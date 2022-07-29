@@ -4,7 +4,7 @@ namespace App\Notifications\Identities\Voucher;
 
 use App\Mail\Funds\FundExpireSoonMail;
 use App\Models\Voucher;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 
 /**
  * The voucher will expire soon (budget/subsidy)

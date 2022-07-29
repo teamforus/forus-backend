@@ -22,7 +22,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|Language whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Language extends Model
+class Language extends BaseModel
 {
     /**
      * The attributes that are mass assignable.

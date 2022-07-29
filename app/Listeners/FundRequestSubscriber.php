@@ -17,9 +17,8 @@ use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestFeedbackRequestedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRequestedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestResolvedNotification;
 use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
@@ -27,22 +26,18 @@ use App\Scopes\Builders\FundQuery;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Gate;
 
-/**
- * Class FundRequestSubscriber
- * @package App\Listeners
- */
 class FundRequestSubscriber
 {
     /**
      * @param FundRequestCreated $fundRequestCreated
      * @throws \Exception
+     * @noinspection PhpUnused
      */
     public function onFundRequestCreated(FundRequestCreated $fundRequestCreated): void
     {
         $fund = $fundRequestCreated->getFund();
         $fundRequest = $fundRequestCreated->getFundRequest();
-        $recordRepo = resolve('forus.services.record');
-        $identityBsn = $recordRepo->bsnByAddress($fundRequest->identity_address);
+        $identityBsn = $fundRequest->identity?->bsn;
 
         // assign fund request to default validator
         if ($fund->default_validator_employee) {
@@ -65,6 +60,7 @@ class FundRequestSubscriber
 
     /**
      * @param FundRequestResolved $fundCreated
+     * @noinspection PhpUnused
      */
     public function onFundRequestResolved(FundRequestResolved $fundCreated): void
     {
@@ -105,6 +101,7 @@ class FundRequestSubscriber
             foreach ($funds as $fund) {
                 if (Gate::forUser($fundRequest->identity_address)->allows('apply', [$fund, $logScope])) {
                     $fund->makeVoucher($fundRequest->identity_address);
+                    $fund->makeFundFormulaProductVouchers($fundRequest->identity_address);
                 }
             }
 
@@ -116,6 +113,7 @@ class FundRequestSubscriber
 
     /**
      * @param FundRequestAssigned $event
+     * @noinspection PhpUnused
      */
     public function onFundRequestAssigned(FundRequestAssigned $event): void
     {
@@ -133,6 +131,7 @@ class FundRequestSubscriber
 
     /**
      * @param FundRequestResigned $event
+     * @noinspection PhpUnused
      */
     public function onFundRequestResigned(FundRequestResigned $event): void
     {
@@ -150,19 +149,19 @@ class FundRequestSubscriber
 
     /**
      * @param FundRequestRecordApproved $requestRecordEvent
+     * @noinspection PhpUnused
      */
     public function onFundRequestRecordApproved(FundRequestRecordApproved $requestRecordEvent): void
     {
         $fundRequestRecord = $requestRecordEvent->getFundRequestRecord();
         $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
 
-        $event = $fundRequestRecord->log($fundRequestRecord::EVENT_APPROVED, $eventModels);
-
-        IdentityFundRequestRecordDeclinedNotification::send($event);
+        $fundRequestRecord->log($fundRequestRecord::EVENT_APPROVED, $eventModels);
     }
 
     /**
      * @param FundRequestRecordDeclined $requestRecordEvent
+     * @noinspection PhpUnused
      */
     public function onFundRequestRecordDeclined(FundRequestRecordDeclined $requestRecordEvent): void
     {
@@ -212,7 +211,7 @@ class FundRequestSubscriber
      */
     public function onFundRequestClarificationRequested(
         FundRequestClarificationRequested $clarificationCreated
-    ) {
+    ): void {
         $clarification = $clarificationCreated->getFundRequestClarification();
         $fundRequestRecord = $clarification->fund_request_record;
 
@@ -220,7 +219,7 @@ class FundRequestSubscriber
             'fund_request_clarification' => $clarification,
         ]);
 
-        IdentityFundRequestFeedbackRequestedNotification::send($fundRequestRecord->log(
+        IdentityFundRequestRecordFeedbackRequestedNotification::send($fundRequestRecord->log(
             $fundRequestRecord::EVENT_CLARIFICATION_REQUESTED,
             $eventModels
         ));
@@ -263,13 +262,10 @@ class FundRequestSubscriber
      */
     private function getSupervisorFields(?Employee $supervisor): array
     {
-        $recordRepo = resolve('forus.services.record');
-        $supervisorEmail = $recordRepo->primaryEmailByAddress($supervisor->identity_address);
-
         return [
             'supervisor_employee_id' => $supervisor->id,
             'supervisor_employee_roles' => $supervisor->roles->pluck('name')->join(', '),
-            'supervisor_employee_email' => $supervisorEmail,
+            'supervisor_employee_email' => $supervisor->identity?->email,
         ];
     }
 
@@ -277,6 +273,7 @@ class FundRequestSubscriber
      * The events dispatcher
      *
      * @param Dispatcher $events
+     * @noinspection PhpUnused
      */
     public function subscribe(Dispatcher $events): void
     {

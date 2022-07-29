@@ -89,6 +89,8 @@ class FundsController extends Controller
 
         $fund->makeFundConfig($request->only([
             'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+            'email_required', 'contact_info_enabled', 'contact_info_required',
+            'contact_info_message_custom', 'contact_info_message_text',
         ]));
 
         $fund->attachMediaByUid($request->input('media_uid'));
@@ -189,6 +191,11 @@ class FundsController extends Controller
             ]));
         }
 
+        $fund->updateFundsConfig($request->only([
+            'email_required', 'contact_info_enabled', 'contact_info_required',
+            'contact_info_message_custom', 'contact_info_message_text',
+        ]));
+
         $fund->attachMediaByUid($request->input('media_uid'));
         $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
         $fund->syncFaqOptional($request->input('faq'));
@@ -196,7 +203,7 @@ class FundsController extends Controller
 
         FundUpdatedEvent::dispatch($fund);
 
-        if (config('forus.features.dashboard.organizations.funds.criteria')) {
+        if (config('forus.features.dashboard.organizations.funds.criteria') && $request->has('criteria')) {
             $fund->syncCriteria($request->input('criteria'));
         }
 

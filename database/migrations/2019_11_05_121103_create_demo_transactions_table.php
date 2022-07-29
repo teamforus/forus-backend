@@ -4,10 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateDemoTransactionsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -34,4 +31,4 @@ class CreateDemoTransactionsTable extends Migration
     {
         Schema::dropIfExists('demo_transactions');
     }
-}
+};

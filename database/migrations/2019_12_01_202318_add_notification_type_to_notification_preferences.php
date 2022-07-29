@@ -4,10 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class AddNotificationTypeToNotificationPreferences extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -40,4 +37,4 @@ class AddNotificationTypeToNotificationPreferences extends Migration
             $table->renameColumn('key', 'mail_key');
         });
     }
-}
+};

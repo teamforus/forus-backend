@@ -24,6 +24,29 @@ trait HasDbTokens
         int $block_count = 1,
         Builder $builder = null
     ): string {
-        return token_generator_db($builder ?: static::query(), $column, $block_length, $block_count);
+        do {
+            $value = token_generator()->generate($block_length, $block_count);
+        } while((clone ($builder ?: static::query()))->where($column, $value)->exists());
+
+        return $value;
+    }
+
+    /**
+     * @param callable $isUnique
+     * @param int $block_length
+     * @param int $block_count
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public static function makeUniqueTokenCallback(
+        callable $isUnique,
+        int $block_length,
+        int $block_count = 1,
+    ): string {
+        do {
+            $value = token_generator()->generate($block_length, $block_count);
+        } while(!$isUnique($value));
+
+        return $value;
     }
 }

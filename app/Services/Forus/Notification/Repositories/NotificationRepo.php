@@ -29,7 +29,7 @@ use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedProductsN
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestFeedbackRequestedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRequestedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationAcceptedNotification;
@@ -111,7 +111,7 @@ class NotificationRepo implements INotificationRepo
         IdentityFundRequestApprovedNotification::class,
         IdentityFundRequestDisregardedNotification::class,
         IdentityFundRequestRecordDeclinedNotification::class,
-        IdentityFundRequestFeedbackRequestedNotification::class,
+        IdentityFundRequestRecordFeedbackRequestedNotification::class,
 
         // funds
         FundCreatedNotification::class,
@@ -212,15 +212,6 @@ class NotificationRepo implements INotificationRepo
         'bunq.transaction_success',
         'funds.provider_approved',
     ];
-
-    public static function test(): string {
-        /** @var BaseNotification|string $className */
-        $className = IdentityAddedEmployeeNotification::class;
-
-        // return call_user_func($className, 'getScope']);
-
-        return $className::getScope();
-    }
 
     /**
      * Emails that you can't unsubscribe from

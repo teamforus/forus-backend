@@ -78,7 +78,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Query\Builder|ProductReservation withoutTrashed()
  * @mixin \Eloquent
  */
-class ProductReservation extends Model
+class ProductReservation extends BaseModel
 {
     use SoftDeletes, HasLogs;
 

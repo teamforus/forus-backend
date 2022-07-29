@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateFundProviderChatMessagesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -44,4 +41,4 @@ class CreateFundProviderChatMessagesTable extends Migration
     {
         Schema::dropIfExists('fund_provider_chat_messages');
     }
-}
+};

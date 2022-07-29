@@ -378,6 +378,17 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\ImplementationsController"
     )->only('index', 'show');
 
+    $router->post(
+        'organizations/{organization}/implementations/{implementation}/pages/validate-blocks',
+        "Api\Platform\Organizations\Implementations\ImplementationPagesController@storeBlocksValidate");
+
+    $router->resource(
+        'organizations/{organization}/implementations/{implementation}/pages',
+        "Api\Platform\Organizations\Implementations\ImplementationPagesController"
+    )->parameters([
+        'pages' => 'implementationPage',
+    ])->only('index', 'store', 'show', 'update', 'destroy');
+
     $router->resource(
         'organizations/{organization}/implementations/{implementation}/system-notifications',
         "Api\Platform\Organizations\Implementations\SystemNotificationsController"

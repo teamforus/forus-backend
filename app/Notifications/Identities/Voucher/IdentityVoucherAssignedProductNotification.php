@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Voucher;
 
 use App\Mail\Vouchers\VoucherAssignedProductMail;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 use App\Models\Voucher;
 
 /**

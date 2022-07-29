@@ -18,12 +18,9 @@ class TagsController extends Controller
      *
      * @param IndexTagsRequest $request
      * @return AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(IndexTagsRequest $request): AnonymousResourceCollection
     {
-        $this->authorize('viewAny', Tag::class);
-
         $query = Tag::query();
 
         if ($request->input('type') === 'funds') {
@@ -47,12 +44,9 @@ class TagsController extends Controller
     /**
      * @param Tag $tag
      * @return TagResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(Tag $tag): TagResource
     {
-        $this->authorize('show', $tag);
-
         return TagResource::create($tag);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Rules;
 
+use App\Models\Identity;
 use Illuminate\Contracts\Validation\Rule;
 
 class IdentityEmailExistsRule implements Rule
@@ -21,9 +22,9 @@ class IdentityEmailExistsRule implements Rule
      * @return bool
      * @throws \Exception
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
-        return is_string($value) && is_string(identity_repo()->getAddress($value));
+        return is_string($value) && Identity::findByEmail($value)?->exists();
     }
 
     /**

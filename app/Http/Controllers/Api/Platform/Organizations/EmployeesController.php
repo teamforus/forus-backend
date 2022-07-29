@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
-use App\Events\Employees\EmployeeCreated;
 use App\Events\Employees\EmployeeDeleted;
 use App\Events\Employees\EmployeeUpdated;
 use App\Http\Requests\Api\Platform\Organizations\Employees\IndexEmployeesRequest;
@@ -13,34 +12,19 @@ use App\Models\Employee;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Scopes\Builders\EmployeeQuery;
-use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use App\Models\Identity;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class EmployeesController
- * @property IRecordRepo $recordRepo
- * @property IIdentityRepo $identityRepo
- * @package App\Http\Controllers\Api\Platform\Organizations
- */
 class EmployeesController extends Controller
 {
     use ThrottleWithMeta;
 
-    private IRecordRepo $recordRepo;
-    private IIdentityRepo $identityRepo;
-
-    public function __construct(
-        IRecordRepo $recordRepo,
-        IIdentityRepo $identityRepo
-    ) {
+    public function __construct()
+    {
         $this->maxAttempts = env('EMPLOYEE_INVITE_THROTTLE_ATTEMPTS', 10);
         $this->decayMinutes = env('EMPLOYEE_INVITE_THROTTLE_DECAY', 10);
-
-        $this->recordRepo = $recordRepo;
-        $this->identityRepo = $identityRepo;
     }
 
     /**
@@ -70,6 +54,10 @@ class EmployeesController extends Controller
             EmployeeQuery::whereHasPermissionFilter($query, $permissionFilter);
         }
 
+        if ($q = $request->get('q')) {
+            EmployeeQuery::whereQueryFilter($query, $q);
+        }
+
         return EmployeeResource::queryCollection($query, $request);
     }
 
@@ -91,19 +79,12 @@ class EmployeesController extends Controller
         $this->authorize('store', [Employee::class, $organization]);
 
         $email = $request->input('email');
-        $identity_address = $this->recordRepo->identityAddressByEmail($email);
+        $roles = $request->input('roles');
 
-        if (!$identity_address) {
-            $identity_address = $this->identityRepo->makeByEmail($email);
-        }
+        $identity = Identity::findByEmail($email) ?: Identity::make($email);
+        $employee = $organization->addEmployee($identity, $roles);
 
-        /** @var Employee $employee */
-        $employee = $organization->employees()->firstOrCreate(compact('identity_address'));
-        $employee->roles()->sync($request->input('roles'));
-
-        EmployeeCreated::dispatch($employee);
-
-        return new EmployeeResource($employee);
+        return EmployeeResource::create($employee);
     }
 
     /**

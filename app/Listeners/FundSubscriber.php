@@ -21,7 +21,6 @@ use App\Mail\Forus\ForusFundCreatedMail;
 use App\Mail\Funds\ProviderInvitationMail;
 use App\Models\Fund;
 use App\Models\FundProvider;
-use App\Notifications\Identities\Fund\IdentityRequesterFundEndedNotification;
 use App\Notifications\Identities\Fund\IdentityRequesterProductRevokedNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderFundEndedNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderFundExpiringNotification;
@@ -42,14 +41,9 @@ use App\Notifications\Organizations\Funds\FundUnArchivedNotification;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Events\Dispatcher;
 
-/**
- * Class FundSubscriber
- * @package App\Listeners
- */
 class FundSubscriber
 {
-    private $notificationService;
-    private $recordRepo;
+    private mixed $notificationService;
 
     /**
      * @param Fund $fund
@@ -70,7 +64,6 @@ class FundSubscriber
      */
     public function __construct()
     {
-        $this->recordRepo = resolve('forus.services.record');
         $this->notificationService = resolve('forus.services.notification');
     }
 
@@ -226,7 +219,7 @@ class FundSubscriber
     {
         $providerInvitation = $event->getFundProviderInvitation();
         $fundFrom = $providerInvitation->from_fund;
-        $providerEmail = $this->recordRepo->primaryEmailByAddress($providerInvitation->organization->identity_address);
+        $providerEmail = $providerInvitation->organization->identity->email;
 
         if ($providerEmail) {
             $mailable = new ProviderInvitationMail([
@@ -366,24 +359,26 @@ class FundSubscriber
      * @param Dispatcher $events
      * @noinspection PhpUnused
      */
-    public function subscribe(Dispatcher $events)
+    public function subscribe(Dispatcher $events): void
     {
-        $events->listen(FundCreatedEvent::class,'\App\Listeners\FundSubscriber@onFundCreated');
-        $events->listen(FundUpdatedEvent::class,'\App\Listeners\FundSubscriber@onFundUpdated');
-        $events->listen(FundEndedEvent::class, '\App\Listeners\FundSubscriber@onFundEnded');
-        $events->listen(FundStartedEvent::class, '\App\Listeners\FundSubscriber@onFundStarted');
-        $events->listen(FundExpiringEvent::class, '\App\Listeners\FundSubscriber@onFundExpiring');
-        $events->listen(FundBalanceLowEvent::class, '\App\Listeners\FundSubscriber@onFundBalanceLow');
-        $events->listen(FundProviderApplied::class, '\App\Listeners\FundSubscriber@onFundProviderApplied');
-        $events->listen(FundBalanceSuppliedEvent::class, '\App\Listeners\FundSubscriber@onFundBalanceSupplied');
-        $events->listen(FundProviderInvitedEvent::class, '\App\Listeners\FundSubscriber@onFundProviderInvited');
-        $events->listen(FundProviderChatMessageEvent::class, '\App\Listeners\FundSubscriber@onFundProviderChatMessage');
+        $class = '\\' . static::class;
 
-        $events->listen(FundProductAddedEvent::class, '\App\Listeners\FundSubscriber@onFundProductAdded');
-        $events->listen(FundProductApprovedEvent::class, '\App\Listeners\FundSubscriber@onFundProductApproved');
-        $events->listen(FundProductRevokedEvent::class, '\App\Listeners\FundSubscriber@onFundProductRevoked');
+        $events->listen(FundCreatedEvent::class,"$class@onFundCreated");
+        $events->listen(FundUpdatedEvent::class,"$class@onFundUpdated");
+        $events->listen(FundEndedEvent::class, "$class@onFundEnded");
+        $events->listen(FundStartedEvent::class, "$class@onFundStarted");
+        $events->listen(FundExpiringEvent::class, "$class@onFundExpiring");
+        $events->listen(FundBalanceLowEvent::class, "$class@onFundBalanceLow");
+        $events->listen(FundProviderApplied::class, "$class@onFundProviderApplied");
+        $events->listen(FundBalanceSuppliedEvent::class, "$class@onFundBalanceSupplied");
+        $events->listen(FundProviderInvitedEvent::class, "$class@onFundProviderInvited");
+        $events->listen(FundProviderChatMessageEvent::class, "$class@onFundProviderChatMessage");
 
-        $events->listen(FundArchivedEvent::class, '\App\Listeners\FundSubscriber@onFundArchived');
-        $events->listen(FundUnArchivedEvent::class, '\App\Listeners\FundSubscriber@onFundUnArchived');
+        $events->listen(FundProductAddedEvent::class, "$class@onFundProductAdded");
+        $events->listen(FundProductApprovedEvent::class, "$class@onFundProductApproved");
+        $events->listen(FundProductRevokedEvent::class, "$class@onFundProductRevoked");
+
+        $events->listen(FundArchivedEvent::class, "$class@onFundArchived");
+        $events->listen(FundUnArchivedEvent::class, "$class@onFundUnArchived");
     }
 }

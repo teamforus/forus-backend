@@ -4,10 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateOfficeSchedulesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -38,4 +35,4 @@ class CreateOfficeSchedulesTable extends Migration
     {
         Schema::dropIfExists('office_schedules');
     }
-}
+};

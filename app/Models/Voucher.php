@@ -12,14 +12,17 @@ use App\Events\Vouchers\VoucherSendToEmailEvent;
 use App\Exports\VoucherExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
+use App\Models\Traits\HasDbTokens;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Scopes\Builders\VoucherQuery;
+use App\Scopes\Builders\VoucherSubQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
-use App\Services\Forus\Identity\Models\Identity;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -27,9 +30,9 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Excel as ExcelModel;
+use Illuminate\Support\Carbon;
 use ZipArchive;
 
 /**
@@ -48,11 +51,11 @@ use ZipArchive;
  * @property string|null $activation_code
  * @property string|null $activation_code_uid
  * @property int|null $fund_backoffice_log_id
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property int|null $product_id
  * @property int|null $parent_id
- * @property \Illuminate\Support\Carbon|null $expire_at
+ * @property Carbon|null $expire_at
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_eligible
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_first_use
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_received
@@ -67,17 +70,18 @@ use ZipArchive;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
  * @property-read bool $expired
- * @property-read bool $has_product_vouchers
+ * @property-read \Illuminate\Support\Carbon|null $first_use_date
+ * @property-read bool $has_reservations
  * @property-read bool $has_transactions
  * @property-read bool $in_use
  * @property-read bool $is_granted
- * @property-read \Carbon\Carbon|\Illuminate\Support\Carbon $last_active_day
+ * @property-read \Illuminate\Support\Carbon|null $last_active_day
  * @property-read string $state_locale
  * @property-read string $type
  * @property-read string|null $updated_at_string
  * @property-read string|null $updated_at_string_locale
  * @property-read bool $used
- * @property-read Identity|null $identity
+ * @property-read \App\Models\Identity|null $identity
  * @property-read EventLog|null $last_deactivation_log
  * @property-read \App\Models\VoucherTransaction|null $last_transaction
  * @property-read Collection|EventLog[] $logs
@@ -123,9 +127,9 @@ use ZipArchive;
  * @method static Builder|Voucher whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Voucher extends Model
+class Voucher extends BaseModel
 {
-    use HasLogs, HasFormattedTimestamps;
+    use HasLogs, HasFormattedTimestamps, HasDbTokens;
 
     public const EVENT_CREATED_BUDGET = 'created_budget';
     public const EVENT_CREATED_PRODUCT = 'created_product';
@@ -172,10 +176,6 @@ class Voucher extends Model
         self::STATE_ACTIVE,
         self::STATE_PENDING,
         self::STATE_DEACTIVATED,
-    ];
-
-    protected $withCount = [
-        'transactions'
     ];
 
     /**
@@ -251,6 +251,7 @@ class Voucher extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
     public function identity(): BelongsTo
     {
@@ -259,6 +260,7 @@ class Voucher extends Model
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
     public function backoffice_logs(): HasMany
     {
@@ -467,6 +469,7 @@ class Voucher extends Model
 
     /**
      * @return string
+     * @noinspection PhpUnused
      */
     public function getStateLocaleAttribute(): string
     {
@@ -486,10 +489,10 @@ class Voucher extends Model
     }
 
     /**
-     * @return Carbon|\Illuminate\Support\Carbon
+     * @return Carbon|null
      * @noinspection PhpUnused
      */
-    public function getLastActiveDayAttribute()
+    public function getLastActiveDayAttribute(): ?Carbon
     {
         return $this->expire_at;
     }
@@ -564,6 +567,7 @@ class Voucher extends Model
      * @param Organization $organization
      * @param Fund|null $fund
      * @return Builder
+     * @throws \Exception
      */
     public static function searchSponsorQuery(
         BaseFormRequest $request,
@@ -577,6 +581,8 @@ class Voucher extends Model
         $count_per_identity_min = $request->input('count_per_identity_min');
         $count_per_identity_max = $request->input('count_per_identity_max');
         $state = $request->input('state');
+        $in_use_from = $request->input('in_use_from');
+        $in_use_to = $request->input('in_use_to');
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -586,7 +592,7 @@ class Voucher extends Model
             }
         });
 
-        if ($state && $state == 'expired') {
+        if ($state == 'expired') {
             VoucherQuery::whereExpired($query);
         }
 
@@ -613,12 +619,12 @@ class Voucher extends Model
         }
 
         if ($request->has('email') && $email = $request->input('email')) {
-            $query->where('identity_address', $request->identity_repo()->getAddress($email) ?: '_');
+            $query->where('identity_address', Identity::findByEmail($email)?->email ?: '_');
         }
 
         if ($request->has('bsn') && $bsn = $request->input('bsn')) {
             $query->where(static function(Builder $builder) use ($bsn, $request) {
-                $builder->where('identity_address', $request->records_repo()->identityAddressByBsn($bsn) ?: '-');
+                $builder->where('identity_address', Identity::findByBsn($bsn)?->address ?: '-');
                 $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($bsn) {
                     $builder->where(compact('bsn'));
                 });
@@ -655,24 +661,18 @@ class Voucher extends Model
             }, '<=', $count_per_identity_max);
         }
 
+        if ($in_use_from || $in_use_to) {
+            $query = VoucherQuery::whereInUseDateQuery(
+                VoucherSubQuery::appendFirstUseFields($query),
+                $in_use_from ? Carbon::parse($in_use_from)->startOfDay() : null,
+                $in_use_to ? Carbon::parse($in_use_to)->endOfDay() : null,
+            );
+        }
+
         return $query->orderBy(
             $request->input('sort_by', 'created_at'),
             $request->input('sort_order', 'asc')
         );
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param Organization $organization
-     * @param Fund|null $fund
-     * @return Builder[]|Collection
-     */
-    public static function searchSponsor(
-        BaseFormRequest $request,
-        Organization $organization,
-        Fund $fund = null
-    ) {
-        return self::searchSponsorQuery($request, $organization, $fund)->get();
     }
 
     /**
@@ -690,16 +690,16 @@ class Voucher extends Model
      */
     public function getHasTransactionsAttribute(): bool
     {
-        return $this->transactions->count() > 0;
+        return $this->usedCount('transactions', false);
     }
 
     /**
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getHasProductVouchersAttribute(): bool
+    public function getHasReservationsAttribute(): bool
     {
-        return $this->product_vouchers->count() > 0;
+        return $this->usedCount('reservations', false);
     }
 
     /**
@@ -708,19 +708,37 @@ class Voucher extends Model
      */
     public function getInUseAttribute(): bool
     {
-        return $this->usedCount(false) > 0;
+        return $this->first_use_date !== null;
+    }
+
+    /**
+     * @return \Illuminate\Support\Carbon|null
+     * @noinspection PhpUnused
+     */
+    public function getFirstUseDateAttribute(): ?Carbon
+    {
+        if (key_exists('first_use_date', $this->attributes)) {
+            return $this->attributes['first_use_date'] ? Carbon::parse(
+                $this->attributes['first_use_date']
+            ) : null;
+        }
+
+        $model = VoucherSubQuery::appendFirstUseFields(static::query())->find($this->id);
+        $this->setAttribute('first_use_date', $model?->getAttribute('first_use_date'));
+
+        return $this->getAttribute('first_use_date');
     }
 
     /**
      * Assign voucher to identity
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @return $this
      */
-    public function assignToIdentity(string $identity_address): self
+    public function assignToIdentity(Identity $identity): self
     {
         $this->update([
-            'identity_address' => $identity_address,
+            'identity_address' => $identity->address,
             'state' => self::STATE_ACTIVE,
         ]);
 
@@ -732,7 +750,7 @@ class Voucher extends Model
     /**
      * @param Product $product
      * @param ProductReservation|null $productReservation
-     * @return Voucher|\Illuminate\Database\Eloquent\Model
+     * @return Voucher
      */
     public function buyProductVoucher(
         Product $product,
@@ -745,7 +763,7 @@ class Voucher extends Model
         ])));
 
         $voucher = self::create([
-            'product_reservation_id'    => $productReservation ? $productReservation->id : null,
+            'product_reservation_id'    => $productReservation?->id,
             'identity_address'          => $this->identity_address,
             'parent_id'                 => $this->id,
             'fund_id'                   => $this->fund_id,
@@ -774,6 +792,16 @@ class Voucher extends Model
     public function isPending(): bool
     {
         return $this->state === self::STATE_PENDING;
+    }
+
+    /**
+     * @return void
+     */
+    public function setPending(): void
+    {
+        $this->update(([
+            'state' => static::STATE_PENDING,
+        ]));
     }
 
     /**
@@ -806,7 +834,7 @@ class Voucher extends Model
             'amount'                    => $amount,
             'state'                     => ProductReservation::STATE_PENDING,
             'product_id'                => $product->id,
-            'employee_id'               => $employee ? $employee->id : null,
+            'employee_id'               => $employee?->id,
             'fund_provider_product_id'  => $fundProviderProduct ? $fundProviderProduct->id : null,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
         ], array_only($extraData, [
@@ -842,7 +870,7 @@ class Voucher extends Model
      * @return array
      */
     public static function exportData(
-        Collection $vouchers,
+        Collection|Arrayable $vouchers,
         array $fields,
         string $dataFormat,
         ?string $qrFormat = null
@@ -980,7 +1008,7 @@ class Voucher extends Model
      * @param string $bsn
      * @return VoucherRelation|\Illuminate\Database\Eloquent\Model
      */
-    public function setBsnRelation(string $bsn): VoucherRelation
+    public function setBsnRelation(string $bsn): VoucherRelation|Model
     {
         $this->voucher_relation()->delete();
 
@@ -989,11 +1017,11 @@ class Voucher extends Model
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      */
-    public static function assignAvailableToIdentityByBsn(string $identity_address): void
+    public static function assignAvailableToIdentityByBsn(Identity $identity): void
     {
-        if (!$bsn = record_repo()->bsnByAddress($identity_address)) {
+        if (!$identity->bsn) {
             return;
         }
 
@@ -1001,8 +1029,8 @@ class Voucher extends Model
         $query = self::whereNull('identity_address');
         $query->whereHas('fund.organization', function(Builder $builder) {
             $builder->where('bsn_enabled', true);
-        })->whereHas('voucher_relation', static function(Builder $builder) use ($bsn) {
-            $builder->where('bsn', '=', $bsn);
+        })->whereHas('voucher_relation', static function(Builder $builder) use ($identity) {
+            $builder->where('bsn', '=', $identity->bsn);
         })->get()->each(static function(Voucher $voucher) {
             $voucher->voucher_relation->assignIfExists();
         });
@@ -1027,14 +1055,15 @@ class Voucher extends Model
             $voucher = $queryUnused->first();
             $activation_code = $voucher->activation_code;
         } else {
-            $activation_code = token_generator_callback(static function($value) {
-                return Prevalidation::whereUid($value)->doesntExist() &&
-                    Voucher::whereActivationCode($value)->doesntExist();
+            $activation_code = self::makeUniqueTokenCallback(function ($value) {
+                return
+                    Prevalidation::whereUid($value)->doesntExist() &&
+                    Voucher::whereActivationCode('activation_code')->doesntExist();
             }, 4, 2);
         }
 
         if (!is_null($activation_code_uid) && $oldVoucher = $queryUsed->first()) {
-            $this->assignToIdentity($oldVoucher->identity_address);
+            $this->assignToIdentity($oldVoucher->identity);
         }
 
         return $this->updateModel([
@@ -1045,9 +1074,9 @@ class Voucher extends Model
 
     /**
      * @param string $code
-     * @return PhysicalCard|Model|mixed
+     * @return PhysicalCard|BaseModel
      */
-    public function addPhysicalCard(string $code): PhysicalCard
+    public function addPhysicalCard(string $code): PhysicalCard|Model
     {
         return $this->physical_cards()->create([
             'code' => $code,
@@ -1058,12 +1087,12 @@ class Voucher extends Model
     /**
      * @param array $options
      * @param bool $shouldNotifyRequester
-     * @return PhysicalCardRequest|\Illuminate\Database\Eloquent\Model
+     * @return PhysicalCardRequest|Model
      */
     public function makePhysicalCardRequest(
         array $options,
         bool $shouldNotifyRequester = false
-    ): PhysicalCardRequest {
+    ): PhysicalCardRequest|Model {
         $cardRequest = $this->physical_card_requests()->create(Arr::only($options, [
             'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id',
         ]));
@@ -1162,7 +1191,7 @@ class Voucher extends Model
      */
     public function deactivationDate(): ?Carbon
     {
-        return $this->last_deactivation_log ? $this->last_deactivation_log->created_at : null;
+        return $this->last_deactivation_log?->created_at;
     }
 
     /**
@@ -1178,14 +1207,14 @@ class Voucher extends Model
         if ($voucherShouldReport) {
             $backOffice = $this->fund->getBackofficeApi();
             $eligibilityLog = $this->backoffice_log_eligible;
-            $bsn = record_repo()->bsnByAddress($this->identity_address);
+            $bsn = $this->identity?->bsn;
 
             if ($backOffice && $bsn) {
                 $requestId = $eligibilityLog->response_id ?? null;
+                $backofficeLog = $backOffice->reportReceived($bsn, $requestId);
+                $backofficeLog->updateModel(['voucher_id' => $this->id]);
 
-                return $backOffice->reportReceived($bsn, $requestId)->updateModel([
-                    'voucher_id' => $this->id,
-                ]);
+                return $backofficeLog;
             }
         }
 
@@ -1205,14 +1234,14 @@ class Voucher extends Model
         if ($voucherShouldReport) {
             $backOffice = $this->fund->getBackofficeApi();
             $firstUseLog = $this->backoffice_log_first_use;
-            $bsn = record_repo()->bsnByAddress($this->identity_address);
+            $bsn = $this->identity?->bsn;
 
             if ($backOffice && $bsn) {
                 $requestId = $firstUseLog->response_id ?? null;
+                $backofficeLog = $backOffice->reportFirstUse($bsn, $requestId);
+                $backofficeLog->update(['voucher_id' => $this->id]);
 
-                return $backOffice->reportFirstUse($bsn, $requestId)->updateModel([
-                    'voucher_id' => $this->id,
-                ]);
+                return $backofficeLog;
             }
         }
 
@@ -1220,16 +1249,17 @@ class Voucher extends Model
     }
 
     /**
+     * @param string $scope
      * @param bool $fresh
      * @return int
      */
-    public function usedCount(bool $fresh = true): int
+    public function usedCount(string $scope = 'all', bool $fresh = true): int
     {
-        if ($fresh) {
-            return $this->transactions()->count() + $this->product_vouchers()->count();
-        }
+        $transactions_count = $fresh ? $this->transactions()->count() : $this->transactions->count();
+        $reservations_count = $fresh ? $this->product_vouchers()->count() : $this->product_vouchers->count();
 
-        return $this->transactions->count() + $this->product_vouchers->count();
+        return (in_array($scope, ['all', 'transactions']) ? $transactions_count : 0) +
+            (in_array($scope, ['all', 'reservations']) ? $reservations_count : 0);
     }
 
     /**

@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @method static \Illuminate\Database\Eloquent\Builder|Permission whereName($value)
  * @mixin \Eloquent
  */
-class Permission extends Model
+class Permission extends BaseModel
 {
     protected static Collection|null $memCache = null;
 

@@ -385,7 +385,6 @@ class MediaService
      * @param Media|null $media
      * @param bool $fromQueue
      * @param array $keepPresets
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      * @throws \Exception
      */
     public function regenerateMedia(
@@ -547,7 +546,7 @@ class MediaService
     /**
      * @param string $path
      * @return string|null
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException|null
+     * @throws null
      */
     public function getContent(string $path): ?string
     {

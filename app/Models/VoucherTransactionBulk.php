@@ -91,7 +91,7 @@ use Throwable;
  * @method static Builder|VoucherTransactionBulk whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class VoucherTransactionBulk extends Model
+class VoucherTransactionBulk extends BaseModel
 {
     use HasLogs, HasDbTokens;
 
@@ -372,8 +372,6 @@ class VoucherTransactionBulk extends Model
                 return $this;
             });
 
-            // This endpoint is throttled by bunq: You can do a maximum of 3 calls per 3 second to this endpoint.
-            sleep(2);
         } catch (Throwable $e) {
             logger()->error($e->getMessage() . "\n" . $e->getTraceAsString());
 
@@ -383,6 +381,9 @@ class VoucherTransactionBulk extends Model
                 'error_message' => $e->getMessage(),
             ], $employee);
         }
+
+        // This endpoint is throttled by bunq: You can do a maximum of 3 calls per 3 second to this endpoint.
+        sleep(2);
 
         return $this;
     }

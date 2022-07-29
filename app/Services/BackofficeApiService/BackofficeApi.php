@@ -5,10 +5,10 @@ namespace App\Services\BackofficeApiService;
 
 use App\Models\Fund;
 use App\Models\FundBackofficeLog;
+use App\Models\Identity;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
 use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
 use App\Services\BackofficeApiService\Responses\ResidencyResponse;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
@@ -20,7 +20,6 @@ use Illuminate\Support\Arr;
 class BackofficeApi
 {
     protected Fund $fund;
-    protected IRecordRepo $recordRepo;
 
     public const ACTION_ELIGIBILITY_CHECK = 'eligibility_check';
     public const ACTION_RESIDENCY_CHECK = 'residency_check';
@@ -39,12 +38,10 @@ class BackofficeApi
     public const ATTEMPTS_INTERVAL = 8;
 
     /**
-     * @param IRecordRepo $recordRepo
      * @param Fund $fund
      */
-    public function __construct(IRecordRepo $recordRepo, Fund $fund)
+    public function __construct(Fund $fund)
     {
-        $this->recordRepo = $recordRepo;
         $this->fund = $fund;
     }
 
@@ -203,7 +200,11 @@ class BackofficeApi
      */
     protected static function makeRequestId(): string
     {
-        return "forus-" . token_generator_db(FundBackofficeLog::query(), 'response_id', 16);
+        do {
+            $value = token_generator()->generate(16);
+        } while(FundBackofficeLog::where('response_id', $value)->exists());
+
+        return "forus-" . $value;
     }
 
     /**
@@ -212,22 +213,20 @@ class BackofficeApi
      * @param string $action
      * @param string|null $bsn
      * @param string|null $requestId
-     * @return FundBackofficeLog
+     * @return FundBackofficeLog|null
      */
     protected function makeLog(
         string $action,
         ?string $bsn = null,
         ?string $requestId = null
     ): ?FundBackofficeLog {
-        $identityAddress = $bsn ? $this->recordRepo->identityAddressByBsn($bsn) : null;
-
         if (!in_array($action, [self::ACTION_STATUS, self::ACTION_REPORT_FIRST_USE])) {
             $requestId = $requestId ?: self::makeRequestId();
         }
 
         /** @var FundBackofficeLog $fundLog */
         $fundLog = $this->fund->backoffice_logs()->create([
-            'identity_address'  => $identityAddress,
+            'identity_address'  => Identity::findByBsn($bsn)?->address,
             'bsn'               => $bsn,
             'action'            => $action,
             'request_id'        => $requestId,
@@ -357,11 +356,11 @@ class BackofficeApi
      * Get list of logs to be sent to the API
      *
      * @param array $fundsId
-     * @return FundBackofficeLog|Builder|\Illuminate\Database\Query\Builder
+     * @return FundBackofficeLog|Builder
      */
-    public static function getNextLogInQueueQuery(array $fundsId = [])
+    public static function getNextLogInQueueQuery(array $fundsId = []): FundBackofficeLog|Builder
     {
-        return FundBackofficeLog::query()
+        return FundBackofficeLog::where([])
             ->whereIn('fund_id', $fundsId)
             ->orderBy('created_at', 'ASC')
             ->where(function(Builder $builder) {

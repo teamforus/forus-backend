@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -13,29 +14,29 @@ class ImplementationPolicy
     /**
      * Determine whether the user can view any implementations.
      *
-     * @param $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAny(
-        $identity_address,
-        Organization $organization
-    ): bool {
-        return $organization->identityCan($identity_address, [
-            'manage_implementation', 'manage_implementation_cms'
+    public function viewAny(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, [
+            'manage_implementation', 'manage_implementation_cms',
         ], false);
     }
 
     /**
      * Determine whether the user can view the implementation.
      *
-     * @param $identity_address
+     * @param Identity $identity
      * @param Implementation $implementation
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function view(
-        $identity_address,
+        Identity $identity,
         Implementation $implementation,
         Organization $organization
     ): bool {
@@ -43,21 +44,22 @@ class ImplementationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity_address, [
-            'manage_implementation', 'manage_implementation_cms'
+        return $organization->identityCan($identity, [
+            'manage_implementation', 'manage_implementation_cms',
         ], false);
     }
 
     /**
      * Determine whether the user can update the implementation CMS.
      *
-     * @param $identity_address
+     * @param Identity $identity
      * @param Implementation $implementation
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function updateCMS(
-        $identity_address,
+        Identity $identity,
         Implementation $implementation,
         Organization $organization
     ): bool {
@@ -65,20 +67,20 @@ class ImplementationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity_address, 'manage_implementation_cms');
+        return $organization->identityCan($identity, 'manage_implementation_cms');
     }
 
     /**
      * Determine whether the user can update the implementation.
      *
-     * @param $identity_address
+     * @param Identity $identity
      * @param Implementation $implementation
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
     public function updateEmail(
-        $identity_address,
+        Identity $identity,
         Implementation $implementation,
         Organization $organization
     ): bool {
@@ -86,20 +88,20 @@ class ImplementationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity_address, 'manage_implementation');
+        return $organization->identityCan($identity, 'manage_implementation');
     }
 
     /**
      * Determine whether the user can update the implementation.
      *
-     * @param $identity_address
+     * @param Identity $identity
      * @param Implementation $implementation
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
     public function updateEmailBranding(
-        $identity_address,
+        Identity $identity,
         Implementation $implementation,
         Organization $organization
     ): bool {
@@ -107,19 +109,20 @@ class ImplementationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity_address, 'manage_implementation_cms');
+        return $organization->identityCan($identity, 'manage_implementation_cms');
     }
 
     /**
      * Determine whether the user can update the implementation.
      *
-     * @param $identity_address
+     * @param Identity $identity
      * @param Implementation $implementation
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function updateDigiD(
-        $identity_address,
+        Identity $identity,
         Implementation $implementation,
         Organization $organization
     ): bool {
@@ -127,7 +130,7 @@ class ImplementationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity_address, 'manage_implementation');
+        return $organization->identityCan($identity, 'manage_implementation');
     }
 
     /**

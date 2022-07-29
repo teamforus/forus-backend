@@ -10,6 +10,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\FundTopUpTransaction;
+use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\PhysicalCard;
@@ -212,7 +213,7 @@ class EventLogService implements IEventLogService
         return $this->keyPrepend([
             'id' => $employee->id,
             'roles' => $employee->roles->pluck('name')->join(', '),
-            'email' => $this->emailByAddress($employee->identity_address),
+            'email' => $employee->identity->email,
             'organization_id' => $employee->organization_id,
         ], 'employee_');
     }
@@ -265,7 +266,7 @@ class EventLogService implements IEventLogService
             'created_at_locale' => format_date_locale($transaction->created_at),
         ], $transaction->employee ? [
             'employee_id' => $transaction->employee_id,
-            'employee_email' => $this->emailByAddress($transaction->employee->identity_address),
+            'employee_email' => $transaction->employee->identity->email,
         ] : []), 'voucher_transaction_');
     }
 
@@ -335,7 +336,7 @@ class EventLogService implements IEventLogService
             'id' => $bankConnection->id,
             'state' => $bankConnection->state,
             'bank_id' => $bankConnection->bank_id,
-            'session_expire_at' => $expire_at ? $expire_at->format('Y-m-d H:i:s') : null,
+            'session_expire_at' => $expire_at?->format('Y-m-d H:i:s'),
             'implementation_id' => $bankConnection->implementation_id,
         ], 'bank_connection_');
     }
@@ -386,15 +387,6 @@ class EventLogService implements IEventLogService
             'key' => $implementation->key,
             'name' => $implementation->name,
         ], 'implementation_');
-    }
-
-    /**
-     * @param string $identity_address
-     * @return string|null
-     */
-    private function emailByAddress(string $identity_address): ?string
-    {
-        return resolve('forus.services.record')->primaryEmailByAddress($identity_address);
     }
 
     /**

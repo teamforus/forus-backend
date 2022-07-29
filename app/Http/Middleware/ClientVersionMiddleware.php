@@ -7,10 +7,6 @@ use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/**
- * Class ClientVersionMiddleware
- * @package App\Http\Middleware
- */
 class ClientVersionMiddleware
 {
     /**
@@ -25,10 +21,10 @@ class ClientVersionMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): mixed
     {
         $excluded = in_array($request->route()->getName(), static::EXCEPT);
-        $baseRequest = BaseFormRequest::createFromBase($request);
+        $baseRequest = BaseFormRequest::createFrom($request);
         $clientVersion = $baseRequest->client_version();
 
         if ($excluded || is_null($clientVersion) || is_numeric($clientVersion)) {

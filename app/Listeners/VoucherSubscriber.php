@@ -32,10 +32,6 @@ use App\Notifications\Identities\Voucher\IdentityVoucherSharedByEmailNotificatio
 use App\Notifications\Organizations\PhysicalCardRequest\PhysicalCardRequestCreatedSponsorNotification;
 use Illuminate\Events\Dispatcher;
 
-/**
- * Class VoucherSubscriber
- * @package App\Listeners
- */
 class VoucherSubscriber
 {
     /**
@@ -303,47 +299,20 @@ class VoucherSubscriber
      * The events dispatcher
      *
      * @param Dispatcher $events
+     * @return void
+     * @noinspection PhpUnused
      */
     public function subscribe(Dispatcher $events): void
     {
-        $events->listen(
-            VoucherCreated::class,
-            '\App\Listeners\VoucherSubscriber@onVoucherCreated'
-        );
+        $class = '\\' . static::class;
 
-        $events->listen(
-            ProductVoucherShared::class,
-            '\App\Listeners\VoucherSubscriber@onProductVoucherShared'
-        );
-
-        $events->listen(
-            VoucherAssigned::class,
-            '\App\Listeners\VoucherSubscriber@onVoucherAssigned'
-        );
-
-        $events->listen(
-            VoucherExpireSoon::class,
-            '\App\Listeners\VoucherSubscriber@onVoucherExpireSoon'
-        );
-
-        $events->listen(
-            VoucherExpired::class,
-            '\App\Listeners\VoucherSubscriber@onVoucherExpired'
-        );
-
-        $events->listen(
-            VoucherDeactivated::class,
-            '\App\Listeners\VoucherSubscriber@onVoucherDeactivated'
-        );
-
-        $events->listen(
-            VoucherSendToEmailEvent::class,
-            '\App\Listeners\VoucherSubscriber@onVoucherSendToEmail'
-        );
-
-        $events->listen(
-            VoucherPhysicalCardRequestedEvent::class,
-            '\App\Listeners\VoucherSubscriber@onVoucherPhysicalCardRequested'
-        );
+        $events->listen(VoucherCreated::class, "$class@onVoucherCreated");
+        $events->listen(ProductVoucherShared::class, "$class@onProductVoucherShared");
+        $events->listen(VoucherAssigned::class, "$class@onVoucherAssigned");
+        $events->listen(VoucherExpireSoon::class, "$class@onVoucherExpireSoon");
+        $events->listen(VoucherExpired::class, "$class@onVoucherExpired");
+        $events->listen(VoucherDeactivated::class, "$class@onVoucherDeactivated");
+        $events->listen(VoucherSendToEmailEvent::class, "$class@onVoucherSendToEmail");
+        $events->listen(VoucherPhysicalCardRequestedEvent::class, "$class@onVoucherPhysicalCardRequested");
     }
 }

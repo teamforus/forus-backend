@@ -1,11 +1,10 @@
 <?php
 
+use App\Models\Record;
+use App\Models\RecordType;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class RemovePreviouslyAddedBsnNumbers extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -14,11 +13,7 @@ class RemovePreviouslyAddedBsnNumbers extends Migration
      */
     public function up(): void
     {
-        $recordRepo = resolve('forus.services.record');
-
-        App\Services\Forus\Record\Models\Record::where([
-            'record_type_id' => $recordRepo->getTypeIdByKey('bsn')
-        ])->forceDelete();
+        Record::whereRelation('record_type', 'key', '=', 'bsn')->forceDelete();
     }
 
     /**
@@ -26,8 +21,5 @@ class RemovePreviouslyAddedBsnNumbers extends Migration
      *
      * @return void
      */
-    public function down(): void
-    {
-        //
-    }
-}
+    public function down(): void {}
+};

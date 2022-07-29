@@ -16,17 +16,17 @@ class RegenerateMediaJob implements ShouldQueue
     /**
      * @var MediaConfig
      */
-    protected $mediaConfig;
+    protected MediaConfig $mediaConfig;
 
     /**
      * @var Media|null
      */
-    protected $media;
+    protected ?Media $media;
 
     /**
      * @var Media[]|null
      */
-    protected $keepPresets;
+    protected ?array $keepPresets;
 
     /**
      * Create a new job instance.
@@ -39,7 +39,7 @@ class RegenerateMediaJob implements ShouldQueue
     public function __construct(
         MediaConfig $mediaConfig,
         Media $media = null,
-        $keepPresets = []
+        ?array $keepPresets = []
     ) {
         $this->mediaConfig = $mediaConfig;
         $this->media = $media;
@@ -53,7 +53,7 @@ class RegenerateMediaJob implements ShouldQueue
      */
     public function handle(): void
     {
-        media()->regenerateMedia(
+        resolve('media')->regenerateMedia(
             $this->mediaConfig,
             $this->media,
             true,

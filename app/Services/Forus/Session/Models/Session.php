@@ -2,11 +2,18 @@
 
 namespace App\Services\Forus\Session\Models;
 
+use App\Models\Identity;
+use App\Models\IdentityProxy;
+use App\Models\Implementation;
 use App\Services\Forus\Session\Services\GeoIp;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Config;
 
 /**
  * App\Services\Forus\Session\Models\Session
@@ -15,26 +22,30 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $uid
  * @property string|null $identity_address
  * @property int|null $identity_proxy_id
- * @property \Illuminate\Support\Carbon $last_activity_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon $last_activity_at
+ * @property Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read \App\Services\Forus\Session\Models\SessionRequest|null $first_request
+ * @property-read string|null $initial_client_type
+ * @property-read Identity|null $identity
+ * @property-read IdentityProxy|null $identity_proxy
+ * @property-read IdentityProxy|null $identity_proxy_with_trashed
  * @property-read \App\Services\Forus\Session\Models\SessionRequest|null $last_request
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Session\Models\SessionRequest[] $requests
  * @property-read int|null $requests_count
- * @method static \Illuminate\Database\Eloquent\Builder|Session newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Session newQuery()
+ * @method static Builder|Session newModelQuery()
+ * @method static Builder|Session newQuery()
  * @method static \Illuminate\Database\Query\Builder|Session onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Session query()
- * @method static \Illuminate\Database\Eloquent\Builder|Session whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Session whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Session whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Session whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Session whereIdentityProxyId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Session whereLastActivityAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Session whereUid($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Session whereUpdatedAt($value)
+ * @method static Builder|Session query()
+ * @method static Builder|Session whereCreatedAt($value)
+ * @method static Builder|Session whereDeletedAt($value)
+ * @method static Builder|Session whereId($value)
+ * @method static Builder|Session whereIdentityAddress($value)
+ * @method static Builder|Session whereIdentityProxyId($value)
+ * @method static Builder|Session whereLastActivityAt($value)
+ * @method static Builder|Session whereUid($value)
+ * @method static Builder|Session whereUpdatedAt($value)
  * @method static \Illuminate\Database\Query\Builder|Session withTrashed()
  * @method static \Illuminate\Database\Query\Builder|Session withoutTrashed()
  * @mixin \Eloquent
@@ -49,12 +60,41 @@ class Session extends Model
      * @var array
      */
     protected $fillable = [
-        'uid', 'identity_address', 'identity_proxy_id', 'last_activity_at'
+        'uid', 'identity_address', 'identity_proxy_id', 'last_activity_at',
     ];
 
     protected $dates = [
-        'last_activity_at'
+        'last_activity_at',
     ];
+
+    /**
+     * @return BelongsTo
+     */
+    public function identity(): BelongsTo
+    {
+        return $this->belongsTo(Identity::class);
+    }
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function identity_proxy(): BelongsTo
+    {
+        return $this->belongsTo(IdentityProxy::class);
+    }
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function identity_proxy_with_trashed(): BelongsTo
+    {
+        return $this->belongsTo(IdentityProxy::class)->where(function(Builder $builder) {
+            /** @var Builder|SoftDeletes $builder */
+            $builder->withTrashed();
+        });
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -66,6 +106,7 @@ class Session extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @noinspection PhpUnused
      */
     public function first_request(): HasOne
     {
@@ -74,6 +115,7 @@ class Session extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @noinspection PhpUnused
      */
     public function last_request(): HasOne
     {
@@ -81,33 +123,16 @@ class Session extends Model
     }
 
     /**
-     * @throws \Exception
+     * @param bool $expired
+     * @return void
      */
-    public function terminate()
+    public function terminate(bool $expired = true): void
     {
-        $identity_address = $this->identity_address;
-        $identity_proxy_id = $this->identity_proxy_id;
-
-        $identityRepo = resolve('forus.services.identity');
-        $identityRepo->destroyProxyIdentity($identity_proxy_id, true);
-
-        self::where(compact('identity_address', 'identity_proxy_id'))->delete();
+        $this->identity_proxy->deactivateBySession($expired);
     }
 
     /**
-     * @param $identity_address
-     * @throws \Exception
-     */
-    public static function terminateAll($identity_address)
-    {
-        while ($session = self::where(compact('identity_address'))->first()) {
-            /** @var \App\Services\Forus\Session\Models\Session $session */
-            $session->terminate();
-        }
-    }
-
-    /**
-     * @return \Illuminate\Support\Collection
+     * @return \Illuminate\Support\Collection|null
      */
     public function locations(): ?\Illuminate\Support\Collection
     {
@@ -131,5 +156,72 @@ class Session extends Model
     public function isActive(): bool
     {
         return $this->last_activity_at->diffInMinutes(now()) <= 5;
+    }
+
+    /**
+     * @return bool
+     */
+    public function shouldExpire(): bool
+    {
+        $expireTime = $this->getExpireTime();
+
+        if (!$this->identity_proxy) {
+            return true;
+        }
+
+        // Token expired
+        if (now()->isAfter($this->identity_proxy->created_at->clone()->addYears(4))) {
+            return true;
+        }
+
+        // Long time no activity
+        if ($expireTime && now()->isAfter($expireTime)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return Carbon|null
+     */
+    public function getExpireTime(): ?Carbon
+    {
+        $lastActivityTime = $this->last_activity_at->clone();
+
+        $appTime = Config::get('forus.sessions.app_expire_time');
+        $webshopTime = Config::get('forus.sessions.webshop_expire_time');
+        $dashboardTime = Config::get('forus.sessions.dashboard_expire_time');
+
+        return match($this->initial_client_type) {
+            Implementation::FRONTEND_WEBSHOP => $webshopTime['value'] ? $lastActivityTime->add(
+                $webshopTime['unit'] ?? 'minutes', $webshopTime['value'],
+            ) : null,
+            Implementation::FRONTEND_SPONSOR_DASHBOARD,
+            Implementation::FRONTEND_PROVIDER_DASHBOARD,
+            Implementation::FRONTEND_VALIDATOR_DASHBOARD => $dashboardTime['value'] ? $lastActivityTime->add(
+                $dashboardTime['unit'] ?? 'months', $dashboardTime['value'],
+            ) : null,
+            default => $appTime['value'] ? $lastActivityTime->add(
+                $appTime['unit'] ?? 'years', $appTime['value'],
+            ) : null,
+        };
+    }
+
+    /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getInitialClientTypeAttribute(): ?string
+    {
+        return $this->first_request?->client_type;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTerminated(): bool
+    {
+        return $this->trashed();
     }
 }

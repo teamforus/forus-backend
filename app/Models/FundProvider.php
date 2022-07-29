@@ -59,7 +59,7 @@ use Carbon\Carbon;
  * @method static Builder|FundProvider whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundProvider extends Model
+class FundProvider extends BaseModel
 {
     use HasLogs;
 
@@ -331,7 +331,7 @@ class FundProvider extends Model
                 trans("$transKey.fund_type") => $fundProvider->fund->type,
                 trans("$transKey.provider") => $provider->name,
                 trans("$transKey.iban") => $provider->iban,
-                trans("$transKey.provider_last_activity") => $lastActivity ? $lastActivity->diffForHumans(now()) : null,
+                trans("$transKey.provider_last_activity") => $lastActivity?->diffForHumans(now()),
                 trans("$transKey.products_provider_count") => $provider_products_count,
                 trans("$transKey.products_sponsor_count") => $sponsor_products_count,
                 trans("$transKey.products_active_count") => $active_products_count,
@@ -451,7 +451,7 @@ class FundProvider extends Model
             $this->fund_provider_chats()->getQuery(),
             $products
         )->get()->each(static function(FundProviderChat $chat) {
-            $chat->addSystemMessage('Aanbieding afgewezen.', auth_address());
+            $chat->addSystemMessage('Aanbieding afgewezen.', auth()->id());
         });
 
         return $this;
@@ -484,13 +484,6 @@ class FundProvider extends Model
     public function setState(string $state): void
     {
         $originalState = $this->state;
-
-        if ($state === self::STATE_ACCEPTED && $this->isPending() && $this->fund->isTypeBudget()) {
-            $this->update([
-                'allow_budget' => true,
-                'allow_products' => true,
-            ]);
-        }
 
         $approvedBefore = $this->isApproved();
         $this->update(compact('state'));

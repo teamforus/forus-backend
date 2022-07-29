@@ -22,7 +22,7 @@ class IndexProductReservationsRequest extends BaseFormRequest
     public function authorize(): bool
     {
         return $this->isAuthenticated() &&
-            $this->organization->identityCan($this->auth_address(), 'scan_vouchers');
+            $this->organization->identityCan($this->identity(), 'scan_vouchers');
     }
 
     /**

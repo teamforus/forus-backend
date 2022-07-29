@@ -5,10 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Product;
 
-/**
- * @noinspection PhpUnused
- */
-class MakeProductPriceDiscountNonNullable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -47,4 +44,4 @@ class MakeProductPriceDiscountNonNullable extends Migration
             $table->decimal('price_discount')->nullable()->change();
         });
     }
-}
+};

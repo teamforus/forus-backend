@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use App\Services\FileService\Models\File;
 use App\Services\EventLogService\Models\EventLog;
 
-/**
- * @noinspection PhpUnused
- */
-class MigrateMorphKeysForFilesAndEventLogs extends Migration
+return new class extends Migration
 {
     protected array $keysToMigrate = [
         'fund_request_record' => 'App\Models\FundRequestRecord',
@@ -49,4 +46,4 @@ class MigrateMorphKeysForFilesAndEventLogs extends Migration
             ]);
         }
     }
-}
+};

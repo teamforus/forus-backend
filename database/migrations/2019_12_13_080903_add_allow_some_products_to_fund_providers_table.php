@@ -5,10 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 use App\Models\FundProvider;
 
-/**
- * @noinspection PhpUnused
- */
-class AddAllowSomeProductsToFundProvidersTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -40,4 +37,4 @@ class AddAllowSomeProductsToFundProvidersTable extends Migration
             $table->dropColumn('allow_some_products');
         });
     }
-}
+};

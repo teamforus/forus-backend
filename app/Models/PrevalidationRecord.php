@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Services\Forus\Record\Models\RecordType;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -15,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Prevalidation $prevalidation
- * @property-read RecordType $record_type
+ * @property-read \App\Models\RecordType $record_type
  * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord query()
@@ -27,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord whereValue($value)
  * @mixin \Eloquent
  */
-class PrevalidationRecord extends Model
+class PrevalidationRecord extends BaseModel
 {
     /**
      * @var array
@@ -39,14 +38,27 @@ class PrevalidationRecord extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function prevalidation(): BelongsTo {
+    public function prevalidation(): BelongsTo
+    {
         return $this->belongsTo(Prevalidation::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function record_type(): BelongsTo {
+    public function record_type(): BelongsTo
+    {
         return $this->belongsTo(RecordType::class);
+    }
+
+    /**
+     * @param Identity $identity
+     * @return Record
+     */
+    public function makeRecord(Identity $identity): Record
+    {
+        return $identity->makeRecord($this->record_type, $this->value)->updateModel([
+            'prevalidation_id' => $this->prevalidation_id
+        ]);
     }
 }

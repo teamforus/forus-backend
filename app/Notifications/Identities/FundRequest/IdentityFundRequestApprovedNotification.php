@@ -4,12 +4,8 @@ namespace App\Notifications\Identities\FundRequest;
 
 use App\Mail\Funds\FundRequests\FundRequestApprovedMail;
 use App\Models\FundRequest;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 
-/**
- * Class IdentityFundRequestResolvedNotification
- * @package App\Notifications\Identities\FundRequest
- */
 class IdentityFundRequestApprovedNotification extends BaseIdentityFundRequestNotification
 {
     protected static ?string $key = 'notifications_identities.fund_request_approved';

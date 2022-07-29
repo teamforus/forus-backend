@@ -12,7 +12,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|OrganizationProductCategory query()
  * @mixin \Eloquent
  */
-class OrganizationProductCategory extends Model
+class OrganizationProductCategory extends BaseModel
 {
     /**
      * The attributes that are mass assignable.

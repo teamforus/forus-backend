@@ -19,9 +19,7 @@ class IndexVouchersExportFieldsRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->organization->identityCan($this->auth_address(), [
-            'manage_vouchers'
-        ]);
+        return $this->organization->identityCan($this->identity(), 'manage_vouchers');
     }
 
     /**

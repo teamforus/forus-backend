@@ -6,7 +6,6 @@ use App\Events\FundRequestRecords\FundRequestRecordApproved;
 use App\Events\FundRequestRecords\FundRequestRecordDeclined;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Traits\HasFiles;
-use App\Services\Forus\Record\Models\RecordType;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -33,7 +32,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read int|null $fund_request_clarifications_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read RecordType $record_type
+ * @property-read \App\Models\RecordType $record_type
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord query()
@@ -49,7 +48,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereValue($value)
  * @mixin \Eloquent
  */
-class FundRequestRecord extends Model
+class FundRequestRecord extends BaseModel
 {
     use HasFiles, HasLogs;
 
@@ -216,18 +215,13 @@ class FundRequestRecord extends Model
         string $recordTypeKey,
         string $value
     ): FundRequestRecord {
-        $recordService = resolve('forus.services.record');
         $fundRequest = $this->fund_request;
-        $requestIdentityAddress = $fundRequest->identity_address;
+        $requestIdentity = $fundRequest->identity;
 
-        $record = $recordService->recordCreate($requestIdentityAddress, $recordTypeKey, $value);
-        $request = $recordService->makeValidationRequest($requestIdentityAddress, $record['id']);
-
-        $recordService->approveValidationRequest(
-            $this->employee->identity_address,
-            $request['uuid'],
-            $fundRequest->fund->organization_id
-        );
+        $requestIdentity
+            ->makeRecord(RecordType::findByKey($recordTypeKey), $value)
+            ->makeValidationRequest()
+            ->approve($this->employee->identity, $fundRequest->fund->organization);
 
         return $this;
     }

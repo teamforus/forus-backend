@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\RecordValidations;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class RecordValidationStoreRequest extends FormRequest
+class RecordValidationStoreRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,7 +24,7 @@ class RecordValidationStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'record_id' => 'required',
+            'record_id' => 'required|numeric|exists:records,id',
         ];
     }
 }

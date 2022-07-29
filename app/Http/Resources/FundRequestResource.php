@@ -5,9 +5,7 @@ namespace App\Http\Resources;
 use App\Models\FundRequest;
 
 /**
- * Class FundRequestResource
  * @property FundRequest $resource
- * @package App\Http\Resources
  */
 class FundRequestResource extends BaseJsonResource
 {
@@ -20,7 +18,7 @@ class FundRequestResource extends BaseJsonResource
     public function toArray($request): array
     {
         return array_merge($this->resource->only([
-            'id', 'state', 'employee_id', 'fund_id',
+            'id', 'state', 'employee_id', 'fund_id', 'contact_information',
         ]), [
             'fund' => new FundResource($this->resource->fund),
             'records' => FundRequestRecordResource::collection($this->resource->records),

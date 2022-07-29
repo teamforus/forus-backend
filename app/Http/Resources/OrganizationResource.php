@@ -2,15 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Requests\BaseFormRequest;
 use Gate;
 use App\Models\Fund;
 use App\Models\Organization;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Class OrganizationResource
  * @property Organization $resource
- * @package App\Http\Resources
  */
 class OrganizationResource extends JsonResource
 {
@@ -49,11 +48,12 @@ class OrganizationResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request|any  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return array
      */
     public function toArray($request): array
     {
+        $baseRequest = BaseFormRequest::createFrom($request);
         $organization = $this->resource;
         $ownerData = [];
 
@@ -67,7 +67,7 @@ class OrganizationResource extends JsonResource
         $fundsDep = api_dependency_requested('funds', $request, false);
         $fundsCountDep = api_dependency_requested('funds_count', $request, false);
         $businessType = api_dependency_requested('business_type', $request, true);
-        $permissionsCountDep = api_dependency_requested('permissions', $request, true);
+        $permissionsCountDep = api_dependency_requested('permissions', $request, $baseRequest->isDashboard());
 
         $privateData = [
             'email' => $organization->email_public ? $organization->email ?? null: null,

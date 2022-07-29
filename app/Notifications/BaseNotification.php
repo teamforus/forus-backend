@@ -5,7 +5,8 @@ namespace App\Notifications;
 use App\Models\Implementation;
 use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
+use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -31,7 +32,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     protected static ?string $pushKey;
 
     protected ?EventLog $eventLog;
-    protected $meta = [];
+    protected array $meta = [];
     protected ?Implementation $implementation;
 
     public const VARIABLES = [
@@ -280,9 +281,9 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     }
 
     /**
-     * @return \App\Services\Forus\Notification\NotificationService|\Illuminate\Contracts\Foundation\Application|mixed
+     * @return NotificationService
      */
-    public function getNotificationService()
+    public function getNotificationService(): NotificationService
     {
         return resolve('forus.services.notification');
     }
@@ -401,7 +402,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      * @return array
      * @throws \Exception
      */
-    abstract public static function getMeta($loggable): array;
+    abstract public static function getMeta(mixed $loggable): array;
 
     /**
      * Get identities which are eligible for the notification
@@ -410,5 +411,5 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      * @return Collection
      * @throws \Exception
      */
-    abstract public static function eligibleIdentities($loggable): Collection;
+    abstract public static function eligibleIdentities(mixed $loggable): Collection;
 }

@@ -2,61 +2,58 @@
 
 namespace App\Policies;
 
+use App\Models\Identity;
 use App\Models\Implementation;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-/**
- * Class MediaPolicy
- * @package App\Policies
- */
 class MediaPolicy
 {
     use HandlesAuthorization;
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @return mixed
      */
-    public function viewAny($identity_address): bool
+    public function viewAny(Identity $identity): bool
     {
-        return !empty($identity_address);
+        return $identity->exists;
     }
 
     /**
-     * @param $identity_address
-     * @return mixed
-     */
-    public function show($identity_address): bool
-    {
-        return !empty($identity_address);
-    }
-
-    /**
-     * @param $identity_address
-     * @return mixed
-     */
-    public function store($identity_address): bool
-    {
-        return !empty($identity_address);
-    }
-
-    /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Media $media
      * @return bool
      */
-    public function destroy($identity_address, Media $media): bool
+    public function show(Identity $identity, Media $media): bool
+    {
+        return $identity->address == $media->identity_address;
+    }
+
+    /**
+     * @param Identity $identity
+     * @return bool
+     */
+    public function store(Identity $identity): bool
+    {
+        return $identity->exists;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Media $media
+     * @return bool
+     */
+    public function destroy(Identity $identity, Media $media): bool
     {
         if ($media->mediable && in_array($media->type, ['implementation_banner', 'email_logo'])) {
-            /** @var Implementation $implementation */
-            $implementation = $media->mediable;
+            $implementation = $media->mediable instanceof Implementation ? $media->mediable : null;
 
-            return $implementation->organization->identityCan($identity_address, [
-                'manage_implementation_cms'
+            return $implementation?->organization->identityCan($identity, [
+                'manage_implementation_cms',
             ]);
         }
 
-        return strcmp($media->identity_address, $identity_address) == 0;
+        return $identity->address == $media->identity_address;
     }
 }

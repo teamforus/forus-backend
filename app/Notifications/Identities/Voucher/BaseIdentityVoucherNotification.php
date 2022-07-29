@@ -4,7 +4,7 @@ namespace App\Notifications\Identities\Voucher;
 
 use App\Models\Voucher;
 use App\Notifications\Identities\BaseIdentityNotification;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 use Illuminate\Support\Collection;
 
 abstract class BaseIdentityVoucherNotification extends BaseIdentityNotification
