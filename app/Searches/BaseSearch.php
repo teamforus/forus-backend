@@ -4,6 +4,7 @@
 namespace App\Searches;
 
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
@@ -78,6 +79,20 @@ class BaseSearch
     public function getFilter(string $key, $default = null)
     {
         return array_get($this->filters, $key, $default);
+    }
+
+    /**
+     * @param string $key
+     * @param string $format
+     * @return Carbon|null
+     */
+    public function getFilterDate(string $key, string $format = 'Y-m-d'): ?Carbon
+    {
+        if ($this->hasFilter($key)) {
+            return Carbon::createFromFormat($format, $this->getFilter($key));
+        }
+
+        return null;
     }
 
     /**

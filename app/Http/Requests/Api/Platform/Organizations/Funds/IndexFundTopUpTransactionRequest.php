@@ -11,9 +11,9 @@ class IndexFundTopUpTransactionRequest extends BaseFormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
-        return !empty($this->auth_address());
+        return $this->isAuthenticated();
     }
 
     /**
@@ -25,10 +25,8 @@ class IndexFundTopUpTransactionRequest extends BaseFormRequest
     {
         return [
             'q'                 => 'nullable|string|max:100',
-            'code'              => 'nullable|string|max:50',
-            'iban'              => 'nullable|string|max:50',
-            'from'              => 'date:Y-m-d',
-            'to'                => 'date:Y-m-d',
+            'from'              => 'date_format:Y-m-d',
+            'to'                => 'date_format:Y-m-d',
             'amount_min'        => 'numeric|min:0',
             'amount_max'        => 'numeric|min:0',
             'per_page'          => $this->perPageRule(),

@@ -25,13 +25,13 @@ class IndexEmployeesRequest extends BaseFormRequest
     {
         return [
             'q' => 'nullable|string|max:500',
-            'per_page'  => 'numeric|int|between:1,100',
             'role' => 'nullable|string|exists:roles,key',
             'roles' => 'nullable|array',
             'roles.*' => 'nullable|string|exists:roles,key',
             'permission' => 'nullable|string|exists:permissions,key',
             'permissions' => 'nullable|array',
             'permissions.*' => 'nullable|exists:permissions,key',
+            'per_page' => $this->perPageRule(1000),
         ];
     }
 }
