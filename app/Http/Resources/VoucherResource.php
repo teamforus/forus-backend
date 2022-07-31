@@ -60,7 +60,7 @@ class VoucherResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request|any $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      * @throws \Exception
      */
@@ -120,7 +120,8 @@ class VoucherResource extends BaseJsonResource
         $logs = $voucher->requesterHistoryLogs()->sortByDesc('created_at');
 
         return $logs->map(function(EventLog $eventLog) use ($voucher) {
-            return array_merge($eventLog->only('id', 'event', 'event_locale'), [
+            return array_merge($eventLog->only('id', 'event'), [
+                'event_locale' => $eventLog->getEventLocale(EventLog::TRANSLATION_WEBSHOP),
                 'created_at' => $eventLog->created_at->format('Y-m-d'),
                 'created_at_locale' => format_date_locale($eventLog->created_at),
             ]);

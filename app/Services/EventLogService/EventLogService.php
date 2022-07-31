@@ -24,6 +24,7 @@ use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Interfaces\IEventLogService;
 use App\Services\EventLogService\Traits\HasLogs;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -80,6 +81,7 @@ class EventLogService implements IEventLogService
             'bank_connection_account' => fn() => $this->bankConnectionAccountMeta($model),
             'voucher_transaction_bulk' => fn() => $this->voucherTransactionBulkMeta($model),
             'implementation' => fn() => $this->implementationMeta($model),
+            'fund_vouchers' => fn() => $this->fundVouchersMeta($model),
         ];
 
         return $modelMeta[$type] ? $modelMeta[$type]() : [];
@@ -102,6 +104,17 @@ class EventLogService implements IEventLogService
             'end_date_locale' => format_date_locale($fund->end_date->clone()->addDay()),
             'end_date_minus1_locale' => format_date_locale($fund->end_date),
         ], 'fund_');
+    }
+
+    /**
+     * @param Collection $vouchers
+     * @return array
+     */
+    protected function fundVouchersMeta(Collection $vouchers): array
+    {
+        return $this->keyPrepend([
+            'ids' => $vouchers->pluck('id')->all(),
+        ], 'fund_vouchers_');
     }
 
     /**

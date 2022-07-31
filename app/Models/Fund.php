@@ -196,6 +196,7 @@ class Fund extends BaseModel
     public const EVENT_ARCHIVED = 'archived';
     public const EVENT_UNARCHIVED = 'unarchived';
     public const EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
+    public const EVENT_VOUCHERS_EXPORT = 'vouchers_export';
 
     public const STATE_ACTIVE = 'active';
     public const STATE_CLOSED = 'closed';

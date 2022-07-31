@@ -1161,21 +1161,6 @@ class Voucher extends BaseModel
     /**
      * @return Collection
      */
-    public function sponsorHistoryLogs(): Collection
-    {
-        return $this->logs->whereIn('event', array_merge([
-            self::EVENT_PHYSICAL_CARD_REQUESTED,
-            self::EVENT_EXPIRED_BUDGET,
-            self::EVENT_EXPIRED_PRODUCT,
-            self::EVENT_DEACTIVATED,
-            self::EVENT_ACTIVATED,
-            self::EVENT_ASSIGNED,
-        ], self::EVENTS_CREATED, self::EVENTS_TRANSACTION));
-    }
-
-    /**
-     * @return Collection
-     */
     public function requesterHistoryLogs(): Collection
     {
         return $this->logs->whereIn('event', array_merge([
