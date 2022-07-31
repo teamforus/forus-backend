@@ -14,10 +14,8 @@ class AddExtraCertificateFieldsToFundConfigsTable extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->string('backoffice_client_certificate', 8000)->after('backoffice_certificate');
-            $table->string('backoffice_client_certificate_pass', 200)->after('backoffice_client_certificate');
-            $table->string('backoffice_client_certificate_key', 8000)->after('backoffice_client_certificate_pass');
-            $table->string('backoffice_client_certificate_key_pass', 200)->after('backoffice_client_certificate_key');
+            $table->string('backoffice_client_cert', 2000)->after('backoffice_certificate');
+            $table->string('backoffice_client_cert_key', 4000)->after('backoffice_client_cert');
         });
     }
 
@@ -29,10 +27,8 @@ class AddExtraCertificateFieldsToFundConfigsTable extends Migration
     public function down(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->dropColumn('backoffice_client_certificate');
-            $table->dropColumn('backoffice_client_certificate_pass');
-            $table->dropColumn('backoffice_client_certificate_key');
-            $table->dropColumn('backoffice_client_certificate_key_pass');
+            $table->dropColumn('backoffice_client_cert');
+            $table->dropColumn('backoffice_client_cert_key');
         });
     }
 }
