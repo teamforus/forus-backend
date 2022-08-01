@@ -78,9 +78,7 @@ class FundResource extends BaseJsonResource
                 FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth()->id());
             })->exists(),
         ], $isWebshop && $checkCriteria ? [
-            'taken_by_partner' =>
-                ($fund->fund_config->hash_partner_deny ?? false) &&
-                $fund->isTakenByPartner($baseRequest->identity()),
+            'taken_by_partner' => $this->isTakenByPartner($fund, $baseRequest),
         ]: [], $financialData, $generatorData);
 
         if ($isDashboard && $organization->identityCan($baseRequest->identity(), 'manage_funds')) {
@@ -101,6 +99,19 @@ class FundResource extends BaseJsonResource
         }
 
         return $data;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param BaseFormRequest $request
+     * @return bool
+     */
+    protected function isTakenByPartner(Fund $fund, BaseFormRequest $request): bool
+    {
+        $identity = $request->identity();
+        $hashPartnerDeny = $fund->fund_config->hash_partner_deny ?? false;
+
+         return $identity && $hashPartnerDeny && $fund->isTakenByPartner($identity);
     }
 
     /**
