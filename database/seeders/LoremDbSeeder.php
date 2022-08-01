@@ -109,7 +109,7 @@ class LoremDbSeeder extends Seeder
     ];
 
     private array $fundKeyOverwrite = [
-        'Nijmegen' => 'meedoen_2020',
+        'Nijmegen' => 'meedoen',
     ];
 
     /**
