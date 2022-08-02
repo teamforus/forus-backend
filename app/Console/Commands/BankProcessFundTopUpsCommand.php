@@ -21,7 +21,7 @@ class BankProcessFundTopUpsCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'bank:process-top-ups';
+    protected $signature = 'bank:process-top-ups {--fund=}';
 
     /**
      * The console command description.
@@ -69,7 +69,9 @@ class BankProcessFundTopUpsCommand extends Command
     public function processTopUps(): void
     {
         $balanceProvider = Fund::BALANCE_PROVIDER_TOP_UPS;
-        $funds = FundQuery::whereTopUpAndBalanceUpdateAvailable(Fund::query(), $balanceProvider)->get();
+        $fundId = $this->option('fund');
+        $funds = $fundId ? Fund::whereKey($fundId) : Fund::query();
+        $funds = FundQuery::whereTopUpAndBalanceUpdateAvailable($funds, $balanceProvider)->get();
 
         foreach ($funds as $fund) {
             DB::transaction(function() use ($fund) {
