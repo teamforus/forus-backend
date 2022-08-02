@@ -28,7 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $is_configured
  * @property bool $limit_generator_amount
  * @property bool $backoffice_enabled
- * @property bool $backoffice_status
+ * @property bool $backoffice_check_partner
  * @property string|null $backoffice_url
  * @property string|null $backoffice_key
  * @property string|null $backoffice_certificate
@@ -51,12 +51,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeEnabled($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeFallback($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeIneligiblePolicy($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeIneligibleRedirectUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqAllowedIp($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqKey($value)
@@ -104,7 +104,7 @@ class FundConfig extends Model
         'formula_multiplier', 'is_configured', 'allow_physical_cards',
         'csv_primary_key', 'subtract_transaction_costs',
         'implementation_id', 'implementation', 'hash_partner_deny', 'limit_generator_amount',
-        'backoffice_enabled', 'backoffice_status', 'backoffice_url', 'backoffice_key',
+        'backoffice_enabled', 'backoffice_url', 'backoffice_key', 'backoffice_check_partner',
         'backoffice_certificate', 'backoffice_fallback',
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'allow_fund_requests', 'allow_prevalidations',
@@ -118,7 +118,6 @@ class FundConfig extends Model
         'hash_bsn' => 'boolean',
         'is_configured' => 'boolean',
         'hash_partner_deny' => 'boolean',
-        'backoffice_status' => 'boolean',
         'backoffice_enabled' => 'boolean',
         'backoffice_fallback' => 'boolean',
         'allow_fund_requests' => 'boolean',
@@ -127,6 +126,7 @@ class FundConfig extends Model
         'allow_direct_requests' => 'boolean',
         'limit_generator_amount' => 'boolean',
         'allow_blocking_vouchers' => 'boolean',
+        'backoffice_check_partner' => 'boolean',
         'employee_can_see_product_vouchers' => 'boolean',
     ];
 
