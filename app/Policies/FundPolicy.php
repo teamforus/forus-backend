@@ -156,7 +156,7 @@ class FundPolicy
         }
 
         if ($fund->isBackofficeApiAvailable() &&
-            env('ENABLE_BACKOFFICE_PARTNER_CHECK', false) &&
+            $fund->fund_config->backoffice_check_partner &&
             $bsn = record_repo()->bsnByAddress($identity_address)) {
             try {
                 $response = $fund->getBackofficeApi()->partnerBsn($bsn);
