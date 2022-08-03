@@ -11,7 +11,7 @@ class AddProductboardApiKeyFieldToImplementationsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
             $table->string('productboard_api_key', 1000)->after('digid_forus_api_url');
@@ -23,7 +23,7 @@ class AddProductboardApiKeyFieldToImplementationsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
             $table->dropColumn('productboard_api_key');
