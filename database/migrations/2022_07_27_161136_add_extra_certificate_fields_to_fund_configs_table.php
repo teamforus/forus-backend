@@ -14,7 +14,7 @@ class AddExtraCertificateFieldsToFundConfigsTable extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->string('backoffice_client_cert', 2000)->after('backoffice_certificate');
+            $table->string('backoffice_client_cert', 4000)->after('backoffice_certificate');
             $table->string('backoffice_client_cert_key', 4000)->after('backoffice_client_cert');
         });
     }
