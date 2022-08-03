@@ -34,6 +34,7 @@ class ImplementationsTableSeeder extends DatabaseSeeder
             'url_app'       => config('forus.front_ends.landing-app', ''),
             'lon'           => config('forus.front_ends.map.lon', ''),
             'lat'           => config('forus.front_ends.map.lat', ''),
+            'productboard_api_key' => env('DB_SEED_PRODUCTBOARD_API_KEY', ''),
         ]);
 
         $emailLogoPath = resource_path('/mail_templates/assets/general/auth_icon.jpg');

@@ -641,6 +641,7 @@ class LoremDbSeeder extends Seeder
             'digid_app_id'              => config('forus.seeders.lorem_db_seeder.digid_app_id'),
             'digid_shared_secret'       => config('forus.seeders.lorem_db_seeder.digid_shared_secret'),
             'digid_a_select_server'     => config('forus.seeders.lorem_db_seeder.digid_a_select_server'),
+            'productboard_api_key'      => config('forus.seeders.lorem_db_seeder.productboard_api_key'),
         ]);
     }
 
