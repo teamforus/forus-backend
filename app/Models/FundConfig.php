@@ -25,6 +25,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
  * @property bool $employee_can_see_product_vouchers
+ * @property bool $show_voucher_qr
+ * @property bool $show_voucher_amount
  * @property bool $is_configured
  * @property bool $limit_generator_amount
  * @property bool $backoffice_enabled
