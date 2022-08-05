@@ -150,15 +150,11 @@ class EventLog extends Model
         }
 
         if ($this->loggable_type === (new BankConnection())->getMorphClass()) {
-            /** @var BankConnection $bankConnection */
-            $bankConnection = $this->loggable;
-            if ($bankConnection) {
-                $attributes = [
-                    'bank' => $bankConnection->bank->name,
-                    'iban' => $bankConnection->iban,
-                    'state' => Arr::get($this->data, 'bank_connection_state'),
-                ];
-            }
+            $attributes = [
+                'bank' => Arr::get($this->data, 'bank_connection_account_monetary_account_name'),
+                'iban' => Arr::get($this->data, 'bank_connection_account_monetary_account_iban'),
+                'state' => Arr::get($this->data, 'bank_connection_state'),
+            ];
         }
 
         $path = implode('.', ['events/' . $this->loggable_type, $type, $this->event]);
