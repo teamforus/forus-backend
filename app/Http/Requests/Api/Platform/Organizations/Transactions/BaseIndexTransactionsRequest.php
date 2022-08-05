@@ -37,6 +37,7 @@ abstract class BaseIndexTransactionsRequest extends BaseFormRequest
             'amount_max'    => 'numeric|min:0',
             'data_format'   => 'nullable|in:csv,xls',
 
+            'fund_id'           => 'nullable|exists:funds,id',
             'fund_ids'          => 'nullable|array',
             'fund_ids.*'        => 'required|exists:funds,id',
             'postcodes'         => 'nullable|array',
