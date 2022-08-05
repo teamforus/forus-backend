@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\Organization;
 use App\Models\VoucherTransactionBulk;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class VoucherTransactionBulkPolicy
 {
@@ -45,16 +46,16 @@ class VoucherTransactionBulkPolicy
      *
      * @param string $identity_address
      * @param Organization $organization
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return bool|Response
      */
     public function store(
         string $identity_address,
         Organization $organization
-    ) {
+    ): Response|bool {
         $hasPermission = $organization->identityCan($identity_address, 'manage_transaction_bulks');
 
         if ($hasPermission) {
-            if (VoucherTransactionBulk::getNextBulkTransactionsForSponsor($organization)->exists()) {
+            if (VoucherTransactionBulk::getNextBulkTransactionsForSponsor($organization, request())->exists()) {
                 return true;
             }
 
@@ -73,13 +74,13 @@ class VoucherTransactionBulkPolicy
      * @param string $identity_address
      * @param VoucherTransactionBulk $bulk
      * @param Organization $organization
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return bool|Response
      */
     public function resetBulk(
         string $identity_address,
         VoucherTransactionBulk $bulk,
         Organization $organization
-    ) {
+    ): Response|bool {
         $integrityIsValid = $this->checkIntegrity($bulk, $organization);
         $hasPermission = $organization->identityCan($identity_address, 'manage_transaction_bulks');
         $bank = $bulk->bank_connection->bank;
@@ -101,13 +102,13 @@ class VoucherTransactionBulkPolicy
      * @param string $identity_address
      * @param VoucherTransactionBulk $voucherTransactionBulk
      * @param Organization $organization
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return bool|Response
      */
     public function setAcceptedManually(
         string $identity_address,
         VoucherTransactionBulk $voucherTransactionBulk,
         Organization $organization
-    ) {
+    ): Response|bool {
         $hasPermission =
             $this->checkIntegrity($voucherTransactionBulk, $organization) &&
             $organization->identityCan($identity_address, 'manage_transaction_bulks');

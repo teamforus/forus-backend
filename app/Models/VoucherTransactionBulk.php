@@ -19,6 +19,7 @@ use App\Services\BNGService\Responses\Entries\Payment as PaymentBNG;
 use App\Services\BNGService\Responses\Entries\PaymentInitiator;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Statistics\Funds\FinancialStatisticQueries;
 use bunq\Model\Generated\Endpoint\DraftPayment;
 use bunq\Model\Generated\Endpoint\Payment;
 use bunq\Model\Generated\Endpoint\PaymentBatch;
@@ -508,32 +509,51 @@ class VoucherTransactionBulk extends Model
 
     /**
      * @param Organization $sponsor
+     * @param Request|null $request
      * @return Builder
      */
-    public static function getNextBulkTransactionsForSponsor(Organization $sponsor): Builder
-    {
-        $query = VoucherTransaction::whereHas('voucher', function(Builder $builder) use ($sponsor) {
-            $builder->whereHas('fund', function(Builder $builder) use ($sponsor) {
-                $builder->where('funds.organization_id', $sponsor->id);
-            });
+    public static function getNextBulkTransactionsForSponsor(
+        Organization $sponsor,
+        ?Request $request = null
+    ): Builder {
+        if ($request) {
+            $options = $request->only(array_merge([
+                'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids',
+            ], [
+                'date_to' => $request->input('to') ? Carbon::parse($request->input('to')) : null,
+                'date_from' => $request->input('from') ? Carbon::parse($request->input('from')) : null,
+            ]));
+
+            $query = VoucherTransaction::search($request);
+            $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($sponsor, $options, $query);
+        } else {
+            $query = VoucherTransaction::query();
+        }
+
+        $query->whereHas('voucher.fund.organization', function(Builder $builder) use ($sponsor) {
+            $builder->where('id', $sponsor->id);
         });
 
-        return VoucherTransactionQuery::whereAvailableForBulking($query);
+        VoucherTransactionQuery::whereAvailableForBulking($query);
+
+        return $query;
     }
 
     /**
      * @param Organization $sponsor
      * @param Employee|null $employee
+     * @param Request|null $request
      * @param array $previousBulks
      * @return array
      */
     public static function buildBulksForOrganization(
         Organization $sponsor,
         ?Employee $employee = null,
+        ?Request $request = null,
         array $previousBulks = []
     ): array {
         $perBulk = 100;
-        $query = static::getNextBulkTransactionsForSponsor($sponsor);
+        $query = static::getNextBulkTransactionsForSponsor($sponsor, $request);
 
         if ((clone($query))->doesntExist()) {
             return $previousBulks;
@@ -560,8 +580,8 @@ class VoucherTransactionBulk extends Model
 
         $bulksList[] = $transactionsBulk->id;
 
-        if (static::getNextBulkTransactionsForSponsor($sponsor)->exists()) {
-            return static::buildBulksForOrganization($sponsor, $employee, $bulksList);
+        if (static::getNextBulkTransactionsForSponsor($sponsor, $request)->exists()) {
+            return static::buildBulksForOrganization($sponsor, $employee, $request, $bulksList);
         }
 
         return $bulksList;
