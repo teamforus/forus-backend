@@ -22,7 +22,6 @@
         "barryvdh/laravel-dompdf": "^1.0",
         "barryvdh/laravel-ide-helper": "^2.7",
         "bunq/sdk_php": "^1.14.18",
-        "doctrine/dbal": "^2.10",
         "dusterio/laravel-aws-worker": "^0.1",
         "eduardokum/laravel-mail-auto-embed": "^2.0",
         "fruitcake/laravel-cors": "^2.0",
@@ -49,6 +48,7 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
+        "laravel/dusk": "^6.25",
         "laravel/sail": "^1.0.1",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^6.1",

@@ -20,7 +20,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $activated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property string|null $termination_reason
  * @property int $expires_in
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -43,7 +42,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static Builder|IdentityProxy whereId($value)
  * @method static Builder|IdentityProxy whereIdentityAddress($value)
  * @method static Builder|IdentityProxy whereState($value)
- * @method static Builder|IdentityProxy whereTerminationReason($value)
  * @method static Builder|IdentityProxy whereType($value)
  * @method static Builder|IdentityProxy whereUpdatedAt($value)
  * @method static \Illuminate\Database\Query\Builder|IdentityProxy withTrashed()
