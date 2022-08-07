@@ -4,9 +4,8 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Exports\VoucherTransactionBulksExport;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\IndexTransactionBulksRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\StoreTransactionBulksRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\UpdateTransactionBulksRequest;
-use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\IndexTransactionsRequest;
-use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\VoucherTransactionBulkResource;
 use App\Models\Organization;
@@ -72,14 +71,14 @@ class TransactionBulksController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param BaseFormRequest $request
+     * @param StoreTransactionBulksRequest $request
      * @param Organization $organization
      * @return AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      * @noinspection PhpUnused
      */
     public function store(
-        IndexTransactionsRequest $request,
+        StoreTransactionBulksRequest $request,
         Organization $organization
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);

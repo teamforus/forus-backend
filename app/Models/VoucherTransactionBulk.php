@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
 use App\Exports\VoucherTransactionBulksExport;
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasDbTokens;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherTransactionBulkQuery;
@@ -479,8 +480,7 @@ class VoucherTransactionBulk extends Model
     /**
      * Execute the console command.
      *
-     * @return mixed
-     * @throws \Throwable
+     * @return void
      */
     public static function buildBulks(): void
     {
@@ -509,20 +509,20 @@ class VoucherTransactionBulk extends Model
 
     /**
      * @param Organization $sponsor
-     * @param Request|null $request
+     * @param BaseFormRequest|null $request
      * @return Builder
      */
     public static function getNextBulkTransactionsForSponsor(
         Organization $sponsor,
-        ?Request $request = null
+        ?BaseFormRequest $request = null
     ): Builder {
         if ($request) {
-            $options = $request->only(array_merge([
+            $options = array_merge($request->only([
                 'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids',
-            ], [
+            ]), [
                 'date_to' => $request->input('to') ? Carbon::parse($request->input('to')) : null,
                 'date_from' => $request->input('from') ? Carbon::parse($request->input('from')) : null,
-            ]));
+            ]);
 
             $query = VoucherTransaction::search($request);
             $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($sponsor, $options, $query);
@@ -530,26 +530,22 @@ class VoucherTransactionBulk extends Model
             $query = VoucherTransaction::query();
         }
 
-        $query->whereHas('voucher.fund.organization', function(Builder $builder) use ($sponsor) {
-            $builder->where('id', $sponsor->id);
-        });
+        $query->whereRelation('voucher.fund', 'funds.organization_id', $sponsor->id);
 
-        VoucherTransactionQuery::whereAvailableForBulking($query);
-
-        return $query;
+        return VoucherTransactionQuery::whereAvailableForBulking($query);
     }
 
     /**
      * @param Organization $sponsor
      * @param Employee|null $employee
-     * @param Request|null $request
+     * @param BaseFormRequest|null $request
      * @param array $previousBulks
      * @return array
      */
     public static function buildBulksForOrganization(
         Organization $sponsor,
         ?Employee $employee = null,
-        ?Request $request = null,
+        ?BaseFormRequest $request = null,
         array $previousBulks = []
     ): array {
         $perBulk = 100;
