@@ -748,18 +748,18 @@ class LoremDbSeeder extends Seeder
     public function getBackofficeConfigs (): array
     {
         $url = $this->config('backoffice_url');
-        $key = $this->config('backoffice_key');
-        $cert = $this->config('backoffice_cert');
-        $fallback = $this->config('backoffice_fallback');
+        $key = $this->config('backoffice_server_key');
+        $cert = $this->config('backoffice_server_cert');
 
-        return $url && $key && $cert ? [
+        return $url && $key && $cert ? array_merge([
             'backoffice_enabled' => true,
-            'backoffice_status' => true,
+            'backoffice_check_partner' => true,
             'backoffice_url' => $url,
             'backoffice_key' => $key,
             'backoffice_certificate' => $cert,
-            'backoffice_fallback' => $fallback,
-        ]: [];
+        ], $this->configOnly([
+            'backoffice_fallback', 'backoffice_client_cert', 'backoffice_client_cert_key',
+        ])): [];
     }
 
     /**
@@ -1025,6 +1025,19 @@ class LoremDbSeeder extends Seeder
     public function config($key, $default = null): mixed
     {
         return config(sprintf('forus.seeders.lorem_db_seeder.%s', $key), $default);
+    }
+
+    /**
+     * @param $keys
+     * @param null $default
+     * @return array
+     */
+    public function configOnly($keys, $default = null): array
+    {
+        return array_merge(
+            array_fill_keys($keys, $default),
+            array_only(config('forus.seeders.lorem_db_seeder'), $keys),
+        );
     }
 
     /**

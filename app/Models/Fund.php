@@ -1839,7 +1839,7 @@ class Fund extends BaseModel
             }
 
             // check if taken by partner
-            if (env('ENABLE_BACKOFFICE_PARTNER_CHECK', false)) {
+            if ($this->fund_config->backoffice_check_partner) {
                 $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
                 $partner = Identity::findByBsn($partnerBsnResponse->getBsn() ?: null);
 
