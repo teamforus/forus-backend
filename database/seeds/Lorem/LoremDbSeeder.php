@@ -610,7 +610,7 @@ class LoremDbSeeder extends Seeder
         $requiredDigidImplementations = array_map("str_slug", $this->fundsWithPhysicalCards);
         $informalCommunication = array_map("str_slug", $this->implementationsWithInformalCommunication);
 
-        return Implementation::create([
+        return Implementation::forceCreate([
             'key'   => $key,
             'name'  => $name,
 

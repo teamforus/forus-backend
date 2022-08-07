@@ -76,5 +76,5 @@ return [
     'iconnect_oin' => env('DB_SEED_ICONNECT_OIN', ""),
     'iconnect_binding' => env('DB_SEED_ICONNECT_BINDING', ""),
 
-    'productboard_api_key' => env('DB_SEED_PRODUCTBOARD_API_KEY', ""),
+    'productboard_api_key' => env('DB_SEED_PRODUCTBOARD_API_KEY'),
 ];

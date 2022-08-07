@@ -14,7 +14,7 @@ class AddProductboardApiKeyFieldToImplementationsTable extends Migration
     public function up(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
-            $table->string('productboard_api_key', 1000)->after('digid_forus_api_url');
+            $table->string('productboard_api_key', 1000)->nullable()->after('informal_communication');
         });
     }
 
