@@ -221,7 +221,9 @@ class LoremDbSeeder extends Seeder
     public function makeSponsors(string $identity_address): array
     {
         $organizations = array_map(function($implementation) use ($identity_address) {
-            return $this->makeOrganization($implementation, $identity_address, []);
+            return $this->makeOrganization($implementation, $identity_address, [
+                'is_sponsor' => true
+            ]);
         }, $this->implementationsWithFunds);
 
         foreach ($organizations as $organization) {
@@ -431,6 +433,11 @@ class LoremDbSeeder extends Seeder
         $out = [];
         $nth= 1;
 
+        $fields = array_merge($fields, [
+            'is_validator' => $prefix === 'Validator',
+            'is_provider' => $prefix === 'Provider',
+        ]);
+
         while ($count-- > 0) {
             $out[] = $this->makeOrganization(
                 sprintf('%s #%s', $prefix, $nth++),
@@ -473,6 +480,7 @@ class LoremDbSeeder extends Seeder
             'email_public', 'phone_public', 'website_public',
             'identity_address', 'business_type_id', 'manage_provider_products',
             'backoffice_available', 'bsn_enabled',
+            'is_sponsor', 'is_provider', 'is_validator',
         ]));
 
         OrganizationCreated::dispatch($organization);
