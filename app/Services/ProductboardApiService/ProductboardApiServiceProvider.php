@@ -15,7 +15,7 @@ class ProductboardApiServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton('productboard', function() {
-            $api_key = Implementation::active()->productboard_api_key ?? Implementation::general()->productboard_api_key;
+            $api_key = Implementation::active()->getProductboardApiKey();
 
             return $api_key ? new ProductboardApi($api_key) : null;
         });

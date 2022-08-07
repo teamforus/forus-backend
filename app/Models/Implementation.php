@@ -789,4 +789,12 @@ class Implementation extends Model
     {
         return config('forus.mail_styles.color_primary');
     }
+
+    /**
+     * @return string|null
+     */
+    public function getProductboardApiKey(): ?string
+    {
+        return $this->productboard_api_key ?: Implementation::general()->productboard_api_key;
+    }
 }
