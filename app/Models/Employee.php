@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $fund_request_records
  * @property-read int|null $fund_request_records_count
+ * @property-read \App\Models\Identity|null $identity
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Organization $organization
@@ -38,7 +39,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Query\Builder|Employee withoutTrashed()
  * @mixin \Eloquent
  */
-class Employee extends Model
+class Employee extends BaseModel
 {
     use SoftDeletes, HasLogs;
 
@@ -49,6 +50,14 @@ class Employee extends Model
     protected $fillable = [
         'identity_address', 'organization_id'
     ];
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function identity(): BelongsTo
+    {
+        return $this->belongsTo(Identity::class, 'identity_address', 'address');
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

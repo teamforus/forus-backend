@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class RemoveSubtractTransactionCostsFromFundConfigsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -32,4 +29,4 @@ class RemoveSubtractTransactionCostsFromFundConfigsTable extends Migration
             $table->boolean('subtract_transaction_costs')->default(0)->after('csv_primary_key');
         });
     }
-}
+};

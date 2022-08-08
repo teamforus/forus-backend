@@ -18,19 +18,20 @@ abstract class BasePolicy
     abstract public function getPolicyKey(): string;
 
     /**
-     * @param string $error
+     * @param mixed $message
      * @param int $code
      * @throws AuthorizationJsonException
      */
-    protected function deny(string $error, $code = 403): void
+    protected function deny(mixed $message, int $code = 403): void
     {
         $policyError = sprintf(
             "%s/%s.%s",
             $this->policyErrorFilesRoot,
             $this->getPolicyKey(),
-            $error
+            $message
         );
 
+        $error = $message;
         $titleKey = sprintf("%s.title", $policyError);
         $messageKey = sprintf("%s.message", $policyError);
 

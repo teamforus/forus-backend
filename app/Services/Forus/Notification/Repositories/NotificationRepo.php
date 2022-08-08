@@ -213,15 +213,6 @@ class NotificationRepo implements INotificationRepo
         'funds.provider_approved',
     ];
 
-    public static function test(): string {
-        /** @var BaseNotification|string $className */
-        $className = IdentityAddedEmployeeNotification::class;
-
-        // return call_user_func($className, 'getScope']);
-
-        return $className::getScope();
-    }
-
     /**
      * Emails that you can't unsubscribe from
      * @var array

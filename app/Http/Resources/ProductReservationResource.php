@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Identity;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -45,8 +46,8 @@ class ProductReservationResource extends JsonResource
         ]));
 
         $physicalCard = $voucher->physical_cards[0] ?? null;
-        $identityData = $reservation->product->organization->identityCan('scan_vouchers') ? [
-            'identity_email' => $voucher->identity->primary_email->email ?? null,
+        $identityData = $reservation->product->organization->identityCan(Identity::auth(), 'scan_vouchers') ? [
+            'identity_email' => $voucher->identity?->email,
             'identity_physical_card' => $physicalCard ? $physicalCard->code : null,
         ] : [];
 

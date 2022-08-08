@@ -2,126 +2,126 @@
 
 namespace App\Http\Controllers\Api\Identity;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\RecordCategories\RecordCategoryStoreRequest;
 use App\Http\Requests\Api\RecordCategories\RecordCategoryUpdateRequest;
 use App\Http\Requests\BaseFormRequest;
-use App\Http\Controllers\Controller;
+use App\Http\Resources\RecordCategoryResource;
+use App\Models\RecordCategory;
+use Illuminate\Http\JsonResponse;
 
 class RecordCategoryController extends Controller
 {
-    private $recordRepo;
-
-    /**
-     * RecordCategoryController constructor.
-     */
-    public function __construct() {
-        $this->recordRepo = resolve('forus.services.record');
-    }
-
     /**
      * Get list categories
      * @param BaseFormRequest $request
-     * @return array
+     * @return JsonResponse
      */
-    public function index(BaseFormRequest $request): array
+    public function index(BaseFormRequest $request): JsonResponse
     {
-        return $request->records_repo()->categoriesList($request->auth_address());
+        $query = $request->identity()->record_categories()->orderBy('order');
+
+        return new JsonResponse(RecordCategoryResource::queryCollection($query)->toArray($request));
     }
 
     /**
      * Create new record category
      * @param RecordCategoryStoreRequest $request
-     * @return array
+     * @return RecordCategoryResource
      */
-    public function store(RecordCategoryStoreRequest $request): array
+    public function store(RecordCategoryStoreRequest $request): RecordCategoryResource
     {
-        $success = !!$this->recordRepo->categoryCreate(
-            $request->auth_address(),
+        $recordCategory = $request->identity()->createRecordCategory(
             $request->get('name'),
             $request->input('order', 0)
         );
 
-        return compact('success');
+        return RecordCategoryResource::create($recordCategory);
     }
 
     /**
      * Get record category
      * @param BaseFormRequest $request
      * @param int $recordCategoryId
-     * @return array|null
+     * @return RecordCategoryResource
      */
-    public function show(BaseFormRequest $request, int $recordCategoryId): ?array
+    public function show(BaseFormRequest $request, int $recordCategoryId): RecordCategoryResource
     {
-        if (empty($this->recordRepo->categoryGet($request->auth_address(), $recordCategoryId))) {
+        $recordCategory = $request->identity()->record_categories()->where([
+            'record_categories.id' => $recordCategoryId,
+        ])->first();
+
+        if (empty($recordCategory)) {
             abort(404, trans('record-categories.codes.404'));
         }
 
-        $category = $this->recordRepo->categoryGet($request->auth_address(), $recordCategoryId);
-
-        if (!$category) {
-            abort(404, trans('record-categories.codes.404'));
-        }
-
-        return $category;
+        return RecordCategoryResource::create($recordCategory);
     }
 
     /**
      * Update record category
      * @param RecordCategoryUpdateRequest $request
      * @param int $recordCategoryId
-     * @return array
+     * @return RecordCategoryResource
      */
-    public function update(RecordCategoryUpdateRequest $request, int $recordCategoryId): array
+    public function update(RecordCategoryUpdateRequest $request, int $recordCategoryId): RecordCategoryResource
     {
-        if (empty($this->recordRepo->categoryGet($request->auth_address(), $recordCategoryId))) {
+        $recordCategory = $request->identity()->record_categories()->where([
+            'record_categories.id' => $recordCategoryId,
+        ])->first();
+
+        if (empty($recordCategory)) {
             abort(404, trans('record-categories.codes.404'));
         }
 
-        $success = $this->recordRepo->categoryUpdate(
-            $request->auth_address(),
-            $recordCategoryId,
-            $request->input('name'),
-            $request->input('order')
-        );
+        $recordCategory->update($request->only('name', 'order'));
 
-        return compact('success');
+        return RecordCategoryResource::create($recordCategory);
     }
 
     /**
      * Delete record category
+     *
      * @param BaseFormRequest $request
      * @param int $recordCategoryId
-     * @return array
+     * @return JsonResponse
      * @throws \Exception
      */
-    public function destroy(BaseFormRequest $request, int $recordCategoryId ): array
+    public function destroy(BaseFormRequest $request, int $recordCategoryId): JsonResponse
     {
-        if (empty($this->recordRepo->categoryGet($request->auth_address(), $recordCategoryId))) {
+        /** @var RecordCategory|null $recordCategory */
+        $recordCategory = $request->identity()->record_categories()->where([
+            'record_categories.id' => $recordCategoryId,
+        ])->first();
+
+        if (empty($recordCategory)) {
             abort(404, trans('record-categories.codes.404'));
         }
 
-        return [
-            'success' => $this->recordRepo->categoryDelete(
-                $request->auth_address(),
-                $recordCategoryId
-            ),
-        ];
+        $recordCategory->records()->update([
+            'record_category_id' => null,
+        ]);
+
+        return new JsonResponse([
+            'success' => $recordCategory->delete(),
+        ]);
     }
 
     /**
      * Sort record categories
      * @param BaseFormRequest $request
-     * @return array
+     * @return JsonResponse
      */
-    public function sort(BaseFormRequest $request): array
+    public function sort(BaseFormRequest $request): JsonResponse
     {
-        $this->recordRepo->categoriesSort(
-            $request->auth_address(),
-            collect($request->get('categories', []))->toArray()
-        );
+        $orders = collect($request->get('categories', []))->toArray();
 
-        $success = true;
+        foreach ($orders as $categoryId => $order) {
+            $request->identity()->record_categories()->where([
+                'record_categories.id' => $categoryId,
+            ])->update(compact('order'));
+        }
 
-        return compact('success');
+        return new JsonResponse(['success' => true]);
     }
 }

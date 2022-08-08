@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundTopUpTransaction extends Model
+class FundTopUpTransaction extends BaseModel
 {
     protected $fillable = [
         'fund_top_up_id', 'bank_transaction_id', 'amount'

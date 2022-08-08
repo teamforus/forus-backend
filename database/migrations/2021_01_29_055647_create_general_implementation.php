@@ -3,10 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Database\Seeders\ImplementationsTableSeeder;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateGeneralImplementation extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -26,4 +23,4 @@ class CreateGeneralImplementation extends Migration
      * @throws Exception
      */
     public function down(): void {}
-}
+};

@@ -4,10 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateTokensTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -50,4 +47,4 @@ class CreateTokensTable extends Migration
         Schema::dropIfExists('token_translations');
         Schema::dropIfExists('tokens');
     }
-}
+};

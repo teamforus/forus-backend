@@ -4,29 +4,27 @@ namespace App\Policies;
 
 use App\Models\Fund;
 use App\Models\FundProvider;
+use App\Models\Identity;
 use App\Models\Organization;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-/**
- * Class FundProviderPolicy
- * @package App\Policies
- */
 class FundProviderPolicy
 {
     use HandlesAuthorization;
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @param Fund|null $fund
      * @return bool
+     * @noinspection PhpUnused
      */
     public function viewAnySponsor(
-        $identity_address,
+        Identity $identity,
         Organization $organization,
         Fund $fund = null
     ): bool {
-        if ($fund && $organization && ($fund->organization_id != $organization->id)) {
+        if ($fund && ($fund->organization_id != $organization->id)) {
             return false;
         }
 
@@ -34,52 +32,56 @@ class FundProviderPolicy
             return true;
         }
 
-        return $identity_address && $organization->identityCan($identity_address, [
+        return $organization->identityCan($identity, [
             'view_finances', 'manage_providers'
         ], false);
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAnyProvider($identity_address, Organization $organization): bool
+    public function viewAnyProvider(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, [
-            'manage_provider_funds', 'scan_vouchers'
+        return $organization->identityCan($identity, [
+            'manage_provider_funds', 'scan_vouchers',
         ], false);
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function storeSponsor($identity_address, Organization $organization): bool
+    public function storeSponsor(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'manage_providers');
+        return $organization->identityCan($identity, 'manage_providers');
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function storeProvider($identity_address, Organization $organization): bool
+    public function storeProvider(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'manage_provider_funds');
+        return $organization->identityCan($identity, 'manage_provider_funds');
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param FundProvider $fundProvider
      * @param Organization $organization
      * @param Fund $fund
      * @return bool
+     * @noinspection PhpUnused
      */
     public function showSponsor(
-        $identity_address,
+        Identity $identity,
         FundProvider $fundProvider,
         Organization $organization,
         Fund $fund
@@ -96,19 +98,20 @@ class FundProviderPolicy
             return true;
         }
 
-        return $identity_address && $organization->identityCan($identity_address, [
-            'manage_funds', 'view_finances'
+        return $organization->identityCan($identity, [
+            'manage_funds', 'view_finances',
         ], false);
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param FundProvider $organizationFund
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function showProvider(
-        $identity_address,
+        Identity $identity,
         FundProvider $organizationFund,
         Organization $organization
     ): bool {
@@ -116,18 +119,19 @@ class FundProviderPolicy
             return false;
         }
 
-        return $organizationFund->organization->identityCan($identity_address, 'manage_provider_funds');
+        return $organizationFund->organization->identityCan($identity, 'manage_provider_funds');
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param FundProvider $fundProvider
-     * @param Organization|null $organization
-     * @param Fund|null $fund
+     * @param Organization $organization
+     * @param Fund $fund
      * @return bool
+     * @noinspection PhpUnused
      */
     public function updateSponsor(
-        $identity_address,
+        Identity $identity,
         FundProvider $fundProvider,
         Organization $organization,
         Fund $fund
@@ -141,17 +145,18 @@ class FundProviderPolicy
         }
 
         return !$fund->isArchived() &&
-            $fund->organization->identityCan($identity_address, 'manage_funds');
+            $fund->organization->identityCan($identity, 'manage_funds');
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param FundProvider $organizationFund
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function updateProvider(
-        $identity_address,
+        Identity $identity,
         FundProvider $organizationFund,
         Organization $organization
     ): bool {
@@ -159,22 +164,23 @@ class FundProviderPolicy
             return false;
         }
 
-        return $organizationFund->organization->identityCan($identity_address, 'manage_provider_funds');
+        return $organizationFund->organization->identityCan($identity, 'manage_provider_funds');
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param FundProvider $fundProvider
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function deleteProvider(
-        $identity_address,
+        Identity $identity,
         FundProvider $fundProvider,
         Organization $organization
     ): bool {
         $isPending = !$fundProvider->isApproved();
-        $hasPermission = $this->updateProvider($identity_address, $fundProvider, $organization);
+        $hasPermission = $this->updateProvider($identity, $fundProvider, $organization);
         $doesntHaveTransactions = !$fundProvider->hasTransactions();
 
         return $isPending && $hasPermission && $doesntHaveTransactions;

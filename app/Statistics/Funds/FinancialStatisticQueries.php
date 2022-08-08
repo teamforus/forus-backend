@@ -3,7 +3,7 @@
 
 namespace App\Statistics\Funds;
 
-use App\Models\Model;
+use App\Models\BaseModel;
 use App\Models\Office;
 use App\Models\Organization;
 use App\Models\ProductCategory;
@@ -91,7 +91,7 @@ class FinancialStatisticQueries
         ])->orderByDesc('transactions');
 
         return $this->collectionOnly($query->get()->map(function(Office $office) {
-            return (new Model())->forceFill([
+            return (new BaseModel())->forceFill([
                 'id' => $office->postcode_number,
                 'name' => $office->postcode_number,
                 'transactions' => $office->transactions ?? 0,
@@ -126,7 +126,7 @@ class FinancialStatisticQueries
      * @return array
      */
     protected function collectionOnly(BaseCollection $collection, array $only): array {
-        return $collection->map(function(Model $model) use ($only) {
+        return $collection->map(function(BaseModel $model) use ($only) {
             return $model->only($only);
         })->values()->toArray();
     }

@@ -29,7 +29,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule whereWeekDay($value)
  * @mixin \Eloquent
  */
-class OfficeSchedule extends Model
+class OfficeSchedule extends BaseModel
 {
     /**
      * The attributes that are mass assignable.

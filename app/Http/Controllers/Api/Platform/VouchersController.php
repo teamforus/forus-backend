@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Vouchers\DeactivateVoucherRequest;
-use App\Http\Requests\Api\Platform\Vouchers\StoreProductReservationRequest;
 use App\Http\Resources\VoucherCollectionResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Voucher;
@@ -78,7 +77,7 @@ class VouchersController extends Controller
         $this->authorize('sendEmail', $voucherToken->voucher);
 
         $voucher = $voucherToken->voucher;
-        $voucher->sendToEmail($voucher->identity->primary_email->email);
+        $voucher->sendToEmail($voucher->identity->email);
 
         return new JsonResponse([]);
     }

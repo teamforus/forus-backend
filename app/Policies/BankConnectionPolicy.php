@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\BankConnection;
+use App\Models\Identity;
 use App\Models\Organization;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -13,37 +14,37 @@ class BankConnectionPolicy
     /**
      * Determine whether the user can view any bank connection.
      *
-     * @param $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
      */
-    public function viewAny($identity_address, Organization $organization): bool
+    public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'manage_bank_connections');
+        return $organization->identityCan($identity, 'manage_bank_connections');
     }
 
     /**
      * Determine whether the user can add new bank connection.
      *
-     * @param $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
      */
-    public function store($identity_address, Organization $organization): bool
+    public function store(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'manage_bank_connections');
+        return $organization->identityCan($identity, 'manage_bank_connections');
     }
 
     /**
      * Determine whether the user can update the bank connection.
      *
-     * @param $identity_address
+     * @param Identity $identity
      * @param BankConnection $connection
      * @param Organization $organization
      * @return bool
      */
     public function update(
-        $identity_address,
+        Identity $identity,
         BankConnection $connection,
         Organization $organization
     ): bool {
@@ -51,23 +52,23 @@ class BankConnectionPolicy
             return false;
         }
 
-        return $organization->identityCan($identity_address, 'manage_bank_connections');
+        return $organization->identityCan($identity, 'manage_bank_connections');
     }
 
     /**
      * Determine whether the user can view the connection.
      *
-     * @param $identity_address
+     * @param Identity $identity
      * @param BankConnection $connection
      * @param Organization $organization
      * @return bool
      */
     public function view(
-        $identity_address,
+        Identity $identity,
         BankConnection $connection,
         Organization $organization
     ): bool {
-        return $this->update($identity_address, $connection, $organization);
+        return $this->update($identity, $connection, $organization);
     }
 
     /**

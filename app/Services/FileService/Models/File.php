@@ -5,6 +5,7 @@ namespace App\Services\FileService\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * App\Services\FileService\Models\File
@@ -86,9 +87,9 @@ class File extends Model
     }
 
     /**
-     * @return mixed
+     * @return StreamedResponse
      */
-    public function download()
+    public function download(): StreamedResponse
     {
         return resolve('file')->download(ltrim($this->path, '/'));
     }

@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class AddIndexToIdentityAddressOnVouchersTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -32,4 +29,4 @@ class AddIndexToIdentityAddressOnVouchersTable extends Migration
             $table->dropIndex('vouchers_identity_address_index');
         });
     }
-}
+};

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\FundFaq;
 use App\Models\Organization;
@@ -11,9 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Class FundResource
  * @property Fund $resource
- * @package App\Http\Resources
  */
 class FundResource extends BaseJsonResource
 {
@@ -36,12 +35,16 @@ class FundResource extends BaseJsonResource
      */
     public function toArray($request): array
     {
-        $fund           = $this->resource;
-        $organization   = $fund->organization;
-        $checkCriteria  = $request->get('check_criteria', false);
+        $fund = $this->resource;
+        $organization = $fund->organization;
+        $checkCriteria = $request->get('check_criteria', false);
 
-        $financialData  = $this->getFinancialData($fund);
-        $generatorData  = $this->getVoucherGeneratorData($fund);
+        $baseRequest = BaseFormRequest::createFrom($request);
+        $isWebshop = $baseRequest->isWebshop();
+        $isDashboard = $baseRequest->isDashboard();
+
+        $financialData = $isDashboard ? $this->getFinancialData($fund) : [];
+        $generatorData = $isDashboard ? $this->getVoucherGeneratorData($fund) : [];
 
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'description_html', 'description_short',
@@ -51,7 +54,10 @@ class FundResource extends BaseJsonResource
         ]), $fund->fund_config->only([
             'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
+            'email_required', 'contact_info_enabled', 'contact_info_required',
+            'contact_info_message_custom', 'contact_info_message_text',
         ]), [
+            'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
             'tags' => TagResource::collection($fund->tags_webshop),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
             'auto_validation' => $fund->isAutoValidatingRequests(),
@@ -68,16 +74,14 @@ class FundResource extends BaseJsonResource
             }),
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount' => $fund->amountFixedByFormula(),
-            'has_pending_fund_requests' => auth_address() && $fund->fund_requests()->where(function (Builder $builder) {
-                FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth_address());
+            'has_pending_fund_requests' => $baseRequest->auth_address() && $fund->fund_requests()->where(function (Builder $builder) {
+                FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth()->id());
             })->exists(),
-        ], $checkCriteria ? [
-            'taken_by_partner' =>
-                ($fund->fund_config->hash_partner_deny ?? false) &&
-                $fund->isTakenByPartner(auth_address()),
+        ], $isWebshop && $checkCriteria ? [
+            'taken_by_partner' => $this->isTakenByPartner($fund, $baseRequest),
         ]: [], $financialData, $generatorData);
 
-        if ($organization->identityCan(auth()->id(), 'manage_funds')) {
+        if ($isDashboard && $organization->identityCan($baseRequest->identity(), 'manage_funds')) {
             $data = array_merge($data, $fund->only([
                 'default_validator_employee_id', 'auto_requests_validation',
             ]), [
@@ -87,7 +91,7 @@ class FundResource extends BaseJsonResource
             $data['backoffice'] = $this->getBackofficeData($fund);
         }
 
-        if ($organization->identityCan(auth()->id(), 'validate_records')) {
+        if ($isDashboard && $organization->identityCan($baseRequest->identity(), 'validate_records')) {
             $data = array_merge($data, [
                 'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',
                 'csv_required_keys' => $fund->requiredPrevalidationKeys()->toArray()
@@ -95,6 +99,19 @@ class FundResource extends BaseJsonResource
         }
 
         return $data;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param BaseFormRequest $request
+     * @return bool
+     */
+    protected function isTakenByPartner(Fund $fund, BaseFormRequest $request): bool
+    {
+        $identity = $request->identity();
+        $hashPartnerDeny = $fund->fund_config->hash_partner_deny ?? false;
+
+         return $identity && $hashPartnerDeny && $fund->isTakenByPartner($identity);
     }
 
     /**
@@ -175,10 +192,10 @@ class FundResource extends BaseJsonResource
      */
     private function getBackofficeData(Fund $fund): ?array
     {
-        return $fund->fund_config ? $fund->fund_config->only([
+        return $fund->fund_config?->only([
             'backoffice_enabled', 'backoffice_url',
             'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
             'backoffice_key', 'backoffice_certificate', 'backoffice_fallback',
-        ]): null;
+        ]);
     }
 }

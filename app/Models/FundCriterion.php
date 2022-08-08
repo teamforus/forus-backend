@@ -42,7 +42,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereValue($value)
  * @mixin \Eloquent
  */
-class FundCriterion extends Model
+class FundCriterion extends BaseModel
 {
     /**
      * The attributes that are mass assignable.

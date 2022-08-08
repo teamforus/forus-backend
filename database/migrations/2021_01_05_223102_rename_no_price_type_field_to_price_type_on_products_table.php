@@ -5,10 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Product;
 
-/**
- * @noinspection PhpUnused
- */
-class RenameNoPriceTypeFieldToPriceTypeOnProductsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -117,4 +114,4 @@ class RenameNoPriceTypeFieldToPriceTypeOnProductsTable extends Migration
             $table->dropColumn('price_type');
         });
     }
-}
+};

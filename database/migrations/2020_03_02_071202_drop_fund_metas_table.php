@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 
-/**
- * @noinspection PhpUnused
- */
-class DropFundMetasTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -37,4 +34,4 @@ class DropFundMetasTable extends Migration
             )->references('id')->on('funds')->onDelete('cascade');
         });
     }
-}
+};

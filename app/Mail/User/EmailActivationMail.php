@@ -4,7 +4,6 @@ namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
-use JetBrains\PhpStorm\ArrayShape;
 use Symfony\Component\Mime\Email;
 
 /**
@@ -35,7 +34,6 @@ class EmailActivationMail extends ImplementationMail
      * @param array $data
      * @return array
      */
-    #[ArrayShape(['link' => "string", 'button' => "string", 'platform' => "string"])]
     protected function getMailExtraData(array $data): array
     {
         $platform = [

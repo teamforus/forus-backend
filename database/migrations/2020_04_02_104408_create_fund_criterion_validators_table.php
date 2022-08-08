@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateFundCriterionValidatorsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -45,4 +42,4 @@ class CreateFundCriterionValidatorsTable extends Migration
     {
         Schema::dropIfExists('fund_criterion_validators');
     }
-}
+};

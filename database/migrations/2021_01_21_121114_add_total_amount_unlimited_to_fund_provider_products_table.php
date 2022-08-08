@@ -5,10 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\FundProviderProduct;
 
-/**
- * @noinspection PhpUnused
- */
-class AddTotalAmountUnlimitedToFundProviderProductsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -42,4 +39,4 @@ class AddTotalAmountUnlimitedToFundProviderProductsTable extends Migration
             $table->dropColumn('limit_total_unlimited');
         });
     }
-}
+};

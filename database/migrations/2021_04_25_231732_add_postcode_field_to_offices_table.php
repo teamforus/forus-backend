@@ -5,10 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Office;
 
-/**
- * @noinspection PhpUnused
- */
-class AddPostcodeFieldToOfficesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -42,4 +39,4 @@ class AddPostcodeFieldToOfficesTable extends Migration
             $table->dropColumn('postcode', 'postcode_number', 'postcode_addition');
         });
     }
-}
+};

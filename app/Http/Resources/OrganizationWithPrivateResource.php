@@ -5,16 +5,14 @@ namespace App\Http\Resources;
 use App\Models\Organization;
 
 /**
- * Class OrganizationWithPrivateResource
  * @property Organization $resource
- * @package App\Http\Resources
  */
 class OrganizationWithPrivateResource extends OrganizationResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request|any  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return array
      */
     public function toArray($request): array

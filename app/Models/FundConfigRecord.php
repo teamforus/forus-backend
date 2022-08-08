@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Services\Forus\Record\Models\RecordType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -11,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property int $id
  * @property int $fund_id
- * @property RecordType|null $record_type
+ * @property \App\Models\RecordType|null $record_type
  * @property int|null $record_validity_days
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at

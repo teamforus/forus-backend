@@ -13,10 +13,6 @@ use App\Notifications\Identities\ProductReservation\IdentityProductReservationCr
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationRejectedNotification;
 use Illuminate\Events\Dispatcher;
 
-/**
- * Class ProductReservationSubscriber
- * @package App\Listeners
- */
 class ProductReservationSubscriber
 {
     /**
@@ -39,6 +35,7 @@ class ProductReservationSubscriber
 
     /**
      * @param ProductReservationCreated $event
+     * @noinspection PhpUnused
      */
     public function onProductReservationCreated(ProductReservationCreated $event): void
     {
@@ -57,6 +54,7 @@ class ProductReservationSubscriber
 
     /**
      * @param ProductReservationAccepted $event
+     * @noinspection PhpUnused
      */
     public function onProductReservationAccepted(ProductReservationAccepted $event): void
     {
@@ -70,6 +68,7 @@ class ProductReservationSubscriber
 
     /**
      * @param ProductReservationCanceled $event
+     * @noinspection PhpUnused
      */
     public function onProductReservationCanceled(ProductReservationCanceled $event): void
     {
@@ -83,6 +82,7 @@ class ProductReservationSubscriber
 
     /**
      * @param ProductReservationRejected $event
+     * @noinspection PhpUnused
      */
     public function onProductReservationRejected(ProductReservationRejected $event): void
     {
@@ -99,27 +99,15 @@ class ProductReservationSubscriber
      *
      * @param Dispatcher $events
      * @return void
+     * @noinspection PhpUnused
      */
-    public function subscribe(Dispatcher $events)
+    public function subscribe(Dispatcher $events): void
     {
-        $events->listen(
-            ProductReservationCreated::class,
-            '\App\Listeners\ProductReservationSubscriber@onProductReservationCreated'
-        );
+        $class = '\\' . static::class;
 
-        $events->listen(
-            ProductReservationAccepted::class,
-            '\App\Listeners\ProductReservationSubscriber@onProductReservationAccepted'
-        );
-
-        $events->listen(
-            ProductReservationRejected::class,
-            '\App\Listeners\ProductReservationSubscriber@onProductReservationRejected'
-        );
-
-        $events->listen(
-            ProductReservationCanceled::class,
-            '\App\Listeners\ProductReservationSubscriber@onProductReservationCanceled'
-        );
+        $events->listen(ProductReservationCreated::class, "$class@onProductReservationCreated");
+        $events->listen(ProductReservationAccepted::class, "$class@onProductReservationAccepted");
+        $events->listen(ProductReservationRejected::class, "$class@onProductReservationRejected");
+        $events->listen(ProductReservationCanceled::class, "$class@onProductReservationCanceled");
     }
 }

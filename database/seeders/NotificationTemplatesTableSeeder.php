@@ -12,7 +12,7 @@ class NotificationTemplatesTableSeeder extends Seeder
      * Run the database seeds.
      *
      * @return void
-     * @throws Exception
+     * @throws \Throwable
      */
     public function run(): void
     {

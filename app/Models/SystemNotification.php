@@ -146,7 +146,8 @@ class SystemNotification extends Model
     }
 
     /**
-     * @return static
+     * @param string $key
+     * @return SystemNotification|null
      */
     public static function getByKey(string $key): ?self
     {
@@ -161,7 +162,7 @@ class SystemNotification extends Model
     {
         /** @var SystemNotificationConfig|null $configs */
         $configs = $this->optional ? $this->system_notification_configs : null;
-        $config = $configs ? $configs->where('implementation_id', $implementationId)->first() : null;
+        $config = $configs?->where('implementation_id', $implementationId)->first();
 
         return array_filter([
             ($this->database && (!$config || !$config->disable_database)) ? 'database' : false,

@@ -56,8 +56,10 @@ class SystemNotificationResource extends BaseJsonResource
     }
 
     /**
-     * @param Collection|NotificationTemplate[] $templates
-     * @return Collection|NotificationTemplate[]
+     * @param Collection $templates
+     * @param Implementation $implementation
+     * @param bool $formalCommunication
+     * @return Collection
      */
     public function getTemplates(
         Collection $templates,

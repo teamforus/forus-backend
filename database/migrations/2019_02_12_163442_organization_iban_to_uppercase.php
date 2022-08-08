@@ -1,11 +1,10 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use App\Models\Organization;
+use Illuminate\Support\Facades\DB;
 
-/**
- * @noinspection PhpUnused
- */
-class OrganizationIbanToUppercase extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -14,7 +13,9 @@ class OrganizationIbanToUppercase extends Migration
      */
     public function up(): void
     {
-        DB::statement("UPDATE organizations SET `iban` = UPPER(`iban`)");
+        Organization::query()->update([
+            'iban' => DB::raw('UPPER(`iban`)'),
+        ]);
     }
 
     /**
@@ -22,8 +23,5 @@ class OrganizationIbanToUppercase extends Migration
      *
      * @return void
      */
-    public function down(): void
-    {
-        //
-    }
-}
+    public function down(): void {}
+};

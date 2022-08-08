@@ -28,7 +28,7 @@ use App\Traits\HasMarkdownDescription;
  * @method static \Illuminate\Database\Eloquent\Builder|FundFaq whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundFaq extends Model
+class FundFaq extends BaseModel
 {
     use HasMedia, HasMarkdownDescription;
 

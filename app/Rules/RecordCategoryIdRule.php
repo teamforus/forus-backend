@@ -16,10 +16,12 @@ class RecordCategoryIdRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        $recordRepo = resolve('forus.services.record');
-        $request = BaseFormRequest::createFromBase(request());
+        $request = BaseFormRequest::createFrom(request());
+        $value = is_numeric($value) ? intval($value) : null;
 
-        return !empty($recordRepo->categoryGet($request->auth_address(), $value));
+        return $value && $request->identity()->record_categories()->where([
+            'record_categories.id' => $value,
+        ])->exists();
     }
 
     /**

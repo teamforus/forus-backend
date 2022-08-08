@@ -2,6 +2,7 @@
 
 namespace App\Rules;
 
+use App\Services\MediaService\Models\Media;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\Facades\Gate;
 
@@ -38,7 +39,7 @@ class MediaUidRule implements Rule
             return false;
         }
 
-        if (!$media = media()->findByUid($value)) {
+        if (!$media = Media::findByUid($value)) {
             $this->errorMessage = trans('validation.exists');
             return false;
         }
