@@ -132,7 +132,7 @@ class EventLog extends Model
         return trans("events/loggable.$this->loggable_type", array_merge($attributes, [
             'dashboard_url' => rtrim(Implementation::active()->urlSponsorDashboard(), '/'),
         ], $this->loggable instanceof Voucher ? [
-            'sponsor_id' => $attributes['sponsor_id'] ?? $this->loggable->fund->organization_id,
+            'sponsor_id' => $attributes['sponsor_id'] ?? $this->loggable->fund?->organization_id,
         ] : []));
     }
 
