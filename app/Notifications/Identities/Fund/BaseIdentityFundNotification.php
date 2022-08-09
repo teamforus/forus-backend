@@ -5,7 +5,7 @@ namespace App\Notifications\Identities\Fund;
 use App\Models\Fund;
 use App\Notifications\Identities\BaseIdentityNotification;
 use App\Scopes\Builders\VoucherQuery;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 use Illuminate\Support\Collection;
 
 abstract class BaseIdentityFundNotification extends BaseIdentityNotification

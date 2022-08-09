@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Api\Identity;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\RecordTypes\IndexRecordTypesRequest;
+use App\Http\Resources\RecordTypeResource;
+use App\Models\RecordType;
+use Illuminate\Http\JsonResponse;
 
 /**
  * Class RecordTypeController
@@ -15,18 +18,16 @@ class RecordTypeController extends Controller
      * Display a listing of the resource.
      *
      * @param IndexRecordTypesRequest $request
-     * @return array
+     * @return JsonResponse
      */
-    public function index(IndexRecordTypesRequest $request): array
+    public function index(IndexRecordTypesRequest $request): JsonResponse
     {
         $insertableOnly = $request->input('insertable_only', false);
         $system = $request->input('system', false);
-        $recordTypes = $request->records_repo()->getRecordTypes(!$insertableOnly || $system);
+        $recordTypes = RecordType::searchQuery(!$insertableOnly || $system);
 
-        return array_values(array_map(function ($type) {
-            return array_only($type, [
-                'key', 'name', 'type', 'system'
-            ]);
-        }, $recordTypes));
+        return new JsonResponse(RecordTypeResource::queryCollection(
+            $recordTypes
+        )->toArray($request));
     }
 }

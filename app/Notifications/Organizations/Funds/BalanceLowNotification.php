@@ -4,7 +4,7 @@ namespace App\Notifications\Organizations\Funds;
 
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Models\Fund;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 
 /**
  * Notify sponsor that the fund balance is low (reached the threshold)

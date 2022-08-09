@@ -42,7 +42,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|FundProviderInvitation whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundProviderInvitation extends Model
+class FundProviderInvitation extends BaseModel
 {
     public const STATE_ACCEPTED = 'accepted';
     public const STATE_EXPIRED = 'expired';
@@ -159,7 +159,7 @@ class FundProviderInvitation extends Model
         ])->update($this->only('allow_products', 'allow_budget'));
 
         return $this->updateModel([
-            'state' => self::STATE_ACCEPTED
+            'state' => self::STATE_ACCEPTED,
         ]);
     }
 }

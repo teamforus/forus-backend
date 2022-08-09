@@ -4,7 +4,7 @@ namespace App\Notifications\Organizations\Products;
 
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Models\Implementation;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 
 /**
  * The product was sold out

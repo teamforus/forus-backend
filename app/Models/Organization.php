@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\Employees\EmployeeCreated;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\EmployeeQuery;
@@ -18,6 +19,7 @@ use App\Traits\HasMarkdownDescription;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -82,6 +84,7 @@ use Illuminate\Database\Query\Builder;
  * @property-read Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
+ * @property-read \App\Models\Identity|null $identity
  * @property-read Collection|\App\Models\Implementation[] $implementations
  * @property-read int|null $implementations_count
  * @property-read Media|null $logo
@@ -156,7 +159,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereWebsitePublic($value)
  * @mixin \Eloquent
  */
-class Organization extends Model
+class Organization extends BaseModel
 {
     use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription;
 
@@ -201,6 +204,14 @@ class Organization extends Model
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
     ];
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function identity(): BelongsTo
+    {
+        return $this->belongsTo(Identity::class, 'identity_address', 'address');
+    }
 
     /**
      * @param string|null $type
@@ -634,46 +645,42 @@ class Organization extends Model
 
     /**
      * Check if identity is organization employee
-     * @param string|null $identity_address string
+     * @param Identity $identity
      * @return bool
      */
-    public function isEmployee(?string $identity_address = null): bool {
-        return $identity_address &&
-            $this->employees()->whereIn('identity_address', (array) $identity_address)->exists();
+    public function isEmployee(Identity $identity): bool
+    {
+        return $this->employees()->where('identity_address', $identity->address)->exists();
     }
 
     /**
-     * @param string|null $identityAddress string
+     * @param Identity|null $identity
      * @param array|string $permissions
-     * @param boolean $all
+     * @param bool $all
      * @return bool
      */
     public function identityCan(
-        string $identityAddress = null,
-        $permissions = [],
+        Identity $identity = null,
+        array|string  $permissions = [],
         bool $all = true
     ): bool {
-        if (!$identityAddress) {
+        // convert string to array
+        $permissions = (array) $permissions;
+
+        if (!$identity || !$identity->exists || !$identity->address || count($permissions) === 0) {
             return false;
         }
 
         // as owner of the organization you don't have any restrictions
-        if (strcmp($identityAddress, $this->identity_address) === 0) {
+        if ($identity->address === $this->identity_address) {
             return true;
         }
 
-        // retrieving the list of all the permissions that identity have
-        $identityPermissionKeys = $this->identityPermissions($identityAddress)->pluck('key');
+        // retrieving the list of all the permissions that the identity has
+        $permissionKeys = $this->identityPermissions($identity->address)->pluck('key');
+        $permissionsCount = $permissionKeys->intersect($permissions)->count();
 
-        // convert string to array
-        $permissions = (array) $permissions;
-
-        if (!$all) {
-            return $identityPermissionKeys->intersect($permissions)->count() > 0;
-        }
-
-        // check if all the requirements are satisfied
-        return $identityPermissionKeys->intersect($permissions)->count() === count($permissions);
+        return $all ? $permissionsCount === count($permissions) : $permissionsCount > 0;
     }
 
     /**
@@ -683,7 +690,7 @@ class Organization extends Model
      */
     public static function queryByIdentityPermissions(
         string $identityAddress,
-        $permissions = false
+        string|array|bool $permissions = false
     ): EloquentBuilder {
         $permissions = $permissions === false ? false : (array) $permissions;
 
@@ -758,18 +765,18 @@ class Organization extends Model
 
     /**
      * @param string $identity_address
-     * @return Employee|\Illuminate\Database\Eloquent\Model|null
+     * @return Employee|Model|null
      */
-    public function findEmployee(string $identity_address): ?Employee
+    public function findEmployee(string $identity_address): Employee|Model|null
     {
         return $this->employees()->where(compact('identity_address'))->first();
     }
 
     /**
      * @param $fund_id
-     * @return Fund|\Illuminate\Database\Eloquent\Model|null
+     * @return Fund|Model|null
      */
-    public function findFund($fund_id = null): ?Fund
+    public function findFund($fund_id = null): Fund|Model|null
     {
         return $this->funds()->where('funds.id', $fund_id)->first();
     }
@@ -859,5 +866,32 @@ class Organization extends Model
                 $fund->setBalance($balance->getAmount(), $this->bank_connection_active);
             }
         }
+    }
+
+    /**
+     * @param Identity $identity
+     * @param array $roles
+     * @return Employee
+     */
+    public function addEmployee(Identity $identity, array $roles = []): Employee
+    {
+        /** @var Employee $employee */
+        $employee = $this->employees()->firstOrCreate([
+            'identity_address' => $identity->address,
+        ]);
+
+        $employee->roles()->sync($roles);
+        EmployeeCreated::dispatch($employee);
+
+        return $employee;
+    }
+
+    /**
+     * @param Identity $identity
+     * @return bool
+     */
+    public function isOwner(Identity $identity): bool
+    {
+        return $this->identity_address == $identity->address;
     }
 }

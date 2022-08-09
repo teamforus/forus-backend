@@ -17,7 +17,7 @@ class StoreIdentityEmailRequest extends BaseIdentityEmailRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->isAuthenticated();
     }
 
     /**
@@ -31,9 +31,8 @@ class StoreIdentityEmailRequest extends BaseIdentityEmailRequest
         $this->throttleWithKey('to_many_attempts', $this, 'email');
 
         return [
-            'email' => [
-                'required', 'email:strict', new IdentityEmailUniqueRule()
-            ]
+            'target' => 'nullable|alpha_dash',
+            'email' => ['required', 'email:strict', new IdentityEmailUniqueRule()],
         ];
     }
 }

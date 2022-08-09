@@ -3,18 +3,21 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\File\StoreFileRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FileResource;
 use App\Services\FileService\FileService;
 use App\Services\FileService\Models\File;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
 {
     /**
      * @var FileService
      */
-    private $fileService;
+    private FileService $fileService;
 
     /**
      * FileController constructor.
@@ -27,15 +30,13 @@ class FileController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(Request $request) {
-        return FileResource::collection(File::where([
-            'identity_address' => auth()->user()->getAuthIdentifier()
-        ])->paginate(
-            $request->input('per_page', 20)
-        ));
+    public function index(BaseFormRequest $request): AnonymousResourceCollection {
+        return FileResource::queryCollection(File::where([
+            'identity_address' => $request->auth_address(),
+        ]));
     }
 
     /**
@@ -44,23 +45,25 @@ class FileController extends Controller
      * @param StoreFileRequest $request
      * @return FileResource
      */
-    public function store(StoreFileRequest $request)
+    public function store(StoreFileRequest $request): FileResource
     {
         return new FileResource($this->fileService->uploadSingle(
             $request->file('file'),
             $request->input('type'),
-            auth()->user()->getAuthIdentifier()
+            $request->auth_address(),
         ));
     }
 
     /**
      * Validate file store request
+     *
      * @param StoreFileRequest $request
-     * @return string
+     * @return JsonResponse
+     * @noinspection PhpUnused
      */
-    public function storeValidate(StoreFileRequest $request)
+    public function storeValidate(StoreFileRequest $request): JsonResponse
     {
-        return '';
+        return new JsonResponse();
     }
 
     /**
@@ -70,7 +73,7 @@ class FileController extends Controller
      * @return FileResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(File $file)
+    public function show(File $file): FileResource
     {
         $this->authorize('show', $file);
 
@@ -78,13 +81,13 @@ class FileController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Download file as stream
      *
      * @param File $file
-     * @return mixed
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function download(File $file)
+    public function download(File $file): StreamedResponse
     {
         $this->authorize('download', $file);
 

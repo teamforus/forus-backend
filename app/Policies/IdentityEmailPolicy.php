@@ -2,8 +2,10 @@
 
 namespace App\Policies;
 
-use App\Services\Forus\Identity\Models\IdentityEmail;
+use App\Models\Identity;
+use App\Models\IdentityEmail;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class IdentityEmailPolicy
 {
@@ -11,61 +13,50 @@ class IdentityEmailPolicy
 
     /**
      * Determine whether the user can view any identity emails.
-     * 
-     * @param string|null $identity_address
+     *
+     * @param Identity $identity
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAny(
-        ?string $identity_address
-    ) {
-        return !empty($identity_address);
+    public function viewAny(Identity $identity): bool
+    {
+        return $identity->exists;
     }
 
     /**
      * Determine whether the user can view identity emails.
      *
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @param IdentityEmail $identityEmail
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function view(
-        ?string $identity_address,
-        IdentityEmail $identityEmail
-    ) {
-        return $identityEmail->identity_address === $identity_address;
+    public function view(Identity $identity, IdentityEmail $identityEmail): bool
+    {
+        return $identityEmail->identity_address === $identity->address;
     }
 
     /**
      * Determine whether the user can create identity emails.
      *
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function create(?string $identity_address)
+    public function create(Identity $identity): bool
     {
-        return !empty($identity_address);
-    }
-
-    /**
-     * Determine whether the user can update the identity email.
-     *
-     * @param string|null $identity_address
-     * @param  \App\Services\Forus\Identity\Models\IdentityEmail  $identityEmail
-     * @return bool
-     */
-    public function update(?string $identity_address, IdentityEmail $identityEmail)
-    {
-        return $identityEmail->identity_address === $identity_address;
+        return $identity->exists;
     }
 
     /**
      * Determine whether the user can set this email as primary.
      *
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @param IdentityEmail $identityEmail
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return bool|Response
+     * @noinspection PhpUnused
      */
-    public function makePrimary(?string $identity_address, IdentityEmail $identityEmail)
+    public function makePrimary(Identity $identity, IdentityEmail $identityEmail): Response|bool
     {
         if ($identityEmail->primary) {
             return $this->deny("Already primary");
@@ -75,82 +66,57 @@ class IdentityEmailPolicy
             return $this->deny("Please verify email first.");
         }
 
-        return $identityEmail->identity_address === $identity_address;
+        return $identityEmail->identity_address === $identity->address;
     }
 
     /**
      * Determine whether the identity email verification token can be used.
      *
-     * @param string|null $identity_address
+     * @param Identity|null $identity
      * @param IdentityEmail $identityEmail
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
-    public function verifyToken(?string $identity_address, IdentityEmail $identityEmail)
+    public function verifyToken(?Identity $identity, IdentityEmail $identityEmail): Response|bool
     {
         if ($identityEmail->verified) {
             return $this->deny("You already have verified your email.");
         }
 
-        return isset($identity_address);
+        return !$identity || $identity->exists;
     }
 
     /**
      * Determine whether the user can resend the identity email verification token.
      *
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @param IdentityEmail $identityEmail
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return bool|Response
+     * @noinspection PhpUnused
      */
-    public function resend(?string $identity_address, IdentityEmail $identityEmail)
+    public function resend(Identity $identity, IdentityEmail $identityEmail): Response|bool
     {
         if ($identityEmail->verified) {
             return $this->deny("Email already verified.");
         }
 
-        return $identityEmail->identity_address === $identity_address;
+        return $identityEmail->identity_address === $identity->address;
     }
 
     /**
      * Determine whether the user can delete the identity email.
      *
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @param IdentityEmail $identityEmail
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return bool|Response
+     * @noinspection PhpUnused
      */
-    public function delete(?string $identity_address, IdentityEmail $identityEmail)
+    public function delete(Identity $identity, IdentityEmail $identityEmail): Response|bool
     {
         if ($identityEmail->primary) {
             return $this->deny("Can't delete primary email.");
         }
 
-        return $identityEmail->identity_address === $identity_address;
-    }
-
-    /**
-     * Determine whether the user can restore the identity email.
-     *
-     * @param string|null $identity_address
-     * @param  \App\Services\Forus\Identity\Models\IdentityEmail  $identityEmail
-     * @return bool
-     */
-    public function restore(?string $identity_address, IdentityEmail $identityEmail)
-    {
-        return $identityEmail->identity_address === $identity_address;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the identity email.
-     *
-     * @param string|null $identity_address
-     * @param IdentityEmail $identityEmail
-     * @return bool|\Illuminate\Auth\Access\Response
-     */
-    public function forceDelete(?string $identity_address, IdentityEmail $identityEmail)
-    {
-        if ($identityEmail->primary) {
-            return $this->deny("Can't delete primary email.");
-        }
-
-        return $identityEmail->identity_address === $identity_address;
+        return $identityEmail->identity_address === $identity->address;
     }
 }

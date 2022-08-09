@@ -5,10 +5,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class ChangeFundsStateField extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -21,10 +18,7 @@ class ChangeFundsStateField extends Migration
 
         foreach ($fundStates as $id => $state) {
             if (!in_array($state, Fund::STATES, true)) {
-                exit(str_terminal_color(
-                    sprintf("Can't migrate fund: %s state: %s\n", $id, $state),
-                    'red'
-                ));
+                exit(sprintf("Can't migrate fund: %s state: %s\n", $id, $state));
             }
         }
 
@@ -64,4 +58,4 @@ class ChangeFundsStateField extends Migration
             Fund::find($id)->update(compact('state'));
         }
     }
-}
+};

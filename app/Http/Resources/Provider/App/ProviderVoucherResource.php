@@ -6,7 +6,6 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\MediaCompactResource;
 use App\Http\Resources\OrganizationBasicResource;
-use App\Http\Resources\Provider\any;
 use App\Http\Resources\Provider\ProviderSubsidyProductResource;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -21,13 +20,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Class ProviderVoucherResource
  * @property VoucherToken|Voucher $resource
- * @package App\Http\Resources\Provider
  */
 class ProviderVoucherResource extends BaseJsonResource
 {
-    protected $request;
+    protected BaseFormRequest $request;
 
     /**
      * @param string|null $append
@@ -44,12 +41,12 @@ class ProviderVoucherResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param Request|any $request
-     * @return array|mixed|void|null
+     * @param Request $request
+     * @return array|null
      */
     public function toArray($request): ?array
     {
-        $this->request = BaseFormRequest::createFromBase($request);
+        $this->request = BaseFormRequest::createFrom($request);
 
         if (!$this->getVoucherToken()) {
             return null;

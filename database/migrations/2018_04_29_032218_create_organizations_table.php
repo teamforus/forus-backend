@@ -4,10 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateOrganizationsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -43,4 +40,4 @@ class CreateOrganizationsTable extends Migration
     {
         Schema::dropIfExists('organizations');
     }
-}
+};

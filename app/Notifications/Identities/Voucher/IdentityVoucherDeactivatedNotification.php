@@ -4,7 +4,7 @@ namespace App\Notifications\Identities\Voucher;
 
 use App\Mail\Vouchers\DeactivationVoucherMail;
 use App\Models\Voucher;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 
 /**
  * The voucher was deactivated
@@ -21,7 +21,7 @@ class IdentityVoucherDeactivatedNotification extends BaseIdentityVoucherNotifica
 
         if ($this->eventLog->data['notify_by_email'] ?? false) {
             $this->sendMailNotification(
-                $voucher->identity->primary_email->email,
+                $voucher->identity->email,
                 new DeactivationVoucherMail($this->eventLog->data, $voucher->fund->getEmailFrom())
             );
         }

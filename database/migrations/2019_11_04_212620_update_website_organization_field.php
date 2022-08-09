@@ -4,10 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class UpdateWebsiteOrganizationField extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -32,4 +29,4 @@ class UpdateWebsiteOrganizationField extends Migration
             $table->string('website', 200)->default('')->change();
         });
     }
-}
+};

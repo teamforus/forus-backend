@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateImplementationPagesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -36,4 +33,4 @@ class CreateImplementationPagesTable extends Migration
     {
         Schema::dropIfExists('implementation_pages');
     }
-}
+};

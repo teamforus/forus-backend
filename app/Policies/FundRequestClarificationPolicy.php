@@ -5,9 +5,11 @@ namespace App\Policies;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class FundRequestClarificationPolicy
 {
@@ -16,22 +18,23 @@ class FundRequestClarificationPolicy
     /**
      * Determine whether the user can view FundRequestRecords.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param FundRequest $request
      * @param Fund $fund
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
     public function viewAnyRequester(
-        string $identity_address,
+        Identity $identity,
         FundRequest $request,
         Fund $fund
-    ) {
+    ): Response|bool {
         if (!$this->checkIntegrityRequester($fund, $request)) {
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
         // only fund requester is allowed to see records
-        if ($request->identity_address !== $identity_address) {
+        if ($request->identity_address !== $identity->address) {
             return $this->deny('fund_requests.not_requester');
         }
 
@@ -41,24 +44,25 @@ class FundRequestClarificationPolicy
     /**
      * Determine whether the user can view the fundRequestClarification.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param FundRequestClarification $requestClarification
      * @param FundRequest $request
      * @param Fund $fund
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
     public function viewRequester(
-        string $identity_address,
+        Identity $identity,
         FundRequestClarification $requestClarification,
         FundRequest $request,
         Fund $fund
-    ) {
+    ): Response|bool {
         if (!$this->checkIntegrityRequester($fund, $request, $requestClarification)) {
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
         // only fund requester is allowed to see records
-        if ($request->identity_address !== $identity_address) {
+        if ($request->identity_address !== $identity->address) {
             return $this->deny('fund_requests.not_requester');
         }
 
@@ -68,24 +72,25 @@ class FundRequestClarificationPolicy
     /**
      * Determine whether the user can update the fundRequestClarification.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param FundRequestClarification $requestClarification
      * @param FundRequest $request
      * @param Fund $fund
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
     public function update(
-        string $identity_address,
+        Identity $identity,
         FundRequestClarification $requestClarification,
         FundRequest $request,
         Fund $fund
-    ) {
+    ): Response|bool {
         if (!$this->checkIntegrityRequester($fund, $request, $requestClarification)) {
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
         // only fund requester is allowed to see records
-        if ($request->identity_address !== $identity_address) {
+        if ($request->identity_address !== $identity->address) {
             return $this->deny('fund_requests.not_requester');
         }
 
@@ -99,40 +104,41 @@ class FundRequestClarificationPolicy
     /**
      * Determine whether the user can view fundRequestRecords.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param FundRequest $request
      * @param Organization $organization
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
     public function viewAnyValidator(
-        string $identity_address,
+        Identity $identity,
         FundRequest $request,
         Organization $organization
-    ) {
-        return $this->create($identity_address, $request, $organization);
+    ): Response|bool {
+        return $this->create($identity, $request, $organization);
     }
 
     /**
      * Determine whether the user can view the fundRequestClarification.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param FundRequestClarification $requestClarification
      * @param FundRequest $request
      * @param Organization $organization
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return Response|bool
      * @noinspection PhpUnused
      */
     public function viewValidator(
-        string $identity_address,
+        Identity $identity,
         FundRequestClarification $requestClarification,
         FundRequest $request,
         Organization $organization
-    ) {
+    ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $request, $requestClarification)) {
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity_address, 'validate_records')) {
+        if (!$organization->identityCan($identity, 'validate_records')) {
             return $this->deny('fund_requests.invalid_validator');
         }
 
@@ -142,22 +148,27 @@ class FundRequestClarificationPolicy
     /**
      * Determine whether the user can create fundRequestClarifications.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param FundRequest $request
-     * @param Organization|null $organization
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
     public function create(
-        string $identity_address,
+        Identity $identity,
         FundRequest $request,
         Organization $organization
-    ) {
+    ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $request)) {
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity_address, 'validate_records')) {
+        if (!$organization->identityCan($identity, 'validate_records')) {
             return $this->deny('fund_requests.invalid_validator');
+        }
+
+        if (!$request->identity->email) {
+            return $this->deny('fund_requests.request_identity_has_no_email');
         }
 
         return true;
@@ -168,6 +179,7 @@ class FundRequestClarificationPolicy
      * @param FundRequest $request
      * @param FundRequestClarification|null $fundRequestClarification
      * @return bool
+     * @noinspection PhpUnused
      */
     private function checkIntegrityRequester(
         Fund $fund,

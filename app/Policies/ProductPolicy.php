@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -14,50 +15,51 @@ class ProductPolicy
     use HandlesAuthorization;
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
-    public function viewAny($identity_address, Organization $organization): bool
+    public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'manage_products');
+        return $organization->identityCan($identity, 'manage_products');
     }
 
     /**
+     * @param Identity|null $identity
      * @return bool
      * @noinspection PhpUnused
      */
-    public function viewAnyPublic(): bool
+    public function viewAnyPublic(?Identity $identity): bool
     {
-        return true;
+        return !$identity || $identity->exists;
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
-    public function store($identity_address, Organization $organization): bool
+    public function store(Identity $identity, Organization $organization): bool
     {
         $hard_limit = config('forus.features.dashboard.organizations.products.hard_limit');
         $count_products = $organization->products()->whereDoesntHave('sponsor_organization')->count();
   
-        return $organization->identityCan($identity_address, [
-            'manage_products'
+        return $organization->identityCan($identity, [
+            'manage_products',
         ]) && $count_products < $hard_limit;
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Product $product
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
     public function show(
-        $identity_address,
+        Identity $identity,
         Product $product,
         Organization $organization
     ): bool {
@@ -65,64 +67,66 @@ class ProductPolicy
             return false;
         }
 
-        return $product->organization->identityCan($identity_address, 'manage_products');
+        return $product->organization->identityCan($identity, 'manage_products');
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Product $product
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
     public function showFunds(
-        $identity_address,
+        Identity $identity,
         Product $product,
         Organization $organization
     ): bool {
-        return $this->show($identity_address, $product, $organization);
+        return $this->show($identity, $product, $organization);
     }
 
     /**
      * @return bool
      * @noinspection PhpUnused
      */
-    public function showPublic(): bool {
+    public function showPublic(): bool
+    {
         return true;
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Product $product
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
     public function update(
-        $identity_address,
+        Identity $identity,
         Product $product,
         Organization $organization
     ): bool {
-        return $this->show($identity_address, $product, $organization) &&
+        return
+            $this->show($identity, $product, $organization) &&
             $product->sponsor_organization_id == null;
     }
 
     /**
-     * To be able to make an reservation product should not
+     * To be able to make a reservation, product should not
      * be expired or sold out and voucher not expired
      *
-     * @param $identity_address
-     * @param Voucher $voucher
+     * @param Identity $identity
      * @param Product $product
+     * @param Voucher $voucher
      * @return bool
      * @noinspection PhpUnused
      */
     public function reserve(
-        $identity_address,
+        Identity $identity,
         Product $product,
         Voucher $voucher
     ): bool {
-        if (empty($identity_address)) {
+        if (!$identity->exists) {
             return false;
         }
 
@@ -134,52 +138,52 @@ class ProductPolicy
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Product $product
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
     public function destroy(
-        $identity_address,
+        Identity $identity,
         Product $product,
         Organization $organization
     ): bool {
-        return $this->show($identity_address, $product, $organization);
+        return $this->show($identity, $product, $organization);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $provider
      * @param Organization $sponsor
      * @return bool
      * @noinspection PhpUnused
      */
     public function listSponsorProduct(
-        string $identity_address,
+        Identity $identity,
         Organization $provider,
         Organization $sponsor
     ): bool {
-        return $this->isSponsorProductThreeAuthorized($identity_address, $sponsor, $provider);
+        return $this->isSponsorProductThreeAuthorized($identity, $sponsor, $provider);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $provider
      * @param Organization $sponsor
      * @return bool
      * @noinspection PhpUnused
      */
     public function storeSponsorProduct(
-        string $identity_address,
+        Identity $identity,
         Organization $provider,
         Organization $sponsor
     ): bool {
-        return $this->isSponsorProductThreeAuthorized($identity_address, $sponsor, $provider);
+        return $this->isSponsorProductThreeAuthorized($identity, $sponsor, $provider);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Product $product
      * @param Organization $provider
      * @param Organization $sponsor
@@ -187,16 +191,16 @@ class ProductPolicy
      * @noinspection PhpUnused
      */
     public function showSponsorProduct(
-        string $identity_address,
+        Identity $identity,
         Product $product,
         Organization $provider,
         Organization $sponsor
     ): bool {
-        return $this->isSponsorProductThreeAuthorized($identity_address, $sponsor, $provider, $product);
+        return $this->isSponsorProductThreeAuthorized($identity, $sponsor, $provider, $product);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Product $product
      * @param Organization $provider
      * @param Organization $sponsor
@@ -204,16 +208,16 @@ class ProductPolicy
      * @noinspection PhpUnused
      */
     public function updateSponsorProduct(
-        string $identity_address,
+        Identity $identity,
         Product $product,
         Organization $provider,
         Organization $sponsor
     ): bool {
-        return $this->isSponsorProductThreeAuthorized($identity_address, $sponsor, $provider, $product);
+        return $this->isSponsorProductThreeAuthorized($identity, $sponsor, $provider, $product);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Product $product
      * @param Organization $provider
      * @param Organization $sponsor
@@ -221,29 +225,29 @@ class ProductPolicy
      * @noinspection PhpUnused
      */
     public function destroySponsorProduct(
-        string $identity_address,
+        Identity $identity,
         Product $product,
         Organization $provider,
         Organization $sponsor
     ): bool {
-        return $this->isSponsorProductThreeAuthorized($identity_address, $sponsor, $provider, $product);
+        return $this->isSponsorProductThreeAuthorized($identity, $sponsor, $provider, $product);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $sponsor
      * @param Organization $provider
      * @param Product|null $product
      * @return bool
      */
     public function isSponsorProductThreeAuthorized(
-        string $identity_address,
+        Identity $identity,
         Organization $sponsor,
         Organization $provider,
         ?Product $product = null
     ): bool {
         $isSponsorManagingProducts = $sponsor->manage_provider_products;
-        $identityIsProviderManager = $sponsor->identityCan($identity_address, 'manage_providers');
+        $identityIsProviderManager = $sponsor->identityCan($identity, 'manage_providers');
         $isSponsorForTheProvider = OrganizationQuery::whereIsProviderOrganization(
             Organization::query(), $sponsor
         )->whereKey($provider->id)->exists();

@@ -4,10 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateTaggablesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -23,9 +20,9 @@ class CreateTaggablesTable extends Migration
             $table->string('taggable_type', 100);
             $table->timestamps();
 
-            $table->foreign('tag_id')->references(
-                'id'
-            )->on('tags')->onDelete('cascade');
+            $table->foreign('tag_id')
+                ->references('id')->on('tags')
+                ->onDelete('cascade');
         });
     }
 
@@ -38,4 +35,4 @@ class CreateTaggablesTable extends Migration
     {
         Schema::dropIfExists('taggables');
     }
-}
+};

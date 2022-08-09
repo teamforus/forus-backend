@@ -2,74 +2,63 @@
 
 namespace App\Http\Controllers\Api\Identity;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Identity\ApproveRecordValidationRequest;
 use App\Http\Requests\Api\RecordValidations\RecordValidationStoreRequest;
+use App\Http\Requests\BaseFormRequest;
+use App\Http\Resources\RecordValidationResource;
 use App\Models\Organization;
-use App\Http\Controllers\Controller;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use App\Models\Record;
+use App\Models\RecordValidation;
+use Illuminate\Http\JsonResponse;
 
-/**
- * Class RecordValidationController
- * @package App\Http\Controllers\Api\Identity
- */
 class RecordValidationController extends Controller
 {
-    private $recordRepo;
-
     /**
-     * RecordValidationController constructor.
-     * @param IRecordRepo $recordRepo
-     */
-    public function __construct(IRecordRepo $recordRepo) {
-        $this->recordRepo = $recordRepo;
-    }
-
-    /**
-     * Store a newly created resource in storage.
      * @param RecordValidationStoreRequest $request
-     * @return \Illuminate\Http\Response|array
+     * @return JsonResponse
      */
-    public function store(RecordValidationStoreRequest $request)
+    public function store(RecordValidationStoreRequest $request): JsonResponse
     {
-        $request = $this->recordRepo->makeValidationRequest(
-            auth_address(),
-            $request->get('record_id', '')
-        );
+        $record = Record::find($request->get('record_id'));
+        $validationRequest = $record->makeValidationRequest();
 
-        if (!$request) {
-            return response([
-                'message' => 'Can\'t create validation request'
-            ])->setStatusCode(403);
-        }
-
-        return $request;
+        return new JsonResponse($validationRequest->only('uuid'), 201);
     }
 
     /**
      * Display the specified resource.
      *
+     * @param BaseFormRequest $request
      * @param string $recordUuid
-     * @return \Illuminate\Http\Response|array
+     * @return JsonResponse
      */
-    public function show(
-        string $recordUuid
-    ) {
-        $request = $this->recordRepo->showValidationRequest(
-            $recordUuid
-        );
+    public function show(BaseFormRequest $request, string $recordUuid): JsonResponse
+    {
+        $identityAddress = $request->auth_address();
+        $validationRequest = RecordValidation::whereUuid($recordUuid)->first();
 
-        $request['organizations_available'] =
-            Organization::queryByIdentityPermissions(
-            auth()->id(), 'validate_records'
-        )->select(['id', 'name'])->get()->map(function(Organization $organization) {
-            return $organization->only(['id', 'name']);
-        });
-
-        if (!$request) {
-            abort(404, "Not found");
+        if (!$validationRequest) {
+            return new JsonResponse(['message' => "Not found"], 404);
         }
 
-        return $request;
+        $organizations = Organization::queryByIdentityPermissions(
+            $identityAddress, 'validate_records',
+        )->select('id', 'name')->get();
+
+        $organizations = $organizations->map(function (Organization $organization) {
+            return $organization->only('id', 'name');
+        });
+
+        return new JsonResponse(array_merge(array_merge($validationRequest->only([
+            'state', 'identity_address', 'uuid'
+        ]), $validationRequest->record->only([
+            'value'
+        ]), $validationRequest->record->record_type->only([
+            'key', 'name'
+        ])), [
+            'organizations_available' => $organizations,
+        ]));
     }
 
     /**
@@ -77,46 +66,35 @@ class RecordValidationController extends Controller
      *
      * @param ApproveRecordValidationRequest $request
      * @param string $recordUuid
-     * @return array|\Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
+     * @return JsonResponse
      */
-    public function approve(
-        ApproveRecordValidationRequest $request,
-        string $recordUuid
-    ) {
-        $success = $this->recordRepo->approveValidationRequest(
-            auth_address(),
-            $recordUuid,
-            $request->post('organization_id')
-        );
+    public function approve(ApproveRecordValidationRequest $request, string $recordUuid): JsonResponse
+    {
+        $identity = $request->identity();
+        $organization = Organization::find($request->post('organization_id'));
+        $success = RecordValidation::findByUuid($recordUuid)?->approve($identity, $organization);
 
         if (!$success) {
-            return response([
-                'message' => 'Can\'t approve request.'
-            ])->setStatusCode(403);
+            return new JsonResponse(['message' => "Can't approve request."], 403);
         }
 
-        return compact('success');
+        return new JsonResponse(compact('success'));
     }
 
     /**
      * Decline validation request
+     * @param BaseFormRequest $request
      * @param string $recordUuid
-     * @return mixed
+     * @return JsonResponse
      */
-    public function decline(
-        string $recordUuid
-    ) {
-        $success = $this->recordRepo->declineValidationRequest(
-            auth_address(),
-            $recordUuid
-        );
+    public function decline(BaseFormRequest $request, string $recordUuid): JsonResponse
+    {
+        $success = RecordValidation::findByUuid($recordUuid)?->decline($request->identity());
 
         if (!$success) {
-            return response([
-                'message' => 'Can\'t decline request.'
-            ])->setStatusCode(403);
+            return new JsonResponse(['message' => "Can't decline request.",], 403);
         }
 
-        return compact('success');
+        return new JsonResponse(compact('success'));
     }
 }

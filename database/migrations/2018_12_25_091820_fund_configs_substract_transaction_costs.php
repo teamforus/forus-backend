@@ -4,10 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class FundConfigsSubstractTransactionCosts extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -32,4 +29,4 @@ class FundConfigsSubstractTransactionCosts extends Migration
             $table->dropColumn('subtract_transaction_costs');
         });
     }
-}
+};

@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class DropValidatorRequestsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -49,4 +46,4 @@ class DropValidatorRequestsTable extends Migration
                 ->on('records')->onDelete('cascade');
         });
     }
-}
+};

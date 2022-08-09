@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateProductReservationsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -71,4 +68,4 @@ class CreateProductReservationsTable extends Migration
     {
         Schema::dropIfExists('product_reservations');
     }
-}
+};

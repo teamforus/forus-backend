@@ -3,75 +3,54 @@
 namespace App\Policies;
 
 use App\Models\Employee;
+use App\Models\Identity;
 use App\Models\Organization;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class EmployeePolicy
 {
     use HandlesAuthorization;
 
     /**
-     * Create a new policy instance.
-     *
-     * @return void
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
      */
-    public function __construct()
+    public function viewAny(Identity $identity, Organization $organization): bool
     {
-        //
+        return $organization->isEmployee($identity);
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
      */
-    public function viewAny(
-        $identity_address,
-        Organization $organization
-    ) {
-        return $organization->isEmployee($identity_address);
+    public function store(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, 'manage_employees');
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
+     * @param Employee $employee
      * @param Organization $organization
-     * @return bool
+     * @return Response|bool
      */
-    public function store(
-        $identity_address,
-        Organization $organization
-    ) {
-        return $organization->identityCan(
-            $identity_address,
-            'manage_employees'
-        );
+    public function show(Identity $identity, Employee $employee, Organization $organization): Response|bool
+    {
+        return $this->update($identity, $employee, $organization);
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Employee $employee
      * @param Organization $organization
      * @return bool|\Illuminate\Auth\Access\Response
      */
-    public function show(
-        $identity_address,
-        Employee $employee,
-        Organization $organization
-    ) {
-        return $this->update($identity_address, $employee, $organization);
-    }
-
-    /**
-     * @param $identity_address
-     * @param Employee $employee
-     * @param Organization $organization
-     * @return bool|\Illuminate\Auth\Access\Response
-     */
-    public function update(
-        $identity_address,
-        Employee $employee,
-        Organization $organization
-    ) {
+    public function update(Identity $identity, Employee $employee, Organization $organization): Response|bool
+    {
         if ($employee->organization_id != $organization->id) {
             return false;
         }
@@ -81,28 +60,25 @@ class EmployeePolicy
             return $this->deny("employees.cant_delete_organization_owner");
         }
 
-        return $employee->organization->identityCan(
-            $identity_address,
-            'manage_employees'
-        );
+        return $employee->organization->identityCan($identity, 'manage_employees');
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Employee $employee
      * @param Organization $organization
      * @return bool|\Illuminate\Auth\Access\Response
      */
     public function destroy(
-        $identity_address,
+        Identity $identity,
         Employee $employee,
         Organization $organization
-    ) {
+    ): Response|bool {
         // organization owner employee can't be edited
-        if ($employee->identity_address == $identity_address) {
+        if ($employee->identity_address === $identity->address) {
             return $this->deny("employees.cant_delete_yourself");
         }
 
-        return $this->update($identity_address, $employee, $organization);
+        return $this->update($identity, $employee, $organization);
     }
 }

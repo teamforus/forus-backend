@@ -24,7 +24,6 @@ class SponsorVoucherResource extends BaseJsonResource
      */
     public function toArray($request): array
     {
-        $recordRepo = resolve('forus.services.record');
         $voucher = $this->resource;
         $address = $voucher->token_without_confirmation->address ?? null;
         $physical_cards = $voucher->physical_cards()->first();
@@ -33,8 +32,8 @@ class SponsorVoucherResource extends BaseJsonResource
         $first_use_date = $voucher->first_use_date;
 
         if ($voucher->is_granted && $voucher->identity_address) {
-            $identity_email = $recordRepo->primaryEmailByAddress($voucher->identity_address);
-            $identity_bsn = $bsn_enabled ? $recordRepo->bsnByAddress($voucher->identity_address): null;
+            $identity_email = $voucher->identity?->email;
+            $identity_bsn = $bsn_enabled ? $voucher->identity?->bsn: null;
         }
 
         return array_merge($voucher->only([
@@ -74,7 +73,7 @@ class SponsorVoucherResource extends BaseJsonResource
             'product_category_id', 'organization_id',
         ]), [
             'product_category' => $voucher->product->product_category,
-            'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : null,
+            'expire_at' => $voucher->product->expire_at?->format('Y-m-d'),
             'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
             'photo' => new MediaResource($voucher->product->photo),
             'organization' => new OrganizationBasicResource($voucher->product->organization),
@@ -99,9 +98,9 @@ class SponsorVoucherResource extends BaseJsonResource
                 'employee_email' => Arr::get($log->data, sprintf($employeePattern, 'employee_email')),
                 'note' => Arr::get($log->data, sprintf($notePattern, 'note')),
                 'initiator' => $isTransaction ? $initiator  : null,
-                'created_at' => $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : null,
+                'created_at' => $log->created_at?->format('Y-m-d H:i:s'),
                 'created_at_locale' => format_datetime_locale($log->created_at),
-                'updated_at' => $log->updated_at ? $log->updated_at->format('Y-m-d H:i:s') : null,
+                'updated_at' => $log->updated_at?->format('Y-m-d H:i:s'),
                 'updated_at_locale' => format_date_locale($log->updated_at),
             ]);
         })->values()->toArray();

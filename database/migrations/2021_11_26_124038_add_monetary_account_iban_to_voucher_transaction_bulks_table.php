@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class AddMonetaryAccountIbanToVoucherTransactionBulksTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -32,4 +29,4 @@ class AddMonetaryAccountIbanToVoucherTransactionBulksTable extends Migration
             $table->dropColumn('monetary_account_iban');
         });
     }
-}
+};

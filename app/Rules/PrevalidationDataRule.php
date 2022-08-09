@@ -3,6 +3,7 @@
 namespace App\Rules;
 
 use App\Models\Fund;
+use App\Models\RecordType;
 use Illuminate\Contracts\Validation\Rule;
 
 /**
@@ -11,8 +12,8 @@ use Illuminate\Contracts\Validation\Rule;
  */
 class PrevalidationDataRule implements Rule
 {
-    private $messageText;
-    private $fundId;
+    private string $messageText;
+    private ?int $fundId;
 
     /**
      * Create a new rule instance.
@@ -36,8 +37,7 @@ class PrevalidationDataRule implements Rule
     public function passes($attribute, $value): bool
     {
         $data = collect($value);
-        $recordRepo = resolve('forus.services.record');
-        $recordTypes = collect($recordRepo->getRecordTypes())->pluck('key');
+        $recordTypes = RecordType::search()->pluck('key');
 
         if ($data->isEmpty()) {
             $this->messageText = trans('validation.prevalidated_empty_data');

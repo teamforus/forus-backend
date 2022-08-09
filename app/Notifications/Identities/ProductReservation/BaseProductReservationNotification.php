@@ -4,7 +4,7 @@ namespace App\Notifications\Identities\ProductReservation;
 
 use App\Models\ProductReservation;
 use App\Notifications\Identities\BaseIdentityNotification;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 use Illuminate\Support\Collection;
 
 /**

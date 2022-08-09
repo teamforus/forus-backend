@@ -40,7 +40,7 @@ class IdentityStoreRequest extends BaseFormRequest
             'records' => [
                 'nullable',
                 'array',
-                new IdentityRecordsRule($this)
+                new IdentityRecordsRule()
             ],
             'records.address' => [
                 new IdentityRecordsAddressRule()

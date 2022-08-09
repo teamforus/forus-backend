@@ -5,10 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Fund;
 
-/**
- * @noinspection PhpUnused
- */
-class AddDescriptionTextToFundsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -39,4 +36,4 @@ class AddDescriptionTextToFundsTable extends Migration
             $table->dropColumn("description_text");
         });
     }
-}
+};

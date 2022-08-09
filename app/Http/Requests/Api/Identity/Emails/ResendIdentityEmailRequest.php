@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api\Identity\Emails;
 
-use App\Services\Forus\Identity\Models\IdentityEmail;
+use App\Models\IdentityEmail;
 
 /**
  * Class ResendIdentityEmailRequest

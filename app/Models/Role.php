@@ -37,7 +37,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|Role withTranslation()
  * @mixin \Eloquent
  */
-class Role extends Model
+class Role extends BaseModel
 {
     use Translatable;
 

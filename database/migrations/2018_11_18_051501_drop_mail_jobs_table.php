@@ -3,10 +3,7 @@
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class DropMailJobsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -23,8 +20,5 @@ class DropMailJobsTable extends Migration
      *
      * @return void
      */
-    public function down(): void
-    {
-
-    }
-}
+    public function down(): void {}
+};

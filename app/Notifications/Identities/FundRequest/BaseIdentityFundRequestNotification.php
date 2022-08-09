@@ -4,13 +4,9 @@ namespace App\Notifications\Identities\FundRequest;
 
 use App\Models\FundRequest;
 use App\Notifications\Identities\BaseIdentityNotification;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 use Illuminate\Support\Collection;
 
-/**
- * Class BaseIdentityFundRequestNotification
- * @package App\Notifications\Identities\FundRequest
- */
 abstract class BaseIdentityFundRequestNotification extends BaseIdentityNotification
 {
     /**

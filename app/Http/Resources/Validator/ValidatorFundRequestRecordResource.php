@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Validator;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\BaseJsonResource;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
@@ -26,7 +27,8 @@ class ValidatorFundRequestRecordResource extends BaseJsonResource
      */
     public function toArray($request): array
     {
-        $identityAddress = auth_address(true);
+        $baseRequest = BaseFormRequest::createFrom($request);
+        $identityAddress = $baseRequest->auth_address() or abort(403);
 
         /** @var Organization $organization */
         $organization = $request->route('organization') or abort(403);

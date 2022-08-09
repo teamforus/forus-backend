@@ -78,7 +78,7 @@ class FundProviderChatsController extends Controller
         $chatMessage = $fundProvider->startChat(
             Product::find($request->input('product_id')),
             $request->input('message'),
-            auth_address()
+            $request->auth_address(),
         );
 
         FundProviderSponsorChatMessage::dispatch($fundProvider, $chatMessage);

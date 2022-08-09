@@ -48,7 +48,7 @@ use Illuminate\Support\Arr;
  * @method static \Illuminate\Database\Query\Builder|ImplementationPage withoutTrashed()
  * @mixin \Eloquent
  */
-class ImplementationPage extends Model
+class ImplementationPage extends BaseModel
 {
     use HasMedia, SoftDeletes;
 

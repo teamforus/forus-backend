@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\VoucherTransactionBulk;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -15,45 +16,43 @@ class VoucherTransactionBulkPolicy
     /**
      * Determine whether the user can view any voucher transaction bulks.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
      */
-    public function viewAny(string $identity_address, Organization $organization): bool
+    public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'view_finances');
+        return $organization->identityCan($identity, 'view_finances');
     }
 
     /**
      * Determine whether the user can view the voucher transaction bulk.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param VoucherTransactionBulk $voucherTransactionBulk
      * @param Organization $organization
      * @return bool
      */
     public function show(
-        string $identity_address,
+        Identity $identity,
         VoucherTransactionBulk $voucherTransactionBulk,
         Organization $organization
     ): bool {
         return
             $this->checkIntegrity($voucherTransactionBulk, $organization) &&
-            $organization->identityCan($identity_address, 'view_finances');
+            $organization->identityCan($identity, 'view_finances');
     }
 
     /**
      * Determine whether the user can build a new voucher transaction bulk.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
-     * @return bool|Response
+     * @return Response|bool
      */
-    public function store(
-        string $identity_address,
-        Organization $organization
-    ): Response|bool {
-        $hasPermission = $organization->identityCan($identity_address, 'manage_transaction_bulks');
+    public function store(Identity $identity, Organization $organization): Response|bool
+    {
+        $hasPermission = $organization->identityCan($identity, 'manage_transaction_bulks');
 
         if ($hasPermission) {
             if (VoucherTransactionBulk::getNextBulkTransactionsForSponsor(
@@ -74,18 +73,19 @@ class VoucherTransactionBulkPolicy
     /**
      * Determine whether the user can build a new voucher transaction bulk.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param VoucherTransactionBulk $bulk
      * @param Organization $organization
-     * @return bool|Response
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
     public function resetBulk(
-        string $identity_address,
+        Identity $identity,
         VoucherTransactionBulk $bulk,
         Organization $organization
     ): Response|bool {
         $integrityIsValid = $this->checkIntegrity($bulk, $organization);
-        $hasPermission = $organization->identityCan($identity_address, 'manage_transaction_bulks');
+        $hasPermission = $organization->identityCan($identity, 'manage_transaction_bulks');
         $bank = $bulk->bank_connection->bank;
 
         if ($bank->isBunq() && !$bulk->isRejected()) {
@@ -102,19 +102,20 @@ class VoucherTransactionBulkPolicy
     /**
      * Determine whether the user can build a new voucher transaction bulk.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param VoucherTransactionBulk $voucherTransactionBulk
      * @param Organization $organization
-     * @return bool|Response
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
     public function setAcceptedManually(
-        string $identity_address,
+        Identity $identity,
         VoucherTransactionBulk $voucherTransactionBulk,
         Organization $organization
     ): Response|bool {
         $hasPermission =
             $this->checkIntegrity($voucherTransactionBulk, $organization) &&
-            $organization->identityCan($identity_address, 'manage_transaction_bulks');
+            $organization->identityCan($identity, 'manage_transaction_bulks');
 
         if (!$voucherTransactionBulk->isPending()) {
             return $this->deny("Only pending bulks can be approved manually.");

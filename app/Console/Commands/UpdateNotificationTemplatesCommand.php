@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
+use Database\Seeders\NotificationTemplatesTableSeeder;
 use Illuminate\Console\Command;
-use NotificationTemplatesTableSeeder;
 
 class UpdateNotificationTemplatesCommand extends Command
 {
@@ -25,8 +25,8 @@ class UpdateNotificationTemplatesCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
-     * @throws \Exception
+     * @return void
+     * @throws \Throwable
      */
     public function handle(): void
     {
