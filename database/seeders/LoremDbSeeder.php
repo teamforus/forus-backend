@@ -625,9 +625,9 @@ class LoremDbSeeder extends Seeder
         $requiredDigId = array_map("str_slug", $this->implementationsWithRequiredDigId);
         $digidSignup = array_map("str_slug", $this->implementationsWithDigidSignup);
 
-        return Implementation::create([
-            'key' => $key,
-            'name' => $name,
+        return Implementation::forceCreate([
+            'key'   => $key,
+            'name'  => $name,
             'organization_id' => $organization?->id,
 
             'url_webshop' => str_var_replace(
@@ -658,6 +658,7 @@ class LoremDbSeeder extends Seeder
             'digid_shared_secret'       => config('forus.seeders.lorem_db_seeder.digid_shared_secret'),
             'digid_a_select_server'     => config('forus.seeders.lorem_db_seeder.digid_a_select_server'),
             'digid_sign_up_allowed'     => in_array($key, $digidSignup, true),
+            'productboard_api_key'      => config('forus.seeders.lorem_db_seeder.productboard_api_key'),
         ]);
     }
 
