@@ -3,21 +3,19 @@
 namespace App\Services\ProductboardApiService;
 
 use GuzzleHttp\Client;
-use Illuminate\Support\Arr;
 
 class ProductboardApi
 {
     protected string $api_url = "https://api.productboard.com/";
     protected string $api_key;
-    protected int $connect_timeout;
+    protected int $connect_timeout = 10;
 
     /**
-     * @param array $configs
+     * @param string $api_key
      */
-    public function __construct(array $configs)
+    public function __construct(string $api_key)
     {
-        $this->api_key = Arr::get($configs, 'access_token');
-        $this->connect_timeout = Arr::get($configs, 'connect_timeout', 10);
+        $this->api_key = $api_key;
     }
 
     /**

@@ -2,7 +2,7 @@
 
 namespace App\Services\ProductboardApiService;
 
-use Illuminate\Support\Arr;
+use App\Models\Implementation;
 use Illuminate\Support\ServiceProvider;
 
 class ProductboardApiServiceProvider extends ServiceProvider
@@ -15,22 +15,9 @@ class ProductboardApiServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton('productboard', function() {
-            $storage = resolve('filesystem')->disk('local');
-            $configPath = config('productboard.config_path');
+            $api_key = Implementation::active()->getProductboardApiKey();
 
-            try {
-                $config = json_decode($storage->get($configPath), true);
-
-                if ($config && is_string(Arr::get($config, 'access_token'))) {
-                    return new ProductboardApi($config);
-                }
-            } catch (\Throwable $e) {
-                if ($logger = logger()) {
-                    $logger->error($e->getMessage());
-                }
-            }
-
-            return null;
+            return $api_key ? new ProductboardApi($api_key) : null;
         });
     }
 }
