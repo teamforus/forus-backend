@@ -14,8 +14,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->text('backoffice_client_cert')->after('backoffice_certificate');
-            $table->text('backoffice_client_cert_key')->after('backoffice_client_cert');
+            $table->text('backoffice_certificate')->change();
+            $table->text('backoffice_client_cert')->after('backoffice_certificate')->change();
+            $table->text('backoffice_client_cert_key')->after('backoffice_client_cert')->change();
         });
     }
 
@@ -24,11 +25,5 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down(): void
-    {
-        Schema::table('fund_configs', function (Blueprint $table) {
-            $table->dropColumn('backoffice_client_cert');
-            $table->dropColumn('backoffice_client_cert_key');
-        });
-    }
+    public function down(): void {}
 };
