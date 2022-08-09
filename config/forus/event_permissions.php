@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'bank_connections' => [
+    'bank_connection' => [
         'permissions' => [
             'manage_bank_connections'
         ],
@@ -17,7 +17,7 @@ return [
         ]),
     ],
 
-    'vouchers' => [
+    'voucher' => [
         'permissions' => [
             'manage_vouchers'
         ],
@@ -40,7 +40,7 @@ return [
         ],
     ],
 
-    'employees' => [
+    'employee' => [
         'permissions' => [
             'manage_employees'
         ],
@@ -51,7 +51,7 @@ return [
         ],
     ],
 
-    'funds' => [
+    'fund' => [
         'permissions' => [
             'view_funds'
         ],

@@ -3,6 +3,10 @@
 return [
     'add_money' => false,
     'validationRequests' => true,
+    'event_permissions' => array_combine(
+        array_keys(config('forus.event_permissions')),
+        array_pluck(config('forus.event_permissions'), 'permissions'),
+    ),
     'organizations' => [
         'list' => true,
         'show' => true,

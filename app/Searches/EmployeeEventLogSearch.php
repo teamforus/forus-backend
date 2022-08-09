@@ -25,10 +25,10 @@ class EmployeeEventLogSearch extends BaseSearch
      * @var array|string[]
      */
     protected array $organizationRelationMap = [
-        'funds' => 'organization',
-        'vouchers' => 'fund.organization',
-        'employees' => 'organization',
-        'bank_connections' => 'organization',
+        'fund' => 'organization',
+        'voucher' => 'fund.organization',
+        'employee' => 'organization',
+        'bank_connection' => 'organization',
     ];
 
     /**
@@ -94,8 +94,8 @@ class EmployeeEventLogSearch extends BaseSearch
      */
     protected function whereLoggable(Builder $builder, Model $morphModel): void
     {
-        $table = $morphModel->getTable();
-        $builder->whereIn('event', Arr::get($this->permissions, "$table.events", []));
+        $morphKey = $morphModel->getMorphClass();
+        $builder->whereIn('event', Arr::get($this->permissions, "$morphKey.events", []));
         $builder->whereHasMorph('loggable', $morphModel::class);
 
         $builder->whereIn('loggable_id', fn (QBuilder $q) => $q->fromSub(
@@ -121,14 +121,14 @@ class EmployeeEventLogSearch extends BaseSearch
      */
     protected function makeMorphQuery(Model $model): Builder|QBuilder
     {
-        $table = $model->getTable();
-        $relation = Arr::get($this->organizationRelationMap, $table, '');
+        $morphKey = $model->getMorphClass();
+        $relation = Arr::get($this->organizationRelationMap, $morphKey, '');
 
-        return $model->newQuery()->whereHas($relation, function (Builder $builder) use ($table) {
+        return $model->newQuery()->whereHas($relation, function (Builder $builder) use ($morphKey) {
             OrganizationQuery::whereHasPermissions(
                 $builder->where('id', $this->employee->organization_id),
                 $this->employee->identity,
-                Arr::get($this->permissions, "$table.permissions", [])
+                Arr::get($this->permissions, "$morphKey.permissions", [])
             );
         })->select('id');
     }
