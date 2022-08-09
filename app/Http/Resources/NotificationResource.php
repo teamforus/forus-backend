@@ -6,7 +6,7 @@ use App\Models\Implementation;
 use App\Models\NotificationTemplate;
 use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
-use App\Services\Forus\Identity\Models\DatabaseNotification;
+use App\Models\DatabaseNotification;
 use Throwable;
 
 /**

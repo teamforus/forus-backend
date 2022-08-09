@@ -6,9 +6,11 @@ use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Product;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class FundProviderChatMessagePolicy
 {
@@ -17,22 +19,23 @@ class FundProviderChatMessagePolicy
     /**
      * Determine whether the user can view any fund provider chats.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param FundProviderChat $fundProviderChat
      * @param FundProvider $fundProvider
      * @param Fund $fund
      * @param Organization $organization
      * @return \Illuminate\Auth\Access\Response
+     * @noinspection PhpUnused
      */
     public function viewAnySponsor(
-        string $identity_address,
+        Identity $identity,
         FundProviderChat $fundProviderChat,
         FundProvider $fundProvider,
         Fund $fund,
         Organization $organization
-    ) {
+    ): Response {
         return $this->createSponsor(
-            $identity_address,
+            $identity,
             $fundProviderChat,
             $fundProvider,
             $fund,
@@ -43,20 +46,21 @@ class FundProviderChatMessagePolicy
     /**
      * Determine whether the user can view any fund provider chats.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param FundProviderChat $fundProviderChat
      * @param Product $product
      * @param Organization $organization
      * @return \Illuminate\Auth\Access\Response
+     * @noinspection PhpUnused
      */
     public function viewAnyProvider(
-        string $identity_address,
+        Identity $identity,
         FundProviderChat $fundProviderChat,
         Product $product,
         Organization $organization
-    ) {
+    ): Response {
         return $this->createProvider(
-            $identity_address,
+            $identity,
             $fundProviderChat,
             $product,
             $organization
@@ -66,22 +70,23 @@ class FundProviderChatMessagePolicy
     /**
      * Determine whether the user can view the fund provider chat.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param FundProviderChatMessage $fundProviderChatMessage
      * @param FundProviderChat $fundProviderChat
      * @param FundProvider $fundProvider
      * @param Fund $fund
      * @param Organization $organization
      * @return \Illuminate\Auth\Access\Response
+     * @noinspection PhpUnused
      */
     public function viewSponsor(
-        string $identity_address,
+        Identity $identity,
         FundProviderChatMessage $fundProviderChatMessage,
         FundProviderChat $fundProviderChat,
         FundProvider $fundProvider,
         Fund $fund,
         Organization $organization
-    ) {
+    ): Response {
         $integrityValidation = $this->checkIntegritySponsor(
             $organization,
             $fund,
@@ -94,7 +99,7 @@ class FundProviderChatMessagePolicy
             return $this->deny('integrity');
         }
 
-        if (!$organization->identityCan($identity_address, 'manage_providers')) {
+        if (!$organization->identityCan($identity, 'manage_providers')) {
             return $this->deny();
         }
 
@@ -104,20 +109,21 @@ class FundProviderChatMessagePolicy
     /**
      * Determine whether the user can view the fund provider chat.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param FundProviderChatMessage $fundProviderChatMessage
      * @param FundProviderChat $fundProviderChat
      * @param Product $product
      * @param Organization $organization
      * @return \Illuminate\Auth\Access\Response
+     * @noinspection PhpUnused
      */
     public function viewProvider(
-        string $identity_address,
+        Identity $identity,
         FundProviderChatMessage $fundProviderChatMessage,
         FundProviderChat $fundProviderChat,
         Product $product,
         Organization $organization
-    ) {
+    ): Response {
         $integrityValidation = $this->checkIntegrityProvider(
             $organization,
             $product,
@@ -129,7 +135,7 @@ class FundProviderChatMessagePolicy
             return $this->deny('integrity');
         }
 
-        if (!$organization->identityCan($identity_address, 'manage_provider_funds')) {
+        if (!$organization->identityCan($identity, 'manage_provider_funds')) {
             return $this->deny();
         }
 
@@ -139,20 +145,21 @@ class FundProviderChatMessagePolicy
     /**
      * Determine whether the user can create fund provider chats.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param FundProviderChat $fundProviderChat
      * @param FundProvider $fundProvider
      * @param Fund $fund
      * @param Organization $organization
-     * @return \Illuminate\Auth\Access\Response
+     * @return Response
+     * @noinspection PhpUnused
      */
     public function createSponsor(
-        string $identity_address,
+        Identity $identity,
         FundProviderChat $fundProviderChat,
         FundProvider $fundProvider,
         Fund $fund,
         Organization $organization
-    ) {
+    ): Response {
         $integrityValidation = $this->checkIntegritySponsor(
             $organization,
             $fund,
@@ -164,7 +171,7 @@ class FundProviderChatMessagePolicy
             return $this->deny('integrity');
         }
 
-        if (!$organization->identityCan($identity_address, 'manage_providers')) {
+        if (!$organization->identityCan($identity, 'manage_providers')) {
             return $this->deny();
         }
 
@@ -174,18 +181,19 @@ class FundProviderChatMessagePolicy
     /**
      * Determine whether the user can create fund provider chats.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param FundProviderChat $fundProviderChat
      * @param Product $product
      * @param Organization $organization
      * @return \Illuminate\Auth\Access\Response
+     * @noinspection PhpUnused
      */
     public function createProvider(
-        string $identity_address,
+        Identity $identity,
         FundProviderChat $fundProviderChat,
         Product $product,
         Organization $organization
-    ) {
+    ): Response {
         $integrityValidation = $this->checkIntegrityProvider(
             $organization,
             $product,
@@ -196,7 +204,7 @@ class FundProviderChatMessagePolicy
             return $this->deny('integrity');
         }
 
-        if (!$organization->identityCan($identity_address, 'manage_provider_funds')) {
+        if (!$organization->identityCan($identity, 'manage_provider_funds')) {
             return $this->deny();
         }
 
@@ -210,6 +218,7 @@ class FundProviderChatMessagePolicy
      * @param FundProviderChat $fundProviderChat
      * @param FundProviderChatMessage|null $fundProviderChatMessage
      * @return bool
+     * @noinspection PhpUnused
      */
     private function checkIntegritySponsor(
         Organization $organization,
@@ -217,7 +226,7 @@ class FundProviderChatMessagePolicy
         FundProvider $fundProvider,
         FundProviderChat $fundProviderChat,
         ?FundProviderChatMessage $fundProviderChatMessage = null
-    ) {
+    ): bool {
         if ($organization->id != $fund->organization_id) {
             return false;
         }
@@ -244,13 +253,14 @@ class FundProviderChatMessagePolicy
      * @param FundProviderChat $fundProviderChat
      * @param FundProviderChatMessage|null $fundProviderChatMessage
      * @return bool
+     * @noinspection PhpUnused
      */
     private function checkIntegrityProvider(
         Organization $organization,
         Product $product,
         FundProviderChat $fundProviderChat,
         ?FundProviderChatMessage $fundProviderChatMessage = null
-    ) {
+    ): bool {
         if ($organization->id != $product->organization_id) {
             return false;
         }

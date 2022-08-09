@@ -50,7 +50,7 @@ use Illuminate\Http\Request;
  * @method static Builder|Office whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Office extends Model
+class Office extends BaseModel
 {
     use HasMedia;
 

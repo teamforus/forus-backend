@@ -5,7 +5,7 @@ namespace App\Scopes\Builders;
 
 use App\Models\Fund;
 use App\Models\FundProviderProduct;
-use App\Models\Model;
+use App\Models\BaseModel;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
@@ -112,7 +112,7 @@ class ProductSubQuery
             ->selectRaw('CAST(if(`limit_total_unlimited`, null, `limit_total`) as SIGNED) as `limit_total`')
             ->getQuery();
 
-        return Model::query()->fromSub($builder, 'reservations')
+        return BaseModel::query()->fromSub($builder, 'reservations')
             ->selectRaw('cast(sum(`limit_total`) as signed) as `limit_total`');
     }
 
@@ -128,7 +128,7 @@ class ProductSubQuery
             ->selectRaw('CAST(`limit_per_identity` * `limit_multiplier` AS SIGNED) as `limit`')
             ->getQuery();
 
-        return Model::query()->fromSub($builder, 'reservations')
+        return BaseModel::query()->fromSub($builder, 'reservations')
             ->selectRaw('cast(sum(`limit`) as signed) as `limit`');
     }
 
@@ -244,7 +244,7 @@ class ProductSubQuery
             $builder->selectRaw("CAST((`count_transactions` + `count_vouchers` + `count_reservations`) as SIGNED) as `used_total`");
         }, 'count_reservations');
 
-        return Model::query()->fromSub($builder, 'reservations')
+        return BaseModel::query()->fromSub($builder, 'reservations')
             ->selectRaw('cast(sum(count_reservations) as signed) as count_reservations');
     }
 

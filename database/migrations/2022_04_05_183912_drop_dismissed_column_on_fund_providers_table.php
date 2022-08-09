@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class DropDismissedColumnOnFundProvidersTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -32,4 +29,4 @@ class DropDismissedColumnOnFundProvidersTable extends Migration
             $table->boolean('dismissed')->default(false)->after('allow_some_products');
         });
     }
-}
+};

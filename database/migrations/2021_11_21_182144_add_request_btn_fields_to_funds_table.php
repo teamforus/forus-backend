@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class AddRequestBtnFieldsToFundsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -34,4 +31,4 @@ class AddRequestBtnFieldsToFundsTable extends Migration
             $table->dropColumn('request_btn_url');
         });
     }
-}
+};

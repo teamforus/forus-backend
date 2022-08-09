@@ -2,12 +2,19 @@
 
 namespace App\Http\Controllers\Api\Identity;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Records\IndexRecordsRequest;
 use App\Http\Requests\Api\Records\RecordStoreRequest;
 use App\Http\Requests\Api\Records\RecordUpdateRequest;
+use App\Http\Requests\Api\Records\SortRecordsRequest;
 use App\Http\Requests\BaseFormRequest;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
-use App\Http\Controllers\Controller;
+use App\Http\Resources\RecordResource;
+use App\Models\Record;
+use App\Models\RecordType;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\JsonResponse;
 
 /**
  * Class RecordController
@@ -15,55 +22,39 @@ use App\Http\Controllers\Controller;
  */
 class RecordController extends Controller
 {
-    private IRecordRepo $recordRepo;
-
-    /**
-     * RecordController constructor.
-     * @param IRecordRepo $recordRepo
-     */
-    public function __construct(IRecordRepo $recordRepo)
-    {
-        $this->recordRepo = $recordRepo;
-    }
-
     /**
      * Get list records
      * @param IndexRecordsRequest $request
-     * @return array
+     * @return JsonResponse
      */
-    public function index(IndexRecordsRequest $request): array
+    public function index(IndexRecordsRequest $request): JsonResponse
     {
-        $recordRepo = $request->records_repo();
-        $recordTypes = collect($recordRepo->getRecordTypes())->keyBy('key')->toArray();
+        $deleted = $request->get('deleted', false);
 
-        return array_values(array_filter($recordRepo->recordsList(
-            $request->auth_address(),
-            $request->get('type'),
-            $request->get('record_category_id'),
-            (bool) $request->get('deleted', false)
-        ), static function($record) use ($recordTypes) {
-            if (env('HIDE_SYSTEM_RECORDS', false)) {
-                return !($recordTypes[$record['key']]['system'] ?? true);
-            }
+        /** @var Builder|Relation|SoftDeletes $query */
+        $query = $request->identity()->records();
+        $query = $deleted ? $query->onlyTrashed() : $query;
 
-            return $record;
-        }));
+        $query = Record::search($query, $request->only([
+            'type', 'record_category_id',
+        ]), env('HIDE_SYSTEM_RECORDS', false));
+
+        return new JsonResponse(RecordResource::queryCollection($query)->toArray($request));
     }
 
     /**
      * Create new record
      * @param RecordStoreRequest $request
-     * @return array|null
+     * @return RecordResource|null
      */
-    public function store(RecordStoreRequest $request): ?array
+    public function store(RecordStoreRequest $request): ?RecordResource
     {
-        return $this->recordRepo->recordCreate(
-            $request->auth_address(),
-            $request->get('type'),
+        return RecordResource::create($request->identity()->makeRecord(
+            RecordType::findByKey($request->get('type')),
             $request->get('value'),
             $request->get('record_category_id'),
             $request->get('order')
-        );
+        ));
     }
 
     /**
@@ -77,20 +68,21 @@ class RecordController extends Controller
      * Get record
      * @param BaseFormRequest $request
      * @param int $recordId
-     * @return array
+     * @return RecordResource
      */
-    public function show(BaseFormRequest $request, int $recordId): array
+    public function show(BaseFormRequest $request, int $recordId): RecordResource
     {
-        $recordRepo = $request->records_repo();
-        $recordTypes = collect($recordRepo->getRecordTypes())->keyBy('key')->toArray();
-        $record = $recordRepo->recordGet($request->auth_address(), $recordId, true);
+        /** @var Builder|SoftDeletes|Record $recordsQuery */
+        $recordsQuery = $request->identity()->records();
+        $record = $recordsQuery->withTrashed()->find($recordId);
+
         $hideSystemRecords = env('HIDE_SYSTEM_RECORDS', false);
 
-        if (!$record || ($hideSystemRecords && ($recordTypes[$record['key']]['system'] ?? true))) {
+        if (!$record || ($hideSystemRecords && ($record->record_type->system ?? true))) {
             abort(404, trans('records.codes.404'));
         }
 
-        return $record;
+        return RecordResource::create($record);
     }
 
     /**
@@ -98,22 +90,20 @@ class RecordController extends Controller
      *
      * @param RecordUpdateRequest $request
      * @param int $recordId
-     * @return array
+     * @return RecordResource
      */
-    public function update(RecordUpdateRequest $request, int $recordId): array
+    public function update(RecordUpdateRequest $request, int $recordId): RecordResource
     {
-        if (empty($this->recordRepo->recordGet($request->auth_address(), $recordId))) {
+        /** @var Record $record */
+        $record = $request->identity()->records()->find($recordId);
+
+        if (!$record) {
             abort(404, trans('records.codes.404'));
         }
 
-        $success = $this->recordRepo->recordUpdate(
-            $request->auth_address(),
-            $recordId,
-            $request->input('record_category_id'),
-            $request->input('order')
-        );
+        $record->update($request->only('record_category_id', 'order'));
 
-        return compact('success');
+        return RecordResource::create($record);
     }
 
     /**
@@ -127,31 +117,43 @@ class RecordController extends Controller
      * Delete record
      * @param BaseFormRequest $request
      * @param int $recordId
-     * @return array
-     * @throws \Exception
+     * @return JsonResponse
      */
-    public function destroy(BaseFormRequest $request, int $recordId): array
+    public function destroy(BaseFormRequest $request, int $recordId): JsonResponse
     {
-        if (empty($this->recordRepo->recordGet($request->auth_address(), $recordId))) {
+        /** @var Record $record */
+        $record = $request->identity()->records()->find($recordId);
+
+        if (!$record) {
             abort(404, trans('records.codes.404'));
         }
 
-        $success = $this->recordRepo->recordDelete($request->auth_address(), $recordId);
+        if ($record->record_type->key === 'primary_email') {
+            abort(403,'record.exceptions.cant_delete_primary_email', [
+                'record_type_name' => $record->record_type->name
+            ]);
+        }
 
-        return compact('success');
+        return new JsonResponse([
+            'success' => (bool) $record?->delete(),
+        ]);
     }
 
     /**
      * Sort records
-     * @param BaseFormRequest $request
-     * @return array
+     * @param SortRecordsRequest $request
+     * @return JsonResponse
      */
-    public function sort(BaseFormRequest $request): array
+    public function sort(SortRecordsRequest $request): JsonResponse
     {
-        $this->recordRepo->recordsSort($request->auth_address(), $request->get('records', []));
+        foreach ($request->get('records', []) as $order => $recordId) {
+            $request->identity()->records()->where([
+                'records.id' => $recordId,
+            ])->update(compact('order'));
+        }
 
-        $success = true;
-
-        return compact('success');
+        return new JsonResponse([
+            'success' => true,
+        ]);
     }
 }

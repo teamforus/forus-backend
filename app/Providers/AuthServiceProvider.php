@@ -19,7 +19,6 @@ use App\Models\PhysicalCardRequest;
 use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\ProductReservation;
-use App\Models\Tag;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
@@ -32,6 +31,7 @@ use App\Policies\FundProviderInvitationPolicy;
 use App\Policies\FundRequestClarificationPolicy;
 use App\Policies\FundRequestPolicy;
 use App\Policies\FundRequestRecordPolicy;
+use App\Policies\IdentityEmailPolicy;
 use App\Policies\ImplementationPagePolicy;
 use App\Policies\ImplementationPolicy;
 use App\Policies\MediaPolicy;
@@ -42,21 +42,21 @@ use App\Policies\OfficePolicy;
 use App\Policies\FundProviderPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ProductReservationPolicy;
-use App\Policies\TagPolicy;
 use App\Policies\VoucherPolicy;
 use App\Policies\VoucherTransactionBulkPolicy;
 use App\Policies\VoucherTransactionPolicy;
 use App\Services\AuthService\BearerTokenGuard;
 use App\Services\AuthService\ServiceIdentityProvider;
 use App\Services\FileService\Models\File;
+use App\Models\IdentityEmail;
 use App\Services\MediaService\Models\Media;
-use Illuminate\Auth\Access\Gate;
 use Illuminate\Contracts\Auth\Access\Gate as GateContract;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Policies\FundPolicy;
 use App\Policies\OrganizationPolicy;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -67,7 +67,6 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
-        Tag::class                      => TagPolicy::class,
         File::class                     => FilePolicy::class,
         Fund::class                     => FundPolicy::class,
         Media::class                    => MediaPolicy::class,
@@ -80,6 +79,7 @@ class AuthServiceProvider extends ServiceProvider
         FundProvider::class             => FundProviderPolicy::class,
         PhysicalCard::class             => PhysicalCardPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
+        IdentityEmail::class            => IdentityEmailPolicy::class,
         Implementation::class           => ImplementationPolicy::class,
         BankConnection::class           => BankConnectionPolicy::class,
         FundProviderChat::class         => FundProviderChatPolicy::class,
@@ -99,7 +99,7 @@ class AuthServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->registerPolicies();
 
@@ -113,26 +113,26 @@ class AuthServiceProvider extends ServiceProvider
             return new BearerTokenGuard(Auth::createUserProvider($config['provider']), app()->make('request'));
         });
 
-        \Gate::resource('funds', FundPolicy::class, [
+        Gate::resource('funds', FundPolicy::class, [
             'manageVouchers' => 'manageVouchers',
             'showFinances' => 'showFinances',
             'update' => 'update',
         ]);
 
-        \Gate::resource('prevalidations', PrevalidationPolicy::class, [
+        Gate::resource('prevalidations', PrevalidationPolicy::class, [
             'redeem' => 'redeem',
         ]);
 
-        \Gate::resource('organizations', OrganizationPolicy::class, [
+        Gate::resource('organizations', OrganizationPolicy::class, [
             'update' => 'update',
         ]);
     }
 
-    public function register()
+    public function register(): void
     {
         $this->app->singleton(GateContract::class, function ($app) {
-            return new Gate($app, function () use ($app) {
-                return auth_user() ?? false;
+            return new \Illuminate\Auth\Access\Gate($app, function () use ($app) {
+                return auth()->user() ?? null;
             });
         });
 

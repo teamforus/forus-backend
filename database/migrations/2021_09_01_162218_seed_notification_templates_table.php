@@ -3,10 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Database\Seeders\NotificationTemplatesTableSeeder;
 
-/**
- * @noinspection PhpUnused
- */
-class SeedNotificationTemplatesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -25,4 +22,4 @@ class SeedNotificationTemplatesTable extends Migration
      * @return void
      */
     public function down(): void {}
-}
+};

@@ -59,9 +59,7 @@ class FundRequestClarificationsController extends Controller
         Organization $organization,
         FundRequest $fundRequest
     ): FundRequestClarificationResource {
-        $this->authorize('create', [
-            FundRequestClarification::class, $fundRequest, $organization
-        ]);
+        $this->authorize('create', [FundRequestClarification::class, $fundRequest, $organization]);
 
         $clarification = $fundRequest->clarifications()->create($request->only([
             'question', 'fund_request_record_id'

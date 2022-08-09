@@ -5,10 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 use App\Services\FileService\Models\File;
 
-/**
- * @noinspection PhpUnused
- */
-class AddTypeFieldToFilesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -37,4 +34,4 @@ class AddTypeFieldToFilesTable extends Migration
     {
         //
     }
-}
+};

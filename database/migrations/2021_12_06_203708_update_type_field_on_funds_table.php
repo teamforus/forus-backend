@@ -2,10 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class UpdateTypeFieldOnFundsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -26,4 +23,4 @@ class UpdateTypeFieldOnFundsTable extends Migration
     {
         DB::statement("ALTER TABLE `funds` CHANGE `type` `type` ENUM('budget', 'subsidies') DEFAULT 'budget';");
     }
-}
+};

@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class AddEmployeeIdToVoucherTransactionsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -35,4 +32,4 @@ class AddEmployeeIdToVoucherTransactionsTable extends Migration
             $table->dropColumn('employee_id');
         });
     }
-}
+};

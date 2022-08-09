@@ -34,7 +34,7 @@ class RecordStoreRequest extends BaseFormRequest
         return [
             'type' => [
                 'required',
-                new RecordTypeKeyExistsRule($this, false),
+                new RecordTypeKeyExistsRule(false),
             ],
             'value' => [
                 'required',

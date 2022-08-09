@@ -20,6 +20,7 @@ use App\Http\Resources\Sponsor\SponsorVoucherResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
+use App\Models\Identity;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -75,37 +76,42 @@ class VouchersController extends Controller
         $note       = $request->input('note');
         $email      = $request->input('email', false);
         $amount     = $fund->isTypeBudget() ? $request->input('amount', 0) : 0;
-        $identity   = $email ? $request->identity_repo()->getOrMakeByEmail($email) : null;
+        $identity   = $email ? Identity::findOrMake($email)->address : null;
         $expire_at  = $request->input('expire_at', false);
         $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
         $multiplier = $request->input('limit_multiplier');
         $employee_id = $organization->findEmployee($request->auth_address())->id;
         $extraFields = compact('note', 'employee_id');
+        $productVouchers = [];
 
         if ($product_id) {
-            $voucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
+            $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
         } else {
-            $voucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
+            $mainVoucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
+            $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $extraFields, $expire_at);
         }
 
-        if ($organization->bsn_enabled && ($bsn = $request->input('bsn', false))) {
-            $voucher->setBsnRelation($bsn)->assignIfExists();
-        }
+        /** @var Voucher[] $vouchers */
+        $vouchers = array_merge([$mainVoucher], $productVouchers);
 
-        if (!$voucher->is_granted) {
-            if (!$request->input('activate')) {
-                $voucher->update([
-                    'state' => $voucher::STATE_PENDING,
-                ]);
+        foreach ($vouchers as $voucher) {
+            if ($organization->bsn_enabled && ($bsn = $request->input('bsn', false))) {
+                $voucher->setBsnRelation($bsn)->assignIfExists();
             }
 
-            if ($request->input('activation_code')) {
-                $voucher->makeActivationCode($request->input('activation_code_uid'));
+            if (!$voucher->is_granted) {
+                if (!$request->input('activate')) {
+                    $voucher->setPending();
+                }
+
+                if ($request->input('activation_code')) {
+                    $voucher->makeActivationCode($request->input('activation_code_uid'));
+                }
             }
         }
 
-        return new SponsorVoucherResource($voucher);
+        return new SponsorVoucherResource($mainVoucher);
     }
 
     /**
@@ -144,37 +150,42 @@ class VouchersController extends Controller
             $note       = $voucher['note'] ?? null;
             $email      = $voucher['email'] ?? false;
             $amount     = $fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0;
-            $identity   = $email ? $request->identity_repo()->getOrMakeByEmail($email) : null;
+            $identity   = $email ? Identity::findOrMake($email)->address : null;
             $expire_at  = $voucher['expire_at'] ?? false;
             $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
             $multiplier = $voucher['limit_multiplier'] ?? null;
             $employee_id = $organization->findEmployee($request->auth_address())->id;
             $extraFields = compact('note', 'employee_id');
+            $productVouchers = [];
 
             if ($product_id) {
-                $voucherModel = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
+                $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
             } else {
-                $voucherModel = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
+                $mainVoucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
+                $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $extraFields, $expire_at);
             }
 
-            if ($organization->bsn_enabled && ($bsn = ($voucher['bsn'] ?? false))) {
-                $voucherModel->setBsnRelation((string) $bsn)->assignIfExists();
-            }
+            /** @var Voucher[] $vouchers */
+            $vouchers = array_merge([$mainVoucher], $productVouchers);
 
-            if (!$voucherModel->is_granted) {
-                if (!($voucher['activate'] ?? false)) {
-                    $voucherModel->update([
-                        'state' => $voucherModel::STATE_PENDING,
-                    ]);
+            foreach ($vouchers as $voucherModel) {
+                if ($organization->bsn_enabled && ($bsn = ($voucher['bsn'] ?? false))) {
+                    $voucherModel->setBsnRelation((string) $bsn)->assignIfExists();
                 }
 
-                if ($voucher['activation_code'] ?? false) {
-                    $voucherModel->makeActivationCode($voucher['activation_code_uid'] ?? null);
+                if (!$voucherModel->is_granted) {
+                    if (!($voucher['activate'] ?? false)) {
+                        $voucherModel->setPending();
+                    }
+
+                    if ($voucher['activation_code'] ?? false) {
+                        $voucherModel->makeActivationCode($voucher['activation_code_uid'] ?? null);
+                    }
                 }
             }
 
-            return $voucherModel;
+            return $mainVoucher;
         }));
     }
 
@@ -229,7 +240,7 @@ class VouchersController extends Controller
         $email = $request->post('email');
 
         if ($email) {
-            $voucher->assignToIdentity($request->identity_repo()->getOrMakeByEmail($email));
+            $voucher->assignToIdentity(Identity::findOrMake($email));
         } else if ($organization->bsn_enabled && $bsn) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }

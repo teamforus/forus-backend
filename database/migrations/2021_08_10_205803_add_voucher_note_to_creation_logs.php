@@ -5,10 +5,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Models\Voucher;
 use App\Services\EventLogService\Models\EventLog;
 
-/**
- * @noinspection PhpUnused
- */
-class AddVoucherNoteToCreationLogs extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -37,4 +34,4 @@ class AddVoucherNoteToCreationLogs extends Migration
      * @return void
      */
     public function down(): void {}
-}
+};

@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class AddPreApproveExternalFundsColumnToOrganizationsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -33,4 +30,4 @@ class AddPreApproveExternalFundsColumnToOrganizationsTable extends Migration
             $table->dropColumn('pre_approve_external_funds');
         });
     }
-}
+};

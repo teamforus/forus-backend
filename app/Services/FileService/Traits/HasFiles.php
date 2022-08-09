@@ -28,7 +28,7 @@ trait HasFiles
     }
 
     /**
-     * Get all of the mediable's medias.
+     * Get all the fileable files.
      *
      * @return mixed
      */

@@ -13,8 +13,10 @@ class EmployeeQuery
      * @param string|array $permissions
      * @return Builder|Relation
      */
-    public static function whereHasPermissionFilter($query, $permissions)
-    {
+    public static function whereHasPermissionFilter(
+        Builder|Relation $query,
+        string|array $permissions
+    ): Builder|Relation {
         return $query->whereHas('roles.permissions', function(Builder $builder) use ($permissions) {
             $builder->whereIn('permissions.key', (array) $permissions);
         });
@@ -25,8 +27,10 @@ class EmployeeQuery
      * @param string|array $roles
      * @return Builder|Relation
      */
-    public static function whereHasRoleFilter($query, $roles)
-    {
+    public static function whereHasRoleFilter(
+        Builder|Relation $query,
+        string|array $roles
+    ): Builder|Relation {
         return $query->whereHas('roles', function(Builder $builder) use ($roles) {
             $builder->whereIn('roles.key', (array) $roles);
         });
@@ -37,8 +41,10 @@ class EmployeeQuery
      * @param Builder|Relation|array $records
      * @return Builder|Relation
      */
-    public static function whereCanValidateRecords($query, $records)
-    {
+    public static function whereCanValidateRecords(
+        Builder|Relation $query,
+        Builder|Relation|array $records
+    ): Relation|Builder {
         return $query->where(function($builder) use ($records) {
             static::whereHasPermissionFilter($builder, 'validate_records');
 
@@ -67,8 +73,6 @@ class EmployeeQuery
      */
     public static function whereQueryFilter(Relation|Builder $query, string $q): Relation|Builder
     {
-        return $query->whereIn(
-            'identity_address', identity_repo()->identityAddressesByEmailSearch($q)
-        );
+        return $query->whereRelation('identity.primary_email', 'email', 'LIKE', "%$q%");
     }
 }

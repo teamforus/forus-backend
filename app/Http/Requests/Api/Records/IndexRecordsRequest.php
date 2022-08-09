@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Records;
 
 use App\Http\Requests\BaseFormRequest;
-use Illuminate\Validation\Rule;
 
 class IndexRecordsRequest extends BaseFormRequest
 {
@@ -25,18 +24,9 @@ class IndexRecordsRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'type' => [
-                'nullable',
-                Rule::exists('record_types', 'key'),
-            ],
-            'record_category_id' => [
-                'nullable',
-                Rule::exists('record_categories', 'id'),
-            ],
-            'deleted' => [
-                'nullable',
-                'boolean',
-            ],
+            'type' => 'nullable|string|exists:record_types,key',
+            'deleted' => 'nullable|boolean',
+            'record_category_id' => 'nullable|numeric|exists:record_categories:id',
         ];
     }
 }

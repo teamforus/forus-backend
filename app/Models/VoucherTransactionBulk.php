@@ -91,7 +91,7 @@ use Throwable;
  * @method static Builder|VoucherTransactionBulk whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class VoucherTransactionBulk extends Model
+class VoucherTransactionBulk extends BaseModel
 {
     use HasLogs, HasDbTokens;
 
@@ -305,13 +305,12 @@ class VoucherTransactionBulk extends Model
     }
 
     /**
-     * @param BulkPaymentValue $draftPayment
      * @return VoucherTransactionBulk
      * @throws Throwable
      */
-    public function setAcceptedBNG(BulkPaymentValue $draftPayment): self
+    public function setAcceptedBNG(): self
     {
-        DB::transaction(function() use ($draftPayment) {
+        DB::transaction(function() {
             $this->update([
                 'state' => static::STATE_ACCEPTED,
             ]);
@@ -624,7 +623,7 @@ class VoucherTransactionBulk extends Model
                 }
 
                 if ($this->bank_connection->bank->isBNG()) {
-                    $this->setAcceptedBNG($payment);
+                    $this->setAcceptedBNG();
                 }
             } break;
         }

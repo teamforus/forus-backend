@@ -32,7 +32,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundRequestClarification extends Model
+class FundRequestClarification extends BaseModel
 {
     use HasFiles;
 

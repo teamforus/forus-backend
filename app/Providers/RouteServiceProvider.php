@@ -22,7 +22,7 @@ use App\Models\VoucherTransaction;
 use App\Models\DemoTransaction;
 use App\Models\VoucherTransactionBulk;
 use App\Services\DigIdService\Models\DigIdSession;
-use App\Services\Forus\Identity\Models\IdentityEmail;
+use App\Models\IdentityEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Route;
@@ -104,7 +104,7 @@ class RouteServiceProvider extends ServiceProvider
                 if ($voucher = Voucher::findByAddressOrPhysicalCard($value)) {
                     return $voucher->token_without_confirmation;
                 }
-            } catch (ModelNotFoundException $exception) {}
+            } catch (ModelNotFoundException) {}
 
             abort(404, $isCard ? "De pas is niet geactiveerd": 'De voucher is niet gevonden.');
         });

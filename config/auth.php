@@ -66,7 +66,8 @@ return [
 
     'providers' => [
         'identity_service' => [
-            'driver' => 'identity_service'
+            'driver' => 'identity_service',
+            'model' => \App\Models\Identity::class,
         ]
 
         // 'users' => [

@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class AddFundBackofficeLogIdToVouchersTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -37,4 +34,4 @@ class AddFundBackofficeLogIdToVouchersTable extends Migration
             $table->dropColumn('fund_backoffice_log_id');
         });
     }
-}
+};

@@ -6,7 +6,6 @@ use App\Mail\Digest\BaseDigestMail;
 use App\Mail\MailBodyBuilder;
 use App\Models\Organization;
 use App\Services\EventLogService\Traits\HasDigests;
-use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Notification\NotificationService;
 
 /**
@@ -20,22 +19,14 @@ abstract class BaseOrganizationDigest
      */
     protected string $requiredRelation = '';
     protected string $digestKey = '';
-    protected IIdentityRepo $identityRepo;
     protected array $employeePermissions = [];
 
     /**
      * @param NotificationService $notificationService
-     * @param IIdentityRepo $identityRepo
      */
-    public function handle(
-        NotificationService $notificationService,
-        IIdentityRepo $identityRepo
-    ): void {
-        $this->identityRepo = $identityRepo;
-
-        foreach (Organization::whereHas(
-            $this->requiredRelation
-        )->get() as $organization) {
+    public function handle(NotificationService $notificationService): void
+    {
+        foreach (Organization::whereHas($this->requiredRelation)->get() as $organization) {
             $this->handleOrganizationDigest($organization, $notificationService);
         }
     }
@@ -54,7 +45,8 @@ abstract class BaseOrganizationDigest
      * @param Organization|HasDigests $organization
      * @return \Carbon\Carbon|\Illuminate\Support\Carbon
      */
-    public function getOrganizationDigestTime(Organization $organization) {
+    public function getOrganizationDigestTime(Organization $organization)
+    {
         return $organization->lastDigestOfType($this->digestKey)->created_at ?? now()->subDay();
     }
 
@@ -80,11 +72,9 @@ abstract class BaseOrganizationDigest
         $employees = $organization->employeesWithPermissions($this->employeePermissions);
 
         foreach ($employees as $employee) {
-            $this->sendDigest(
-                $notificationService,
-                $this->identityRepo->getPrimaryEmail($employee->identity_address),
-                $emailBody
-            );
+            if ($employee->identity->email) {
+                $this->sendDigest($notificationService, $employee->identity->email, $emailBody);
+            }
         }
 
         $this->updateLastDigest($organization);
@@ -94,7 +84,7 @@ abstract class BaseOrganizationDigest
      * @param NotificationService $notificationService
      * @param string $email
      * @param MailBodyBuilder $emailBody
-     * @return mixed|void
+     * @return void
      */
     protected function sendDigest(
         NotificationService $notificationService,

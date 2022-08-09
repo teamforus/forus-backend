@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 
-/**
- * @noinspection PhpUnused
- */
-class DropWalletTokensTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -40,4 +37,4 @@ class DropWalletTokensTable extends Migration
             )->references('id')->on('tokens')->onDelete('cascade');
         });
     }
-}
+};

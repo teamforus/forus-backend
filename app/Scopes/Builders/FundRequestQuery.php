@@ -4,6 +4,7 @@
 namespace App\Scopes\Builders;
 
 use App\Models\FundRequest;
+use App\Models\Identity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
@@ -68,9 +69,7 @@ class FundRequestQuery
      */
     public static function whereQueryFilter(Builder $builder, string $q): Builder
     {
-        $recordRepo = resolve('forus.services.record');
-
-        return $builder->where(function (Builder $query) use ($q, $recordRepo) {
+        return $builder->where(function (Builder $query) use ($q) {
             $query->whereHas('fund', static function(Builder $builder) use ($q) {
                 $builder->where('name', 'LIKE', "%$q%");
             });
@@ -79,8 +78,8 @@ class FundRequestQuery
                 $builder->where('email', 'LIKE', "%$q%");
             });
 
-            if ($bsn_identity_address = $recordRepo->identityAddressByBsn($q)) {
-                $query->orWhere('identity_address', '=', $bsn_identity_address);
+            if ($bsnIdentity = Identity::findByBsn($q)) {
+                $query->orWhere('identity_address', '=', $bsnIdentity->address);
             }
 
             $query->orWhere('id', '=', $q);

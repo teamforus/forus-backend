@@ -4,7 +4,7 @@ namespace App\Notifications\Organizations\Funds;
 
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Models\Fund;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 
 /**
  * Notify sponsor that a new provider applied to the fund
@@ -28,6 +28,6 @@ class FundProviderAppliedNotification extends BaseFundsNotification
             'sponsor_dashboard_link' => $fund->urlSponsorDashboard(),
         ]), $fund->fund_config->implementation->getEmailFrom());
 
-        $this->sendMailNotification($identity->primary_email->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable);
     }
 }

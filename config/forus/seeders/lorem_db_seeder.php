@@ -68,8 +68,10 @@ return [
     ),
 
     'backoffice_url' => env('DB_SEED_BACKOFFICE_URL'),
-    'backoffice_key' => env('DB_SEED_BACKOFFICE_KEY', ""),
-    'backoffice_cert' => env('DB_SEED_BACKOFFICE_CERT', ""),
+    'backoffice_server_key' => env('DB_SEED_BACKOFFICE_SERVER_KEY', ""),
+    'backoffice_server_cert' => env('DB_SEED_BACKOFFICE_SERVER_CERT', ""),
+    'backoffice_client_cert' => env('DB_SEED_BACKOFFICE_CLIENT_CERT', ""),
+    'backoffice_client_cert_key' => env('DB_SEED_BACKOFFICE_CLIENT_CERT_KEY', ""),
     'backoffice_fallback' => env('DB_SEED_BACKOFFICE_FALLBACK', true),
 
     'iconnect_url' => env('DB_SEED_ICONNECT_URL', ""),

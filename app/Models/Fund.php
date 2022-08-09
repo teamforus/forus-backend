@@ -10,35 +10,37 @@ use App\Events\Funds\FundUnArchivedEvent;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
-use App\Scopes\Builders\VoucherQuery;
-use App\Services\BackofficeApiService\Responses\EligibilityResponse;
-use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
-use App\Services\BackofficeApiService\Responses\ResidencyResponse;
-use App\Services\EventLogService\Traits\HasDigests;
-use App\Services\EventLogService\Traits\HasLogs;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundCriteriaQuery;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\RecordValidationQuery;
+use App\Scopes\Builders\VoucherQuery;
+use App\Services\BackofficeApiService\BackofficeApi;
+use App\Services\BackofficeApiService\Responses\EligibilityResponse;
+use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
+use App\Services\BackofficeApiService\Responses\ResidencyResponse;
+use App\Services\EventLogService\Traits\HasDigests;
+use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Models\File;
-use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
-use App\Services\BackofficeApiService\BackofficeApi;
 use App\Traits\HasMarkdownDescription;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Facades\DB;
 
 /**
  * App\Models\Fund
@@ -171,7 +173,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @method static Builder|Fund whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Fund extends Model
+class Fund extends BaseModel
 {
     use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription;
 
@@ -431,6 +433,8 @@ class Fund extends Model
     {
         $values = array_only($attributes, [
             'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+            'email_required', 'contact_info_enabled', 'contact_info_required',
+            'contact_info_message_custom', 'contact_info_message_text',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
@@ -816,40 +820,44 @@ class Fund extends Model
      * @param string $identity_address
      * @param string $record_type
      * @param FundCriterion|null $criterion
-     * @return mixed
+     * @return Model|Record|null
      */
     public function getTrustedRecordOfType(
         string $identity_address,
         string $record_type,
         FundCriterion $criterion = null
-    ) {
+    ): Record|Model|null {
         $fund = $this;
-        $organization = $fund->organization;
-        $recordRepo = resolve('forus.services.record');
-        $trustedIdentities = $fund->validatorEmployees($criterion);
         $daysTrusted = $this->getTrustedDays($record_type);
-        $recordsOfType = $recordRepo->recordsList($identity_address, $record_type, null,false, $daysTrusted);
 
-        $validRecordsOfType = collect($recordsOfType)->map(static function($record) use (
-            $trustedIdentities, $organization
-        ) {
-            $validations = collect($record['validations']);
-            $validations = $validations->whereIn('identity_address', $trustedIdentities);
-            $validations = $validations->filter(static function($validation) use ($organization) {
-                return is_null($validation['organization_id']) ||
-                    ($validation['organization_id'] === $organization->id);
-            });
-
-            return array_merge($record, [
-                'validations' => $validations->sortByDesc('created_at')->values()->toArray()
-            ]);
-        })->filter(static function($record) {
-            return count($record['validations']) > 0;
-        })->sortByDesc(static function($record) {
-            return $record['validations'][0]['validation_date_timestamp'];
+        $builder = Record::search(Identity::findByAddress($identity_address)->records(), [
+            'type' => $record_type,
+        ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund, $criterion) {
+            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted);
+            RecordValidationQuery::whereTrustedByQuery($query, $fund, $criterion);
         });
 
-        return $validRecordsOfType->first();
+        $validationSubQuery = RecordValidation::where(function(Builder $query) use ($daysTrusted, $fund, $criterion) {
+            $query->whereColumn('records.id', '=', 'record_validations.record_id');
+            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted);
+            RecordValidationQuery::whereTrustedByQuery($query, $fund, $criterion);
+        });
+
+        $builder->addSelect([
+            'validated_at_validation' => (clone $validationSubQuery)->select('created_at'),
+            'validated_at_prevalidation' => (clone $validationSubQuery)->select([
+                'validated_at_prevalidation' => Prevalidation::whereColumn([
+                    'prevalidations.id' => 'record_validations.prevalidation_id',
+                ])->select('prevalidations.validated_at')
+            ])
+        ]);
+
+        $builder = Record::fromSub($builder->getQuery(), 'records')->select([
+            '*',
+            DB::raw('IF(`validated_at_prevalidation`, `validated_at_prevalidation`, `validated_at_validation`) as `validated_at`'),
+        ])->orderByDesc('validated_at');
+
+        return $builder->first();
     }
 
     /**
@@ -896,9 +904,7 @@ class Fund extends Model
                         $formula->record_type_key
                     );
 
-                    return is_numeric(
-                        $record['value']
-                    ) ? $formula->amount * $record['value'] : 0;
+                    return is_numeric($record?->value) ? $formula->amount * $record->value : 0;
                 }
                 default: return 0;
             }
@@ -918,12 +924,12 @@ class Fund extends Model
         }
 
         return $multipliers->map(function(FundLimitMultiplier $multiplier) use ($identityAddress) {
-            $records = $this->getTrustedRecordOfType(
+            $record = $this->getTrustedRecordOfType(
                 $identityAddress,
                 $multiplier->record_type_key
             );
 
-            return ((int) ($records ? $records['value']: 1)) * $multiplier->multiplier;
+            return ((int) ($record ? $record->value: 1)) * $multiplier->multiplier;
         })->sum();
     }
 
@@ -1136,11 +1142,28 @@ class Fund extends Model
             VoucherCreated::dispatch($voucher);
         }
 
+        return $voucher;
+    }
+
+    /**
+     * @param string|null $identity_address
+     * @param array $extraFields
+     * @param Carbon|null $expireAt
+     * @return array|Voucher[]
+     */
+    public function makeFundFormulaProductVouchers(
+        string $identity_address = null,
+        array $extraFields = [],
+        Carbon $expireAt = null
+    ): array {
+        $vouchers = [];
+        $fundEndDate = $this->end_date;
+
         if ($this->fund_formula_products->count() > 0) {
             foreach ($this->fund_formula_products as $fund_formula_product) {
-                $voucherExpireAt = $fund_formula_product->product->expire_at && $this->end_date->gt(
-                    $fund_formula_product->product->expire_at
-                ) ? $fund_formula_product->product->expire_at : $this->end_date;
+                $productExpireDate = $fund_formula_product->product->expire_at;
+                $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
+                $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
 
                 $voucher = $this->makeProductVoucher(
                     $identity_address,
@@ -1150,11 +1173,13 @@ class Fund extends Model
                     $fund_formula_product->price
                 );
 
+                $vouchers[] = $voucher;
+
                 VoucherAssigned::broadcast($voucher);
             }
         }
 
-        return $voucher;
+        return $vouchers;
     }
 
     /**
@@ -1206,6 +1231,14 @@ class Fund extends Model
     /**
      * @return bool
      */
+    public function isClosed(): bool
+    {
+        return $this->state === static::STATE_CLOSED;
+    }
+
+    /**
+     * @return bool
+     */
     public function isExpired(): bool
     {
         return $this->end_date->isPast();
@@ -1225,14 +1258,6 @@ class Fund extends Model
     public function isPaused(): bool
     {
         return $this->state === static::STATE_PAUSED;
-    }
-
-    /**
-     * @return bool
-     */
-    private function isClosed(): bool
-    {
-        return $this->state === static::STATE_CLOSED;
     }
 
     /**
@@ -1264,18 +1289,22 @@ class Fund extends Model
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param array $records
+     * @param string|null $contactInformation
      * @return FundRequest
      */
     public function makeFundRequest(
-        string $identity_address,
-        array $records
+        Identity $identity,
+        array $records,
+        ?string $contactInformation = null
     ): FundRequest {
         /** @var FundRequest $fundRequest */
-        $fundRequest = $this->fund_requests()->create(compact(
-            'identity_address'
-        ));
+        $fundRequest = $this->fund_requests()->create(array_merge([
+            'identity_address' => $identity->address,
+        ], $this->fund_config->contact_info_enabled ? [
+            'contact_information' => $contactInformation,
+        ] : []));
 
         foreach ($records as $record) {
             /** @var FundRequestRecord $requestRecord */
@@ -1704,39 +1733,35 @@ class Fund extends Model
     }
 
     /**
-     * @param ?string $identity_address
+     * @param Identity $identity
      * @return bool
      */
-    public function isTakenByPartner(?string $identity_address): bool
+    public function isTakenByPartner(Identity $identity): bool
     {
-        if (!$identity_address || !$identity = Identity::findByAddress($identity_address)) {
-            return false;
-        }
-
         return Identity::whereHas('vouchers', function(Builder $builder) {
             return VoucherQuery::whereNotExpired($builder->where('fund_id', $this->id));
         })->whereHas('records', function(Builder $builder) use ($identity) {
             $builder->where(function(Builder $builder) use ($identity) {
-                $identityBsn = record_repo()->bsnByAddress($identity->address);
+                $identityBsn = $identity->bsn;
 
                 $builder->where(function(Builder $builder) use ($identity, $identityBsn) {
-                    $builder->where('record_type_id', record_repo()->getTypeIdByKey(
-                        $this->isHashingBsn() ? 'partner_bsn_hash': 'partner_bsn'
-                    ));
+                    $builder->whereRelation('record_type', [
+                        'record_types.key' => $this->isHashingBsn() ? 'partner_bsn_hash': 'partner_bsn',
+                    ]);
 
                     $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
-                        $this->getTrustedRecordOfType($identity->address, 'bsn_hash')['value'] ?? null,
+                        $this->getTrustedRecordOfType($identity->address, 'bsn_hash')?->value ?: null,
                         $identityBsn ? $this->getHashedValue($identityBsn) : null
                     ]) : [$identityBsn ?: null]);
                 });
 
                 $builder->orWhere(function(Builder $builder) use ($identity, $identityBsn) {
-                    $builder->where('record_type_id', record_repo()->getTypeIdByKey(
-                        $this->isHashingBsn() ? 'bsn_hash': 'bsn'
-                    ));
+                    $builder->whereRelation('record_type', [
+                        'record_types.key' => $this->isHashingBsn() ? 'bsn_hash': 'bsn',
+                    ]);
 
                     $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
-                        $this->getTrustedRecordOfType($identity->address, 'partner_bsn_hash')['value'] ?? null,
+                        $this->getTrustedRecordOfType($identity->address, 'partner_bsn_hash')?->value ?: null,
                         $identityBsn ? $this->getHashedValue($identityBsn) : null
                     ]) : [$identityBsn ?: null]);
                 });
@@ -1784,30 +1809,29 @@ class Fund extends Model
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @return bool
      */
-    public function identityHasActiveVoucher(string $identity_address): bool
+    public function identityHasActiveVoucher(Identity $identity): bool
     {
-        return VoucherQuery::whereNotExpired($this->vouchers()->getQuery())->where(
-            compact('identity_address')
-        )->exists();
+        return VoucherQuery::whereNotExpired($this->vouchers()->getQuery())->where([
+            'identity_address' => $identity->address,
+        ])->exists();
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @return ResidencyResponse|PartnerBsnResponse|EligibilityResponse|null
      */
-    public function checkBackofficeIfAvailable(string $identity_address)
-    {
-        $recordRepo = record_repo();
-        $bsn = $recordRepo->bsnByAddress($identity_address);
-        $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity_address);
+    public function checkBackofficeIfAvailable(
+        Identity $identity
+    ): EligibilityResponse|ResidencyResponse|PartnerBsnResponse|null {
+        $bsn = $identity?->bsn;
+        $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity);
 
         if ($bsn && !$alreadyHasActiveVoucher && $this->isBackofficeApiAvailable()) {
-            $backofficeApi = $this->getBackofficeApi();
-
             // check for residency
+            $backofficeApi = $this->getBackofficeApi();
             $residencyResponse = $backofficeApi->residencyCheck($bsn);
 
             if (!$residencyResponse->getLog()->success() || !$residencyResponse->isResident()) {
@@ -1815,14 +1839,13 @@ class Fund extends Model
             }
 
             // check if taken by partner
-            if (env('ENABLE_BACKOFFICE_PARTNER_CHECK', false)) {
+            if ($this->fund_config->backoffice_check_partner) {
                 $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
-                $partnerBsn = $partnerBsnResponse->getBsn();
-                $partnerIdentity = $partnerBsn ? $recordRepo->identityAddressByBsn($partnerBsn) : null;
+                $partner = Identity::findByBsn($partnerBsnResponse->getBsn() ?: null);
 
                 if (!$partnerBsnResponse->getLog()->success() ||
-                    ($partnerIdentity && $this->identityHasActiveVoucher($partnerIdentity)) ||
-                    $this->isTakenByPartner($identity_address)) {
+                    ($partner && $this->identityHasActiveVoucher($partner)) ||
+                    $this->isTakenByPartner($identity)) {
                     return $partnerBsnResponse;
                 }
             }
@@ -1830,10 +1853,10 @@ class Fund extends Model
             // check again for active vouchers
             $response = $backofficeApi->eligibilityCheck($bsn, $residencyResponse->getLog()->response_id);
 
-            if ($response->isEligible() && !$this->identityHasActiveVoucher($identity_address)) {
-                $voucher = $this->makeVoucher($identity_address, [
-                    'fund_backoffice_log_id' => $response->getLog()->id,
-                ]);
+            if ($response->isEligible() && !$this->identityHasActiveVoucher($identity)) {
+                $extraFields = ['fund_backoffice_log_id' => $response->getLog()->id];
+                $voucher = $this->makeVoucher($identity->address, $extraFields);
+                $this->makeFundFormulaProductVouchers($identity->address, $extraFields);
 
                 $response->getLog()->update([
                     'voucher_id' => $voucher->id,
@@ -1853,7 +1876,7 @@ class Fund extends Model
     public function getBackofficeApi(bool $skipEnabledCheck = false): ?BackofficeApi
     {
         if ($this->isBackofficeApiAvailable($skipEnabledCheck)) {
-            return new BackofficeApi(record_repo(), $this);
+            return new BackofficeApi($this);
         }
 
         return null;

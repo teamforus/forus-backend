@@ -21,7 +21,7 @@ class PartnerBsnResponse
     /**
      * @return string|false|null
      */
-    public function getBsn()
+    public function getBsn(): bool|string|null
     {
         if ($this->log->state === BackofficeApi::STATE_SUCCESS) {
             return $this->log->response_body['partner_bsn'] ?? false;

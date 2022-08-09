@@ -7,10 +7,7 @@ use App\Models\FundProvider;
 use App\Models\Organization;
 use Illuminate\Database\Eloquent\Builder;
 
-/**
- * @noinspection PhpUnused
- */
-class AddStateColumnToFundProvidersTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -87,4 +84,4 @@ class AddStateColumnToFundProvidersTable extends Migration
             $table->dropColumn('state');
         });
     }
-}
+};

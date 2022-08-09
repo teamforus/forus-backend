@@ -9,12 +9,13 @@ use App\Models\Organization;
 use App\Models\Role;
 use Illuminate\Events\Dispatcher;
 
-/**
- * Class OrganizationSubscriber
- * @package App\Listeners
- */
 class OrganizationSubscriber
 {
+    /**
+     * @param OrganizationCreated $organizationCreated
+     * @return void
+     * @noinspection PhpUnused
+     */
     public function onOrganizationCreated(OrganizationCreated $organizationCreated): void
     {
         /** @var Employee $employee */
@@ -33,11 +34,12 @@ class OrganizationSubscriber
                     $organization->offices()->create(array_only($office, ['address', 'lon', 'lat']));
                 }
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable) {}
     }
 
     /**
      * @param OrganizationUpdated $organizationUpdated
+     * @noinspection PhpUnused
      */
     public function onOrganizationUpdated(OrganizationUpdated $organizationUpdated): void
     {
@@ -52,17 +54,13 @@ class OrganizationSubscriber
      * The events dispatcher
      *
      * @param Dispatcher $events
+     * @noinspection PhpUnused
      */
-    public function subscribe(Dispatcher $events)
+    public function subscribe(Dispatcher $events): void
     {
-        $events->listen(
-            OrganizationCreated::class,
-            '\App\Listeners\OrganizationSubscriber@onOrganizationCreated'
-        );
+        $class = '\\' . static::class;
 
-        $events->listen(
-            OrganizationUpdated::class,
-            '\App\Listeners\OrganizationSubscriber@onOrganizationUpdated'
-        );
+        $events->listen(OrganizationCreated::class, "$class@onOrganizationCreated");
+        $events->listen(OrganizationUpdated::class, "$class@onOrganizationUpdated");
     }
 }

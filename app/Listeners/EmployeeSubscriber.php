@@ -17,6 +17,7 @@ class EmployeeSubscriber
     /**
      * @param EmployeeCreated $employeeCreated
      * @throws \Exception
+     * @noinspection PhpUnused
      */
     public function onEmployeeCreated(EmployeeCreated $employeeCreated): void
     {
@@ -31,6 +32,7 @@ class EmployeeSubscriber
     /**
      * @param EmployeeUpdated $employeeUpdated
      * @throws \Exception
+     * @noinspection PhpUnused
      */
     public function onEmployeeUpdated(EmployeeUpdated $employeeUpdated): void
     {
@@ -65,6 +67,7 @@ class EmployeeSubscriber
     /**
      * @param EmployeeDeleted $employeeDeleted
      * @throws \Exception
+     * @noinspection PhpUnused
      */
     public function onEmployeeDeleted(EmployeeDeleted $employeeDeleted): void
     {
@@ -80,11 +83,14 @@ class EmployeeSubscriber
      * The events dispatcher
      *
      * @param Dispatcher $events
+     * @noinspection PhpUnused
      */
     public function subscribe(Dispatcher $events): void
     {
-        $events->listen(EmployeeCreated::class, '\App\Listeners\EmployeeSubscriber@onEmployeeCreated');
-        $events->listen(EmployeeUpdated::class, '\App\Listeners\EmployeeSubscriber@onEmployeeUpdated');
-        $events->listen(EmployeeDeleted::class, '\App\Listeners\EmployeeSubscriber@onEmployeeDeleted');
+        $class = '\\' . static::class;
+
+        $events->listen(EmployeeCreated::class, "$class@onEmployeeCreated");
+        $events->listen(EmployeeUpdated::class, "$class@onEmployeeUpdated");
+        $events->listen(EmployeeDeleted::class, "$class@onEmployeeDeleted");
     }
 }

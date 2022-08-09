@@ -25,7 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundLimitMultiplier whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundLimitMultiplier extends Model
+class FundLimitMultiplier extends BaseModel
 {
     protected $fillable = [
         'id', 'fund_id', 'multiplier', 'record_type_key'

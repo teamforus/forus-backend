@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class UpdateFundDescriptionField extends Migration
+return new class extends Migration
 {
     /**
      * @throws \Doctrine\DBAL\Exception
@@ -42,4 +39,4 @@ class UpdateFundDescriptionField extends Migration
             $table->string('description', 4000)->change();
         });
     }
-}
+};

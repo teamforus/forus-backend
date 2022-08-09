@@ -84,7 +84,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereVoucherTransactionBulkId($value)
  * @mixin \Eloquent
  */
-class VoucherTransaction extends Model
+class VoucherTransaction extends BaseModel
 {
     use HasLogs;
 

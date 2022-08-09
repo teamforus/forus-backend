@@ -63,7 +63,7 @@ class VouchersController extends Controller
         $this->authorize('sendEmail', $voucherToken->voucher);
 
         $voucher = $voucherToken->voucher;
-        $voucher->sendToEmail($voucher->identity->primary_email->email);
+        $voucher->sendToEmail($voucher->identity->email);
 
         return new JsonResponse([]);
     }

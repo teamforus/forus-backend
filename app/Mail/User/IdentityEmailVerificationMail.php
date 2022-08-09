@@ -4,7 +4,6 @@ namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
-use JetBrains\PhpStorm\ArrayShape;
 
 /**
  * Class EmailActivationMail
@@ -26,7 +25,6 @@ class IdentityEmailVerificationMail extends ImplementationMail
      * @param array $data
      * @return array
      */
-    #[ArrayShape(['link' => "string", 'button' => "string"])]
     protected function getMailExtraData(array $data): array
     {
         return [

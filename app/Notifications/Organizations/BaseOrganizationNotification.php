@@ -4,7 +4,7 @@ namespace App\Notifications\Organizations;
 
 use App\Models\Organization;
 use App\Notifications\BaseNotification;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
