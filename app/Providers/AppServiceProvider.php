@@ -9,7 +9,6 @@ use App\Media\ImplementationBlockMediaConfig;
 use App\Media\ImplementationMailLogoMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
-use App\Media\RecordCategoryIconMediaConfig;
 use App\Models\BankConnection;
 use App\Models\Fund;
 use App\Models\FundFaq;
@@ -76,8 +75,6 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap any application services.
-     *
-     * @throws \App\Services\MediaService\Exceptions\MediaConfigAlreadyRegisteredException
      */
     public function boot(): void
     {
@@ -92,7 +89,6 @@ class AppServiceProvider extends ServiceProvider
             new OfficePhotoMediaConfig(),
             new ProductPhotoMediaConfig(),
             new OrganizationLogoMediaConfig(),
-            new RecordCategoryIconMediaConfig(),
             new ImplementationBannerMediaConfig(),
             new ImplementationMailLogoMediaConfig(),
             new ImplementationBlockMediaConfig(),

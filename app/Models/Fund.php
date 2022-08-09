@@ -905,7 +905,7 @@ class Fund extends BaseModel
                         $formula->record_type_key
                     );
 
-                    return is_numeric($record?->value) ? $formula->amount * $record['value'] : 0;
+                    return is_numeric($record?->value) ? $formula->amount * $record->value : 0;
                 }
                 default: return 0;
             }
@@ -1840,7 +1840,7 @@ class Fund extends BaseModel
             }
 
             // check if taken by partner
-            if (env('ENABLE_BACKOFFICE_PARTNER_CHECK', false)) {
+            if ($this->fund_config->backoffice_check_partner) {
                 $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
                 $partner = Identity::findByBsn($partnerBsnResponse->getBsn() ?: null);
 

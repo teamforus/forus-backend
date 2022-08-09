@@ -11,6 +11,7 @@ class BearerTokenGuard implements Guard
     protected Request $request;
     protected UserProvider $identityProvider;
     protected ?Authenticatable $user;
+    protected string $bearerToken;
 
     public function __construct(UserProvider $identityProvider, Request $request)
     {
@@ -55,18 +56,8 @@ class BearerTokenGuard implements Guard
         }
 
         return $this->user = $this->identityProvider->retrieveByCredentials([
-            'bearer_token' => $this->getTokenForRequest()
+            'bearer_token' => $this->request->bearerToken()
         ]);
-    }
-
-    /**
-     * Get the token for the current request.
-     *
-     * @return string|null
-     */
-    public function getTokenForRequest(): ?string
-    {
-        return $this->request->bearerToken();
     }
 
     /**

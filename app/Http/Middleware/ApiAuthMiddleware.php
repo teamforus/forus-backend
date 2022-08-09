@@ -27,7 +27,7 @@ class ApiAuthMiddleware
             ], 401);
         }
 
-        if (!$baseRequest->user() || !$baseRequest->identity()) {
+        if (!$baseRequest->user() || !$baseRequest->identityProxy() || !$baseRequest->identity()) {
             return new JsonResponse([
                 "message" => 'invalid_access_token',
             ], 401);

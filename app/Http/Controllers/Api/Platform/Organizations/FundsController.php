@@ -117,6 +117,7 @@ class FundsController extends Controller
      * @param Organization $organization
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function storeCriteriaValidate(
         StoreFundCriteriaRequest $request,
@@ -175,26 +176,22 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('update', [$fund, $organization]);
 
-        $auto_requests_validation =
-            $request->input('default_validator_employee_id') &&
-            $request->input('auto_requests_validation');
-
         $fund->updateModel(array_merge($request->only([
             'name', 'description', 'description_short', 'notification_amount',
-            'default_validator_employee_id', 'faq_title',
+            'default_validator_employee_id', 'auto_requests_validation', 'faq_title',
             'request_btn_text', 'external_link_text', 'external_link_url',
-        ]), compact('auto_requests_validation')));
+        ])));
 
-        if ($fund->isWaiting()) {
-            $fund->updateFundsConfig($request->only([
-                'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
-            ]));
+        if (!$fund->default_validator_employee_id) {
+            $fund->updateModelValue('auto_requests_validation', false);
         }
 
-        $fund->updateFundsConfig($request->only([
+        $fund->updateFundsConfig($request->only(array_merge($fund->isWaiting() ? [
+            'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+        ] : [], [
             'email_required', 'contact_info_enabled', 'contact_info_required',
             'contact_info_message_custom', 'contact_info_message_text',
-        ]));
+        ])));
 
         $fund->attachMediaByUid($request->input('media_uid'));
         $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
@@ -223,6 +220,7 @@ class FundsController extends Controller
      * @param Fund $fund
      * @return FundResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function updateCriteria(
         UpdateFundCriteriaRequest $request,
@@ -245,6 +243,7 @@ class FundsController extends Controller
      * @param Fund $fund
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function updateCriteriaValidate(
         UpdateFundCriteriaRequest $request,
@@ -371,6 +370,7 @@ class FundsController extends Controller
      * @param Organization $organization
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function finances(FinanceRequest $request, Organization $organization): JsonResponse
     {
@@ -450,8 +450,9 @@ class FundsController extends Controller
      * @param Fund $fund
      * @return FundResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
-    public function unarchive(
+    public function unArchive(
         BaseFormRequest $request,
         Organization $organization,
         Fund $fund
