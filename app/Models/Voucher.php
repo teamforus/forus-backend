@@ -1133,6 +1133,7 @@ class Voucher extends BaseModel
         $this->log(self::EVENT_ACTIVATED, [
             'voucher' => $this,
             'employee' => $employee,
+            'sponsor' => $this->fund->organization,
         ], compact('note'));
 
         return $this;

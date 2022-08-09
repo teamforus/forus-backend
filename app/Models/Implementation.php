@@ -142,6 +142,7 @@ class Implementation extends BaseModel
 
     protected $perPage = 20;
     protected static ?Implementation $generalModel = null;
+    protected static ?Implementation $activeModel = null;
 
     /**
      * @var string[]
@@ -329,7 +330,23 @@ class Implementation extends BaseModel
      */
     public static function active(): ?Implementation
     {
-        return self::byKey(self::activeKey());
+        return static::$activeModel ?: static::$activeModel = self::byKey(self::activeKey());
+    }
+
+    /**
+     * @return Implementation
+     */
+    public static function general(): Implementation
+    {
+        return static::$generalModel ?: static::$generalModel = self::byKey(self::KEY_GENERAL);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isGeneral(): bool
+    {
+        return $this->key === self::KEY_GENERAL;
     }
 
     /**
@@ -710,22 +727,6 @@ class Implementation extends BaseModel
     public function getEmailFrom(): EmailFrom
     {
         return new EmailFrom($this);
-    }
-
-    /**
-     * @return bool
-     */
-    public function isGeneral(): bool
-    {
-        return $this->key === self::KEY_GENERAL;
-    }
-
-    /**
-     * @return Implementation
-     */
-    public static function general(): Implementation
-    {
-        return static::$generalModel ?: static::$generalModel = self::byKey(self::KEY_GENERAL);
     }
 
     /**

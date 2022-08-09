@@ -81,12 +81,12 @@ class EventLog extends Model
     /**
      * todo: migrate all eventsOfTypeQuery to eventsOfTypeQuery2
      * @param string $loggable_class
-     * @param int|array $loggable_key
+     * @param array|int $loggable_key
      * @return Builder
      */
     public static function eventsOfTypeQuery(
         string $loggable_class,
-        $loggable_key
+        array|int $loggable_key
     ): Builder {
         $query = self::query();
 
@@ -131,7 +131,9 @@ class EventLog extends Model
 
         return trans("events/loggable.$this->loggable_type", array_merge($attributes, [
             'dashboard_url' => rtrim(Implementation::active()->urlSponsorDashboard(), '/'),
-        ]));
+        ], $this->loggable instanceof Voucher ? [
+            'sponsor_id' => $attributes['sponsor_id'] ?? $this->loggable->fund->organization_id,
+        ] : []));
     }
 
     /**
@@ -173,7 +175,6 @@ class EventLog extends Model
                 'fund_name', 'provider_name', 'product_name', 'sponsor_id', 'fund_id',
             ]), [
                 'vouchers_count' => count(Arr::get($this->data, 'fund_export_voucher_ids', [])),
-                'dashboard_url' => rtrim(Implementation::active()->urlSponsorDashboard(), '/'),
             ]);
         }
 
@@ -184,6 +185,8 @@ class EventLog extends Model
                 'state' => Arr::get($this->data, 'bank_connection_state'),
             ];
         }
+
+        $attributes['dashboard_url'] = rtrim(Implementation::active()->urlSponsorDashboard(), '/');
 
         foreach ($attributes as $key => $attribute) {
             $attributes[$key] = e($attribute);
