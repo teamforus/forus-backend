@@ -54,6 +54,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $digid_shared_secret
  * @property string|null $digid_a_select_server
  * @property string|null $digid_forus_api_url
+ * @property string|null $productboard_api_key
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Media|null $banner
@@ -150,7 +151,7 @@ class Implementation extends Model
      */
     protected $hidden = [
         'digid_enabled', 'digid_env', 'digid_app_id', 'digid_shared_secret',
-        'digid_a_select_server',
+        'digid_a_select_server', 'productboard_api_key'
     ];
 
     /**
@@ -787,5 +788,13 @@ class Implementation extends Model
     public static function defaultEmailColor(): string
     {
         return config('forus.mail_styles.color_primary');
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getProductboardApiKey(): ?string
+    {
+        return $this->productboard_api_key ?: Implementation::general()->productboard_api_key;
     }
 }
