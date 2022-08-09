@@ -1163,9 +1163,9 @@ class Voucher extends BaseModel
      */
     public function requesterHistoryLogs(): Collection
     {
-        return $this->logs->whereIn('event', array_merge([
-            self::EVENT_EXPIRED_BUDGET,
+        return $this->logs->sortBy('created_at')->whereIn('event', array_merge([
             self::EVENT_EXPIRED_PRODUCT,
+            self::EVENT_EXPIRED_BUDGET,
             self::EVENT_DEACTIVATED,
             self::EVENT_ACTIVATED,
         ], self::EVENTS_CREATED));

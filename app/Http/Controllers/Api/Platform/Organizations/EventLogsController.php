@@ -6,14 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\EventLog\IndexEventLogRequest;
 use App\Http\Resources\Sponsor\EventLogResource;
 use App\Models\Organization;
-use App\Scopes\Builders\EventLogQuery;
+use App\Searches\EmployeeEventLogSearch;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * @noinspection PhpUnused
  */
-class EventLogController extends Controller
+class EventLogsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -30,12 +30,10 @@ class EventLogController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAny', [EventLog::class, $organization]);
 
-        $query = EventLogQuery::queryEvents(EventLog::query(), $organization, $request);
+        $search = new EmployeeEventLogSearch($request->employee($organization), $request->only([
+            'q', 'loggable', 'loggable_id',
+        ]));
 
-        if ($q = $request->get('q')) {
-            EventLogQuery::whereQueryFilter($query, $q);
-        }
-
-        return EventLogResource::queryCollection($query->orderByDesc('created_at'), $request);
+        return EventLogResource::queryCollection($search->query(), $request);
     }
 }

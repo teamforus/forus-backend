@@ -6,6 +6,7 @@ use App\Models\BankConnection;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Identity;
+use App\Models\Implementation;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -25,7 +26,9 @@ use Illuminate\Support\Arr;
  * @property array $data
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read string|null $loggable_locale
+ * @property-read string|null $event_locale_dashboard
+ * @property-read string|null $event_locale_webshop
+ * @property-read string|null $loggable_locale_dashboard
  * @property-read Identity|null $identity
  * @property-read Model|\Eloquent $loggable
  * @method static Builder|EventLog newModelQuery()
@@ -116,10 +119,37 @@ class EventLog extends Model
 
     /**
      * @return string|null
+     * @noinspection PhpUnused
      */
-    public function getLoggableLocaleAttribute(): ?string
+    public function getLoggableLocaleDashboardAttribute(): ?string
     {
-        return trans('events/loggable.' . $this->loggable_type);
+        $attributes = array_dot($this->data);
+
+        foreach ($attributes as $key => $attribute) {
+            $attributes[$key] = e($attribute);
+        }
+
+        return trans("events/loggable.$this->loggable_type", array_merge($attributes, [
+            'dashboard_url' => rtrim(Implementation::active()->urlSponsorDashboard(), '/'),
+        ]));
+    }
+
+    /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getEventLocaleDashboardAttribute(): ?string
+    {
+        return $this->getEventLocale(self::TRANSLATION_DASHBOARD);
+    }
+
+    /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getEventLocaleWebshopAttribute(): ?string
+    {
+        return $this->getEventLocale(self::TRANSLATION_WEBSHOP);
     }
 
     /**
@@ -139,13 +169,11 @@ class EventLog extends Model
         }
 
         if ($this->loggable_type === (new Fund())->getMorphClass()) {
-            $voucherIds = Arr::get($this->data, 'fund_vouchers_ids', []);
-            array_walk($voucherIds, fn(&$id) => $id = "#$id");
-
             $attributes = array_merge(Arr::only($this->data, [
-                'fund_name', 'provider_name', 'product_name',
+                'fund_name', 'provider_name', 'product_name', 'sponsor_id', 'fund_id',
             ]), [
-                'vouchers' => implode(', ', $voucherIds),
+                'vouchers_count' => count(Arr::get($this->data, 'fund_export_voucher_ids', [])),
+                'dashboard_url' => rtrim(Implementation::active()->urlSponsorDashboard(), '/'),
             ]);
         }
 
@@ -157,26 +185,10 @@ class EventLog extends Model
             ];
         }
 
-        $path = implode('.', ['events/' . $this->loggable_type, $type, $this->event]);
-
-        return trans($path, $attributes);
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getNote(): ?string
-    {
-        if ($this->loggable_type === (new Voucher())->getMorphClass()) {
-            $isTransaction = $this->event == 'transaction';
-            $initiator = Arr::get($this->data, 'voucher_transaction_initiator', 'provider');
-            $initiatorIsSponsor = $initiator == 'sponsor';
-
-            $notePattern = $isTransaction && $initiatorIsSponsor ? 'voucher_transaction_%s' : '%s';
-
-            return Arr::get($this->data, sprintf($notePattern, 'note'));
+        foreach ($attributes as $key => $attribute) {
+            $attributes[$key] = e($attribute);
         }
 
-        return null;
+        return trans("events/$this->loggable_type.$type.$this->event", $attributes);
     }
 }

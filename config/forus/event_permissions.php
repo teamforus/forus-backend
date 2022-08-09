@@ -1,22 +1,23 @@
 <?php
 
 return [
-    'bank_connection' => [
+    'bank_connections' => [
         'permissions' => [
             'manage_bank_connections'
         ],
-        'events' => [
+        'events' => array_merge([
             'disabled',
             'monetary_account_changed',
             'replaced',
+            'disabled_invalid',
             'activated',
-//            'created',
-//            'rejected',
-//            'disabled_invalid',
-        ],
+
+            // 'created',
+            // 'rejected',
+        ]),
     ],
 
-    'voucher' => [
+    'vouchers' => [
         'permissions' => [
             'manage_vouchers'
         ],
@@ -31,14 +32,15 @@ return [
             'transaction_product',
             'transaction_subsidy',
             'physical_card_requested',
-//            'shared_by_email',
-//            'shared',
-//            'expiring_soon_budget',
-//            'expiring_soon_product',
+            'expiring_soon_budget',
+            'expiring_soon_product',
+
+            // 'shared',
+            // 'shared_by_email',
         ],
     ],
 
-    'employee' => [
+    'employees' => [
         'permissions' => [
             'manage_employees'
         ],
@@ -49,31 +51,32 @@ return [
         ],
     ],
 
-    'fund' => [
+    'funds' => [
         'permissions' => [
             'view_funds'
         ],
         'events' => [
-            'vouchers_export',
-//            'created',
-//            'provider_applied',
-//            'provider_replied',
-//            'provider_approved_products',
-//            'provider_approved_budget',
-//            'provider_revoked_products',
-//            'provider_revoked_budget',
-//            'balance_low',
-//            'balance_supplied',
-//            'fund_started',
-//            'fund_ended',
-//            'fund_product_added',
-//            'fund_product_approved',
-//            'fund_product_revoked',
-//            'fund_product_subsidy_removed',
-//            'fund_expiring',
-//            'archived',
-//            'unarchived',
-//            'balance_updated_by_bank_connection',
+            'created',
+            'vouchers_exported',
+            'balance_low',
+            'balance_supplied',
+            'fund_started',
+            'fund_ended',
+            'fund_expiring',
+            'archived',
+            'unarchived',
+            'balance_updated_by_bank_connection',
+
+            // 'provider_applied',
+            // 'provider_replied',
+            // 'provider_approved_products',
+            // 'provider_approved_budget',
+            // 'provider_revoked_products',
+            // 'provider_revoked_budget',
+            // 'fund_product_added',
+            // 'fund_product_approved',
+            // 'fund_product_revoked',
+            // 'fund_product_subsidy_removed',
         ],
     ],
 ];

@@ -837,7 +837,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->get(
         'organizations/{organization}/logs',
-        'Api\Platform\Organizations\EventLogController@index'
+        'Api\Platform\Organizations\EventLogsController@index'
     );
 
     $router->get('prevalidations/export','Api\Platform\PrevalidationController@export');

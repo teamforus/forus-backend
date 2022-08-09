@@ -25,11 +25,11 @@ class IndexEventLogRequest extends BaseFormRequest
     {
         return [
             'q' => 'nullable|string|max:500',
-            'per_page'  => 'nullable|numeric|between:1,300',
             'loggable' => 'required_with:loggable_id|array' .
                 ($this->request->has('loggable_id') ? '|size:1' : ''),
             'loggable.*' => 'required|string',
             'loggable_id' => 'nullable|integer',
+            'per_page'  => $this->perPageRule(),
         ];
     }
 }
