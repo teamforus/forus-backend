@@ -2,7 +2,9 @@
 
 namespace App\Services\MediaService\Models;
 
+use App\Services\MediaService\MediaService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * App\Services\MediaService\Models\MediaPreset
@@ -33,20 +35,22 @@ class MediaPreset extends Model
      * @var array
      */
     protected $fillable = [
-        'media_id', 'key', 'path'
+        'media_id', 'key', 'path',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function media() {
+    public function media(): BelongsTo
+    {
         return $this->belongsTo(Media::class);
     }
 
     /**
      * @return \App\Services\MediaService\MediaService
      */
-    public function service() {
+    public function service(): MediaService
+    {
         return resolve('media');
     }
 
@@ -76,16 +80,17 @@ class MediaPreset extends Model
 
     /**
      * @return string|null
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function getContent() {
+    public function getContent(): ?string
+    {
         return self::service()->getContent($this->path);
     }
 
     /**
-     * @return mixed
+     * @return bool
      */
-    public function fileExists() {
+    public function fileExists(): bool
+    {
         return self::service()->storageFileExists($this->path);
     }
 }

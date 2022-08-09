@@ -136,7 +136,7 @@ $router->group([], static function() use ($router) {
 
     $router->post(
         'organizations/{organization}/funds/{fund}/unarchive',
-        "Api\Platform\Organizations\FundsController@unarchive");
+        "Api\Platform\Organizations\FundsController@unArchive");
 
     $router->resource(
         'organizations.funds',

@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * App\Models\RecordCategory
@@ -17,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property int $order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Media|null $icon
  * @property-read \App\Models\Identity $identity
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Record[] $records
  * @property-read int|null $records_count
@@ -59,16 +56,5 @@ class RecordCategory extends Model
     public function records(): HasMany
     {
         return $this->hasMany(Record::class);
-    }
-
-    /**
-     * Get category icon
-     * @return MorphOne
-     */
-    public function icon(): MorphOne
-    {
-        return $this->morphOne(Media::class, 'mediable')->where([
-            'type' => 'record_category_icon'
-        ]);
     }
 }
