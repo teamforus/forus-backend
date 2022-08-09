@@ -17,7 +17,7 @@ class ImplementationsTableSeeder extends DatabaseSeeder
             return;
         }
 
-        $generalImplementation = Implementation::create([
+        $generalImplementation = Implementation::forceCreate([
             'key'           => 'general',
             'name'          => 'General',
             'title'         => 'General',
@@ -30,10 +30,10 @@ class ImplementationsTableSeeder extends DatabaseSeeder
             'url_sponsor'   => config('forus.front_ends.panel-sponsor', ''),
             'url_provider'  => config('forus.front_ends.panel-provider', ''),
             'url_validator' => config('forus.front_ends.panel-validator', ''),
-            'url_website'   => config('forus.front_ends.website-default', ''),
             'url_app'       => config('forus.front_ends.landing-app', ''),
             'lon'           => config('forus.front_ends.map.lon', ''),
             'lat'           => config('forus.front_ends.map.lat', ''),
+            'productboard_api_key' => env('DB_SEED_PRODUCTBOARD_API_KEY', ''),
         ]);
 
         $emailLogoPath = resource_path('/mail_templates/assets/general/auth_icon.jpg');

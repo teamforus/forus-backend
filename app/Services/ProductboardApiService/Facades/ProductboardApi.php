@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Facade;
 
 class ProductboardApi extends Facade
 {
-    protected static function getFacadeAccessor()
+    protected static function getFacadeAccessor(): string
     {
         return 'productboard';
     }
