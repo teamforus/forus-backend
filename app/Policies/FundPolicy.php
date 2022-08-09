@@ -209,9 +209,7 @@ class FundPolicy
             return $this->deny(trans('fund.not_configured'));
         }
 
-        $backofficePartnerCheck = (bool) env('ENABLE_BACKOFFICE_PARTNER_CHECK', false);
-
-        if ($fund->isBackofficeApiAvailable() && $backofficePartnerCheck && $identity->bsn) {
+        if ($fund->isBackofficeApiAvailable() && $fund->fund_config->backoffice_check_partner && $identity->bsn) {
             try {
                 $response = $fund->getBackofficeApi()->partnerBsn($identity->bsn);
 

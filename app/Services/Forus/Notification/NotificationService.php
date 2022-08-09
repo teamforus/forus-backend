@@ -268,7 +268,9 @@ class NotificationService
             rtrim(Implementation::active()['url_sponsor'], '/'),
             'preferences/notifications');
 
-        $mailable->with(compact('email', 'unsubscribeLink', 'notificationPreferencesLink'));
+        $mailable->with(array_merge(compact('email', 'unsubscribeLink', 'notificationPreferencesLink'), [
+            'mailable' => get_class($mailable),
+        ]));
 
         if (method_exists($mailable, 'onQueue')) {
             $mailable->onQueue(config('forus.notifications.email_queue_name'));

@@ -250,13 +250,16 @@ class BackofficeApi
     public function request(string $method, string $url, array $data = []): array
     {
         $guzzleClient = new Client();
-        $certTmpFile = (new TmpFile($this->fund->fund_config->backoffice_certificate));
+        $certTmpFile = new TmpFile($this->fund->fund_config->backoffice_certificate);
+        $clientCertTmpFile = new TmpFile($this->fund->fund_config->backoffice_client_cert);
+        $clientCertKeyTmpFile = new TmpFile($this->fund->fund_config->backoffice_client_cert_key);
 
         try {
-            $options = $this->makeRequestOptions($method, $data);
-            $options['verify'] = $certTmpFile->path();
-            $response = $guzzleClient->request($method, $url, $options);
-            $certTmpFile->close();
+            $response = $guzzleClient->request($method, $url, $this->makeOptions($method, $data, [
+                'verify' => $certTmpFile->path(),
+                'cert' => $clientCertTmpFile->path(),
+                'ssl_key' => $clientCertKeyTmpFile->path(),
+            ]));
 
             return [
                 'success' => true,
@@ -264,13 +267,15 @@ class BackofficeApi
                 'response_body' => json_decode($response->getBody()->getContents(), true),
             ];
         } catch (\Throwable $e) {
-            $certTmpFile->close();
-
             return [
                 'success' => false,
                 'response_code' => $e->getCode(),
                 'response_error' => $e->getMessage(),
             ];
+        } finally {
+            $certTmpFile->close();
+            $clientCertTmpFile->close();
+            $clientCertKeyTmpFile->close();
         }
     }
 
@@ -331,25 +336,18 @@ class BackofficeApi
      *
      * @param string $method
      * @param array $data
+     * @param array $options
      * @return array
      */
-    protected function makeRequestOptions(string $method, array $data): array {
+    protected function makeOptions(string $method, array $data, array $options = []): array
+    {
+        $dataKey = $method === 'GET' ? 'query' : 'json';
+
         return array_merge([
             'headers' => $this->makeRequestHeaders(),
-            'connect_timeout' => config('forus.backoffice_api.connect_timeout', 10),
-            'cert' => [
-                config('forus.backoffice_api.cert_path'),
-                config('forus.backoffice_api.cert_pass')
-            ],
-            'ssl_key' => [
-                config('forus.backoffice_api.key_path'),
-                config('forus.backoffice_api.key_pass')
-            ],
-        ], $method === 'GET' ? [
-            'query' => $data,
-        ]: [
-            'json' => $data,
-        ]);
+            'connect_timeout' => 10,
+            $dataKey => $data,
+        ], $options);
     }
 
     /**

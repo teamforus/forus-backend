@@ -21,4 +21,15 @@ class BaseModel extends \Illuminate\Database\Eloquent\Model
     {
         return tap($this)->update($attributes, $options);
     }
+
+    /**
+     * @param string $key
+     * @param mixed $value
+     * @param array $options
+     * @return $this
+     */
+    public function updateModelValue(string $key, mixed $value, array $options = []): static
+    {
+        return $this->updateModel([$key => $value], $options);
+    }
 }
