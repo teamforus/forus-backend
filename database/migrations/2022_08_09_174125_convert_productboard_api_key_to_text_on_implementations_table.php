@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
-            $table->string('productboard_api_key', 1000)->nullable()->after('informal_communication');
+            $table->text('productboard_api_key')->nullable()->change();
         });
     }
 
@@ -25,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('implementations', function (Blueprint $table) {
-            $table->dropColumn('productboard_api_key');
-        });
+        Schema::table('implementations', function (Blueprint $table) {});
     }
 };
