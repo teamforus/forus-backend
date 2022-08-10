@@ -14,10 +14,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
-/**
- * Class ProviderReservationsDigest
- * @package App\Digests
- */
 class ProviderReservationsDigest extends BaseOrganizationDigest
 {
     use Dispatchable;

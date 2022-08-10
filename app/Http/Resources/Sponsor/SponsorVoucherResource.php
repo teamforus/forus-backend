@@ -42,7 +42,6 @@ class SponsorVoucherResource extends BaseJsonResource
             'in_use', 'limit_multiplier', 'fund_id',
         ]), [
             'amount_available' => currency_format($amount_available),
-            'history' => $this->getHistory($voucher),
             'source' => $voucher->employee_id ? 'employee' : 'user',
             'identity_bsn' => $identity_bsn ?? null,
             'identity_email' => $identity_email ?? null,
@@ -78,31 +77,5 @@ class SponsorVoucherResource extends BaseJsonResource
             'photo' => new MediaResource($voucher->product->photo),
             'organization' => new OrganizationBasicResource($voucher->product->organization),
         ]);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getHistory(Voucher $voucher): array
-    {
-        return $voucher->sponsorHistoryLogs()->reverse()->map(function (EventLog $log) {
-            $isTransaction = $log->event == 'transaction';
-            $initiator = Arr::get($log->data, 'voucher_transaction_initiator', 'provider');
-            $initiatorIsSponsor = $initiator == 'sponsor';
-
-            $notePattern = $isTransaction && $initiatorIsSponsor ? 'voucher_transaction_%s'  : '%s';
-            $employeePattern = $isTransaction && $initiatorIsSponsor ? 'voucher_transaction_%s'  : '%s';
-
-            return array_merge($log->only('id', 'event', 'event_locale'), [
-                'employee_id' => Arr::get($log->data, sprintf($employeePattern, 'employee_id')),
-                'employee_email' => Arr::get($log->data, sprintf($employeePattern, 'employee_email')),
-                'note' => Arr::get($log->data, sprintf($notePattern, 'note')),
-                'initiator' => $isTransaction ? $initiator  : null,
-                'created_at' => $log->created_at?->format('Y-m-d H:i:s'),
-                'created_at_locale' => format_datetime_locale($log->created_at),
-                'updated_at' => $log->updated_at?->format('Y-m-d H:i:s'),
-                'updated_at_locale' => format_date_locale($log->updated_at),
-            ]);
-        })->values()->toArray();
     }
 }
