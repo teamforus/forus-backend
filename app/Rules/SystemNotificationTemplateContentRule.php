@@ -2,7 +2,7 @@
 
 namespace App\Rules;
 
-class SystemNotificationTemplateContent extends BaseRule
+class SystemNotificationTemplateContentRule extends BaseRule
 {
     /**
      * Determine if the validation rule passes.

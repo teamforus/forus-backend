@@ -477,6 +477,7 @@ class LoremDbSeeder extends Seeder
             'business_type_id' => BusinessType::pluck('id')->random(),
             'manage_provider_products' => in_array($name, $this->sponsorsWithSponsorProducts),
             'backoffice_available' => in_array($name, $this->sponsorsWithBackoffice),
+            'allow_custom_fund_notifications' => true,
         ], $fields, compact('name', 'identity_address')), [
             'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',

@@ -8,5 +8,5 @@ namespace App\Notifications\Organizations\FundProviders;
 class FundProvidersRevokedProductsNotification extends BaseFundProvidersNotification
 {
     protected static ?string $key = 'notifications_fund_providers.revoked_products';
-    protected static $permissions = 'manage_provider_funds';
+    protected static string|array $permissions = 'manage_provider_funds';
 }

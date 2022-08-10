@@ -8,5 +8,5 @@ namespace App\Notifications\Organizations\Funds;
 class FundProviderChatMessageNotification extends BaseFundsNotification
 {
     protected static ?string $key = 'notifications_funds.provider_message';
-    protected static $permissions = 'manage_providers';
+    protected static string|array $permissions = 'manage_providers';
 }

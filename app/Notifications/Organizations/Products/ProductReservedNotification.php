@@ -12,7 +12,7 @@ use App\Models\Identity;
 class ProductReservedNotification extends BaseProductsNotification
 {
     protected static ?string $key = 'notifications_products.reserved';
-    protected static $permissions = 'manage_products';
+    protected static string|array $permissions = 'manage_products';
 
     public function toMail(Identity $identity): void
     {

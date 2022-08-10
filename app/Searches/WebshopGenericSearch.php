@@ -16,7 +16,7 @@ use Exception;
  */
 class WebshopGenericSearch
 {
-    protected $filters;
+    protected array $filters;
 
     /**
      * WebshopSearch constructor.
@@ -29,6 +29,7 @@ class WebshopGenericSearch
 
     /**
      * @param array $filters
+     * @noinspection PhpUnused
      */
     public function setFilters(array $filters): void
     {
@@ -37,6 +38,7 @@ class WebshopGenericSearch
 
     /**
      * @return array
+     * @noinspection PhpUnused
      */
     public function getFilters(): array
     {
@@ -48,7 +50,7 @@ class WebshopGenericSearch
      * @return Builder|null
      * @throws Exception
      */
-    public function query($types): ?Builder
+    public function query(array|string $types): ?Builder
     {
         $types = is_array($types) ? $types : func_get_args();
         $query = null;
@@ -69,16 +71,12 @@ class WebshopGenericSearch
      */
     protected function queryOfType(string $type, array $options): Builder
     {
-        switch ($type) {
-            case "products":
-                return $this->queryProducts($options);
-            case "providers":
-                return $this->queryProviders($options);
-            case "funds":
-                return $this->queryFunds($options);
-            default:
-                throw new Exception("Unknown query type");
-        }
+        return match ($type) {
+            "products" => $this->queryProducts($options),
+            "providers" => $this->queryProviders($options),
+            "funds" => $this->queryFunds($options),
+            default => throw new Exception("Unknown query type"),
+        };
     }
 
     /**
@@ -113,21 +111,13 @@ class WebshopGenericSearch
      */
     private function selectByType(Builder $query, string $type): Builder
     {
-        switch ($type) {
-            case "funds":
-                return $query->select([
-                    'id', 'name', 'created_at'
-                ])->selectRaw('"fund" as `item_type`');
-            case "products":
-                return $query->select([
-                    'id', 'name', 'created_at'
-                ])->selectRaw('"product" as `item_type`');
-            case "providers":
-                return $query->select([
-                    'id', 'name', 'created_at'
-                ])->selectRaw('"provider" as `item_type`');
-            default:
-                throw new Exception("Unknown query type");
-        }
+        $columns = ['id', 'name', 'created_at'];
+
+        return match ($type) {
+            "funds" => $query->select($columns)->selectRaw('"fund" as `item_type`'),
+            "products" => $query->select($columns)->selectRaw('"product" as `item_type`'),
+            "providers" => $query->select($columns)->selectRaw('"provider" as `item_type`'),
+            default => throw new Exception("Unknown query type"),
+        };
     }
 }

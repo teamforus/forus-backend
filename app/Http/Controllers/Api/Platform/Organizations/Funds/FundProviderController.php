@@ -2,20 +2,16 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Funds;
 
-use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundProviderRequest;
-use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundProviderRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\IndexFundProviderRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\UpdateFundProviderRequest;
 use App\Http\Resources\FundProviderResource;
 use App\Models\Fund;
-use App\Models\Organization;
-use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
+use App\Models\Organization;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class FundProviderController
- * @package App\Http\Controllers\Api\Platform\Organizations\Funds
- */
 class FundProviderController extends Controller
 {
     /**
@@ -57,7 +53,7 @@ class FundProviderController extends Controller
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProvider $organizationFund
-     * @return FundProviderResource|FundProvider
+     * @return FundProviderResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
@@ -67,7 +63,7 @@ class FundProviderController extends Controller
     ): FundProviderResource {
         $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
 
-        return new FundProviderResource($organizationFund);
+        return FundProviderResource::create($organizationFund);
     }
 
     /**

@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Implementations\SystemNot
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\SystemNotification;
-use App\Rules\SystemNotificationTemplateContent;
+use App\Rules\SystemNotificationTemplateContentRule;
 use App\Rules\SystemNotificationTemplateTitle;
 
 /**
@@ -39,7 +39,7 @@ class UpdateSystemNotificationsRequest extends BaseFormRequest
             'templates.*.type' => 'required|string|in:mail,push,database',
             'templates.*.formal' => 'required|boolean',
             'templates.*.title' => ['required', 'string', new SystemNotificationTemplateTitle()],
-            'templates.*.content' => ['required', 'string', new SystemNotificationTemplateContent()],
+            'templates.*.content' => ['required', 'string', new SystemNotificationTemplateContentRule()],
 
             'templates_remove' => 'nullable|array',
             'templates_remove.*.type' => 'required|string|in:mail,push,database',

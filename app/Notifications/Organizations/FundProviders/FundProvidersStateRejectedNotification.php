@@ -17,7 +17,7 @@ class FundProvidersStateRejectedNotification extends BaseFundProvidersNotificati
     /**
      * @var string[]
      */
-    protected static $permissions = 'manage_provider_funds';
+    protected static string|array $permissions = 'manage_provider_funds';
 
     /**
      * @param Identity $identity
