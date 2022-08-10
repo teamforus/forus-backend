@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\VoucherTransactionBulk;
@@ -54,7 +55,9 @@ class VoucherTransactionBulkPolicy
         $hasPermission = $organization->identityCan($identity, 'manage_transaction_bulks');
 
         if ($hasPermission) {
-            if (VoucherTransactionBulk::getNextBulkTransactionsForSponsor($organization)->exists()) {
+            if (VoucherTransactionBulk::getNextBulkTransactionsForSponsor(
+                $organization, BaseFormRequest::createFromBase(request())
+            )->exists()) {
                 return true;
             }
 

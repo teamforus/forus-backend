@@ -58,6 +58,7 @@ use Illuminate\Database\Query\Builder;
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
+ * @property bool $allow_custom_fund_notifications
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
@@ -126,6 +127,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization newQuery()
  * @method static EloquentBuilder|Organization query()
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
+ * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
  * @method static EloquentBuilder|Organization whereBankCronTime($value)
  * @method static EloquentBuilder|Organization whereBsnEnabled($value)
@@ -180,7 +182,7 @@ class Organization extends BaseModel
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
         'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
-        'reservations_auto_accept', 'bsn_enabled',
+        'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
     ];
 
     /**
@@ -201,6 +203,7 @@ class Organization extends BaseModel
         'reservations_subsidy_enabled'          => 'boolean',
         'reservations_auto_accept'              => 'boolean',
         'allow_batch_reservations'              => 'boolean',
+        'allow_custom_fund_notifications'       => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
     ];

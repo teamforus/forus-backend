@@ -7,16 +7,13 @@ use App\Notifications\Organizations\BaseOrganizationNotification;
 
 abstract class BaseBankConnectionsNotification extends BaseOrganizationNotification
 {
-    /**
-     * @var string
-     */
     protected static ?string $scope = self::SCOPE_SPONSOR;
 
     /**
      * @param \App\Models\BankConnection $loggable
      * @return \App\Models\Organization
      */
-    public static function getOrganization($loggable): Organization
+    public static function getOrganization(mixed $loggable): Organization
     {
         return $loggable->organization;
     }

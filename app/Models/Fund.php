@@ -197,6 +197,7 @@ class Fund extends BaseModel
     public const EVENT_UNARCHIVED = 'unarchived';
     public const EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
     public const EVENT_VOUCHERS_EXPORTED = 'vouchers_exported';
+    public const EVENT_SPONSOR_NOTIFICATION_CREATED = 'sponsor_notification_created';
 
     public const STATE_ACTIVE = 'active';
     public const STATE_CLOSED = 'closed';
@@ -499,6 +500,36 @@ class Fund extends BaseModel
         ]);
 
         return $this;
+    }
+
+    /**
+     * @param bool|null $withBalance
+     * @param bool|null $withEmail
+     * @return Builder
+     */
+    public function activeIdentityQuery(
+        bool $withBalance = false,
+        ?bool $withEmail = null
+    ): Builder {
+        $builder = Identity::whereHas('vouchers', function(Builder $builder) use ($withBalance) {
+            VoucherQuery::whereNotExpiredAndActive($builder->where([
+                'fund_id' => $this->id,
+            ]));
+
+            if ($withBalance) {
+                VoucherQuery::whereHasBalance($builder);
+            }
+        });
+
+        if ($withEmail === true) {
+            $builder->whereHas('primary_email');
+        }
+
+        if ($withEmail === false) {
+            $builder->whereDoesntHave('primary_email');
+        }
+
+        return $builder;
     }
 
     /**

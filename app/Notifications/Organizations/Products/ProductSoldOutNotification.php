@@ -12,7 +12,7 @@ use App\Models\Identity;
 class ProductSoldOutNotification extends BaseProductsNotification
 {
     protected static ?string $key = 'notifications_products.sold_out';
-    protected static $permissions = 'manage_products';
+    protected static string|array $permissions = 'manage_products';
 
     /**
      * @param Identity $identity

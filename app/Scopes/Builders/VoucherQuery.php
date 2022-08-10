@@ -7,9 +7,12 @@ use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Models\Identity;
 use App\Models\IdentityEmail;
+use App\Models\VoucherTransaction;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Query\Builder as QBuilder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Class VoucherQuery
@@ -62,10 +65,10 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation $builder
+     * @return Builder|Relation
      */
-    public static function whereNotExpired(Builder $builder): Builder
+    public static function whereNotExpired(Builder|Relation $builder): Builder|Relation
     {
         return $builder->where(static function(Builder $builder) {
             $builder->where('vouchers.expire_at', '>=', today());
@@ -77,10 +80,10 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation $builder
+     * @return Builder|Relation
      */
-    public static function whereActive(Builder $builder): Builder
+    public static function whereActive(Builder|Relation $builder): Builder|Relation
     {
         return $builder->where('state', Voucher::STATE_ACTIVE);
     }
@@ -104,10 +107,10 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation $builder
+     * @return Builder|Relation
      */
-    public static function whereNotExpiredAndActive(Builder $builder): Builder
+    public static function whereNotExpiredAndActive(Builder|Relation $builder): Builder|Relation
     {
         return self::whereNotExpired(self::whereActive($builder));
     }
@@ -253,15 +256,14 @@ class VoucherQuery
 
     /**
      * @param Builder $builder
-     * @param bool $inUse
      * @return Builder
      */
-    public static function whereIsProductVoucher(Builder $builder, bool $inUse = true): Builder
+    public static function whereIsProductVoucher(Builder $builder): Builder
     {
-        return $builder->where(static function(Builder $builder) use ($inUse) {
+        return $builder->where(static function(Builder $builder) {
             $builder->whereNotNull('parent_id');
 
-            $builder->where(static function(Builder $builder) use ($inUse) {
+            $builder->where(static function(Builder $builder) {
                 $builder->whereDoesntHave('product_reservation');
                 $builder->orWhereHas('product_reservation', function (Builder $builder) {
                     $builder->whereIn('state', [
@@ -280,5 +282,70 @@ class VoucherQuery
     public static function whereNotInUseQuery(Builder $builder): Builder
     {
         return static::whereInUseQuery($builder, false);
+    }
+
+    /**
+     * @param Relation|Builder $query
+     * @return Relation|Builder
+     */
+    public static function whereHasBalance(Relation|Builder $query): Relation|Builder
+    {
+        return $query->where(function(Builder $builder) {
+            $builder->where(fn(Builder $builder) => static::whereIsProductVoucher(
+                $builder->whereDoesntHave('transactions')
+            ));
+
+            $builder->orWhere(function(Builder $builder) {
+                $builder->whereNull('parent_id');
+                $builder->where('amount', '>', fn (QBuilder $builder) => $builder->fromSub(
+                    self::voucherBalanceSubQuery(), 'voucher_payouts'
+                ));
+            });
+        });
+    }
+
+    /**
+     * @param Relation|Builder $query
+     * @return Relation|Builder
+     */
+    public static function whereHasBalanceIsActiveAndNotExpired(
+        Relation|Builder $query
+    ): Relation|Builder {
+        return self::whereHasBalance(self::whereNotExpiredAndActive($query));
+    }
+
+    /**
+     * @param Relation|Builder $query
+     * @return Relation|Builder
+     */
+    public static function addBalanceFields(Relation|Builder $query): Relation|Builder
+    {
+        $query->addSelect([
+            'balance' => DB::query()
+                ->fromSub(static::voucherBalanceSubQuery(), 'voucher_payouts')
+                ->selectRaw('vouchers.amount - voucher_payouts.amount_spent'),
+        ]);
+
+        return $query;
+    }
+
+    /**
+     * @return QBuilder
+     */
+    private static function voucherBalanceSubQuery(): QBuilder
+    {
+        $selectQuery = DB::query()->select([
+            'transactions_amount' => VoucherTransaction::query()
+                ->whereColumn('vouchers.id', 'voucher_transactions.voucher_id')
+                ->selectRaw('IFNULL(sum(voucher_transactions.amount), 0)'),
+            'vouchers_amount' => Voucher::query()
+                ->fromSub(Voucher::query(), 'product_vouchers')
+                ->whereColumn('vouchers.id', 'product_vouchers.parent_id')
+                ->selectRaw('IFNULL(sum(product_vouchers.amount), 0)'),
+        ]);
+
+        return DB::query()
+            ->fromSub($selectQuery, 'voucher_payouts')
+            ->selectRaw('`transactions_amount` + `vouchers_amount` as `amount_spent`');
     }
 }

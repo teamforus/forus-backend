@@ -56,6 +56,61 @@ class FundPolicy
      * @param Identity $identity
      * @param Fund $fund
      * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function showIdentities(Identity $identity, Fund $fund, Organization $organization): bool
+    {
+        if ($fund->organization_id !== $organization->id) {
+            return false;
+        }
+
+        return $fund->organization->identityCan($identity, 'manage_vouchers');
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function showIdentitiesOverview(Identity $identity, Fund $fund, Organization $organization): bool
+    {
+        if ($fund->organization_id !== $organization->id) {
+            return false;
+        }
+
+        return $fund->organization->identityCan($identity, [
+            'manage_implementation_notifications', 'manage_vouchers'
+        ], false);
+    }
+
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function sendIdentityNotifications(Identity $identity, Fund $fund, Organization $organization): bool
+    {
+        if ($fund->organization_id !== $organization->id) {
+            return false;
+        }
+
+        if (!$fund->organization->allow_custom_fund_notifications) {
+            return false;
+        }
+
+        return $fund->organization->identityCan($identity, 'manage_implementation_notifications');
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param Organization $organization
      * @return Response|bool
      * @noinspection PhpUnused
      */

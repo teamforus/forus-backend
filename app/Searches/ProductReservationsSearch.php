@@ -8,10 +8,6 @@ use App\Models\ProductReservation;
 use App\Scopes\Builders\ProductReservationQuery;
 use Illuminate\Database\Eloquent\Builder;
 
-/**
- * Class WebshopSearch
- * @package App\Searches
- */
 class ProductReservationsSearch extends BaseSearch
 {
     /**

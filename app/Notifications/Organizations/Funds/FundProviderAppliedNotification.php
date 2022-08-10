@@ -12,7 +12,7 @@ use App\Models\Identity;
 class FundProviderAppliedNotification extends BaseFundsNotification
 {
     protected static ?string $key = 'notifications_funds.provider_applied';
-    protected static $permissions = 'manage_providers';
+    protected static string|array $permissions = 'manage_providers';
 
     /**
      * Get the mail representation of the notification.
