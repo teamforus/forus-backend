@@ -295,7 +295,8 @@ class DigIdSession extends Model
      * @param StartDigIdRequest $request
      * @return string|null
      */
-    protected static function makeFinalRedirectUrl(StartDigIdRequest $request): ?string {
+    protected static function makeFinalRedirectUrl(StartDigIdRequest $request): ?string
+    {
         if ($request->input('request') === 'fund_request') {
             $fund = Fund::find($request->input('fund_id'));
 
@@ -323,9 +324,9 @@ class DigIdSession extends Model
     }
 
     /**
-     * @return Identity
+     * @return Identity|null
      */
-    public function sessionIdentity(): Identity
+    public function sessionIdentity(): ?Identity
     {
         return $this->identity;
     }
@@ -384,5 +385,16 @@ class DigIdSession extends Model
         return $this->makeRedirectResponse([
             'digid_error' => $error,
         ], $url);
+    }
+
+    /**
+     * @param Identity $identity
+     * @return Model|$this
+     */
+    public function setIdentity(Identity $identity): Model|DigIdSession
+    {
+        return $this->updateModel([
+            'identity_address' => $identity->address,
+        ])->unsetRelation('identity');
     }
 }

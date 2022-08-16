@@ -52,7 +52,7 @@ class VoucherRelation extends Model
     /**
      * @return bool
      */
-    public function assignIfExists(): bool
+    public function assignByBsnIfExists(): bool
     {
         $identity = Identity::findByBsn($this->bsn);
 

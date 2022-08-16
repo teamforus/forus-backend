@@ -47,6 +47,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property float|null $lon
  * @property float|null $lat
  * @property bool $informal_communication
+ * @property string|null $productboard_api_key
  * @property string|null $email_from_address
  * @property string|null $email_from_name
  * @property string|null $email_color
@@ -59,7 +60,6 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $digid_shared_secret
  * @property string|null $digid_a_select_server
  * @property string|null $digid_forus_api_url
- * @property string|null $productboard_api_key
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
@@ -114,6 +114,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereOverlayEnabled($value)
  * @method static Builder|Implementation whereOverlayOpacity($value)
  * @method static Builder|Implementation whereOverlayType($value)
+ * @method static Builder|Implementation whereProductboardApiKey($value)
  * @method static Builder|Implementation whereTitle($value)
  * @method static Builder|Implementation whereUpdatedAt($value)
  * @method static Builder|Implementation whereUrlApp($value)

@@ -1902,6 +1902,62 @@ class Fund extends BaseModel
     }
 
     /**
+     * @param ResidencyResponse|PartnerBsnResponse|EligibilityResponse|null $response
+     * @return array|null
+     */
+    public function backofficeResponseToData(
+        ResidencyResponse|PartnerBsnResponse|EligibilityResponse|null $response
+    ): ?array {
+        // backoffice not available
+        if ($response === null) {
+            return null;
+        }
+
+        // backoffice not responding
+        if (!$response->getLog()->success()) {
+            return $this->backofficeError('no_response', $this->fund_config->backoffice_fallback);
+        }
+
+        // not resident
+        if ($response instanceof ResidencyResponse && !$response->isResident()) {
+            return $this->backofficeError('not_resident');
+        }
+
+        // is partner bsn
+        if ($response instanceof PartnerBsnResponse) {
+            return $this->backofficeError('taken_by_partner');
+        }
+
+        // not eligible
+        if ($response instanceof EligibilityResponse && !$response->isEligible()) {
+            if ($this->fund_config->shouldRedirectOnIneligibility()) {
+                return [
+                    'backoffice_redirect' => $this->fund_config->backoffice_ineligible_redirect_url,
+                ];
+            }
+
+            // should show error
+            return $this->backofficeError('not_eligible', true);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $error_key
+     * @param bool $fallback
+     * @return array
+     */
+    protected function backofficeError(string $error_key, bool $fallback = false): array
+    {
+        return [
+            'backoffice_error' => 1,
+            'backoffice_error_key' => $error_key,
+            'backoffice_fallback' => $fallback ? 1 : 0,
+        ];
+    }
+
+    /**
      * @param bool $skipEnabledCheck
      * @return ?BackofficeApi
      */
@@ -1970,5 +2026,21 @@ class Fund extends BaseModel
             $this->fund_config->iconnect_target_binding,
             $this->fund_config->iconnect_base_url
         ) : null;
+    }
+
+    /**
+     * @param Identity $identity
+     * @return bool
+     */
+    public function identityRequireBsnConfirmation(Identity $identity): bool
+    {
+        $record = $identity->activeBsnRecord();
+        $recordTime = $record?->created_at?->diffInSeconds(now());
+
+        if ($this->fund_config && $this->fund_config->bsn_confirmation_api_time === null) {
+            return false;
+        }
+
+        return empty($record) || $recordTime > $this->fund_config?->bsn_confirmation_api_time;
     }
 }

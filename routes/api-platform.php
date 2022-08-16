@@ -203,25 +203,15 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     ]);
 
-    $router->post(
-        'funds/{fund}/apply',
-        "Api\Platform\FundsController@apply"
-    );
+    $router->post('funds/{fund}/apply', "Api\Platform\FundsController@apply")->name('fund.apply');
+    $router->post('funds/{fund}/check', "Api\Platform\FundsController@check")->name('fund.check');
 
-    $router->resource('vouchers', "Api\Platform\VouchersController", [
-        'only' => [
-            'index', 'show', 'destroy',
-        ],
-        'parameters' => [
-            'vouchers' => 'voucher_token_address'
-        ]
-    ]);
+    $router->resource('vouchers', "Api\Platform\VouchersController")
+        ->parameter('vouchers', 'voucher_token_address')
+        ->only('index', 'show', 'destroy');
 
-    $router->resource('product-reservations', "Api\Platform\ProductReservationsController", [
-        'only' => [
-            'index', 'store', 'show', 'update', 'destroy'
-        ]
-    ]);
+    $router->resource('product-reservations', "Api\Platform\ProductReservationsController")
+        ->only('index', 'store', 'show', 'update', 'destroy');
 
     $router->post('product-reservations/validate', "Api\Platform\ProductReservationsController@storeValidate");
 

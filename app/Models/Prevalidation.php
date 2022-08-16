@@ -104,12 +104,12 @@ class Prevalidation extends BaseModel
 
     /**
      * @param Identity $identity
-     * @return void
+     * @return int|null
      */
-    public static function assignAvailableToIdentityByBsn(Identity $identity): void
+    public static function assignAvailableToIdentityByBsn(Identity $identity): ?int
     {
         if (!$identity->bsn) {
-            return;
+            return null;
         }
 
         $query = static::where([
@@ -139,9 +139,9 @@ class Prevalidation extends BaseModel
             }
         })->get();
 
-        $prevalidations->each(static function(Prevalidation $prevalidation) use ($identity) {
+        return $prevalidations->each(static function(Prevalidation $prevalidation) use ($identity) {
             $prevalidation->assignToIdentity($identity);
-        });
+        })->count();
     }
 
     /**

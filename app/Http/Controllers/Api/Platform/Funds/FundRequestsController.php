@@ -45,6 +45,7 @@ class FundRequestsController extends Controller
         StoreFundRequestRequest $request,
         Fund $fund
     ): FundRequestResource {
+        $this->authorize('check', $fund);
         $this->authorize('createAsRequester', [FundRequest::class, $fund]);
 
         $fundRequest = $fund->makeFundRequest(
@@ -76,7 +77,8 @@ class FundRequestsController extends Controller
      * @return FundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(Fund $fund, FundRequest $fundRequest): FundRequestResource {
+    public function show(Fund $fund, FundRequest $fundRequest): FundRequestResource
+    {
         $this->authorize('viewAsRequester', [$fundRequest, $fund]);
 
         return FundRequestResource::create($fundRequest);

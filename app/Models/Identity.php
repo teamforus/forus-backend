@@ -276,10 +276,19 @@ class Identity extends Model implements Authenticatable
      */
     public function getBsnAttribute(): ?string
     {
+        return $this->activeBsnRecord()?->value;
+    }
+
+    /**
+     * @return Record|null
+     */
+    public function activeBsnRecord(): ?Record
+    {
         return Record::query()
             ->where('identity_address', $this->address)
             ->whereRelation('record_type', 'key', 'bsn')
-            ->first()?->value;
+            ->latest('created_at')
+            ->first();
     }
 
     /**
@@ -657,7 +666,7 @@ class Identity extends Model implements Authenticatable
     {
         $recordType = RecordType::findByKey('bsn');
 
-        if ($this->records()->where('record_type_id', $recordType->id)->exists()) {
+        if ($this->bsn && $this->bsn !== $bsnValue) {
             abort(403,'record.exceptions.bsn_record_cant_be_changed');
         }
 

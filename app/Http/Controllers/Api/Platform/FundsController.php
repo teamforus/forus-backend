@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Requests\Api\Platform\Funds\CheckFundRequest;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 use App\Http\Requests\Api\Platform\Funds\RedeemFundsRequest;
 use App\Http\Requests\BaseFormRequest;
@@ -12,28 +13,15 @@ use App\Models\Fund;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
 use App\Models\Organization;
-use App\Traits\ThrottleWithMeta;
+use App\Models\Prevalidation;
+use App\Models\Voucher;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
-/**
- * Class FundsController
- * @package App\Http\Controllers\Api\Platform
- */
 class FundsController extends Controller
 {
-    use ThrottleWithMeta;
-
-    /**
-     * FundsController constructor.
-     */
-    public function __construct()
-    {
-        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', 3);
-        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', 180);
-    }
-
     /**
      * Display a listing of all active funds.
      *
@@ -131,5 +119,27 @@ class FundsController extends Controller
         ])->first();
 
         return $voucher ? new VoucherResource($voucher) : null;
+    }
+
+    /**
+     * Apply fund for identity
+     *
+     * @param CheckFundRequest $request
+     * @param Fund $fund
+     * @return array
+     * @throws AuthorizationException
+     */
+    public function check(CheckFundRequest $request, Fund $fund): array
+    {
+        $this->authorize('check', $fund);
+
+        $vouchers = Voucher::assignAvailableToIdentityByBsn($request->identity());
+        $prevalidations = Prevalidation::assignAvailableToIdentityByBsn($request->identity());
+        $hasBackoffice = $fund->fund_config && $fund->organization->backoffice_available;
+
+        $backofficeResponse = $fund->checkBackofficeIfAvailable($request->identity());
+        $backoffice = $hasBackoffice ? $fund->backofficeResponseToData($backofficeResponse) : null;
+
+        return compact('backoffice', 'vouchers', 'prevalidations');
     }
 }
