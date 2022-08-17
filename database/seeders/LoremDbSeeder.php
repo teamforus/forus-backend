@@ -34,6 +34,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Config;
 use Kalnoy\Nestedset\Collection as NestedsetCollection;
 
 /**
@@ -112,6 +113,10 @@ class LoremDbSeeder extends Seeder
         'Nijmegen' => 'meedoen',
     ];
 
+    private array $organizationsWithCustomNotifications = [
+        'Zuidhorn', 'Nijmegen',
+    ];
+
     /**
      * LoremDbSeeder constructor.
      */
@@ -130,16 +135,22 @@ class LoremDbSeeder extends Seeder
         $this->vouchersPerFund = config('forus.seeders.lorem_db_seeder.vouchers_per_fund_count');
     }
 
+    /**
+     * @return void
+     */
     private function disableEmails(): void
     {
-        config()->set('mail.disable', true);
-        config()->set('queue.default', 'sync');
+        Config::set('mail.disable', true);
+        Config::set('queue.default', 'sync');
     }
 
+    /**
+     * @return void
+     */
     private function enableEmails(): void
     {
-        config()->set('mail.disable', false);
-        config()->set('queue.default', env('QUEUE_DRIVER', 'sync'));
+        Config::set('mail.disable', false);
+        Config::set('queue.default', Config::get('queue.default'));
     }
 
     /**
@@ -381,14 +392,14 @@ class LoremDbSeeder extends Seeder
                 'state' => 'used'
             ]);
 
-            if (env('DB_SEED_NO_VOUCHERS', false)) {
+            if ($this->config('no_vouchers')) {
                 continue;
             }
 
             $voucher = $prevalidation->fund->makeVoucher($identity->address);
             $prevalidation->fund->makeFundFormulaProductVouchers($identity->address);
 
-            if (env('DB_SEED_NO_PRODUCT_VOUCHERS', false)) {
+            if ($this->config('no_product_vouchers')) {
                 continue;
             }
 
@@ -475,7 +486,7 @@ class LoremDbSeeder extends Seeder
     ): Organization {
         $organization = Organization::create(array_only(array_merge([
             'kvk' => '69599068',
-            'iban' => env('DB_SEED_PROVIDER_IBAN'),
+            'iban' => $this->config('default_organization_iban'),
             'phone' => '123456789',
             'email' => $this->primaryEmail,
             'bsn_enabled' => true,
@@ -484,13 +495,13 @@ class LoremDbSeeder extends Seeder
             'business_type_id' => BusinessType::pluck('id')->random(),
             'manage_provider_products' => in_array($name, $this->sponsorsWithSponsorProducts),
             'backoffice_available' => in_array($name, $this->sponsorsWithBackoffice),
-            'allow_custom_fund_notifications' => true,
+            'allow_custom_fund_notifications' => in_array($name, $this->organizationsWithCustomNotifications),
         ], $fields, compact('name', 'identity_address')), [
             'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
             'identity_address', 'business_type_id', 'manage_provider_products',
-            'backoffice_available', 'bsn_enabled',
-            'is_sponsor', 'is_provider', 'is_validator',
+            'backoffice_available', 'bsn_enabled', 'is_sponsor', 'is_provider', 'is_validator',
+            'allow_custom_fund_notifications',
         ]));
 
         OrganizationCreated::dispatch($organization);
@@ -832,7 +843,7 @@ class LoremDbSeeder extends Seeder
         $bsn_prevalidation_partner_index = $count - 3;
 
         $csv_primary_key = $fund->fund_config->csv_primary_key;
-        $env_lorem_bsn = env('DB_SEED_PREVALIDATION_BSN', false);
+        $env_lorem_bsn = $this->config('prevalidation_bsn', false);
 
         while ($count-- > 0) {
             do {

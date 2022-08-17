@@ -11,6 +11,12 @@ return [
     'provider_products_count'       => env('DB_SEED_PROVIDER_PRODUCTS', 4),
     'vouchers_per_fund_count'       => env('DB_SEED_VOUCHERS_PER_FUND', 5),
 
+    'default_organization_iban'     => env('DB_SEED_PROVIDER_IBAN'),
+    'prevalidation_bsn'             => env('DB_SEED_PREVALIDATION_BSN', false),
+
+    'no_vouchers'                   => env('DB_SEED_NO_VOUCHERS', false),
+    'no_product_vouchers'           => env('DB_SEED_NO_PRODUCT_VOUCHERS', false),
+
     // amount in generated vouchers
     'voucher_amount'                => env('DB_SEED_VOUCHER_AMOUNT', 600),
 
@@ -21,7 +27,7 @@ return [
     'fund_request_email_pattern'    => env('DB_SEED_FUND_REQUEST_EMAIL_PATTERN', 'requester-%s@example.com'),
 
     // default bunq key
-    'bunq_key'              => env('DB_SEED_BUNQ_KEY', ''),
+    'bunq_key'                      => env('DB_SEED_BUNQ_KEY', ''),
 
     // criteria for generated funds
     'funds_criteria'        => [[
