@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
+use Database\Seeders\SystemNotificationsTableSeeder;
 use Illuminate\Console\Command;
-use SystemNotificationsTableSeeder;
 
 class UpdateSystemNotificationsCommand extends Command
 {
@@ -23,9 +23,6 @@ class UpdateSystemNotificationsCommand extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return mixed
-     * @throws \Exception
      */
     public function handle(): void
     {

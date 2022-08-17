@@ -22,7 +22,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|FundProduct whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundProduct extends Model
+class FundProduct extends BaseModel
 {
     /**
      * The attributes that are mass assignable.

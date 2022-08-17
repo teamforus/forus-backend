@@ -14,10 +14,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
-/**
- * Class ProviderReservationsDigest
- * @package App\Digests
- */
 class ProviderReservationsDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
@@ -67,13 +63,13 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
      * @param Organization $organization
      * @param array $targetEvents
      * @param array $otherEvents
-     * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|Collection
+     * @return Collection
      */
     protected function getEvents(
         Organization $organization,
         array $targetEvents,
         array $otherEvents
-    ) {
+    ): Collection {
         // reservations query
         $reservationQuery = ProductReservation::where(function(Builder $builder) use ($organization) {
             $builder->whereHas('product', function(Builder $builder) use ($organization) {
@@ -103,9 +99,6 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
         Organization $organization
     ): MailBodyBuilder {
         $mailBody = new MailBodyBuilder();
-
-        // todo: which event 'created'
-        // todo: emails font
 
         // only those created by requester and with state created or accepted
         $logsApprovedProducts = $this->getEvents($organization, [

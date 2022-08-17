@@ -2,12 +2,13 @@
 
 namespace App\Http\Resources;
 
-use App\Http\Requests\BaseFormRequest;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,6 +16,7 @@ class BaseJsonResource extends JsonResource
 {
     public const LOAD = [];
     public const LOAD_COUNT = [];
+    public const LOAD_MORPH = [];
 
     /**
      * @param string|null $append
@@ -25,6 +27,19 @@ class BaseJsonResource extends JsonResource
         return $append ? array_map(function($load) use ($append) {
             return "$append.$load";
         }, static::LOAD) : static::LOAD;
+    }
+
+    /**
+     * @param Model $builder
+     * @return Model
+     */
+    protected static function load_morph(Model $builder): Model
+    {
+        foreach (static::LOAD_MORPH as $morphKey => $morphRelations) {
+            $builder->loadMorph($morphKey, $morphRelations);
+        }
+
+        return $builder;
     }
 
     /**
@@ -39,32 +54,49 @@ class BaseJsonResource extends JsonResource
     }
 
     /**
-     * @param mixed $resource
+     * @param Model|Collection|array $resource
      * @return static
      */
-    public static function create($resource): self
+    public static function create(mixed $resource): static
     {
-        return new static($resource instanceof Model ? $resource
-            ->load(static::load())
-            ->loadCount(static::load_count()) : $resource);
+        if ($resource instanceof Model) {
+            $resource = static::load_morph($resource)->load(static::load())->loadCount(static::load_count());
+        }
+
+        return new static($resource);
     }
 
     /**
      * @param Builder|Relation $query
-     * @param FormRequest|int|null $request
+     * @param int|Request|null $request
      * @return AnonymousResourceCollection
      */
-    public static function queryCollection($query, $request = null): AnonymousResourceCollection
-    {
-        if (!$request || $request instanceof FormRequest) {
-            $request = $request ?: BaseFormRequest::createFromBase(request());
-            $request = $request->input('per_page');
+    public static function queryCollection(
+        Relation|Builder $query,
+        Request|int|null $request = null
+    ): AnonymousResourceCollection {
+        if (!$request || $request instanceof Request) {
+            $request = ($request ?: request())->input('per_page');
         }
 
-        return self::collection($query
+        static::withMorphCollection($query)
             ->with(static::load())
-            ->withCount(static::load_count())
-            ->paginate(is_numeric($request) ? $request : null));
+            ->withCount(static::load_count());
+
+        return self::collection($query->paginate(is_numeric($request) ? $request : null));
+    }
+
+    /**
+     * @param Relation|Builder $builder
+     * @return Relation|Builder
+     */
+    protected static function withMorphCollection(Relation|Builder $builder): Relation|Builder
+    {
+        foreach (static::LOAD_MORPH as $morphKey => $morphRelations) {
+            $builder->with($morphKey, fn (MorphTo $morphTo) => $morphTo->morphWith($morphRelations));
+        }
+
+        return $builder;
     }
 
     /**

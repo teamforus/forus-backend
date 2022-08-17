@@ -52,15 +52,14 @@ class VoucherRelation extends Model
     /**
      * @return bool
      */
-    public function assignIfExists(): bool
+    public function assignByBsnIfExists(): bool
     {
-        $identity_address = record_repo()->identityAddressByBsn($this->bsn);
+        $identity = Identity::findByBsn($this->bsn);
 
-        if (!$identity_address || $this->voucher->identity_address) {
+        if (!$identity || $this->voucher->identity_address) {
             return false;
         }
 
-        $this->voucher->assignToIdentity($identity_address);
-        return true;
+        return (bool) $this->voucher->assignToIdentity($identity);
     }
 }

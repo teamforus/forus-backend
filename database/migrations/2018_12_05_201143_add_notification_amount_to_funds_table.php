@@ -5,10 +5,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class AddNotificationAmountToFundsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -38,4 +35,4 @@ class AddNotificationAmountToFundsTable extends Migration
             DB::statement('ALTER TABLE funds MODIFY start_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
         });
     }
-}
+};

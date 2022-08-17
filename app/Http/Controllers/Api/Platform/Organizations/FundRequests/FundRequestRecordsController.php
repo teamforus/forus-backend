@@ -6,7 +6,6 @@ use App\Http\Requests\Api\Platform\Funds\Requests\Records\ApproveFundRequestReco
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\DeclineFundRequestRecordRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\IndexFundRequestRecordsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\StoreFundRequestRecordRequest;
-use App\Http\Requests\Api\Platform\Funds\Requests\Records\UpdateFundRequestRecordRequest;
 use App\Http\Resources\Validator\ValidatorFundRequestRecordResource;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
@@ -14,10 +13,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class FundRequestRecordsController
- * @package App\Http\Controllers\Api\Platform\Organizations\FundRequests
- */
 class FundRequestRecordsController extends Controller
 {
     /**
@@ -62,7 +57,7 @@ class FundRequestRecordsController extends Controller
         $fundRequestRecord = $fundRequest->records()->create(array_merge($request->only([
             'value', 'record_type_key',
         ]), [
-            'employee_id' => $organization->findEmployee(auth_address())->id,
+            'employee_id' => $request->employee($organization)->id,
         ]));
 
         $fundRequestRecord->approve();

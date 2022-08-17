@@ -2,6 +2,7 @@
 
 namespace App\Rules;
 
+use App\Models\Identity;
 use Illuminate\Contracts\Validation\Rule;
 
 class IdentityEmailUniqueRule implements Rule
@@ -23,7 +24,7 @@ class IdentityEmailUniqueRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        return identity_repo()->isEmailAvailable($value);
+        return Identity::isEmailAvailable($value);
     }
 
     /**

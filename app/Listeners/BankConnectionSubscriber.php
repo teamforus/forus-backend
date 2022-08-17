@@ -18,16 +18,13 @@ use App\Notifications\Organizations\BankConnections\BankConnectionMonetaryAccoun
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Events\Dispatcher;
 
-/**
- * Class BankConnectionSubscriber
- * @package App\Listeners
- */
 class BankConnectionSubscriber
 {
     /**
      * @param BankConnection $bankConnection
      * @param Employee|null $employee
      * @return array
+     * @noinspection PhpUnused
      */
     protected function getBankConnectionLogModels(
         BankConnection $bankConnection,
@@ -46,6 +43,7 @@ class BankConnectionSubscriber
      * @param BaseBankConnectionEvent $event
      * @param string $eventType
      * @return EventLog
+     * @noinspection PhpUnused
      */
     protected function makeEvent(BaseBankConnectionEvent $event, string $eventType): EventLog
     {
@@ -129,42 +127,18 @@ class BankConnectionSubscriber
      * The events dispatcher
      *
      * @param Dispatcher $events
+     * @noinspection PhpUnused
      */
     public function subscribe(Dispatcher $events): void
     {
-        $events->listen(
-            BankConnectionCreated::class,
-            '\App\Listeners\BankConnectionSubscriber@onBankConnectionCreated'
-        );
+        $class = '\\' . static::class;
 
-        $events->listen(
-            BankConnectionActivated::class,
-            '\App\Listeners\BankConnectionSubscriber@onBankConnectionActivated'
-        );
-
-        $events->listen(
-            BankConnectionRejected::class,
-            '\App\Listeners\BankConnectionSubscriber@onBankConnectionRejected'
-        );
-
-        $events->listen(
-            BankConnectionDisabled::class,
-            '\App\Listeners\BankConnectionSubscriber@onBankConnectionDisabled'
-        );
-
-        $events->listen(
-            BankConnectionReplaced::class,
-            '\App\Listeners\BankConnectionSubscriber@onBankConnectionReplaced'
-        );
-
-        $events->listen(
-            BankConnectionDisabledInvalid::class,
-            '\App\Listeners\BankConnectionSubscriber@onBankConnectionDisabledInvalid'
-        );
-
-        $events->listen(
-            BankConnectionMonetaryAccountChanged::class,
-            '\App\Listeners\BankConnectionSubscriber@onBankConnectionMonetaryAccountChanged'
-        );
+        $events->listen(BankConnectionCreated::class, "$class@onBankConnectionCreated");
+        $events->listen(BankConnectionActivated::class, "$class@onBankConnectionActivated");
+        $events->listen(BankConnectionRejected::class, "$class@onBankConnectionRejected");
+        $events->listen(BankConnectionDisabled::class, "$class@onBankConnectionDisabled");
+        $events->listen(BankConnectionReplaced::class, "$class@onBankConnectionReplaced");
+        $events->listen(BankConnectionDisabledInvalid::class, "$class@onBankConnectionDisabledInvalid");
+        $events->listen(BankConnectionMonetaryAccountChanged::class, "$class@onBankConnectionMonetaryAccountChanged");
     }
 }

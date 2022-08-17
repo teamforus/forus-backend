@@ -2,19 +2,17 @@
 
 namespace App\Services\Forus\Session\Resources;
 
+use App\Http\Resources\BaseJsonResource;
 use App\Services\Forus\Session\Models\Session;
 use App\Services\Forus\Session\Models\SessionRequest;
 use App\Services\Forus\Session\Services\Browser;
 use App\Services\Forus\Session\Services\GeoIp;
 use App\Services\Forus\Session\SessionService;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Class SessionResource
  * @property Session $resource
- * @package App\Http\Resources
  */
-class SessionResource extends JsonResource
+class SessionResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
@@ -22,12 +20,11 @@ class SessionResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request) {
+    public function toArray($request): array
+    {
         $session = $this->resource;
         $sessionStartTime = $session->last_request->created_at;
-
-        $currentSession =  SessionService::currentSession();
-        $currentSessionId = $currentSession ? $currentSession->id : null;
+        $currentSessionId = SessionService::currentSession()?->id;
 
         return array_merge($this->resource->only([
             'uid', 'identity_address',
@@ -46,7 +43,12 @@ class SessionResource extends JsonResource
         ]);
     }
 
-    private function requestData(SessionRequest $request) {
+    /**
+     * @param SessionRequest $request
+     * @return array
+     */
+    private function requestData(SessionRequest $request): array
+    {
         if (Browser::isEnabled()) {
             $agentData = Browser::getAgentData($request->user_agent);
             $agentDataArray = $agentData->isDetected() ? $agentData->toArray() : null;
@@ -63,7 +65,7 @@ class SessionResource extends JsonResource
             'client_type'       => $request->client_type,
             'client_version'    => $request->client_version,
             'device_available'  => Browser::isEnabled(),
-            'device_string'     => $agentData ? $agentData->toString() : null,
+            'device_string'     => $agentData?->toString(),
             'device'            => $agentDataArray,
         ];
     }

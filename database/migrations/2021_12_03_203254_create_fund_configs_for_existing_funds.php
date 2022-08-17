@@ -3,10 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use App\Models\Fund;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateFundConfigsForExistingFunds extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -26,4 +23,4 @@ class CreateFundConfigsForExistingFunds extends Migration
      * @return void
      */
     public function down(): void {}
-}
+};

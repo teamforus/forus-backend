@@ -6,6 +6,7 @@ use App\Http\Responses\AuthorizationJsonResponse;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\PhysicalCard;
 use App\Models\Product;
@@ -20,43 +21,45 @@ use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 
-/**
- * Class VoucherPolicy
- * @package App\Policies
- */
 class VoucherPolicy
 {
     use HandlesAuthorization;
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAny(string $identity_address): bool
+    public function viewAny(Identity $identity): bool
     {
-        return !empty($identity_address);
+        return $identity->exists;
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAnySponsor(string $identity_address, Organization $organization): bool
+    public function viewAnySponsor(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'manage_vouchers');
+        return $organization->identityCan($identity, 'manage_vouchers');
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @param Fund $fund
-     * @return \Illuminate\Auth\Access\Response|bool
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
-    public function storeSponsor(string $identity_address, Organization $organization, Fund $fund)
-    {
+    public function storeSponsor(
+        Identity $identity,
+        Organization $organization,
+        Fund $fund
+    ): Response|bool {
         if (($fund->organization_id !== $organization->id) ||
-            !$this->viewAnySponsor($identity_address, $organization)) {
+            !$this->viewAnySponsor($identity, $organization)) {
             return $this->deny('no_permission_to_make_vouchers');
         }
 
@@ -68,7 +71,7 @@ class VoucherPolicy
             return $this->deny('Fund not configured.');
         }
 
-        if (!$organization->identityCan($identity_address, 'manage_vouchers')) {
+        if (!$organization->identityCan($identity, 'manage_vouchers')) {
             return $this->deny('no_manage_vouchers_permission');
         }
 
@@ -76,13 +79,14 @@ class VoucherPolicy
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function showSponsor(
-        string $identity_address,
+        Identity $identity,
         Voucher $voucher,
         Organization $organization
     ): bool {
@@ -90,108 +94,116 @@ class VoucherPolicy
         $isProductTypeMadeByEmployee = $voucher->isProductType() && $voucher->employee_id;
         $employeeCanSeeProductVouchers = $voucher->fund->fund_config->employee_can_see_product_vouchers;
 
-        return ($isBudgetType || $isProductTypeMadeByEmployee || $employeeCanSeeProductVouchers) &&
+        return
+            ($isBudgetType || $isProductTypeMadeByEmployee || $employeeCanSeeProductVouchers) &&
             ($voucher->fund->organization_id === $organization->id) &&
-            $organization->identityCan($identity_address, 'manage_vouchers');
+            $organization->identityCan($identity, 'manage_vouchers');
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function assignSponsor(
-        string $identity_address,
+        Identity $identity,
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return $organization->identityCan($identity_address, 'manage_vouchers') &&
-            ($voucher->fund->organization_id === $organization->id) &&
-            ($voucher->fund->isConfigured()) &&
-            ($voucher->fund->isInternal()) &&
+        return
+            $organization->identityCan($identity, 'manage_vouchers') &&
+            $voucher->fund->organization_id === $organization->id &&
+            $voucher->fund->isConfigured() &&
+            $voucher->fund->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->is_granted;
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function activateSponsor(
-        string $identity_address,
+        Identity $identity,
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return $organization->identityCan($identity_address, 'manage_vouchers') &&
-            ($voucher->fund->organization_id === $organization->id) &&
-            ($voucher->fund->isConfigured()) &&
-            ($voucher->fund->isInternal()) &&
+        return
+            $organization->identityCan($identity, 'manage_vouchers') &&
+            $voucher->fund->organization_id === $organization->id &&
+            $voucher->fund->isConfigured() &&
+            $voucher->fund->isInternal() &&
             !$voucher->activated &&
             !$voucher->expired;
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function deactivateSponsor(
-        string $identity_address,
+        Identity $identity,
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return $organization->identityCan($identity_address, 'manage_vouchers') &&
-            ($voucher->fund->organization_id === $organization->id) &&
+        return
+            $organization->identityCan($identity, 'manage_vouchers') &&
+            $voucher->fund->organization_id === $organization->id &&
             !$voucher->deactivated &&
             !$voucher->expired;
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function update(
-        string $identity_address,
-        Voucher $voucher,
-        Organization $organization
-    ): bool {
-        return $organization->identityCan($identity_address, 'manage_vouchers') &&
-            ($voucher->fund->organization_id === $organization->id);
+    public function update(Identity $identity, Voucher $voucher, Organization $organization): bool
+    {
+        return
+            $organization->identityCan($identity, 'manage_vouchers') &&
+            $voucher->fund->organization_id === $organization->id;
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function deactivateRequester(
-        string $identity_address,
-        Voucher $voucher
-    ): bool {
-        return (strcmp($identity_address, $voucher->identity_address) === 0) &&
+    public function deactivateRequester(Identity $identity, Voucher $voucher): bool
+    {
+        return
+            $identity->address === $voucher->identity_address &&
             $voucher->fund->fund_config->allow_blocking_vouchers &&
             !$voucher->deactivated &&
             !$voucher->expired;
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function makeActivationCodeSponsor(
-        string $identity_address,
+        Identity $identity,
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return $this->assignSponsor($identity_address, $voucher, $organization) &&
+        return
+            $this->assignSponsor($identity, $voucher, $organization) &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
             !$voucher->activation_code &&
@@ -201,13 +213,16 @@ class VoucherPolicy
 
     /**
      * Voucher can be redeemed using an activation code.
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function redeem(string $identity_address, Voucher $voucher): bool
+    public function redeem(Identity $identity, Voucher $voucher): bool
     {
-        return ($identity_address && $voucher->exists) &&
+        return
+            $identity->exists &&
+            $voucher->exists &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
             $voucher->activation_code &&
@@ -216,38 +231,52 @@ class VoucherPolicy
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
     public function sendByEmailSponsor(
-        string $identity_address,
+        Identity $identity,
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return $this->assignSponsor($identity_address, $voucher, $organization);
+        return $this->assignSponsor($identity, $voucher, $organization);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function show(string $identity_address, Voucher $voucher) : bool
+    public function show(Identity $identity, Voucher $voucher) : bool
     {
-        return strcmp($identity_address, $voucher->identity_address) === 0;
+        return $identity->address === $voucher->identity_address;
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function sendEmail(string $identity_address, Voucher $voucher): bool
+    public function sendEmail(Identity $identity, Voucher $voucher): bool
     {
-        return $this->show($identity_address, $voucher) &&
+        return $this->shareVoucher($identity, $voucher) && $voucher->identity->email;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Voucher $voucher
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function shareVoucher(Identity $identity, Voucher $voucher): bool
+    {
+        return
+            $this->show($identity, $voucher) &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
             !$voucher->deactivated &&
@@ -255,23 +284,15 @@ class VoucherPolicy
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function shareVoucher(string $identity_address, Voucher $voucher): bool
+    public function requestPhysicalCard(Identity $identity, Voucher $voucher): bool
     {
-        return $this->sendEmail($identity_address, $voucher);
-    }
-
-    /**
-     * @param string $identity_address
-     * @param Voucher $voucher
-     * @return bool
-     */
-    public function requestPhysicalCard(string $identity_address, Voucher $voucher): bool
-    {
-        return $this->show($identity_address, $voucher) &&
+        return
+            $this->show($identity, $voucher) &&
             Gate::allows('create', [PhysicalCard::class, $voucher]) &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
@@ -280,17 +301,19 @@ class VoucherPolicy
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function requestPhysicalCardAsSponsor(
-        string $identity_address,
+        Identity $identity,
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return $organization->identityCan($identity_address, 'manage_vouchers') &&
+        return
+            $organization->identityCan($identity, 'manage_vouchers') &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
             $voucher->fund->fund_config->allow_physical_cards &&
@@ -303,7 +326,7 @@ class VoucherPolicy
      * @param Voucher $voucher
      * @return bool|\Illuminate\Auth\Access\Response
      */
-    private function checkBaseVoucherProviderAvailability(Voucher $voucher)
+    private function checkBaseVoucherProviderAvailability(Voucher $voucher): Response|bool
     {
         if (!$voucher->fund->isConfigured()) {
             return $this->deny('Fund not configured.');
@@ -364,10 +387,10 @@ class VoucherPolicy
 
     /**
      * @param Voucher $voucher
-     * @param int|null $product_id = null
+     * @param int|null $product_id
      * @return array|Response
      */
-    private function getVoucherProvidersLists(Voucher $voucher, int $product_id = null): array
+    private function getVoucherProvidersLists(Voucher $voucher, int $product_id = null): Response|array
     {
         if ($voucher->fund->isTypeBudget()) {
             if ($voucher->isBudgetType()) {
@@ -442,23 +465,24 @@ class VoucherPolicy
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param int|null $product_id
-     * @return bool|Response
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
     protected function useAsProviderBase(
-        string $identity_address,
+        Identity $identity,
         Voucher $voucher,
         int $product_id = null
-    ) {
+    ): Response|bool {
         // Check basic voucher availability by state and relations
         if (($voucherAvailable = $this->checkBaseVoucherProviderAvailability($voucher)) !== true) {
             return $voucherAvailable;
         }
 
         $applied = $voucher->fund->providers()->pluck('organization_id');
-        $providers = Organization::queryByIdentityPermissions($identity_address, 'scan_vouchers');
+        $providers = Organization::queryByIdentityPermissions($identity->address, 'scan_vouchers');
         $providers = $providers->pluck('id');
         extract($this->getVoucherProvidersLists($voucher, $product_id));
 
@@ -491,59 +515,66 @@ class VoucherPolicy
             }
 
             // The identity should be allowed to scan voucher for the provider organization
-            return $voucher->product->organization->identityCan($identity_address, 'scan_vouchers');
+            return $voucher->product->organization->identityCan($identity, 'scan_vouchers');
         }
 
         return false;
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
-    public function useAsProvider(string $identity_address, Voucher $voucher)
+    public function useAsProvider(Identity $identity, Voucher $voucher): Response|bool
     {
-        return $this->useAsProviderBase($identity_address, $voucher);
+        return $this->useAsProviderBase($identity, $voucher);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param int $product_id
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
-    public function useAsProviderWithProducts(string $identity_address, Voucher $voucher, int $product_id)
-    {
-        return $this->useAsProviderBase($identity_address, $voucher, $product_id);
+    public function useAsProviderWithProducts(
+        Identity $identity,
+        Voucher $voucher,
+        int $product_id
+    ): Response|bool {
+        return $this->useAsProviderBase($identity, $voucher, $product_id);
     }
 
     /**
      * Allows to make voucher transaction as sponsor for the given voucher and provider
-     * @param string $identity_address
+     *
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param Organization $providerOrganization
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return Response|bool
      * @noinspection PhpUnused
      */
     public function useAsSponsor(
-        string $identity_address,
+        Identity $identity,
         Voucher $voucher,
         Organization $providerOrganization
-    ) {
-        if (!$voucher->fund->organization->identityCan($identity_address, 'make_direct_payments')) {
+    ): Response|bool {
+        if (!$voucher->fund->organization->identityCan($identity, 'make_direct_payments')) {
             return false;
         }
 
-        return $this->useAsProviderBase($providerOrganization->identity_address, $voucher);
+        return $this->useAsProviderBase($providerOrganization->identity, $voucher);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return bool|Response
+     * @noinspection PhpUnused
      */
-    public function useChildVoucherAsProvider(string $identity_address, Voucher $voucher)
+    public function useChildVoucherAsProvider(Identity $identity, Voucher $voucher): Response|bool
     {
         // Check basic voucher availability by state and relations
         if (($voucherAvailable = $this->checkBaseVoucherProviderAvailability($voucher)) !== true) {
@@ -552,7 +583,7 @@ class VoucherPolicy
 
         if (VoucherQuery::whereProductVouchersCanBeScannedForFundBy(
             $voucher->product_vouchers()->getQuery(),
-            $identity_address,
+            $identity->address,
             $voucher->fund_id
         )->doesntExist()) {
             return $this->deny('no_available_product_voucher');
@@ -562,13 +593,15 @@ class VoucherPolicy
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return bool|Response
      * @noinspection PhpUnused
      */
-    public function viewRegularVoucherAvailableProductsAsProvider(string $identity_address, Voucher $voucher)
-    {
+    public function viewRegularVoucherAvailableProductsAsProvider(
+        Identity $identity,
+        Voucher $voucher
+    ): Response|bool {
         // Check basic voucher availability by state and relations
         if (($voucherAvailable = $this->checkBaseVoucherProviderAvailability($voucher)) !== true) {
             return $voucherAvailable;
@@ -576,8 +609,8 @@ class VoucherPolicy
 
         // Identity is allowed to make transactions with at least one product
         if ($voucher->fund->isTypeBudget()) {
-            $products = Product::whereHas('organization', function(Builder $builder) use ($identity_address) {
-                OrganizationQuery::whereHasPermissions($builder, $identity_address, 'scan_vouchers');
+            $products = Product::whereHas('organization', function(Builder $builder) use ($identity) {
+                OrganizationQuery::whereHasPermissions($builder, $identity->address, 'scan_vouchers');
             });
 
             if (ProductQuery::whereAvailableForVoucher($products, $voucher, null, false)->doesntExist()) {
@@ -587,7 +620,7 @@ class VoucherPolicy
 
         // Identity is allowed to make transactions with at least one product
         if ($voucher->fund->isTypeSubsidy()) {
-            $organizationsQuery = Organization::queryByIdentityPermissions($identity_address, 'scan_vouchers');
+            $organizationsQuery = Organization::queryByIdentityPermissions($identity->address, 'scan_vouchers');
 
             $providerProducts = FundProviderProductQuery::whereAvailableForSubsidyVoucher(
                 FundProviderProduct::query(),
@@ -604,24 +637,25 @@ class VoucherPolicy
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @return bool
      */
-    public function destroy(string $identity_address, Voucher $voucher): bool
+    public function destroy(Identity $identity, Voucher $voucher): bool
     {
-        return $this->show($identity_address, $voucher) &&
+        return
+            $this->show($identity, $voucher) &&
             $voucher->parent_id !== null &&
             $voucher->transactions->count() === 0 &&
             $voucher->returnable;
     }
 
     /**
-     * @param $message
-     * @param $code
+     * @param mixed $message
+     * @param int $code
      * @return Response
      */
-    protected function deny($message, $code = 403): Response
+    protected function deny(mixed $message, int $code = 403): Response
     {
         return AuthorizationJsonResponse::deny(is_array($message) ? $message : [
             'key' => $message,

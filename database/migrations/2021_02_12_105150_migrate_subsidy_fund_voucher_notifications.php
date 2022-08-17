@@ -6,10 +6,7 @@ use Illuminate\Database\Eloquent\Collection;
 use App\Models\Notification;
 use App\Models\Voucher;
 
-/**
- * @noinspection PhpUnused
- */
-class MigrateSubsidyFundVoucherNotifications extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -101,4 +98,4 @@ class MigrateSubsidyFundVoucherNotifications extends Migration
      */
     public function down(): void
     {}
-}
+};

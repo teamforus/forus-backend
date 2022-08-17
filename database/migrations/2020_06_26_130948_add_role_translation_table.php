@@ -5,10 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Database\Seeders\RolesTableSeeder;
 
-/**
- * @noinspection PhpUnused
- */
-class AddRoleTranslationTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -41,4 +38,4 @@ class AddRoleTranslationTable extends Migration
     {
         Schema::dropIfExists('role_translations');
     }
-}
+};

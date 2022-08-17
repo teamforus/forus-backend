@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
+use App\Events\Funds\FundVouchersExportedEvent;
 use App\Exports\VoucherExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
@@ -20,6 +21,7 @@ use App\Http\Resources\Sponsor\SponsorVoucherResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
+use App\Models\Identity;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -75,7 +77,7 @@ class VouchersController extends Controller
         $note       = $request->input('note');
         $email      = $request->input('email', false);
         $amount     = $fund->isTypeBudget() ? $request->input('amount', 0) : 0;
-        $identity   = $email ? $request->identity_repo()->getOrMakeByEmail($email) : null;
+        $identity   = $email ? Identity::findOrMake($email)->address : null;
         $expire_at  = $request->input('expire_at', false);
         $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
@@ -96,7 +98,7 @@ class VouchersController extends Controller
 
         foreach ($vouchers as $voucher) {
             if ($organization->bsn_enabled && ($bsn = $request->input('bsn', false))) {
-                $voucher->setBsnRelation($bsn)->assignIfExists();
+                $voucher->setBsnRelation($bsn)->assignByBsnIfExists();
             }
 
             if (!$voucher->is_granted) {
@@ -149,7 +151,7 @@ class VouchersController extends Controller
             $note       = $voucher['note'] ?? null;
             $email      = $voucher['email'] ?? false;
             $amount     = $fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0;
-            $identity   = $email ? $request->identity_repo()->getOrMakeByEmail($email) : null;
+            $identity   = $email ? Identity::findOrMake($email)->address : null;
             $expire_at  = $voucher['expire_at'] ?? false;
             $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
@@ -170,7 +172,7 @@ class VouchersController extends Controller
 
             foreach ($vouchers as $voucherModel) {
                 if ($organization->bsn_enabled && ($bsn = ($voucher['bsn'] ?? false))) {
-                    $voucherModel->setBsnRelation((string) $bsn)->assignIfExists();
+                    $voucherModel->setBsnRelation((string) $bsn)->assignByBsnIfExists();
                 }
 
                 if (!$voucherModel->is_granted) {
@@ -239,9 +241,9 @@ class VouchersController extends Controller
         $email = $request->post('email');
 
         if ($email) {
-            $voucher->assignToIdentity($request->identity_repo()->getOrMakeByEmail($email));
+            $voucher->assignToIdentity(Identity::findOrMake($email));
         } else if ($organization->bsn_enabled && $bsn) {
-            $voucher->setBsnRelation($bsn)->assignIfExists();
+            $voucher->setBsnRelation($bsn)->assignByBsnIfExists();
         }
 
         return new SponsorVoucherResource($voucher);
@@ -404,6 +406,13 @@ class VouchersController extends Controller
         ])->get();
 
         $exportData = Voucher::exportData($vouchers, $fields, $dataFormat, $qrFormat);
+
+        FundVouchersExportedEvent::dispatch($fund, [
+            'fields' => $fields,
+            'qr_format' => $qrFormat,
+            'data_format' => $dataFormat,
+            'voucher_ids' => $vouchers->pluck('id'),
+        ]);
 
         return new VoucherExportArrResource(Arr::only($exportData, ['files', 'data']));
     }

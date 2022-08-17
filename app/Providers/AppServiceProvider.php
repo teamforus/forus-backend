@@ -9,8 +9,6 @@ use App\Media\ImplementationBlockMediaConfig;
 use App\Media\ImplementationMailLogoMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
-use App\Media\ProductPhotosMediaConfig;
-use App\Media\RecordCategoryIconMediaConfig;
 use App\Models\BankConnection;
 use App\Models\Fund;
 use App\Models\FundFaq;
@@ -18,6 +16,7 @@ use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
+use App\Models\IdentityEmail;
 use App\Models\Implementation;
 use App\Models\ImplementationBlock;
 use App\Models\ImplementationPage;
@@ -28,6 +27,7 @@ use App\Models\ProductReservation;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use App\Observers\FundProviderObserver;
+use App\Models\Identity;
 use Carbon\Carbon;
 use App\Media\OrganizationLogoMediaConfig;
 use App\Models\Employee;
@@ -41,10 +41,6 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
-/**
- * Class AppServiceProvider
- * @package App\Providers
- */
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -56,9 +52,11 @@ class AppServiceProvider extends ServiceProvider
         'office'                        => Office::class,
         'voucher'                       => Voucher::class,
         'product'                       => Product::class,
+        'identity'                      => Identity::class,
         'employees'                     => Employee::class,
         'fund_request'                  => FundRequest::class,
         'organization'                  => Organization::class,
+        'identity_email'                => IdentityEmail::class,
         'mail_template'                 => NotificationTemplate::class,
         'fund_provider'                 => FundProvider::class,
         'physical_card'                 => PhysicalCard::class,
@@ -77,8 +75,6 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap any application services.
-     *
-     * @throws \App\Services\MediaService\Exceptions\MediaConfigAlreadyRegisteredException
      */
     public function boot(): void
     {
@@ -93,7 +89,6 @@ class AppServiceProvider extends ServiceProvider
             new OfficePhotoMediaConfig(),
             new ProductPhotoMediaConfig(),
             new OrganizationLogoMediaConfig(),
-            new RecordCategoryIconMediaConfig(),
             new ImplementationBannerMediaConfig(),
             new ImplementationMailLogoMediaConfig(),
             new ImplementationBlockMediaConfig(),
@@ -106,7 +101,8 @@ class AppServiceProvider extends ServiceProvider
      * @param string $locale
      * @return false|string
      */
-    public function setLocale(string $locale) {
+    public function setLocale(string $locale): string|false
+    {
         if (strlen($locale) === 2) {
             $locale .= '_' . strtoupper($locale);
         }
@@ -121,5 +117,5 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register() { }
+    public function register(): void {}
 }

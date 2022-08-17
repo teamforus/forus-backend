@@ -60,7 +60,7 @@ class VoucherResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request|any $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      * @throws \Exception
      */
@@ -74,7 +74,7 @@ class VoucherResource extends BaseJsonResource
             'identity_address', 'fund_id', 'returnable', 'transactions_count',
             'expired', 'deactivated', 'type', 'state', 'state_locale',
         ]), $this->getBaseFields($voucher), $this->getOptionalFields($voucher), [
-            'deactivated_at' => $deactivationDate ? $deactivationDate->format('Y-m-d') : null,
+            'deactivated_at' => $deactivationDate?->format('Y-m-d'),
             'deactivated_at_locale' => format_date_locale($deactivationDate),
             'history' => $this->getStateHistory($voucher),
             'expire_at' => [
@@ -84,8 +84,7 @@ class VoucherResource extends BaseJsonResource
             'expire_at_locale' => format_date_locale($voucher->expire_at),
             'last_active_day' => $voucher->last_active_day->format('Y-m-d'),
             'last_active_day_locale' => format_date_locale($voucher->last_active_day),
-            'last_transaction_at' => $voucher->last_transaction ?
-                $voucher->last_transaction->created_at->format('Y-m-d') : null,
+            'last_transaction_at' => $voucher->last_transaction?->created_at->format('Y-m-d'),
             'last_transaction_at_locale' => $voucher->last_transaction ? format_date_locale(
                 $voucher->last_transaction->created_at
             ) : null,
@@ -108,23 +107,24 @@ class VoucherResource extends BaseJsonResource
      */
     protected function getDeactivationDate(Voucher $voucher): ?Carbon
     {
-        return $voucher->last_deactivation_log ? $voucher->last_deactivation_log->created_at : null;
+        return $voucher->last_deactivation_log?->created_at;
     }
 
     /**
      * @param Voucher $voucher
-     * @return Collection|\Illuminate\Support\Collection
+     * @return \Illuminate\Support\Collection
      */
-    protected function getStateHistory(Voucher $voucher)
+    protected function getStateHistory(Voucher $voucher): \Illuminate\Support\Collection
     {
-        $logs = $voucher->requesterHistoryLogs()->sortByDesc('created_at');
+        $logs = $voucher->requesterHistoryLogs();
 
         return $logs->map(function(EventLog $eventLog) use ($voucher) {
-            return array_merge($eventLog->only('id', 'event', 'event_locale'), [
+            return array_merge($eventLog->only('id', 'event'), [
+                'event_locale' => $eventLog->event_locale_webshop,
                 'created_at' => $eventLog->created_at->format('Y-m-d'),
                 'created_at_locale' => format_date_locale($eventLog->created_at),
             ]);
-        })->values();
+        });
     }
 
     /**
@@ -195,7 +195,7 @@ class VoucherResource extends BaseJsonResource
         $reservable = false;
         $reservable_count = $product['limit_available'] ?? null;
         $reservable_count = is_numeric($reservable_count) ? intval($reservable_count) : null;
-        $reservable_expire_at = $expire_at ? $expire_at->format('Y-m-d') : null;
+        $reservable_expire_at = $expire_at?->format('Y-m-d');
         $reservable_enabled = $product->reservationsEnabled($voucher->fund);
 
         if ($voucher->isBudgetType()) {
@@ -241,12 +241,13 @@ class VoucherResource extends BaseJsonResource
     }
 
     /**
-     * @param Voucher[]|Collection|null $product_vouchers
-     * @return Voucher[]|Collection|null
+     * @param Collection|Voucher[]|null $product_vouchers
+     * @return Voucher[]|\Illuminate\Support\Collection|null
      */
-    protected function getProductVouchers($product_vouchers)
-    {
-        return $product_vouchers ? $product_vouchers->map(function(Voucher $product_voucher) {
+    protected function getProductVouchers(
+        Collection|array|null $product_vouchers
+    ): \Illuminate\Support\Collection|array|null {
+        return $product_vouchers?->map(function (Voucher $product_voucher) {
             return array_merge($product_voucher->only([
                 'identity_address', 'fund_id', 'returnable',
             ]), [
@@ -257,7 +258,7 @@ class VoucherResource extends BaseJsonResource
                 'timestamp' => $product_voucher->created_at->timestamp,
                 'product' => self::getProductDetails($product_voucher),
             ], $this->timestamps($product_voucher, 'created_at'));
-        })->values() : null;
+        })->values();
     }
 
     /**

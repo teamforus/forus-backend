@@ -4,18 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\DigID\ResolveDigIdRequest;
 use App\Http\Requests\DigID\StartDigIdRequest;
-use App\Models\Fund;
-use App\Models\Prevalidation;
-use App\Models\Voucher;
-use App\Services\BackofficeApiService\Responses\EligibilityResponse;
-use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
-use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use App\Services\DigIdService\Models\DigIdSession;
+use App\Models\Identity;
+use Illuminate\Http\RedirectResponse;
 
-/**
- * Class DigIdController
- * @package App\Http\Controllers
- */
 class DigIdController extends Controller
 {
     /**
@@ -39,9 +31,9 @@ class DigIdController extends Controller
 
     /**
      * @param DigIdSession $session
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return RedirectResponse
      */
-    public function redirect(DigIdSession $session)
+    public function redirect(DigIdSession $session): RedirectResponse
     {
         return redirect($session->digid_auth_redirect_url);
     }
@@ -49,10 +41,10 @@ class DigIdController extends Controller
     /**
      * @param ResolveDigIdRequest $request
      * @param DigIdSession $session
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return RedirectResponse
      * @throws \Exception
      */
-    public function resolve(ResolveDigIdRequest $request, DigIdSession $session)
+    public function resolve(ResolveDigIdRequest $request, DigIdSession $session): RedirectResponse
     {
         // check if session secret is match records
         if ($request->get('session_secret') !== $session->session_secret) {
@@ -68,157 +60,102 @@ class DigIdController extends Controller
             $request->get('aselect_credentials', '')
         );
 
-        // check if digid request went well and redirect to final url with
-        // error core if not
+        // check if digid request worked
         if (!$session->isAuthorized()) {
-            return redirect(url_extend_get_params($session->session_final_url, [
-                'digid_error' => $session->getErrorKey()
-            ]));
+            return $session->makeRedirectErrorResponse($session->getErrorKey());
         }
 
-        switch ($session->session_request) {
-            case 'auth': return $this->_resolveAuth($request, $session);
-            case 'fund_request': return $this->_resolveFundRequest($request, $session);
+        // Authentication
+        if ($session->session_request == 'auth') {
+            return $this->_resolveAuth($session);
         }
 
-        return redirect(url_extend_get_params($session->session_final_url, [
-            'digid_error' => 'unknown_session_type',
+        // Fund request
+        if ($session->session_request == 'fund_request') {
+            return $this->_resolveFundRequest($session);
+        }
+
+        // Default unknown request type error
+        return $session->makeRedirectErrorResponse('unknown_session_type');
+    }
+
+    /**
+     * @param DigIdSession $session
+     * @return RedirectResponse
+     * @throws \Exception
+     */
+    private function _resolveAuth(DigIdSession $session): RedirectResponse
+    {
+        $identity = $session->digidBsnIdentity();
+
+        if (!$identity) {
+            if (!$session->implementation->digid_sign_up_allowed) {
+                return $session->makeRedirectErrorResponse('uid_not_found');
+            }
+
+            $identity = Identity::make();
+        }
+
+        $proxy = Identity::makeAuthorizationShortTokenProxy();
+        $identity->activateAuthorizationShortTokenProxy($proxy->exchange_token);
+
+        $session->setIdentity($identity);
+        $assignResult = $this->handleBsnAssign($session);
+
+        // Redirect with an error
+        if ($assignResult instanceof RedirectResponse) {
+            return $assignResult;
+        }
+
+        return $session->makeRedirectResponse([
+            'token' => $proxy->exchange_token,
+        ], sprintf('%s/auth-link', rtrim($session->session_final_url, '/')));
+    }
+
+    /**
+     * @param DigIdSession $session
+     * @return RedirectResponse
+     */
+    private function _resolveFundRequest(DigIdSession $session): RedirectResponse
+    {
+        $assignResult = $this->handleBsnAssign($session);
+
+        // Redirect with an error
+        if ($assignResult instanceof RedirectResponse) {
+            return $assignResult;
+        }
+
+        return $session->makeRedirectResponse(array_merge([
+            'digid_success' => $assignResult ? 'signed_up' : 'signed_in',
         ]));
     }
 
     /**
-     * @param ResolveDigIdRequest $request
      * @param DigIdSession $session
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     * @throws \Exception
+     * @return RedirectResponse|bool
      */
-    private function _resolveAuth(ResolveDigIdRequest $request, DigIdSession $session)
+    protected function handleBsnAssign(DigIdSession $session): RedirectResponse|bool
     {
-        $identity = $request->records_repo()->identityAddressByBsn($session->digid_uid);
+        $digidBsn = $session->digidBsn();
+        $digidBsnIdentity = $session->digidBsnIdentity();
+        $sessionIdentity = $session->sessionIdentity();
+        $sessionIdentityBsn = $session->sessionIdentityBsn();
 
-        if (empty($identity)) {
-            return redirect(sprintf(
-                 '%s/?digid_error=uid_not_found',
-                rtrim($session->session_final_url, '/')
-            ));
+        // Identity already has a bsn attached, and it's different
+        if ($sessionIdentityBsn && $sessionIdentityBsn !== $digidBsn) {
+            return $session->makeRedirectErrorResponse('uid_dont_match');
         }
 
-        $identityRepo = $request->identity_repo();
-        $proxy = $identityRepo->makeAuthorizationShortTokenProxy();
-        $identityRepo->activateAuthorizationShortTokenProxy($identity, $proxy['exchange_token']);
-
-        return redirect(sprintf(
-            '%s/auth-link?token=%s',
-            rtrim($session->session_final_url, '/'),
-            $proxy['exchange_token']
-        ));
-    }
-
-    /**
-     * @param ResolveDigIdRequest $request
-     * @param DigIdSession $session
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     */
-    private function _resolveFundRequest(ResolveDigIdRequest $request, DigIdSession $session)
-    {
-        $recordRepo = $request->records_repo();
-        $bsn = $session->digid_uid;
-        $fund = Fund::find($session->meta['fund_id']);
-        $identity = $session->identity_address;
-        $identity_bsn = $recordRepo->bsnByAddress($identity);
-        $bsn_identity = $recordRepo->identityAddressByBsn($bsn);
-        $params = [];
-
-        if ($identity_bsn && $bsn !== $identity_bsn) {
-            return redirect(url_extend_get_params($session->session_final_url, [
-                'digid_error' => "uid_dont_match",
-            ]));
+        // The digid bsn is already in the system but belongs to someone else
+        if ($digidBsnIdentity && $digidBsnIdentity->address !== $sessionIdentity->address) {
+            return $session->makeRedirectErrorResponse('uid_used');
         }
 
-        if ($bsn_identity && $bsn_identity !== $identity) {
-            return redirect(url_extend_get_params($session->session_final_url, [
-                'digid_error' => "uid_used",
-            ]));
+        // The session organization have bsn_enabled and
+        if ($session->sessionOrganization()->bsn_enabled) {
+            return (bool) $session->identity->setBsnRecord($session->digid_uid);
         }
 
-        $isFirstSignUp = !$identity_bsn && !$bsn_identity;
-        $hasBackoffice = $fund && $fund->fund_config && $fund->organization->backoffice_available;
-
-        if ($fund->organization->bsn_enabled && $isFirstSignUp) {
-            $recordRepo->setBsnRecord($identity, $bsn);
-        }
-
-        Prevalidation::assignAvailableToIdentityByBsn($identity);
-        Voucher::assignAvailableToIdentityByBsn($identity);
-
-        if ($fund->organization->bsn_enabled && $hasBackoffice) {
-            $response = $fund->checkBackofficeIfAvailable($identity);
-            $redirect = $this->handleBackofficeResponse($fund, $response);
-
-            if (is_string($redirect)) {
-                return redirect($redirect);
-            }
-
-            $params = $redirect;
-        }
-
-        return redirect(url_extend_get_params($session->session_final_url, array_merge([
-            'digid_success' => $isFirstSignUp ? 'signed_up' : 'signed_in',
-        ], $params)));
-    }
-
-    /**
-     * @param Fund $fund
-     * @param ResidencyResponse|PartnerBsnResponse|EligibilityResponse|null $response
-     * @return string|array
-     */
-    protected function handleBackofficeResponse(Fund $fund, $response)
-    {
-        // backoffice not available
-        if ($response === null) {
-            return [];
-        }
-
-        // backoffice not responding
-        if (!$response->getLog()->success()) {
-            return $this->backofficeError('no_response', $fund->fund_config->backoffice_fallback);
-        }
-
-        // not resident
-        if ($response instanceof ResidencyResponse && !$response->isResident()) {
-            return $this->backofficeError('not_resident');
-        }
-
-        // is partner bsn
-        if ($response instanceof PartnerBsnResponse) {
-            return $this->backofficeError('taken_by_partner');
-        }
-
-        // not eligible
-        if ($response instanceof EligibilityResponse && !$response->isEligible()) {
-            if ($fund->fund_config->shouldRedirectOnIneligibility()) {
-                // should redirect
-                return $fund->fund_config->backoffice_ineligible_redirect_url;
-            }
-
-            // should show error
-            return $this->backofficeError('not_eligible', true);
-        }
-
-        return [];
-    }
-
-    /**
-     * @param string $error_key
-     * @param bool $fallback
-     * @return array
-     */
-    protected function backofficeError(string $error_key, bool $fallback = false): array
-    {
-        return [
-            'backoffice_error' => 1,
-            'backoffice_error_key' => $error_key,
-            'backoffice_fallback' => $fallback ? 1 : 0,
-        ];
+        return false;
     }
 }

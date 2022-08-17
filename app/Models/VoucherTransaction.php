@@ -84,7 +84,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereVoucherTransactionBulkId($value)
  * @mixin \Eloquent
  */
-class VoucherTransaction extends Model
+class VoucherTransaction extends BaseModel
 {
     use HasLogs;
 
@@ -317,10 +317,16 @@ class VoucherTransaction extends Model
      */
     public static function searchSponsor(Request $request, Organization $organization): Builder
     {
-        $builder = self::search($request)->whereHas('voucher.fund.organization', function (
+        $builder = self::search($request)->whereHas('voucher.fund', function (
             Builder $query
-        ) use ($organization) {
-            $query->where('id', $organization->id);
+        ) use ($organization, $request) {
+            if ($fund_id = $request->input('fund_id')) {
+                $query->where('id', $fund_id);
+            }
+
+            $query->whereHas('organization', function (Builder $query) use ($organization) {
+                $query->where('id', $organization->id);
+            });
         });
 
         if ($voucher_transaction_bulk_id = $request->input('voucher_transaction_bulk_id')) {

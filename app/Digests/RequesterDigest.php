@@ -7,16 +7,13 @@ use App\Mail\MailBodyBuilder;
 use App\Models\Fund;
 use App\Models\Voucher;
 use App\Services\EventLogService\Models\EventLog;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 use App\Services\Forus\Notification\NotificationService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
-/**
- * Class RequesterDigest
- * @package App\Digests
- */
 class RequesterDigest
 {
     use Dispatchable;
@@ -215,11 +212,10 @@ class RequesterDigest
 
     /**
      * @param Fund $fund
-     * @return \Carbon\Carbon|\Illuminate\Support\Carbon
+     * @return Carbon
      */
-    public function getFundDigestTime(
-        Fund $fund
-    ) {
+    public function getFundDigestTime(Fund $fund): Carbon
+    {
         return $fund->lastDigestOfType('requester')->created_at ?? now()->subWeek();
     }
 

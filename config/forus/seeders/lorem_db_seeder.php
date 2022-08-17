@@ -11,6 +11,12 @@ return [
     'provider_products_count'       => env('DB_SEED_PROVIDER_PRODUCTS', 4),
     'vouchers_per_fund_count'       => env('DB_SEED_VOUCHERS_PER_FUND', 5),
 
+    'default_organization_iban'     => env('DB_SEED_PROVIDER_IBAN'),
+    'prevalidation_bsn'             => env('DB_SEED_PREVALIDATION_BSN', false),
+
+    'no_vouchers'                   => env('DB_SEED_NO_VOUCHERS', false),
+    'no_product_vouchers'           => env('DB_SEED_NO_PRODUCT_VOUCHERS', false),
+
     // amount in generated vouchers
     'voucher_amount'                => env('DB_SEED_VOUCHER_AMOUNT', 600),
 
@@ -21,7 +27,7 @@ return [
     'fund_request_email_pattern'    => env('DB_SEED_FUND_REQUEST_EMAIL_PATTERN', 'requester-%s@example.com'),
 
     // default bunq key
-    'bunq_key'              => env('DB_SEED_BUNQ_KEY', ''),
+    'bunq_key'                      => env('DB_SEED_BUNQ_KEY', ''),
 
     // criteria for generated funds
     'funds_criteria'        => [[
@@ -68,11 +74,15 @@ return [
     ),
 
     'backoffice_url' => env('DB_SEED_BACKOFFICE_URL'),
-    'backoffice_key' => env('DB_SEED_BACKOFFICE_KEY', ""),
-    'backoffice_cert' => env('DB_SEED_BACKOFFICE_CERT', ""),
+    'backoffice_server_key' => env('DB_SEED_BACKOFFICE_SERVER_KEY', ""),
+    'backoffice_server_cert' => env('DB_SEED_BACKOFFICE_SERVER_CERT', ""),
+    'backoffice_client_cert' => env('DB_SEED_BACKOFFICE_CLIENT_CERT', ""),
+    'backoffice_client_cert_key' => env('DB_SEED_BACKOFFICE_CLIENT_CERT_KEY', ""),
     'backoffice_fallback' => env('DB_SEED_BACKOFFICE_FALLBACK', true),
 
     'iconnect_url' => env('DB_SEED_ICONNECT_URL', ""),
     'iconnect_oin' => env('DB_SEED_ICONNECT_OIN', ""),
     'iconnect_binding' => env('DB_SEED_ICONNECT_BINDING', ""),
+
+    'productboard_api_key' => env('DB_SEED_PRODUCTBOARD_API_KEY'),
 ];

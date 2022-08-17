@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\FundsProviderChats;
 
 use App\Exceptions\MissingRequiredRequestPropertyException;
+use App\Http\Requests\BaseFormRequest;
 use App\Models\FundProvider;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
@@ -12,7 +12,7 @@ use Illuminate\Validation\Rule;
  * @property FundProvider $fund_provider
  * @package App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\FundsProviderChats
  */
-class StoreFundProviderChatRequest extends FormRequest
+class StoreFundProviderChatRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

@@ -2,14 +2,12 @@
 
 namespace App\Policies;
 
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\ProductReservation;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
-/**
- * Class ProductReservationPolicy
- * @package App\Policies
- */
 class ProductReservationPolicy
 {
     use HandlesAuthorization;
@@ -17,132 +15,141 @@ class ProductReservationPolicy
     /**
      * Determine whether the user can view any product reservations.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAny(string $identity_address): bool
+    public function viewAny(Identity $identity): bool
     {
-        return !empty($identity_address);
+        return $identity->exists;
     }
 
     /**
      * Determine whether the user can view any product reservations.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAnyProvider(string $identity_address, Organization $organization): bool
+    public function viewAnyProvider(Identity $identity, Organization $organization): bool
     {
-        return $identity_address && $organization->identityCan($identity_address, 'scan_vouchers');
+        return $organization->identityCan($identity, 'scan_vouchers');
     }
 
     /**
      * Determine whether the user can view the product reservation.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param \App\Models\ProductReservation $productReservation
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function view(string $identity_address, ProductReservation $productReservation): bool
+    public function view(Identity $identity, ProductReservation $productReservation): bool
     {
-        return $this->update($identity_address, $productReservation);
+        return $this->update($identity, $productReservation);
     }
 
     /**
      * Determine whether the user can view the product reservation.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param \App\Models\ProductReservation $productReservation
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
     public function viewProvider(
-        string $identity_address,
+        Identity $identity,
         ProductReservation $productReservation,
         Organization $organization
     ): bool {
-        return $this->updateProvider($identity_address, $productReservation, $organization);
+        return $this->updateProvider($identity, $productReservation, $organization);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function create(string $identity_address): bool
+    public function create(Identity $identity): bool
     {
-        return !empty($identity_address);
+        return $identity->exists;
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function createProvider(string $identity_address, Organization $organization): bool
+    public function createProvider(Identity $identity, Organization $organization): bool
     {
-        return $identity_address && $organization->identityCan($identity_address, 'scan_vouchers');
+        return $organization->identityCan($identity, 'scan_vouchers');
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function createProviderBatch(string $identity_address, Organization $organization): bool
+    public function createProviderBatch(Identity $identity, Organization $organization): bool
     {
-        return $identity_address &&
+        return
+            $identity->exists &&
             $organization->allow_batch_reservations &&
-            $organization->identityCan($identity_address, 'scan_vouchers');
+            $organization->identityCan($identity, 'scan_vouchers');
     }
 
     /**
      * Determine whether the user can update the product reservation.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param  \App\Models\ProductReservation  $productReservation
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function update(string $identity_address, ProductReservation $productReservation): bool
+    public function update(Identity $identity, ProductReservation $productReservation): bool
     {
-        return $productReservation->voucher->identity_address === $identity_address;
+        return $productReservation->voucher->identity_address === $identity->address;
     }
 
     /**
      * Determine whether the user can update the product reservation.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param \App\Models\ProductReservation $productReservation
      * @param Organization $organization
-     * @noinspection PhpUnused
      * @return bool
+     * @noinspection PhpUnused
      */
     public function updateProvider(
-        string $identity_address,
+        Identity $identity,
         ProductReservation $productReservation,
         Organization $organization
     ): bool {
-        return !empty($identity_address) &&
+        return
+            $identity->exists &&
             $productReservation->product->organization_id == $organization->id &&
-            $organization->identityCan($identity_address, 'scan_vouchers');
+            $organization->identityCan($identity, 'scan_vouchers');
     }
 
     /**
      * Determine whether the user can update the product reservation.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param \App\Models\ProductReservation $productReservation
      * @param Organization $organization
+     * @return Response|bool
      * @noinspection PhpUnused
-     * @return bool|\Illuminate\Auth\Access\Response
      */
     public function acceptProvider(
-        string $identity_address,
+        Identity $identity,
         ProductReservation $productReservation,
         Organization $organization
-    ) {
-        if (!$this->updateProvider($identity_address, $productReservation, $organization)) {
+    ): Response|bool {
+        if (!$this->updateProvider($identity, $productReservation, $organization)) {
             return false;
         }
 
@@ -175,17 +182,17 @@ class ProductReservationPolicy
     /**
      * Determine whether the user can update the product reservation.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param \App\Models\ProductReservation $productReservation
      * @param Organization $organization
+     * @return Response|bool
      * @noinspection PhpUnused
-     * @return bool|\Illuminate\Auth\Access\Response
      */
     public function rejectProvider(
-        string $identity_address,
+        Identity $identity,
         ProductReservation $productReservation,
         Organization $organization
-    ) {
+    ): Response|bool {
         if (!$productReservation->voucher->activated && !$productReservation->isAccepted()) {
             return $this->deny('The voucher used to make the reservation, is not active.');
         }
@@ -194,20 +201,20 @@ class ProductReservationPolicy
             return $this->deny('The voucher used to make the reservation, has expired.');
         }
 
-        return $this->updateProvider($identity_address, $productReservation, $organization) &&
+        return $this->updateProvider($identity, $productReservation, $organization) &&
             $productReservation->isCancelableByProvider();
     }
 
     /**
      * Determine whether the user can delete the product reservation.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param  \App\Models\ProductReservation  $productReservation
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function delete(string $identity_address, ProductReservation $productReservation): bool
+    public function delete(Identity $identity, ProductReservation $productReservation): bool
     {
-        return $this->update($identity_address, $productReservation) &&
-            $productReservation->isPending();
+        return $this->update($identity, $productReservation) && $productReservation->isPending();
     }
 }

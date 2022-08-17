@@ -4,10 +4,7 @@ use App\Models\Role;
 use App\Models\Organization;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class AddOrganizationOwnersToEmployeesList extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -38,4 +35,4 @@ class AddOrganizationOwnersToEmployeesList extends Migration
     {
         //
     }
-}
+};

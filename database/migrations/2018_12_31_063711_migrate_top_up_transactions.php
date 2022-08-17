@@ -4,10 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class MigrateTopUpTransactions extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -76,4 +73,4 @@ class MigrateTopUpTransactions extends Migration
 
         DB::table('fund_top_up_transactions')->whereNotNull('id')->delete();
     }
-}
+};

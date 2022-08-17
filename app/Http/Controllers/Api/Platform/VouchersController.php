@@ -4,19 +4,15 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Vouchers\DeactivateVoucherRequest;
-use App\Http\Requests\Api\Platform\Vouchers\StoreProductReservationRequest;
 use App\Http\Resources\VoucherCollectionResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
+use App\Searches\VouchersSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class VouchersController
- * @package App\Http\Controllers\Api\Platform
- */
 class VouchersController extends Controller
 {
     /**
@@ -28,27 +24,16 @@ class VouchersController extends Controller
     {
         $this->authorize('viewAny', Voucher::class);
 
-        $query = Voucher::whereIdentityAddress($request->auth_address())
+        $query = Voucher::query()
+            ->where('identity_address', $request->auth_address())
             ->whereDoesntHave('product_reservation')
             ->orderByDesc('created_at');
 
-        if ($request->input('type') === Voucher::TYPE_BUDGET) {
-            $query->whereNull('product_id');
-        }
-
-        if ($request->input('type') === Voucher::TYPE_PRODUCT) {
-            $query->whereNotNull('product_id');
-        }
-
-        if ($request->has('state')) {
-            $query->where('state', $request->input('state'));
-        }
+        $search = new VouchersSearch($request->only('type', 'state', 'archived'), $query);
+        $per_page = $request->input('per_page', 1000);
 
         // todo: remove fallback pagination 1000, when apps are ready
-        return VoucherCollectionResource::queryCollection(
-            $query,
-            $request->input('per_page', 1000),
-        );
+        return VoucherCollectionResource::queryCollection($search->query(), $per_page);
     }
 
     /**
@@ -78,7 +63,7 @@ class VouchersController extends Controller
         $this->authorize('sendEmail', $voucherToken->voucher);
 
         $voucher = $voucherToken->voucher;
-        $voucher->sendToEmail($voucher->identity->primary_email->email);
+        $voucher->sendToEmail($voucher->identity->email);
 
         return new JsonResponse([]);
     }

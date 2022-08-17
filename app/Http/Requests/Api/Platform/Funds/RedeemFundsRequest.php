@@ -6,12 +6,11 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Traits\ThrottleWithMeta;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Gate;
 
-/**
- * Class RedeemFundsRequest
- * @package App\Http\Requests\Api\Platform\Funds
- */
 class RedeemFundsRequest extends BaseFormRequest
 {
     use ThrottleWithMeta;
@@ -21,12 +20,11 @@ class RedeemFundsRequest extends BaseFormRequest
      *
      * @return bool
      * @throws \App\Exceptions\AuthorizationJsonException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function authorize(): bool
     {
-        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', 3);
-        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', 180);
+        $this->maxAttempts = Config::get('forus.throttles.activation_code.attempts');
+        $this->decayMinutes = Config::get('forus.throttles.activation_code.decay');
 
         if ($this->isAuthenticated()) {
             $prevalidation = $this->getPrevalidation();
@@ -45,7 +43,7 @@ class RedeemFundsRequest extends BaseFormRequest
             }
 
             if ($prevalidation) {
-                authorize('redeem', $prevalidation);
+                return Gate::allows('redeem', $prevalidation);
             }
 
             return true;
@@ -57,7 +55,7 @@ class RedeemFundsRequest extends BaseFormRequest
     /**
      * @return Collection|Voucher[]
      */
-    public function getAvailableVouchers(): Collection
+    public function getAvailableVouchers(): Collection|Arrayable
     {
         return Voucher::whereNull('identity_address')->where([
             'activation_code' => $this->input('code'),
@@ -67,7 +65,7 @@ class RedeemFundsRequest extends BaseFormRequest
     /**
      * @return Collection|Voucher[]
      */
-    public function getUsedVouchers(): Collection
+    public function getUsedVouchers(): Collection|Arrayable
     {
         return Voucher::whereNotNull('identity_address')->where([
             'activation_code' => $this->input('code'),
@@ -75,7 +73,7 @@ class RedeemFundsRequest extends BaseFormRequest
     }
 
     /**
-     * @return Prevalidation
+     * @return Prevalidation|null
      */
     public function getPrevalidation(): ?Prevalidation
     {

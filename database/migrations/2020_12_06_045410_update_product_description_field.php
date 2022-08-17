@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class UpdateProductDescriptionField extends Migration
+return new class extends Migration
 {
     public function __construct()
     {
@@ -39,4 +36,4 @@ class UpdateProductDescriptionField extends Migration
             $table->string('description', 1000)->change();
         });
     }
-}
+};

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
 use App\Exports\VoucherTransactionBulksExport;
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasDbTokens;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherTransactionBulkQuery;
@@ -19,6 +20,7 @@ use App\Services\BNGService\Responses\Entries\Payment as PaymentBNG;
 use App\Services\BNGService\Responses\Entries\PaymentInitiator;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Statistics\Funds\FinancialStatisticQueries;
 use bunq\Model\Generated\Endpoint\DraftPayment;
 use bunq\Model\Generated\Endpoint\Payment;
 use bunq\Model\Generated\Endpoint\PaymentBatch;
@@ -91,7 +93,7 @@ use Throwable;
  * @method static Builder|VoucherTransactionBulk whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class VoucherTransactionBulk extends Model
+class VoucherTransactionBulk extends BaseModel
 {
     use HasLogs, HasDbTokens;
 
@@ -305,13 +307,12 @@ class VoucherTransactionBulk extends Model
     }
 
     /**
-     * @param BulkPaymentValue $draftPayment
      * @return VoucherTransactionBulk
      * @throws Throwable
      */
-    public function setAcceptedBNG(BulkPaymentValue $draftPayment): self
+    public function setAcceptedBNG(): self
     {
-        DB::transaction(function() use ($draftPayment) {
+        DB::transaction(function() {
             $this->update([
                 'state' => static::STATE_ACCEPTED,
             ]);
@@ -478,8 +479,7 @@ class VoucherTransactionBulk extends Model
     /**
      * Execute the console command.
      *
-     * @return mixed
-     * @throws \Throwable
+     * @return void
      */
     public static function buildBulks(): void
     {
@@ -508,15 +508,28 @@ class VoucherTransactionBulk extends Model
 
     /**
      * @param Organization $sponsor
+     * @param BaseFormRequest|null $request
      * @return Builder
      */
-    public static function getNextBulkTransactionsForSponsor(Organization $sponsor): Builder
-    {
-        $query = VoucherTransaction::whereHas('voucher', function(Builder $builder) use ($sponsor) {
-            $builder->whereHas('fund', function(Builder $builder) use ($sponsor) {
-                $builder->where('funds.organization_id', $sponsor->id);
-            });
-        });
+    public static function getNextBulkTransactionsForSponsor(
+        Organization $sponsor,
+        ?BaseFormRequest $request = null
+    ): Builder {
+        if ($request) {
+            $options = array_merge($request->only([
+                'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids',
+            ]), [
+                'date_to' => $request->input('to') ? Carbon::parse($request->input('to')) : null,
+                'date_from' => $request->input('from') ? Carbon::parse($request->input('from')) : null,
+            ]);
+
+            $query = VoucherTransaction::search($request);
+            $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($sponsor, $options, $query);
+        } else {
+            $query = VoucherTransaction::query();
+        }
+
+        $query->whereRelation('voucher.fund', 'funds.organization_id', $sponsor->id);
 
         return VoucherTransactionQuery::whereAvailableForBulking($query);
     }
@@ -524,16 +537,18 @@ class VoucherTransactionBulk extends Model
     /**
      * @param Organization $sponsor
      * @param Employee|null $employee
+     * @param BaseFormRequest|null $request
      * @param array $previousBulks
      * @return array
      */
     public static function buildBulksForOrganization(
         Organization $sponsor,
         ?Employee $employee = null,
+        ?BaseFormRequest $request = null,
         array $previousBulks = []
     ): array {
         $perBulk = 100;
-        $query = static::getNextBulkTransactionsForSponsor($sponsor);
+        $query = static::getNextBulkTransactionsForSponsor($sponsor, $request);
 
         if ((clone($query))->doesntExist()) {
             return $previousBulks;
@@ -560,8 +575,8 @@ class VoucherTransactionBulk extends Model
 
         $bulksList[] = $transactionsBulk->id;
 
-        if (static::getNextBulkTransactionsForSponsor($sponsor)->exists()) {
-            return static::buildBulksForOrganization($sponsor, $employee, $bulksList);
+        if (static::getNextBulkTransactionsForSponsor($sponsor, $request)->exists()) {
+            return static::buildBulksForOrganization($sponsor, $employee, $request, $bulksList);
         }
 
         return $bulksList;
@@ -624,7 +639,7 @@ class VoucherTransactionBulk extends Model
                 }
 
                 if ($this->bank_connection->bank->isBNG()) {
-                    $this->setAcceptedBNG($payment);
+                    $this->setAcceptedBNG();
                 }
             } break;
         }

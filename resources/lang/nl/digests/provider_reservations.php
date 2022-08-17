@@ -1,6 +1,5 @@
 <?php
 
-// todo: set plural version and delete the comment
 return [
     'subject' => 'Update: Uw aanbod is gereserveerd',
     'title' => 'Update: Uw aanbod is gereserveerd',

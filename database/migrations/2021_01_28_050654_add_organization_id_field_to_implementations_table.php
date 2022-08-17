@@ -6,10 +6,7 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Organization;
 use App\Models\Fund;
 
-/**
- * @noinspection PhpUnused
- */
-class AddOrganizationIdFieldToImplementationsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -45,4 +42,4 @@ class AddOrganizationIdFieldToImplementationsTable extends Migration
             $table->dropColumn('organization_id');
         });
     }
-}
+};

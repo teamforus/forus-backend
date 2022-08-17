@@ -20,14 +20,11 @@ use App\Notifications\Organizations\Products\ProductRevokedNotification;
 use App\Notifications\Organizations\Products\ProductSoldOutNotification;
 use Illuminate\Events\Dispatcher;
 
-/**
- * Class ProductSubscriber
- * @package App\Listeners
- */
 class ProductSubscriber
 {
     /**
      * @param ProductCreated $productCreated
+     * @noinspection PhpUnused
      */
     public function onProductCreated(ProductCreated $productCreated): void
     {
@@ -49,6 +46,7 @@ class ProductSubscriber
 
     /**
      * @param ProductUpdated $productUpdated
+     * @noinspection PhpUnused
      */
     public function onProductUpdated(ProductUpdated $productUpdated): void
     {
@@ -61,7 +59,7 @@ class ProductSubscriber
         ]);
 
         foreach ($chats as $chat) {
-            $chat->addSystemMessage('Aanbieding aangepast.', auth_address());
+            $chat->addSystemMessage('Aanbieding aangepast.', auth()->id());
         }
 
         $product->updateSoldOutState();
@@ -69,6 +67,7 @@ class ProductSubscriber
 
     /**
      * @param ProductSoldOut $productSoldOut
+     * @noinspection PhpUnused
      */
     public function onProductSoldOut(ProductSoldOut $productSoldOut): void
     {
@@ -82,6 +81,7 @@ class ProductSubscriber
 
     /**
      * @param ProductExpired $productExpired
+     * @noinspection PhpUnused
      */
     public function onProductExpired(ProductExpired $productExpired): void
     {
@@ -95,6 +95,7 @@ class ProductSubscriber
 
     /**
      * @param ProductReserved $productReserved
+     * @noinspection PhpUnused
      */
     public function onProductReserved(ProductReserved $productReserved): void
     {
@@ -114,6 +115,7 @@ class ProductSubscriber
 
     /**
      * @param ProductApproved $productApproved
+     * @noinspection PhpUnused
      */
     public function onProductApproved(ProductApproved $productApproved): void
     {
@@ -121,7 +123,7 @@ class ProductSubscriber
         $product = $productApproved->getProduct();
 
         foreach ($product->fund_provider_chats as $chat) {
-            $chat->addSystemMessage('Aanbieding geaccepteerd.', auth_address());
+            $chat->addSystemMessage('Aanbieding geaccepteerd.', auth()->id());
         }
 
         FundProductApprovedEvent::dispatch($fund, $product);
@@ -137,6 +139,7 @@ class ProductSubscriber
 
     /**
      * @param ProductRevoked $productRevoked
+     * @noinspection PhpUnused
      */
     public function onProductRevoked(ProductRevoked $productRevoked): void
     {
@@ -158,15 +161,19 @@ class ProductSubscriber
      * The events dispatcher
      *
      * @param Dispatcher $events
+     * @return void
+     * @noinspection PhpUnused
      */
     public function subscribe(Dispatcher $events): void
     {
-        $events->listen(ProductRevoked::class, '\App\Listeners\ProductSubscriber@onProductRevoked');
-        $events->listen(ProductCreated::class, '\App\Listeners\ProductSubscriber@onProductCreated');
-        $events->listen(ProductUpdated::class, '\App\Listeners\ProductSubscriber@onProductUpdated');
-        $events->listen(ProductSoldOut::class, '\App\Listeners\ProductSubscriber@onProductSoldOut');
-        $events->listen(ProductExpired::class, '\App\Listeners\ProductSubscriber@onProductExpired');
-        $events->listen(ProductReserved::class, '\App\Listeners\ProductSubscriber@onProductReserved');
-        $events->listen(ProductApproved::class, '\App\Listeners\ProductSubscriber@onProductApproved');
+        $class = '\\' . static::class;
+
+        $events->listen(ProductRevoked::class, "$class@onProductRevoked");
+        $events->listen(ProductCreated::class, "$class@onProductCreated");
+        $events->listen(ProductUpdated::class, "$class@onProductUpdated");
+        $events->listen(ProductSoldOut::class, "$class@onProductSoldOut");
+        $events->listen(ProductExpired::class, "$class@onProductExpired");
+        $events->listen(ProductReserved::class, "$class@onProductReserved");
+        $events->listen(ProductApproved::class, "$class@onProductApproved");
     }
 }

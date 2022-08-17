@@ -3,10 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use App\Models\Organization;
 
-/**
- * @noinspection PhpUnused
- */
-class RemoveOrganizationOwnersFromEmployeesList extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -28,8 +25,5 @@ class RemoveOrganizationOwnersFromEmployeesList extends Migration
      *
      * @return void
      */
-    public function down(): void
-    {
-        //
-    }
-}
+    public function down(): void {}
+};

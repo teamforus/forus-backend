@@ -2,60 +2,69 @@
 
 namespace App\Services\AuthService;
 
-use App\Services\AuthService\Models\Identity;
-use App\Services\Forus\Identity\Repositories\IdentityRepo;
-use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
+use App\Models\IdentityProxy;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
+use App\Models\Identity;
+use Illuminate\Support\Arr;
 
 class ServiceIdentityProvider implements UserProvider
 {
     /**
      * Retrieve a user by the given credentials.
      *
-     * @param  array  $credentials
-     * @return \Illuminate\Contracts\Auth\Authenticatable|null
+     * @param array $credentials
+     * @return Identity|null
      */
-    public function retrieveByCredentials(array $credentials)
+    public function retrieveByCredentials(array $credentials): Identity|null
     {
-        if (empty($credentials) ||
-            !array_key_exists('bearer_token', $credentials) ||
-            empty($credentials['bearer_token']) ||
-            $credentials['bearer_token'] == 'null'
-        ) {
+        if (empty($accessToken = Arr::get($credentials, 'bearer_token'))) {
             return null;
         }
 
-        $bearerToken = $credentials['bearer_token'];
-        $identityService = resolve('forus.services.identity');
-
-        if (!$proxyIdentityId = $identityService->proxyIdByAccessToken($bearerToken)) {
+        if (!$identityProxy = IdentityProxy::findByAccessToken($accessToken)) {
             return null;
         }
 
-        $proxyIdentityState = $identityService->proxyStateById($proxyIdentityId);
-        $identityAddress = $identityService->identityAddressByProxyId($proxyIdentityId);
-
-        return new Identity($identityAddress, $proxyIdentityId, $proxyIdentityState);
+        return $identityProxy->isActive() ? $identityProxy->identity : null;
     }
 
-    public function retrieveById($identifier)
+    /**
+     * @param $identifier
+     * @return Identity|null
+     */
+    public function retrieveById($identifier): ?Identity
     {
-        // TODO: Implement retrieveById() method.
+        return Identity::whereAddress($identifier)->first();
     }
 
+    /**
+     * @param $identifier
+     * @param $token
+     * @return null
+     */
     public function retrieveByToken($identifier, $token)
     {
-        // TODO: Implement retrieveByToken() method.
+        return null;
     }
 
+    /**
+     * @param Authenticatable $user
+     * @param $token
+     * @return null
+     */
     public function updateRememberToken(Authenticatable $user, $token)
     {
-        // TODO: Implement updateRememberToken() method.
+        return null;
     }
 
-    public function validateCredentials(Authenticatable $user, array $credentials)
+    /**
+     * @param Authenticatable|Identity $user
+     * @param array $credentials
+     * @return bool
+     */
+    public function validateCredentials(Authenticatable|Identity $user, array $credentials): bool
     {
-        // TODO: Implement validateCredentials() method.
+        return $user->address === $this->retrieveByCredentials($credentials)->address;
     }
 }

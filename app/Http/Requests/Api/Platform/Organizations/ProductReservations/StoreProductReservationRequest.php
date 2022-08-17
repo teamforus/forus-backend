@@ -37,7 +37,9 @@ class StoreProductReservationRequest extends BaseFormRequest
 
         $this->throttleWithKey('to_many_attempts', $this, 'provider_reservation_store');
 
-        return $this->isAuthenticated() && $this->organization->identityCan('scan_vouchers');
+        return
+            $this->isAuthenticated() &&
+            $this->organization->identityCan($this->identity(), 'scan_vouchers');
     }
 
     /**

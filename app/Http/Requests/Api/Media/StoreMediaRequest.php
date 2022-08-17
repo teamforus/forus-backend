@@ -2,13 +2,13 @@
 
 namespace App\Http\Requests\Api\Media;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Rules\FileMimeTypeRule;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreMediaRequest extends FormRequest
+class StoreMediaRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

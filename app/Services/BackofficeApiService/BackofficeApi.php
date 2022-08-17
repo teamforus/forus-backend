@@ -5,10 +5,10 @@ namespace App\Services\BackofficeApiService;
 
 use App\Models\Fund;
 use App\Models\FundBackofficeLog;
+use App\Models\Identity;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
 use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
 use App\Services\BackofficeApiService\Responses\ResidencyResponse;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
@@ -20,7 +20,6 @@ use Illuminate\Support\Arr;
 class BackofficeApi
 {
     protected Fund $fund;
-    protected IRecordRepo $recordRepo;
 
     public const ACTION_ELIGIBILITY_CHECK = 'eligibility_check';
     public const ACTION_RESIDENCY_CHECK = 'residency_check';
@@ -39,12 +38,10 @@ class BackofficeApi
     public const ATTEMPTS_INTERVAL = 8;
 
     /**
-     * @param IRecordRepo $recordRepo
      * @param Fund $fund
      */
-    public function __construct(IRecordRepo $recordRepo, Fund $fund)
+    public function __construct(Fund $fund)
     {
-        $this->recordRepo = $recordRepo;
         $this->fund = $fund;
     }
 
@@ -203,7 +200,11 @@ class BackofficeApi
      */
     protected static function makeRequestId(): string
     {
-        return "forus-" . token_generator_db(FundBackofficeLog::query(), 'response_id', 16);
+        do {
+            $value = token_generator()->generate(16);
+        } while(FundBackofficeLog::where('response_id', $value)->exists());
+
+        return "forus-" . $value;
     }
 
     /**
@@ -212,22 +213,20 @@ class BackofficeApi
      * @param string $action
      * @param string|null $bsn
      * @param string|null $requestId
-     * @return FundBackofficeLog
+     * @return FundBackofficeLog|null
      */
     protected function makeLog(
         string $action,
         ?string $bsn = null,
         ?string $requestId = null
     ): ?FundBackofficeLog {
-        $identityAddress = $bsn ? $this->recordRepo->identityAddressByBsn($bsn) : null;
-
         if (!in_array($action, [self::ACTION_STATUS, self::ACTION_REPORT_FIRST_USE])) {
             $requestId = $requestId ?: self::makeRequestId();
         }
 
         /** @var FundBackofficeLog $fundLog */
         $fundLog = $this->fund->backoffice_logs()->create([
-            'identity_address'  => $identityAddress,
+            'identity_address'  => Identity::findByBsn($bsn)?->address,
             'bsn'               => $bsn,
             'action'            => $action,
             'request_id'        => $requestId,
@@ -251,13 +250,16 @@ class BackofficeApi
     public function request(string $method, string $url, array $data = []): array
     {
         $guzzleClient = new Client();
-        $certTmpFile = (new TmpFile($this->fund->fund_config->backoffice_certificate));
+        $certTmpFile = new TmpFile($this->fund->fund_config->backoffice_certificate);
+        $clientCertTmpFile = new TmpFile($this->fund->fund_config->backoffice_client_cert);
+        $clientCertKeyTmpFile = new TmpFile($this->fund->fund_config->backoffice_client_cert_key);
 
         try {
-            $options = $this->makeRequestOptions($method, $data);
-            $options['verify'] = $certTmpFile->path();
-            $response = $guzzleClient->request($method, $url, $options);
-            $certTmpFile->close();
+            $response = $guzzleClient->request($method, $url, $this->makeOptions($method, $data, [
+                'verify' => $certTmpFile->path(),
+                'cert' => $clientCertTmpFile->path(),
+                'ssl_key' => $clientCertKeyTmpFile->path(),
+            ]));
 
             return [
                 'success' => true,
@@ -265,13 +267,15 @@ class BackofficeApi
                 'response_body' => json_decode($response->getBody()->getContents(), true),
             ];
         } catch (\Throwable $e) {
-            $certTmpFile->close();
-
             return [
                 'success' => false,
                 'response_code' => $e->getCode(),
                 'response_error' => $e->getMessage(),
             ];
+        } finally {
+            $certTmpFile->close();
+            $clientCertTmpFile->close();
+            $clientCertKeyTmpFile->close();
         }
     }
 
@@ -332,36 +336,29 @@ class BackofficeApi
      *
      * @param string $method
      * @param array $data
+     * @param array $options
      * @return array
      */
-    protected function makeRequestOptions(string $method, array $data): array {
+    protected function makeOptions(string $method, array $data, array $options = []): array
+    {
+        $dataKey = $method === 'GET' ? 'query' : 'json';
+
         return array_merge([
             'headers' => $this->makeRequestHeaders(),
-            'connect_timeout' => config('forus.backoffice_api.connect_timeout', 10),
-            'cert' => [
-                config('forus.backoffice_api.cert_path'),
-                config('forus.backoffice_api.cert_pass')
-            ],
-            'ssl_key' => [
-                config('forus.backoffice_api.key_path'),
-                config('forus.backoffice_api.key_pass')
-            ],
-        ], $method === 'GET' ? [
-            'query' => $data,
-        ]: [
-            'json' => $data,
-        ]);
+            'connect_timeout' => 10,
+            $dataKey => $data,
+        ], $options);
     }
 
     /**
      * Get list of logs to be sent to the API
      *
      * @param array $fundsId
-     * @return FundBackofficeLog|Builder|\Illuminate\Database\Query\Builder
+     * @return FundBackofficeLog|Builder
      */
-    public static function getNextLogInQueueQuery(array $fundsId = [])
+    public static function getNextLogInQueueQuery(array $fundsId = []): FundBackofficeLog|Builder
     {
-        return FundBackofficeLog::query()
+        return FundBackofficeLog::where([])
             ->whereIn('fund_id', $fundsId)
             ->orderBy('created_at', 'ASC')
             ->where(function(Builder $builder) {

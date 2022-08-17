@@ -4,7 +4,7 @@ namespace App\Notifications\Organizations\FundProviders;
 
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Models\FundProvider;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 
 /**
  * Notify the fund provider that they can no longer scan budget vouchers
@@ -12,7 +12,7 @@ use App\Services\Forus\Identity\Models\Identity;
 class FundProvidersRevokedBudgetNotification extends BaseFundProvidersNotification
 {
     protected static ?string $key = 'notifications_fund_providers.revoked_budget';
-    protected static $permissions = 'manage_provider_funds';
+    protected static string|array $permissions = 'manage_provider_funds';
 
     public function toMail(Identity $identity): void
     {
@@ -25,7 +25,7 @@ class FundProvidersRevokedBudgetNotification extends BaseFundProvidersNotificati
         }
 
         $this->sendMailNotification(
-            $identity->primary_email->email,
+            $identity->email,
             new ProviderRejectedMail(
                 $this->eventLog->data,
                 $fund->fund_config->implementation->getEmailFrom()

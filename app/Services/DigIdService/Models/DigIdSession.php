@@ -4,12 +4,15 @@ namespace App\Services\DigIdService\Models;
 
 use App\Http\Requests\DigID\StartDigIdRequest;
 use App\Models\Fund;
+use App\Models\Identity;
 use App\Models\Implementation;
+use App\Models\Organization;
 use App\Services\DigIdService\DigIdException;
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\RedirectResponse;
 
 
 /**
@@ -38,6 +41,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read Identity|null $identity
  * @property-read Implementation|null $implementation
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession newQuery()
@@ -119,6 +123,14 @@ class DigIdSession extends Model
     ];
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function identity(): BelongsTo
+    {
+        return $this->belongsTo(Identity::class, 'identity_address', 'address');
+    }
+
+    /**
      * @param array $attributes
      * @param array $options
      * @return $this
@@ -140,9 +152,9 @@ class DigIdSession extends Model
 
     /**
      * @param StartDigIdRequest $request
-     * @return DigIdSession|Model
+     * @return DigIdSession
      */
-    public static function createSession(StartDigIdRequest $request)
+    public static function createSession(StartDigIdRequest $request): DigIdSession
     {
         $token_generator = resolve('token_generator');
 
@@ -283,7 +295,8 @@ class DigIdSession extends Model
      * @param StartDigIdRequest $request
      * @return string|null
      */
-    protected static function makeFinalRedirectUrl(StartDigIdRequest $request): ?string {
+    protected static function makeFinalRedirectUrl(StartDigIdRequest $request): ?string
+    {
         if ($request->input('request') === 'fund_request') {
             $fund = Fund::find($request->input('fund_id'));
 
@@ -308,5 +321,80 @@ class DigIdSession extends Model
         }
 
         return [];
+    }
+
+    /**
+     * @return Identity|null
+     */
+    public function sessionIdentity(): ?Identity
+    {
+        return $this->identity;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function sessionIdentityBsn(): ?string
+    {
+        return $this->identity?->bsn;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function digidBsn(): ?string
+    {
+        return $this->digid_uid;
+    }
+
+    /**
+     * @return Identity|null
+     */
+    public function digidBsnIdentity(): ?Identity
+    {
+        return Identity::findByBsn($this->digid_uid);
+    }
+
+    /**
+     * @return Organization|null
+     */
+    public function sessionOrganization(): ?Organization
+    {
+        $fund = Fund::find($this->meta['fund_id'] ?? null);
+
+        return $fund?->organization ?: $this->implementation->organization;
+    }
+
+    /**
+     * @param array $data
+     * @param string|null $url
+     * @return RedirectResponse
+     */
+    public function makeRedirectResponse(array $data, string $url = null): RedirectResponse
+    {
+        return redirect(url_extend_get_params($url ?: $this->session_final_url, $data));
+    }
+
+    /**
+     * @param string $error
+     * @param string|null $url
+     * @return RedirectResponse
+     */
+    public function makeRedirectErrorResponse(string $error, string $url = null): RedirectResponse
+    {
+        return $this->makeRedirectResponse([
+            'digid_error' => $error,
+        ], $url);
+    }
+
+    /**
+     * @param Identity $identity
+     * @return Model|$this
+     */
+    public function setIdentity(Identity $identity): Model|DigIdSession
+    {
+        return $this->updateModel([
+            'identity_address' => $identity->address,
+        ])->unsetRelation('identity');
     }
 }

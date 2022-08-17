@@ -95,10 +95,10 @@ class ImplementationMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * @param string|array|null $subject
+     * @param array|string|null $subject
      * @return string
      */
-    protected function getSubject($subject = null): string
+    protected function getSubject(array|string|null $subject = null): string
     {
         if (!$subject ?? false) {
             return config('app.name');
@@ -113,6 +113,8 @@ class ImplementationMail extends Mailable implements ShouldQueue
      */
     protected function escapeData(array $data): array
     {
+        $data = array_filter($data, fn ($value) => is_string($value) || is_numeric($value) || is_bool($value));
+
         foreach ($data as $key => $value) {
             if (!ends_with($key, '_html')) {
                 $data[$key] = e($value);
@@ -192,6 +194,31 @@ class ImplementationMail extends Mailable implements ShouldQueue
             ->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
             ->view('emails.mail-builder-template')
             ->subject($this->getSubject(trans($this->subjectKey, $data)));
+    }
+
+    /**
+     * @param string $subject
+     * @param string $content
+     * @return Mailable
+     */
+    protected function buildCustomMail(string $subject, string $content): Mailable
+    {
+        $data = $this->getTransData();
+        $data = array_merge($data, $this->getMailExtraData($data));
+        $subject = str_var_replace(e($subject), $data);
+
+        $templateHtml = resolve('markdown.converter')->convert(e($content))->getContent();
+        $templateHtml = str_var_replace($templateHtml, $data);
+
+        $emailBody = new MailBodyBuilder();
+        $emailBody->markdownHtml($templateHtml, $this->globalBuilderStyles, $this->implementationColor());
+
+        $this->viewData['emailBody'] = $emailBody;
+
+        return $this
+            ->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
+            ->view('emails.mail-builder-template')
+            ->subject($subject);
     }
 
     /**

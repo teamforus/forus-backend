@@ -4,7 +4,7 @@ namespace App\Notifications\Organizations\Funds;
 
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Models\Fund;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 
 /**
  * Notify sponsor that the fund balance is low (reached the threshold)
@@ -12,7 +12,7 @@ use App\Services\Forus\Identity\Models\Identity;
 class BalanceLowNotification extends BaseFundsNotification
 {
     protected static ?string $key = 'notifications_funds.balance_low';
-    protected static $permissions = 'view_finances';
+    protected static string|array $permissions = 'view_finances';
 
     /**
      * @param Identity $identity

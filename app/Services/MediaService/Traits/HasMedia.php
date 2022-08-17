@@ -131,7 +131,7 @@ trait HasMedia
     }
 
     /**
-     * Get all of the mediable's medias.
+     * Get all the mediable medias.
      * @return MorphMany
      */
     public function medias(): MorphMany

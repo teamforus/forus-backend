@@ -12,7 +12,7 @@ class MigrateEmailColorsAndLogosToImplementationsTable extends Migration
      * Run the migrations.
      *
      * @return void
-     * @throws Exception
+     * @throws Throwable
      */
     public function up(): void
     {

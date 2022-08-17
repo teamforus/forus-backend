@@ -2,14 +2,11 @@
 
 namespace App\Policies;
 
+use App\Models\Identity;
 use App\Models\Voucher;
 use App\Models\PhysicalCardRequest;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-/**
- * Class PhysicalCardRequestPolicy
- * @package App\Policies
- */
 class PhysicalCardRequestPolicy
 {
     use HandlesAuthorization;
@@ -17,29 +14,32 @@ class PhysicalCardRequestPolicy
     /**
      * Determine whether the user can view any physical card requests.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
-     * @return mixed
+     * @return bool
+     * @noinspection PhpUnused
      */
-    public function showAny(string $identity_address, Voucher $voucher): bool
+    public function showAny(Identity $identity, Voucher $voucher): bool
     {
-        return $voucher->identity_address === $identity_address;
+        return $voucher->identity_address === $identity->address;
     }
 
     /**
      * Determine whether the user can view the physical card request.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param \App\Models\PhysicalCardRequest $physicalCardRequest
-     * @return mixed
+     * @return bool
+     * @noinspection PhpUnused
      */
     public function show(
-        string $identity_address,
+        Identity $identity,
         Voucher $voucher,
         PhysicalCardRequest $physicalCardRequest
     ): bool {
-        return ($voucher->identity_address === $identity_address) &&
-            ($physicalCardRequest->voucher_id === $voucher->id);
+        return
+            $voucher->identity_address === $identity->address &&
+            $physicalCardRequest->voucher_id === $voucher->id;
     }
 }

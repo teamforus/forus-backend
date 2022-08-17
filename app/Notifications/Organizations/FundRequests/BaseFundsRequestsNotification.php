@@ -6,22 +6,15 @@ use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Notifications\Organizations\BaseOrganizationNotification;
 
-/**
- * Class BaseFundsRequestsNotification
- * @package App\Notifications\FundRequests
- */
 abstract class BaseFundsRequestsNotification extends BaseOrganizationNotification
 {
-    /**
-     * @var string
-     */
     protected static ?string $scope = self::SCOPE_VALIDATOR;
 
     /**
-     * @param \Illuminate\Database\Eloquent\Model|FundRequest $loggable
-     * @return \App\Models\Organization|void
+     * @param FundRequest $loggable
+     * @return \App\Models\Organization
      */
-    public static function getOrganization($loggable): Organization
+    public static function getOrganization(mixed $loggable): Organization
     {
         return $loggable->fund->organization;
     }

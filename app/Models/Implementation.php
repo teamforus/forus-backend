@@ -47,12 +47,14 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property float|null $lon
  * @property float|null $lat
  * @property bool $informal_communication
+ * @property string|null $productboard_api_key
  * @property string|null $email_from_address
  * @property string|null $email_from_name
  * @property string|null $email_color
  * @property string|null $email_signature
  * @property bool $digid_enabled
  * @property bool $digid_required
+ * @property bool $digid_sign_up_allowed
  * @property string $digid_env
  * @property string|null $digid_app_id
  * @property string|null $digid_shared_secret
@@ -96,6 +98,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereDigidForusApiUrl($value)
  * @method static Builder|Implementation whereDigidRequired($value)
  * @method static Builder|Implementation whereDigidSharedSecret($value)
+ * @method static Builder|Implementation whereDigidSignUpAllowed($value)
  * @method static Builder|Implementation whereEmailColor($value)
  * @method static Builder|Implementation whereEmailFromAddress($value)
  * @method static Builder|Implementation whereEmailFromName($value)
@@ -111,6 +114,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereOverlayEnabled($value)
  * @method static Builder|Implementation whereOverlayOpacity($value)
  * @method static Builder|Implementation whereOverlayType($value)
+ * @method static Builder|Implementation whereProductboardApiKey($value)
  * @method static Builder|Implementation whereTitle($value)
  * @method static Builder|Implementation whereUpdatedAt($value)
  * @method static Builder|Implementation whereUrlApp($value)
@@ -120,7 +124,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
  */
-class Implementation extends Model
+class Implementation extends BaseModel
 {
     use HasMedia;
 
@@ -140,6 +144,7 @@ class Implementation extends Model
 
     protected $perPage = 20;
     protected static ?Implementation $generalModel = null;
+    protected static ?Implementation $activeModel = null;
 
     /**
      * @var string[]
@@ -158,7 +163,7 @@ class Implementation extends Model
      */
     protected $hidden = [
         'digid_enabled', 'digid_env', 'digid_app_id', 'digid_shared_secret',
-        'digid_a_select_server',
+        'digid_a_select_server', 'productboard_api_key'
     ];
 
     /**
@@ -171,6 +176,7 @@ class Implementation extends Model
         'digid_required' => 'boolean',
         'overlay_opacity' => 'int',
         'overlay_enabled' => 'boolean',
+        'digid_sign_up_allowed' => 'boolean',
         'informal_communication' => 'boolean',
     ];
 
@@ -322,11 +328,27 @@ class Implementation extends Model
     }
 
     /**
+     * @return Implementation|null
+     */
+    public static function active(): ?Implementation
+    {
+        return static::$activeModel ?: static::$activeModel = self::byKey(self::activeKey());
+    }
+
+    /**
      * @return Implementation
      */
-    public static function active(): Implementation
+    public static function general(): Implementation
     {
-        return self::byKey(self::activeKey());
+        return static::$generalModel ?: static::$generalModel = self::byKey(self::KEY_GENERAL);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isGeneral(): bool
+    {
+        return $this->key === self::KEY_GENERAL;
     }
 
     /**
@@ -445,15 +467,16 @@ class Implementation extends Model
     /**
      * @param string $frontend
      * @param string $uri
+     * @param array $params
      * @return string|null
      */
-    public function urlFrontend(string $frontend, string $uri = ''): ?string
+    public function urlFrontend(string $frontend, string $uri = '', array $params = []): ?string
     {
         return match ($frontend) {
-            'webshop' => $this->urlWebshop($uri),
-            'sponsor' => $this->urlSponsorDashboard($uri),
-            'provider' => $this->urlProviderDashboard($uri),
-            'validator' => $this->urlValidatorDashboard($uri),
+            'webshop' => $this->urlWebshop($uri, $params),
+            'sponsor' => $this->urlSponsorDashboard($uri, $params),
+            'provider' => $this->urlProviderDashboard($uri, $params),
+            'validator' => $this->urlValidatorDashboard($uri, $params),
             default => null,
         };
     }
@@ -470,56 +493,42 @@ class Implementation extends Model
 
     /**
      * @param string $uri
-     * @param array $getParams
+     * @param array $params
      * @return string
      */
-    public function urlWebshop(string $uri = "/", array $getParams = []): string
+    public function urlWebshop(string $uri = "/", array $params = []): string
     {
-        return $this->buildFrontendUrl(http_resolve_url($this->url_webshop, $uri), $getParams);
+        return $this->buildFrontendUrl(http_resolve_url($this->url_webshop, $uri), $params);
     }
 
     /**
      * @param string $uri
-     * @param array $getParams
+     * @param array $params
      * @return string
      */
-    public function urlSponsorDashboard(string $uri = "/", array $getParams = []): string
+    public function urlSponsorDashboard(string $uri = "/", array $params = []): string
     {
-        return $this->buildFrontendUrl(http_resolve_url($this->url_sponsor, $uri), $getParams);
+        return $this->buildFrontendUrl(http_resolve_url($this->url_sponsor, $uri), $params);
     }
 
     /**
      * @param string $uri
-     * @param array $getParams
+     * @param array $params
      * @return string
      */
-    public function urlProviderDashboard(string $uri = "/", array $getParams = []): string
+    public function urlProviderDashboard(string $uri = "/", array $params = []): string
     {
-        return $this->buildFrontendUrl(http_resolve_url($this->url_provider, $uri), $getParams);
+        return $this->buildFrontendUrl(http_resolve_url($this->url_provider, $uri), $params);
     }
 
     /**
      * @param string $uri
-     * @param array $getParams
+     * @param array $params
      * @return string
      */
-    public function urlValidatorDashboard(string $uri = "/", array $getParams = []): string
+    public function urlValidatorDashboard(string $uri = "/", array $params = []): string
     {
-        return $this->buildFrontendUrl(http_resolve_url($this->url_validator, $uri), $getParams);
-    }
-
-    /**
-     * @return bool
-     */
-    public function autoValidationEnabled(): bool
-    {
-        $oneActiveFund = $this->funds()->where(['state' => Fund::STATE_ACTIVE])->count() === 1;
-        $oneActiveFundWithAutoValidation = $this->funds()->where([
-                'state' => Fund::STATE_ACTIVE,
-                'auto_requests_validation' => true
-            ])->whereNotNull('default_validator_employee_id')->count() === 1;
-
-        return $oneActiveFund && $oneActiveFundWithAutoValidation;
+        return $this->buildFrontendUrl(http_resolve_url($this->url_validator, $uri), $params);
     }
 
     /**
@@ -561,6 +570,7 @@ class Implementation extends Model
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
                 'announcements' => AnnouncementResource::collection($announcements)->toArray($request),
                 'digid' => $implementation->digidEnabled(),
+                'digid_sign_up_allowed' => $implementation->digid_sign_up_allowed,
                 'digid_mandatory' => $implementation->digid_required ?? true,
                 'digid_api_url' => rtrim($implementation->digid_forus_api_url ?: url('/'), '/') . '/api/v1',
                 'communication_type' => $implementation->communicationType(),
@@ -722,22 +732,6 @@ class Implementation extends Model
     }
 
     /**
-     * @return bool
-     */
-    public function isGeneral(): bool
-    {
-        return $this->key === self::KEY_GENERAL;
-    }
-
-    /**
-     * @return Implementation
-     */
-    public static function general(): Implementation
-    {
-        return static::$generalModel ?: static::$generalModel = self::byKey(self::KEY_GENERAL);
-    }
-
-    /**
      * @return string
      * @noinspection PhpUnused
      */
@@ -780,5 +774,13 @@ class Implementation extends Model
         ]));
 
         return $announcement;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getProductboardApiKey(): ?string
+    {
+        return $this->productboard_api_key ?: Implementation::general()->productboard_api_key;
     }
 }

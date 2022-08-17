@@ -2,26 +2,22 @@
 
 namespace App\Rules;
 
-use App\Http\Requests\BaseFormRequest;
+use App\Models\RecordType;
 use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Database\Eloquent\Collection;
 
 class RecordTypeKeyExistsRule implements Rule
 {
-    protected $allowSystemKeys;
-    protected $recordRepo;
+    protected Collection $recordTypes;
 
     /**
      * Create a new rule instance.
      *
-     * @param BaseFormRequest $baseFormRequest
      * @param bool $allowSystemKeys
      */
-    public function __construct(
-        BaseFormRequest $baseFormRequest,
-        bool $allowSystemKeys = false
-    ) {
-        $this->recordRepo = $baseFormRequest->records_repo();
-        $this->allowSystemKeys = $allowSystemKeys;
+    public function __construct(bool $allowSystemKeys = false)
+    {
+        $this->recordTypes = RecordType::search($allowSystemKeys);
     }
 
     /**
@@ -33,9 +29,7 @@ class RecordTypeKeyExistsRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        return in_array($value, array_pluck($this->recordRepo->getRecordTypes(
-            $this->allowSystemKeys
-        ), 'key'), true);
+        return (bool) $this->recordTypes->first(fn(RecordType $type) => $type->key === $value);
     }
 
     /**

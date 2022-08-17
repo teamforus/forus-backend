@@ -21,10 +21,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
-/**
- * Class OrganizationsController
- * @package App\Http\Controllers\Api\Platform
- */
 class OrganizationsController extends Controller
 {
     /**
@@ -54,7 +50,7 @@ class OrganizationsController extends Controller
     {
         $this->authorize('store', Organization::class);
 
-        if ($media = media()->findByUid($request->post('media_uid'))) {
+        if ($media = Media::findByUid($request->post('media_uid'))) {
             $this->authorize('destroy', $media);
         }
 
@@ -66,7 +62,7 @@ class OrganizationsController extends Controller
             ]))->merge([
                 'btw' => (string) $request->get('btw', ''),
                 'iban' => strtoupper($request->get('iban')),
-                'identity_address' => auth_address(),
+                'identity_address' => $request->auth_address(),
             ])->toArray()
         );
 
@@ -108,7 +104,7 @@ class OrganizationsController extends Controller
     ): OrganizationResource {
         $this->authorize('update', $organization);
 
-        if ($media = media()->findByUid($request->post('media_uid'))) {
+        if ($media = Media::findByUid($request->post('media_uid'))) {
             $this->authorize('destroy', $media);
         }
 

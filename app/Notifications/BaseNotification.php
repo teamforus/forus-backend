@@ -5,7 +5,8 @@ namespace App\Notifications;
 use App\Models\Implementation;
 use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
+use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -13,10 +14,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notification;
 
-/**
- * Class BaseNotification
- * @package App\Notifications
- */
 abstract class BaseNotification extends Notification implements ShouldQueue
 {
     use Queueable;
@@ -31,7 +28,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     protected static ?string $pushKey;
 
     protected ?EventLog $eventLog;
-    protected $meta = [];
+    protected array $meta = [];
     protected ?Implementation $implementation;
 
     public const VARIABLES = [
@@ -212,7 +209,10 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         ],
         "notifications_fund_providers.bunq_transaction_success" => [
             "voucher_transaction_amount_locale"
-        ]
+        ],
+        'notifications_identities.requester_sponsor_custom_notification' => [
+            "fund_name", "sponsor_name", "webshop_link", "webshop_button",
+        ],
     ];
 
     /**
@@ -280,9 +280,9 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     }
 
     /**
-     * @return \App\Services\Forus\Notification\NotificationService|\Illuminate\Contracts\Foundation\Application|mixed
+     * @return NotificationService
      */
-    public function getNotificationService()
+    public function getNotificationService(): NotificationService
     {
         return resolve('forus.services.notification');
     }
@@ -374,7 +374,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     {
         try {
             $implementation = Implementation::byKey($event->data['implementation_key']);
-            $identities = static::eligibleIdentities($event->loggable);
+            $identities = static::eligibleIdentities($event->loggable, $event);
             $notification = new static($event, static::getMeta($event->loggable), $implementation);
 
             \Illuminate\Support\Facades\Notification::send($identities, $notification);
@@ -401,14 +401,15 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      * @return array
      * @throws \Exception
      */
-    abstract public static function getMeta($loggable): array;
+    abstract public static function getMeta(mixed $loggable): array;
 
     /**
      * Get identities which are eligible for the notification
      *
      * @param Model $loggable
+     * @param EventLog $eventLog
      * @return Collection
      * @throws \Exception
      */
-    abstract public static function eligibleIdentities($loggable): Collection;
+    abstract public static function eligibleIdentities(mixed $loggable, EventLog $eventLog): Collection;
 }

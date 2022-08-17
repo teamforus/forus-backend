@@ -40,17 +40,17 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
-        $query = VoucherTransaction::searchSponsor($request, $organization);
-        $total_amount = currency_format((clone $query)->sum('amount'));
-
-        $options = $request->only(array_merge([
+        $options = array_merge($request->only([
             'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids',
-        ], [
+        ]), [
             'date_to' => $request->input('to') ? Carbon::parse($request->input('to')) : null,
             'date_from' => $request->input('from') ? Carbon::parse($request->input('from')) : null,
-        ]));
+        ]);
 
+        $query = VoucherTransaction::searchSponsor($request, $organization);
         $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($organization, $options, $query);
+
+        $total_amount = currency_format((clone $query)->sum('amount'));
         $meta = compact('total_amount');
 
         return SponsorVoucherTransactionResource::queryCollection(VoucherTransactionQuery::order(
