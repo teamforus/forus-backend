@@ -32,6 +32,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $contact_info_message_custom
  * @property string|null $contact_info_message_text
  * @property bool $limit_generator_amount
+ * @property int|null $bsn_confirmation_time
+ * @property int $bsn_confirmation_api_time
  * @property bool $backoffice_enabled
  * @property bool $backoffice_check_partner
  * @property string|null $backoffice_url
@@ -58,15 +60,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeClientCert($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeClientCertKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeEnabled($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeFallback($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeIneligiblePolicy($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeIneligibleRedirectUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBsnConfirmationApiTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBsnConfirmationTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqAllowedIp($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqSandbox($value)

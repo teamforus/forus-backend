@@ -14,8 +14,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $bank_connection_account_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\BankConnectionAccount|null $bank_connection_account
  * @property-read \App\Models\FundTopUp $fund_top_up
- * @property-read \App\Models\BankConnectionAccount $bank_connection_account
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction query()

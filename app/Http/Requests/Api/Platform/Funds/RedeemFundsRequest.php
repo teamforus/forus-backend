@@ -8,12 +8,9 @@ use App\Models\Voucher;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 
-/**
- * Class RedeemFundsRequest
- * @package App\Http\Requests\Api\Platform\Funds
- */
 class RedeemFundsRequest extends BaseFormRequest
 {
     use ThrottleWithMeta;
@@ -26,8 +23,8 @@ class RedeemFundsRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', 3);
-        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', 180);
+        $this->maxAttempts = Config::get('forus.throttles.activation_code.attempts');
+        $this->decayMinutes = Config::get('forus.throttles.activation_code.decay');
 
         if ($this->isAuthenticated()) {
             $prevalidation = $this->getPrevalidation();

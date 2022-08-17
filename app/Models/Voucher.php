@@ -1018,22 +1018,24 @@ class Voucher extends BaseModel
 
     /**
      * @param Identity $identity
+     * @return int|null
      */
-    public static function assignAvailableToIdentityByBsn(Identity $identity): void
+    public static function assignAvailableToIdentityByBsn(Identity $identity): ?int
     {
         if (!$identity->bsn) {
-            return;
+            return null;
         }
 
         /** @var Builder $query */
         $query = self::whereNull('identity_address');
-        $query->whereHas('fund.organization', function(Builder $builder) {
+
+        return $query->whereHas('fund.organization', function(Builder $builder) {
             $builder->where('bsn_enabled', true);
         })->whereHas('voucher_relation', static function(Builder $builder) use ($identity) {
             $builder->where('bsn', '=', $identity->bsn);
         })->get()->each(static function(Voucher $voucher) {
-            $voucher->voucher_relation->assignIfExists();
-        });
+            $voucher->voucher_relation->assignByBsnIfExists();
+        })->count();
     }
 
     /**

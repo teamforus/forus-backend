@@ -98,7 +98,7 @@ class VouchersController extends Controller
 
         foreach ($vouchers as $voucher) {
             if ($organization->bsn_enabled && ($bsn = $request->input('bsn', false))) {
-                $voucher->setBsnRelation($bsn)->assignIfExists();
+                $voucher->setBsnRelation($bsn)->assignByBsnIfExists();
             }
 
             if (!$voucher->is_granted) {
@@ -172,7 +172,7 @@ class VouchersController extends Controller
 
             foreach ($vouchers as $voucherModel) {
                 if ($organization->bsn_enabled && ($bsn = ($voucher['bsn'] ?? false))) {
-                    $voucherModel->setBsnRelation((string) $bsn)->assignIfExists();
+                    $voucherModel->setBsnRelation((string) $bsn)->assignByBsnIfExists();
                 }
 
                 if (!$voucherModel->is_granted) {
@@ -243,7 +243,7 @@ class VouchersController extends Controller
         if ($email) {
             $voucher->assignToIdentity(Identity::findOrMake($email));
         } else if ($organization->bsn_enabled && $bsn) {
-            $voucher->setBsnRelation($bsn)->assignIfExists();
+            $voucher->setBsnRelation($bsn)->assignByBsnIfExists();
         }
 
         return new SponsorVoucherResource($voucher);

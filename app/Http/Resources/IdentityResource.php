@@ -22,13 +22,30 @@ class IdentityResource extends BaseJsonResource
     {
         $request = BaseFormRequest::createFrom($request);
         $identity = $this->resource;
-        $email = $request->isMeApp() ? $identity->email ?: 'Geen e-mailadres' : $identity->email;
 
-        return array_merge([
-            'address' => $identity->address,
-        ], $request->auth_address() === $identity->address ? [
-            'bsn' => !empty($identity->bsn),
-            'email' => $email,
-        ] : []);
+        return array_merge($identity->only([
+            'address',
+        ]), $this->privateFields($request, $identity));
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Identity $identity
+     * @return array
+     */
+    protected function privateFields(BaseFormRequest $request, Identity $identity): array
+    {
+        $email = $request->isMeApp() ? $identity->email ?: 'Geen e-mailadres' : $identity->email;
+        $bsnRecord = $identity->activeBsnRecord();
+
+        if ($request->auth_address() === $identity->address) {
+            return [
+                'bsn' => !empty($bsnRecord),
+                'bsn_time' => $bsnRecord ? now()->diffInSeconds($bsnRecord->created_at) : null,
+                'email' => $email,
+            ];
+        }
+
+        return [];
     }
 }

@@ -189,6 +189,20 @@ class FundPolicy
     }
 
     /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @return Response|bool
+     */
+    public function check(Identity $identity, Fund $fund): Response|bool
+    {
+        if ($fund->identityRequireBsnConfirmation($identity)) {
+            return $this->deny('BSN session expired, please sign-in again.');
+        }
+
+        return $fund->isConfigured();
+    }
+
+    /**
      *
      * @param Identity $identity
      * @param Fund $fund
