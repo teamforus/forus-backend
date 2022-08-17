@@ -92,6 +92,15 @@ class VoucherQuery
      * @param Builder $builder
      * @return Builder
      */
+    public static function whereNotActive(Builder $builder): Builder
+    {
+        return $builder->where('state', '!=', Voucher::STATE_ACTIVE);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
     public static function wherePending(Builder $builder): Builder
     {
         return $builder->where('state', Voucher::STATE_PENDING);
@@ -155,6 +164,18 @@ class VoucherQuery
     public static function whereExpiredButActive(Builder $builder): Builder
     {
         return static::whereActive(static::whereExpired($builder));
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereExpiredOrNotActive(Builder $builder): Builder
+    {
+        return $builder->where(function (Builder $builder) {
+            $builder->where(fn (Builder $builder) => static::whereExpired($builder));
+            $builder->orWhere(fn (Builder $builder) => static::whereNotActive($builder));
+        });
     }
 
     /**

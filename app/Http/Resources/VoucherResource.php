@@ -240,11 +240,11 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Collection|Voucher[]|null $product_vouchers
-     * @return Voucher[]|Collection|null
+     * @return Voucher[]|\Illuminate\Support\Collection|null
      */
     protected function getProductVouchers(
         Collection|array|null $product_vouchers
-    ): Collection|array|null {
+    ): \Illuminate\Support\Collection|array|null {
         return $product_vouchers?->map(function (Voucher $product_voucher) {
             return array_merge($product_voucher->only([
                 'identity_address', 'fund_id', 'returnable',
