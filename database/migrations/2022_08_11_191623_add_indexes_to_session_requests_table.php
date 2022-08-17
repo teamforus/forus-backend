@@ -26,6 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('session_requests', function (Blueprint $table) {
+            $table->dropForeign('session_requests_session_id_foreign');
             $table->dropIndex('session_requests_session_id_client_type_index');
         });
     }
