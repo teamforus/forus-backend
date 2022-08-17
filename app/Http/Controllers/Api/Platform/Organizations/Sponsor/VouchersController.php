@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
+use App\Events\Funds\FundVouchersExportedEvent;
 use App\Exports\VoucherExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
@@ -405,6 +406,13 @@ class VouchersController extends Controller
         ])->get();
 
         $exportData = Voucher::exportData($vouchers, $fields, $dataFormat, $qrFormat);
+
+        FundVouchersExportedEvent::dispatch($fund, [
+            'fields' => $fields,
+            'qr_format' => $qrFormat,
+            'data_format' => $dataFormat,
+            'voucher_ids' => $vouchers->pluck('id'),
+        ]);
 
         return new VoucherExportArrResource(Arr::only($exportData, ['files', 'data']));
     }

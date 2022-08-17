@@ -240,7 +240,9 @@ class LoremDbSeeder extends Seeder
     public function makeSponsors(string $identity_address): array
     {
         $organizations = array_map(function($implementation) use ($identity_address) {
-            return $this->makeOrganization($implementation, $identity_address, []);
+            return $this->makeOrganization($implementation, $identity_address, [
+                'is_sponsor' => true
+            ]);
         }, $this->implementationsWithFunds);
 
         foreach ($organizations as $organization) {
@@ -440,6 +442,11 @@ class LoremDbSeeder extends Seeder
         $out = [];
         $nth= 1;
 
+        $fields = array_merge($fields, [
+            'is_validator' => $prefix === 'Validator',
+            'is_provider' => $prefix === 'Provider',
+        ]);
+
         while ($count-- > 0) {
             $out[] = $this->makeOrganization(
                 sprintf('%s #%s', $prefix, $nth++),
@@ -477,11 +484,13 @@ class LoremDbSeeder extends Seeder
             'business_type_id' => BusinessType::pluck('id')->random(),
             'manage_provider_products' => in_array($name, $this->sponsorsWithSponsorProducts),
             'backoffice_available' => in_array($name, $this->sponsorsWithBackoffice),
+            'allow_custom_fund_notifications' => true,
         ], $fields, compact('name', 'identity_address')), [
             'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
             'identity_address', 'business_type_id', 'manage_provider_products',
             'backoffice_available', 'bsn_enabled',
+            'is_sponsor', 'is_provider', 'is_validator',
         ]));
 
         OrganizationCreated::dispatch($organization);
@@ -625,9 +634,9 @@ class LoremDbSeeder extends Seeder
         $requiredDigId = array_map("str_slug", $this->implementationsWithRequiredDigId);
         $digidSignup = array_map("str_slug", $this->implementationsWithDigidSignup);
 
-        return Implementation::create([
-            'key' => $key,
-            'name' => $name,
+        return Implementation::forceCreate([
+            'key'   => $key,
+            'name'  => $name,
             'organization_id' => $organization?->id,
 
             'url_webshop' => str_var_replace(
@@ -658,6 +667,7 @@ class LoremDbSeeder extends Seeder
             'digid_shared_secret'       => config('forus.seeders.lorem_db_seeder.digid_shared_secret'),
             'digid_a_select_server'     => config('forus.seeders.lorem_db_seeder.digid_a_select_server'),
             'digid_sign_up_allowed'     => in_array($key, $digidSignup, true),
+            'productboard_api_key'      => config('forus.seeders.lorem_db_seeder.productboard_api_key'),
         ]);
     }
 

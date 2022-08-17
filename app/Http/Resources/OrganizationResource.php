@@ -19,6 +19,7 @@ class OrganizationResource extends JsonResource
         'funds_count',
         'business_type',
         'permissions',
+        'employees',
         'bank_connection_active',
     ];
 
@@ -55,52 +56,77 @@ class OrganizationResource extends JsonResource
     {
         $baseRequest = BaseFormRequest::createFrom($request);
         $organization = $this->resource;
-        $ownerData = [];
-
-        if (Gate::allows('organizations.update', $organization)) {
-            $ownerData = $organization->only([
-                'iban', 'btw', 'phone', 'email', 'website', 'email_public',
-                'phone_public', 'website_public',
-            ]);
-        }
 
         $fundsDep = api_dependency_requested('funds', $request, false);
         $fundsCountDep = api_dependency_requested('funds_count', $request, false);
-        $businessType = api_dependency_requested('business_type', $request, true);
         $permissionsCountDep = api_dependency_requested('permissions', $request, $baseRequest->isDashboard());
 
-        $privateData = [
-            'email' => $organization->email_public ? $organization->email ?? null: null,
-            'phone' => $organization->phone_public ? $organization->phone ?? null: null,
-            'website' => $organization->website_public ? $organization->website ?? null: null,
-        ];
+        $ownerData = $this->ownerData($organization);
+        $privateData = $this->privateData($organization);
+        $employeeOnlyData = $this->employeeOnlyData($baseRequest, $organization);
         
         return array_filter(array_merge($organization->only([
             'id', 'identity_address', 'name', 'kvk', 'business_type_id',
             'email_public', 'phone_public', 'website_public',
-            'is_sponsor', 'is_provider', 'is_validator',
-            'validator_auto_accept_funds', 'description', 'description_html',
-            'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
-            'reservations_budget_enabled', 'reservations_subsidy_enabled',
-            'allow_batch_reservations', 'bsn_enabled'
-        ]), $privateData, $ownerData, [
+            'description', 'description_html',
+        ]), $privateData, $ownerData, $employeeOnlyData, [
             'tags' => TagResource::collection($organization->tags),
-            'has_bank_connection' => !empty($organization->bank_connection_active),
-            'logo' => !self::isRequested('logo') ? '_null_' : new MediaResource($organization->logo),
-            'business_type' => $businessType ? new BusinessTypeResource(
-                $organization->business_type
-            ) : '_null_',
-            'funds' => $fundsDep ? $organization->funds->map(static function(Fund $fund) {
-                return $fund->only([
-                    'id', 'name'
-                ]);
-            }) : '_null_',
+            'logo' => new MediaResource($organization->logo),
+            'business_type' => new BusinessTypeResource($organization->business_type),
+            'funds' => $fundsDep ? $organization->funds->map(fn (Fund $fund) => $fund->only('id', 'name')) : '_null_',
             'funds_count' => $fundsCountDep ? $organization->funds_count : '_null_',
-            'permissions' => $permissionsCountDep ? $organization->identityPermissions(
-                auth()->id()
-            )->pluck('key') : '_null_',
+            'permissions' => $permissionsCountDep ? $organization->identityPermissions(auth()->id())->pluck('key') : '_null_',
         ]), static function($item) {
             return $item !== '_null_';
         });
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @return array
+     */
+    protected function employeeOnlyData(BaseFormRequest $request, Organization $organization): array
+    {
+        $isEmployee = $request->identity() && $organization->employees
+            ->where('identity_address', $request->identity()->address)
+            ->isNotEmpty();
+
+        return $isEmployee ? array_merge([
+            'has_bank_connection' => !empty($organization->bank_connection_active),
+        ], $organization->only([
+            'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
+            'allow_custom_fund_notifications', 'validator_auto_accept_funds',
+            'reservations_budget_enabled', 'reservations_subsidy_enabled',
+            'is_sponsor', 'is_provider', 'is_validator',
+            'bsn_enabled', 'allow_batch_reservations',
+        ])) : [];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return array
+     */
+    protected function privateData(Organization $organization): array
+    {
+        return [
+            'email' => $organization->email_public ? $organization->email ?? null: null,
+            'phone' => $organization->phone_public ? $organization->phone ?? null: null,
+            'website' => $organization->website_public ? $organization->website ?? null: null,
+        ];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return array
+     */
+    protected function ownerData(Organization $organization): array
+    {
+        $canUpdate = Gate::allows('organizations.update', $organization);
+
+        return $canUpdate ? $organization->only([
+            'iban', 'btw', 'phone', 'email', 'website', 'email_public',
+            'phone_public', 'website_public',
+        ]) : [];
     }
 }

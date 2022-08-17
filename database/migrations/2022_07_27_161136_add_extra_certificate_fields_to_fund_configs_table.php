@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddExtraCertificateFieldsToFundConfigsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -14,8 +14,8 @@ class AddExtraCertificateFieldsToFundConfigsTable extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->string('backoffice_client_cert', 4000)->after('backoffice_certificate');
-            $table->string('backoffice_client_cert_key', 4000)->after('backoffice_client_cert');
+            $table->text('backoffice_client_cert')->after('backoffice_certificate');
+            $table->text('backoffice_client_cert_key')->after('backoffice_client_cert');
         });
     }
 
@@ -31,4 +31,4 @@ class AddExtraCertificateFieldsToFundConfigsTable extends Migration
             $table->dropColumn('backoffice_client_cert_key');
         });
     }
-}
+};

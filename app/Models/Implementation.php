@@ -59,6 +59,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $digid_shared_secret
  * @property string|null $digid_a_select_server
  * @property string|null $digid_forus_api_url
+ * @property string|null $productboard_api_key
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
@@ -142,6 +143,7 @@ class Implementation extends BaseModel
 
     protected $perPage = 20;
     protected static ?Implementation $generalModel = null;
+    protected static ?Implementation $activeModel = null;
 
     /**
      * @var string[]
@@ -160,7 +162,7 @@ class Implementation extends BaseModel
      */
     protected $hidden = [
         'digid_enabled', 'digid_env', 'digid_app_id', 'digid_shared_secret',
-        'digid_a_select_server',
+        'digid_a_select_server', 'productboard_api_key'
     ];
 
     /**
@@ -329,7 +331,23 @@ class Implementation extends BaseModel
      */
     public static function active(): ?Implementation
     {
-        return self::byKey(self::activeKey());
+        return static::$activeModel ?: static::$activeModel = self::byKey(self::activeKey());
+    }
+
+    /**
+     * @return Implementation
+     */
+    public static function general(): Implementation
+    {
+        return static::$generalModel ?: static::$generalModel = self::byKey(self::KEY_GENERAL);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isGeneral(): bool
+    {
+        return $this->key === self::KEY_GENERAL;
     }
 
     /**
@@ -713,22 +731,6 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return bool
-     */
-    public function isGeneral(): bool
-    {
-        return $this->key === self::KEY_GENERAL;
-    }
-
-    /**
-     * @return Implementation
-     */
-    public static function general(): Implementation
-    {
-        return static::$generalModel ?: static::$generalModel = self::byKey(self::KEY_GENERAL);
-    }
-
-    /**
      * @return string
      * @noinspection PhpUnused
      */
@@ -771,5 +773,13 @@ class Implementation extends BaseModel
         ]));
 
         return $announcement;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getProductboardApiKey(): ?string
+    {
+        return $this->productboard_api_key ?: Implementation::general()->productboard_api_key;
     }
 }

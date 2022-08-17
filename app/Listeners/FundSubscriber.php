@@ -17,6 +17,7 @@ use App\Events\Funds\FundProviderInvitedEvent;
 use App\Events\Funds\FundStartedEvent;
 use App\Events\Funds\FundUnArchivedEvent;
 use App\Events\Funds\FundUpdatedEvent;
+use App\Events\Funds\FundVouchersExportedEvent;
 use App\Mail\Forus\ForusFundCreatedMail;
 use App\Mail\Funds\ProviderInvitationMail;
 use App\Models\Fund;
@@ -354,6 +355,21 @@ class FundSubscriber
     }
 
     /**
+     * @param FundVouchersExportedEvent $event
+     * @noinspection PhpUnused
+     */
+    public function onFundVouchersExported(FundVouchersExportedEvent $event): void
+    {
+        $fund = $event->getFund();
+        $details = $event->getExportDetails();
+
+        $fund->log($fund::EVENT_VOUCHERS_EXPORTED, $this->getFundLogModels($fund), array_combine(
+            array_map(fn ($key) => "fund_export_$key", array_keys($details)),
+            array_values($details)
+        ));
+    }
+
+    /**
      * The events dispatcher
      *
      * @param Dispatcher $events
@@ -380,5 +396,7 @@ class FundSubscriber
 
         $events->listen(FundArchivedEvent::class, "$class@onFundArchived");
         $events->listen(FundUnArchivedEvent::class, "$class@onFundUnArchived");
+
+        $events->listen(FundVouchersExportedEvent::class, "$class@onFundVouchersExported");
     }
 }

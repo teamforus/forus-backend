@@ -24,6 +24,7 @@ class SystemNotificationsTableSeeder extends Seeder
 
         "notifications_identities.requester_provider_approved_budget" => ["database"],
         "notifications_identities.requester_provider_approved_products" => [],// TODO can database notifications be removed
+        "notifications_identities.requester_sponsor_custom_notification" => ["mail"],
 
         "notifications_fund_requests.created_validator_employee" => ["database"],
 

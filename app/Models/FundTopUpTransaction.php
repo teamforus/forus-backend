@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\FundTopUp $fund_top_up
+ * @property-read \App\Models\BankConnectionAccount $bank_connection_account
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction query()
@@ -29,6 +30,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class FundTopUpTransaction extends BaseModel
 {
+    protected $perPage = 10;
+
     protected $fillable = [
         'fund_top_up_id', 'bank_transaction_id', 'amount'
     ];
@@ -40,5 +43,14 @@ class FundTopUpTransaction extends BaseModel
     function fund_top_up(): BelongsTo
     {
         return $this->belongsTo(FundTopUp::class);
+    }
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    function bank_connection_account(): BelongsTo
+    {
+        return $this->belongsTo(BankConnectionAccount::class);
     }
 }

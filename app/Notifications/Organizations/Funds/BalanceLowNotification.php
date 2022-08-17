@@ -12,7 +12,7 @@ use App\Models\Identity;
 class BalanceLowNotification extends BaseFundsNotification
 {
     protected static ?string $key = 'notifications_funds.balance_low';
-    protected static $permissions = 'view_finances';
+    protected static string|array $permissions = 'view_finances';
 
     /**
      * @param Identity $identity

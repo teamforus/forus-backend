@@ -10,7 +10,6 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\FundTopUpTransaction;
-use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\PhysicalCard;
@@ -26,14 +25,10 @@ use App\Services\EventLogService\Interfaces\IEventLogService;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * Class EventLogService
- * @package App\Services\EventLogService
- */
 class EventLogService implements IEventLogService
 {
     /**
-     * @param HasLogs|Model $loggable
+     * @param HasLogs|Model|mixed $loggable
      * @param string $action
      * @param array $models
      * @param array $raw_meta
