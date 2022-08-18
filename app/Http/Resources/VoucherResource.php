@@ -233,6 +233,8 @@ class VoucherResource extends BaseJsonResource
             'end_date' => $fund->end_date->format('Y-m-d H:i'),
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
+            'show_voucher_qr' => $fund->fund_config->show_voucher_qr,
+            'show_voucher_amount' => $fund->fund_config->show_voucher_amount,
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
         ]);
