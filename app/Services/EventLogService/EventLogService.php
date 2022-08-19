@@ -255,6 +255,7 @@ class EventLogService implements IEventLogService
             'iban_to' => $transaction->iban_to,
             'iban_from' => $transaction->iban_from,
             'initiator' => $transaction->initiator,
+            'target' => $transaction->target,
             'payment_time' => $transaction->payment_time,
             'payment_time_locale' => format_date_locale($transaction->payment_time),
             'created_at' => $transaction->created_at->format('Y-m-d'),

@@ -46,6 +46,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $backoffice_fallback
  * @property string|null $backoffice_ineligible_policy
  * @property string|null $backoffice_ineligible_redirect_url
+ * @property bool $allow_direct_payments
  * @property string|null $iconnect_target_binding
  * @property string|null $iconnect_api_oin
  * @property string|null $iconnect_base_url
@@ -57,6 +58,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig query()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowBlockingVouchers($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectPayments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowFundRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
@@ -132,6 +134,7 @@ class FundConfig extends BaseModel
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'allow_fund_requests', 'allow_prevalidations',
         'iconnect_target_binding', 'iconnect_api_oin', 'iconnect_base_url',
+        'allow_direct_payments',
     ];
 
     /**
@@ -155,6 +158,7 @@ class FundConfig extends BaseModel
         'contact_info_enabled' => 'boolean',
         'contact_info_required' => 'boolean',
         'contact_info_message_custom' => 'boolean',
+        'allow_direct_payments' => 'boolean',
     ];
 
     /**

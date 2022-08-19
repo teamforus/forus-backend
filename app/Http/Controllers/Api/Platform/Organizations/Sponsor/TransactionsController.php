@@ -75,7 +75,16 @@ class TransactionsController extends Controller
     ): SponsorVoucherTransactionResource {
         $note = $request->input('note');
         $voucher = Voucher::find($request->input('voucher_id'));
-        $provider = Organization::find($request->input('provider_id'));
+
+        $provider = null;
+        $target = $request->get('target');
+        $targetIban = $target === VoucherTransaction::TARGET_IDENTITY
+            ? $request->get('target_iban')
+            : null;
+
+        if ($target === VoucherTransaction::TARGET_PROVIDER) {
+            $provider = Organization::find($request->input('provider_id'));
+        }
 
         $this->authorize('show', $organization);
         $this->authorize('useAsSponsor', [$voucher, $provider]);
@@ -84,7 +93,9 @@ class TransactionsController extends Controller
             'amount' => $request->input('amount'),
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
             'employee_id' => $request->employee($organization)->id,
-            'organization_id' => $provider->id,
+            'organization_id' => $provider?->id,
+            'target' => $target,
+            'target_iban' => $targetIban,
         ]);
 
         $note && $transaction->addNote('sponsor', $note);

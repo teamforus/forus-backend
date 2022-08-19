@@ -38,6 +38,8 @@ use Illuminate\Http\Request;
  * @property int $attempts
  * @property string $state
  * @property string $initiator
+ * @property string $target
+ * @property string|null $target_iban
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
@@ -78,6 +80,8 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction wherePaymentTime($value)
  * @method static Builder|VoucherTransaction whereProductId($value)
  * @method static Builder|VoucherTransaction whereState($value)
+ * @method static Builder|VoucherTransaction whereTarget($value)
+ * @method static Builder|VoucherTransaction whereTargetIban($value)
  * @method static Builder|VoucherTransaction whereTransferAt($value)
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
@@ -109,6 +113,14 @@ class VoucherTransaction extends BaseModel
     public const INITIATOR_SPONSOR = 'sponsor';
     public const INITIATOR_PROVIDER = 'provider';
 
+    public const TARGET_IDENTITY = 'identity';
+    public const TARGET_PROVIDER = 'provider';
+
+    public const TARGETS = [
+        self::TARGET_IDENTITY,
+        self::TARGET_PROVIDER,
+    ];
+
     public const SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'voucher_transaction_bulk_id',
         'fund_name', 'provider_name',
@@ -124,6 +136,7 @@ class VoucherTransaction extends BaseModel
         'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
         'iban_from', 'iban_to', 'payment_time', 'employee_id', 'transfer_at',
         'voucher_transaction_bulk_id', 'payment_description', 'initiator',
+        'target', 'target_iban',
     ];
 
     protected $hidden = [
@@ -384,7 +397,7 @@ class VoucherTransaction extends BaseModel
             'date_transaction' => format_datetime_locale($transaction->created_at),
             'date_payment' => format_datetime_locale($transaction->payment_time),
             'fund_name' => $transaction->voucher->fund->name,
-            'provider' => $transaction->provider->name,
+            'provider' => $transaction->target === self::TARGET_PROVIDER ? $transaction->provider->name : '',
             'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
         ], $fields))->values();
 
@@ -522,5 +535,21 @@ class VoucherTransaction extends BaseModel
             'state'         => static::STATE_SUCCESS,
             'payment_time'  => now(),
         ]);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getTargetIban(): ?string
+    {
+        return $this->target === self::TARGET_PROVIDER ? $this->provider->iban : $this->target_iban;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getTargetName(): ?string
+    {
+        return $this->target === self::TARGET_PROVIDER ? $this->provider->name : null;
     }
 }

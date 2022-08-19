@@ -22,20 +22,20 @@ class VoucherTransactionResource extends BaseJsonResource
         $transaction = $this->resource;
 
         return array_merge($transaction->only([
-            "id", "organization_id", "product_id", "address", "state", "payment_id",
+            'id', 'organization_id', 'product_id', 'address', 'state', 'payment_id', 'target',
         ]), [
             'cancelable' => $transaction->isCancelable(),
             'transaction_in' => $transaction->daysBeforeTransaction(),
             'amount' => currency_format($transaction->amount),
             'timestamp' => $transaction->created_at->timestamp,
-            "organization" => array_merge($transaction->provider->only([
-                "id", "name"
+            'organization' => $transaction->provider ? array_merge($transaction->provider->only([
+                'id', 'name'
             ]), [
                 'logo' => new MediaResource($transaction->provider->logo),
-            ]),
-            "product" => new ProductResource($transaction->product),
-            "fund" => array_merge($transaction->voucher->fund->only([
-                "id", "name", "organization_id"
+            ]) : [],
+            'product' => new ProductResource($transaction->product),
+            'fund' => array_merge($transaction->voucher->fund->only([
+                'id', 'name', 'organization_id'
             ]), [
                 'logo' => new MediaResource($transaction->voucher->fund->logo),
             ]),

@@ -7,6 +7,8 @@ use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
+use App\Rules\Base\IbanRule;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherQuery;
@@ -40,8 +42,16 @@ class StoreTransactionRequest extends BaseFormRequest
                 'required',
                 Rule::in($this->voucherIds()),
             ],
-            'provider_id' => [
+            'target' => [
                 'required',
+                Rule::in(VoucherTransaction::TARGETS),
+            ],
+            'target_iban' => [
+                'required_if:target,' . VoucherTransaction::TARGET_IDENTITY,
+                new IbanRule(),
+            ],
+            'provider_id' => [
+                'required_if:target,' . VoucherTransaction::TARGET_PROVIDER,
                 Rule::in($this->fundProviderIds()),
             ],
             'note' => 'nullable|string|max:255',

@@ -607,6 +607,7 @@ class Voucher extends BaseModel
         }
 
         switch ($request->input('type')) {
+            case 'all': break;
             case 'fund_voucher': $query->whereNull('product_id'); break;
             case 'product_voucher': $query->whereNotNull('product_id'); break;
         }
@@ -620,6 +621,10 @@ class Voucher extends BaseModel
 
         if ($request->has('email') && $email = $request->input('email')) {
             $query->where('identity_address', Identity::findByEmail($email)?->email ?: '_');
+        }
+
+        if ($request->has('identity_address') && $identity_address = $request->input('identity_address')) {
+            $query->where('identity_address', $identity_address);
         }
 
         if ($request->has('bsn') && $bsn = $request->input('bsn')) {

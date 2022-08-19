@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\ExportIdentiti
 use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\IndexIdentitiesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\SendIdentityNotificationRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
+use App\Http\Resources\Sponsor\IdentityBsnResource;
 use App\Http\Resources\Sponsor\IdentityResource;
 use App\Models\Fund;
 use App\Models\Identity;
@@ -52,6 +53,26 @@ class IdentitiesController extends Controller
         return IdentityResource::queryCollection($query)->additional([
             'meta' => compact('counts'),
         ]);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return IdentityBsnResource|IdentityResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function show(
+        Organization $organization,
+        Fund $fund,
+        Identity $identity
+    ): IdentityBsnResource|IdentityResource {
+        $this->authorize('show', [$organization]);
+        $this->authorize('showIdentity', [$fund, $organization, $identity]);
+
+        return $organization->bsn_enabled
+            ? IdentityBsnResource::create($identity)
+            : IdentityResource::create($identity);
     }
 
     /**

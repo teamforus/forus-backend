@@ -155,7 +155,7 @@ class FinancialStatistic
     protected function getTransactionData(?VoucherTransaction $transaction) : ?array
     {
         return $transaction ? array_merge($transaction->only('id', 'amount'), [
-            'provider' => $transaction->provider->name,
+            'provider' => $transaction->provider?->name,
         ]) : null;
     }
 

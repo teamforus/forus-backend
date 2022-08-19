@@ -432,9 +432,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\FundsController"
     )->only('store', 'update', 'destroy');
 
-    $router->get(
-        'organizations/{organization}/funds/{fund}/identities',
-        "Api\Platform\Organizations\Funds\IdentitiesController@index");
+    $router->resource(
+        'organizations.funds.identities',
+        "Api\Platform\Organizations\Funds\IdentitiesController"
+    )->only('index', 'show');
 
     $router->get(
         'organizations/{organization}/funds/{fund}/identities/export',

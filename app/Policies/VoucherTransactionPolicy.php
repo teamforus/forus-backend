@@ -103,7 +103,7 @@ class VoucherTransactionPolicy
             return false;
         }
 
-        return $transaction->provider->identityCan($identity, 'view_finances');
+        return $transaction->provider && $transaction->provider->identityCan($identity, 'view_finances');
     }
 
     /**

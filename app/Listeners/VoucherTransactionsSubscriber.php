@@ -6,6 +6,7 @@ use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Models\FundProvider;
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherTransactionNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherSubsidyTransactionNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherBudgetTransactionNotification;
@@ -72,21 +73,23 @@ class VoucherTransactionsSubscriber
     {
         $transaction = $event->getVoucherTransaction();
 
-        $fundProvider = $transaction->voucher->fund->providers()->where([
-            'organization_id' => $transaction->organization_id,
-        ])->first();
+        if ($transaction->target === VoucherTransaction::TARGET_PROVIDER && $transaction->organization_id) {
+            $fundProvider = $transaction->voucher->fund->providers()->where([
+                'organization_id' => $transaction->organization_id,
+            ])->first();
 
-        if ($fundProvider) {
-            $event = $fundProvider->log(FundProvider::EVENT_BUNQ_TRANSACTION_SUCCESS, [
-                'fund' => $transaction->voucher->fund,
-                'sponsor' => $transaction->voucher->fund->organization,
-                'provider' => $transaction->provider,
-                'employee' => $transaction->employee,
-                'implementation' => $transaction->voucher->fund->getImplementation(),
-                'voucher_transaction' => $transaction,
-            ], $event->getLogData());
+            if ($fundProvider) {
+                $event = $fundProvider->log(FundProvider::EVENT_BUNQ_TRANSACTION_SUCCESS, [
+                    'fund' => $transaction->voucher->fund,
+                    'sponsor' => $transaction->voucher->fund->organization,
+                    'provider' => $transaction->provider,
+                    'employee' => $transaction->employee,
+                    'implementation' => $transaction->voucher->fund->getImplementation(),
+                    'voucher_transaction' => $transaction,
+                ], $event->getLogData());
 
-            FundProviderTransactionBunqSuccessNotification::send($event);
+                FundProviderTransactionBunqSuccessNotification::send($event);
+            }
         }
     }
 

@@ -86,6 +86,30 @@ class FundPolicy
         ], false);
     }
 
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param Organization $organization
+     * @param Identity $identityShow
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function showIdentity(
+        Identity $identity,
+        Fund $fund,
+        Organization $organization,
+        Identity $identityShow
+    ): bool {
+        if ($fund->organization_id !== $organization->id) {
+            return false;
+        }
+
+        $permissions = $fund->organization->identityCan($identity, [
+            'manage_implementation_notifications', 'manage_vouchers'
+        ], false);
+
+        return $permissions && $fund->activeIdentityQuery()->where('id', $identityShow->id)->exists();
+    }
 
     /**
      * @param Identity $identity
