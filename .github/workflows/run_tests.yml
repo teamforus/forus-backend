@@ -1,0 +1,42 @@
+name: Run tests
+
+on:
+  push:
+    branches: '**'
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout forus-backend repo
+        uses: actions/checkout@v3
+
+      - name: Copy default .env. docker file to .env
+        run: cp -n .env.docker .env
+
+      - name: Build and run docker images by docker-compose up
+        run: docker-compose up -d
+
+      - name: Crutch - set correct ownership of files in docker
+        run: docker exec -u 0 forus-backend-app chown -R forus:forus /var/www/
+
+      - name: Install dependencies
+        run: docker-compose exec -T app bash -c "composer install"
+
+      - name: Create database structure with artisan
+        run: docker-compose exec -T app bash -c "composer dumpautoload && php artisan migrate"
+
+      - name: Run base seeders
+        run: docker-compose exec -T app bash -c "php artisan db:seed"
+
+      - name: Generate test data with LoremDbSeeder
+        run: docker-compose exec -T app php artisan db:seed --class LoremDbSeeder
+
+      - name: Run unit tests
+        run: docker-compose exec -T app bash -c "./vendor/bin/phpunit tests/Unit/."
+
+      - name: Run feature tests
+        run: docker-compose exec -T app bash -c "./vendor/bin/phpunit tests/Feature/."
