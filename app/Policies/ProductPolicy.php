@@ -86,12 +86,13 @@ class ProductPolicy
     }
 
     /**
+     * @param Identity|null $identity
      * @return bool
      * @noinspection PhpUnused
      */
-    public function showPublic(): bool
+    public function showPublic(?Identity $identity): bool
     {
-        return true;
+        return !$identity || $identity->exists;
     }
 
     /**
