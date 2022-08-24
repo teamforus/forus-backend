@@ -79,6 +79,16 @@ $router->group([], static function() use ($router) {
         "Api\Platform\ProductsController@sample"
     );
 
+    $router->post(
+        'products/set-favourite/{product}',
+        "Api\Platform\ProductsController@setFavourite"
+    );
+
+    $router->post(
+        'products/remove-favourite/{product}',
+        "Api\Platform\ProductsController@removeFavourite"
+    );
+
     $router->resource(
         'products',
         "Api\Platform\ProductsController", [

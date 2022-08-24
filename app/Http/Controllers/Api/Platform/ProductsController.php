@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\SearchProductsRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Requester\ProductResource;
+use App\Models\FavouriteProduct;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -27,7 +29,8 @@ class ProductsController extends Controller
 
         $query = Product::search($request->only([
             'fund_type', 'product_category_id', 'fund_id', 'price_type', 'unlimited_stock',
-            'organization_id', 'q', 'order_by', 'order_by_dir', 'postcode', 'distance',
+            'organization_id', 'q', 'order_by', 'order_by_dir', 'postcode',
+            'distance', 'favourites_only'
         ]));
 
         if (!$request->input('show_all', false)) {
@@ -74,6 +77,36 @@ class ProductsController extends Controller
     public function show(Product $product): ProductResource
     {
         $this->authorize('showPublic', $product);
+
+        return ProductResource::create($product);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Product $product
+     * @return ProductResource
+     */
+    public function setFavourite(BaseFormRequest $request, Product $product): ProductResource
+    {
+        FavouriteProduct::query()->create([
+            'product_id' => $product->id,
+            'identity_address' => $request->auth_address()
+        ]);
+
+        return ProductResource::create($product);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Product $product
+     * @return ProductResource
+     */
+    public function removeFavourite(BaseFormRequest $request, Product $product): ProductResource
+    {
+        FavouriteProduct::query()->where([
+            'product_id' => $product->id,
+            'identity_address' => $request->auth_address()
+        ])->delete();
 
         return ProductResource::create($product);
     }

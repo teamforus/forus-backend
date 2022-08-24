@@ -43,6 +43,7 @@ class SearchProductsRequest extends FormRequest
             'simplified'            => 'nullable|bool',
             'postcode'              => 'nullable|string|max:100',
             'distance'              => 'nullable|integer|max:1000',
+            'favourites_only'       => 'nullable|bool'
         ];
     }
 }

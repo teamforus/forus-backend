@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\FavouriteProduct;
 use App\Models\Fund;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
@@ -64,7 +65,11 @@ class ProductResource extends BaseJsonResource
             'price_min' => currency_format($this->getProductSubsidyPrice($product, 'max')),
             'price_max' => currency_format($this->getProductSubsidyPrice($product, 'min')),
             'offices' => OfficeResource::collection($product->organization->offices),
-            'product_category' => new ProductCategoryResource($product->product_category)
+            'product_category' => new ProductCategoryResource($product->product_category),
+            'is_favourite' => FavouriteProduct::query()->where([
+                'product_id' => $product->id,
+                'identity_address' => $request->user()?->address
+            ])->exists()
         ]);
     }
 

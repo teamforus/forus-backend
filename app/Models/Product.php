@@ -330,6 +330,14 @@ class Product extends BaseModel
     }
 
     /**
+     * @return HasMany
+     */
+    public function favourites(): HasMany
+    {
+        return $this->hasMany(FavouriteProduct::class);
+    }
+
+    /**
      * @return int
      * @noinspection PhpUnused
      */
@@ -436,6 +444,10 @@ class Product extends BaseModel
                     'lng' => $location ? $location['lng'] : 0,
                 ]);
             });
+        }
+
+        if (Arr::has($options, 'favourites_only') && Arr::get($options, 'favourites_only')) {
+            $query->whereHas('favourites');
         }
 
         $orderBy = Arr::get($options, 'order_by', 'created_at');
