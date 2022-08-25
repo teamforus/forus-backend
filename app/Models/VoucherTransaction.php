@@ -347,9 +347,15 @@ class VoucherTransaction extends BaseModel
      */
     public static function searchProvider(Request $request, Organization $organization): Builder
     {
-        return self::search($request)->where([
-            'organization_id' => $organization->id
+        $builder = self::search($request)->where([
+            'organization_id' => $organization->id,
         ]);
+
+        if ($request->has('fund_id')) {
+            $builder->whereRelation('voucher', 'fund_id', $request->get('fund_id'));
+        }
+
+        return $builder;
     }
 
     /**

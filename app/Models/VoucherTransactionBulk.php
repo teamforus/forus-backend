@@ -523,7 +523,7 @@ class VoucherTransactionBulk extends BaseModel
                 'date_from' => $request->input('from') ? Carbon::parse($request->input('from')) : null,
             ]);
 
-            $query = VoucherTransaction::search($request);
+            $query = VoucherTransaction::searchSponsor($request, $sponsor);
             $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($sponsor, $options, $query);
         } else {
             $query = VoucherTransaction::query();
