@@ -4,8 +4,8 @@ return [
     'webshop' => [],
 
     'dashboard' => [
-        'created' => ':email was added as an employee',
-        'updated' => ':email was updated',
-        'deleted' => ':email was deleted',
+        'created' => ':email is toegevoegd als medewerker',
+        'updated' => ':email is bijgewerkt',
+        'deleted' => ':email is verwijderd',
     ],
 ];
