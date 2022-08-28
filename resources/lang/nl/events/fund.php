@@ -4,7 +4,7 @@ return [
     'webshop' => [],
 
     'dashboard' => [
-        'vouchers_exported' => '<strong class="text-primary">:vouchers_count</strong> vouchers geëxporteerd <a href=":dashboard_url/organizations/:sponsor_id/funds/:fund_id" class="text-primary text-medium">:fund_name</a> fund.',
+        'vouchers_exported' => '<strong class="text-primary">:vouchers_count</strong> vouchers geëxporteerd voor <a href=":dashboard_url/organizations/:sponsor_id/funds/:fund_id" class="text-primary text-medium">:fund_name</a> fonds.',
         'created' => 'Fonds <a href=":dashboard_url/organizations/:sponsor_id/funds/:fund_id" class="text-primary text-medium">:fund_name</a> is aangemaakt',
         'balance_low' => 'Budget dient opgehoogd te worden voor <a href=":dashboard_url/organizations/:sponsor_id/funds/:fund_id" class="text-primary text-medium">:fund_name</a>',
         'balance_supplied' => 'Budget is opgehoogd voor <a href=":dashboard_url/organizations/:sponsor_id/funds/:fund_id" class="text-primary text-medium">:fund_name</a>',
