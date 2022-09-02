@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
-use NotificationChannels\Fcm\FcmNotification;
+use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 
 /**
  * Class FcmBasicNotification
@@ -48,7 +48,6 @@ class FcmBasicNotification extends Notification implements ShouldQueue
     public function toFcm()
     {
         return FcmMessage::create()->setNotification(FcmNotification::create()
-            ->setSound("default")
             ->setTitle($this->title)
             ->setBody($this->body)
         );
