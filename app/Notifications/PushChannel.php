@@ -17,7 +17,7 @@ class PushChannel extends \Illuminate\Notifications\Channels\MailChannel
      * @return void
      * @noinspection PhpUnused
      */
-    public function send($notifiable, Notification $notification): void
+    public function send($notifiable, Notification|BaseIdentityNotificatioN $notification): void
     {
         $notification->toPush($notifiable);
     }

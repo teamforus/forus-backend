@@ -5,11 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Voucher;
 
-/**
- * Class AddDeactivatedStateToVouchersTable
- * @noinspection PhpUnused
- */
-class AddDeactivatedStateToVouchersTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -41,4 +37,4 @@ class AddDeactivatedStateToVouchersTable extends Migration
      * @return void
      */
     public function down(): void {}
-}
+};

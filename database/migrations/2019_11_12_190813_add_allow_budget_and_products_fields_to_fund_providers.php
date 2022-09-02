@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 use App\Models\FundProvider;
 
-class AddAllowBudgetAndProductsFieldsToFundProviders extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -51,4 +51,4 @@ class AddAllowBudgetAndProductsFieldsToFundProviders extends Migration
             $table->dropColumn('allow_products');
         });
     }
-}
+};

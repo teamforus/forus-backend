@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateWalletVoucherTransactionsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -43,4 +43,4 @@ class CreateWalletVoucherTransactionsTable extends Migration
     {
         Schema::dropIfExists('wallet_voucher_transactions');
     }
-}
+};

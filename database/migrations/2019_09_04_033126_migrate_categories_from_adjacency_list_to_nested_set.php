@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class MigrateCategoriesFromAdjacencyListToNestedSet extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -36,4 +36,4 @@ class MigrateCategoriesFromAdjacencyListToNestedSet extends Migration
             $table->dropColumn('_rgt');
         });
     }
-}
+};

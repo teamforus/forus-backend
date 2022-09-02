@@ -4,19 +4,16 @@
 namespace App\Searches;
 
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-/**
- * Class WebshopSearch
- * @package App\Searches
- */
 class BaseSearch
 {
-    protected $filters;
-    protected $builder;
+    protected array $filters;
+    protected ?Builder $builder;
 
     /**
      * WebshopSearch constructor.
@@ -26,11 +23,12 @@ class BaseSearch
     public function __construct(array $filters, Builder $builder = null)
     {
         $this->filters = $filters;
-        $this->builder = $builder;
+        $this->builder = clone $builder;
     }
 
     /**
      * @param array $filters
+     * @noinspection PhpUnused
      */
     public function setFilters(array $filters): void
     {
@@ -39,6 +37,7 @@ class BaseSearch
 
     /**
      * @return array
+     * @noinspection PhpUnused
      */
     public function getFilters(): array
     {
@@ -47,6 +46,7 @@ class BaseSearch
 
     /**
      * @param Builder $builder
+     * @noinspection PhpUnused
      */
     public function setBuilder(Builder $builder): void
     {
@@ -55,6 +55,7 @@ class BaseSearch
 
     /**
      * @return Builder
+     * @noinspection PhpUnused
      */
     public function getBuilder(): Builder
     {
@@ -75,9 +76,23 @@ class BaseSearch
      * @param null $default
      * @return mixed
      */
-    public function getFilter(string $key, $default = null)
+    public function getFilter(string $key, $default = null): mixed
     {
         return array_get($this->filters, $key, $default);
+    }
+
+    /**
+     * @param string $key
+     * @param string $format
+     * @return Carbon|null
+     */
+    public function getFilterDate(string $key, string $format = 'Y-m-d'): ?Carbon
+    {
+        if ($this->hasFilter($key)) {
+            return Carbon::createFromFormat($format, $this->getFilter($key));
+        }
+
+        return null;
     }
 
     /**
@@ -92,7 +107,7 @@ class BaseSearch
      * @param string[] $columns
      * @return Collection
      */
-    public function get($columns = ['*']): Collection
+    public function get(array $columns = ['*']): Collection
     {
         return $this->query()->get($columns);
     }

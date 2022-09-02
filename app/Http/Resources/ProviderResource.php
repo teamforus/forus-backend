@@ -30,13 +30,15 @@ class ProviderResource extends BaseJsonResource
     {
         $organization = $this->resource;
 
-        return array_merge($organization->only(array_filter(array_merge([
+        $fields = array_merge([
             'id', 'name', 'description', 'business_type_id',
-        ], [
+        ], array_filter([
             $organization->email_public ? 'email': null,
             $organization->phone_public ? 'phone': null,
             $organization->website_public ? 'website': null,
-        ]))), [
+        ]));
+
+        return array_merge($organization->only($fields), [
             'description_html' => $organization->description_html,
             'business_type' => new BusinessTypeResource($organization->business_type),
             'offices' => OfficeResource::collection($organization->offices),

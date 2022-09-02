@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Media\StoreMediaRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\MediaResource;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -16,7 +16,7 @@ class MediaController extends Controller
     /**
      * @var MediaService
      */
-    private $mediaService;
+    private mixed $mediaService;
 
     /**
      * MediaController constructor.
@@ -29,16 +29,16 @@ class MediaController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(BaseFormRequest $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Media::class);
 
-        $media = Media::query()->where([
-            'identity_address' => auth_address()
+        $media = Media::where([
+            'identity_address' => $request->auth_address(),
         ]);
 
         if ($type = $request->get('type', false)) {
@@ -61,23 +61,20 @@ class MediaController extends Controller
         $file = $request->file('file');
 
         try {
-            if ($media = $this->mediaService->uploadSingle(
+            $media = $this->mediaService->uploadSingle(
                 (string) $file,
                 $file->getClientOriginalName(),
                 $request->input('type'),
-                $request->input('sync_presets', [
-                    'thumbnail'
-                ])
-            )) {
+                $request->input('sync_presets', ['thumbnail'])
+            );
+
+            if ($media) {
                 $media->update([
-                    'identity_address' => auth_address()
+                    'identity_address' => $request->auth_address(),
                 ]);
             }
-        } catch (\Exception $exception) {
-            logger()->error(sprintf(
-                "Media uploading failed: %s",
-                $exception->getMessage()
-            ));
+        } catch (\Throwable $e) {
+            logger()->error(sprintf("Media uploading failed: %s", $e->getMessage()));
         }
 
         return new MediaResource($media ?? null);

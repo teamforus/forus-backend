@@ -3,35 +3,28 @@
 namespace App\Http\Resources;
 
 use App\Models\OrganizationValidator;
-use Illuminate\Http\Resources\Json\Resource;
-use Illuminate\Support\Collection;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Class OrganizationBasicResource
  * @property OrganizationValidator $resource
  * @package App\Http\Resources
  */
-class OrganizationValidatorResource extends Resource
+class OrganizationValidatorResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return array|Collection
+     * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
-        $validatorOrganization = $this->resource;
-
-        return collect($validatorOrganization)->only([
+        return array_merge($this->resource->only([
             'id', 'organization_id', 'validator_organization_id',
-        ])->merge([
-            'organization' => new OrganizationBasicResource(
-                $validatorOrganization->organization
-            ),
-            'validator_organization' => new OrganizationBasicResource(
-                $validatorOrganization->validator_organization
-            )
-        ])->toArray();
+        ]), [
+            'organization' => new OrganizationBasicResource($this->resource->organization),
+            'validator_organization' => new OrganizationBasicResource($this->resource->validator_organization)
+        ]);
     }
 }

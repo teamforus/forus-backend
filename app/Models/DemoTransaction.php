@@ -20,7 +20,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|DemoTransaction whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class DemoTransaction extends Model
+class DemoTransaction extends BaseModel
 {
     const STATE_PENDING  = 'pending';
     const STATE_ACCEPTED = 'accepted';
@@ -38,6 +38,6 @@ class DemoTransaction extends Model
      * @var array
      */
     protected $fillable = [
-        'token', 'state'
+        'token', 'state',
     ];
 }

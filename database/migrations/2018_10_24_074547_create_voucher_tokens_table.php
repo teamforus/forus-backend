@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 use App\Models\Voucher;
 
-class CreateVoucherTokensTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -60,4 +60,4 @@ class CreateVoucherTokensTable extends Migration
 
         Schema::dropIfExists('voucher_tokens');
     }
-}
+};

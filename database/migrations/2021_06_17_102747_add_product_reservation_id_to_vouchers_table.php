@@ -4,11 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Class AddProductReservationIdToVouchersTable
- * @noinspection PhpUnused
- */
-class AddProductReservationIdToVouchersTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -37,4 +33,4 @@ class AddProductReservationIdToVouchersTable extends Migration
             $table->dropColumn('product_reservation_id');
         });
     }
-}
+};

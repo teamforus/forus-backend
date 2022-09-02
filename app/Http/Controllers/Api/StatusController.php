@@ -3,25 +3,23 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
-/**
- * Class StatusController
- * @package App\Http\Controllers\Api
- */
 class StatusController extends Controller
 {
     /**
      * Get api availability state
      *
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function getStatus() {
+    public function getStatus(): JsonResponse
+    {
         try {
             DB::connection()->getPdo();
-            return response(null);
-        } catch (\Exception $e) {
-            return response(null, 503);
+            return new JsonResponse();
+        } catch (\Throwable) {
+            return new JsonResponse(null, 503);
         }
     }
 }

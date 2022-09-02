@@ -2,7 +2,7 @@
 
 namespace App\Models\Traits;
 
-use App\Models\Model;
+use App\Models\BaseModel;
 use Kalnoy\Nestedset\Collection;
 use Kalnoy\Nestedset\DescendantsRelation;
 
@@ -10,7 +10,7 @@ use Kalnoy\Nestedset\DescendantsRelation;
  * Trait NodeTrait
  * @property NodeTrait[]|\Illuminate\Database\Eloquent\Collection $descendants
  * @property NodeTrait[]|\Illuminate\Database\Eloquent\Collection $descendants_min
- * @method static int fixTree(NodeTrait|Model $root = null)
+ * @method static int fixTree(NodeTrait|BaseModel $root = null)
  * @method static Collection descendantsAndSelf($id, array $columns = [ '*' ])
  * @package App\Models\Traits
  */

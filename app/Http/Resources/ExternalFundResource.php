@@ -6,14 +6,14 @@ use App\Models\Fund;
 use App\Models\FundCriterion;
 use App\Scopes\Builders\FundCriteriaQuery;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Class FundResource
  * @property Fund $resource
  * @package App\Http\Resources
  */
-class ExternalFundResource extends Resource
+class ExternalFundResource extends JsonResource
 {
     /**
      * Transform the resource into an array.

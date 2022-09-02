@@ -10,7 +10,6 @@ use App\Events\FundRequests\FundRequestResolved;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Services\EventLogService\Traits\HasLogs;
-use App\Services\Forus\Identity\Models\Identity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +23,7 @@ use Illuminate\Http\Request;
  * @property int $id
  * @property int $fund_id
  * @property string $identity_address
+ * @property string|null $contact_information
  * @property string $note
  * @property string $disregard_note
  * @property bool $disregard_notify
@@ -36,7 +36,7 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Fund $fund
  * @property-read int|null $lead_time_days
  * @property-read string $lead_time_locale
- * @property-read Identity $identity
+ * @property-read \App\Models\Identity $identity
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $records
@@ -52,6 +52,7 @@ use Illuminate\Http\Request;
  * @method static Builder|FundRequest newModelQuery()
  * @method static Builder|FundRequest newQuery()
  * @method static Builder|FundRequest query()
+ * @method static Builder|FundRequest whereContactInformation($value)
  * @method static Builder|FundRequest whereCreatedAt($value)
  * @method static Builder|FundRequest whereDisregardNote($value)
  * @method static Builder|FundRequest whereDisregardNotify($value)
@@ -64,7 +65,7 @@ use Illuminate\Http\Request;
  * @method static Builder|FundRequest whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundRequest extends Model
+class FundRequest extends BaseModel
 {
     use HasLogs;
 
@@ -109,7 +110,8 @@ class FundRequest extends Model
 
     protected $fillable = [
         'fund_id', 'identity_address', 'employee_id', 'note', 'state', 'resolved_at',
-        'disregard_note', 'disregard_notify',
+        'disregard_note', 'disregard_notify', 'identity_address',
+        'contact_information',
     ];
 
     protected $dates = [
@@ -533,24 +535,20 @@ class FundRequest extends Model
      * @param Builder $builder
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    private static function exportTransform(Builder $builder)
+    private static function exportTransform(Builder $builder): mixed
     {
         $transKey = "export.fund_requests";
-        $recordRepo = resolve('forus.services.record');
         $fundRequests = $builder->with('records.employee', 'fund')->get();
 
-        return $fundRequests->map(static function(FundRequest $fundRequest) use ($transKey, $recordRepo) {
+        return $fundRequests->map(static function(FundRequest $fundRequest) use ($transKey) {
             $employees = $fundRequest->records->pluck('employee')->filter();
-
-            $employees = $employees->map(static function(Employee $employee) use ($recordRepo) {
-                return $recordRepo->primaryEmailByAddress($employee->identity_address);
-            })->unique();
+            $employees = $employees->map(fn(Employee $employee) => $employee->identity->email)->unique();
 
             return [
-                trans("$transKey.bsn") => $recordRepo->bsnByAddress($fundRequest->identity_address),
+                trans("$transKey.bsn") => $fundRequest->identity?->bsn,
                 trans("$transKey.fund_name") => $fundRequest->fund->name,
                 trans("$transKey.status") => trans("$transKey.state-values.$fundRequest->state"),
-                trans("$transKey.validator") => $employees->join(', ') ?: null,
+                trans("$transKey.validator") => $employees->filter()->join(', ') ?: null,
                 trans("$transKey.created_at") => $fundRequest->created_at,
                 trans("$transKey.resolved_at") => $fundRequest->resolved_at,
                 trans("$transKey.lead_time_days") => (string) $fundRequest->lead_time_days,
@@ -565,7 +563,7 @@ class FundRequest extends Model
      * @param Employee $employee
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    public static function exportSponsor(Request $request, Employee $employee)
+    public static function exportSponsor(Request $request, Employee $employee): mixed
     {
         return self::exportTransform(self::search($request, $employee));
     }

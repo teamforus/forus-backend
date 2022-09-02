@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailable;
  */
 class FundRequestClarificationRequestedMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = "notifications_identities.fund_request_feedback_requested";
+    protected string $notificationTemplateKey = "notifications_identities.fund_request_feedback_requested";
 
     /**
      * @return Mailable

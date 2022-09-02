@@ -2,30 +2,29 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\FundCriterion;
 use App\Models\FundCriterionValidator;
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Class FundCriterionResource
  * @property FundCriterion $resource
- * @package App\Http\Resources
  */
-class FundCriterionResource extends Resource
+class FundCriterionResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request|any  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return array
      */
     public function toArray($request): array
     {
+        $baseRequest = BaseFormRequest::createFrom($request);
         $criterion = $this->resource;
         $fund = $this->resource->fund;
-        $auth_address = auth_address();
-        $is_valid = $this->isValid($request, $fund, $auth_address);
+        $is_valid = $this->isValid($request, $fund, $baseRequest->auth_address());
 
         $recordTypes = array_pluck(record_types_cached(), 'name', 'key');
         $external_validators = $criterion->fund_criterion_validators;
@@ -44,7 +43,6 @@ class FundCriterionResource extends Resource
                 ];
             })->toArray(),
             'record_type_name' => $recordTypes[$criterion->record_type_key],
-            'show_attachment' => $criterion->show_attachment ? true : false,
             'is_valid' => $is_valid
         ]);
     }
@@ -66,7 +64,7 @@ class FundCriterionResource extends Resource
                 $criterion
             );
 
-            $is_valid = collect($record ? [$record] : []);
+            $is_valid = collect($record ? [$record->only('value')] : []);
 
             return $is_valid->where('value', $criterion->operator, $criterion->value)->count() > 0;
         } else {

@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileService
 {
@@ -238,9 +239,10 @@ class FileService
 
     /**
      * @param string $path
-     * @return mixed
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function download(string $path) {
+    public function download(string $path): StreamedResponse
+    {
         return $this->storage()->download(ltrim($path, '/'));
     }
 

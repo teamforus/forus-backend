@@ -9,14 +9,14 @@ use bunq\Model\Generated\Endpoint\OauthClient;
 use bunq\Util\BunqEnumApiEnvironmentType;
 use Illuminate\Database\Seeder;
 use App\Services\BankService\Models\Bank;
-use Exception;
+use Throwable;
 
 /**
  * @noinspection PhpUnused
  */
 class BanksTableSeeder extends Seeder
 {
-    public $warningBankUsageMessage =
+    public string $warningBankUsageMessage =
         "Although BUNQ/BNG connection is not required to run the app, " .
         "you will not be able to use/test some platform functionality, " .
         "like: top-ups and transactions payout which means all the " .
@@ -26,8 +26,8 @@ class BanksTableSeeder extends Seeder
     /**
      * @var string Bunq allows only one active oauth client
      */
-    protected $bunqContextFile = '/bank-connections/bunq/bunq-data.json';
-    protected $bngContextFile = '/bank-connections/bng/bng-data.json';
+    protected string $bunqContextFile = '/bank-connections/bunq/bunq-data.json';
+    protected string $bngContextFile = '/bank-connections/bng/bng-data.json';
 
     /**
      * Run the database seeds.
@@ -173,8 +173,8 @@ class BanksTableSeeder extends Seeder
                 'data->context'         => json_decode($context->toJson()),
                 'data->oauth_client'    => $oauth_client,
             ]);
-        } catch (Exception $exception) {
-            $error = "[Error] - " . $exception->getMessage();
+        } catch (Throwable $e) {
+            $error = "[Error] - " . $e->getMessage();
             $message = "Error while making bank context using the key from the .env file.";
 
             $this->printWarning("$errorPrefix$message\n$error");

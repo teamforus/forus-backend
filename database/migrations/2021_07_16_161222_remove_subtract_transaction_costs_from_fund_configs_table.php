@@ -4,18 +4,14 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Class RemoveSubtractTransactionCostsFromFundConfigsTable
- * @noinspection PhpUnused
- */
-class RemoveSubtractTransactionCostsFromFundConfigsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->dropColumn('subtract_transaction_costs');
@@ -27,10 +23,10 @@ class RemoveSubtractTransactionCostsFromFundConfigsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->boolean('subtract_transaction_costs')->default(0)->after('csv_primary_key');
         });
     }
-}
+};

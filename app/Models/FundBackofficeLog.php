@@ -47,7 +47,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereVoucherId($value)
  * @mixin \Eloquent
  */
-class FundBackofficeLog extends Model
+class FundBackofficeLog extends BaseModel
 {
     protected $fillable = [
         'fund_id', 'identity_address', 'bsn', 'action', 'state', 'request_id', 'response_id',

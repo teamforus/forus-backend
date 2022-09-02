@@ -6,10 +6,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Voucher;
 
-/**
- * @noinspection PhpUnused
- */
-class MakeCreationLogForOlderVouchers extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -35,7 +32,7 @@ class MakeCreationLogForOlderVouchers extends Migration
     }
 
     /**
-     * @param Collection|Voucher[] $vouchers
+     * @param Collection $vouchers
      */
     protected function migrateVouchers(Collection $vouchers)
     {
@@ -77,4 +74,4 @@ class MakeCreationLogForOlderVouchers extends Migration
      * @return void
      */
     public function down(): void {}
-}
+};

@@ -14,7 +14,7 @@ use App\Scopes\Builders\ProductSubQuery;
  */
 class ProductIdToReservationRule extends BaseRule
 {
-    protected $messageTransPrefix = 'validation.product_reservation.';
+    protected string $messageTransPrefix = 'validation.product_reservation.';
     private $voucherAddress;
     private $priceType;
 

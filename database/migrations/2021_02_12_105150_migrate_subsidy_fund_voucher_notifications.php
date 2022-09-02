@@ -2,22 +2,18 @@
 
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Migrations\Migration;
-use \Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Collection;
 use App\Models\Notification;
 use App\Models\Voucher;
 
-/**
- * Class MigrateSubsidyFundVoucherNotifications
- * @noinspection PhpUnused
- */
-class MigrateSubsidyFundVoucherNotifications extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         $this->migrateVouchersCreated();
         $this->migrateVouchersAssigned();
@@ -100,5 +96,6 @@ class MigrateSubsidyFundVoucherNotifications extends Migration
      *
      * @return void
      */
-    public function down() {}
-}
+    public function down(): void
+    {}
+};

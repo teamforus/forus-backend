@@ -2,13 +2,13 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Rules\Base\BtwRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\Base\KvkRule;
-use Illuminate\Foundation\Http\FormRequest;
 
-class StoreOrganizationRequest extends FormRequest
+class StoreOrganizationRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

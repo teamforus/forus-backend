@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Services\EventLogService\Models\EventLog;
-use App\Services\Forus\Identity\Models\Identity;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Notifications\DatabaseNotification;
@@ -26,6 +25,8 @@ use Illuminate\Notifications\DatabaseNotification;
  * @method static Builder|Notification newModelQuery()
  * @method static Builder|Notification newQuery()
  * @method static Builder|Notification query()
+ * @method static Builder|DatabaseNotification read()
+ * @method static Builder|DatabaseNotification unread()
  * @method static Builder|Notification whereCreatedAt($value)
  * @method static Builder|Notification whereData($value)
  * @method static Builder|Notification whereId($value)

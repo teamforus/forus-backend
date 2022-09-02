@@ -2,10 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class AddDisregardedStateToFundRequestsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -32,4 +29,4 @@ class AddDisregardedStateToFundRequestsTable extends Migration
             "ENUM('pending', 'approved', 'declined', 'approved_partly') DEFAULT 'pending';"
         );
     }
-}
+};

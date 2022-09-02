@@ -482,7 +482,7 @@ class BNGService
     {
         try {
             return bin2hex(random_bytes($length / 2));
-        } catch (\Throwable $exception) {
+        } catch (\Throwable $e) {
             throw new RuntimeException("Failed to generate token.");
         }
     }

@@ -2,13 +2,13 @@
 
 namespace App\Http\Requests\Api\Platform\Funds\Requests\Records;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * @property-read Organization $organization
  */
-class StoreFundRequestRecordRequest extends FormRequest
+class StoreFundRequestRecordRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

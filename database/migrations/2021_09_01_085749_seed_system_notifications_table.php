@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Database\Seeders\SystemNotificationsTableSeeder;
 
-/** @noinspection PhpUnused */
-class SeedSystemNotificationsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -21,4 +21,4 @@ class SeedSystemNotificationsTable extends Migration
      * @return void
      */
     public function down(): void {}
-}
+};

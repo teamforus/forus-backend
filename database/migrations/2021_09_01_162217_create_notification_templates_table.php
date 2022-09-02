@@ -3,8 +3,9 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Database\Seeders\NotificationTemplatesTableSeeder;
 
-class CreateNotificationTemplatesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -49,4 +50,4 @@ class CreateNotificationTemplatesTable extends Migration
     {
         Schema::dropIfExists('notification_templates');
     }
-}
+};

@@ -4,11 +4,11 @@ namespace App\Notifications\Identities\FundRequest;
 
 use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationRequestedMail;
 use App\Models\FundRequestRecord;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 
 class IdentityFundRequestRecordFeedbackRequestedNotification extends BaseIdentityFundRequestRecordNotification
 {
-    protected static $key = 'notifications_identities.fund_request_feedback_requested';
+    protected static ?string $key = 'notifications_identities.fund_request_feedback_requested';
 
     /**
      * @param Identity $identity
@@ -27,7 +27,7 @@ class IdentityFundRequestRecordFeedbackRequestedNotification extends BaseIdentit
         ));
 
         $this->sendMailNotification(
-            $identity->primary_email->email,
+            $identity->email,
             new FundRequestClarificationRequestedMail(array_merge($this->eventLog->data, [
                 'webshop_clarification_link' => $linkClarification,
             ]), $fundRequest->fund->getEmailFrom())

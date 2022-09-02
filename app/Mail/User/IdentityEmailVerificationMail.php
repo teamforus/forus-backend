@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class IdentityEmailVerificationMail extends ImplementationMail
 {
-    protected $subjectKey = 'mails/system_mails.identity_email_verification.title';
+    protected string $subjectKey = 'mails/system_mails.identity_email_verification.title';
 
     /**
      * @return Mailable

@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AddFundConfigsCsvPrimaryKey extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -44,4 +44,4 @@ class AddFundConfigsCsvPrimaryKey extends Migration
             $table->dropUnique('record_types_key_unique');
         });
     }
-}
+};

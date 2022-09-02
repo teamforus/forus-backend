@@ -13,19 +13,17 @@ use App\Rules\BaseRule;
  */
 class ProviderProductReservationBatchItemStockRule extends BaseRule
 {
-    protected $index;
-    protected $organization;
-    protected $reservationsData;
+    protected int $index;
+    protected Organization $organization;
+    protected array $reservationsData;
 
     /**
      * ProviderProductReservationBatchItemRule constructor.
      * @param Organization $organization
      * @param array $reservationsData
      */
-    public function __construct(
-        Organization $organization,
-        array $reservationsData = []
-    ) {
+    public function __construct(Organization $organization, array $reservationsData = [])
+    {
         $this->organization = $organization;
         $this->reservationsData = $reservationsData;
     }
@@ -40,7 +38,7 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
     public function passes($attribute, $value): bool
     {
         // get current reservation index
-        $this->index = (array_last(explode('.', $attribute)) ?? 0);
+        $this->index = (int) (array_last(explode('.', $attribute)) ?? 0);
 
         /** @var Voucher|null $voucher current row voucher */
         /** @var Product|null $product current row product */
@@ -91,7 +89,7 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
         // Sponsor total limit for the product reached.
         // Total limit of %s for the product \"%s\" reached!
         if ($target_products_count > $product['limit_total_available']) {
-            return sprintf("Het aanbod \"%s\" heeft het limiet bereikt!", $product['limit_total'], $product->name);
+            return sprintf("Het aanbod \"%s\" heeft het limiet bereikt!", $product['limit_total']);
         }
 
         // The total limit of %s for the voucher was reached!

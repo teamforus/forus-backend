@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
  * App\Models\Tag
@@ -23,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @method static \Illuminate\Database\Eloquent\Builder|Tag whereScope($value)
  * @mixin \Eloquent
  */
-class Tag extends Model
+class Tag extends BaseModel
 {
     /**
      * The attributes that are mass assignable.

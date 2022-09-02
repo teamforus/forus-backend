@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateProviderProductCategoriesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -19,11 +19,15 @@ class CreateProviderProductCategoriesTable extends Migration
             $table->integer('product_category_id')->unsigned();
             $table->timestamps();
 
-            $table->foreign('provider_id'
-            )->references('id')->on('organizations')->onDelete('cascade');
+            $table->foreign('provider_id')
+                ->references('id')
+                ->on('organizations')
+                ->onDelete('cascade');
 
-            $table->foreign('product_category_id'
-            )->references('id')->on('product_categories')->onDelete('cascade');
+            $table->foreign('product_category_id')
+                ->references('id')
+                ->on('product_categories')
+                ->onDelete('cascade');
         });
     }
 
@@ -36,4 +40,4 @@ class CreateProviderProductCategoriesTable extends Migration
     {
         Schema::dropIfExists('provider_product_categories');
     }
-}
+};

@@ -12,7 +12,7 @@ abstract class BaseEmployeeEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $employee;
+    protected Employee $employee;
 
     /**
      * Create a new event instance.

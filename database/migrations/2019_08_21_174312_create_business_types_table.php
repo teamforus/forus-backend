@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateBusinessTypesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -42,4 +42,4 @@ class CreateBusinessTypesTable extends Migration
         Schema::dropIfExists('business_type_translations');
         Schema::dropIfExists('business_types');
     }
-}
+};

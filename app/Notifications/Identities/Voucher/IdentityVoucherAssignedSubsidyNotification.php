@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Voucher;
 
 use App\Mail\Vouchers\VoucherAssignedSubsidyMail;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 use App\Models\Voucher;
 
 /**
@@ -11,8 +11,8 @@ use App\Models\Voucher;
  */
 class IdentityVoucherAssignedSubsidyNotification extends BaseIdentityVoucherNotification
 {
-    protected static $key = 'notifications_identities.identity_voucher_assigned_subsidy';
-    protected static $pushKey = 'voucher.assigned';
+    protected static ?string $key = 'notifications_identities.identity_voucher_assigned_subsidy';
+    protected static ?string $pushKey = 'voucher.assigned';
 
     /**
      * @param Identity $identity

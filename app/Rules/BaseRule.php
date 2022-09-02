@@ -10,8 +10,8 @@ use Illuminate\Contracts\Validation\Rule;
  */
 abstract class BaseRule implements Rule
 {
-    protected $messageTransPrefix = "";
-    protected $messageText = "";
+    protected string $messageTransPrefix = "";
+    protected string $messageText = "";
 
     /**
      * @param $messageKey

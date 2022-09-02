@@ -4,20 +4,21 @@ namespace App\Notifications\Organizations;
 
 use App\Models\Organization;
 use App\Notifications\BaseNotification;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
+use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 abstract class BaseOrganizationNotification extends BaseNotification
 {
-    protected static $scope;
+    protected static ?string $scope;
 
     /**
      * Permissions required to get the notification
      *
      * @var array|string
      */
-    protected static $permissions = [];
+    protected static string|array $permissions = [];
 
     /**
      * Get the permissions required for the identity to receive the notification
@@ -42,10 +43,11 @@ abstract class BaseOrganizationNotification extends BaseNotification
      * Get identities which are eligible for the notification
      *
      * @param Model $loggable
+     * @param EventLog $eventLog
      * @return Collection
      * @throws \Exception
      */
-    public static function eligibleIdentities($loggable): Collection
+    public static function eligibleIdentities($loggable, EventLog $eventLog): Collection
     {
         $employeeAddresses = static::getOrganization($loggable)->employeesWithPermissionsQuery(
             self::getPermissions()
@@ -74,5 +76,5 @@ abstract class BaseOrganizationNotification extends BaseNotification
      * @return Organization
      * @throws \Exception
      */
-    abstract public static function getOrganization($loggable): Organization;
+    abstract public static function getOrganization(mixed $loggable): Organization;
 }

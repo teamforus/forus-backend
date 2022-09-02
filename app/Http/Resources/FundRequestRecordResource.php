@@ -22,8 +22,8 @@ class FundRequestRecordResource extends BaseJsonResource
         $recordTypes = collect(record_types_cached())->keyBy('key');
 
         return array_merge($this->resource->only([
-            'id', 'state', 'record_type_key', 'fund_request_id',
-            'created_at', 'updated_at', 'employee_id', 'value',
+            'id', 'state', 'record_type_key', 'fund_request_id', 'employee_id', 'value',
+            'fund_criterion_id',
         ]), [
             'record_type' => $recordTypes[$this->resource->record_type_key],
         ], $this->timestamps($this->resource, 'created_at', 'updated_at'));

@@ -1,26 +1,25 @@
 <?php
 
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use \App\Models\ImplementationPage;
-use \App\Models\Implementation;
+use App\Models\ImplementationPage;
+use App\Models\Implementation;
 
-/**
- * Class MoveImplementationFieldsToImplementationPagesTable
- * @noinspection PhpUnused
- */
-class MoveImplementationFieldsToImplementationPagesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Implementation::get()->each(static function (Implementation $implementation) {
-            if (!$implementation->page_explanation()->exists()) {
+        Implementation::get()->each(function (Implementation $implementation) {
+            if (!$this->withTrashed($implementation->page_explanation())->exists()) {
                 $implementation->pages()->create([
                     'content'       => $implementation->description_steps ?? null,
                     'page_type'     => ImplementationPage::TYPE_EXPLANATION,
@@ -29,7 +28,7 @@ class MoveImplementationFieldsToImplementationPagesTable extends Migration
                 ]);
             }
 
-            if (!$implementation->page_provider()->exists()) {
+            if (!$this->withTrashed($implementation->page_provider())->exists()) {
                 $implementation->pages()->create([
                     'content' => $implementation->description_providers ?? null,
                     'page_type' => ImplementationPage::TYPE_PROVIDER,
@@ -46,12 +45,18 @@ class MoveImplementationFieldsToImplementationPagesTable extends Migration
         });
     }
 
+    private function withTrashed(Builder|Relation $builder): Builder|Relation
+    {
+        /** @var Builder|Relation|SoftDeletes $builder */
+        return $builder->withTrashed();
+    }
+
     /**
      * Reverse the migrations.
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
             $table->boolean('has_more_info_url')->after('description')->default(false);
@@ -60,4 +65,4 @@ class MoveImplementationFieldsToImplementationPagesTable extends Migration
             $table->text('description_providers')->after('description_steps')->nullable();
         });
     }
-}
+};

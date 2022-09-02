@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class FundExpireSoonMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = 'notifications_identities.voucher_expire_soon_budget';
+    protected string $notificationTemplateKey = 'notifications_identities.voucher_expire_soon_budget';
 
     /**
      * @return Mailable

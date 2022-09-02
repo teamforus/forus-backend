@@ -5,7 +5,7 @@ use Illuminate\Database\Migrations\Migration;
 use App\Models\Notification;
 use App\Models\Implementation;
 
-class MigrateOldPhysicalCardRequestLogs extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -65,4 +65,4 @@ class MigrateOldPhysicalCardRequestLogs extends Migration
             'data->key' => 'notifications_identities.physical_card_request_created',
         ]);
     }
-}
+};

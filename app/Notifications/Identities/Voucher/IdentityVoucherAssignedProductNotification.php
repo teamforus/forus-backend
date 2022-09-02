@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Voucher;
 
 use App\Mail\Vouchers\VoucherAssignedProductMail;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 use App\Models\Voucher;
 
 /**
@@ -11,9 +11,9 @@ use App\Models\Voucher;
  */
 class IdentityVoucherAssignedProductNotification extends BaseIdentityVoucherNotification
 {
-    protected static $key = 'notifications_identities.identity_voucher_assigned_product';
-    protected static $pushKey = 'voucher.assigned';
-    protected static $scope = null;
+    protected static ?string $key = 'notifications_identities.identity_voucher_assigned_product';
+    protected static ?string $pushKey = 'voucher.assigned';
+    protected static ?string $scope = null;
 
     /**
      * @param Identity $identity

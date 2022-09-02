@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\PhysicalCard;
 
-class AddIdentityAddressToPhysicalCardsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -34,4 +34,4 @@ class AddIdentityAddressToPhysicalCardsTable extends Migration
             $table->dropColumn('identity_address');
         });
     }
-}
+};

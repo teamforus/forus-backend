@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class UpdateProductDescriptionField extends Migration
+return new class extends Migration
 {
     public function __construct()
     {
@@ -18,7 +18,7 @@ class UpdateProductDescriptionField extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('products', function(Blueprint $table) {
             $table->string('description', 2500)->change();
@@ -30,10 +30,10 @@ class UpdateProductDescriptionField extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('products', function(Blueprint $table) {
             $table->string('description', 1000)->change();
         });
     }
-}
+};

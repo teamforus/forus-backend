@@ -4,11 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Class AddActivationCodeUidToVouchersTable
- * @noinspection PhpUnused
- */
-class AddActivationCodeUidToVouchersTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -33,4 +29,4 @@ class AddActivationCodeUidToVouchersTable extends Migration
             $table->dropColumn('activation_code_uid');
         });
     }
-}
+};

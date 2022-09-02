@@ -23,8 +23,6 @@ class StoreTransactionRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 }

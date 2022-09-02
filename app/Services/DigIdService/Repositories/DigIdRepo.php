@@ -30,10 +30,10 @@ class DigIdRepo implements IDigIdRepo
     public const ENV_SANDBOX = "sandbox";
     public const ENV_PRODUCTION = "production";
 
-    protected $app_id = null;
-    protected $shared_secret = null;
-    protected $a_select_server = null;
-    protected $environment = self::ENV_SANDBOX;
+    protected ?string $app_id = null;
+    protected ?string $shared_secret = null;
+    protected ?string $a_select_server = null;
+    protected string $environment = self::ENV_SANDBOX;
 
     /**
      * DigIdRepo constructor.
@@ -59,7 +59,7 @@ class DigIdRepo implements IDigIdRepo
         $this->environment = $env;
     }
 
-    public static function responseCodeDetails($errorCode)
+    public static function responseCodeDetails($errorCode): string
     {
         if ($errorCode == self::DIGID_SUCCESS) {
             return 'FundRequestAutoComponent.js';
@@ -67,6 +67,8 @@ class DigIdRepo implements IDigIdRepo
             return 'digid_unavailable';
         } elseif ($errorCode == self::DIGID_TEMPORARY_UNAVAILABLE_1) {
             return 'digid_temporary_unavailable_1';
+        } elseif ($errorCode == self::DIGID_TEMPORARY_UNAVAILABLE_2) {
+            return 'digid_temporary_unavailable_2';
         } elseif ($errorCode == self::DIGID_VERIFICATION_FAILED_1) {
             return 'digid_verification_failed_1';
         } elseif ($errorCode == self::DIGID_VERIFICATION_FAILED_2) {
@@ -87,10 +89,6 @@ class DigIdRepo implements IDigIdRepo
             return 'digid_webservice_not_active';
         } elseif ($errorCode == self::DIGID_WEBSERVICE_NOT_AUTHORISED) {
             return 'digid_webservice_not_authorised';
-        } elseif ($errorCode == self::DIGID_TEMPORARY_UNAVAILABLE_2) {
-            return 'digid_temporary_unavailable_2';
-        } elseif ($errorCode == self::DIGID_TEMPORARY_UNAVAILABLE_2) {
-            return 'digid_api_not_responding';
         } elseif ($errorCode == self::DIGID_API_NOT_RESPONDING) {
             return 'digid_api_not_responding';
         }
@@ -102,7 +100,8 @@ class DigIdRepo implements IDigIdRepo
      * @return string
      * @throws DigIdException
      */
-    private function getApiUrl() {
+    private function getApiUrl(): string
+    {
         if ($this->environment == self::ENV_SANDBOX) {
             return self::URL_API_SANDBOX;
         } elseif ($this->environment == self::ENV_PRODUCTION) {
@@ -115,7 +114,8 @@ class DigIdRepo implements IDigIdRepo
     /**
      * @return array
      */
-    private function getAuthParams() {
+    private function getAuthParams(): array
+    {
         return [
             "app_id"            => $this->app_id,
             "shared_secret"     => $this->shared_secret,
@@ -127,7 +127,8 @@ class DigIdRepo implements IDigIdRepo
      * @param array $params
      * @return array
      */
-    private function makeAuthorizedRequest(array $params) {
+    private function makeAuthorizedRequest(array $params): array
+    {
         return array_merge($this->getAuthParams(), $params);
     }
 
@@ -136,22 +137,30 @@ class DigIdRepo implements IDigIdRepo
      * @return string
      * @throws DigIdException
      */
-    private function makeRequestUrl(array $params) {
+    private function makeRequestUrl(array $params): string
+    {
         return sprintf("%s?%s", $this->getApiUrl(), http_build_query($params));
     }
 
-    private function parseResponseBody($response) {
+    /**
+     * @param $response
+     * @return array
+     */
+    private function parseResponseBody($response): array
+    {
         $result = [];
         parse_str($response, $result);
         return $result;
     }
 
-    private function validateAuthRequestResponse($result) {
-        // Validate result
-        $check = TRUE;
-
+    /**
+     * @param $result
+     * @return bool
+     */
+    private function validateAuthRequestResponse($result): bool
+    {
         // Should be alphanumeric.
-        $check = $check && isset($result['rid']) && ctype_alnum($result['rid']);
+        $check = isset($result['rid']) && ctype_alnum($result['rid']);
 
         // URL.
         $check = $check && isset($result['as_url']) && $result['as_url'];
@@ -160,40 +169,44 @@ class DigIdRepo implements IDigIdRepo
         $check = $check && isset($result['a-select-server']) && ctype_alnum($result['a-select-server']);
 
         // Should be numeric and 4 characters.
-        $check = $check && isset($result['result_code']) && ctype_digit($result['result_code']);
-
-        return $check;
+        return $check && isset($result['result_code']) && ctype_digit($result['result_code']);
     }
 
-    private function validateVerifyCredentialsResponse($result) {
-        // Validate result.
-        $check = true;
-
+    /**
+     * @param $result
+     * @return bool
+     */
+    private function validateVerifyCredentialsResponse($result): bool
+    {
         // Should be numeric.
-        $check = $check && isset($result['uid']) && ctype_digit($result['uid']);
+        $check = isset($result['uid']) && ctype_digit($result['uid']);
+
         // Should be alphanumeric.
         $check = $check && isset($result['app_id']) && ctype_alnum($result['app_id']);
+
         // Should be alphanumeric.
         $check = $check && isset($result['organization']) && ctype_alnum($result['organization']);
+
         // Should be numeric and 2 characters.
         $check = $check && isset($result['betrouwbaarheidsniveau']) && ctype_digit($result['betrouwbaarheidsniveau']);
+
         // Should be alphanumeric.
         $check = $check && isset($result['rid']) && ctype_alnum($result['rid']);
+
         // Should be alphanumeric.
         $check = $check && isset($result['a-select-server']) && ctype_alnum($result['a-select-server']);
-        // Should be numeric and 4 characters.
-        $check = $check && isset($result['result_code']) && ctype_digit($result['result_code']);
 
-        return $check;
+        // Should be numeric and 4 characters.
+        return $check && isset($result['result_code']) && ctype_digit($result['result_code']);
     }
 
     /**
      * @param string $app_url
      * @param array $extraParams
-     * @return array|bool
+     * @return array
      * @throws DigIdException
      */
-    public function makeAuthRequest($app_url = "", array $extraParams = [])
+    public function makeAuthRequest($app_url = "", array $extraParams = []): array
     {
         $request = $this->makeRequestUrl($this->makeAuthorizedRequest(array_merge([
             "request"           => "authenticate",
@@ -202,7 +215,7 @@ class DigIdRepo implements IDigIdRepo
 
         try {
             $response = (new Client())->get($request);
-        } catch (\Exception $exception) {
+        } catch (\Throwable $e) {
             throw (new DigIdException(
                 "Digid API not responding."
             ))->setDigIdCode(self::DIGID_API_NOT_RESPONDING);
@@ -230,14 +243,14 @@ class DigIdRepo implements IDigIdRepo
      * @param string $rid
      * @param string $aselect_server
      * @param string $aselect_credentials
-     * @return mixed
+     * @return array
      * @throws DigIdException
      */
     public function getBsnFromResponse(
         string $rid,
         string $aselect_server,
         string $aselect_credentials
-    ) {
+    ): array {
         $request = $this->makeRequestUrl($this->makeAuthorizedRequest([
             'request'               => 'verify_credentials',
             'rid'                   => $rid,

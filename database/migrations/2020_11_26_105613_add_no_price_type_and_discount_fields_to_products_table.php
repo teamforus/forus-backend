@@ -4,11 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Class AddNoPriceTypeAndDiscountFieldsToProductsTable
- * @noinspection PhpUnused
- */
-class AddNoPriceTypeAndDiscountFieldsToProductsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -35,4 +31,4 @@ class AddNoPriceTypeAndDiscountFieldsToProductsTable extends Migration
             $table->dropColumn('no_price_discount');
         });
     }
-}
+};

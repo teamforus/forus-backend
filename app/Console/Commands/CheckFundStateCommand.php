@@ -31,6 +31,6 @@ class CheckFundStateCommand extends Command
     {
         try {
             $fund::checkStateQueue();
-        } catch (\Exception $e) {}
+        } catch (\Throwable $e) {}
     }
 }

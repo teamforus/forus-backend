@@ -12,10 +12,6 @@ use App\Notifications\Identities\Voucher\IdentityVoucherBudgetTransactionNotific
 use App\Notifications\Organizations\FundProviders\FundProviderTransactionBunqSuccessNotification;
 use Illuminate\Events\Dispatcher;
 
-/**
- * Class VoucherTransactionsSubscriber
- * @package App\Listeners
- */
 class VoucherTransactionsSubscriber
 {
     /**
@@ -35,9 +31,7 @@ class VoucherTransactionsSubscriber
             $voucher->reportBackofficeFirstUse();
         }
 
-        if ($transaction->product) {
-            $transaction->product->updateSoldOutState();
-        }
+        $transaction->product?->updateSoldOutState();
 
         $eventMeta = [
             'fund'                  => $voucher->fund,
@@ -100,17 +94,14 @@ class VoucherTransactionsSubscriber
      * The events dispatcher
      *
      * @param Dispatcher $events
+     * @return void
+     * @noinspection PhpUnused
      */
     public function subscribe(Dispatcher $events): void
     {
-        $events->listen(
-            VoucherTransactionCreated::class,
-            '\App\Listeners\VoucherTransactionsSubscriber@onVoucherTransactionCreated'
-        );
+        $class = '\\' . static::class;
 
-        $events->listen(
-            VoucherTransactionBunqSuccess::class,
-            '\App\Listeners\VoucherTransactionsSubscriber@onVoucherTransactionBunqSuccess'
-        );
+        $events->listen(VoucherTransactionCreated::class, "$class@onVoucherTransactionCreated");
+        $events->listen(VoucherTransactionBunqSuccess::class, "$class@onVoucherTransactionBunqSuccess");
     }
 }

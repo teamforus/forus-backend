@@ -11,9 +11,9 @@ use App\Models\Organization;
 use App\Models\ProductCategory;
 use App\Services\MediaService\Models\Media;
 
-class UpdateMorphableTypes extends Migration
+return new class extends Migration
 {
-    private $morphMap = [
+    private array $morphMap = [
         'fund'              => Fund::class,
         'media'             => Media::class,
         'office'            => Office::class,
@@ -67,4 +67,4 @@ class UpdateMorphableTypes extends Migration
             ]);
         }
     }
-}
+};

@@ -4,11 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Class AddAllowBatchReservationsFieldToOrganizationsTable
- * @noinspection PhpUnused
- */
-class AddAllowBatchReservationsFieldToOrganizationsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -33,4 +29,4 @@ class AddAllowBatchReservationsFieldToOrganizationsTable extends Migration
             $table->dropColumn('allow_batch_reservations');
         });
     }
-}
+};

@@ -2,14 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations;
 
-use App\Rules\ImplementationPagesArrayKeysRule;
 use App\Rules\MediaUidRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-/**
- * Class UpdateImplementationCmsRequest
- * @package App\Http\Requests\Api\Platform\Organizations\Implementations
- */
 class UpdateImplementationCmsRequest extends FormRequest
 {
     /**
@@ -29,7 +24,7 @@ class UpdateImplementationCmsRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        return array_merge([
             'title' => 'nullable|string|max:50',
             'description' => 'nullable|string|max:4000',
             'description_alignment' => 'nullable|in:left,center,right',
@@ -37,20 +32,11 @@ class UpdateImplementationCmsRequest extends FormRequest
             'banner_media_uid' => ['nullable', new MediaUidRule('implementation_banner')],
             'media_uid' => 'nullable|array',
             'media_uid.*' => $this->mediaRule(),
-            'pages' => ['array', new ImplementationPagesArrayKeysRule()],
-            'pages.*' => 'array',
-            'pages.*.content' => 'nullable|string|max:10000',
-            'pages.*.content_alignment' => 'nullable|in:left,center,right',
-            'pages.*.external' => 'present|boolean',
-            'pages.*.external_url' => 'nullable|string|max:300',
-
             'overlay_enabled' => 'nullable|bool',
             'overlay_type' => 'nullable|in:color,dots,lines,points,circles',
             'overlay_opacity' => 'nullable|numeric|min:0|max:100',
             'header_text_color' => 'nullable|in:bright,dark,auto',
-            'pages.*.media_uid' => 'nullable|array',
-            'pages.*.media_uid.*' => $this->mediaRule(),
-        ];
+        ], $this->announcementsRules());
     }
 
     /**
@@ -61,7 +47,23 @@ class UpdateImplementationCmsRequest extends FormRequest
             'required',
             'string',
             'exists:media,uid',
-            new MediaUidRule('cms_media')
+            new MediaUidRule('cms_media'),
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    private function announcementsRules(): array
+    {
+        return [
+            'announcement'              => 'nullable|array',
+            'announcement.type'         => 'nullable|in:warning,danger,success,primary,default',
+            'announcement.title'        => 'nullable|string|max:2000',
+            'announcement.description'  => 'nullable|string|max:8000',
+            'announcement.expire_at'    => 'nullable|date_format:Y-m-d',
+            'announcement.active'       => 'nullable|boolean',
+            'announcement.replace'      => 'nullable|boolean',
         ];
     }
 
@@ -71,9 +73,8 @@ class UpdateImplementationCmsRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'pages.privacy.external_url' => 'External url',
-            'pages.privacy.external' => 'External',
-            'pages.privacy.content' => 'Content',
+            'announcement.title' => 'titel',
+            'announcement.description' => 'description',
         ];
     }
 }

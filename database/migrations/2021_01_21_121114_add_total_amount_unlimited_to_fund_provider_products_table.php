@@ -5,18 +5,14 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\FundProviderProduct;
 
-/**
- * Class AddTotalAmountUnlimitedToFundProviderProductsTable
- * @noinspection PhpUnused
- */
-class AddTotalAmountUnlimitedToFundProviderProductsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('fund_provider_products', function (Blueprint $table) {
             $table->boolean('limit_total_unlimited')->default(0)->after('limit_total');
@@ -33,7 +29,7 @@ class AddTotalAmountUnlimitedToFundProviderProductsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         FundProviderProduct::where('limit_total_unlimited', 1)->update([
             'limit_total' => 999999,
@@ -43,4 +39,4 @@ class AddTotalAmountUnlimitedToFundProviderProductsTable extends Migration
             $table->dropColumn('limit_total_unlimited');
         });
     }
-}
+};

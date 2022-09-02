@@ -13,7 +13,7 @@ class MediaServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/migrations');
 
@@ -31,7 +31,7 @@ class MediaServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->app->singleton('media', function () {
             return new MediaService();

@@ -1,5 +1,8 @@
 <?php
 
+use Astrotomic\Translatable\TranslatableServiceProvider;
+use Dusterio\AwsWorker\Integrations\LaravelServiceProvider;
+
 return [
 
     /*
@@ -186,23 +189,16 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        App\Providers\RepositoryServiceProvider::class,
 
-        \Astrotomic\Translatable\TranslatableServiceProvider::class,
-        \Dusterio\AwsWorker\Integrations\LaravelServiceProvider::class,
+        TranslatableServiceProvider::class,
+        LaravelServiceProvider::class,
 
         App\Services\TokenGeneratorService\TokenGeneratorServiceProvider::class,
-        App\Services\ApiRequestService\ApiRequestServiceProvider::class,
 
 
         /*
          * Forus Service Providers
          */
-
-        App\Services\Forus\Identity\IdentityServiceProvider::class,
-        App\Services\Forus\Record\RecordServiceProvider::class,
-
-        App\Services\KeyPairGeneratorService\KeyPairGeneratorServiceProvider::class,
         App\Services\KvkApiService\KvkApiServiceProvider::class,
 
         App\Services\FileService\FileServiceProvider::class,
@@ -221,6 +217,7 @@ return [
 
         App\Services\BNGService\BNGServiceProvider::class,
         App\Services\ProductboardApiService\ProductboardApiServiceProvider::class,
+        App\Services\MailDatabaseLoggerService\MailDatabaseLoggerServiceProvider::class,
     ],
 
     /*
@@ -269,15 +266,5 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
-
-        /*
-         * Forus services
-         */
-        'IdentityService' => \App\Services\Forus\Identity\Facades\IdentityService::class,
-        'RecordService' => \App\Services\Forus\Record\Facades\RecordService::class,
-        'NotificationService' => \App\Services\Forus\Notification\Facades\Notification::class,
-        'SessionService' => \App\Services\Forus\Session\Facades\Session::class,
-
     ],
-
 ];

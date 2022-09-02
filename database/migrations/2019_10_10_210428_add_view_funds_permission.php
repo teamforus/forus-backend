@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use App\Models\Permission;
 use App\Models\Role;
 
-class AddViewFundsPermission extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -37,4 +37,4 @@ class AddViewFundsPermission extends Migration
     {
         //
     }
-}
+};

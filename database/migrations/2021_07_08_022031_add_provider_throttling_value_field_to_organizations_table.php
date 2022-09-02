@@ -4,11 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Class AddProviderThrottlingValueFieldToOrganizationsTable
- * @noinspection PhpUnused
- */
-class AddProviderThrottlingValueFieldToOrganizationsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -35,4 +31,4 @@ class AddProviderThrottlingValueFieldToOrganizationsTable extends Migration
             $table->dropColumn('provider_throttling_value');
         });
     }
-}
+};

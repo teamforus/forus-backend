@@ -4,14 +4,14 @@ namespace App\Notifications\Identities\FundRequest;
 
 use App\Mail\Funds\FundRequests\FundRequestCreatedMail;
 use App\Models\FundRequest;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 
 /**
  * Notify requester about their fund request being submitted
  */
 class IdentityFundRequestCreatedNotification extends BaseIdentityFundRequestNotification
 {
-    protected static $key = 'notifications_identities.fund_request_created';
+    protected static ?string $key = 'notifications_identities.fund_request_created';
 
     /**
      * @param Identity $identity
@@ -27,7 +27,7 @@ class IdentityFundRequestCreatedNotification extends BaseIdentityFundRequestNoti
         }
 
         $this->sendMailNotification(
-            $identity->primary_email->email,
+            $identity->email,
             new FundRequestCreatedMail(array_merge($this->eventLog->data, [
                 'webshop_link' => $fund->urlWebshop(),
             ]), $fund->getEmailFrom())

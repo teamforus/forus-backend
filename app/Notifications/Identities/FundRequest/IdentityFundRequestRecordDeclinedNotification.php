@@ -4,12 +4,12 @@ namespace App\Notifications\Identities\FundRequest;
 
 use App\Mail\Funds\FundRequestRecords\FundRequestRecordDeclinedMail;
 use App\Models\FundRequestRecord;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 
 class IdentityFundRequestRecordDeclinedNotification extends BaseIdentityFundRequestRecordNotification
 {
-    protected static $key = 'notifications_identities.fund_request_record_declined';
-    protected static $scope = null;
+    protected static ?string $key = 'notifications_identities.fund_request_record_declined';
+    protected static ?string $scope = null;
 
     /**
      * @param Identity $identity
@@ -19,6 +19,10 @@ class IdentityFundRequestRecordDeclinedNotification extends BaseIdentityFundRequ
         /** @var FundRequestRecord $fundRequestRecord */
         $fundRequestRecord = $this->eventLog->loggable;
         $fundRequest = $fundRequestRecord->fund_request;
+
+        if (empty($this->eventLog->data['rejection_note'])) {
+            return;
+        }
 
         $mailable = new FundRequestRecordDeclinedMail(array_merge($this->eventLog->data, [
             'webshop_link' => $fundRequest->fund->urlWebshop(),

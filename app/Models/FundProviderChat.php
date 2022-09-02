@@ -73,14 +73,13 @@ class FundProviderChat extends Model
      * @param string $counterpart
      * @param string $message
      * @param string|null $identity_address
-     * @return FundProviderChatMessage|Model
+     * @return FundProviderChatMessage|BaseModel
      */
     public function addMessage(
         string $counterpart,
         string $message,
         ?string $identity_address = null
-    ): FundProviderChatMessage {
-        /** @var FundProviderChatMessage $message */
+    ): FundProviderChatMessage|Model {
         return $this->messages()->create(array_merge(compact(
             'identity_address', 'message', 'counterpart'
         ), [

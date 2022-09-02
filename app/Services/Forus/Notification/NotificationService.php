@@ -6,14 +6,13 @@ use App\Mail\Auth\UserLoginMail;
 use App\Mail\Digest\BaseDigestMail;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\User\IdentityEmailVerificationMail;
+use App\Models\Identity;
 use App\Models\Implementation;
-use App\Services\ApiRequestService\ApiRequest;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Notification\Models\NotificationToken;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
-use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Mailable;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Notification;
 use Exception;
 
@@ -31,28 +30,18 @@ class NotificationService
         self::TYPE_PUSH_ANDROID,
     ];
 
-    protected $notificationRepo;
-    protected $recordRepo;
-    protected $apiRequest;
-    protected $mailer;
+    protected INotificationRepo $notificationRepo;
+    protected Mailer $mailer;
 
     /**
      * NotificationService constructor.
      *
      * @param Mailer $mailer
-     * @param ApiRequest $apiRequest
-     * @param IRecordRepo $recordRepo
      * @param INotificationRepo $notificationRepo
      */
-    public function __construct(
-        Mailer $mailer,
-        ApiRequest $apiRequest,
-        IRecordRepo $recordRepo,
-        INotificationRepo $notificationRepo
-    ) {
+    public function __construct(Mailer $mailer, INotificationRepo $notificationRepo)
+    {
         $this->mailer = $mailer;
-        $this->apiRequest = $apiRequest;
-        $this->recordRepo = $recordRepo;
         $this->notificationRepo = $notificationRepo;
     }
 
@@ -171,17 +160,17 @@ class NotificationService
         $platform = '';
         $time = date('H:i', strtotime('1 hour'));
 
-        if (strpos($source, '_webshop') !== false) {
+        if (str_contains($source, '_webshop')) {
             $platform = 'de webshop';
-        } else if (strpos($source, '_sponsor') !== false) {
+        } else if (str_contains($source, '_sponsor')) {
             $platform = 'het dashboard';
-        } else if (strpos($source, '_provider') !== false) {
+        } else if (str_contains($source, '_provider')) {
             $platform = 'het dashboard';
-        } else if (strpos($source, '_validator') !== false) {
+        } else if (str_contains($source, '_validator')) {
             $platform = 'het dashboard';
-        } else if (strpos($source, '_website') !== false) {
+        } else if (str_contains($source, '_website')) {
             $platform = 'de website';
-        } else if (strpos($source, 'me_app') !== false) {
+        } else if (str_contains($source, 'me_app')) {
             $platform = 'Me';
         }
 
@@ -217,7 +206,7 @@ class NotificationService
      * @param string $email
      * @param ?EmailFrom $emailFrom
      * @param string $link
-     * @return bool|null
+     * @return bool
      */
     public function sendEmailVerificationLink(
         string $email,
@@ -236,7 +225,8 @@ class NotificationService
      * @param BaseDigestMail $mailable
      * @return bool|null
      */
-    public function sendDigest(string $email, BaseDigestMail $mailable): ?bool {
+    public function sendDigest(string $email, BaseDigestMail $mailable): ?bool
+    {
         return $this->sendMail($email, $mailable);
     }
 
@@ -244,21 +234,19 @@ class NotificationService
      * Send the mail and check for failure
      *
      * @param $email
-     * @param Mailable|Queueable $mailable
+     * @param Mailable $mailable
      * @return bool
      */
     private function sendMail($email, Mailable $mailable): bool
     {
-        if (!config()->get('mail.disable', false)) {
+        if (!Config::get('mail.disable', false)) {
             try {
                 if (!$this->isUnsubscribed($email, $mailable)) {
                     $mailable = $this->addGlobalVarsToMailable($mailable, $email);
                     $this->mailer->to($email)->queue($mailable);
-
-                    return $this->checkFailure(get_class($mailable));
                 }
-            } catch (\Exception $exception) {
-                $this->logFailure($exception);
+            } catch (\Throwable $e) {
+                $this->logFailure($e);
             }
 
             return false;
@@ -268,11 +256,11 @@ class NotificationService
     }
 
     /**
-     * @param Mailable|Queueable $mailable
+     * @param Mailable $mailable
      * @param string $email
-     * @return Mailable|Queueable
+     * @return Mailable
      */
-    protected function addGlobalVarsToMailable(Mailable $mailable, string $email)
+    protected function addGlobalVarsToMailable(Mailable $mailable, string $email): Mailable
     {
         $unsubscribeLink = $this->notificationRepo->makeUnsubLink($email);
         $notificationPreferencesLink = sprintf(
@@ -280,8 +268,13 @@ class NotificationService
             rtrim(Implementation::active()['url_sponsor'], '/'),
             'preferences/notifications');
 
-        $mailable->with(compact('email', 'unsubscribeLink', 'notificationPreferencesLink'));
-        $mailable->onQueue(config('forus.notifications.email_queue_name'));
+        $mailable->with(array_merge(compact('email', 'unsubscribeLink', 'notificationPreferencesLink'), [
+            'mailable' => get_class($mailable),
+        ]));
+
+        if (method_exists($mailable, 'onQueue')) {
+            $mailable->onQueue(config('forus.notifications.email_queue_name'));
+        }
 
         return $mailable;
     }
@@ -291,17 +284,16 @@ class NotificationService
      * @param string $email
      * @param Mailable $mailable
      * @return bool
-     * @throws \Exception
+     * @throws \Throwable
      */
-    protected function isUnsubscribed(string $email, Mailable $mailable): bool {
+    protected function isUnsubscribed(string $email, Mailable $mailable): bool
+    {
         $mailClass = get_class($mailable);
+        $identity = Identity::findByEmail($email);
 
         return $this->notificationRepo->isMailUnsubscribable($mailClass) && (
             $this->notificationRepo->isEmailUnsubscribed($email) ||
-            $this->notificationRepo->isEmailTypeUnsubscribed(
-                $this->recordRepo->identityAddressByEmail($email),
-                $mailClass
-            )
+            $this->notificationRepo->isEmailTypeUnsubscribed($identity->address, $mailClass)
         );
     }
 
@@ -326,22 +318,6 @@ class NotificationService
     protected function isPushUnsubscribed(string $identity_address, string $key): bool
     {
         return $this->notificationRepo->isPushNotificationUnsubscribed($identity_address, $key);
-    }
-
-    /**
-     * Check for failure and log in case of error
-     *
-     * @param string $mailName
-     * @return bool
-     */
-    private function checkFailure(string $mailName): bool
-    {
-        if (!empty($this->mailer->failures())) {
-            $this->logFailure($mailName);
-            return false;
-        }
-
-        return true;
     }
 
     /**

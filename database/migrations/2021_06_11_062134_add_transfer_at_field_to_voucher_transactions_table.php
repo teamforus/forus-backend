@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Class AddTransferAtFieldToVoucherTransactionsTable
- */
-class AddTransferAtFieldToVoucherTransactionsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -33,4 +30,4 @@ class AddTransferAtFieldToVoucherTransactionsTable extends Migration
             $table->dropColumn('transfer_at', 'canceled_at');
         });
     }
-}
+};

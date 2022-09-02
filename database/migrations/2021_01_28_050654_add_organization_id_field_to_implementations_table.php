@@ -6,18 +6,14 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Organization;
 use App\Models\Fund;
 
-/**
- * Class AddOrganizationIdFieldToImplementationsTable
- * @noinspection PhpUnused
- */
-class AddOrganizationIdFieldToImplementationsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
             $table->unsignedInteger('organization_id')->nullable()->after('id');
@@ -40,10 +36,10 @@ class AddOrganizationIdFieldToImplementationsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
             $table->dropColumn('organization_id');
         });
     }
-}
+};

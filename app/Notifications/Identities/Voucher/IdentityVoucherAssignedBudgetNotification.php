@@ -3,17 +3,16 @@
 namespace App\Notifications\Identities\Voucher;
 
 use App\Mail\Vouchers\VoucherAssignedBudgetMail;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 use App\Models\Voucher;
-use Illuminate\Mail\Mailable;
 
 /**
  * Budget voucher was assigned to identity
  */
 class IdentityVoucherAssignedBudgetNotification extends BaseIdentityVoucherNotification
 {
-    protected static $key = 'notifications_identities.identity_voucher_assigned_budget';
-    protected static $pushKey = 'voucher.assigned';
+    protected static ?string $key = 'notifications_identities.identity_voucher_assigned_budget';
+    protected static ?string $pushKey = 'voucher.assigned';
 
     /**
      * @param Identity $identity

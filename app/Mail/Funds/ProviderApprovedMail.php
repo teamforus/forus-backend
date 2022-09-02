@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class ProviderApprovedMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = 'notifications_fund_providers.approved_budget';
+    protected string $notificationTemplateKey = 'notifications_fund_providers.approved_budget';
 
     /**
      * @return Mailable

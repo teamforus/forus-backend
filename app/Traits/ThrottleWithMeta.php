@@ -8,11 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 /**
- * Trait ThrottleWithMeta
  * @property int $decayMinutes
  * @property int $maxAttempts
  */
-trait ThrottleWithMeta {
+trait ThrottleWithMeta
+{
     use ThrottlesLogins;
 
     /**
@@ -33,7 +33,7 @@ trait ThrottleWithMeta {
         Request $request,
         string $type,
         ?string $key = null,
-        $code = 429
+        int $code = 429
     ): void {
         $this->throttleKeyPrefix = ($key ?: $type) . '_';
         $this->throttle($error, $request, $type, $code);
@@ -50,7 +50,7 @@ trait ThrottleWithMeta {
         string $error,
         Request $request,
         string $type = 'prevalidations',
-        $code = 429
+        int $code = 429
     ): void {
         if ($this->hasTooManyLoginAttempts($request)) {
             $this->responseWithThrottleMeta($error, $request, $type, $code);
@@ -82,7 +82,7 @@ trait ThrottleWithMeta {
         $error,
         Request $request,
         string $type = 'prevalidations',
-        $code = 429
+        int $code = 429
     ): void {
         $key = $this->throttleKey($request);
         $available_in = $this->limiter()->tooManyAttempts($key, $this->maxAttempts()) ?
@@ -108,10 +108,7 @@ trait ThrottleWithMeta {
         throw new AuthorizationJsonException(json_encode([
             'error' => $error,
             'message' => $message,
-            'meta' => array_merge([
-                'title' => $title,
-                'message' => $message,
-            ], $meta)
+            'meta' => array_merge(compact('title', 'message'), $meta)
         ]), $code);
     }
 

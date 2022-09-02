@@ -1,8 +1,9 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Database\Seeders\NotificationTemplatesTableSeeder;
 
-class SeedNotificationTemplatesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -10,7 +11,7 @@ class SeedNotificationTemplatesTable extends Migration
      * @return void
      * @throws Exception
      */
-    public function up()
+    public function up(): void
     {
         (new NotificationTemplatesTableSeeder())->run();
     }
@@ -21,4 +22,4 @@ class SeedNotificationTemplatesTable extends Migration
      * @return void
      */
     public function down(): void {}
-}
+};

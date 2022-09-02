@@ -4,11 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Class AddLimitGeneratorAmountFieldToFundConfigsTable
- * @noinspection PhpUnused
- */
-class AddLimitGeneratorAmountFieldToFundConfigsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -33,4 +29,4 @@ class AddLimitGeneratorAmountFieldToFundConfigsTable extends Migration
             $table->dropColumn('limit_generator_amount');
         });
     }
-}
+};

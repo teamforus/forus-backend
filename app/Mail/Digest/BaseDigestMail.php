@@ -3,12 +3,14 @@
 namespace App\Mail\Digest;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class BaseDigestMail extends Mailable
+class BaseDigestMail extends Mailable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, InteractsWithQueue;
 
     /**
      * Create a new message instance.
@@ -28,5 +30,18 @@ class BaseDigestMail extends Mailable
     public function build(): self
     {
         return $this->view('emails.mail-builder-template');
+    }
+
+    /**
+     * Handle a job failure.
+     *
+     * @param \Throwable $e
+     * @return void
+     */
+    public function failed(\Throwable $e): void
+    {
+        if ($logger = logger()) {
+            $logger->error("Error sending digest: `" . $e->getMessage() . "`");
+        }
     }
 }

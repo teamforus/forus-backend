@@ -12,7 +12,7 @@ use App\Scopes\Builders\ProductQuery;
  */
 class ProductIdInStockRule extends BaseRule
 {
-    protected $messageTransPrefix = 'validation.product_voucher.';
+    protected string $messageTransPrefix = 'validation.product_voucher.';
     private Fund $fund;
     private ?array $otherReservations;
 

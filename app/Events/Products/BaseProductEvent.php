@@ -16,7 +16,7 @@ abstract class BaseProductEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $product;
+    protected Product $product;
 
     /**
      * Create a new event instance.

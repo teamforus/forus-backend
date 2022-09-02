@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AddOrganizationIdToRecordValidationsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -29,4 +29,4 @@ class AddOrganizationIdToRecordValidationsTable extends Migration
             $table->dropColumn('organization_id');
         });
     }
-}
+};

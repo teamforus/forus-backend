@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 
-class DropWalletVoucherTokensTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -35,4 +35,4 @@ class DropWalletVoucherTokensTable extends Migration
             )->references('id')->on('wallet_vouchers')->onDelete('cascade');
         });
     }
-}
+};

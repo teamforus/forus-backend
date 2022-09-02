@@ -3,8 +3,9 @@
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Database\Seeders\RolePermissionsTableSeeder;
 
-class CreateRolePermissionsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -25,7 +26,7 @@ class CreateRolePermissionsTable extends Migration
             )->references('id')->on('permissions')->onDelete('cascade');
         });
 
-        resolve(RolePermissionsTableSeeder::class)->run();
+        (new RolePermissionsTableSeeder())->run();
     }
 
     /**
@@ -37,4 +38,4 @@ class CreateRolePermissionsTable extends Migration
     {
         Schema::dropIfExists('role_permissions');
     }
-}
+};

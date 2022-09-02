@@ -7,7 +7,7 @@ namespace App\Notifications\Organizations\FundProviders;
  */
 class FundProviderTransactionBunqSuccessNotification extends BaseFundProvidersNotification
 {
-    protected static $key = 'notifications_fund_providers.bunq_transaction_success';
-    protected static $scope = null;
-    protected static $permissions = 'view_finances';
+    protected static ?string $key = 'notifications_fund_providers.bunq_transaction_success';
+    protected static ?string $scope = null;
+    protected static string|array $permissions = 'view_finances';
 }

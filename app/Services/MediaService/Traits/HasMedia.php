@@ -27,10 +27,10 @@ trait HasMedia
 
     /**
      * @param string|null $uid
-     * @return $this
+     * @return static
      * @noinspection PhpUnused
      */
-    public function attachMediaByUid(?string $uid): self
+    public function attachMediaByUid(?string $uid): static
     {
         if ($uid && $media = resolve('media')->findByUid($uid)) {
             return $this->attachMedia($media);
@@ -123,15 +123,15 @@ trait HasMedia
             $media->each(function(Media $media) {
                 resolve('media')->unlink($media);
             });
-        } catch (\Exception $exception) {
+        } catch (\Throwable $e) {
             if ($logger = logger()) {
-                $logger->error($exception->getMessage());
+                $logger->error($e->getMessage());
             }
         }
     }
 
     /**
-     * Get all of the mediable's medias.
+     * Get all the mediable medias.
      * @return MorphMany
      */
     public function medias(): MorphMany

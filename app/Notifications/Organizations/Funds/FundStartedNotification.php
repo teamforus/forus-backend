@@ -7,6 +7,6 @@ namespace App\Notifications\Organizations\Funds;
  */
 class FundStartedNotification extends BaseFundsNotification
 {
-    protected static $key = 'notifications_funds.started';
-    protected static $permissions = 'view_funds';
+    protected static ?string $key = 'notifications_funds.started';
+    protected static string|array $permissions = 'view_funds';
 }

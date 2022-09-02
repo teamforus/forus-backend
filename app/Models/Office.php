@@ -50,7 +50,7 @@ use Illuminate\Http\Request;
  * @method static Builder|Office whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Office extends Model
+class Office extends BaseModel
 {
     use HasMedia;
 
@@ -71,6 +71,15 @@ class Office extends Model
      */
     protected $with = [];
 
+    /**
+     * @var int
+     */
+    protected $perPage = 100;
+
+    /**
+     * @param Request $request
+     * @return Builder
+     */
     public static function search(Request $request): Builder
     {
         /** @var Builder $query */

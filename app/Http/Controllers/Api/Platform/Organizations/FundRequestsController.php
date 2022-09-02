@@ -273,7 +273,7 @@ class FundRequestsController extends Controller
         $this->authorize('viewPersonBSNData', [$fundRequest, $organization]);
 
         $iConnect = $fundRequest->fund->getIConnect();
-        $bsn = $request->records_repo()->bsnByAddress($fundRequest->identity_address);
+        $bsn = $fundRequest->identity->bsn;
         $person = $iConnect->getPerson($bsn, ['parents', 'children', 'partners']);
 
         $scope = $request->input('scope');

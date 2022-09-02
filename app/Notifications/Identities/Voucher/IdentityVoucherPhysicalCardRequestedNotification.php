@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Voucher;
 
 use App\Models\Voucher;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 use App\Mail\Vouchers\RequestPhysicalCardMail;
 
 /**
@@ -11,8 +11,8 @@ use App\Mail\Vouchers\RequestPhysicalCardMail;
  */
 class IdentityVoucherPhysicalCardRequestedNotification extends BaseIdentityVoucherNotification
 {
-    protected static $key = 'notifications_identities.voucher_physical_card_requested';
-    protected static $scope = null;
+    protected static ?string $key = 'notifications_identities.voucher_physical_card_requested';
+    protected static ?string $scope = null;
 
     /**
      * @param Identity $identity

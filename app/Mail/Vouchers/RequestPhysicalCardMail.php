@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class RequestPhysicalCardMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = 'notifications_identities.voucher_physical_card_requested';
+    protected string $notificationTemplateKey = 'notifications_identities.voucher_physical_card_requested';
 
     /**
      * @return Mailable

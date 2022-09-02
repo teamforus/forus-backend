@@ -7,6 +7,7 @@ use App\Models\NotificationTemplate;
 use App\Models\SystemNotification;
 use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
@@ -17,26 +18,26 @@ use Illuminate\Support\Arr;
  * @property string|null $identityId Destination email
  * @package App\Mail
  */
-class ImplementationMail extends Mailable
+class ImplementationMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public $emailFrom;
-    public $implementationKey;
-    public $informalCommunication;
-    public $communicationType;
+    public ?EmailFrom $emailFrom = null;
+    public ?string $implementationKey;
+    public bool $informalCommunication = false;
+    public string $communicationType;
 
-    protected $mailData = [];
-    protected $globalBuilderStyles = 'text_center';
-    protected $notificationTemplateKey;
+    protected array $mailData = [];
+    protected string $globalBuilderStyles = 'text_center';
+    protected string $notificationTemplateKey;
 
-    protected $subjectKey = "";
-    protected $viewKey = "";
+    protected string $subjectKey = "";
+    protected string $viewKey = "";
 
     /**
      * @var array|false|null
      */
-    protected $dataKeys = null;
+    protected mixed $dataKeys = null;
 
     /**
      * @param array $data
@@ -69,7 +70,7 @@ class ImplementationMail extends Mailable
 
         try {
             $logo = $this->headerIconImage($this->implementationLogoUrl());
-        } catch (\Exception $exception) {}
+        } catch (\Throwable) {}
 
         return array_merge($this->dataKeys === false ? [] : $this->mailData, [
             'email_logo' => $logo ?? '',
@@ -94,10 +95,10 @@ class ImplementationMail extends Mailable
     }
 
     /**
-     * @param string|array|null $subject
+     * @param array|string|null $subject
      * @return string
      */
-    protected function getSubject($subject = null): string
+    protected function getSubject(array|string|null $subject = null): string
     {
         if (!$subject ?? false) {
             return config('app.name');
@@ -112,6 +113,8 @@ class ImplementationMail extends Mailable
      */
     protected function escapeData(array $data): array
     {
+        $data = array_filter($data, fn ($value) => is_string($value) || is_numeric($value) || is_bool($value));
+
         foreach ($data as $key => $value) {
             if (!ends_with($key, '_html')) {
                 $data[$key] = e($value);
@@ -143,7 +146,7 @@ class ImplementationMail extends Mailable
     /**
      * Build the message.
      *
-     * @return $this
+     * @return Mailable|null
      */
     public function buildNotificationTemplatedMail(): ?Mailable
     {
@@ -154,7 +157,7 @@ class ImplementationMail extends Mailable
             $data = array_merge($data, $this->getMailExtraData($data));
             $subject = $this->getSubject(str_var_replace(e($template->title), $data));
 
-            $templateHtml = resolve('markdown')->convertToHtml(e($template->content));
+            $templateHtml = resolve('markdown.converter')->convert(e($template->content))->getContent();
             $templateHtml = str_var_replace($templateHtml, $data);
 
             $emailBody = new MailBodyBuilder();
@@ -191,6 +194,31 @@ class ImplementationMail extends Mailable
             ->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
             ->view('emails.mail-builder-template')
             ->subject($this->getSubject(trans($this->subjectKey, $data)));
+    }
+
+    /**
+     * @param string $subject
+     * @param string $content
+     * @return Mailable
+     */
+    protected function buildCustomMail(string $subject, string $content): Mailable
+    {
+        $data = $this->getTransData();
+        $data = array_merge($data, $this->getMailExtraData($data));
+        $subject = str_var_replace(e($subject), $data);
+
+        $templateHtml = resolve('markdown.converter')->convert(e($content))->getContent();
+        $templateHtml = str_var_replace($templateHtml, $data);
+
+        $emailBody = new MailBodyBuilder();
+        $emailBody->markdownHtml($templateHtml, $this->globalBuilderStyles, $this->implementationColor());
+
+        $this->viewData['emailBody'] = $emailBody;
+
+        return $this
+            ->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
+            ->view('emails.mail-builder-template')
+            ->subject($subject);
     }
 
     /**
@@ -304,10 +332,23 @@ class ImplementationMail extends Mailable
 
     /**
      * @param string $key
-     * @return NotificationTemplate
+     * @return NotificationTemplate|null
      */
-    protected function implementationNotificationTemplate(string $key): NotificationTemplate
+    protected function implementationNotificationTemplate(string $key): ?NotificationTemplate
     {
         return SystemNotification::findTemplate($key, 'mail', $this->implementationKey());
+    }
+
+    /**
+     * Handle a job failure.
+     *
+     * @param \Throwable $e
+     * @return void
+     */
+    public function failed(\Throwable $e): void
+    {
+        if ($logger = logger()) {
+            $logger->error("Error sending digest: `" . $e->getMessage() . "`");
+        }
     }
 }

@@ -2,7 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Requests\BaseFormRequest;
+use App\Models\IdentityProxy;
 use Closure;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ApiAuthMiddleware
 {
@@ -13,36 +17,52 @@ class ApiAuthMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): mixed
     {
-        if (!$request->user()) {
-            return response()->json([
-                "message" => 'invalid_access_token'
-            ])->setStatusCode(401);
+        $baseRequest = BaseFormRequest::createFrom($request);
+
+        if ($this->hasExpiredToken($baseRequest)) {
+            return new JsonResponse([
+                "message" => 'session_expired',
+            ], 401);
         }
 
-        // TODO: deprecated, remove after making sure it's not used anywhere
-        $proxyId = $request->user()->getProxyId();
-        $proxyState = $request->user()->getProxyState();
-        $address = $request->user()->getAddress();
-
-        switch ($proxyState) {
-            case 'pending': {
-                return response()->json([
-                    "message" => 'proxy_identity_pending'
-                ])->setStatusCode(401);
-            }
+        if (!$baseRequest->user() || !$baseRequest->identityProxy() || !$baseRequest->identity()) {
+            return new JsonResponse([
+                "message" => 'invalid_access_token',
+            ], 401);
         }
 
-        if (!$proxyId || !$address) {
-            return response()->json([
-                "message" => 'invalid_access_token'
-            ])->setStatusCode(401);
+        if ($baseRequest->identityProxy()->isPending()) {
+            return new JsonResponse([
+                "message" => 'proxy_identity_pending',
+            ], 401);
         }
 
-        $request->attributes->set('identity', $address);
-        $request->attributes->set('proxyIdentity', $proxyId);
+        if (!$baseRequest->identityProxy()->isActive()) {
+            return new JsonResponse([
+                "message" => 'proxy_identity_not_active',
+            ], 401);
+        }
 
         return $next($request);
+    }
+
+
+    /**
+     * @param BaseFormRequest $request
+     * @return bool
+     */
+    private function hasExpiredToken(BaseFormRequest $request): bool
+    {
+        if ($request->isAuthenticated() || !$request->bearerToken()) {
+            return false;
+        }
+
+        return IdentityProxy::query()
+            ->whereAccessToken($request->bearerToken())
+            ->where('state', IdentityProxy::STATE_EXPIRED)
+            ->withTrashed()
+            ->exists();
     }
 }

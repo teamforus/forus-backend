@@ -13,10 +13,6 @@ use App\Scopes\Builders\ProductQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 
-/**
- * Class ProviderProductReservationBatchItemRule
- * @package App\Rules
- */
 class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
 {
     protected $index;
@@ -33,7 +29,7 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
         Organization $organization,
         array $reservationsData = []
     ) {
-        $this->request = BaseFormRequest::createFromBase(request());
+        $this->request = BaseFormRequest::createFrom(request());
         $this->organization = $organization;
         $this->reservationsData = $reservationsData;
     }
@@ -155,11 +151,6 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
 
         // This product was not approved for this found.
         return $allowed ?: "Dit aanbod is niet geaccepteerd voor dit fonds.";
-    }
-
-    public function reject($message): bool
-    {
-        return parent::reject($message);
     }
 
     /**

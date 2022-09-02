@@ -2,35 +2,26 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Requests\Api\Platform\Funds\CheckFundRequest;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 use App\Http\Requests\Api\Platform\Funds\RedeemFundsRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\PrevalidationResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
-use App\Traits\ThrottleWithMeta;
+use App\Models\Organization;
+use App\Models\Prevalidation;
+use App\Models\Voucher;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
 
-/**
- * Class FundsController
- * @package App\Http\Controllers\Api\Platform
- */
 class FundsController extends Controller
 {
-    use ThrottleWithMeta;
-
-    /**
-     * FundsController constructor.
-     */
-    public function __construct()
-    {
-        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', 3);
-        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', 180);
-    }
-
     /**
      * Display a listing of all active funds.
      *
@@ -39,8 +30,9 @@ class FundsController extends Controller
      */
     public function index(IndexFundsRequest $request): AnonymousResourceCollection
     {
-        $state = $request->input('state') === 'active_and_closed' ? [
+        $state = $request->input('state') === 'active_paused_and_closed' ? [
             Fund::STATE_CLOSED,
+            Fund::STATE_PAUSED,
             Fund::STATE_ACTIVE,
         ] : Fund::STATE_ACTIVE;
 
@@ -49,13 +41,10 @@ class FundsController extends Controller
             'order_by', 'order_by_dir', 'with_external',
         ]), Implementation::queryFundsByState($state));
 
-        $meta = [
-            'organizations' => $query->with('organization')->get()->pluck(
-                'organization.name', 'organization.id'
-            )->map(static function ($name, $id) {
-                return (object) compact('id', 'name');
-            })->toArray()
-        ];
+        $organizations = Organization::whereIn('id', (clone $query)->select('organization_id'))->get();
+        $organizations = $organizations->map(fn(Organization $item) => $item->only('id', 'name'));
+        $meta = compact('organizations');
+        $query->with(FundResource::load());
 
         if ($per_page = $request->input('per_page', false)) {
             return FundResource::collection($query->paginate($per_page))->additional(compact('meta'));
@@ -79,13 +68,14 @@ class FundsController extends Controller
             abort(404);
         }
 
-        return new FundResource($fund);
+        return FundResource::create($fund);
     }
 
     /**
      * @param RedeemFundsRequest $request
      * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function redeem(RedeemFundsRequest $request): JsonResponse
     {
@@ -93,20 +83,18 @@ class FundsController extends Controller
 
         if ($prevalidation = $request->getPrevalidation()) {
             $this->authorize('redeem', $prevalidation);
-            $prevalidation->assignToIdentity($request->auth_address());
+            $prevalidation->assignToIdentity($request->identity());
         }
 
         // check permissions of all voucher before assigning
         foreach ($vouchersAvailable as $voucher) {
-            $this->authorize('redeem', $voucher);
+            if (Gate::allows('redeem', $voucher)) {
+                $voucher->assignToIdentity($request->identity());
+            }
         }
 
-        foreach ($vouchersAvailable as $voucher) {
-            $voucher->assignToIdentity($request->auth_address());
-        }
-
-        return response()->json([
-            'prevalidation' => $prevalidation ? new PrevalidationResource($prevalidation) : null,
+        return new JsonResponse([
+            'prevalidation' => $prevalidation ? PrevalidationResource::create($prevalidation) : null,
             'vouchers' => VoucherResource::collection($vouchersAvailable),
         ]);
     }
@@ -114,23 +102,44 @@ class FundsController extends Controller
     /**
      * Apply fund for identity
      *
+     * @param BaseFormRequest $request
      * @param Fund $fund
      * @return VoucherResource|null
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
      */
-    public function apply(Fund $fund): ?VoucherResource
+    public function apply(BaseFormRequest $request, Fund $fund): ?VoucherResource
     {
         $this->authorize('apply', [$fund, 'apply']);
 
-        $identity_address = auth_address();
-        $voucher = $fund->makeVoucher($identity_address);
-        $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($identity_address);
+        $voucher = $fund->makeVoucher($request->auth_address());
+        $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($request->auth_address());
 
         $voucher = $voucher ?: array_first($formulaProductVouchers) ?: $fund->vouchers()->where([
-            'identity_address' => $identity_address,
+            'identity_address' => $request->auth_address(),
         ])->first();
 
         return $voucher ? new VoucherResource($voucher) : null;
+    }
+
+    /**
+     * Apply fund for identity
+     *
+     * @param CheckFundRequest $request
+     * @param Fund $fund
+     * @return array
+     * @throws AuthorizationException
+     */
+    public function check(CheckFundRequest $request, Fund $fund): array
+    {
+        $this->authorize('check', $fund);
+
+        $vouchers = Voucher::assignAvailableToIdentityByBsn($request->identity());
+        $prevalidations = Prevalidation::assignAvailableToIdentityByBsn($request->identity());
+        $hasBackoffice = $fund->fund_config && $fund->organization->backoffice_available;
+
+        $backofficeResponse = $fund->checkBackofficeIfAvailable($request->identity());
+        $backoffice = $hasBackoffice ? $fund->backofficeResponseToData($backofficeResponse) : null;
+
+        return compact('backoffice', 'vouchers', 'prevalidations');
     }
 }

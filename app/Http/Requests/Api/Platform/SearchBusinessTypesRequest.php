@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class SearchBusinessTypesRequest extends FormRequest
+class SearchBusinessTypesRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,9 +24,9 @@ class SearchBusinessTypesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'q' => 'string',
+            'q' => 'string|min:1|max:10000',
             'used' => 'boolean',
-            'per_page' => 'numeric'
+            'per_page' => 'nullable|numeric|min:1|max:10000',
         ];
     }
 }

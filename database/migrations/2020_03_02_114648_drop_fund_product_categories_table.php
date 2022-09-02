@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class DropFundProductCategoriesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -36,4 +36,4 @@ class DropFundProductCategoriesTable extends Migration
             )->references('id')->on('product_categories')->onDelete('cascade');
         });
     }
-}
+};

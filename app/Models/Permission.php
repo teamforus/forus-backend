@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 /**
  * App\Models\Permission
  *
  * @property int $id
  * @property string $key
  * @property string $name
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[] $roles
+ * @property-read Collection|\App\Models\Role[] $roles
  * @property-read int|null $roles_count
  * @method static \Illuminate\Database\Eloquent\Builder|Permission newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Permission newQuery()
@@ -18,9 +21,10 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|Permission whereName($value)
  * @mixin \Eloquent
  */
-class Permission extends Model
+class Permission extends BaseModel
 {
-    protected static $memCache = null;
+    protected static Collection|null $memCache = null;
+
     protected $fillable = [
         'key', 'name'
     ];
@@ -28,18 +32,17 @@ class Permission extends Model
     public $timestamps = false;
 
     /**
-     * @return Permission[]|\Illuminate\Database\Eloquent\Collection|null
+     * @return Collection
      */
-    public static function allMemCached() {
+    public static function allMemCached(): Collection
+    {
         return self::$memCache ?: self::all();
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function roles() {
-        return $this->belongsToMany(Role::class, (
-        new RolePermission
-        )->getTable());
+    public function roles(): BelongsToMany {
+        return $this->belongsToMany(Role::class, (new RolePermission)->getTable());
     }
 }

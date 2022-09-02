@@ -42,7 +42,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereValue($value)
  * @mixin \Eloquent
  */
-class FundCriterion extends Model
+class FundCriterion extends BaseModel
 {
     /**
      * The attributes that are mass assignable.
@@ -100,6 +100,6 @@ class FundCriterion extends Model
      */
     public function getDescriptionHtmlAttribute(): string
     {
-        return resolve('markdown')->convertToHtml($this->description ?? '');
+        return resolve('markdown.converter')->convert($this->description ?: '')->getContent();
     }
 }

@@ -14,10 +14,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-/**
- * Class PrevalidationController
- * @package App\Http\Controllers\Api\Platform
- */
 class PrevalidationController extends Controller
 {
     /**
@@ -30,7 +26,8 @@ class PrevalidationController extends Controller
     {
         $this->authorize('store', Prevalidation::class);
 
-        return new PrevalidationResource(Prevalidation::storePrevalidations(
+        return PrevalidationResource::create(Prevalidation::storePrevalidations(
+            $request->identity(),
             Fund::find($request->input('fund_id')),
             [$request->input('data')]
         )->first());
@@ -48,12 +45,13 @@ class PrevalidationController extends Controller
         $this->authorize('store', Prevalidation::class);
 
         $prevalidations = Prevalidation::storePrevalidations(
+            $request->identity(),
             Fund::find($request->input('fund_id')),
             $request->input('data', []),
             $request->input('overwrite', [])
-        );
+        )->load(PrevalidationResource::LOAD);
 
-        return PrevalidationResource::collection($prevalidations->load(PrevalidationResource::$load));
+        return PrevalidationResource::collection($prevalidations);
     }
 
     /**
@@ -64,9 +62,8 @@ class PrevalidationController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
-    public function collectionHash(
-        UploadPrevalidationsRequest $request
-    ): array {
+    public function collectionHash(UploadPrevalidationsRequest $request): array
+    {
         $this->authorize('store', Prevalidation::class);
 
         $fund = Fund::find($request->input('fund_id'));
@@ -100,9 +97,7 @@ class PrevalidationController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAny', Prevalidation::class);
 
-        return PrevalidationResource::collection(Prevalidation::search($request)->with(
-            PrevalidationResource::$load
-        )->paginate($request->input('per_page')));
+        return PrevalidationResource::queryCollection(Prevalidation::search($request), $request);
     }
 
     /**
@@ -110,7 +105,6 @@ class PrevalidationController extends Controller
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
-     * @throws \PhpOffice\PhpSpreadsheet\Writer
      * @noinspection PhpUnused
      */
     public function export(
@@ -140,6 +134,6 @@ class PrevalidationController extends Controller
 
         $prevalidation->delete();
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 }

@@ -7,5 +7,5 @@ namespace App\Notifications\Identities\Fund;
  */
 class IdentityRequesterProviderApprovedBudgetNotification extends BaseIdentityFundNotification
 {
-    protected static $key = 'notifications_identities.requester_provider_approved_budget';
+    protected static ?string $key = 'notifications_identities.requester_provider_approved_budget';
 }

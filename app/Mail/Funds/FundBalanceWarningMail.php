@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class FundBalanceWarningMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = "notifications_funds.balance_low";
+    protected string $notificationTemplateKey = "notifications_funds.balance_low";
 
     /**
      * @return Mailable

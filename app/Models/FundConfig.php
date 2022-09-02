@@ -25,8 +25,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
  * @property bool $employee_can_see_product_vouchers
+ * @property bool $show_voucher_qr
+ * @property bool $show_voucher_amount
  * @property bool $is_configured
+ * @property bool $email_required
+ * @property bool $contact_info_enabled
+ * @property bool $contact_info_required
+ * @property bool $contact_info_message_custom
+ * @property string|null $contact_info_message_text
  * @property bool $limit_generator_amount
+ * @property int|null $bsn_confirmation_time
+ * @property int $bsn_confirmation_api_time
  * @property bool $backoffice_enabled
  * @property bool $backoffice_check_partner
  * @property string|null $backoffice_url
@@ -53,20 +62,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeClientCert($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeClientCertKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeEnabled($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeFallback($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeIneligiblePolicy($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeIneligibleRedirectUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBsnConfirmationApiTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBsnConfirmationTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqAllowedIp($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqSandbox($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoMessageCustom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoMessageText($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCsvPrimaryKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereEmailRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereEmployeeCanSeeProductVouchers($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsn($value)
@@ -84,7 +100,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundConfig extends Model
+class FundConfig extends BaseModel
 {
     public const BACKOFFICE_INELIGIBLE_POLICY_REDIRECT = 'redirect';
     public const BACKOFFICE_INELIGIBLE_POLICY_FUND_REQUEST = 'fund_request';
@@ -98,6 +114,8 @@ class FundConfig extends Model
         'backoffice_enabled', 'backoffice_url', 'backoffice_key',
         'backoffice_certificate', 'backoffice_fallback',
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
+        'email_required', 'contact_info_enabled', 'contact_info_required',
+        'contact_info_message_custom', 'contact_info_message_text',
     ];
 
     /**
@@ -133,6 +151,10 @@ class FundConfig extends Model
         'allow_blocking_vouchers' => 'boolean',
         'backoffice_check_partner' => 'boolean',
         'employee_can_see_product_vouchers' => 'boolean',
+        'email_required' => 'boolean',
+        'contact_info_enabled' => 'boolean',
+        'contact_info_required' => 'boolean',
+        'contact_info_message_custom' => 'boolean',
     ];
 
     /**
@@ -169,5 +191,13 @@ class FundConfig extends Model
     public function shouldRedirectOnIneligibility(): bool
     {
         return $this->backoffice_ineligible_policy == self::BACKOFFICE_INELIGIBLE_POLICY_REDIRECT;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDefaultContactInfoMessage(): string
+    {
+        return trans('fund.default_contact_info_message');
     }
 }

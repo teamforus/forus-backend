@@ -76,6 +76,7 @@ return array(
         'app/Services/Forus/Session/Models',
         'app/Services/DigIdService/Models',
         'app/Services/EventLogService/Models',
+        'app/Services/MailDatabaseLoggerService/Models',
     ),
 
 

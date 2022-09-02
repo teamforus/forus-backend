@@ -31,12 +31,8 @@ class SmsService
             ]);
 
             return true;
-        } catch (\Exception $exception) {
-            logger()->error(sprintf(
-                'Error during sms sending: %s',
-                $exception->getMessage()
-            ));
-
+        } catch (\Throwable $e) {
+            logger()->error('Error during sms sending: ' . $e->getMessage());
             return false;
         }
     }

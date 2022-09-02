@@ -4,11 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Class AddPrevalidationIdFieldToRecordsTable
- * @noinspection PhpUnused
- */
-class AddPrevalidationIdFieldToRecordsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -37,4 +33,4 @@ class AddPrevalidationIdFieldToRecordsTable extends Migration
             $table->dropColumn('prevalidation_id');
         });
     }
-}
+};

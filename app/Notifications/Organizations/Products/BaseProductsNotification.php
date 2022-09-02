@@ -5,22 +5,15 @@ namespace App\Notifications\Organizations\Products;
 use App\Models\Organization;
 use App\Notifications\Organizations\BaseOrganizationNotification;
 
-/**
- * Class BaseProductsNotification
- * @package App\Notifications\Organizations\Products
- */
 abstract class BaseProductsNotification extends BaseOrganizationNotification
 {
-    /**
-     * @var string
-     */
-    protected static $scope = self::SCOPE_PROVIDER;
+    protected static ?string $scope = self::SCOPE_PROVIDER;
 
     /**
      * @param \App\Models\Product $loggable
      * @return \App\Models\Organization
      */
-    public static function getOrganization($loggable): Organization
+    public static function getOrganization(mixed $loggable): Organization
     {
         return $loggable->organization;
     }

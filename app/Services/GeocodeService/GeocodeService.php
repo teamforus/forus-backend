@@ -53,7 +53,7 @@ class GeocodeService
             $coordinatesData = Arr::only($result['geometry']['location'], ['lng', 'lat']);
 
             return array_merge($coordinatesData, $postalData);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return false;
         }
     }

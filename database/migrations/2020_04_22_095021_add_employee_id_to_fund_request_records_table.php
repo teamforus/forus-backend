@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\FundRequest;
 
-class AddEmployeeIdToFundRequestRecordsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -38,4 +38,4 @@ class AddEmployeeIdToFundRequestRecordsTable extends Migration
             $table->dropColumn('employee_id');
         });
     }
-}
+};

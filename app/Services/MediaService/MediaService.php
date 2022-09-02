@@ -2,7 +2,6 @@
 
 namespace App\Services\MediaService;
 
-use App\Services\MediaService\Exceptions\MediaConfigAlreadyRegisteredException;
 use App\Services\MediaService\Jobs\RegenerateMediaJob;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaPreset as PresetModel;
@@ -15,34 +14,33 @@ class MediaService
 {
     /**
      * Media model
-     * @var Media $model
+     * @var Media|Model $model
      */
-    protected $model;
+    protected Model|Media $model;
 
     /**
      * Default Filesystem driver to use for storage
      * May be overwritten in media config file
      * @var string $storageDriver
      */
-    protected $storageDriver;
+    protected mixed $storageDriver;
 
     /**
      * Default storage path
      * May be overwritten in media config file
      * @var string $storagePath
      */
-    protected $storagePath;
+    protected string $storagePath;
 
     /**
      * @var array|MediaConfig[]
      */
-    protected static $mediaConfigs = [];
+    protected static array $mediaConfigs = [];
 
     /**
      * @param array $configs
      * @param bool $append
      * @return MediaConfig[]|array
-     * @throws MediaConfigAlreadyRegisteredException
      */
     public static function setMediaConfigs(array $configs = [], bool $append = true): array
     {
@@ -68,17 +66,9 @@ class MediaService
     /**
      * @param MediaConfig $mediaConfig
      * @return MediaConfig
-     * @throws MediaConfigAlreadyRegisteredException
      */
     public static function addMediaConfig(MediaConfig $mediaConfig): MediaConfig
     {
-        if (isset(self::$mediaConfigs[$mediaConfig->getName()])) {
-            throw new MediaConfigAlreadyRegisteredException(sprintf(
-                "Media config %s already registered",
-                $mediaConfig->getName()
-            ));
-        }
-
         return self::$mediaConfigs[$mediaConfig->getName()] = $mediaConfig;
     }
 
@@ -368,9 +358,11 @@ class MediaService
     }
 
     /**
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @return void
+     * @throws \Exception
+     * @noinspection PhpUnused
      */
-    public function regenerateAllMedia()
+    public function regenerateAllMedia(): void
     {
         foreach (self::getMediaConfigs() as $mediaConfig) {
             if ($mediaConfig->getPresets()[
@@ -385,7 +377,6 @@ class MediaService
      * @param Media|null $media
      * @param bool $fromQueue
      * @param array $keepPresets
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      * @throws \Exception
      */
     public function regenerateMedia(
@@ -547,7 +538,7 @@ class MediaService
     /**
      * @param string $path
      * @return string|null
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException|null
+     * @throws null
      */
     public function getContent(string $path): ?string
     {

@@ -2,7 +2,7 @@
 
 namespace App\Rules;
 
-use App\Http\Requests\BaseFormRequest;
+use App\Models\RecordType;
 use Illuminate\Contracts\Validation\Rule;
 
 /**
@@ -11,18 +11,7 @@ use Illuminate\Contracts\Validation\Rule;
  */
 class IdentityRecordsRule implements Rule
 {
-    private $recordRepo;
-    private $message;
-
-    /**
-     * Create a new rule instance.
-     *
-     * @param BaseFormRequest $request
-     */
-    public function __construct(BaseFormRequest $request)
-    {
-        $this->recordRepo = $request->records_repo();
-    }
+    private string $message;
 
     /**
      * Determine if the validation rule passes.
@@ -38,14 +27,11 @@ class IdentityRecordsRule implements Rule
             return false;
         }
 
-        $invalidKeys = array_diff(
-            array_keys($value),
-            array_pluck($this->recordRepo->getRecordTypes(false), 'key')
-        );
+        $invalidKeys = array_diff(array_keys($value), RecordType::search(false)->pluck('key')->toArray());
 
-        if (count($invalidKeys) > 0) {
+        if (!empty($invalidKeys)) {
             $this->message = trans('validation.unknown_record_key', [
-                'key' => array_first($invalidKeys)
+                'key' => $invalidKeys[0],
             ]);
 
             return false;

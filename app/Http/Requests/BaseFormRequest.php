@@ -5,22 +5,23 @@ namespace App\Http\Requests;
 use App\Models\Employee;
 use App\Models\Implementation;
 use App\Models\Organization;
-use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
+use App\Models\Identity;
+use App\Models\IdentityProxy;
 use App\Services\Forus\Notification\NotificationService;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Log\LogManager;
 use Illuminate\Support\Facades\Gate;
 
-/**
- * Class BaseFormRequest
- * @package App\Http\Requests
- */
 class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 {
     use ThrottleWithMeta;
 
-    protected $message;
+    protected string $message;
+    protected Implementation|null $implementationModel = null;
 
     /**
      * @return array
@@ -36,7 +37,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @throws AuthorizationException
      * @noinspection PhpUnused
      */
-    public function deny($message = 'This action is unauthorized.'): void
+    public function deny(string $message = 'This action is unauthorized.'): void
     {
         $this->message = $message;
         $this->failedAuthorization();
@@ -51,29 +52,15 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      */
     protected function failedAuthorization(): void
     {
-        throw new AuthorizationException($this->message);
+        throw new AuthorizationException($this->message ?? null);
     }
 
     /**
      * @return string|null
-     * @noinspection PhpUnused
      */
     public function auth_address(): ?string
     {
-        return auth_address();
-    }
-
-    /**
-     * @param bool $abortOnFail
-     * @param int $errorCode
-     * @return string|null
-     * @noinspection PhpUnused
-     */
-    public function auth_proxy_id($abortOnFail = false, $errorCode = 403): ?string
-    {
-        $auth = auth_model($abortOnFail, $errorCode);
-
-        return $auth && method_exists($auth, 'getProxyId') ? $auth->getProxyId() : null;
+        return $this->identity()?->address;
     }
 
     /**
@@ -102,16 +89,19 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      */
     public function implementation_key(): ?string
     {
-        return implementation_key();
+        return Implementation::activeKey();
     }
 
     /**
      * @return Implementation|null
-     * @noinspection PhpUnused
      */
-    public function implementation(): Implementation
+    public function implementation(): ?Implementation
     {
-        return Implementation::active();
+        if ($this->implementationModel) {
+            return $this->implementationModel;
+        }
+
+        return $this->implementationModel = Implementation::active();
     }
 
     /**
@@ -120,24 +110,6 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     public function isAuthenticated(): bool
     {
         return (bool) $this->auth_address();
-    }
-
-    /**
-     * @return IIdentityRepo
-     * @noinspection PhpUnused
-     */
-    public function identity_repo(): IIdentityRepo
-    {
-        return resolve('forus.services.identity');
-    }
-
-    /**
-     * @return IRecordRepo
-     * @noinspection PhpUnused
-     */
-    public function records_repo(): IRecordRepo
-    {
-        return resolve('forus.services.record');
     }
 
     /**
@@ -153,7 +125,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @param int $max
      * @return string
      */
-    public function perPageRule($max = 100): string
+    public function perPageRule(int $max = 100): string
     {
         return "nullable|numeric|min:0|max:$max";
     }
@@ -163,7 +135,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @param array $arguments
      * @return bool
      */
-    public function gateAllows($abilityOrRules, $arguments = []): bool
+    public function gateAllows($abilityOrRules, array $arguments = []): bool
     {
         if (is_array($abilityOrRules)) {
             foreach ($abilityOrRules as $ability => $arguments) {
@@ -196,9 +168,66 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     }
 
     /**
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Log\LogManager|null
+     * @return LogManager|null
      */
-    public function logger() {
+    public function logger(): ?LogManager
+    {
         return logger();
+    }
+
+    /**
+     * @return Identity|null
+     */
+    public function identity(): ?Identity
+    {
+        return $this->user() instanceof Identity ? $this->user() : null;
+    }
+
+    /**
+     * @return IdentityProxy|Model|null
+     */
+    public function identityProxy(): IdentityProxy|Model|null
+    {
+        return $this->identity()?->proxies->where('access_token', $this->bearerToken())->first();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWebshop(): bool
+    {
+        return $this->client_type() == $this->implementation()::FRONTEND_WEBSHOP;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSponsorDashboard(): bool
+    {
+        return $this->client_type() == $this->implementation()::FRONTEND_SPONSOR_DASHBOARD;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isProviderDashboard(): bool
+    {
+        return $this->client_type() == $this->implementation()::FRONTEND_PROVIDER_DASHBOARD;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isValidatorDashboard(): bool
+    {
+        return $this->client_type() == $this->implementation()::FRONTEND_VALIDATOR_DASHBOARD;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDashboard(): bool
+    {
+        return $this->isSponsorDashboard() || $this->isProviderDashboard() || $this->isValidatorDashboard();
     }
 }

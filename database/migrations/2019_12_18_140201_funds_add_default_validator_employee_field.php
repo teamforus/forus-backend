@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class FundsAddDefaultValidatorEmployeeField extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -35,4 +35,4 @@ class FundsAddDefaultValidatorEmployeeField extends Migration
             $table->dropColumn('auto_requests_validation');
         });
     }
-}
+};

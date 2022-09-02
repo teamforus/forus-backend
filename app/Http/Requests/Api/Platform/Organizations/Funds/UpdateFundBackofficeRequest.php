@@ -24,7 +24,7 @@ class UpdateFundBackofficeRequest extends BaseFormRequest
     {
         return $this->isAuthenticated() &&
             $this->fund->organization_id === $this->organization->id &&
-            $this->organization->identityCan($this->auth_address(), 'manage_funds');
+            $this->organization->identityCan($this->identity(), 'manage_funds');
     }
 
     /**

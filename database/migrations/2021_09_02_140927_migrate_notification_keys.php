@@ -5,7 +5,7 @@ use App\Models\Notification;
 use App\Models\FundRequest;
 use App\Services\EventLogService\Models\EventLog;
 
-class MigrateNotificationKeys extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -66,4 +66,4 @@ class MigrateNotificationKeys extends Migration
             'data->key' => 'notifications_identities.fund_request_resolved',
         ]);
     }
-}
+};

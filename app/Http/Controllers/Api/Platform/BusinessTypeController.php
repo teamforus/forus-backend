@@ -16,12 +16,9 @@ class BusinessTypeController extends Controller
      * @param SearchBusinessTypesRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(
-        SearchBusinessTypesRequest $request
-    ): AnonymousResourceCollection {
-        return BusinessTypeResource::collection(BusinessType::search($request)->with(
-            BusinessTypeResource::$load
-        )->paginate($request->input('per_page', 100)));
+    public function index(SearchBusinessTypesRequest $request): AnonymousResourceCollection
+    {
+        return BusinessTypeResource::queryCollection(BusinessType::search($request), $request);
     }
 
     /**
@@ -32,6 +29,6 @@ class BusinessTypeController extends Controller
      */
     public function show(BusinessType $businessType): BusinessTypeResource
     {
-        return new BusinessTypeResource($businessType);
+        return BusinessTypeResource::create($businessType);
     }
 }

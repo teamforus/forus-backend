@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Validator;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\EmployeeResource;
 use App\Http\Resources\FileResource;
@@ -48,12 +49,12 @@ class ValidatorFundRequestResource extends BaseJsonResource
      */
     public function toArray($request): array
     {
-        $recordRepo = resolve('forus.services.record');
         $fundRequest = $this->resource;
+        $baseFormRequest = BaseFormRequest::createFrom($request);
 
         /** @var Organization $organization */
         $organization = $request->route('organization') or abort(403);
-        $allowedEmployees = $this->getAllowedRequestEmployeesQuery($fundRequest, $organization)->get();
+        $allowedEmployees = $this->getAllowedRequestEmployeesQuery($baseFormRequest, $fundRequest, $organization)->get();
 
         /** @var Organization $organization */
         $organization = $request->route('organization') or abort(403);
@@ -61,11 +62,12 @@ class ValidatorFundRequestResource extends BaseJsonResource
 
         return array_merge($fundRequest->only([
             'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
+            'contact_information',
         ]), [
-            'bsn' => $bsn_enabled ? $recordRepo->bsnByAddress($fundRequest->identity_address) : null,
+            'bsn' => $bsn_enabled ? $fundRequest->identity->bsn : null,
             'fund' => $this->fundDetails($fundRequest),
-            'email' => $fundRequest->identity->primary_email->email ?? null,
-            'records' => $this->getRecordsDetails($organization, $fundRequest),
+            'email' => $fundRequest->identity->email,
+            'records' => $this->getRecordsDetails($baseFormRequest, $organization, $fundRequest),
             'replaced' => $this->isReplaced($fundRequest),
             'allowed_employees' => $allowedEmployees->map(fn(Employee $employee) => $employee->only([
                 'id', 'organization_id', 'identity_address',
@@ -74,24 +76,26 @@ class ValidatorFundRequestResource extends BaseJsonResource
     }
 
     /**
+     * @param BaseFormRequest $request
      * @param FundRequest $fundRequest
      * @param Organization $organization
      * @return Builder|Relation
      */
     protected function getAllowedRequestEmployeesQuery(
+        BaseFormRequest $request,
         FundRequest $fundRequest,
         Organization $organization
-    ) {
+    ): Relation|Builder {
         $recordsQuery = $fundRequest->records_pending()->whereDoesntHave('employee');
         $employeesQuery = $organization->employees();
         $isSponsorOrganization = $organization->id === $fundRequest->fund->organization_id;
 
         $isManagerQuery = $organization->employeesWithPermissionsQuery('manage_validators')->where([
-            'identity_address' => auth_address()
+            'identity_address' => $request->auth_address(),
         ]);
 
         if (!$isSponsorOrganization && !$isManagerQuery->exists()) {
-            $employeesQuery->where('identity_address', auth_address());
+            $employeesQuery->where('identity_address', $request->auth_address());
         }
 
         return EmployeeQuery::whereCanValidateRecords(
@@ -128,17 +132,21 @@ class ValidatorFundRequestResource extends BaseJsonResource
     }
 
     /**
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @return array
      */
-    public function getRecordsDetails(Organization $organization, FundRequest $fundRequest): array
-    {
-        $employee = $organization->findEmployee(auth_address()) or abort(403);
+    public function getRecordsDetails(
+        BaseFormRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest
+    ): array {
+        $employee = $request->employee($organization) or abort(403);
         $bsnFields = ['bsn', 'partner_bsn', 'bsn_hash', 'partner_bsn_hash'];
+
         $availableRecords = FundRequestRecordQuery::whereEmployeeCanBeValidator(
-            $fundRequest->records(),
-            $employee,
+            $fundRequest->records(), $employee,
         )->pluck('fund_request_records.id');
 
         return $fundRequest->records->filter(function(FundRequestRecord $record) use ($organization, $bsnFields) {
@@ -152,7 +160,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param FundRequestRecord $record
-     * @param Employee|null $employee
+     * @param Employee $employee
      * @param bool $isRecordAssignable
      * @return array
      */

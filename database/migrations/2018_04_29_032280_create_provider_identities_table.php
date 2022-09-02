@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateProviderIdentitiesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -19,8 +19,10 @@ class CreateProviderIdentitiesTable extends Migration
             $table->string('identity_address')->default('');
             $table->timestamps();
 
-            $table->foreign('provider_id'
-            )->references('id')->on('organizations')->onDelete('cascade');
+            $table->foreign('provider_id')
+                ->references('id')
+                ->on('organizations')
+                ->onDelete('cascade');
         });
     }
 
@@ -33,4 +35,4 @@ class CreateProviderIdentitiesTable extends Migration
     {
         Schema::dropIfExists('provider_identities');
     }
-}
+};

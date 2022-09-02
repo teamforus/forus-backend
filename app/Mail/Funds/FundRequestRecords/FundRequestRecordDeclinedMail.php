@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class FundRequestRecordDeclinedMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = "notifications_identities.fund_request_record_declined";
+    protected string $notificationTemplateKey = "notifications_identities.fund_request_record_declined";
 
     /**
      * @return Mailable

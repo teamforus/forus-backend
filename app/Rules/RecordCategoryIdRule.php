@@ -2,20 +2,11 @@
 
 namespace App\Rules;
 
+use App\Http\Requests\BaseFormRequest;
 use Illuminate\Contracts\Validation\Rule;
 
 class RecordCategoryIdRule implements Rule
 {
-    /**
-     * Create a new rule instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
-
     /**
      * Determine if the validation rule passes.
      *
@@ -23,13 +14,14 @@ class RecordCategoryIdRule implements Rule
      * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
-        $recordRepo = resolve('forus.services.record');
+        $request = BaseFormRequest::createFrom(request());
+        $value = is_numeric($value) ? intval($value) : null;
 
-        return !empty($recordRepo->categoryGet(
-            request()->get('identity'), $value
-        ));
+        return $value && $request->identity()->record_categories()->where([
+            'record_categories.id' => $value,
+        ])->exists();
     }
 
     /**
@@ -37,7 +29,7 @@ class RecordCategoryIdRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return trans('validation.exists');
     }

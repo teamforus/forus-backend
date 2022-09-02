@@ -3,11 +3,12 @@
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use App\Models\Organization;
 use App\Models\Employee;
 use App\Models\Role;
 
-class DropProviderIdentitiesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -55,18 +56,24 @@ class DropProviderIdentitiesTable extends Migration
     public function down(): void
     {
         if (!Schema::hasTable('provider_identities')) {
-            (new CreateProviderIdentitiesTable())->up();
+            Schema::create('provider_identities', function (Blueprint $table) {
+                $table->increments('id');
+                $table->integer('provider_id')->unsigned();
+                $table->string('identity_address')->default('');
+                $table->timestamps();
+
+                $table->foreign('provider_id')
+                    ->references('id')
+                    ->on('organizations')
+                    ->onDelete('cascade');
+            });
 
             if (Schema::hasTable('employees') && Schema::hasTable('employee_roles')) {
-                $roleId = Role::query()->where([
-                    'key' => 'operation_officer'
-                ])->first()->id;
-
-                $employeeRoles = DB::table('employee_roles')->where([
-                    'role_id' => $roleId
-                ])->get();
+                $roleId = Role::where('key', 'operation_officer')->first()->id;
+                $employeeRoles = DB::table('employee_roles')->where('role_id', $roleId)->get();
 
                 $employeeRoles = $employeeRoles->map(function($employeeRole) {
+                    /** @var Employee $employee */
                     $employee = DB::table('employees')->where([
                         'id' => $employeeRole->employee_id,
                     ])->first();
@@ -78,10 +85,8 @@ class DropProviderIdentitiesTable extends Migration
                 })->toArray();
 
                 DB::table('provider_identities')->insert($employeeRoles);
-                DB::table('employee_roles')->where([
-                    'role_id' => $roleId
-                ])->delete();
+                DB::table('employee_roles')->where('role_id', $roleId)->delete();
             }
         }
     }
-}
+};
