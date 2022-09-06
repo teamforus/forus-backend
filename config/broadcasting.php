@@ -54,15 +54,16 @@ return [
             'driver' => 'null',
         ],
 
+        'emergency' => [
+            'path' => storage_path('logs/laravel.log'),
+        ],
+
         'apn' => env('APN_ENABLED', false) ? [
-            'environment' => env('APN_SANDBOX', true) ?
-                \NotificationChannels\Apn\ApnChannel::SANDBOX :
-                \NotificationChannels\Apn\ApnChannel::PRODUCTION,
-            'certificate' => env('APN_CERTIFICATE_PATH_RAW', false) ?: storage_path(
-                env('APN_CERTIFICATE_PATH', false) ?: "app/apn-cert.pem"
-            ),
-            // optional pass phrase
-            'pass_phrase' => env('APN_PASS_PHRASE'),
+            'key_id' => env('APN_KEY_ID'),
+            'team_id' => env('APN_TEAM_ID'),
+            'app_bundle_id' => env('APN_BUNDLE_ID'),
+            'private_key_content' => file_get_contents(env('APN_CERTIFICATE_PATH', "app/apn-cert.pem")),
+            'production' => !env('APN_SANDBOX', true),
         ] : null,
 
         'fcm' => env('FCM_ENABLED', false) ? [
