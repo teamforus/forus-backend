@@ -11,7 +11,7 @@ return [
     'provider_products_count'       => env('DB_SEED_PROVIDER_PRODUCTS', 4),
     'vouchers_per_fund_count'       => env('DB_SEED_VOUCHERS_PER_FUND', 5),
 
-    'default_organization_iban'     => env('DB_SEED_PROVIDER_IBAN'),
+    'default_organization_iban'     => env('DB_SEED_PROVIDER_IBAN', ''),
     'prevalidation_bsn'             => env('DB_SEED_PREVALIDATION_BSN', false),
 
     'no_vouchers'                   => env('DB_SEED_NO_VOUCHERS', false),
