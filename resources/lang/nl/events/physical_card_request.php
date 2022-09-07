@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'created' => 'Pas ordered',
+    'created' => 'Pas is besteld',
 ];

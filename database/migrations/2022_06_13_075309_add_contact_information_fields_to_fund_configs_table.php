@@ -26,7 +26,7 @@ return new class extends Migration
             $table->boolean('contact_info_message_custom')->default(false)
                 ->after('contact_info_required');
 
-            $table->string('contact_info_message_text', 8000)->nullable()->default(null)
+            $table->text('contact_info_message_text')->nullable()->default(null)
                 ->after('contact_info_message_custom');
         });
     }
