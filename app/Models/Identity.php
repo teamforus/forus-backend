@@ -332,7 +332,7 @@ class Identity extends Model implements Authenticatable
         return IdentityEmail::where([
             'primary' => 1,
             'email' => $primaryEmail
-        ])->first()->identity ?: static::make($primaryEmail, $records);
+        ])->first()?->identity ?: static::make($primaryEmail, $records);
     }
 
     /**
