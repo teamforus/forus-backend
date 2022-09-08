@@ -73,23 +73,25 @@ class VoucherTransactionsSubscriber
     {
         $transaction = $event->getVoucherTransaction();
 
-        if ($transaction->target === VoucherTransaction::TARGET_PROVIDER && $transaction->organization_id) {
-            $fundProvider = $transaction->voucher->fund->providers()->where([
-                'organization_id' => $transaction->organization_id,
-            ])->first();
+        if (!$transaction->targetIsProvider() || !$transaction->organization_id) {
+            return;
+        }
 
-            if ($fundProvider) {
-                $event = $fundProvider->log(FundProvider::EVENT_BUNQ_TRANSACTION_SUCCESS, [
-                    'fund' => $transaction->voucher->fund,
-                    'sponsor' => $transaction->voucher->fund->organization,
-                    'provider' => $transaction->provider,
-                    'employee' => $transaction->employee,
-                    'implementation' => $transaction->voucher->fund->getImplementation(),
-                    'voucher_transaction' => $transaction,
-                ], $event->getLogData());
+        $fundProvider = $transaction->voucher->fund->providers()->where([
+            'organization_id' => $transaction->organization_id,
+        ])->first();
 
-                FundProviderTransactionBunqSuccessNotification::send($event);
-            }
+        if ($fundProvider) {
+            $event = $fundProvider->log(FundProvider::EVENT_BUNQ_TRANSACTION_SUCCESS, [
+                'fund' => $transaction->voucher->fund,
+                'sponsor' => $transaction->voucher->fund->organization,
+                'provider' => $transaction->provider,
+                'employee' => $transaction->employee,
+                'implementation' => $transaction->voucher->fund->getImplementation(),
+                'voucher_transaction' => $transaction,
+            ], $event->getLogData());
+
+            FundProviderTransactionBunqSuccessNotification::send($event);
         }
     }
 

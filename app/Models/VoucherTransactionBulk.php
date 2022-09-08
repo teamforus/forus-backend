@@ -348,9 +348,8 @@ class VoucherTransactionBulk extends BaseModel
                 }
 
                 $transactions = $this->voucher_transactions->map(function(VoucherTransaction $transaction) {
-                    $ibanTo = $transaction->getTargetIban();
-
                     $amount = number_format($transaction->amount, 2, '.', '');
+                    $ibanTo = $transaction->getTargetIban();
                     $paymentAmount = new Amount($amount, 'EUR');
                     $paymentPointer = new Pointer('IBAN', $ibanTo, $transaction->getTargetName());
                     $paymentDescription = $transaction->makePaymentDescription();
@@ -420,7 +419,8 @@ class VoucherTransactionBulk extends BaseModel
                     $payments[] = new PaymentBNG(
                         new AmountBNG(number_format($transaction->amount, 2, '.', ''), 'EUR'),
                         new Account($this->monetary_account_iban, $this->monetary_account_name),
-                        new Account($ibanTo, $transaction->getTargetName()),
+                        // todo: account name is required
+                        new Account($ibanTo, $transaction->getTargetName() ?: 'Fund user'),
                         $transaction->id,
                         $transaction->payment_description,
                         $requestedExecutionDate

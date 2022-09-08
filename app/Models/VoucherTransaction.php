@@ -19,7 +19,7 @@ use Illuminate\Http\Request;
  *
  * @property int $id
  * @property int $voucher_id
- * @property int $organization_id
+ * @property int|null $organization_id
  * @property int|null $employee_id
  * @property int|null $product_id
  * @property int|null $fund_provider_product_id
@@ -56,7 +56,7 @@ use Illuminate\Http\Request;
  * @property-read int|null $notes_sponsor_count
  * @property-read \App\Models\Product|null $product
  * @property-read \App\Models\ProductReservation|null $product_reservation
- * @property-read \App\Models\Organization $provider
+ * @property-read \App\Models\Organization|null $provider
  * @property-read \App\Models\Voucher $voucher
  * @property-read \App\Models\VoucherTransactionBulk|null $voucher_transaction_bulk
  * @method static Builder|VoucherTransaction newModelQuery()
@@ -150,7 +150,8 @@ class VoucherTransaction extends BaseModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function product(): BelongsTo {
+    public function product(): BelongsTo
+    {
         return $this->belongsTo(Product::class);
     }
 
@@ -166,21 +167,24 @@ class VoucherTransaction extends BaseModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function provider(): BelongsTo {
+    public function provider(): BelongsTo
+    {
         return $this->belongsTo(Organization::class, 'organization_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function voucher(): BelongsTo {
+    public function voucher(): BelongsTo
+    {
         return $this->belongsTo(Voucher::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function product_reservation(): HasOne {
+    public function product_reservation(): HasOne
+    {
         return $this->hasOne(ProductReservation::class);
     }
 
@@ -403,7 +407,7 @@ class VoucherTransaction extends BaseModel
             'date_transaction' => format_datetime_locale($transaction->created_at),
             'date_payment' => format_datetime_locale($transaction->payment_time),
             'fund_name' => $transaction->voucher->fund->name,
-            'provider' => $transaction->target === self::TARGET_PROVIDER ? $transaction->provider->name : '',
+            'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
             'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
         ], $fields))->values();
 
@@ -548,7 +552,7 @@ class VoucherTransaction extends BaseModel
      */
     public function getTargetIban(): ?string
     {
-        return $this->target === self::TARGET_PROVIDER ? $this->provider->iban : $this->target_iban;
+        return $this->targetIsProvider() ? $this->provider->iban : $this->target_iban;
     }
 
     /**
@@ -556,6 +560,23 @@ class VoucherTransaction extends BaseModel
      */
     public function getTargetName(): ?string
     {
-        return $this->target === self::TARGET_PROVIDER ? $this->provider->name : null;
+        return $this->targetIsProvider() ? $this->provider->name : null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function targetIsProvider(): bool
+    {
+        return $this->target === self::TARGET_PROVIDER;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function targetIsIdentity(): bool
+    {
+        return $this->target === self::TARGET_IDENTITY;
     }
 }

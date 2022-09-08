@@ -432,11 +432,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\FundsController"
     )->only('store', 'update', 'destroy');
 
-    $router->resource(
-        'organizations.funds.identities',
-        "Api\Platform\Organizations\Funds\IdentitiesController"
-    )->only('index', 'show');
-
     $router->get(
         'organizations/{organization}/funds/{fund}/identities/export',
         "Api\Platform\Organizations\Funds\IdentitiesController@export");
@@ -448,6 +443,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->post(
         'organizations/{organization}/funds/{fund}/identities/notification',
         "Api\Platform\Organizations\Funds\IdentitiesController@sendIdentityNotification");
+
+    $router->resource(
+        'organizations.funds.identities',
+        "Api\Platform\Organizations\Funds\IdentitiesController"
+    )->only('index', 'show');
 
     $router->resource(
         'organizations.funds.provider-invitations',

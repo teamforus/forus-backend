@@ -14,9 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->boolean('allow_direct_payments')
-                ->default(0)
-                ->after('backoffice_ineligible_redirect_url');
+            $table->boolean('allow_direct_payments')->after('allow_blocking_vouchers');
         });
     }
 

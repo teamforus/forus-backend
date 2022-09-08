@@ -75,8 +75,11 @@ class FundPolicy
      * @return bool
      * @noinspection PhpUnused
      */
-    public function showIdentitiesOverview(Identity $identity, Fund $fund, Organization $organization): bool
-    {
+    public function viewIdentitiesSponsor(
+        Identity $identity,
+        Fund $fund,
+        Organization $organization
+    ): bool {
         if ($fund->organization_id !== $organization->id) {
             return false;
         }
@@ -90,25 +93,19 @@ class FundPolicy
      * @param Identity $identity
      * @param Fund $fund
      * @param Organization $organization
-     * @param Identity $identityShow
+     * @param Identity $fundIdentity
      * @return bool
      * @noinspection PhpUnused
      */
-    public function showIdentity(
+    public function showIdentitySponsor(
         Identity $identity,
         Fund $fund,
         Organization $organization,
-        Identity $identityShow
+        Identity $fundIdentity
     ): bool {
-        if ($fund->organization_id !== $organization->id) {
-            return false;
-        }
-
-        $permissions = $fund->organization->identityCan($identity, [
-            'manage_implementation_notifications', 'manage_vouchers'
-        ], false);
-
-        return $permissions && $fund->activeIdentityQuery()->where('id', $identityShow->id)->exists();
+        return
+            $this->viewIdentitiesSponsor($identity, $fund, $organization) &&
+            $fund->activeIdentityQuery()->where('id', $fundIdentity->id)->exists();
     }
 
     /**

@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
+ * @property bool $allow_direct_payments
  * @property bool $employee_can_see_product_vouchers
  * @property bool $show_voucher_qr
  * @property bool $show_voucher_amount
@@ -35,7 +36,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $contact_info_message_text
  * @property bool $limit_generator_amount
  * @property int|null $bsn_confirmation_time
- * @property int $bsn_confirmation_api_time
+ * @property int|null $bsn_confirmation_api_time
  * @property bool $backoffice_enabled
  * @property bool $backoffice_check_partner
  * @property string|null $backoffice_url
@@ -46,7 +47,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $backoffice_fallback
  * @property string|null $backoffice_ineligible_policy
  * @property string|null $backoffice_ineligible_redirect_url
- * @property bool $allow_direct_payments
  * @property string|null $iconnect_target_binding
  * @property string|null $iconnect_api_oin
  * @property string|null $iconnect_base_url

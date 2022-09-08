@@ -339,7 +339,7 @@ class Voucher extends BaseModel
      */
     public function product(): BelongsTo
     {
-        /** @var Builder|SoftDeletes $relationQuery */
+        /** @var BelongsTo|SoftDeletes $relationQuery */
         $relationQuery = $this->belongsTo(Product::class, 'product_id', 'id');
 
         return $relationQuery->withTrashed();
@@ -525,11 +525,11 @@ class Voucher extends BaseModel
 
     /**
      * @param Request $request
-     * @return Builder
+     * @return Builder|Voucher
      */
-    public static function search(Request $request): Builder
+    public static function search(Request $request): Builder|Voucher
     {
-        /** @var Builder $query */
+        /** @var Builder|Voucher $query */
         $query = self::query();
         $granted = $request->input('granted');
 
@@ -610,6 +610,7 @@ class Voucher extends BaseModel
             case 'all': break;
             case 'fund_voucher': $query->whereNull('product_id'); break;
             case 'product_voucher': $query->whereNotNull('product_id'); break;
+            default: abort(403);
         }
 
         switch ($request->input('source', 'employee')) {
@@ -620,11 +621,11 @@ class Voucher extends BaseModel
         }
 
         if ($request->has('email') && $email = $request->input('email')) {
-            $query->where('identity_address', Identity::findByEmail($email)?->email ?: '_');
+            $query->where('identity_address', Identity::findByEmail($email)?->address ?: '_');
         }
 
-        if ($request->has('identity_address') && $identity_address = $request->input('identity_address')) {
-            $query->where('identity_address', $identity_address);
+        if ($request->input('identity_address', false)) {
+            $query->where('identity_address', $request->input('identity_address'));
         }
 
         if ($request->has('bsn') && $bsn = $request->input('bsn')) {

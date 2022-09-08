@@ -5,16 +5,14 @@ namespace App\Http\Resources;
 use App\Models\VoucherTransaction;
 
 /**
- * Class VoucherTransactionResource
  * @property VoucherTransaction $resource
- * @package App\Http\Resources
  */
 class VoucherTransactionResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request|any  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return array
      */
     public function toArray($request): array
@@ -32,7 +30,7 @@ class VoucherTransactionResource extends BaseJsonResource
                 'id', 'name'
             ]), [
                 'logo' => new MediaResource($transaction->provider->logo),
-            ]) : [],
+            ]) : null,
             'product' => new ProductResource($transaction->product),
             'fund' => array_merge($transaction->voucher->fund->only([
                 'id', 'name', 'organization_id'

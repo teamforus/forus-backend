@@ -74,16 +74,17 @@ class TransactionsController extends Controller
         Organization $organization
     ): SponsorVoucherTransactionResource {
         $note = $request->input('note');
+        $target = $request->input('target');
         $voucher = Voucher::find($request->input('voucher_id'));
 
-        $provider = null;
-        $target = $request->get('target');
-        $targetIban = $target === VoucherTransaction::TARGET_IDENTITY
-            ? $request->get('target_iban')
-            : null;
-
-        if ($target === VoucherTransaction::TARGET_PROVIDER) {
+        if ($target === VoucherTransaction::TARGET_IDENTITY) {
+            $provider = null;
+            $targetIban = $request->input('target_iban');
+        } else if ($target === VoucherTransaction::TARGET_PROVIDER) {
             $provider = Organization::find($request->input('provider_id'));
+            $targetIban = null;
+        } else {
+            abort(403);
         }
 
         $this->authorize('show', $organization);

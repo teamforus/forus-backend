@@ -7,9 +7,7 @@ use App\Http\Resources\VoucherTransactionNoteResource;
 use App\Models\VoucherTransaction;
 
 /**
- * Class SponsorVoucherTransactionResource
  * @property VoucherTransaction $resource
- * @package App\Http\Resources\Sponsor
  */
 class SponsorVoucherTransactionResource extends BaseJsonResource
 {

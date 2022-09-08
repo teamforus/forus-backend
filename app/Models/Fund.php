@@ -505,12 +505,12 @@ class Fund extends BaseModel
     /**
      * @param bool|null $withBalance
      * @param bool|null $withEmail
-     * @return Builder
+     * @return Builder|Identity
      */
     public function activeIdentityQuery(
         bool $withBalance = false,
         ?bool $withEmail = null
-    ): Builder {
+    ): Builder|Identity {
         $builder = Identity::whereHas('vouchers', function(Builder $builder) use ($withBalance) {
             VoucherQuery::whereNotExpiredAndActive($builder->where([
                 'fund_id' => $this->id,
