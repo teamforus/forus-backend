@@ -1,18 +1,41 @@
 name: Bug Report
 description: File a bug report
 title: "[Bug]: "
-labels: ["bug", "triage"]
+labels: ["bug"]
 assignees:
   - lexlog
 body:
   - type: textarea
-    id: what-happened
+    id: Description
     attributes:
-      label: What happened?
-      description: Also tell us, what did you expect to happen?
-      placeholder: Tell us what you see!
+      label: Description
+      description: Describe what the bug is
+      placeholder: Tell what you found!
     validations:
       required: true
+
+  - type: textarea
+    id: Reproduce
+    attributes:
+      label: How to reproduce
+      description: Steps to reproduce the behavior
+      value: |
+        1. Log in into Dashboard/Webshop
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+      
+  - type: textarea
+    id: Expectations
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+      value: " "
+    validations:
+      required: true
+      
   - type: dropdown
     id: env
     attributes:
@@ -27,10 +50,37 @@ body:
         - local
     validations:
       required: true
+      
+  - type: textarea
+    id: Fix proposal 
+    attributes:
+      label: proposal
+      description: If you know how to fix or have a proposal you can write a list of ToDo-s for that
+      value: |
+        - [ ] Create confirmation modal 
+        - [ ] Add new table
+        - [ ] ...
 
   - type: input
     id: version
     attributes:
       label: Version
-      description: Provide a version if you know it
-      placeholder: v0.40.0
+      description: Specify a version/git commit/git branch
+      placeholder: 0.40.0
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component is affected?
+      multiple: true
+      options:
+        - webshop
+        - sponsor dashboard
+        - validator dashboard
+        - provider dashboard
+        - backend
+        - frontend
+        - database
+        - configuration
+        - infrastructure
