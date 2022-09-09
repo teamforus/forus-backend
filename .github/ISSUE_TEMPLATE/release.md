@@ -1,3 +1,4 @@
+---
 name: Release
 about: Release issue
 title: 'Release v0.XX.X'
