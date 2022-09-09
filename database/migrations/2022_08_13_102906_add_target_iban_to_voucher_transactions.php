@@ -24,6 +24,14 @@ return new class extends Migration
                 $table->string('target_iban', 200)->nullable()->after('target');
             }
 
+            if (!Schema::hasColumn('voucher_transactions', 'target_name')) {
+                $table->string('target_name', 200)->nullable()->after('target_iban');
+            }
+
+            if (!Schema::hasColumn('voucher_transactions', 'iban_to_name')) {
+                $table->string('iban_to_name', 200)->nullable()->after('iban_to');
+            }
+
             $table->unsignedInteger('organization_id')->nullable()->change();
         });
     }

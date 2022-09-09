@@ -57,9 +57,10 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
      */
     public function getIbanFields(VoucherTransaction $transaction): array
     {
-        return $transaction->iban_final ? $transaction->only('iban_from', 'iban_to') : [
+        return $transaction->iban_final ? $transaction->only('iban_from', 'iban_to', 'iban_to_name') : [
             'iban_from' => $transaction->voucher->fund->organization->bank_connection_active->iban ?? null,
             'iban_to' => $transaction->getTargetIban(),
+            'iban_to_name' => $transaction->getTargetName(),
         ];
     }
 }

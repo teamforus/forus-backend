@@ -50,6 +50,12 @@ class StoreTransactionRequest extends BaseFormRequest
                 'required_if:target,' . VoucherTransaction::TARGET_IDENTITY,
                 new IbanRule(),
             ],
+            'target_name' => [
+                'required_if:target,' . VoucherTransaction::TARGET_IDENTITY,
+                'string',
+                'min:3',
+                'max:200',
+            ],
             'provider_id' => [
                 'required_if:target,' . VoucherTransaction::TARGET_PROVIDER,
                 Rule::in($this->fundProviderIds()),

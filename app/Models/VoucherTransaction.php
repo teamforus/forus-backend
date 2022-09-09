@@ -27,6 +27,7 @@ use Illuminate\Http\Request;
  * @property string $amount
  * @property string|null $iban_from
  * @property string|null $iban_to
+ * @property string|null $iban_to_name
  * @property string|null $payment_time
  * @property string $address
  * @property \Illuminate\Support\Carbon|null $transfer_at
@@ -40,6 +41,7 @@ use Illuminate\Http\Request;
  * @property string $initiator
  * @property string $target
  * @property string|null $target_iban
+ * @property string|null $target_name
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
@@ -71,6 +73,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereFundProviderProductId($value)
  * @method static Builder|VoucherTransaction whereIbanFrom($value)
  * @method static Builder|VoucherTransaction whereIbanTo($value)
+ * @method static Builder|VoucherTransaction whereIbanToName($value)
  * @method static Builder|VoucherTransaction whereId($value)
  * @method static Builder|VoucherTransaction whereInitiator($value)
  * @method static Builder|VoucherTransaction whereLastAttemptAt($value)
@@ -82,6 +85,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereState($value)
  * @method static Builder|VoucherTransaction whereTarget($value)
  * @method static Builder|VoucherTransaction whereTargetIban($value)
+ * @method static Builder|VoucherTransaction whereTargetName($value)
  * @method static Builder|VoucherTransaction whereTransferAt($value)
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
@@ -134,9 +138,9 @@ class VoucherTransaction extends BaseModel
     protected $fillable = [
         'voucher_id', 'organization_id', 'product_id', 'fund_provider_product_id',
         'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
-        'iban_from', 'iban_to', 'payment_time', 'employee_id', 'transfer_at',
+        'iban_from', 'iban_to', 'iban_to_name', 'payment_time', 'employee_id', 'transfer_at',
         'voucher_transaction_bulk_id', 'payment_description', 'initiator',
-        'target', 'target_iban',
+        'target', 'target_iban', 'target_name',
     ];
 
     protected $hidden = [
@@ -556,11 +560,11 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
-     * @return string|null
+     * @return string
      */
-    public function getTargetName(): ?string
+    public function getTargetName(): string
     {
-        return $this->targetIsProvider() ? $this->provider->name : null;
+        return ($this->targetIsProvider() ? $this->provider->name : $this->target_name) ?: 'Onbekend';
     }
 
     /**

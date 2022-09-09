@@ -80,9 +80,11 @@ class TransactionsController extends Controller
         if ($target === VoucherTransaction::TARGET_IDENTITY) {
             $provider = null;
             $targetIban = $request->input('target_iban');
+            $targetName = $request->input('target_name');
         } else if ($target === VoucherTransaction::TARGET_PROVIDER) {
             $provider = Organization::find($request->input('provider_id'));
             $targetIban = null;
+            $targetName = null;
         } else {
             abort(403);
         }
@@ -97,6 +99,7 @@ class TransactionsController extends Controller
             'organization_id' => $provider?->id,
             'target' => $target,
             'target_iban' => $targetIban,
+            'target_name' => $targetName,
         ]);
 
         $note && $transaction->addNote('sponsor', $note);

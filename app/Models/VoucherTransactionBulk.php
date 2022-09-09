@@ -350,12 +350,14 @@ class VoucherTransactionBulk extends BaseModel
                 $transactions = $this->voucher_transactions->map(function(VoucherTransaction $transaction) {
                     $amount = number_format($transaction->amount, 2, '.', '');
                     $ibanTo = $transaction->getTargetIban();
+                    $ibanToName = $transaction->getTargetName();
                     $paymentAmount = new Amount($amount, 'EUR');
-                    $paymentPointer = new Pointer('IBAN', $ibanTo, $transaction->getTargetName());
+                    $paymentPointer = new Pointer('IBAN', $ibanTo, $ibanToName);
                     $paymentDescription = $transaction->makePaymentDescription();
 
                     $transaction->update([
                         'iban_to' => $ibanTo,
+                        'iban_to_name' => $ibanToName,
                         'iban_from' => $this->monetary_account_iban,
                         'payment_description' => $paymentDescription,
                     ]);
@@ -409,9 +411,11 @@ class VoucherTransactionBulk extends BaseModel
 
                 foreach ($this->voucher_transactions as $transaction) {
                     $ibanTo = $transaction->getTargetIban();
+                    $ibanToName = $transaction->getTargetName();
 
                     $transaction->update([
                         'iban_to' => $ibanTo,
+                        'iban_to_name' => $ibanToName,
                         'iban_from' => $this->monetary_account_iban,
                         'payment_description' => $transaction->makePaymentDescription(),
                     ]);
@@ -419,8 +423,7 @@ class VoucherTransactionBulk extends BaseModel
                     $payments[] = new PaymentBNG(
                         new AmountBNG(number_format($transaction->amount, 2, '.', ''), 'EUR'),
                         new Account($this->monetary_account_iban, $this->monetary_account_name),
-                        // todo: account name is required
-                        new Account($ibanTo, $transaction->getTargetName() ?: 'Fund user'),
+                        new Account($ibanTo, $ibanToName),
                         $transaction->id,
                         $transaction->payment_description,
                         $requestedExecutionDate
