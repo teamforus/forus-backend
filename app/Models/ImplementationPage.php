@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\MediaService\Traits\HasMedia;
+use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,8 +17,8 @@ use Illuminate\Support\Arr;
  * @property int $implementation_id
  * @property string|null $page_type
  * @property string $state
- * @property string|null $content
- * @property string $content_alignment
+ * @property string|null $description
+ * @property string $description_alignment
  * @property string|null $external_url
  * @property bool $external
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -25,7 +26,6 @@ use Illuminate\Support\Arr;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\ImplementationBlock[] $blocks
  * @property-read int|null $blocks_count
- * @property-read string $content_html
  * @property-read \App\Models\Implementation $implementation
  * @property-read Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
@@ -50,7 +50,7 @@ use Illuminate\Support\Arr;
  */
 class ImplementationPage extends BaseModel
 {
-    use HasMedia, SoftDeletes;
+    use HasMedia, HasMarkdownDescription, SoftDeletes;
 
     const TYPE_HOME = 'home';
     const TYPE_PRODUCTS = 'products';
@@ -122,7 +122,7 @@ class ImplementationPage extends BaseModel
      * @var string[]
      */
     protected $fillable = [
-        'implementation_id', 'page_type', 'content', 'content_alignment',
+        'implementation_id', 'page_type', 'description', 'description_alignment',
         'external', 'external_url', 'state',
     ];
 
@@ -139,15 +139,6 @@ class ImplementationPage extends BaseModel
     public function implementation(): BelongsTo
     {
         return $this->belongsTo(Implementation::class);
-    }
-
-    /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function getContentHtmlAttribute(): string
-    {
-        return resolve('markdown.converter')->convert($this->content ?: '')->getContent();
     }
 
     /**

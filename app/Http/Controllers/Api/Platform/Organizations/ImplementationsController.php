@@ -87,7 +87,7 @@ class ImplementationsController extends Controller
         );
 
         $implementation->attachMediaByUid($request->input('banner_media_uid'));
-        $implementation->appendMedia($request->input('media_uid', []), 'cms_media');
+        $implementation->syncDescriptionMarkdownMedia('cms_media');
 
         return new ImplementationPrivateResource($implementation);
     }

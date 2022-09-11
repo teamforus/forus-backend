@@ -60,13 +60,13 @@ class ImplementationPagesController extends Controller
 
         /** @var ImplementationPage $page */
         $page = $implementation->pages()->create(array_merge($request->only([
-            'content', 'content_alignment', 'external', 'external_url', 'page_type', 'state',
+            'description', 'description_alignment', 'external', 'external_url', 'page_type', 'state',
         ]), $isInternalType ? [
             'external' => false,
             'external_url' => null,
         ] : []));
 
-        $page->appendMedia($data['media_uid'] ?? [], 'implementation_block_media');
+        $page->syncDescriptionMarkdownMedia('implementation_block_media');
         $page->syncBlocks($request->input('blocks'));
 
         return new ImplementationPageResource($page);
@@ -135,14 +135,14 @@ class ImplementationPagesController extends Controller
         $isInternalType = ImplementationPage::isInternalType($implementationPage->page_type);
 
         $data = array_merge($request->only([
-            'state', 'content', 'content_alignment', 'external', 'external_url',
+            'state', 'description', 'description_alignment', 'external', 'external_url',
         ]), $isInternalType ? [
             'external' => false,
             'external_url' => null,
         ] : []);
 
         $implementationPage->update($data);
-        $implementationPage->appendMedia($request->input('media_uid'), 'cms_media');
+        $implementationPage->syncDescriptionMarkdownMedia('cms_media');
         $implementationPage->syncBlocks($request->input('blocks'));
 
         return new ImplementationPageResource($implementationPage);
