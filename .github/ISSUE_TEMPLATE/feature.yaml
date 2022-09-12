@@ -27,7 +27,7 @@ body:
   - type: dropdown
     id: design
     attributes:
-      label: Does this issue need design?
+      label: Needs design?
       options:
         - 'yes'
         - 'no'
@@ -35,7 +35,7 @@ body:
   - type: dropdown
     id: Project
     attributes:
-      label: Does this issue belong to the project?
+      label: Belongs to the project?
       options:
         - 'yes'
         - 'no'
