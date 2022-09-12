@@ -33,7 +33,7 @@ body:
         - 'no'
 
   - type: dropdown
-    id: design
+    id: Project
     attributes:
       label: Does this issue belong to the project?
       options:
