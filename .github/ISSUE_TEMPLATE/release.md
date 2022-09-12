@@ -59,6 +59,6 @@ The full process of the release is described here - [doc link](https://docs.goog
 - [ ] Master branch is merged into develop
 - [ ] New tests are described in Test Quality or sent to [tech.debt](https://docs.google.com/document/d/1jhSXnK2rg-UzrKi9zkC00_vxNINFe0OcyXMFy7KcH-8/edit)
 - [ ] Help center articles are described
-- [ ] All new bugs are register or planned
+- [ ] All new bugs are fix or reported in GitHub
 
 

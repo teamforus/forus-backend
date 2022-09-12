@@ -1,0 +1,56 @@
+name: New feature
+description: Describe or propose new feature
+title: ""
+body:
+  - type: textarea
+    id: Problem
+    attributes:
+      label: Problem
+      description: Describe what is the problem that this feature will solve
+    validations:
+      required: true
+
+  - type: textarea
+    id: Description
+    attributes:
+      label: Feature description
+      description: Describe how do you see possible realization of the feature
+    validations:
+      required: true
+
+  - type: textarea
+    id: Additional
+    attributes:
+      label: Additional ifo
+      description: Provide some side notes and additional info here.
+
+  - type: dropdown
+    id: env
+    attributes:
+      label: Environment
+      description: Where did you met this bug?
+      multiple: true
+      options:
+        - dev
+        - staging
+        - demo
+        - prod
+        - local
+    validations:
+      required: true
+
+  - type: dropdown
+    id: design
+    attributes:
+      label: Does this issue need design?
+      options:
+        - yes
+        - no
+
+  - type: dropdown
+    id: design
+    attributes:
+      label: Does this issue belong to the project?
+      options:
+        - yes
+        - no
