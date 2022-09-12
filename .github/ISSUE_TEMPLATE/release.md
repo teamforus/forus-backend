@@ -46,7 +46,7 @@ The full process of the release is described here - [doc link](https://docs.goog
 
 ### Production deployment
 - [ ] **No critical bugs left since staging**
-- [ ] *Release branches are merged**
+- [ ] **Release branches are merged**
 - [ ] **Deployment on production is done**
     - [ ] [Jenkins](https://jenkins.forus.io/job/production/)
     - [ ] Migration
@@ -54,11 +54,11 @@ The full process of the release is described here - [doc link](https://docs.goog
 - [ ] **Production is working without regress**
 
 ### Post-release actions
-- [ ] **Release notes in Github are done**
-- [ ] **Release notes in Stonly are done**
-- [ ] **Master branch is merged into develop**
-- [ ] **New tests are described in Test Quality or sent to [tech.debt](https://docs.google.com/document/d/1jhSXnK2rg-UzrKi9zkC00_vxNINFe0OcyXMFy7KcH-8/edit)**
-- [ ] **Help center articles are described**
-- [ ] **All new bugs are register or planned**
+- [ ] Release notes in Github are done
+- [ ] Release notes in Stonly are done
+- [ ] Master branch is merged into develop
+- [ ] New tests are described in Test Quality or sent to [tech.debt](https://docs.google.com/document/d/1jhSXnK2rg-UzrKi9zkC00_vxNINFe0OcyXMFy7KcH-8/edit)
+- [ ] Help center articles are described
+- [ ] All new bugs are register or planned
 
 
