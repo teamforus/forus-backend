@@ -1,6 +1,8 @@
 name: Feature
 description: Describe or propose new feature
 title: "[Feature]: "
+assignees:
+  - GerbenBosschieter
 body:
   - type: textarea
     id: Problem
