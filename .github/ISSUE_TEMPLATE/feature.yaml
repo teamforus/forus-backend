@@ -1,6 +1,6 @@
 name: Feature
 description: Describe or propose new feature
-title: ""
+title: " "
 body:
   - type: textarea
     id: Problem
