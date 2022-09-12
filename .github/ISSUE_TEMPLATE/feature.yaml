@@ -21,36 +21,21 @@ body:
   - type: textarea
     id: Additional
     attributes:
-      label: Additional ifo
+      label: Additional info
       description: Provide some side notes and additional info here.
-
-  - type: dropdown
-    id: env
-    attributes:
-      label: Environment
-      description: Where did you met this bug?
-      multiple: true
-      options:
-        - dev
-        - staging
-        - demo
-        - prod
-        - local
-    validations:
-      required: true
 
   - type: dropdown
     id: design
     attributes:
       label: Does this issue need design?
       options:
-        - yes
-        - no
+        - 'yes'
+        - 'no'
 
   - type: dropdown
     id: design
     attributes:
       label: Does this issue belong to the project?
       options:
-        - yes
-        - no
+        - 'yes'
+        - 'no'
