@@ -19,7 +19,7 @@
         "astrotomic/laravel-translatable": "^11.9.1",
         "aws/aws-sdk-php": "3.191.2",
         "azuyalabs/yasumi": "^2.5",
-        "barryvdh/laravel-dompdf": "^1.0",
+        "barryvdh/laravel-dompdf": "^2.0",
         "barryvdh/laravel-ide-helper": "^2.7",
         "bunq/sdk_php": "^1.14.18",
         "dusterio/laravel-aws-worker": "^0.1",
