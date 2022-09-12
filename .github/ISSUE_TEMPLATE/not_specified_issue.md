@@ -6,15 +6,15 @@ assignees: ''
 ---
 
 ## Description
-Current release process fully contains manual steps. Some of them are short and easy, some are not.
+<!-- Example: Current release process fully contains manual steps. Some of them are short and easy, some are not.-->
 
 ### Goals
-For example, optimise topic above
+<!-- For example, optimise topic above -->
 
-## To do
 
+## ToDo-s
+<!-- 
 - [ ] 1
-
 - [ ] 2
-
-- [ ] 3
+- [ ] 3 
+-->
