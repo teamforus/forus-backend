@@ -24,6 +24,10 @@ class ProductReservationQuery
             $builder->orWhere('first_name', 'LIKE', "%$q%");
             $builder->orWhere('last_name', 'LIKE', "%$q%");
 
+            $builder->orWhereHas('voucher.identity.primary_email', function(Builder $builder) use ($q) {
+                return $builder->where('email', 'LIKE', "%$q%");
+            });
+
             $builder->orWhereHas('product', function(Builder $builder) use ($q) {
                 ProductQuery::queryFilter($builder, $q);
             });
