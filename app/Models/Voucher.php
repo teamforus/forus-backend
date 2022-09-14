@@ -619,7 +619,7 @@ class Voucher extends BaseModel
         }
 
         if ($request->has('email') && $email = $request->input('email')) {
-            $query->where('identity_address', Identity::findByEmail($email)?->email ?: '_');
+            $query->where('identity_address', Identity::findByEmail($email)?->address ?: '_');
         }
 
         if ($request->has('bsn') && $bsn = $request->input('bsn')) {
