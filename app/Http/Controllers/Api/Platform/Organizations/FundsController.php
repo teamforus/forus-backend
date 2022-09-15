@@ -93,6 +93,7 @@ class FundsController extends Controller
             'contact_info_message_custom', 'contact_info_message_text',
         ]));
 
+        $fund->attachMediaByUid($request->input('media_uid'));
         $fund->syncDescriptionMarkdownMedia('cms_media');
         $fund->syncTagsOptional($request->input('tag_ids'));
         $fund->syncFaq($request->input('faq'));
@@ -192,6 +193,7 @@ class FundsController extends Controller
             'contact_info_message_custom', 'contact_info_message_text',
         ])));
 
+        $fund->attachMediaByUid($request->input('media_uid'));
         $fund->syncDescriptionMarkdownMedia('cms_media');
         $fund->syncFaqOptional($request->input('faq'));
         $fund->syncTagsOptional($request->input('tag_ids'));

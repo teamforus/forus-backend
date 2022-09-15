@@ -99,9 +99,13 @@ trait HasMarkdownDescription {
 
         $uid = $this->getDescriptionMarkdownMediaQuery()
             ->where('type', $mediaType)
-            ->whereNull('mediable_id')
-            ->pluck('uid')->toArray();
+            ->where(function (Builder $builder) {
+                $builder->whereNull('mediable_id');
+                $builder->orWhereHasMorph('mediable', $this->getMorphClass(), function(Builder $builder) {
+                    $builder->where('mediable_id', $this->id);
+                });
+            })->pluck('uid')->toArray();
 
-        return $this->appendMedia($uid, $mediaType);
+        return $this->syncMedia($uid, $mediaType);
     }
 }
