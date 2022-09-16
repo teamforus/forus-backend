@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QBuilder;
 
 /**
  * Class VoucherQuery
@@ -29,6 +30,8 @@ class VoucherTransactionQuery
         $builder->whereDoesntHave('provider', function(Builder $builder) {
             $builder->whereIn('iban', config('bunq.skip_iban_numbers'));
         });
+
+        VoucherTransactionQuery::outgoing($builder);
 
         return $builder->where(function(Builder $query) {
             $query->whereNull('transfer_at');
@@ -96,5 +99,23 @@ class VoucherTransactionQuery
         return Organization::where(function(Builder $builder) {
             $builder->whereColumn('organizations.id', 'voucher_transactions.organization_id');
         })->select('organizations.name');
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    public static function outgoing(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        return $builder->whereIn('target', VoucherTransaction::OUTGOING_TARGETS);
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    public static function incoming(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        return $builder->whereIn('target', VoucherTransaction::INCOMING_TARGETS);
     }
 }

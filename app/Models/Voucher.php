@@ -101,6 +101,8 @@ use ZipArchive;
  * @property-read \App\Models\VoucherToken|null $token_without_confirmation
  * @property-read Collection|\App\Models\VoucherToken[] $tokens
  * @property-read int|null $tokens_count
+ * @property-read Collection|\App\Models\VoucherTransaction[] $top_up_transactions
+ * @property-read int|null $top_up_transactions_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $transactions
  * @property-read int|null $transactions_count
  * @property-read \App\Models\VoucherRelation|null $voucher_relation
@@ -351,7 +353,18 @@ class Voucher extends BaseModel
      */
     public function transactions(): HasMany
     {
-        return $this->hasMany(VoucherTransaction::class);
+        return $this->hasMany(VoucherTransaction::class)
+            ->whereIn('target', VoucherTransaction::OUTGOING_TARGETS);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function top_up_transactions(): HasMany
+    {
+        return $this->hasMany(VoucherTransaction::class)
+            ->where('target', VoucherTransaction::TARGET_SELF);
     }
 
     /**
@@ -359,7 +372,9 @@ class Voucher extends BaseModel
      * @noinspection PhpUnused
      */
     public function last_transaction(): HasOne {
-        return $this->hasOne(VoucherTransaction::class)->orderByDesc('created_at');
+        return $this->hasOne(VoucherTransaction::class)
+            ->whereIn('target', VoucherTransaction::OUTGOING_TARGETS)
+            ->orderByDesc('created_at');
     }
 
     /**
@@ -389,7 +404,8 @@ class Voucher extends BaseModel
     {
         return round($this->amount -
             $this->transactions()->sum('amount') -
-            $this->product_vouchers()->sum('amount'), 2);
+            $this->product_vouchers()->sum('amount') +
+            $this->top_up_transactions()->sum('amount'), 2);
     }
 
     /**
@@ -400,7 +416,8 @@ class Voucher extends BaseModel
     {
         return round($this->amount -
             $this->transactions->sum('amount') -
-            $this->product_vouchers->sum('amount'), 2);
+            $this->product_vouchers->sum('amount') +
+            $this->top_up_transactions->sum('amount'), 2);
     }
 
     /**
@@ -1266,7 +1283,7 @@ class Voucher extends BaseModel
         bool $reviewRequired = false
     ): VoucherTransaction {
         $data = array_merge([
-            'state' => 'pending',
+            'state' => VoucherTransaction::STATE_PENDING,
             'address' => resolve('token_generator')->address(),
             'initiator' => VoucherTransaction::INITIATOR_PROVIDER,
             'voucher_id' => $this->id,

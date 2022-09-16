@@ -49,7 +49,10 @@ class VoucherTransactionsSubscriber
             IdentityProductVoucherTransactionNotification::send($event);
         } elseif ($type == 'budget') {
             $event = $voucher->log(Voucher::EVENT_TRANSACTION, $eventMeta, $logData);
-            IdentityVoucherBudgetTransactionNotification::send($event);
+
+            if ($transaction->isOutgoing()) {
+                IdentityVoucherBudgetTransactionNotification::send($event);
+            }
         } elseif ($type == 'subsidy') {
             $fundProviderProduct = $transaction->product->getSubsidyDetailsForFund($fund);
 

@@ -56,7 +56,7 @@ class FundResource extends BaseJsonResource
             'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
             'email_required', 'contact_info_enabled', 'contact_info_required',
             'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
-            'allow_direct_payments',
+            'allow_direct_payments', 'limit_voucher_top_up_amount',
         ]), [
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
             'tags' => TagResource::collection($fund->tags_webshop),

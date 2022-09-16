@@ -37,6 +37,12 @@ class StoreTransactionRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+        $voucher = $this->has('voucher_id') ? Voucher::find($this->input('voucher_id')) : null;
+
+        $targets = ($voucher && $voucher->fund->fund_config->limit_voucher_top_up_amount)
+            ? VoucherTransaction::TARGETS
+            : [VoucherTransaction::TARGET_IDENTITY, VoucherTransaction::TARGET_PROVIDER];
+
         return [
             'voucher_id' => [
                 'required',
@@ -44,7 +50,7 @@ class StoreTransactionRequest extends BaseFormRequest
             ],
             'target' => [
                 'required',
-                Rule::in(VoucherTransaction::TARGETS),
+                Rule::in($targets),
             ],
             'target_iban' => [
                 'required_if:target,' . VoucherTransaction::TARGET_IDENTITY,
@@ -58,25 +64,29 @@ class StoreTransactionRequest extends BaseFormRequest
             ],
             'provider_id' => [
                 'required_if:target,' . VoucherTransaction::TARGET_PROVIDER,
-                Rule::in($this->fundProviderIds()),
+                Rule::in($this->fundProviderIds($voucher)),
             ],
             'note' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:.02|max:' . currency_format($this->maxAmount()),
+            'amount' => $this->amountRule($voucher),
         ];
     }
 
     /**
-     * @return float
+     * @param Voucher|null $voucher
+     * @return string
      */
-    protected function maxAmount(): float
+    protected function amountRule(?Voucher $voucher): string
     {
-        $voucher = $this->has('voucher_id') ? Voucher::find($this->input('voucher_id')) : null;
+        $max = 0;
+        $target = $this->input('target');
 
         if ($voucher) {
-            return $voucher->amount_available;
+            $max = $target === VoucherTransaction::TARGET_SELF
+                ? ($voucher->fund->fund_config->limit_voucher_top_up_amount ?? 0)
+                : $voucher->amount_available;
         }
 
-        return 0;
+        return 'required|numeric|min:.02|max:' . currency_format($max);
     }
 
     /**
@@ -98,12 +108,11 @@ class StoreTransactionRequest extends BaseFormRequest
     }
 
     /**
+     * @param Voucher|null $voucher
      * @return array
      */
-    protected function fundProviderIds(): array
+    protected function fundProviderIds(?Voucher $voucher): array
     {
-        $voucher = $this->has('voucher_id') ? Voucher::find($this->input('voucher_id')) : null;
-
         return $voucher ? FundProviderQuery::whereApprovedForFundsFilter(
             FundProvider::query(),
             $voucher->fund_id,

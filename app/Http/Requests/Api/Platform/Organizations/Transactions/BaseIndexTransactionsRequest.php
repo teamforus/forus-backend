@@ -52,6 +52,7 @@ abstract class BaseIndexTransactionsRequest extends BaseFormRequest
 
             'order_by'          => 'nullable|in:' . implode(',', VoucherTransaction::SORT_BY_FIELDS),
             'order_dir'         => 'nullable|in:asc,desc',
+            'show_all'          => 'nullable|boolean'
         ];
     }
 }

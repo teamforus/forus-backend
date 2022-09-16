@@ -119,15 +119,26 @@ class VoucherTransaction extends BaseModel
 
     public const TARGET_IDENTITY = 'identity';
     public const TARGET_PROVIDER = 'provider';
+    public const TARGET_SELF = 'self';
 
     public const TARGETS = [
         self::TARGET_IDENTITY,
         self::TARGET_PROVIDER,
+        self::TARGET_SELF,
+    ];
+
+    public const OUTGOING_TARGETS = [
+        self::TARGET_IDENTITY,
+        self::TARGET_PROVIDER,
+    ];
+
+    public const INCOMING_TARGETS = [
+        self::TARGET_SELF,
     ];
 
     public const SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'voucher_transaction_bulk_id',
-        'fund_name', 'provider_name',
+        'fund_name', 'provider_name', 'target',
     ];
 
     /**
@@ -328,6 +339,10 @@ class VoucherTransaction extends BaseModel
             });
         }
 
+        if (!$request->input('show_all')) {
+            VoucherTransactionQuery::outgoing($query);
+        }
+
         return $query;
     }
 
@@ -352,6 +367,10 @@ class VoucherTransaction extends BaseModel
 
         if ($voucher_transaction_bulk_id = $request->input('voucher_transaction_bulk_id')) {
             $builder->where(compact('voucher_transaction_bulk_id'));
+        }
+
+        if ($voucher_id = $request->input('voucher_id')) {
+            $builder->where(compact('voucher_id'));
         }
 
         if ($request->input('pending_bulking')) {
@@ -564,7 +583,15 @@ class VoucherTransaction extends BaseModel
      */
     public function getTargetName(): string
     {
-        return ($this->targetIsProvider() ? $this->provider->name : $this->target_name) ?: 'Onbekend';
+        if ($this->targetIsProvider()) {
+            return $this->provider->name;
+        }
+
+        if ($this->targetIsSelf()) {
+            return 'Top up';
+        }
+
+        return $this->target_name ?: 'Onbekend';
     }
 
     /**
@@ -582,5 +609,30 @@ class VoucherTransaction extends BaseModel
     public function targetIsIdentity(): bool
     {
         return $this->target === self::TARGET_IDENTITY;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function targetIsSelf(): bool
+    {
+        return $this->target === self::TARGET_SELF;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isOutgoing(): bool
+    {
+        return in_array($this->target, self::OUTGOING_TARGETS);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isIncoming(): bool
+    {
+        return in_array($this->target, self::INCOMING_TARGETS);
     }
 }

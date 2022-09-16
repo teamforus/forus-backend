@@ -10,6 +10,7 @@ use App\Models\ProductCategory;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
+use App\Scopes\Builders\VoucherTransactionQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
@@ -150,6 +151,8 @@ class FinancialStatisticQueries
         $dateFrom = array_get($options, 'date_from');
         $dateTo = array_get($options, 'date_to');
 
+        $showAll = array_get($options, 'show_all');
+
         $query = $query ?: VoucherTransaction::query();
         $query = $query->whereHas('voucher.fund', function(Builder $builder) use ($sponsor) {
             FundQuery::whereActiveOrClosedFilter($builder->where([
@@ -189,6 +192,10 @@ class FinancialStatisticQueries
         // filter by interval
         if ($dateFrom && $dateTo) {
             $query->whereBetween('voucher_transactions.created_at', [$dateFrom, $dateTo]);
+        }
+
+        if (!$showAll) {
+            VoucherTransactionQuery::outgoing($query);
         }
 
         return $query;

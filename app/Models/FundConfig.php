@@ -50,6 +50,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $iconnect_target_binding
  * @property string|null $iconnect_api_oin
  * @property string|null $iconnect_base_url
+ * @property string|null $limit_voucher_top_up_amount
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -98,6 +99,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIsConfigured($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTopUpAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @mixin \Eloquent
@@ -134,7 +136,7 @@ class FundConfig extends BaseModel
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'allow_fund_requests', 'allow_prevalidations',
         'iconnect_target_binding', 'iconnect_api_oin', 'iconnect_base_url',
-        'allow_direct_payments',
+        'allow_direct_payments', 'limit_voucher_top_up_amount',
     ];
 
     /**

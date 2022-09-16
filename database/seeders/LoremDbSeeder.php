@@ -121,6 +121,10 @@ class LoremDbSeeder extends Seeder
         'Zuidhorn', 'Nijmegen',
     ];
 
+    private array $fundsWithVoucherTopUp = [
+        'Nijmegen', 'Zuidhorn',
+    ];
+
     /**
      * LoremDbSeeder constructor.
      */
@@ -725,6 +729,7 @@ class LoremDbSeeder extends Seeder
             'iconnect_api_oin'          => config('forus.seeders.lorem_db_seeder.iconnect_oin'),
             'iconnect_base_url'         => config('forus.seeders.lorem_db_seeder.iconnect_url'),
             'iconnect_target_binding'   => config('forus.seeders.lorem_db_seeder.iconnect_binding'),
+            'limit_voucher_top_up_amount' => in_array($fund->name, $this->fundsWithVoucherTopUp) ? 5000 : null,
         ], array_only($fields, [
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox', 'csv_primary_key', 'is_configured',
         ]), $backofficeConfig));

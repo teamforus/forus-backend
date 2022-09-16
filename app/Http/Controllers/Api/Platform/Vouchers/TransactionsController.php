@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
+use App\Scopes\Builders\VoucherTransactionQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TransactionsController extends Controller
@@ -30,10 +31,11 @@ class TransactionsController extends Controller
         $this->authorize('show', $voucherToken->voucher);
         $this->authorize('viewAny', [VoucherTransaction::class, $voucherToken]);
 
-        return VoucherTransactionResource::queryCollection(
-            VoucherTransaction::searchVoucher($voucherToken->voucher, $request),
-            $request
+        $query = VoucherTransactionQuery::outgoing(
+            VoucherTransaction::searchVoucher($voucherToken->voucher, $request)
         );
+
+        return VoucherTransactionResource::queryCollection($query, $request);
     }
 
     /**
@@ -113,6 +115,7 @@ class TransactionsController extends Controller
             'employee_id' => $organization->findEmployee($request->auth_address())->id,
             'state' => $transactionState,
             'fund_provider_product_id' => $fundProviderProductId ?? null,
+            'target' => VoucherTransaction::TARGET_PROVIDER,
             'organization_id' => $organization->id,
         ], $voucher->needsTransactionReview());
 

@@ -324,7 +324,8 @@ class Fund extends BaseModel
      */
     public function voucher_transactions(): HasManyThrough
     {
-        return $this->hasManyThrough(VoucherTransaction::class, Voucher::class);
+        return $this->hasManyThrough(VoucherTransaction::class, Voucher::class)
+            ->whereIn('target', VoucherTransaction::OUTGOING_TARGETS);
     }
 
     /**
@@ -1814,22 +1815,13 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return bool
-     */
-    public function limitGeneratorAmount(): bool
-    {
-        return $this->fund_config->limit_generator_amount ?? true;
-    }
-
-    /**
      * @return float
      */
     public function getMaxAmountPerVoucher(): float
     {
-        $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
-        $max = min($this->budget_left ?? $max_allowed, $max_allowed);
+        $max_allowed = $this->fund_config->limit_generator_amount;
 
-        return (float) ($this->limitGeneratorAmount() ? $max : $max_allowed);
+        return min($this->budget_left ?? $max_allowed, $max_allowed);
     }
 
     /**
@@ -1837,7 +1829,7 @@ class Fund extends BaseModel
      */
     public function getMaxAmountSumVouchers(): float
     {
-        return (float) ($this->limitGeneratorAmount() ? $this->budget_left : 1000000);
+        return (float) ($this->fund_config->limit_generator_amount ? $this->budget_left : 1000000);
     }
 
     /**
