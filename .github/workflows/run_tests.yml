@@ -44,13 +44,13 @@ jobs:
         working-directory: forus-backend
         run: docker-compose exec -T app php artisan db:seed --class LoremDbSeeder
 
-      - name: Run unit tests
+      - name: --- RUN UNIT TESTS ----
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "./vendor/bin/phpunit tests/Unit/."
+        run: docker-compose exec -T app bash -c "./vendor/bin/phpunit --debug --verbose --testdox tests/Unit/."
 
-      - name: Run feature tests
+      - name: --- RUN FEATURE TESTS ----
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "./vendor/bin/phpunit tests/Feature/."
+        run: docker-compose exec -T app bash -c "./vendor/bin/phpunit --debug --verbose --testdox tests/Feature/."
 
       - name: Check out forus-frontend repo
         uses: actions/checkout@v3
@@ -101,6 +101,6 @@ jobs:
         working-directory: forus-backend
         run: docker-compose exec -T app bash -c "php artisan dusk:chrome"
 
-      - name: Run php dusk
+      - name: --- RUN BROWSER TESTS ----
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "php artisan dusk"
+        run: docker-compose exec -T app bash -c "php artisan dusk --debug --verbose --testdox"
