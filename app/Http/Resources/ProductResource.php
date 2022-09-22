@@ -66,8 +66,7 @@ class ProductResource extends BaseJsonResource
             'price_max' => currency_format($this->getProductSubsidyPrice($product, 'min')),
             'offices' => OfficeResource::collection($product->organization->offices),
             'product_category' => new ProductCategoryResource($product->product_category),
-            'is_favourite' => FavouriteProduct::query()->where([
-                'product_id' => $product->id,
+            'is_favourite' => $product->bookmark()->where([
                 'identity_address' => $request->user()?->address
             ])->exists()
         ]);

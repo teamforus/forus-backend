@@ -80,34 +80,4 @@ class ProductsController extends Controller
 
         return ProductResource::create($product);
     }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param Product $product
-     * @return ProductResource
-     */
-    public function setFavourite(BaseFormRequest $request, Product $product): ProductResource
-    {
-        FavouriteProduct::query()->create([
-            'product_id' => $product->id,
-            'identity_address' => $request->auth_address()
-        ]);
-
-        return ProductResource::create($product);
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param Product $product
-     * @return ProductResource
-     */
-    public function removeFavourite(BaseFormRequest $request, Product $product): ProductResource
-    {
-        FavouriteProduct::query()->where([
-            'product_id' => $product->id,
-            'identity_address' => $request->auth_address()
-        ])->delete();
-
-        return ProductResource::create($product);
-    }
 }

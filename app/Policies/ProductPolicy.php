@@ -95,6 +95,26 @@ class ProductPolicy
     }
 
     /**
+     * @param Identity|null $identity
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function addFavourite(?Identity $identity): bool
+    {
+        return $identity->exists;
+    }
+
+    /**
+     * @param Identity|null $identity
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function removeFavourite(?Identity $identity): bool
+    {
+        return $this->addFavourite($identity);
+    }
+
+    /**
      * @param Identity $identity
      * @param Product $product
      * @param Organization $organization

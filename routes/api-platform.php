@@ -80,13 +80,13 @@ $router->group([], static function() use ($router) {
     );
 
     $router->post(
-        'products/set-favourite/{product}',
-        "Api\Platform\ProductsController@setFavourite"
+        'bookmarks/set-bookmark',
+        "Api\Platform\BookmarkController@setBookmark"
     );
 
     $router->post(
-        'products/remove-favourite/{product}',
-        "Api\Platform\ProductsController@removeFavourite"
+        'bookmarks/remove-bookmark',
+        "Api\Platform\BookmarkController@removeBookmark"
     );
 
     $router->resource(

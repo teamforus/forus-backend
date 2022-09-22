@@ -13,13 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('favourite_products', function (Blueprint $table) {
+        Schema::create('bookmarks', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('product_id');
-            $table->string('identity_address');
 
-            $table->foreign('identity_address'
-            )->references('address')->on('identities')->onDelete('cascade');
+            $table->string('identity_address', 200)->default('');
+            $table->unsignedInteger('bookmarkable_id');
+            $table->string('bookmarkable_type', 200);
+
             $table->timestamps();
         });
     }
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('favourite_products');
+        Schema::dropIfExists('bookmarks');
     }
 };

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Products\ProductSoldOut;
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Traits\HasBookmark;
 use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
@@ -107,7 +108,7 @@ use Illuminate\Support\Arr;
  */
 class Product extends BaseModel
 {
-    use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription;
+    use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription, HasBookmark;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_SOLD_OUT = 'sold_out';
@@ -330,14 +331,6 @@ class Product extends BaseModel
     }
 
     /**
-     * @return HasMany
-     */
-    public function favourites(): HasMany
-    {
-        return $this->hasMany(FavouriteProduct::class);
-    }
-
-    /**
      * @return int
      * @noinspection PhpUnused
      */
@@ -447,7 +440,7 @@ class Product extends BaseModel
         }
 
         if (Arr::has($options, 'favourites_only') && Arr::get($options, 'favourites_only')) {
-            $query->whereHas('favourites');
+            $query->whereHas('bookmark');
         }
 
         $orderBy = Arr::get($options, 'order_by', 'created_at');
