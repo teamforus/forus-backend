@@ -325,7 +325,7 @@ class Fund extends BaseModel
     public function voucher_transactions(): HasManyThrough
     {
         return $this->hasManyThrough(VoucherTransaction::class, Voucher::class)
-            ->whereIn('target', VoucherTransaction::OUTGOING_TARGETS);
+            ->whereIn('target', VoucherTransaction::TARGETS_OUTGOING);
     }
 
     /**
@@ -1819,9 +1819,11 @@ class Fund extends BaseModel
      */
     public function getMaxAmountPerVoucher(): float
     {
-        $max_allowed = $this->fund_config->limit_generator_amount;
-
-        return min($this->budget_left ?? $max_allowed, $max_allowed);
+        return min(
+            $this->budget_left,
+            $this->fund_config->limit_generator_amount,
+            $this->fund_config->limit_voucher_total_amount,
+        );
     }
 
     /**

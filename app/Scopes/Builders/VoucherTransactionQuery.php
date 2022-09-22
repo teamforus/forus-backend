@@ -21,6 +21,8 @@ class VoucherTransactionQuery
      */
     protected static function whereReadyForPayment(Builder $builder): Builder
     {
+        VoucherTransactionQuery::whereOutgoing($builder);
+
         $builder->where('voucher_transactions.state', VoucherTransaction::STATE_PENDING);
         $builder->whereNull('voucher_transaction_bulk_id');
 
@@ -30,8 +32,6 @@ class VoucherTransactionQuery
         $builder->whereDoesntHave('provider', function(Builder $builder) {
             $builder->whereIn('iban', config('bunq.skip_iban_numbers'));
         });
-
-        VoucherTransactionQuery::outgoing($builder);
 
         return $builder->where(function(Builder $query) {
             $query->whereNull('transfer_at');
@@ -105,17 +105,17 @@ class VoucherTransactionQuery
      * @param Builder|QBuilder $builder
      * @return Builder|QBuilder
      */
-    public static function outgoing(Builder|QBuilder $builder): Builder|QBuilder
+    public static function whereOutgoing(Builder|QBuilder $builder): Builder|QBuilder
     {
-        return $builder->whereIn('target', VoucherTransaction::OUTGOING_TARGETS);
+        return $builder->whereIn('target', VoucherTransaction::TARGETS_OUTGOING);
     }
 
     /**
      * @param Builder|QBuilder $builder
      * @return Builder|QBuilder
      */
-    public static function incoming(Builder|QBuilder $builder): Builder|QBuilder
+    public static function whereIncoming(Builder|QBuilder $builder): Builder|QBuilder
     {
-        return $builder->whereIn('target', VoucherTransaction::INCOMING_TARGETS);
+        return $builder->whereIn('target', VoucherTransaction::TARGETS_INCOMING);
     }
 }

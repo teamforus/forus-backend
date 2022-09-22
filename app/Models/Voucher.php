@@ -56,6 +56,8 @@ use ZipArchive;
  * @property int|null $product_id
  * @property int|null $parent_id
  * @property Carbon|null $expire_at
+ * @property-read Collection|\App\Models\VoucherTransaction[] $all_transactions
+ * @property-read int|null $all_transactions_count
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_eligible
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_first_use
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_received
@@ -64,8 +66,14 @@ use ZipArchive;
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
  * @property-read bool $activated
- * @property-read float $amount_available
- * @property-read float $amount_available_cached
+ * @property-read string $amount_available
+ * @property-read string $amount_available_cached
+ * @property-read string $amount_spent
+ * @property-read string $amount_spent_cached
+ * @property-read string $amount_top_up
+ * @property-read string $amount_top_up_cached
+ * @property-read string $amount_total
+ * @property-read string $amount_total_cached
  * @property-read string|null $created_at_string
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
@@ -353,8 +361,19 @@ class Voucher extends BaseModel
      */
     public function transactions(): HasMany
     {
-        return $this->hasMany(VoucherTransaction::class)
-            ->whereIn('target', VoucherTransaction::OUTGOING_TARGETS);
+        return $this
+            ->hasMany(VoucherTransaction::class)
+            ->whereIn('target', VoucherTransaction::TARGETS_OUTGOING);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function all_transactions(): HasMany
+    {
+        return $this
+            ->hasMany(VoucherTransaction::class);
     }
 
     /**
@@ -363,8 +382,9 @@ class Voucher extends BaseModel
      */
     public function top_up_transactions(): HasMany
     {
-        return $this->hasMany(VoucherTransaction::class)
-            ->where('target', VoucherTransaction::TARGET_SELF);
+        return $this
+            ->hasMany(VoucherTransaction::class)
+            ->where('target', VoucherTransaction::TARGET_TOP_UP);
     }
 
     /**
@@ -373,7 +393,7 @@ class Voucher extends BaseModel
      */
     public function last_transaction(): HasOne {
         return $this->hasOne(VoucherTransaction::class)
-            ->whereIn('target', VoucherTransaction::OUTGOING_TARGETS)
+            ->whereIn('target', VoucherTransaction::TARGETS_OUTGOING)
             ->orderByDesc('created_at');
     }
 
@@ -397,27 +417,81 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @return float
+     * @return string
      * @noinspection PhpUnused
      */
-    public function getAmountAvailableAttribute(): float
+    public function getAmountTopUpAttribute(): string
     {
-        return round($this->amount -
-            $this->transactions()->sum('amount') -
-            $this->product_vouchers()->sum('amount') +
-            $this->top_up_transactions()->sum('amount'), 2);
+        return currency_format($this->top_up_transactions()->sum('amount'));
     }
 
     /**
-     * @return float
+     * @return string
      * @noinspection PhpUnused
      */
-    public function getAmountAvailableCachedAttribute(): float
+    public function getAmountTopUpCachedAttribute(): string
     {
-        return round($this->amount -
-            $this->transactions->sum('amount') -
-            $this->product_vouchers->sum('amount') +
-            $this->top_up_transactions->sum('amount'), 2);
+        return currency_format($this->top_up_transactions->sum('amount'));
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountTotalAttribute(): string
+    {
+        return currency_format(floatval($this->amount) + floatval($this->amount_top_up));
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountTotalCachedAttribute(): string
+    {
+        return currency_format(floatval($this->amount) + floatval($this->amount_top_up_cached));
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountSpentAttribute(): string
+    {
+        return currency_format(array_sum([
+            $this->transactions()->sum('amount'),
+            $this->product_vouchers()->sum('amount'),
+        ]));
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountSpentCachedAttribute(): string
+    {
+        return currency_format(array_sum([
+            $this->transactions->sum('amount'),
+            $this->product_vouchers->sum('amount'),
+        ]));
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountAvailableAttribute(): string
+    {
+        return currency_format($this->amount_total - $this->amount_spent);
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountAvailableCachedAttribute(): string
+    {
+        return currency_format($this->amount_total_cached - $this->amount_spent_cached);
     }
 
     /**
@@ -501,8 +575,9 @@ class Voucher extends BaseModel
      */
     public function getUsedAttribute(): bool
     {
-        return $this->type === 'product' ? $this->transactions->count() > 0 :
-            $this->amount_available_cached === 0.0;
+        return $this->type === 'product' ?
+            $this->transactions->count() > 0 :
+            floatval($this->amount_available_cached) === 0.0;
     }
 
     /**

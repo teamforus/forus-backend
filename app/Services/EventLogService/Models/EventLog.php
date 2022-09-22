@@ -164,7 +164,7 @@ class EventLog extends Model
         $attributes = [];
 
         if ($this->loggable_type === (new Voucher())->getMorphClass()) {
-            $transactionType = Arr::get($this->data, 'voucher_transaction_target') === VoucherTransaction::TARGET_SELF
+            $transactionType = Arr::get($this->data, 'voucher_transaction_target') === VoucherTransaction::TARGET_TOP_UP
                 ? trans('transaction.type.incoming')
                 : trans('transaction.type.outgoing');
 

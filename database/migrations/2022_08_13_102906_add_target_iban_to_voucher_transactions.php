@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::table('voucher_transactions', function (Blueprint $table) {
             if (!Schema::hasColumn('voucher_transactions', 'target')) {
-                $table->enum('target', ['identity', 'provider'])
+                $table->enum('target', ['provider', 'iban'])
                     ->default('provider')
                     ->after('initiator');
             }

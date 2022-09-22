@@ -14,25 +14,32 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $enabled = FundConfig::where('limit_generator_amount', true)->pluck('id')->all();
         $disabled = FundConfig::where('limit_generator_amount', false)->pluck('id')->all();
+        $defaultVoucherLimit = 5000;
 
-        Schema::table('fund_configs', function (Blueprint $table) {
-            $table->decimal('limit_generator_amount',10, 2)
-                ->default(config('forus.funds.max_sponsor_voucher_amount'))
+        Schema::table('fund_configs', function (Blueprint $table) use ($defaultVoucherLimit) {
+            $table->boolean('allow_voucher_top_ups')
+                ->default(false)
+                ->after('allow_direct_payments');
+
+            $table->decimal('limit_generator_amount',10)
+                ->default($defaultVoucherLimit)
+                ->nullable()
                 ->change();
 
-            $table->decimal('limit_voucher_top_up_amount',10, 2)
+            $table->decimal('limit_voucher_top_up_amount',10)
+                ->default($defaultVoucherLimit)
                 ->nullable()
-                ->after('iconnect_base_url');
+                ->after('limit_generator_amount');
+
+            $table->decimal('limit_voucher_total_amount',10)
+                ->default($defaultVoucherLimit)
+                ->nullable()
+                ->after('limit_voucher_top_up_amount');
         });
 
-        FundConfig::whereIn('id', $enabled)->update([
-            'limit_generator_amount' => config('forus.funds.max_sponsor_voucher_amount')
-        ]);
-
         FundConfig::whereIn('id', $disabled)->update([
-            'limit_generator_amount' => null
+            'limit_generator_amount' => null,
         ]);
     }
 
@@ -44,8 +51,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
+            $table->dropColumn('allow_voucher_top_ups');
             $table->boolean('limit_generator_amount')->default(true)->change();
             $table->dropColumn('limit_voucher_top_up_amount');
+            $table->dropColumn('limit_voucher_total_amount');
         });
     }
 };

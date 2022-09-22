@@ -11,8 +11,9 @@ use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
-use App\Scopes\Builders\VoucherTransactionQuery;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Config;
 
 class TransactionsController extends Controller
 {
@@ -31,9 +32,12 @@ class TransactionsController extends Controller
         $this->authorize('show', $voucherToken->voucher);
         $this->authorize('viewAny', [VoucherTransaction::class, $voucherToken]);
 
-        $query = VoucherTransactionQuery::outgoing(
-            VoucherTransaction::searchVoucher($voucherToken->voucher, $request)
-        );
+        $query = VoucherTransaction::searchVoucher($voucherToken->voucher, $request);
+        $hideOnMeApp = Config::get('forus.features.me_app.hide_non_provider_transactions');
+
+        if ($hideOnMeApp && $request->isMeApp()) {
+            $query->where('target', 'provider');
+        }
 
         return VoucherTransactionResource::queryCollection($query, $request);
     }
@@ -43,8 +47,8 @@ class TransactionsController extends Controller
      *
      * @param StoreVoucherTransactionRequest $request
      * @param VoucherToken $voucherToken
-     * @return VoucherTransactionResource|\Illuminate\Http\JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return VoucherTransactionResource
+     * @throws AuthorizationException
      */
     public function store(
         StoreVoucherTransactionRequest $request,

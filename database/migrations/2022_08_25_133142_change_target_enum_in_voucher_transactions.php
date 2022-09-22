@@ -9,9 +9,13 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        DB::statement("ALTER TABLE voucher_transactions MODIFY COLUMN target ENUM('identity', 'provider', 'self')");
+        DB::statement("
+            ALTER TABLE `voucher_transactions` 
+            CHANGE `target` `target` ENUM('provider', 'iban', 'top_up') 
+            NOT NULL DEFAULT 'provider';
+        ");
     }
 
     /**
@@ -19,8 +23,5 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
-    {
-        DB::statement("ALTER TABLE voucher_transactions MODIFY COLUMN target ENUM('identity', 'provider')");
-    }
+    public function down(): void {}
 };

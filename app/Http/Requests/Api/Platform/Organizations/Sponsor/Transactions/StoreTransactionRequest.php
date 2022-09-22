@@ -39,35 +39,46 @@ class StoreTransactionRequest extends BaseFormRequest
     {
         $voucher = $this->has('voucher_id') ? Voucher::find($this->input('voucher_id')) : null;
 
-        $targets = ($voucher && $voucher->fund->fund_config->limit_voucher_top_up_amount)
-            ? VoucherTransaction::TARGETS
-            : [VoucherTransaction::TARGET_IDENTITY, VoucherTransaction::TARGET_PROVIDER];
-
-        return [
+        return array_merge([
             'voucher_id' => [
                 'required',
                 Rule::in($this->voucherIds()),
             ],
-            'target' => [
-                'required',
-                Rule::in($targets),
-            ],
-            'target_iban' => [
-                'required_if:target,' . VoucherTransaction::TARGET_IDENTITY,
-                new IbanRule(),
-            ],
-            'target_name' => [
-                'required_if:target,' . VoucherTransaction::TARGET_IDENTITY,
-                'string',
-                'min:3',
-                'max:200',
-            ],
-            'provider_id' => [
+            'organization_id' => [
                 'required_if:target,' . VoucherTransaction::TARGET_PROVIDER,
                 Rule::in($this->fundProviderIds($voucher)),
             ],
             'note' => 'nullable|string|max:255',
             'amount' => $this->amountRule($voucher),
+        ], $this->targetRules($voucher));
+    }
+
+    /**
+     * @param Voucher|null $voucher
+     * @return array
+     */
+    protected function targetRules(?Voucher $voucher): array
+    {
+        $fundConfig = $voucher?->fund?->fund_config;
+        $allowTopUps = (bool) $fundConfig?->allow_voucher_top_ups;
+        $allowDirectDirectPayments = (bool) $fundConfig?->allow_direct_payments;
+
+        $targets = [
+            $allowDirectDirectPayments ? VoucherTransaction::TARGET_IBAN : null,
+            $allowTopUps ? VoucherTransaction::TARGET_TOP_UP : null,
+            VoucherTransaction::TARGET_PROVIDER
+        ];
+
+        return [
+            'target' => [
+                'required', Rule::in(array_filter($targets)),
+            ],
+            'target_iban' => [
+                'required_if:target,' . VoucherTransaction::TARGET_IBAN, new IbanRule(),
+            ],
+            'target_name' => [
+                'required_if:target,' . VoucherTransaction::TARGET_IBAN, 'string', 'min:3', 'max:200',
+            ],
         ];
     }
 
@@ -77,14 +88,15 @@ class StoreTransactionRequest extends BaseFormRequest
      */
     protected function amountRule(?Voucher $voucher): string
     {
-        $max = 0;
-        $target = $this->input('target');
-
-        if ($voucher) {
-            $max = $target === VoucherTransaction::TARGET_SELF
-                ? ($voucher->fund->fund_config->limit_voucher_top_up_amount ?? 0)
-                : $voucher->amount_available;
-        }
+        $max = match($this->input('target')) {
+            VoucherTransaction::TARGET_IBAN,
+            VoucherTransaction::TARGET_PROVIDER => $voucher->amount_available,
+            VoucherTransaction::TARGET_TOP_UP => min([
+                $voucher->fund->fund_config->limit_voucher_top_up_amount,
+                $voucher->fund->fund_config->limit_voucher_total_amount - $voucher->amount_total,
+            ]),
+            default => 0,
+        };
 
         return 'required|numeric|min:.02|max:' . currency_format($max);
     }

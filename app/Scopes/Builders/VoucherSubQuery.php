@@ -50,7 +50,7 @@ class VoucherSubQuery
      */
     private static function getFirstTransactionSubQuery(): Builder|QBuilder
     {
-        return VoucherTransactionQuery::outgoing(VoucherTransaction::whereColumn([
+        return VoucherTransactionQuery::whereOutgoing(VoucherTransaction::whereColumn([
             'voucher_transactions.voucher_id' => 'vouchers.id'
         ]));
     }

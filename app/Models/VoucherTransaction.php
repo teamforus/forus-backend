@@ -47,6 +47,7 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
  * @property-read bool $iban_final
  * @property-read string $state_locale
+ * @property-read string $target_locale
  * @property-read float $transaction_cost
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -117,23 +118,23 @@ class VoucherTransaction extends BaseModel
     public const INITIATOR_SPONSOR = 'sponsor';
     public const INITIATOR_PROVIDER = 'provider';
 
-    public const TARGET_IDENTITY = 'identity';
     public const TARGET_PROVIDER = 'provider';
-    public const TARGET_SELF = 'self';
+    public const TARGET_TOP_UP = 'top_up';
+    public const TARGET_IBAN = 'iban';
 
     public const TARGETS = [
-        self::TARGET_IDENTITY,
         self::TARGET_PROVIDER,
-        self::TARGET_SELF,
+        self::TARGET_TOP_UP,
+        self::TARGET_IBAN,
     ];
 
-    public const OUTGOING_TARGETS = [
-        self::TARGET_IDENTITY,
+    public const TARGETS_OUTGOING = [
         self::TARGET_PROVIDER,
+        self::TARGET_IBAN,
     ];
 
-    public const INCOMING_TARGETS = [
-        self::TARGET_SELF,
+    public const TARGETS_INCOMING = [
+        self::TARGET_TOP_UP,
     ];
 
     public const SORT_BY_FIELDS = [
@@ -279,13 +280,27 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getTargetLocaleAttribute(): string
+    {
+        return [
+            self::TARGET_PROVIDER => trans("transaction.target.$this->target"),
+            self::TARGET_TOP_UP => trans("transaction.target.$this->target"),
+            self::TARGET_IBAN => trans("transaction.target.$this->target"),
+        ][$this->target] ?? $this->target;
+    }
+
+    /**
      * @param Request $request
      * @return Builder
      */
     public static function search(Request $request): Builder
     {
-        /** @var Builder $query */
+        /** @var Builder|VoucherTransaction $query */
         $query = self::query();
+        $targets = $request->input('targets', static::TARGETS_OUTGOING);
 
         if ($request->has('q') && $q = $request->input('q', '')) {
             $query->where(static function (Builder $query) use ($q) {
@@ -339,9 +354,7 @@ class VoucherTransaction extends BaseModel
             });
         }
 
-        if (!$request->input('show_all')) {
-            VoucherTransactionQuery::outgoing($query);
-        }
+        $query->whereIn('target', is_array($targets) ? $targets : []);
 
         return $query;
     }
@@ -395,7 +408,7 @@ class VoucherTransaction extends BaseModel
             $builder->whereRelation('voucher', 'fund_id', $request->get('fund_id'));
         }
 
-        return $builder;
+        return VoucherTransactionQuery::whereOutgoing($builder);
     }
 
     /**
@@ -608,7 +621,7 @@ class VoucherTransaction extends BaseModel
      */
     public function targetIsIdentity(): bool
     {
-        return $this->target === self::TARGET_IDENTITY;
+        return $this->target === self::TARGET_IBAN;
     }
 
     /**
@@ -617,7 +630,7 @@ class VoucherTransaction extends BaseModel
      */
     public function targetIsSelf(): bool
     {
-        return $this->target === self::TARGET_SELF;
+        return $this->target === self::TARGET_TOP_UP;
     }
 
     /**
@@ -625,7 +638,7 @@ class VoucherTransaction extends BaseModel
      */
     public function isOutgoing(): bool
     {
-        return in_array($this->target, self::OUTGOING_TARGETS);
+        return in_array($this->target, self::TARGETS_OUTGOING);
     }
 
     /**
@@ -633,6 +646,6 @@ class VoucherTransaction extends BaseModel
      */
     public function isIncoming(): bool
     {
-        return in_array($this->target, self::INCOMING_TARGETS);
+        return in_array($this->target, self::TARGETS_INCOMING);
     }
 }

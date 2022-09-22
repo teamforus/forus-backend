@@ -3,8 +3,8 @@
 return [
     'target' => [
         'provider' => 'Provider',
-        'identity' => 'Identity',
-        'self' => 'Self',
+        'top_up' => 'Top Up',
+        'iban' => 'Bank account',
     ],
     'type' => [
         'incoming' => 'incoming',

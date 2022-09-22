@@ -10,7 +10,6 @@ use App\Models\ProductCategory;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
-use App\Scopes\Builders\VoucherTransactionQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
@@ -147,11 +146,10 @@ class FinancialStatisticQueries
         $providerIds = array_get($options, 'provider_ids');
         $postcodes = array_get($options, 'postcodes');
         $fundIds = array_get($options, 'fund_ids');
+        $targets = array_get($options, 'targets', VoucherTransaction::TARGETS_OUTGOING);
 
         $dateFrom = array_get($options, 'date_from');
         $dateTo = array_get($options, 'date_to');
-
-        $showAll = array_get($options, 'show_all');
 
         $query = $query ?: VoucherTransaction::query();
         $query = $query->whereHas('voucher.fund', function(Builder $builder) use ($sponsor) {
@@ -194,9 +192,7 @@ class FinancialStatisticQueries
             $query->whereBetween('voucher_transactions.created_at', [$dateFrom, $dateTo]);
         }
 
-        if (!$showAll) {
-            VoucherTransactionQuery::outgoing($query);
-        }
+        $query->whereIn('target', is_array($targets) ? $targets : []);
 
         return $query;
     }
