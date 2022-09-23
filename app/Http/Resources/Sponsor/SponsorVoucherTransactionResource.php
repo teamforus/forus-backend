@@ -34,9 +34,9 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
         $updatedAt = $transaction->updated_at;
 
         return array_merge($transaction->only([
-            "id", "organization_id", "product_id", "state_locale",
-            "updated_at", "address", "state", "payment_id", 'voucher_transaction_bulk_id',
-            "transaction_cost", 'attempts', 'transfer_at', 'iban_final', 'target',
+            'id', 'organization_id', 'product_id', 'state_locale',
+            'updated_at', 'address', 'state', 'payment_id', 'voucher_transaction_bulk_id',
+            'transaction_cost', 'attempts', 'transfer_at', 'iban_final', 'target', 'target_locale',
         ]), $this->getIbanFields($transaction), [
             'created_at' => $createdAt?->format('Y-m-d H:i:s'),
             'created_at_locale' => format_datetime_locale($transaction->created_at),
@@ -45,8 +45,8 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'amount' => currency_format($transaction->amount),
             'timestamp' => $transaction->created_at->timestamp,
             'transaction_in' => $transaction->daysBeforeTransaction(),
-            "organization" => $transaction->provider?->only("id", "name"),
-            "fund" => $transaction->voucher->fund->only("id", "name", "organization_id"),
+            'organization' => $transaction->provider?->only('id', 'name'),
+            'fund' => $transaction->voucher->fund->only('id', 'name', 'organization_id'),
             'notes' => VoucherTransactionNoteResource::collection($transaction->notes_sponsor),
         ]);
     }

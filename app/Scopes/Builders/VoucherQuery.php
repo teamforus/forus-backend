@@ -356,9 +356,9 @@ class VoucherQuery
     private static function voucherBalanceSubQuery(): QBuilder
     {
         $selectQuery = DB::query()->select([
-            'transactions_amount' => VoucherTransaction::query()
+            'transactions_amount' => VoucherTransactionQuery::whereOutgoing(VoucherTransaction::query()
                 ->whereColumn('vouchers.id', 'voucher_transactions.voucher_id')
-                ->selectRaw('IFNULL(sum(voucher_transactions.amount), 0)'),
+                ->selectRaw('IFNULL(sum(voucher_transactions.amount), 0)')),
             'vouchers_amount' => Voucher::query()
                 ->fromSub(Voucher::query(), 'product_vouchers')
                 ->whereColumn('vouchers.id', 'product_vouchers.parent_id')

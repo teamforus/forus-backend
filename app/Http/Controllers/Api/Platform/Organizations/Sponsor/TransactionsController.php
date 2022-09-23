@@ -41,7 +41,7 @@ class TransactionsController extends Controller
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
         $options = array_merge($request->only([
-            'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids',
+            'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids', 'targets',
         ]), [
             'date_to' => $request->input('to') ? Carbon::parse($request->input('to')) : null,
             'date_from' => $request->input('from') ? Carbon::parse($request->input('from')) : null,
@@ -75,34 +75,33 @@ class TransactionsController extends Controller
     ): SponsorVoucherTransactionResource {
         $note = $request->input('note');
         $target = $request->input('target');
-        $voucher = Voucher::find($request->input('voucher_id'));
+        $targetTopUp = VoucherTransaction::TARGET_TOP_UP;
+        $targetProvider = $target == VoucherTransaction::TARGET_PROVIDER;
 
-        if ($target === VoucherTransaction::TARGET_IDENTITY) {
-            $provider = null;
-            $targetIban = $request->input('target_iban');
-            $targetName = $request->input('target_name');
-        } else if ($target === VoucherTransaction::TARGET_PROVIDER) {
-            $provider = Organization::find($request->input('provider_id'));
-            $targetIban = null;
-            $targetName = null;
-        } else {
-            abort(403);
-        }
+        $voucher = Voucher::find($request->input('voucher_id'));
+        $provider = Organization::find($request->input('organization_id')) ?: false;
 
         $this->authorize('show', $organization);
-        $this->authorize('useAsSponsor', [$voucher, $provider]);
+        $this->authorize('useAsSponsor', [$voucher, $targetProvider ? $provider : null]);
 
-        $transaction = $voucher->makeTransaction([
+        $fields = match($target) {
+            VoucherTransaction::TARGET_IBAN => $request->only('target_iban', 'target_name'),
+            VoucherTransaction::TARGET_PROVIDER => $request->only('organization_id'),
+            default => [],
+        };
+
+        $transaction = $voucher->makeTransaction(array_merge([
             'amount' => $request->input('amount'),
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
             'employee_id' => $request->employee($organization)->id,
-            'organization_id' => $provider?->id,
             'target' => $target,
-            'target_iban' => $targetIban,
-            'target_name' => $targetName,
-        ]);
+            'state' => $targetTopUp ? VoucherTransaction::STATE_SUCCESS : VoucherTransaction::STATE_PENDING,
+            'payment_time' => $targetTopUp ? now() : null,
+        ], $fields));
 
-        $note && $transaction->addNote('sponsor', $note);
+        if ($note) {
+            $transaction->addNote('sponsor', $note);
+        }
 
         VoucherTransactionCreated::dispatch($transaction, $note ? [
             'voucher_transaction_note' => $note,

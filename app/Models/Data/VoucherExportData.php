@@ -78,7 +78,7 @@ class VoucherExportData
             'activation_code_uid' => $this->voucher->activation_code_uid ?? null,
             'note' => $this->voucher->note,
             'source' => $this->voucher->employee_id ? 'employee': 'user',
-            'amount' => $this->voucher->amount,
+            'amount' => $this->voucher->amount_total,
             'fund_name' => $this->voucher->fund->name,
             'created_at' => format_date_locale($this->voucher->created_at),
             'expire_at' => format_date_locale($this->voucher->expire_at),

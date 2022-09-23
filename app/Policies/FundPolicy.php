@@ -326,7 +326,7 @@ class FundPolicy
             return false;
         }
 
-        if ($fund->isConfigured()) {
+        if (!$fund->isConfigured()) {
             return false;
         }
 

@@ -146,6 +146,7 @@ class FinancialStatisticQueries
         $providerIds = array_get($options, 'provider_ids');
         $postcodes = array_get($options, 'postcodes');
         $fundIds = array_get($options, 'fund_ids');
+        $targets = array_get($options, 'targets', VoucherTransaction::TARGETS_OUTGOING);
 
         $dateFrom = array_get($options, 'date_from');
         $dateTo = array_get($options, 'date_to');
@@ -190,6 +191,8 @@ class FinancialStatisticQueries
         if ($dateFrom && $dateTo) {
             $query->whereBetween('voucher_transactions.created_at', [$dateFrom, $dateTo]);
         }
+
+        $query->whereIn('target', is_array($targets) ? $targets : []);
 
         return $query;
     }
