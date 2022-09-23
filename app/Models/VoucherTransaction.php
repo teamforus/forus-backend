@@ -592,16 +592,16 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getTargetName(): string
+    public function getTargetName(): ?string
     {
         if ($this->targetIsProvider()) {
             return $this->provider->name;
         }
 
-        if ($this->targetIsSelf()) {
-            return 'Top up';
+        if ($this->targetIsTopUp()) {
+            return null;
         }
 
         return $this->target_name ?: 'Onbekend';
@@ -619,7 +619,7 @@ class VoucherTransaction extends BaseModel
      * @return bool
      * @noinspection PhpUnused
      */
-    public function targetIsIdentity(): bool
+    public function targetIsIban(): bool
     {
         return $this->target === self::TARGET_IBAN;
     }
@@ -628,7 +628,7 @@ class VoucherTransaction extends BaseModel
      * @return bool
      * @noinspection PhpUnused
      */
-    public function targetIsSelf(): bool
+    public function targetIsTopUp(): bool
     {
         return $this->target === self::TARGET_TOP_UP;
     }
@@ -643,6 +643,7 @@ class VoucherTransaction extends BaseModel
 
     /**
      * @return bool
+     * @noinspection PhpUnused
      */
     public function isIncoming(): bool
     {

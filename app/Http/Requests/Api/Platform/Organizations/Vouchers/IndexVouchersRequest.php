@@ -61,6 +61,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'count_per_identity_max'    => 'nullable|numeric',
             'fields'            => 'nullable|array',
             'fields.*'          => ['nullable', Rule::in($fields)],
+            'identity_address'  => 'nullable|exists:identities,address',
         ];
     }
 

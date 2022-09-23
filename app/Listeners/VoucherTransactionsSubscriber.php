@@ -6,7 +6,6 @@ use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Models\FundProvider;
 use App\Models\Voucher;
-use App\Models\VoucherTransaction;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherTransactionNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherSubsidyTransactionNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherBudgetTransactionNotification;

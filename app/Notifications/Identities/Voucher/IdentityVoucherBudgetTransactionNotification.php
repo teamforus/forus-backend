@@ -5,6 +5,8 @@ namespace App\Notifications\Identities\Voucher;
 use App\Mail\Vouchers\PaymentSuccessBudgetMail;
 use App\Models\Voucher;
 use App\Models\Identity;
+use App\Models\VoucherTransaction;
+use Illuminate\Support\Arr;
 
 /**
  * New budget voucher transaction created
@@ -22,6 +24,11 @@ class IdentityVoucherBudgetTransactionNotification extends BaseIdentityVoucherNo
     {
         /** @var Voucher $voucher */
         $voucher = $this->eventLog->loggable;
+        $target = Arr::get($this->eventLog->data, 'voucher_transaction_target');
+
+        if ($target !== VoucherTransaction::TARGET_PROVIDER) {
+            return;
+        }
 
         $this->sendMailNotification(
             $identity->email,
