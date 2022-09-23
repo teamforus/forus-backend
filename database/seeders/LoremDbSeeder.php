@@ -30,6 +30,7 @@ use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
 use Carbon\Carbon;
+use Faker\Provider\Payment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
@@ -494,7 +495,7 @@ class LoremDbSeeder extends Seeder
     ): Organization {
         $organization = Organization::create(array_only(array_merge([
             'kvk' => '69599068',
-            'iban' => $this->config('default_organization_iban'),
+            'iban' => $this->config('default_organization_iban') ?: Payment::iban('NL'),
             'phone' => '123456789',
             'email' => $this->primaryEmail,
             'bsn_enabled' => true,
