@@ -733,15 +733,6 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function getDescriptionHtmlAttribute(): string
-    {
-        return resolve('markdown.converter')->convert($this->description ?? '')->getContent();
-    }
-
-    /**
      * @return ?string
      */
     private function getBannerTextColor(): ?string

@@ -50,7 +50,7 @@ trait HasMarkdownDescription {
     /**
      * @return array
      */
-    public function getDescriptionMarkdownMediaPaths(): array
+    protected function getDescriptionMarkdownMediaPaths(): array
     {
         if (!$this->descriptionToHtml()) {
             return [];
@@ -80,7 +80,7 @@ trait HasMarkdownDescription {
     /**
      * @return Builder|Media
      */
-    public function getDescriptionMarkdownMediaQuery(): Builder|Media
+    protected function getDescriptionMarkdownMediaQuery(): Builder|Media
     {
         return Media::whereRelation('presets', function(Builder|MediaPreset $builder) {
             $builder->whereIn('path', $this->getDescriptionMarkdownMediaPaths());
@@ -89,23 +89,29 @@ trait HasMarkdownDescription {
 
     /**
      * @param string $mediaType
-     * @return bool
+     * @return Builder|Media
      */
-    public function syncDescriptionMarkdownMedia(string $mediaType): bool
+    public function getDescriptionMarkdownMediaValidQuery(string $mediaType): Builder|Media
     {
-        if (!$this->descriptionToHtml()) {
-            return false;
-        }
-
-        $uid = $this->getDescriptionMarkdownMediaQuery()
+        return $this->getDescriptionMarkdownMediaQuery()
             ->where('type', $mediaType)
             ->where(function (Builder $builder) {
                 $builder->whereNull('mediable_id');
                 $builder->orWhereHasMorph('mediable', $this->getMorphClass(), function(Builder $builder) {
                     $builder->where('mediable_id', $this->id);
                 });
-            })->pluck('uid')->toArray();
+            });
+    }
 
-        return $this->syncMedia($uid, $mediaType);
+    /**
+     * @param string $mediaType
+     * @return bool
+     */
+    public function syncDescriptionMarkdownMedia(string $mediaType): bool
+    {
+        return $this->syncMedia(
+            $this->getDescriptionMarkdownMediaValidQuery($mediaType)->pluck('uid')->toArray(),
+            $mediaType
+        );
     }
 }

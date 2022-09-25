@@ -26,6 +26,7 @@ use Illuminate\Support\Arr;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\ImplementationBlock[] $blocks
  * @property-read int|null $blocks_count
+ * @property-read string $description_html
  * @property-read \App\Models\Implementation $implementation
  * @property-read Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
@@ -33,10 +34,10 @@ use Illuminate\Support\Arr;
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newQuery()
  * @method static \Illuminate\Database\Query\Builder|ImplementationPage onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage query()
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereContent($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereContentAlignment($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDescriptionAlignment($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternal($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternalUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereId($value)

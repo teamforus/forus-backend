@@ -38,18 +38,6 @@ class UpdateImplementationCmsRequest extends FormRequest
     }
 
     /**
-     * @return array
-     */
-    private function mediaRule(): array {
-        return [
-            'required',
-            'string',
-            'exists:media,uid',
-            new MediaUidRule('cms_media'),
-        ];
-    }
-
-    /**
      * @return string[]
      */
     private function announcementsRules(): array

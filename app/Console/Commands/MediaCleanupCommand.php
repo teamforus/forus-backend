@@ -12,7 +12,7 @@ class MediaCleanupCommand extends Command
      * @var string
      */
     protected $signature = 'media:cleanup
-                            {minutes_to_expire? : How old in minutes should me media to be considered expired.} 
+                            {--minutes= : How old in minutes should me media to be considered expired.} 
                             {--force : Do not ask for confirmation before deleting.}';
 
     /**
@@ -41,13 +41,13 @@ class MediaCleanupCommand extends Command
     {
         $minutes = null;
 
-        if ($this->hasOption('minutes_to_expire')) {
-            if (!is_numeric($this->option('minutes_to_expire'))) {
-                $this->error("Invalid argument `minutes_to_expire`.\n");
+        if ($this->hasOption('minutes')) {
+            if (!is_numeric($this->option('minutes'))) {
+                $this->error("Invalid argument `minutes`.\n");
                 exit();
             }
 
-            $minutes = intval($this->option('minutes_to_expire'));
+            $minutes = intval($this->option('minutes'));
         }
 
         $this->mediaWithoutMediable();

@@ -10,6 +10,7 @@ use App\Http\Resources\Sponsor\ImplementationPageResource;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\Organization;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -66,7 +67,7 @@ class ImplementationPagesController extends Controller
             'external_url' => null,
         ] : []));
 
-        $page->syncDescriptionMarkdownMedia('implementation_block_media');
+        $page->syncDescriptionMarkdownMedia('cms_media');
         $page->syncBlocks($request->input('blocks'));
 
         return new ImplementationPageResource($page);
@@ -120,7 +121,7 @@ class ImplementationPagesController extends Controller
      * @param Implementation $implementation
      * @param ImplementationPage $implementationPage
      * @return ImplementationPageResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function update(
         UpdateImplementationPageRequest $request,
