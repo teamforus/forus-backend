@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use JetBrains\PhpStorm\NoReturn;
@@ -57,10 +58,11 @@ abstract class BaseCommand extends Command
     }
 
     /**
-     * @param Collection|Model[] $cards
+     * @param Collection|Model $cards
+     * @param mixed ...$only
      * @return void
      */
-    protected function printModels(Collection $cards, ...$only)
+    protected function printModels(Collection|Arrayable $cards, ...$only): void
     {
         $only = is_array($only[0] ?? null) ? $only[0] : $only;
         $only = is_array($only) ? $only : null;
@@ -113,6 +115,7 @@ abstract class BaseCommand extends Command
     /**
      * @return void
      */
+    #[NoReturn]
     protected function exit(): void
     {
         $this->printSeparator();

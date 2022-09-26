@@ -26,8 +26,8 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
     {
         return array_merge(parent::rules(), [
             'state'                 => 'nullable|in:' . implode(',', ImplementationPage::STATES),
-            'content'               => 'nullable|string|max:10000',
-            'content_alignment'     => 'nullable|in:left,center,right',
+            'description'           => 'nullable|string|max:10000',
+            'description_alignment' => 'nullable|in:left,center,right',
             'external'              => 'present|boolean',
             'external_url'          => 'nullable|string|max:300',
             'media_uid'             => 'nullable|array',

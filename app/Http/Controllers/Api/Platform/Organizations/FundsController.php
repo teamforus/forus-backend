@@ -94,7 +94,7 @@ class FundsController extends Controller
         ]));
 
         $fund->attachMediaByUid($request->input('media_uid'));
-        $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
+        $fund->syncDescriptionMarkdownMedia('cms_media');
         $fund->syncTagsOptional($request->input('tag_ids'));
         $fund->syncFaq($request->input('faq'));
 
@@ -194,7 +194,7 @@ class FundsController extends Controller
         ])));
 
         $fund->attachMediaByUid($request->input('media_uid'));
-        $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
+        $fund->syncDescriptionMarkdownMedia('cms_media');
         $fund->syncFaqOptional($request->input('faq'));
         $fund->syncTagsOptional($request->input('tag_ids'));
 

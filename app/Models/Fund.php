@@ -1409,9 +1409,10 @@ class Fund extends BaseModel
     {
         /** @var FundFaq $faq */
         $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
-        $faq->appendMedia($question['description_media_uid'] ?? [], 'cms_media');
+        $faq->updateModel(array_only($question, ['title', 'description']));
+        $faq->syncDescriptionMarkdownMedia('cms_media');
 
-        return $faq->updateModel(array_only($question, ['title', 'description']));
+        return $faq;
     }
 
     /**

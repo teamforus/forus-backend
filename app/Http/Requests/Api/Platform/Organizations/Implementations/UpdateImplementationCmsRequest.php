@@ -30,25 +30,11 @@ class UpdateImplementationCmsRequest extends FormRequest
             'description_alignment' => 'nullable|in:left,center,right',
             'informal_communication' => 'nullable|boolean',
             'banner_media_uid' => ['nullable', new MediaUidRule('implementation_banner')],
-            'media_uid' => 'nullable|array',
-            'media_uid.*' => $this->mediaRule(),
             'overlay_enabled' => 'nullable|bool',
             'overlay_type' => 'nullable|in:color,dots,lines,points,circles',
             'overlay_opacity' => 'nullable|numeric|min:0|max:100',
             'header_text_color' => 'nullable|in:bright,dark,auto',
         ], $this->announcementsRules());
-    }
-
-    /**
-     * @return array
-     */
-    private function mediaRule(): array {
-        return [
-            'required',
-            'string',
-            'exists:media,uid',
-            new MediaUidRule('cms_media'),
-        ];
     }
 
     /**
