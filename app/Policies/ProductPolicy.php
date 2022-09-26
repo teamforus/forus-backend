@@ -95,23 +95,23 @@ class ProductPolicy
     }
 
     /**
-     * @param Identity|null $identity
+     * @param Identity $identity
      * @return bool
      * @noinspection PhpUnused
      */
-    public function addFavourite(?Identity $identity): bool
+    public function bookmark(Identity $identity): bool
     {
         return $identity->exists;
     }
 
     /**
-     * @param Identity|null $identity
+     * @param Identity $identity
      * @return bool
      * @noinspection PhpUnused
      */
-    public function removeFavourite(?Identity $identity): bool
+    public function removeBookmark(Identity $identity): bool
     {
-        return $this->addFavourite($identity);
+        return $this->bookmark($identity);
     }
 
     /**

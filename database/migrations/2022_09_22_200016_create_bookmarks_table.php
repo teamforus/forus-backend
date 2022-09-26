@@ -11,16 +11,18 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('bookmarks', function (Blueprint $table) {
             $table->id();
-
-            $table->string('identity_address', 200)->default('');
-            $table->unsignedInteger('bookmarkable_id');
-            $table->string('bookmarkable_type', 200);
-
+            $table->string('identity_address', 200)->index();
+            $table->morphs('bookmarkable');
             $table->timestamps();
+
+            $table->foreign('identity_address')
+                ->references('address')
+                ->on('identities')
+                ->onDelete('cascade');
         });
     }
 
@@ -29,7 +31,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('bookmarks');
     }

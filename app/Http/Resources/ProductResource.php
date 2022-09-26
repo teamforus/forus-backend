@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\FavouriteProduct;
 use App\Models\Fund;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
@@ -12,9 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
- * Class ProductResource
  * @property Product $resource
- * @package App\Http\Resources
  */
 class ProductResource extends BaseJsonResource
 {
@@ -29,6 +26,7 @@ class ProductResource extends BaseJsonResource
         'organization.offices.organization.logo.presets',
         'organization.logo.presets',
         'organization.business_type.translations',
+        'bookmarks',
     ];
 
     /**
@@ -66,9 +64,7 @@ class ProductResource extends BaseJsonResource
             'price_max' => currency_format($this->getProductSubsidyPrice($product, 'min')),
             'offices' => OfficeResource::collection($product->organization->offices),
             'product_category' => new ProductCategoryResource($product->product_category),
-            'is_favourite' => $product->bookmark()->where([
-                'identity_address' => $request->user()?->address
-            ])->exists()
+            'bookmarked' => $product->isBookmarkedBy($baseRequest->identity()),
         ]);
     }
 

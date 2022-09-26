@@ -74,33 +74,16 @@ $router->group([], static function() use ($router) {
         ]
     ]);
 
-    $router->get(
-        'products/sample',
-        "Api\Platform\ProductsController@sample"
-    );
+    $router->get('products/sample', "Api\Platform\ProductsController@sample");
+    $router->post('products/{product}/bookmark', "Api\Platform\ProductsController@bookmark");
+    $router->post('products/{product}/remove-bookmark', "Api\Platform\ProductsController@removeBookmark");
 
-    $router->post(
-        'bookmarks/set-bookmark',
-        "Api\Platform\BookmarkController@setBookmark"
-    );
+    $router->resource('products', "Api\Platform\ProductsController")
+        ->only('index');
 
-    $router->post(
-        'bookmarks/remove-bookmark',
-        "Api\Platform\BookmarkController@removeBookmark"
-    );
-
-    $router->resource(
-        'products',
-        "Api\Platform\ProductsController", [
-        'only' => [
-            'index'
-        ]
-    ]);
-
-    $router->get(
-        'products/{product_with_trashed}',
-        "Api\Platform\ProductsController@show"
-    );
+    $router->resource('products', "Api\Platform\ProductsController")
+        ->parameter('product', 'product_with_trashed')
+        ->only('show');
 
     $router->get(
         'config/{platform_config}',

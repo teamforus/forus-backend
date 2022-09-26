@@ -243,7 +243,7 @@ class VoucherResource extends BaseJsonResource
      * @return Voucher[]|Collection|null
      */
     protected function getProductVouchers(
-        \Illuminate\Support\Collection|array|null $product_vouchers
+        Collection|array|null $product_vouchers
     ): \Illuminate\Support\Collection|array|null {
         return $product_vouchers?->map(function (Voucher $product_voucher) {
             return array_merge($product_voucher->only([
