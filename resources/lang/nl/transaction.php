@@ -8,6 +8,6 @@ return [
     ],
     'type' => [
         'incoming' => 'inkomend',
-        'outgoing' => 'uitgaan',
+        'outgoing' => 'uitgaand',
     ],
 ];
