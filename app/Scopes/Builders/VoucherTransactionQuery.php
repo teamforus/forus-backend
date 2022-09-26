@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QBuilder;
 
 /**
  * Class VoucherQuery
@@ -20,6 +21,8 @@ class VoucherTransactionQuery
      */
     protected static function whereReadyForPayment(Builder $builder): Builder
     {
+        VoucherTransactionQuery::whereOutgoing($builder);
+
         $builder->where('voucher_transactions.state', VoucherTransaction::STATE_PENDING);
         $builder->whereNull('voucher_transaction_bulk_id');
 
@@ -96,5 +99,23 @@ class VoucherTransactionQuery
         return Organization::where(function(Builder $builder) {
             $builder->whereColumn('organizations.id', 'voucher_transactions.organization_id');
         })->select('organizations.name');
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    public static function whereOutgoing(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        return $builder->whereIn('target', VoucherTransaction::TARGETS_OUTGOING);
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    public static function whereIncoming(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        return $builder->whereIn('target', VoucherTransaction::TARGETS_INCOMING);
     }
 }

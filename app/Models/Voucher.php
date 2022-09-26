@@ -56,6 +56,8 @@ use ZipArchive;
  * @property int|null $product_id
  * @property int|null $parent_id
  * @property Carbon|null $expire_at
+ * @property-read Collection|\App\Models\VoucherTransaction[] $all_transactions
+ * @property-read int|null $all_transactions_count
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_eligible
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_first_use
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_received
@@ -64,8 +66,14 @@ use ZipArchive;
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
  * @property-read bool $activated
- * @property-read float $amount_available
- * @property-read float $amount_available_cached
+ * @property-read string $amount_available
+ * @property-read string $amount_available_cached
+ * @property-read string $amount_spent
+ * @property-read string $amount_spent_cached
+ * @property-read string $amount_top_up
+ * @property-read string $amount_top_up_cached
+ * @property-read string $amount_total
+ * @property-read string $amount_total_cached
  * @property-read string|null $created_at_string
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
@@ -101,6 +109,8 @@ use ZipArchive;
  * @property-read \App\Models\VoucherToken|null $token_without_confirmation
  * @property-read Collection|\App\Models\VoucherToken[] $tokens
  * @property-read int|null $tokens_count
+ * @property-read Collection|\App\Models\VoucherTransaction[] $top_up_transactions
+ * @property-read int|null $top_up_transactions_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $transactions
  * @property-read int|null $transactions_count
  * @property-read \App\Models\VoucherRelation|null $voucher_relation
@@ -339,7 +349,7 @@ class Voucher extends BaseModel
      */
     public function product(): BelongsTo
     {
-        /** @var Builder|SoftDeletes $relationQuery */
+        /** @var BelongsTo|SoftDeletes $relationQuery */
         $relationQuery = $this->belongsTo(Product::class, 'product_id', 'id');
 
         return $relationQuery->withTrashed();
@@ -351,7 +361,30 @@ class Voucher extends BaseModel
      */
     public function transactions(): HasMany
     {
-        return $this->hasMany(VoucherTransaction::class);
+        return $this
+            ->hasMany(VoucherTransaction::class)
+            ->whereIn('target', VoucherTransaction::TARGETS_OUTGOING);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function all_transactions(): HasMany
+    {
+        return $this
+            ->hasMany(VoucherTransaction::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function top_up_transactions(): HasMany
+    {
+        return $this
+            ->hasMany(VoucherTransaction::class)
+            ->where('target', VoucherTransaction::TARGET_TOP_UP);
     }
 
     /**
@@ -359,7 +392,9 @@ class Voucher extends BaseModel
      * @noinspection PhpUnused
      */
     public function last_transaction(): HasOne {
-        return $this->hasOne(VoucherTransaction::class)->orderByDesc('created_at');
+        return $this->hasOne(VoucherTransaction::class)
+            ->whereIn('target', VoucherTransaction::TARGETS_OUTGOING)
+            ->orderByDesc('created_at');
     }
 
     /**
@@ -382,25 +417,81 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @return float
+     * @return string
      * @noinspection PhpUnused
      */
-    public function getAmountAvailableAttribute(): float
+    public function getAmountTopUpAttribute(): string
     {
-        return round($this->amount -
-            $this->transactions()->sum('amount') -
-            $this->product_vouchers()->sum('amount'), 2);
+        return currency_format($this->top_up_transactions()->sum('amount'));
     }
 
     /**
-     * @return float
+     * @return string
      * @noinspection PhpUnused
      */
-    public function getAmountAvailableCachedAttribute(): float
+    public function getAmountTopUpCachedAttribute(): string
     {
-        return round($this->amount -
-            $this->transactions->sum('amount') -
-            $this->product_vouchers->sum('amount'), 2);
+        return currency_format($this->top_up_transactions->sum('amount'));
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountTotalAttribute(): string
+    {
+        return currency_format(floatval($this->amount) + floatval($this->amount_top_up));
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountTotalCachedAttribute(): string
+    {
+        return currency_format(floatval($this->amount) + floatval($this->amount_top_up_cached));
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountSpentAttribute(): string
+    {
+        return currency_format(array_sum([
+            $this->transactions()->sum('amount'),
+            $this->product_vouchers()->sum('amount'),
+        ]));
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountSpentCachedAttribute(): string
+    {
+        return currency_format(array_sum([
+            $this->transactions->sum('amount'),
+            $this->product_vouchers->sum('amount'),
+        ]));
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountAvailableAttribute(): string
+    {
+        return currency_format($this->amount_total - $this->amount_spent);
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountAvailableCachedAttribute(): string
+    {
+        return currency_format($this->amount_total_cached - $this->amount_spent_cached);
     }
 
     /**
@@ -484,8 +575,9 @@ class Voucher extends BaseModel
      */
     public function getUsedAttribute(): bool
     {
-        return $this->type === 'product' ? $this->transactions->count() > 0 :
-            $this->amount_available_cached === 0.0;
+        return $this->type === 'product' ?
+            $this->transactions->count() > 0 :
+            floatval($this->amount_available_cached) === 0.0;
     }
 
     /**
@@ -525,11 +617,11 @@ class Voucher extends BaseModel
 
     /**
      * @param Request $request
-     * @return Builder
+     * @return Builder|Voucher
      */
-    public static function search(Request $request): Builder
+    public static function search(Request $request): Builder|Voucher
     {
-        /** @var Builder $query */
+        /** @var Builder|Voucher $query */
         $query = self::query();
         $granted = $request->input('granted');
 
@@ -607,8 +699,10 @@ class Voucher extends BaseModel
         }
 
         switch ($request->input('type')) {
+            case 'all': break;
             case 'fund_voucher': $query->whereNull('product_id'); break;
             case 'product_voucher': $query->whereNotNull('product_id'); break;
+            default: abort(403);
         }
 
         switch ($request->input('source', 'employee')) {
@@ -620,6 +714,10 @@ class Voucher extends BaseModel
 
         if ($request->has('email') && $email = $request->input('email')) {
             $query->where('identity_address', Identity::findByEmail($email)?->address ?: '_');
+        }
+
+        if ($request->input('identity_address', false)) {
+            $query->where('identity_address', $request->input('identity_address'));
         }
 
         if ($request->has('bsn') && $bsn = $request->input('bsn')) {
@@ -1260,7 +1358,7 @@ class Voucher extends BaseModel
         bool $reviewRequired = false
     ): VoucherTransaction {
         $data = array_merge([
-            'state' => 'pending',
+            'state' => VoucherTransaction::STATE_PENDING,
             'address' => resolve('token_generator')->address(),
             'initiator' => VoucherTransaction::INITIATOR_PROVIDER,
             'voucher_id' => $this->id,

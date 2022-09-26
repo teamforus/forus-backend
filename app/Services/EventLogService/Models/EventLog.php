@@ -8,6 +8,7 @@ use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -163,7 +164,15 @@ class EventLog extends Model
         $attributes = [];
 
         if ($this->loggable_type === (new Voucher())->getMorphClass()) {
-            $attributes = ['id' => Arr::get($this->data, 'voucher_id')];
+            $transactionType = Arr::get($this->data, 'voucher_transaction_target') === VoucherTransaction::TARGET_TOP_UP
+                ? trans('transaction.type.incoming')
+                : trans('transaction.type.outgoing');
+
+            $attributes = [
+                'id' => Arr::get($this->data, 'voucher_id'),
+                'transaction_type' => $transactionType,
+                'amount_locale' => Arr::get($this->data, 'voucher_transaction_amount_locale'),
+            ];
         }
 
         if ($this->loggable_type === (new Employee())->getMorphClass()) {

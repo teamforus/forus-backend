@@ -50,8 +50,11 @@ abstract class BaseIndexTransactionsRequest extends BaseFormRequest
             'product_category_ids.*'        => 'nullable|exists:product_categories,id',
             'voucher_transaction_bulk_id'   => 'nullable|exists:voucher_transaction_bulks,id',
 
-            'order_by'          => 'nullable|in:' . implode(',', VoucherTransaction::SORT_BY_FIELDS),
-            'order_dir'         => 'nullable|in:asc,desc',
+            'order_by'  => ['nullable', Rule::in(VoucherTransaction::SORT_BY_FIELDS)],
+            'order_dir' => 'nullable|in:asc,desc',
+            'targets'   => 'nullable|array',
+            'targets.*' => ['required', Rule::in(VoucherTransaction::TARGETS)],
+            'initiator' => ['nullable', Rule::in(VoucherTransaction::INITIATORS)],
         ];
     }
 }

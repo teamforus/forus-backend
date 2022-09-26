@@ -29,7 +29,7 @@ class VoucherTransactionBulkResource extends BaseJsonResource
         return array_merge($transactionBulk->only('id', 'state', 'state_locale', 'payment_id'), [
             'auth_url' => $this->getAuthUrl($transactionBulk),
             'bank' => new BankResource($transactionBulk->bank_connection->bank),
-            'execution_date' => $executionDate ? $executionDate->format('Y-m-d') : null,
+            'execution_date' => $executionDate?->format('Y-m-d'),
             'execution_date_locale' => format_date_locale($transactionBulk->execution_date),
             'voucher_transactions_amount' => $transactionBulk->voucher_transactions->sum('amount'),
             'voucher_transactions_count' => $transactionBulk->voucher_transactions->count(),
