@@ -201,6 +201,10 @@ class Kernel extends ConsoleKernel
      */
     public function scheduleDigest(Schedule $schedule): void
     {
+        if (env('DISABLE_DIGEST', false)) {
+            return;
+        }
+
         /**
          * DigIdSessionsCleanupCommand
          */

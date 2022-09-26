@@ -201,7 +201,7 @@ class RequesterDigest
         foreach ($vouchersByIdentities as $identity_address => $vouchersByIdentity) {
             $identity = Identity::findByAddress($identity_address);
 
-            if (!empty($identity)) {
+            if (!empty($identity) && $identity->email) {
                 $funds = $vouchersByIdentity->pluck('fund_id')->unique()->toArray();
                 $identityFunds[] = compact('identity', 'funds');
             }

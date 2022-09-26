@@ -312,7 +312,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
             $channels[] = MailChannel::class;
         }
 
-        if (in_array('push', $channelKeys)) {
+        if (in_array('push', $channelKeys) && !env('DISABLE_PUSH', false)) {
             $channels[] = PushChannel::class;
         }
 
