@@ -2,12 +2,12 @@
 
 return [
     'target' => [
-        'provider' => 'Provider',
-        'top_up' => 'Top Up',
-        'iban' => 'Bank account',
+        'provider' => 'Aanbieder',
+        'top_up' => 'Opwaarderen',
+        'iban' => 'IBAN',
     ],
     'type' => [
-        'incoming' => 'incoming',
-        'outgoing' => 'outgoing',
+        'incoming' => 'inkomend',
+        'outgoing' => 'uitgaan',
     ],
 ];
