@@ -41,6 +41,10 @@ return new class extends Migration
         FundConfig::whereIn('id', $disabled)->update([
             'limit_generator_amount' => null,
         ]);
+
+        FundConfig::query()->update([
+            'limit_generator_amount' => $defaultVoucherLimit,
+        ]);
     }
 
     /**

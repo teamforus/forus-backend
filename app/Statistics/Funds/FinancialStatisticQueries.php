@@ -12,6 +12,7 @@ use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as BaseCollection;
 
 /**
@@ -190,6 +191,10 @@ class FinancialStatisticQueries
         // filter by interval
         if ($dateFrom && $dateTo) {
             $query->whereBetween('voucher_transactions.created_at', [$dateFrom, $dateTo]);
+        }
+
+        if (Arr::get($options, 'initiator')) {
+            $query->whereInitiator(Arr::get($options, 'initiator'));
         }
 
         $query->whereIn('target', is_array($targets) ? $targets : []);

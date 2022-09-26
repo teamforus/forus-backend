@@ -118,6 +118,11 @@ class VoucherTransaction extends BaseModel
     public const INITIATOR_SPONSOR = 'sponsor';
     public const INITIATOR_PROVIDER = 'provider';
 
+    public const INITIATORS = [
+        self::INITIATOR_SPONSOR,
+        self::INITIATOR_PROVIDER,
+    ];
+
     public const TARGET_PROVIDER = 'provider';
     public const TARGET_TOP_UP = 'top_up';
     public const TARGET_IBAN = 'iban';

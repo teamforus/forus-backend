@@ -54,6 +54,7 @@ abstract class BaseIndexTransactionsRequest extends BaseFormRequest
             'order_dir' => 'nullable|in:asc,desc',
             'targets'   => 'nullable|array',
             'targets.*' => ['required', Rule::in(VoucherTransaction::TARGETS)],
+            'initiator' => ['nullable', Rule::in(VoucherTransaction::INITIATORS)],
         ];
     }
 }

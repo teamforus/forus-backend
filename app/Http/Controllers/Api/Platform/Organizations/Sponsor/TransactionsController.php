@@ -41,7 +41,7 @@ class TransactionsController extends Controller
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
         $options = array_merge($request->only([
-            'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids', 'targets',
+            'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids', 'targets', 'initiator',
         ]), [
             'date_to' => $request->input('to') ? Carbon::parse($request->input('to')) : null,
             'date_from' => $request->input('from') ? Carbon::parse($request->input('from')) : null,
