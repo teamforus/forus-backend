@@ -50,7 +50,7 @@ class SessionController extends Controller
      *
      * @param Session $session
      * @return JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * @throws \Throwable
      */
     public function terminate(Session $session): JsonResponse
     {
@@ -67,7 +67,7 @@ class SessionController extends Controller
      * @param BaseFormRequest $formRequest
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws \Throwable
      * @noinspection PhpUnused
      */
     public function terminateAll(BaseFormRequest $formRequest): JsonResponse
