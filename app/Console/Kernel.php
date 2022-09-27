@@ -261,7 +261,7 @@ class Kernel extends ConsoleKernel
         /**
          * UpdateSessionsExpirationCommand
          */
-        $schedule->command('auth_sessions:update-expiration')
+        $schedule->command('auth_sessions:update-expiration --force')
             ->withoutOverlapping()
             ->everyMinute()
             ->onOneServer();
