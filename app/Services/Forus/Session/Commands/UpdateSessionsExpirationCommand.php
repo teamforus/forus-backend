@@ -17,7 +17,11 @@ class UpdateSessionsExpirationCommand extends BaseCommand
      *
      * @var string
      */
-    protected $signature = 'auth_sessions:update-expiration {--dry-run}';
+    protected $signature = 'auth_sessions:update-expiration
+                                {--chunk-size= : chunk size.}
+                                {--progress}
+                                {--dry-run}
+                                {--force}';
 
     /**
      * The console command description.
@@ -30,70 +34,107 @@ class UpdateSessionsExpirationCommand extends BaseCommand
      * Execute the console command.
      *
      * @return int
+     * @throws \Throwable
      */
     public function handle(): int
     {
-        $identityProxies = $this->getIdentityProxies()->load([
-            'sessions.first_request',
-            'sessions.last_request',
-        ])->loadCount('sessions');
+        $query = $this->getIdentityProxiesQuery();
+        $chunkSize = intval($this->option('chunk-size') ?: 1_000);
+        $countTokens = (clone $query)->count();
+        $chunks = ceil($countTokens / $chunkSize);
+        $conformationMessage = "$countTokens tokens with expired sessions found, are sure you want to continue?";
 
+        $progress = $this->option('progress');
+        $verbose = $this->option('verbose');
         $dryRun = $this->option('dry-run');
+        $force = $this->option('force');
 
-        if (!$dryRun) {
-            foreach ($identityProxies as $identityProxy) {
-                $identityProxy->deactivateBySession();
-            }
-        }
-
-        if ($identityProxies->isEmpty()) {
-            $this->printText($this->green("No tokens have to be deactivated."));
+        if (!$dryRun && !$force && !$this->confirm($conformationMessage)) {
             return 0;
         }
 
-        $this->printHeader($this->green("Deactivated tokens:"), 2);
-        $this->printList($identityProxies->map(function(IdentityProxy $proxy) {
-            $line = sprintf("#%s, date: %s", $this->green($proxy->id), $this->green($proxy->created_at));
+        (clone $query)->chunkById($chunkSize, function(Collection $identityProxies, $page) use (
+            $chunks, $progress, $dryRun
+        ) {
+            $identityProxies->each(function (IdentityProxy $proxy) use (&$dryRun) {
+                if (!$dryRun && !$proxy->isDeactivated()) {
+                    $proxy->deactivateBySession();
+                }
+            });
 
-            return [$line, $proxy->sessions->map(function(Session $session) {
-                return sprintf(
-                    "#%s, start: %s, end: %s, client: %s",
-                    $this->green($session->id),
-                    $this->green($session->first_request->created_at),
-                    $this->green($session->last_request->created_at),
-                    $this->green($session->initial_client_type),
-                );
-            })->toArray()];
-        })->toArray());
+            if ($progress) {
+                if ($page !== 1) {
+                    echo chr(27) . "[0G";
+                }
+
+                echo "Progress: " . $this->green($page) . "/" . $this->green($chunks);
+            }
+        });
+
+        if ($dryRun && $verbose) {
+            if ($countTokens === 0) {
+                $this->printText($this->green("No tokens have to be deactivated."));
+                return 0;
+            }
+
+            $this->printHeader($this->green("Deactivated tokens:"), 2);
+            $this->printDeactivatedProxies((clone $query), $chunkSize);
+        }
 
         return 0;
     }
 
     /**
-     * @return Collection|IdentityProxy[]
+     * @param Builder $builder
+     * @param int $chunkSize
+     * @return void
      */
-    protected function getIdentityProxies(): Collection|Array
+    protected function printDeactivatedProxies(Builder $builder, int $chunkSize): void
+    {
+        $builder->chunk($chunkSize, function($identityProxies) {
+            $this->printList($identityProxies->map(function(IdentityProxy $proxy) {
+                $line = sprintf("Token: #%s, date: %s", $this->green($proxy->id), $this->green($proxy->created_at));
+
+                return [$line, $proxy->sessions->map(function(Session $session) {
+                    return sprintf(
+                        "Session: #%s, start: %s, end: %s, client: %s",
+                        $this->green($session->id),
+                        $this->green($session->first_request->created_at),
+                        $this->green($session->last_request->created_at),
+                        $this->green($session->initial_client_type),
+                    );
+                })->toArray()];
+            })->toArray());
+        });
+    }
+
+    /**
+     * @return Builder
+     */
+    public function getIdentityProxiesQuery(): Builder
     {
         $builder = IdentityProxy::query();
 
-        // is older than 4 years
-        $builder->where('created_at', '<', now()->subYears(4));
+        $builder->where(function(Builder $builder) {
+            // is older than 4 years
+            $builder->where('created_at', '<', now()->subYears(4));
 
-        $builder->orWhere(function(Builder $builder) {
-            // or have no sessions and older than a month
-            $builder->where(fn(Builder $builder) => $this->queryWhereActiveAndNoSessions($builder));
+            $builder->orWhere(function(Builder $builder) {
+                // or have no sessions and older than a month
+                $builder->where(fn(Builder $builder) => $this->queryWhereActiveAndNoSessions($builder));
 
-            // expired webshop sessions
-            $builder->orWhere(fn(Builder $builder) => $this->querySessionExpiredWebshop($builder));
+                // expired webshop sessions
+                $builder->orWhere(fn(Builder $builder) => $this->querySessionExpiredWebshop($builder));
 
-            // expired dashboard sessions
-            $builder->orWhere(fn(Builder $builder) => $this->querySessionExpiredDashboard($builder));
+                // expired dashboard sessions
+                $builder->orWhere(fn(Builder $builder) => $this->querySessionExpiredDashboard($builder));
 
-            // expired app sessions
-            $builder->orWhere(fn(Builder $builder) => $this->querySessionExpiredApp($builder));
+                // expired app sessions
+                $builder->orWhere(fn(Builder $builder) => $this->querySessionExpiredApp($builder));
+            });
         });
 
-        return $builder->get();
+        return $builder;
     }
 
     /**
