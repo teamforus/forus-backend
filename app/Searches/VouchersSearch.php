@@ -26,6 +26,12 @@ class VouchersSearch extends BaseSearch
     {
         $builder = parent::query();
 
+        if ($this->getFilter('isMobileClient')) {
+            $builder->whereHas('fund.fund_config', static function (Builder $builder) {
+                $builder->where('has_external_vouchers', '=', false);
+            });
+        }
+
         if ($this->getFilter('type') === Voucher::TYPE_BUDGET) {
             $builder->whereNull('product_id');
         }

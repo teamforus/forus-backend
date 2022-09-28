@@ -100,6 +100,7 @@ class VoucherResource extends BaseJsonResource
             'physical_card' => $physical_cards ? $physical_cards->only('id', 'code') : false,
             'product_vouchers' => $this->getProductVouchers($voucher->product_vouchers),
             'query_product' => $this->queryProduct($voucher, $request->get('product_id')),
+            'is_internal'   => $voucher->isInternal(),
         ], $this->timestamps($voucher, 'created_at'));
     }
 
@@ -235,8 +236,7 @@ class VoucherResource extends BaseJsonResource
             'end_date' => $fund->end_date->format('Y-m-d H:i'),
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
-            'show_voucher_qr' => $fund->fund_config->show_voucher_qr,
-            'show_voucher_amount' => $fund->fund_config->show_voucher_amount,
+            'has_external_vouchers' => $fund->fund_config->has_external_vouchers,
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
         ]);

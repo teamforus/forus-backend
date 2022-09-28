@@ -117,6 +117,7 @@ class VoucherPolicy
             $voucher->fund->organization_id === $organization->id &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->is_granted;
     }
@@ -138,6 +139,7 @@ class VoucherPolicy
             $voucher->fund->organization_id === $organization->id &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             !$voucher->activated &&
             !$voucher->expired;
     }
@@ -206,6 +208,7 @@ class VoucherPolicy
             $this->assignSponsor($identity, $voucher, $organization) &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             !$voucher->activation_code &&
             !$voucher->deactivated &&
             !$voucher->expired;
@@ -225,6 +228,7 @@ class VoucherPolicy
             $voucher->exists &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             $voucher->activation_code &&
             !$voucher->identity_address &&
             !$voucher->deactivated;
@@ -279,6 +283,7 @@ class VoucherPolicy
             $this->show($identity, $voucher) &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->expired;
     }
@@ -296,6 +301,7 @@ class VoucherPolicy
             Gate::allows('create', [PhysicalCard::class, $voucher]) &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->expired;
     }
@@ -316,6 +322,7 @@ class VoucherPolicy
             $organization->identityCan($identity, 'manage_vouchers') &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             $voucher->fund->fund_config->allow_physical_cards &&
             $voucher->fund->organization_id === $organization->id &&
             !$voucher->deactivated &&
@@ -368,6 +375,10 @@ class VoucherPolicy
         // reservation product removed
         if ($voucher->product_reservation && $voucher->product_reservation->product->trashed()) {
             return $this->deny('reservation_product_removed');
+        }
+
+        if (!$voucher->isInternal()) {
+            return $this->deny('External voucher.');
         }
 
         // reservation is not pending
@@ -561,7 +572,7 @@ class VoucherPolicy
         Voucher $voucher,
         ?Organization $provider = null
     ): Response|bool {
-        if (!$voucher->fund->organization->identityCan($identity, 'make_direct_payments')) {
+        if (!$voucher->fund->organization->identityCan($identity, 'make_direct_payments')  || $voucher->isExternal()) {
             return false;
         }
 

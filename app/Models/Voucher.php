@@ -408,6 +408,22 @@ class Voucher extends BaseModel
     }
 
     /**
+     * @return bool
+     */
+    public function isExternal(): bool
+    {
+        return $this->fund->fund_config->has_external_vouchers;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInternal(): bool
+    {
+        return !$this->isExternal();
+    }
+
+    /**
      * @return string
      * @noinspection PhpUnused
      */

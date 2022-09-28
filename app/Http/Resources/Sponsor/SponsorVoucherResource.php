@@ -52,6 +52,7 @@ class SponsorVoucherResource extends BaseJsonResource
             ]),
             'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
+            'is_internal'   => $voucher->isInternal(),
             'first_use_date' => $first_use_date?->format('Y-m-d'),
             'first_use_date_locale' => $first_use_date ? format_date_locale($first_use_date) : null,
             'created_at' => $voucher->created_at->format('Y-m-d H:i:s'),

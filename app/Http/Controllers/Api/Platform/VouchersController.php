@@ -29,7 +29,9 @@ class VouchersController extends Controller
             ->whereDoesntHave('product_reservation')
             ->orderByDesc('created_at');
 
-        $search = new VouchersSearch($request->only('type', 'state', 'archived'), $query);
+        $search = new VouchersSearch(array_merge($request->only('type', 'state', 'archived'), [
+            'isMobileClient' => $request->isMeApp()
+        ]), $query);
         $per_page = $request->input('per_page', 1000);
 
         // todo: remove fallback pagination 1000, when apps are ready

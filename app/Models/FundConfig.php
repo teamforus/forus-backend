@@ -27,8 +27,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_direct_payments
  * @property bool $allow_voucher_top_ups
  * @property bool $employee_can_see_product_vouchers
- * @property int $show_voucher_qr
- * @property int $show_voucher_amount
  * @property bool $is_configured
  * @property bool $email_required
  * @property bool $contact_info_enabled
@@ -38,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $limit_generator_amount
  * @property string|null $limit_voucher_top_up_amount
  * @property string|null $limit_voucher_total_amount
+ * @property string $has_external_vouchers
  * @property int|null $bsn_confirmation_time
  * @property int|null $bsn_confirmation_api_time
  * @property bool $backoffice_enabled
@@ -125,7 +124,7 @@ class FundConfig extends BaseModel
         'backoffice_certificate', 'backoffice_fallback',
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'email_required', 'contact_info_enabled', 'contact_info_required',
-        'contact_info_message_custom', 'contact_info_message_text',
+        'contact_info_message_custom', 'contact_info_message_text', 'has_external_vouchers'
     ];
 
     /**
