@@ -2008,7 +2008,7 @@ class Fund extends BaseModel
      */
     private function isIconnectApiConfigured(): bool
     {
-        return !empty(IConnect::getConfigs());
+        return !empty(IConnect::getConfigs($this));
     }
 
     /**
@@ -2016,11 +2016,7 @@ class Fund extends BaseModel
      */
     public function getIConnect(): ?IConnect
     {
-        return $this->hasIConnectApiOin() ? new IConnect(
-            $this->fund_config->iconnect_api_oin,
-            $this->fund_config->iconnect_target_binding,
-            $this->fund_config->iconnect_base_url
-        ) : null;
+        return $this->hasIConnectApiOin() ? new IConnect($this) : null;
     }
 
     /**

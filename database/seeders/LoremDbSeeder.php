@@ -731,6 +731,9 @@ class LoremDbSeeder extends Seeder
             'iconnect_api_oin'          => config('forus.seeders.lorem_db_seeder.iconnect_oin'),
             'iconnect_base_url'         => config('forus.seeders.lorem_db_seeder.iconnect_url'),
             'iconnect_target_binding'   => config('forus.seeders.lorem_db_seeder.iconnect_binding'),
+            'iconnect_cert'             => $this->config('iconnect_cert'),
+            'iconnect_key'              => $this->config('iconnect_key'),
+            'iconnect_cert_trust'       => $this->config('iconnect_cert_trust'),
         ], array_only($fields, [
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox', 'csv_primary_key', 'is_configured',
         ]), $backofficeConfig));

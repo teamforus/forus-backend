@@ -3,6 +3,8 @@
 
 namespace App\Services\IConnectApiService;
 
+use App\Models\Fund;
+use App\Services\BNGService\TmpFile;
 use App\Services\IConnectApiService\Objects\Person;
 use App\Services\IConnectApiService\Responses\ResponseData;
 use GuzzleHttp\Client;
@@ -18,6 +20,8 @@ use RuntimeException;
  */
 class IConnect
 {
+    protected Fund $fund;
+
     private const METHOD_GET = 'GET';
 
     private const ENV_PRODUCTION = 'production';
@@ -36,31 +40,29 @@ class IConnect
         'partners' => 'partners',
     ];
 
+    private string $api_url;
     private string $iconnect_api_oin;
     private string $iconnect_target_binding;
-    private string $api_url;
 
     private string $cert_trust_path;
-    private array $configs;
 
     /**
-     * @param string $iconnectApiOin
-     * @param string $targetBinding
-     * @param string $apiUrl
+     * @param Fund $fund
      */
-    public function __construct(string $iconnectApiOin, string $targetBinding, string $apiUrl) {
-        $configs = static::getConfigs();
+    public function __construct(Fund $fund) {
+        $this->fund = $fund;
+
+        $configs = static::getConfigs($fund);
         $isSandbox = Arr::get($configs, 'env') === self::ENV_SANDBOX;
 
         if (!in_array(Arr::get($configs, 'env'), self::ENVIRONMENTS, true)) {
             throw new RuntimeException('Invalid iConnection "env" type.');
         }
 
-        $this->configs = $configs;
         $this->cert_trust_path = Arr::get($configs, 'cert_trust_path', '');
-        $this->iconnect_api_oin = $iconnectApiOin;
-        $this->iconnect_target_binding = $targetBinding;
-        $this->api_url = $isSandbox ? self::URL_SANDBOX : Str::finish($apiUrl, '/');
+        $this->iconnect_api_oin = $this->fund->fund_config->iconnect_api_oin;
+        $this->iconnect_target_binding = $this->fund->fund_config->iconnect_target_binding;
+        $this->api_url = $isSandbox ? self::URL_SANDBOX : Str::finish($this->fund->fund_config->iconnect_base_url, '/');
     }
 
     /**
@@ -84,7 +86,7 @@ class IConnect
      *
      * @param string $url
      * @param array $data
-     * @return \Psr\Http\Message\ResponseInterface
+     * @return ResponseInterface|null
      */
     private function request(string $url, array $data = []): ?ResponseInterface
     {
@@ -109,7 +111,7 @@ class IConnect
     private function makeRequestHeaders(): array
     {
         return [
-            'apikey' => Arr::get($this->configs, 'header_key', ''),
+            'apikey' => '',
             'x-doelbinding' => $this->iconnect_target_binding,
             'x-origin-oin' => $this->iconnect_api_oin,
             'Content-Type' => 'application/json',
@@ -125,10 +127,10 @@ class IConnect
      */
     private function makeRequestOptions(array $data): array {
         return [
-            'cert' => [Arr::get($this->configs, 'cert_path'), Arr::get($this->configs, 'cert_pass')],
-            'ssl_key' => [Arr::get($this->configs, 'key_path'), Arr::get($this->configs, 'key_pass')],
+            'cert' => "",
+            'ssl_key' => "",
             'headers' => $this->makeRequestHeaders(),
-            'connect_timeout' => Arr::get($this->configs, 'connect_timeout', 10),
+            'connect_timeout' => 10,
             'query' => $data,
         ];
     }
@@ -152,27 +154,26 @@ class IConnect
     }
 
     /**
+     * @param Fund $fund
      * @return array|null
      */
-    public static function getConfigs(): ?array
+    public static function getConfigs(Fund $fund): ?array
     {
-        $storage = resolve('filesystem')->disk('local');
-        $configPath = config('iconnect.config_path');
+        $keyTmpFile = new TmpFile($fund->fund_config->iconnect_key);
+        $certTmpFile = new TmpFile($fund->fund_config->iconnect_certificate);
+        $certTrustTmpFile = new TmpFile($fund->fund_config->iconnect_cert_trust);
 
-        if ($storage->has($configPath)) {
-            try {
-                $config = json_decode($storage->get($configPath), true);
+        $config = [
+            'env'       => $fund->fund_config->iconnect_env,
+            'key_path'  => $keyTmpFile->path(),
+            'cert_path' => $certTmpFile->path(),
+            'cert_trust_path' => $certTrustTmpFile->path(),
+        ];
 
-                return array_merge([
-                    'key_path' => $storage->path($config['key_storage_path'] ?? ''),
-                    'cert_path' => $storage->path($config['cert_storage_path'] ?? ''),
-                    'cert_trust_path' => $storage->path($config['cert_storage_trust_path'] ?? ''),
-                ], $config);
-            } catch (FileNotFoundException $e) {
-                logger()->error($e->getMessage());
-            }
-        }
+        $keyTmpFile->close();
+        $certTmpFile->close();
+        $certTrustTmpFile->close();
 
-        return null;
+        return $config;
     }
 }

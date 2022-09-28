@@ -85,4 +85,9 @@ return [
     'iconnect_binding' => env('DB_SEED_ICONNECT_BINDING', ""),
 
     'productboard_api_key' => env('DB_SEED_PRODUCTBOARD_API_KEY'),
+
+    'iconnect_env' => env('DB_SEED_ICONNECT_ENV', ""),
+    'iconnect_cert' => env('DB_SEED_ICONNECT_API_CERT', ""),
+    'iconnect_key' => env('DB_SEED_ICONNECT_API_KEY', ""),
+    'iconnect_cert_trust' => env('DB_SEED_ICONNECT_API_CERT_TRUST', ""),
 ];
