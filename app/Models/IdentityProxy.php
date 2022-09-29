@@ -105,10 +105,10 @@ class IdentityProxy extends Model
      */
     public function sessions_with_trashed(): HasMany
     {
-        return $this->hasMany(Session::class)->where(function(Builder $builder) {
-            /** @var Builder|SoftDeletes $builder */
-            $builder->withTrashed();
-        });
+        /** @var HasMany|SoftDeletes $relation */
+        $relation = $this->hasMany(Session::class);
+
+        return $relation->withTrashed();
     }
 
     /**

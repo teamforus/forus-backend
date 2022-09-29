@@ -135,6 +135,15 @@ class Implementation extends BaseModel
     public const FRONTEND_PROVIDER_DASHBOARD = 'provider';
     public const FRONTEND_VALIDATOR_DASHBOARD = 'validator';
 
+    public const FRONTEND_WEBSITE = 'website';
+    public const FRONTEND_PIN_CODE = 'pin_code-auth';
+
+    public const ME_APP_IOS = 'me_app-android';
+    public const ME_APP_ANDROID = 'me_app-android';
+    public const ME_APP_DEPRECATED = 'app-me_app';
+
+    public const DEPRECATED_FRONTEND_GENERAL = 'general';
+
     public const FRONTEND_KEYS = [
         self::FRONTEND_WEBSHOP,
         self::FRONTEND_SPONSOR_DASHBOARD,
