@@ -36,6 +36,10 @@ jobs:
         working-directory: forus-backend
         run: docker-compose exec -T app bash -c "composer dumpautoload && php artisan migrate"
 
+      - name: Set app key
+        working-directory: forus-backend
+        run: docker-compose exec -T app bash -c "php artisan key:generate"
+
       - name: Run base seeders
         working-directory: forus-backend
         run: docker-compose exec -T app bash -c "php artisan db:seed"
