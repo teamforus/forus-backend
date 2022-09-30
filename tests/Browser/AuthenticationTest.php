@@ -61,7 +61,7 @@ class AuthenticationTest extends DuskTestCase
             $this->assertEmailRestoreLinkSent($identity->email, $startTime);
 
             // Get and follow the auth link from the email then check if the user is authenticated
-            $browser->visit($this->findFirstEmalRestoreLink($identity->email, $startTime));
+            $browser->visit($this->findFirstEmailRestoreLink($identity->email, $startTime));
             $browser->waitFor('@identityEmail');
             $browser->assertSeeIn('@identityEmail', $identity->email);
 
@@ -119,7 +119,7 @@ class AuthenticationTest extends DuskTestCase
             $this->assertEmailConfirmationLinkSent($email, $startTime);
 
             // Get and follow the auth link from the email then check if the user is authenticated
-            $browser->visit($this->findFirstEmalConfirmationLink($email, $startTime));
+            $browser->visit($this->findFirstEmailConfirmationLink($email, $startTime));
             $browser->waitFor('@identityEmail');
             $browser->assertSeeIn('@identityEmail', $email);
 
