@@ -26,6 +26,8 @@ use Illuminate\Support\Arr;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\ImplementationBlock[] $blocks
  * @property-read int|null $blocks_count
+ * @property-read Collection|\App\Models\ImplementationPageFaq[] $faq
+ * @property-read int|null $faq_count
  * @property-read string $description_html
  * @property-read \App\Models\Implementation $implementation
  * @property-read Collection|\App\Services\MediaService\Models\Media[] $medias
@@ -77,46 +79,57 @@ class ImplementationPage extends BaseModel
         'key' => self::TYPE_HOME,
         'type' => 'static',
         'blocks' => true,
+        'faq' => false,
     ], [
         'key' => self::TYPE_PRODUCTS,
         'type' => 'static',
         'blocks' => false,
+        'faq' => false,
     ], [
         'key' => self::TYPE_PROVIDERS,
         'type' => 'static',
         'blocks' => false,
+        'faq' => false,
     ], [
         'key' => self::TYPE_FUNDS,
         'type' => 'static',
         'blocks' => false,
+        'faq' => false,
     ], [
         'key' => self::TYPE_PROVIDER,
         'type' => 'static',
         'blocks' => true,
+        'faq' => false,
     ], [
         'key' => self::TYPE_EXPLANATION,
         'type' => 'extra',
         'blocks' => true,
+        'faq' => true,
     ], [
         'key' => self::TYPE_PRIVACY,
         'type' => 'extra',
         'blocks' => true,
+        'faq' => false,
     ], [
         'key' => self::TYPE_ACCESSIBILITY,
         'type' => 'extra',
         'blocks' => true,
+        'faq' => false,
     ], [
         'key' => self::TYPE_TERMS_AND_CONDITIONS,
         'type' => 'extra',
         'blocks' => true,
+        'faq' => false,
     ], [
         'key' => self::TYPE_FOOTER_CONTACT_DETAILS,
         'type' => 'element',
         'blocks' => false,
+        'faq' => false,
     ], [
         'key' => self::TYPE_FOOTER_OPENING_TIMES,
         'type' => 'element',
         'blocks' => false,
+        'faq' => false,
     ]];
 
     /**
@@ -151,6 +164,14 @@ class ImplementationPage extends BaseModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function faq(): HasMany
+    {
+        return $this->hasMany(ImplementationPageFaq::class);
+    }
+
+    /**
      * @param array|null $blocks
      * @return void
      */
@@ -179,6 +200,49 @@ class ImplementationPage extends BaseModel
 
             $block->attachMediaByUid($blockData['media_uid'] ?? null);
         }
+    }
+
+    /**
+     * Update faq for existing implementation page
+     * @param array $faq
+     * @return $this
+     */
+    public function syncFaq(array $faq = []): self
+    {
+        // remove faq not listed in the array
+        $this->faq()->whereNotIn('id', array_filter(array_pluck($faq, 'id')))->delete();
+
+        foreach ($faq as $question) {
+            $this->syncQuestion($question);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Update faq for existing implementation page when provided
+     * @param array|null $faq
+     * @return $this
+     */
+    public function syncFaqOptional(?array $faq = null): self
+    {
+        return is_array($faq) ? $this->syncFaq($faq) : $this;
+    }
+
+    /**
+     * Update faq question or create new implementation page question
+     *
+     * @param array $question
+     * @return ImplementationPageFaq
+     */
+    protected function syncQuestion(array $question): ImplementationPageFaq
+    {
+        /** @var ImplementationPageFaq $faq */
+        $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
+        $faq->updateModel(array_only($question, ['title', 'description']));
+        $faq->syncDescriptionMarkdownMedia('cms_media');
+
+        return $faq;
     }
 
     /**

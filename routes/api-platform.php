@@ -365,6 +365,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations/{organization}/implementations/{implementation}/pages/validate-blocks',
         "Api\Platform\Organizations\Implementations\ImplementationPagesController@storeBlocksValidate");
 
+    $router->post(
+        'organizations/{organization}/implementations/{implementation}/pages/validate-faq',
+        "Api\Platform\Organizations\Implementations\ImplementationPagesController@storeFaqValidate");
+
     $router->resource(
         'organizations/{organization}/implementations/{implementation}/pages',
         "Api\Platform\Organizations\Implementations\ImplementationPagesController"
