@@ -83,6 +83,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property-read \App\Models\ImplementationPage|null $page_provider
  * @property-read \App\Models\ImplementationPage|null $page_terms_and_conditions
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPageConfig[] $implementation_configs
  * @property-read int|null $pages_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages_public
  * @property-read int|null $pages_public_count
@@ -210,6 +211,14 @@ class Implementation extends BaseModel
         return $this->hasOne(ImplementationPage::class)->where([
             'page_type' => ImplementationPage::TYPE_EXPLANATION,
         ]);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function implementation_configs(): HasMany
+    {
+        return $this->hasMany(ImplementationPageConfig::class);
     }
 
     /**
@@ -594,12 +603,28 @@ class Implementation extends BaseModel
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
                 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
                 'has_productboard_integration' => !empty(resolve('productboard')),
+                'implementation_configs' => $implementation->implementation_configs
             ]);
         }
 
         return $config ?: [];
     }
 
+    /**
+     * @return array
+     */
+    public function getImplementationConfig(): array
+    {
+        $data = [];
+        foreach (ImplementationPageConfig::CONFIG_LIST as $default_config) {
+            $data[] = $this->implementation_configs()->where([
+                'page_key' => $default_config['page_key'],
+                'page_config_key' => $default_config['page_config_key'],
+            ])->first() ?: $default_config;
+        }
+
+        return $data;
+    }
 
     /**
      * @param string $type
