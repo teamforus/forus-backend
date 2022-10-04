@@ -552,20 +552,20 @@ class VoucherPolicy
      *
      * @param Identity $identity
      * @param Voucher $voucher
-     * @param Organization $providerOrganization
+     * @param Organization|null $provider
      * @return Response|bool
      * @noinspection PhpUnused
      */
     public function useAsSponsor(
         Identity $identity,
         Voucher $voucher,
-        Organization $providerOrganization
+        ?Organization $provider = null
     ): Response|bool {
         if (!$voucher->fund->organization->identityCan($identity, 'make_direct_payments')) {
             return false;
         }
 
-        return $this->useAsProviderBase($providerOrganization->identity, $voucher);
+        return !$provider || $this->useAsProviderBase($provider->identity, $voucher);
     }
 
     /**

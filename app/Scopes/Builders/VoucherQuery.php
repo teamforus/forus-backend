@@ -209,10 +209,10 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Voucher $builder
+     * @return Builder|Voucher
      */
-    public static function whereVisibleToSponsor(Builder $builder): Builder
+    public static function whereVisibleToSponsor(Builder|Voucher $builder): Builder|Voucher
     {
         return $builder->where(static function(Builder $builder) {
             $builder->whereNotNull('employee_id');
@@ -356,9 +356,9 @@ class VoucherQuery
     private static function voucherBalanceSubQuery(): QBuilder
     {
         $selectQuery = DB::query()->select([
-            'transactions_amount' => VoucherTransaction::query()
+            'transactions_amount' => VoucherTransactionQuery::whereOutgoing(VoucherTransaction::query()
                 ->whereColumn('vouchers.id', 'voucher_transactions.voucher_id')
-                ->selectRaw('IFNULL(sum(voucher_transactions.amount), 0)'),
+                ->selectRaw('IFNULL(sum(voucher_transactions.amount), 0)')),
             'vouchers_amount' => Voucher::query()
                 ->fromSub(Voucher::query(), 'product_vouchers')
                 ->whereColumn('vouchers.id', 'product_vouchers.parent_id')

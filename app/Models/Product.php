@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Products\ProductSoldOut;
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Traits\HasBookmarks;
 use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
@@ -46,6 +47,8 @@ use Illuminate\Support\Arr;
  * @property \Illuminate\Support\Carbon|null $expire_at
  * @property bool $sold_out
  * @property int|null $sponsor_organization_id
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Bookmark[] $bookmarks
+ * @property-read int|null $bookmarks_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderChat[] $fund_provider_chats
  * @property-read int|null $fund_provider_chats_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
@@ -107,7 +110,7 @@ use Illuminate\Support\Arr;
  */
 class Product extends BaseModel
 {
-    use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription;
+    use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription, HasBookmarks;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_SOLD_OUT = 'sold_out';
@@ -732,5 +735,14 @@ class Product extends BaseModel
         return $reservationsEnabled &&
             ($this->reservation_policy === self::RESERVATION_POLICY_GLOBAL) &&
             $this->organization->reservations_auto_accept;
+    }
+
+    /**
+     * @param Identity|null $identity
+     * @return bool
+     */
+    public function isBookmarkedBy(?Identity $identity = null): bool
+    {
+        return $identity && $this->bookmarks->where('identity_address', $identity->address)->isNotEmpty();
     }
 }

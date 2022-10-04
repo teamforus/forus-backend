@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -11,6 +12,7 @@ use App\Services\EventLogService\Models\EventLog;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Config;
 
 /**
  * Class VoucherResource
@@ -277,11 +279,17 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Voucher $voucher
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @return AnonymousResourceCollection
      */
     protected function getTransactions(Voucher $voucher): AnonymousResourceCollection
     {
-        return VoucherTransactionResource::collection($voucher->transactions);
+        $hideOnMeApp = Config::get('forus.features.me_app.hide_non_provider_transactions');
+
+        if ($hideOnMeApp && BaseFormRequest::createFromBase(request())->isMeApp()) {
+            return $voucher->all_transactions->where('target', 'provider');
+        }
+
+        return VoucherTransactionResource::collection($voucher->all_transactions);
     }
 
     /**

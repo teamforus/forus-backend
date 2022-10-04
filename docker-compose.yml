@@ -55,6 +55,18 @@ services:
     networks:
       - forus-network
 
+  selenium:
+    profiles:
+      - testing
+    depends_on:
+      - app
+    image: selenium/standalone-chrome
+    container_name: forus-backend-selenium
+    ports:
+      - "4444:4444"
+    networks:
+      - forus-network
+
 networks:
   forus-network:
     driver: bridge

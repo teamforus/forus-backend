@@ -19,7 +19,7 @@ use Illuminate\Http\Request;
  *
  * @property int $id
  * @property int $voucher_id
- * @property int $organization_id
+ * @property int|null $organization_id
  * @property int|null $employee_id
  * @property int|null $product_id
  * @property int|null $fund_provider_product_id
@@ -27,6 +27,7 @@ use Illuminate\Http\Request;
  * @property string $amount
  * @property string|null $iban_from
  * @property string|null $iban_to
+ * @property string|null $iban_to_name
  * @property string|null $payment_time
  * @property string $address
  * @property \Illuminate\Support\Carbon|null $transfer_at
@@ -38,11 +39,15 @@ use Illuminate\Http\Request;
  * @property int $attempts
  * @property string $state
  * @property string $initiator
+ * @property string $target
+ * @property string|null $target_iban
+ * @property string|null $target_name
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
  * @property-read bool $iban_final
  * @property-read string $state_locale
+ * @property-read string $target_locale
  * @property-read float $transaction_cost
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -54,7 +59,7 @@ use Illuminate\Http\Request;
  * @property-read int|null $notes_sponsor_count
  * @property-read \App\Models\Product|null $product
  * @property-read \App\Models\ProductReservation|null $product_reservation
- * @property-read \App\Models\Organization $provider
+ * @property-read \App\Models\Organization|null $provider
  * @property-read \App\Models\Voucher $voucher
  * @property-read \App\Models\VoucherTransactionBulk|null $voucher_transaction_bulk
  * @method static Builder|VoucherTransaction newModelQuery()
@@ -69,6 +74,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereFundProviderProductId($value)
  * @method static Builder|VoucherTransaction whereIbanFrom($value)
  * @method static Builder|VoucherTransaction whereIbanTo($value)
+ * @method static Builder|VoucherTransaction whereIbanToName($value)
  * @method static Builder|VoucherTransaction whereId($value)
  * @method static Builder|VoucherTransaction whereInitiator($value)
  * @method static Builder|VoucherTransaction whereLastAttemptAt($value)
@@ -78,6 +84,9 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction wherePaymentTime($value)
  * @method static Builder|VoucherTransaction whereProductId($value)
  * @method static Builder|VoucherTransaction whereState($value)
+ * @method static Builder|VoucherTransaction whereTarget($value)
+ * @method static Builder|VoucherTransaction whereTargetIban($value)
+ * @method static Builder|VoucherTransaction whereTargetName($value)
  * @method static Builder|VoucherTransaction whereTransferAt($value)
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
@@ -109,9 +118,33 @@ class VoucherTransaction extends BaseModel
     public const INITIATOR_SPONSOR = 'sponsor';
     public const INITIATOR_PROVIDER = 'provider';
 
+    public const INITIATORS = [
+        self::INITIATOR_SPONSOR,
+        self::INITIATOR_PROVIDER,
+    ];
+
+    public const TARGET_PROVIDER = 'provider';
+    public const TARGET_TOP_UP = 'top_up';
+    public const TARGET_IBAN = 'iban';
+
+    public const TARGETS = [
+        self::TARGET_PROVIDER,
+        self::TARGET_TOP_UP,
+        self::TARGET_IBAN,
+    ];
+
+    public const TARGETS_OUTGOING = [
+        self::TARGET_PROVIDER,
+        self::TARGET_IBAN,
+    ];
+
+    public const TARGETS_INCOMING = [
+        self::TARGET_TOP_UP,
+    ];
+
     public const SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'voucher_transaction_bulk_id',
-        'fund_name', 'provider_name',
+        'fund_name', 'provider_name', 'target',
     ];
 
     /**
@@ -122,8 +155,9 @@ class VoucherTransaction extends BaseModel
     protected $fillable = [
         'voucher_id', 'organization_id', 'product_id', 'fund_provider_product_id',
         'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
-        'iban_from', 'iban_to', 'payment_time', 'employee_id', 'transfer_at',
+        'iban_from', 'iban_to', 'iban_to_name', 'payment_time', 'employee_id', 'transfer_at',
         'voucher_transaction_bulk_id', 'payment_description', 'initiator',
+        'target', 'target_iban', 'target_name',
     ];
 
     protected $hidden = [
@@ -137,7 +171,8 @@ class VoucherTransaction extends BaseModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function product(): BelongsTo {
+    public function product(): BelongsTo
+    {
         return $this->belongsTo(Product::class);
     }
 
@@ -153,21 +188,24 @@ class VoucherTransaction extends BaseModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function provider(): BelongsTo {
+    public function provider(): BelongsTo
+    {
         return $this->belongsTo(Organization::class, 'organization_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function voucher(): BelongsTo {
+    public function voucher(): BelongsTo
+    {
         return $this->belongsTo(Voucher::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function product_reservation(): HasOne {
+    public function product_reservation(): HasOne
+    {
         return $this->hasOne(ProductReservation::class);
     }
 
@@ -247,13 +285,27 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getTargetLocaleAttribute(): string
+    {
+        return [
+            self::TARGET_PROVIDER => trans("transaction.target.$this->target"),
+            self::TARGET_TOP_UP => trans("transaction.target.$this->target"),
+            self::TARGET_IBAN => trans("transaction.target.$this->target"),
+        ][$this->target] ?? $this->target;
+    }
+
+    /**
      * @param Request $request
      * @return Builder
      */
     public static function search(Request $request): Builder
     {
-        /** @var Builder $query */
+        /** @var Builder|VoucherTransaction $query */
         $query = self::query();
+        $targets = $request->input('targets', static::TARGETS_OUTGOING);
 
         if ($request->has('q') && $q = $request->input('q', '')) {
             $query->where(static function (Builder $query) use ($q) {
@@ -307,6 +359,8 @@ class VoucherTransaction extends BaseModel
             });
         }
 
+        $query->whereIn('target', is_array($targets) ? $targets : []);
+
         return $query;
     }
 
@@ -333,6 +387,10 @@ class VoucherTransaction extends BaseModel
             $builder->where(compact('voucher_transaction_bulk_id'));
         }
 
+        if ($voucher_id = $request->input('voucher_id')) {
+            $builder->where(compact('voucher_id'));
+        }
+
         if ($request->input('pending_bulking')) {
             VoucherTransactionQuery::whereAvailableForBulking($builder);
         }
@@ -355,7 +413,7 @@ class VoucherTransaction extends BaseModel
             $builder->whereRelation('voucher', 'fund_id', $request->get('fund_id'));
         }
 
-        return $builder;
+        return VoucherTransactionQuery::whereOutgoing($builder);
     }
 
     /**
@@ -390,7 +448,7 @@ class VoucherTransaction extends BaseModel
             'date_transaction' => format_datetime_locale($transaction->created_at),
             'date_payment' => format_datetime_locale($transaction->payment_time),
             'fund_name' => $transaction->voucher->fund->name,
-            'provider' => $transaction->provider->name,
+            'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
             'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
         ], $fields))->values();
 
@@ -528,5 +586,72 @@ class VoucherTransaction extends BaseModel
             'state'         => static::STATE_SUCCESS,
             'payment_time'  => now(),
         ]);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getTargetIban(): ?string
+    {
+        return $this->targetIsProvider() ? $this->provider->iban : $this->target_iban;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getTargetName(): ?string
+    {
+        if ($this->targetIsProvider()) {
+            return $this->provider->name;
+        }
+
+        if ($this->targetIsTopUp()) {
+            return null;
+        }
+
+        return $this->target_name ?: 'Onbekend';
+    }
+
+    /**
+     * @return bool
+     */
+    public function targetIsProvider(): bool
+    {
+        return $this->target === self::TARGET_PROVIDER;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function targetIsIban(): bool
+    {
+        return $this->target === self::TARGET_IBAN;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function targetIsTopUp(): bool
+    {
+        return $this->target === self::TARGET_TOP_UP;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isOutgoing(): bool
+    {
+        return in_array($this->target, self::TARGETS_OUTGOING);
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function isIncoming(): bool
+    {
+        return in_array($this->target, self::TARGETS_INCOMING);
     }
 }

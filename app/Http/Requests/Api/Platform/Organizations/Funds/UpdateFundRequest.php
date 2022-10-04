@@ -43,16 +43,12 @@ class UpdateFundRequest extends BaseFormRequest
             'description'               => 'nullable|string|max:15000',
             'description_short'         => 'nullable|string|max:280',
             'notification_amount'       => 'nullable|numeric',
-            'description_media_uid'     => 'nullable|array',
-            'description_media_uid.*'   => $this->mediaRule(),
             'faq_title'                 => 'nullable|string|max:200',
             'faq'                       => 'nullable|array',
             'faq.*'                     => 'required|array',
             'faq.*.id'                  => ['nullable', 'in:' . $this->fund->faq()->pluck('id')->join(',')],
             'faq.*.title'               => 'required|string|max:100',
             'faq.*.description'         => 'required|string|max:5000',
-            'faq.*.description_media_uid'   => 'nullable|array',
-            'faq.*.description_media_uid.*' => $this->mediaRule(),
             'tag_ids'                   => 'nullable|array',
             'tag_ids.*'                 => 'required|exists:tags,id',
             'request_btn_text'          => 'nullable|string|max:50',
@@ -124,17 +120,5 @@ class UpdateFundRequest extends BaseFormRequest
             'criteria.*.validators'         => 'nullable|array',
             'criteria.*.validators.*'       => Rule::in($validators->toArray())
         ] : [];
-    }
-
-    /**
-     * @return array
-     */
-    private function mediaRule(): array {
-        return [
-            'required',
-            'string',
-            'exists:media,uid',
-            new MediaUidRule('cms_media')
-        ];
     }
 }

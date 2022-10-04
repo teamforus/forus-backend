@@ -24,7 +24,7 @@ return [
         'expired' => 'Voucher #:id is verlopen',
         'expired_budget' => 'Voucher #:id is verlopen',
         'expired_product' => 'Voucher #:id is verlopen',
-        'transaction' => 'Voucher #:id transaction is aangemaakt',
+        'transaction' => 'Voucher #:id :transaction_type transaction created with amount :amount_locale',
         'transaction_subsidy' => 'Voucher #:id transactie is aangemaakt',
         'transaction_budget' => 'Voucher #:id transactie is aangemaakt',
         'transaction_product' => 'Voucher #:id transactie is aangemaakt',

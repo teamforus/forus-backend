@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\ExportIdentiti
 use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\IndexIdentitiesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\SendIdentityNotificationRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
+use App\Http\Resources\Sponsor\IdentityBsnResource;
 use App\Http\Resources\Sponsor\IdentityResource;
 use App\Models\Fund;
 use App\Models\Identity;
@@ -35,7 +36,7 @@ class IdentitiesController extends Controller
         Fund $fund
     ): AnonymousResourceCollection|JsonResponse {
         $this->authorize('show', [$organization]);
-        $this->authorize('showIdentitiesOverview', [$fund, $organization]);
+        $this->authorize('viewIdentitiesSponsor', [$fund, $organization]);
 
         $isManager = $organization->identityCan($request->identity(), 'manage_vouchers');
         $filters = array_filter(['target', 'has_email', 'order_by', 'order_dir', $isManager ? 'q' : null]);
@@ -49,9 +50,33 @@ class IdentitiesController extends Controller
             'without_email' => $fund->activeIdentityQuery(false, false)->count(),
         ];
 
-        return IdentityResource::queryCollection($query)->additional([
+        $collection = $organization->bsn_enabled
+            ? IdentityBsnResource::queryCollection($query)
+            : IdentityResource::queryCollection($query);
+
+        return $collection->additional([
             'meta' => compact('counts'),
         ]);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return IdentityBsnResource|IdentityResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function show(
+        Organization $organization,
+        Fund $fund,
+        Identity $identity
+    ): IdentityBsnResource|IdentityResource {
+        $this->authorize('show', [$organization]);
+        $this->authorize('showIdentitySponsor', [$fund, $organization, $identity]);
+
+        return $organization->bsn_enabled
+            ? IdentityBsnResource::create($identity)
+            : IdentityResource::create($identity);
     }
 
     /**

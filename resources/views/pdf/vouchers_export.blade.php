@@ -17,14 +17,14 @@
             $qr_code = make_qr_code('voucher', $voucherData->getVoucher()->token_without_confirmation->address);
         @endphp
 
-        <div style="height: 50%">
+        <div style="height: 60%">
             <img width="400" style="border: 1px solid silver;" alt="qr-code" src="data:image/png;base64, {!! base64_encode($qr_code) !!} "/>
-                <div style="position: absolute; bottom: 0; left: 0;">
-                    <span>{{ $voucherData->getName() }}</span>
+            <div style="position: absolute; bottom: 25px; left: 0;">
+                <span>{{ $voucherData->getName() }}</span>
                 @if ($voucherData->getVoucher()->fund->isTypeBudget())
-                    <span> - {{ $voucherData->getVoucher()->amount }}€</span>
+                    <span> - {{ $voucherData->getVoucher()->amount_total }}€</span>
                 @endif
-                </div>
+            </div>
         </div>
     @endforeach
 

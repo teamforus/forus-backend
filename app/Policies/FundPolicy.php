@@ -75,8 +75,11 @@ class FundPolicy
      * @return bool
      * @noinspection PhpUnused
      */
-    public function showIdentitiesOverview(Identity $identity, Fund $fund, Organization $organization): bool
-    {
+    public function viewIdentitiesSponsor(
+        Identity $identity,
+        Fund $fund,
+        Organization $organization
+    ): bool {
         if ($fund->organization_id !== $organization->id) {
             return false;
         }
@@ -86,6 +89,24 @@ class FundPolicy
         ], false);
     }
 
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param Organization $organization
+     * @param Identity $fundIdentity
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function showIdentitySponsor(
+        Identity $identity,
+        Fund $fund,
+        Organization $organization,
+        Identity $fundIdentity
+    ): bool {
+        return
+            $this->viewIdentitiesSponsor($identity, $fund, $organization) &&
+            $fund->activeIdentityQuery()->where('id', $fundIdentity->id)->exists();
+    }
 
     /**
      * @param Identity $identity
@@ -305,7 +326,7 @@ class FundPolicy
             return false;
         }
 
-        if ($fund->isConfigured()) {
+        if (!$fund->isConfigured()) {
             return false;
         }
 

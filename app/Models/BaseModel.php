@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Closure;
+
 /**
  * App\Models\BaseModel
  *
@@ -31,5 +33,16 @@ class BaseModel extends \Illuminate\Database\Eloquent\Model
     public function updateModelValue(string $key, mixed $value, array $options = []): static
     {
         return $this->updateModel([$key => $value], $options);
+    }
+
+    /**
+     * @param Closure<static> $function
+     * @return $this
+     */
+    public function closure(Closure $function): static
+    {
+        $function($this);
+
+        return $this;
     }
 }
