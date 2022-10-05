@@ -29,11 +29,16 @@ class VouchersController extends Controller
             ->whereDoesntHave('product_reservation')
             ->orderByDesc('created_at');
 
-        $search = new VouchersSearch($request->only('type', 'state', 'archived'), $query);
-        $per_page = $request->input('per_page', 1000);
+        $search = new VouchersSearch($request->only([
+            'type', 'state', 'archived', 'allow_reimbursements',
+            'implementation_id', 'implementation_key',
+        ]), $query);
 
         // todo: remove fallback pagination 1000, when apps are ready
-        return VoucherCollectionResource::queryCollection($search->query(), $per_page);
+        return VoucherCollectionResource::queryCollection(
+            $search->query(),
+            $request->input('per_page', 1000)
+        );
     }
 
     /**

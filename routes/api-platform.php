@@ -169,32 +169,19 @@ $router->post('/share/email', 'Api\Platform\ShareController@sendEmail');
  * Authorization required
  */
 $router->group(['middleware' => 'api.auth'], static function() use ($router) {
-    $router->patch(
-        'organizations/{organization}/update-business',
-        "Api\Platform\OrganizationsController@updateBusinessType"
-    );
+    // Organizations
+    $router->group(['prefix' => 'organizations/{organization}'], function() use ($router) {
+        $router->patch('roles', "Api\Platform\OrganizationsController@updateRoles");
+        $router->patch('update-business', "Api\Platform\OrganizationsController@updateBusinessType");
+        $router->patch('accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
+    });
 
-    $router->patch(
-        'organizations/{organization}/roles',
-        "Api\Platform\OrganizationsController@updateRoles"
-    );
+    $router->resource('organizations', "Api\Platform\OrganizationsController")
+        ->only('show', 'store', 'update');
 
-    $router->patch(
-        'organizations/{organization}/accept-reservations',
-        "Api\Platform\OrganizationsController@updateAcceptReservations"
-    );
-
-    $router->resource('organizations', "Api\Platform\OrganizationsController", [
-        'only' => [
-            'show', 'store', 'update'
-        ]
-    ]);
-
-    $router->resource('roles', "Api\Platform\RolesController", [
-        'only' => [
-            'index', 'show',
-        ]
-    ]);
+    // Roles
+    $router->resource('roles', "Api\Platform\RolesController")
+        ->only('index', 'show');
 
     $router->post('funds/{fund}/apply', "Api\Platform\FundsController@apply")->name('fund.apply');
     $router->post('funds/{fund}/check', "Api\Platform\FundsController@check")->name('fund.check');
@@ -203,67 +190,37 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ->parameter('vouchers', 'voucher_token_address')
         ->only('index', 'show', 'destroy');
 
+    $router->resource('reimbursements', "Api\Platform\ReimbursementsController")
+        ->only('index', 'store', 'show', 'update', 'destroy');
+
     $router->resource('product-reservations', "Api\Platform\ProductReservationsController")
         ->only('index', 'store', 'show', 'update', 'destroy');
 
     $router->post('product-reservations/validate', "Api\Platform\ProductReservationsController@storeValidate");
 
     $router->group(['prefix' => '/provider'], static function() use ($router) {
-        $router->resource('vouchers', "Api\Platform\Provider\VouchersController", [
-            'only' => [
-                'show'
-            ],
-            'parameters' => [
-                'vouchers' => 'voucher_address_or_physical_code',
-            ]
-        ]);
+        $router->resource('vouchers', "Api\Platform\Provider\VouchersController")
+            ->parameter('vouchers', 'voucher_address_or_physical_code')
+            ->only('show');
 
-        $router->resource(
-            'vouchers.product-vouchers',
-            "Api\Platform\Provider\Vouchers\ProductVouchersController", [
-            'only' => [
-                'index'
-            ],
-            'parameters' => [
-                'vouchers' => 'voucher_address_or_physical_code',
-                'product-vouchers' => 'product_voucher_token_address',
-            ]
-        ]);
+        $router->resource('vouchers.product-vouchers', "Api\Platform\Provider\Vouchers\ProductVouchersController")
+            ->parameter('product-vouchers', 'product_voucher_token_address')
+            ->parameter('vouchers', 'voucher_address_or_physical_code')
+            ->only('index');
 
-        $router->resource(
-            'vouchers.products',
-            "Api\Platform\Provider\Vouchers\ProductsController", [
-            'only' => [
-                'index', 'show'
-            ],
-            'parameters' => [
-                'vouchers' => 'voucher_address_or_physical_code',
-                'products' => 'products',
-            ]
-        ]);
+        $router->resource('vouchers.products', "Api\Platform\Provider\Vouchers\ProductsController")
+            ->parameter('vouchers', 'voucher_address_or_physical_code')
+            ->parameter('products', 'products')
+            ->only('index', 'show');
 
-        $router->resource(
-            'vouchers.transactions',
-            "Api\Platform\Vouchers\TransactionsController", [
-            'only' => [
-                'store'
-            ],
-            'parameters' => [
-                'vouchers' => 'voucher_address_or_physical_code',
-                'transactions' => 'transaction_address',
-            ]
-        ]);
+        $router->resource('vouchers.transactions', "Api\Platform\Vouchers\TransactionsController")
+            ->parameter('vouchers', 'voucher_address_or_physical_code')
+            ->parameter('transactions', 'transaction_address')
+            ->only('store');
 
-        $router->resource(
-            'transactions',
-            "Api\Platform\Provider\TransactionsController", [
-            'only' => [
-                'index'
-            ],
-            'parameters' => [
-                'transactions' => 'transaction_address',
-            ]
-        ]);
+        $router->resource('transactions', "Api\Platform\Provider\TransactionsController")
+            ->parameter('transactions', 'transaction_address')
+            ->only('index');
     });
 
     $router->post('funds/redeem', "Api\Platform\FundsController@redeem");
@@ -595,35 +552,43 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'messages' => 'fund_provider_chat_messages'
     ])->only('index', 'show', 'store');
 
-    $router->patch(
-        'organizations/{organization}/products/{product}/exclusions',
-        "Api\Platform\Organizations\ProductsController@updateExclusions"
-    );
+    // Products
+    $router->group(['prefix' => 'organizations/{organization}/products/{product}'], function() use ($router) {
+        $router->patch('exclusions', "Api\Platform\Organizations\ProductsController@updateExclusions");
+    });
 
     $router->resource(
         'organizations.products',
         "Api\Platform\Organizations\ProductsController"
     )->only('index', 'show', 'store', 'update', 'destroy');
 
-    $router->post(
-        'organizations/{organization}/product-reservations/batch',
-        "Api\Platform\Organizations\ProductReservationsController@storeBatch"
-    );
-
-    $router->post(
-        'organizations/{organization}/product-reservations/{product_reservation}/accept',
-        "Api\Platform\Organizations\ProductReservationsController@accept"
-    );
-
-    $router->post(
-        'organizations/{organization}/product-reservations/{product_reservation}/reject',
-        "Api\Platform\Organizations\ProductReservationsController@reject"
-    );
+    // Product reservations
+    $router->group(['prefix' => 'organizations/{organization}/product-reservations'], function() use ($router) {
+        $router->post('batch', "Api\Platform\Organizations\ProductReservationsController@storeBatch");
+        $router->post('accept', "Api\Platform\Organizations\ProductReservationsController@accept");
+        $router->post('reject', "Api\Platform\Organizations\ProductReservationsController@reject");
+    });
 
     $router->resource(
         'organizations.product-reservations',
         "Api\Platform\Organizations\ProductReservationsController"
     )->only('index', 'store', 'show');
+
+    // Reimbursements
+    $router->group(['prefix' => 'organizations/{organization}/reimbursements/{reimbursement}'], function() use ($router) {
+        $router->get('notes', "Api\Platform\Organizations\ReimbursementsController@notes");
+        $router->post('notes', "Api\Platform\Organizations\ReimbursementsController@storeNote");
+        $router->delete('notes/{note}', "Api\Platform\Organizations\ReimbursementsController@destroyNote");
+        $router->post('assign', "Api\Platform\Organizations\ReimbursementsController@assign");
+        $router->post('resign', "Api\Platform\Organizations\ReimbursementsController@resign");
+        $router->post('approve', "Api\Platform\Organizations\ReimbursementsController@approve");
+        $router->post('decline', "Api\Platform\Organizations\ReimbursementsController@decline");
+    });
+
+    $router->resource(
+        'organizations.reimbursements',
+        "Api\Platform\Organizations\ReimbursementsController"
+    )->only('index', 'show', 'update');
 
     $router->resource(
         'organizations.products.funds',

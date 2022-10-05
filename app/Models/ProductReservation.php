@@ -118,6 +118,11 @@ class ProductReservation extends BaseModel
     const TRANSACTION_DELAY = 14;
 
     /**
+     * @var int
+     */
+    protected $perPage = 15;
+
+    /**
      * @var string[]
      */
     protected $fillable = [

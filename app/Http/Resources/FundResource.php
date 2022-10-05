@@ -54,7 +54,7 @@ class FundResource extends BaseJsonResource
         ]), $fund->fund_config->only([
             'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
-            'email_required', 'contact_info_enabled', 'contact_info_required',
+            'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
             'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
         ]), [
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),

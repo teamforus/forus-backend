@@ -3,16 +3,14 @@
 namespace App\Http\Resources;
 
 use App\Models\Implementation;
+use App\Models\Notification;
 use App\Models\NotificationTemplate;
 use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
-use App\Models\DatabaseNotification;
 use Throwable;
 
 /**
- * Class NotificationResource
- * @property DatabaseNotification $resource
- * @package App\Http\Resources
+ * @property Notification $resource
  */
 class NotificationResource extends BaseJsonResource
 {

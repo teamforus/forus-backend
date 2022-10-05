@@ -229,25 +229,25 @@ class MediaService
     }
 
     /**
-     * @param string $filePath
+     * @param string|TmpFile $filePath
      * @param string $fileName
      * @param string $type
-     * @param array|null $syncPresets
+     * @param array|string|null $syncPresets
      * @return Media
      * @throws \Exception
      */
     public function uploadSingle(
-        string $filePath,
+        string|TmpFile $filePath,
         string $fileName,
         string $type,
-        array $syncPresets = null
+        array|string|null $syncPresets = null
     ): Media {
         return $this->makeMedia(
-            TmpFile::fromTmpFile($filePath),
+            $filePath instanceof TmpFile ? $filePath :  TmpFile::fromTmpFile($filePath),
             pathinfo($fileName,PATHINFO_FILENAME),
             pathinfo($fileName,PATHINFO_EXTENSION),
             $type,
-            $syncPresets
+            $syncPresets !== null ? (array) $syncPresets : null,
         );
     }
 

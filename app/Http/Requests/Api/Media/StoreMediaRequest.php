@@ -53,7 +53,6 @@ class StoreMediaRequest extends BaseFormRequest
                     return $mediaPreset->name;
                 }, $type->getPresets())) : []
             ],
-
         ];
     }
 }

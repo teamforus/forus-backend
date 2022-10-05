@@ -12,11 +12,12 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 class FundQuery
 {
     /**
-     * @param Builder $query
-     * @return Builder
+     * @param Builder|Relation|Fund $query
+     * @return Builder|Relation|Fund
      */
-    public static function whereActiveFilter(Builder $query): Builder
-    {
+    public static function whereActiveFilter(
+        Builder|Relation|Fund $query
+    ): Builder|Relation|Fund {
         return $query->where([
             'state' => Fund::STATE_ACTIVE
         ])->whereDate('end_date', '>=', today());
@@ -179,41 +180,45 @@ class FundQuery
     }
 
     /**
-     * @param Builder $query
-     * @return Builder
+     * @param Builder|Relation|Fund $query
+     * @return Builder|Relation|Fund
      */
-    public static function whereIsConfiguredByForus(Builder $query): Builder
-    {
+    public static function whereIsConfiguredByForus(
+        Builder|Relation|Fund $query
+    ): Builder|Relation|Fund {
         return $query->whereHas('fund_config', static function (Builder $query) {
             return $query->where('is_configured', true);
         });
     }
 
     /**
-     * @param Builder $query
-     * @return Builder
+     * @param Builder|Relation|Fund $query
+     * @return Builder|Relation|Fund
      */
-    public static function whereIsInternal(Builder $query): Builder
+    public static function whereIsInternal(Builder|Relation|Fund $query): Builder|Relation|Fund
     {
         return $query->where('type', '!=', Fund::TYPE_EXTERNAL);
     }
   
     /**
-     * @param Builder $query
-     * @return Builder
+     * @param Builder|Relation|Fund $query
+     * @return Builder|Relation|Fund
      */
-    public static function whereIsInternalConfiguredAndActive(Builder $query): Builder
-    {
+    public static function whereIsInternalConfiguredAndActive(
+        Builder|Relation|Fund $query
+    ): Builder|Relation|Fund {
         return self::whereIsInternal(self::whereActiveFilter(self::whereIsConfiguredByForus($query)));
     }
 
     /**
-     * @param Builder|Relation $query
+     * @param Builder|Relation|Fund $query
      * @param string $balanceProvider
-     * @return Builder|Relation
+     * @return Builder|Relation|Fund
      */
-    public static function whereTopUpAndBalanceUpdateAvailable($query, string $balanceProvider)
-    {
+    public static function whereTopUpAndBalanceUpdateAvailable(
+        Builder|Relation|Fund $query,
+        string $balanceProvider
+    ): Builder|Relation|Fund{
         return $query->whereHas('organization', function(Builder $builder) {
             $builder->whereHas('bank_connection_active');
         })->where(function(Builder $builder) {

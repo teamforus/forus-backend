@@ -16,6 +16,7 @@ use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransactionBulk;
 use App\Models\VoucherTransaction;
@@ -75,6 +76,7 @@ class EventLogService implements IEventLogService
             'bank_connection_account' => fn() => $this->bankConnectionAccountMeta($model),
             'voucher_transaction_bulk' => fn() => $this->voucherTransactionBulkMeta($model),
             'implementation' => fn() => $this->implementationMeta($model),
+            'reimbursement' => fn() => $this->reimbursementMeta($model),
         ];
 
         return $modelMeta[$type] ? $modelMeta[$type]() : [];
@@ -384,6 +386,28 @@ class EventLogService implements IEventLogService
             'key' => $implementation->key,
             'name' => $implementation->name,
         ], 'implementation_');
+    }
+
+    /**
+     * @param Reimbursement $reimbursement
+     * @return array
+     */
+    protected function reimbursementMeta(Reimbursement $reimbursement): array
+    {
+        return $this->keyPrepend([
+            'id' => $reimbursement->id,
+            'code' => $reimbursement->code,
+            'title' => $reimbursement->title,
+            'amount' => $reimbursement->amount,
+            'employee_id' => $reimbursement->employee_id,
+            'iban' => $reimbursement->iban,
+            'iban_name' => $reimbursement->iban_name,
+            'reason' => $reimbursement->reason,
+            'state' => $reimbursement->state,
+            'submitted_at' => $reimbursement->submitted_at?->format('Y-m-d H:i:s'),
+            'resolved_at' => $reimbursement->resolved_at?->format('Y-m-d H:i:s'),
+            'deleted_at' => $reimbursement->deleted_at?->format('Y-m-d H:i:s'),
+        ], 'reimbursement_');
     }
 
     /**

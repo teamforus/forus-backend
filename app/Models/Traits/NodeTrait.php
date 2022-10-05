@@ -13,6 +13,7 @@ use Kalnoy\Nestedset\DescendantsRelation;
  * @method static int fixTree(NodeTrait|BaseModel $root = null)
  * @method static Collection descendantsAndSelf($id, array $columns = [ '*' ])
  * @package App\Models\Traits
+ * @mixin \Eloquent
  */
 trait NodeTrait
 {

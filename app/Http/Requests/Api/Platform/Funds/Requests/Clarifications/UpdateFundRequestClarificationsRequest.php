@@ -25,12 +25,8 @@ class UpdateFundRequestClarificationsRequest extends FormRequest
     {
         return [
             'answer' => 'required:files|nullable|between:0,2000',
-            'files' => [
-                'nullable', 'array'
-            ],
-            'files.*' => [
-                'exists:files,uid',
-            ],
+            'files' => 'nullable|array',
+            'files.*' => 'exists:files,uid',
         ];
     }
 }
