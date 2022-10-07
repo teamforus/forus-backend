@@ -110,7 +110,8 @@ class ProductSubQuery
             ->whereColumn('fund_provider_products.product_id', '=', 'products.id')
             ->select([])
             ->selectRaw('CAST(if(`limit_total_unlimited`, null, `limit_total`) as SIGNED) as `limit_total`')
-            ->getQuery();
+            ->getQuery()
+            ->whereNull('deleted_at');
 
         return BaseModel::query()->fromSub($builder, 'reservations')
             ->selectRaw('cast(sum(`limit_total`) as signed) as `limit_total`');
@@ -126,9 +127,11 @@ class ProductSubQuery
             ->whereColumn('fund_provider_products.product_id', '=', 'products.id')
             ->select([])
             ->selectRaw('CAST(`limit_per_identity` * `limit_multiplier` AS SIGNED) as `limit`')
-            ->getQuery();
+            ->getQuery()
+            ->whereNull('deleted_at');
 
-        return BaseModel::query()->fromSub($builder, 'reservations')
+        return BaseModel::query()
+            ->fromSub($builder, 'reservations')
             ->selectRaw('cast(sum(`limit`) as signed) as `limit`');
     }
 
