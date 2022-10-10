@@ -125,6 +125,7 @@ class Session extends Model
     /**
      * @param bool $expired
      * @return void
+     * @throws \Throwable
      */
     public function terminate(bool $expired = true): void
     {
