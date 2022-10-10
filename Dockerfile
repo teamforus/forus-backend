@@ -17,6 +17,10 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     nano \
+    iputils-ping \
+    net-tools \
+    mc \
+    wget \
     locales \
     libzip-dev \
     libfreetype6-dev \

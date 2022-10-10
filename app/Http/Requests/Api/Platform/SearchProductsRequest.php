@@ -2,15 +2,11 @@
 
 namespace App\Http\Requests\Api\Platform;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Product;
-use Illuminate\Foundation\Http\FormRequest;
 
-/**
- * Class SearchProductsRequest
- * @package App\Http\Requests\Api\Platform
- */
-class SearchProductsRequest extends FormRequest
+class SearchProductsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -43,6 +39,7 @@ class SearchProductsRequest extends FormRequest
             'simplified'            => 'nullable|bool',
             'postcode'              => 'nullable|string|max:100',
             'distance'              => 'nullable|integer|max:1000',
+            'bookmarked'            => 'nullable|bool',
         ];
     }
 }

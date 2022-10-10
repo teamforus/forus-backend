@@ -349,12 +349,15 @@ class VoucherTransactionBulk extends BaseModel
 
                 $transactions = $this->voucher_transactions->map(function(VoucherTransaction $transaction) {
                     $amount = number_format($transaction->amount, 2, '.', '');
+                    $ibanTo = $transaction->getTargetIban();
+                    $ibanToName = $transaction->getTargetName();
                     $paymentAmount = new Amount($amount, 'EUR');
-                    $paymentPointer = new Pointer('IBAN', $transaction->provider->iban, $transaction->provider->name);
+                    $paymentPointer = new Pointer('IBAN', $ibanTo, $ibanToName);
                     $paymentDescription = $transaction->makePaymentDescription();
 
                     $transaction->update([
-                        'iban_to' => $transaction->provider->iban,
+                        'iban_to' => $ibanTo,
+                        'iban_to_name' => $ibanToName,
                         'iban_from' => $this->monetary_account_iban,
                         'payment_description' => $paymentDescription,
                     ]);
@@ -407,8 +410,12 @@ class VoucherTransactionBulk extends BaseModel
                 $requestedExecutionDate = PaymentBNG::getNextBusinessDay()->format('Y-m-d');
 
                 foreach ($this->voucher_transactions as $transaction) {
+                    $ibanTo = $transaction->getTargetIban();
+                    $ibanToName = $transaction->getTargetName();
+
                     $transaction->update([
-                        'iban_to' => $transaction->provider->iban,
+                        'iban_to' => $ibanTo,
+                        'iban_to_name' => $ibanToName,
                         'iban_from' => $this->monetary_account_iban,
                         'payment_description' => $transaction->makePaymentDescription(),
                     ]);
@@ -416,7 +423,7 @@ class VoucherTransactionBulk extends BaseModel
                     $payments[] = new PaymentBNG(
                         new AmountBNG(number_format($transaction->amount, 2, '.', ''), 'EUR'),
                         new Account($this->monetary_account_iban, $this->monetary_account_name),
-                        new Account($transaction->provider->iban, $transaction->provider->name),
+                        new Account($ibanTo, $ibanToName),
                         $transaction->id,
                         $transaction->payment_description,
                         $requestedExecutionDate

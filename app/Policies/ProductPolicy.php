@@ -97,6 +97,26 @@ class ProductPolicy
 
     /**
      * @param Identity $identity
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function bookmark(Identity $identity): bool
+    {
+        return $identity->exists;
+    }
+
+    /**
+     * @param Identity $identity
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function removeBookmark(Identity $identity): bool
+    {
+        return $this->bookmark($identity);
+    }
+
+    /**
+     * @param Identity $identity
      * @param Product $product
      * @param Organization $organization
      * @return bool

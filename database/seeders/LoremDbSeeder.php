@@ -30,6 +30,7 @@ use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
 use Carbon\Carbon;
+use Faker\Provider\Payment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
@@ -97,6 +98,10 @@ class LoremDbSeeder extends Seeder
         'Nijmegen', 'Stadjerspas III', 'Stadjerspas IV',
     ];
 
+    private array $fundsWithDirectPayments = [
+        'Nijmegen', 'Stadjerspas',
+    ];
+
     private array $fundsWithoutEmailRequirement = [
         'Stadjerspas IV',
     ];
@@ -115,6 +120,10 @@ class LoremDbSeeder extends Seeder
 
     private array $organizationsWithCustomNotifications = [
         'Zuidhorn', 'Nijmegen',
+    ];
+
+    private array $fundsWithVoucherTopUp = [
+        'Nijmegen', 'Zuidhorn',
     ];
 
     /**
@@ -486,7 +495,7 @@ class LoremDbSeeder extends Seeder
     ): Organization {
         $organization = Organization::create(array_only(array_merge([
             'kvk' => '69599068',
-            'iban' => $this->config('default_organization_iban'),
+            'iban' => $this->config('default_organization_iban') ?: Payment::iban('NL'),
             'phone' => '123456789',
             'email' => $this->primaryEmail,
             'bsn_enabled' => true,
@@ -711,6 +720,8 @@ class LoremDbSeeder extends Seeder
             'csv_primary_key'           => 'uid',
             'is_configured'             => true,
             'allow_physical_cards'      => in_array($fund->name, $this->fundsWithPhysicalCards),
+            'allow_direct_payments'     => in_array($fund->name, $this->fundsWithDirectPayments),
+            'allow_voucher_top_ups'     => in_array($fund->name, $this->fundsWithVoucherTopUp),
             'email_required'            => $emailRequired,
             'contact_info_enabled'      => $emailRequired,
             'contact_info_required'     => $emailRequired,

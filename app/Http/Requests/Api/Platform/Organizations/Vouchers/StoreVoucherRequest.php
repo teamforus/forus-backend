@@ -59,8 +59,8 @@ class StoreVoucherRequest extends BaseFormRequest
             'expire_at' => [
                 'nullable',
                 'date_format:Y-m-d',
-                'after:' . ($fund ? $fund->start_date->format('Y-m-d') : null),
-                'before_or_equal:' . ($fund ? $fund->end_date->format('Y-m-d') : null),
+                'after:' . ($fund?->start_date->format('Y-m-d')),
+                'before_or_equal:' . ($fund?->end_date->format('Y-m-d')),
             ],
             'product_id' => [
                 $fund && $fund->isTypeBudget() ? 'required_without:amount' : 'nullable',

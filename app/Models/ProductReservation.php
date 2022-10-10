@@ -241,7 +241,8 @@ class ProductReservation extends BaseModel
             'amount' => $this->amount,
             'product_id' => $this->product_id,
             'transfer_at' => $transfer_at,
-            'employee_id' => $employee ? $employee->id : null,
+            'employee_id' => $employee?->id,
+            'target' => VoucherTransaction::TARGET_PROVIDER,
             'organization_id' => $this->product->organization_id,
             'fund_provider_product_id' => $this->fund_provider_product_id ?? null,
         ]));

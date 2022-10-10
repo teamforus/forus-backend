@@ -74,23 +74,16 @@ $router->group([], static function() use ($router) {
         ]
     ]);
 
-    $router->get(
-        'products/sample',
-        "Api\Platform\ProductsController@sample"
-    );
+    $router->get('products/sample', "Api\Platform\ProductsController@sample");
+    $router->post('products/{product}/bookmark', "Api\Platform\ProductsController@bookmark");
+    $router->post('products/{product}/remove-bookmark', "Api\Platform\ProductsController@removeBookmark");
 
-    $router->resource(
-        'products',
-        "Api\Platform\ProductsController", [
-        'only' => [
-            'index'
-        ]
-    ]);
+    $router->resource('products', "Api\Platform\ProductsController")
+        ->only('index');
 
-    $router->get(
-        'products/{product_with_trashed}',
-        "Api\Platform\ProductsController@show"
-    );
+    $router->resource('products', "Api\Platform\ProductsController")
+        ->parameter('product', 'product_with_trashed')
+        ->only('show');
 
     $router->get(
         'config/{platform_config}',
@@ -433,10 +426,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->only('store', 'update', 'destroy');
 
     $router->get(
-        'organizations/{organization}/funds/{fund}/identities',
-        "Api\Platform\Organizations\Funds\IdentitiesController@index");
-
-    $router->get(
         'organizations/{organization}/funds/{fund}/identities/export',
         "Api\Platform\Organizations\Funds\IdentitiesController@export");
 
@@ -447,6 +436,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->post(
         'organizations/{organization}/funds/{fund}/identities/notification',
         "Api\Platform\Organizations\Funds\IdentitiesController@sendIdentityNotification");
+
+    $router->resource(
+        'organizations.funds.identities',
+        "Api\Platform\Organizations\Funds\IdentitiesController"
+    )->only('index', 'show');
 
     $router->resource(
         'organizations.funds.provider-invitations',

@@ -24,18 +24,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
+ * @property bool $allow_direct_payments
+ * @property bool $allow_voucher_top_ups
  * @property bool $employee_can_see_product_vouchers
- * @property bool $show_voucher_qr
- * @property bool $show_voucher_amount
+ * @property int $show_voucher_qr
+ * @property int $show_voucher_amount
  * @property bool $is_configured
  * @property bool $email_required
  * @property bool $contact_info_enabled
  * @property bool $contact_info_required
  * @property bool $contact_info_message_custom
  * @property string|null $contact_info_message_text
- * @property bool $limit_generator_amount
+ * @property string|null $limit_generator_amount
+ * @property string|null $limit_voucher_top_up_amount
+ * @property string|null $limit_voucher_total_amount
  * @property int|null $bsn_confirmation_time
- * @property int $bsn_confirmation_api_time
+ * @property int|null $bsn_confirmation_api_time
  * @property bool $backoffice_enabled
  * @property bool $backoffice_check_partner
  * @property string|null $backoffice_url
@@ -57,10 +61,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig query()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowBlockingVouchers($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectPayments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowFundRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherTopUps($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeClientCert($value)
@@ -96,7 +102,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIsConfigured($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTopUpAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereShowVoucherAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereShowVoucherQr($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @mixin \Eloquent
  */
@@ -132,6 +142,8 @@ class FundConfig extends BaseModel
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'allow_fund_requests', 'allow_prevalidations',
         'iconnect_target_binding', 'iconnect_api_oin', 'iconnect_base_url',
+        'allow_direct_payments', 'allow_voucher_top_ups',
+        'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
     ];
 
     /**
@@ -147,14 +159,18 @@ class FundConfig extends BaseModel
         'allow_prevalidations' => 'boolean',
         'allow_physical_cards' => 'boolean',
         'allow_direct_requests' => 'boolean',
-        'limit_generator_amount' => 'boolean',
         'allow_blocking_vouchers' => 'boolean',
+        'allow_direct_payments' => 'boolean',
+        'allow_voucher_top_ups' => 'boolean',
         'backoffice_check_partner' => 'boolean',
         'employee_can_see_product_vouchers' => 'boolean',
         'email_required' => 'boolean',
         'contact_info_enabled' => 'boolean',
         'contact_info_required' => 'boolean',
         'contact_info_message_custom' => 'boolean',
+        'limit_generator_amount' => 'string',
+        'limit_voucher_top_up_amount' => 'string',
+        'limit_voucher_total_amount' => 'string',
     ];
 
     /**
