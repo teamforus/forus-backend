@@ -15,9 +15,11 @@ return new class extends Migration
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->string('iconnect_env', 50)->after('iconnect_base_url')->default('sandbox');
-            $table->text('iconnect_certificate')->after('iconnect_env');
-            $table->text('iconnect_key')->after('iconnect_certificate');
-            $table->text('iconnect_cert_trust')->after('iconnect_key');
+            $table->text('iconnect_key')->after('iconnect_env');
+            $table->text('iconnect_key_pass')->after('iconnect_key');
+            $table->text('iconnect_cert')->after('iconnect_key_pass');
+            $table->text('iconnect_cert_pass')->after('iconnect_cert');
+            $table->text('iconnect_cert_trust')->after('iconnect_cert_pass');
         });
     }
 
@@ -30,8 +32,10 @@ return new class extends Migration
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->dropColumn('iconnect_env');
-            $table->dropColumn('iconnect_certificate');
             $table->dropColumn('iconnect_key');
+            $table->dropColumn('iconnect_key_pass');
+            $table->dropColumn('iconnect_cert');
+            $table->dropColumn('iconnect_cert_pass');
             $table->dropColumn('iconnect_cert_trust');
         });
     }

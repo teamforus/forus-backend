@@ -88,6 +88,8 @@ return [
 
     'iconnect_env' => env('DB_SEED_ICONNECT_ENV', ""),
     'iconnect_cert' => env('DB_SEED_ICONNECT_API_CERT', ""),
+    'iconnect_cert_pass' => env('DB_SEED_ICONNECT_API_CERT_PASS', ""),
     'iconnect_key' => env('DB_SEED_ICONNECT_API_KEY', ""),
+    'iconnect_key_pass' => env('DB_SEED_ICONNECT_API_KEY_PASS', ""),
     'iconnect_cert_trust' => env('DB_SEED_ICONNECT_API_CERT_TRUST', ""),
 ];

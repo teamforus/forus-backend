@@ -4,20 +4,14 @@
 namespace App\Services\IConnectApiService;
 
 use App\Models\Fund;
-use App\Services\BNGService\TmpFile;
 use App\Services\IConnectApiService\Objects\Person;
 use App\Services\IConnectApiService\Responses\ResponseData;
 use GuzzleHttp\Client;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 
-/**
- * Class IConnect
- * @package App\Services\IConnectApiService
- */
 class IConnect
 {
     protected Fund $fund;
@@ -41,28 +35,23 @@ class IConnect
     ];
 
     private string $api_url;
-    private string $iconnect_api_oin;
-    private string $iconnect_target_binding;
-
-    private string $cert_trust_path;
+    private array $configs;
 
     /**
      * @param Fund $fund
      */
-    public function __construct(Fund $fund) {
-        $this->fund = $fund;
-
-        $configs = static::getConfigs($fund);
-        $isSandbox = Arr::get($configs, 'env') === self::ENV_SANDBOX;
+    public function __construct(Fund $fund)
+    {
+        $configs = $this->fundToConfigs($fund);
 
         if (!in_array(Arr::get($configs, 'env'), self::ENVIRONMENTS, true)) {
             throw new RuntimeException('Invalid iConnection "env" type.');
         }
 
-        $this->cert_trust_path = Arr::get($configs, 'cert_trust_path', '');
-        $this->iconnect_api_oin = $this->fund->fund_config->iconnect_api_oin;
-        $this->iconnect_target_binding = $this->fund->fund_config->iconnect_target_binding;
-        $this->api_url = $isSandbox ? self::URL_SANDBOX : Str::finish($this->fund->fund_config->iconnect_base_url, '/');
+        $this->configs = $configs;
+        $this->api_url = Arr::get($configs, 'env') === self::ENV_SANDBOX ?
+            self::URL_SANDBOX :
+            Str::finish(Arr::get($configs, 'base_url'), '/');
     }
 
     /**
@@ -92,7 +81,14 @@ class IConnect
     {
         $guzzleClient = new Client();
         $options = $this->makeRequestOptions($data);
-        $options['verify'] = $this->cert_trust_path;
+
+        $keyTmpFile = new TmpFile(Arr::get($this->configs, 'key', ''));
+        $certTmpFile = new TmpFile(Arr::get($this->configs, 'cert', ''));
+        $certTrustTmpFile = new TmpFile(Arr::get($this->configs, 'cert_trust', ''));
+
+        $options['cert'] = [$certTmpFile->path(), Arr::get($this->configs, 'cert_pass')];
+        $options['ssl_key'] = [$keyTmpFile->path(), Arr::get($this->configs, 'key_pass')];
+        $options['verify'] = $certTrustTmpFile->path();
         $options['http_errors'] = false;
 
         try {
@@ -100,6 +96,10 @@ class IConnect
         } catch (\Throwable $e) {
             logger()->error($e->getMessage());
             return null;
+        } finally {
+            $keyTmpFile->close();
+            $certTmpFile->close();
+            $certTrustTmpFile->close();
         }
     }
 
@@ -111,9 +111,9 @@ class IConnect
     private function makeRequestHeaders(): array
     {
         return [
-            'apikey' => '',
-            'x-doelbinding' => $this->iconnect_target_binding,
-            'x-origin-oin' => $this->iconnect_api_oin,
+            'apikey' => Arr::get($this->configs, 'header_key', ''),
+            'x-doelbinding' => Arr::get($this->configs, 'target_binding', ''),
+            'x-origin-oin' => Arr::get($this->configs, 'api_oin', ''),
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
         ];
@@ -127,8 +127,6 @@ class IConnect
      */
     private function makeRequestOptions(array $data): array {
         return [
-            'cert' => "",
-            'ssl_key' => "",
             'headers' => $this->makeRequestHeaders(),
             'connect_timeout' => 10,
             'query' => $data,
@@ -155,25 +153,20 @@ class IConnect
 
     /**
      * @param Fund $fund
-     * @return array|null
+     * @return array
      */
-    public static function getConfigs(Fund $fund): ?array
+    private function fundToConfigs(Fund $fund): array
     {
-        $keyTmpFile = new TmpFile($fund->fund_config->iconnect_key);
-        $certTmpFile = new TmpFile($fund->fund_config->iconnect_certificate);
-        $certTrustTmpFile = new TmpFile($fund->fund_config->iconnect_cert_trust);
-
-        $config = [
-            'env'       => $fund->fund_config->iconnect_env,
-            'key_path'  => $keyTmpFile->path(),
-            'cert_path' => $certTmpFile->path(),
-            'cert_trust_path' => $certTrustTmpFile->path(),
+        return [
+            'env' => $fund->fund_config->iconnect_env,
+            'api_oin' => $fund->fund_config->iconnect_api_oin,
+            'cert' => $fund->fund_config->iconnect_cert,
+            'cert_pass' => $fund->fund_config->iconnect_cert_pass,
+            'cert_trust' => $fund->fund_config->iconnect_cert_trust,
+            'key' => $fund->fund_config->iconnect_key,
+            'key_pass' => $fund->fund_config->iconnect_key_pass,
+            'base_url' => $fund->fund_config->iconnect_base_url,
+            'target_binding' => $fund->fund_config->iconnect_target_binding,
         ];
-
-        $keyTmpFile->close();
-        $certTmpFile->close();
-        $certTrustTmpFile->close();
-
-        return $config;
     }
 }
