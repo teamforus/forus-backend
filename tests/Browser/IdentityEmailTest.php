@@ -10,6 +10,7 @@ use App\Models\Organization;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Carbon\Carbon;
 use Facebook\WebDriver\Exception\TimeOutException;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
@@ -28,6 +29,8 @@ class IdentityEmailTest extends DuskTestCase
      */
     public function testIdentityEmailWebshopExample(): void
     {
+        Cache::flush();
+
         // Find first nijmegen implementation
         $implementation = Implementation::where('key', 'nijmegen')->first();
 
@@ -47,6 +50,8 @@ class IdentityEmailTest extends DuskTestCase
      */
     public function testIdentityEmailDashboardExample(): void
     {
+        Cache::flush();
+
         // Find first nijmegen implementation and organization
         $implementation = Implementation::where('key', 'nijmegen')->first();
         $organization = Organization::where('name', 'Nijmegen')->first();
@@ -68,9 +73,7 @@ class IdentityEmailTest extends DuskTestCase
      */
     private function makeIdentityEmailTests(): void
     {
-        $startTime = now();
-
-        $this->browse(function (Browser $browser) use ($startTime) {
+        $this->browse(function (Browser $browser) {
             // Visit the url and wait for the page to load
             $browser->visit($this->link);
 
@@ -84,9 +87,11 @@ class IdentityEmailTest extends DuskTestCase
             $email = $this->addNewEmail($browser);
 
             // Check if email exists in database
+            /** @var IdentityEmail $identityEmail */
             $identityEmail = $this->identity->emails()->where('email', $email)->first();
             $this->assertNotNull($identityEmail);
 
+            $startTime = now();
             $this->resendEmailVerification($browser, $identityEmail, $startTime);
 
             // Verify email
@@ -178,11 +183,13 @@ class IdentityEmailTest extends DuskTestCase
         $browser->within('#email_' . $identityEmail->id, function(Browser $browser) use ($identityEmail, $startTime) {
             $browser->assertSeeIn('@identityEmailListItemEmail', $identityEmail->email);
             $browser->press('@btnResendVerificationEmail');
-
-            // Check if email resent
-            $this->assertMailableSent($identityEmail->email, IdentityEmailVerificationMail::class, $startTime);
-            $this->assertEmailVerificationLinkSent($identityEmail->email, $startTime);
         });
+
+        $browser->waitFor('@successNotification');
+
+        // Check if email resent
+        $this->assertMailableSent($identityEmail->email, IdentityEmailVerificationMail::class, $startTime);
+        $this->assertEmailVerificationLinkSent($identityEmail->email, $startTime);
     }
 
     /**
@@ -192,6 +199,8 @@ class IdentityEmailTest extends DuskTestCase
      */
     private function addNewEmail(Browser $browser): string
     {
+        $startTime = now();
+
         $browser->waitFor('@btnIdentityNewEmail');
         $browser->element('@btnIdentityNewEmail')->click();
 
@@ -213,6 +222,9 @@ class IdentityEmailTest extends DuskTestCase
 
         $browser->waitFor('@identityNewEmailSuccess');
         $browser->assertVisible('@identityNewEmailSuccess');
+
+        $this->assertMailableSent($email, IdentityEmailVerificationMail::class, $startTime);
+        $this->assertEmailVerificationLinkSent($email, $startTime);
 
         return $email;
     }
