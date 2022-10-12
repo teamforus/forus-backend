@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Implementations;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationConfigRequest;
 use App\Http\Resources\ImplementationPageConfigResource;
 use App\Models\Implementation;
 use App\Models\ImplementationPageConfig;
@@ -33,16 +34,16 @@ class ImplementationConfigController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Update the specified resource.
      *
-     * @param Request $request
+     * @param UpdateImplementationConfigRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
      * @return ImplementationPageConfigResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(
-        Request $request,
+        UpdateImplementationConfigRequest $request,
         Organization $organization,
         Implementation $implementation,
     ): ImplementationPageConfigResource {
@@ -51,7 +52,7 @@ class ImplementationConfigController extends Controller
 
         foreach($request->input('config') as $config) {
             if (isset($config['id']) && $config['id']) {
-                ImplementationPageConfig::query()->find($config['id'])->update([
+                ImplementationPageConfig::find($config['id'])->update([
                     'is_active' => $config['is_active']
                 ]);
             } else {

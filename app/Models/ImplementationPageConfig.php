@@ -16,10 +16,10 @@ namespace App\Models;
 class ImplementationPageConfig extends BaseModel
 {
     const CONFIG_LIST = [[
-        'page_key'          => 'homepage',
+        'page_key'          => 'home',
         'page_config_key'   => 'show_products',
     ], [
-        'page_key'          => 'homepage',
+        'page_key'          => 'home',
         'page_config_key'   => 'show_map',
     ], [
         'page_key'          => 'providers',
