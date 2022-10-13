@@ -346,7 +346,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->get(
         'organizations/{organization}/implementations/{implementation}/config',
-        "Api\Platform\Organizations\Implementations\ImplementationConfigController@show");
+        "Api\Platform\Organizations\Implementations\ImplementationConfigController@index");
 
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/config',

@@ -8,7 +8,6 @@ use App\Http\Resources\ImplementationPageConfigResource;
 use App\Models\Implementation;
 use App\Models\ImplementationPageConfig;
 use App\Models\Organization;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ImplementationConfigController extends Controller
@@ -21,7 +20,7 @@ class ImplementationConfigController extends Controller
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(
+    public function index(
         Organization $organization,
         Implementation $implementation
     ): AnonymousResourceCollection {

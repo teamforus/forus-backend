@@ -2,9 +2,12 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Http\Resources\Json\JsonResource;
+use App\Models\ImplementationPageConfig;
 
-class ImplementationPageConfigResource extends JsonResource
+/**
+ * @property ImplementationPageConfig $resource
+ */
+class ImplementationPageConfigResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
@@ -14,6 +17,6 @@ class ImplementationPageConfigResource extends JsonResource
      */
     public function toArray($request)
     {
-        return parent::toArray($request);
+        return $this->resource->only('id', 'page_key', 'page_config_key', 'is_active');
     }
 }
