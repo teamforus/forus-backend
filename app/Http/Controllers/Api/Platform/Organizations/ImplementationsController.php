@@ -79,6 +79,7 @@ class ImplementationsController extends Controller
         $implementation->updateModel($request->only([
             'title', 'description', 'description_alignment', 'informal_communication',
             'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+            'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         ]));
 
         $implementation->addWebshopAnnouncement(

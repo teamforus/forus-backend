@@ -83,7 +83,6 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property-read \App\Models\ImplementationPage|null $page_provider
  * @property-read \App\Models\ImplementationPage|null $page_terms_and_conditions
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPageConfig[] $implementation_configs
  * @property-read int|null $pages_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages_public
  * @property-read int|null $pages_public_count
@@ -157,6 +156,7 @@ class Implementation extends BaseModel
         'title', 'description', 'description_alignment', 'informal_communication',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
         'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+        'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         'email_color', 'email_signature',
     ];
 
@@ -180,6 +180,10 @@ class Implementation extends BaseModel
         'overlay_enabled' => 'boolean',
         'digid_sign_up_allowed' => 'boolean',
         'informal_communication' => 'boolean',
+        'show_home_map' => 'boolean',
+        'show_home_products' => 'boolean',
+        'show_providers_map' => 'boolean',
+        'show_provider_map' => 'boolean',
     ];
 
     /**
@@ -211,14 +215,6 @@ class Implementation extends BaseModel
         return $this->hasOne(ImplementationPage::class)->where([
             'page_type' => ImplementationPage::TYPE_EXPLANATION,
         ]);
-    }
-
-    /**
-     * @return HasMany
-     */
-    public function implementation_configs(): HasMany
-    {
-        return $this->hasMany(ImplementationPageConfig::class);
     }
 
     /**
@@ -603,27 +599,10 @@ class Implementation extends BaseModel
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
                 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
                 'has_productboard_integration' => !empty(resolve('productboard')),
-                'implementation_configs' => $implementation->implementation_configs
-            ]);
+            ], $implementation->only('show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map'));
         }
 
         return $config ?: [];
-    }
-
-    /**
-     * @return array
-     */
-    public function getImplementationConfig(): array
-    {
-        $data = [];
-        foreach (ImplementationPageConfig::CONFIG_LIST as $default_config) {
-            $data[] = $this->implementation_configs()->where([
-                'page_key' => $default_config['page_key'],
-                'page_config_key' => $default_config['page_config_key'],
-            ])->first() ?: $default_config;
-        }
-
-        return $data;
     }
 
     /**

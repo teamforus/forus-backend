@@ -344,14 +344,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations/{organization}/implementations/{implementation}/cms',
         "Api\Platform\Organizations\ImplementationsController@updateCms");
 
-    $router->get(
-        'organizations/{organization}/implementations/{implementation}/config',
-        "Api\Platform\Organizations\Implementations\ImplementationConfigController@index");
-
-    $router->patch(
-        'organizations/{organization}/implementations/{implementation}/config',
-        "Api\Platform\Organizations\Implementations\ImplementationConfigController@update");
-
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/email',
         "Api\Platform\Organizations\ImplementationsController@updateEmail");
