@@ -322,9 +322,9 @@ class VoucherPolicy
             $organization->identityCan($identity, 'manage_vouchers') &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
-            $voucher->isInternal() &&
             $voucher->fund->fund_config->allow_physical_cards &&
             $voucher->fund->organization_id === $organization->id &&
+            $voucher->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->expired;
     }
@@ -572,7 +572,9 @@ class VoucherPolicy
         Voucher $voucher,
         ?Organization $provider = null
     ): Response|bool {
-        if (!$voucher->fund->organization->identityCan($identity, 'make_direct_payments')  || $voucher->isExternal()) {
+        $hasPermission = $voucher->fund->organization->identityCan($identity, 'make_direct_payments');
+
+        if (!$hasPermission || !$voucher->isInternal()) {
             return false;
         }
 

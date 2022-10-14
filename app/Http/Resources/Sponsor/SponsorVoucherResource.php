@@ -39,7 +39,7 @@ class SponsorVoucherResource extends BaseJsonResource
         return array_merge($voucher->only([
             'id', 'amount', 'amount_total', 'amount_top_up', 'note', 'identity_address', 'state', 'state_locale',
             'is_granted', 'expired', 'activation_code', 'activation_code_uid', 'has_transactions',
-            'in_use', 'limit_multiplier', 'fund_id',
+            'in_use', 'limit_multiplier', 'fund_id', 'is_external',
         ]), [
             'amount_available' => currency_format($amount_available),
             'source' => $voucher->employee_id ? 'employee' : 'user',
@@ -52,7 +52,6 @@ class SponsorVoucherResource extends BaseJsonResource
             ]),
             'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
-            'is_internal'   => $voucher->isInternal(),
             'first_use_date' => $first_use_date?->format('Y-m-d'),
             'first_use_date_locale' => $first_use_date ? format_date_locale($first_use_date) : null,
             'created_at' => $voucher->created_at->format('Y-m-d H:i:s'),

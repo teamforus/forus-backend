@@ -74,7 +74,7 @@ class VoucherResource extends BaseJsonResource
 
         return array_merge($voucher->only([
             'identity_address', 'fund_id', 'returnable', 'transactions_count',
-            'expired', 'deactivated', 'type', 'state', 'state_locale',
+            'expired', 'deactivated', 'type', 'state', 'state_locale', 'is_external',
         ]), $this->getBaseFields($voucher), $this->getOptionalFields($voucher), [
             'deactivated_at' => $deactivationDate?->format('Y-m-d'),
             'deactivated_at_locale' => format_date_locale($deactivationDate),
@@ -100,7 +100,6 @@ class VoucherResource extends BaseJsonResource
             'physical_card' => $physical_cards ? $physical_cards->only('id', 'code') : false,
             'product_vouchers' => $this->getProductVouchers($voucher->product_vouchers),
             'query_product' => $this->queryProduct($voucher, $request->get('product_id')),
-            'is_internal'   => $voucher->isInternal(),
         ], $this->timestamps($voucher, 'created_at'));
     }
 
@@ -236,7 +235,6 @@ class VoucherResource extends BaseJsonResource
             'end_date' => $fund->end_date->format('Y-m-d H:i'),
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
-            'has_external_vouchers' => $fund->fund_config->has_external_vouchers,
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
         ]);

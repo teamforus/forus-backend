@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_direct_payments
  * @property bool $allow_voucher_top_ups
  * @property bool $employee_can_see_product_vouchers
+ * @property string $vouchers_type
  * @property bool $is_configured
  * @property bool $email_required
  * @property bool $contact_info_enabled
@@ -36,7 +37,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $limit_generator_amount
  * @property string|null $limit_voucher_top_up_amount
  * @property string|null $limit_voucher_total_amount
- * @property string $has_external_vouchers
  * @property int|null $bsn_confirmation_time
  * @property int|null $bsn_confirmation_api_time
  * @property bool $backoffice_enabled
@@ -104,9 +104,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTopUpAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereShowVoucherAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereShowVoucherQr($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVouchersType($value)
  * @mixin \Eloquent
  */
 class FundConfig extends BaseModel
@@ -119,12 +118,15 @@ class FundConfig extends BaseModel
         self::BACKOFFICE_INELIGIBLE_POLICY_FUND_REQUEST,
     ];
 
+    public const VOUCHERS_TYPE_EXTERNAL = 'external';
+    public const VOUCHERS_TYPE_INTERNAL = 'internal';
+
     protected $fillable = [
         'backoffice_enabled', 'backoffice_url', 'backoffice_key',
         'backoffice_certificate', 'backoffice_fallback',
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'email_required', 'contact_info_enabled', 'contact_info_required',
-        'contact_info_message_custom', 'contact_info_message_text', 'has_external_vouchers'
+        'contact_info_message_custom', 'contact_info_message_text',
     ];
 
     /**
@@ -214,5 +216,13 @@ class FundConfig extends BaseModel
     public function getDefaultContactInfoMessage(): string
     {
         return trans('fund.default_contact_info_message');
+    }
+
+    /**
+     * @return bool
+     */
+    public function usesExternalVouchers(): bool
+    {
+        return $this->vouchers_type == self::VOUCHERS_TYPE_EXTERNAL;
     }
 }

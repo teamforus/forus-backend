@@ -16,7 +16,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->boolean('has_external_vouchers')->after('show_voucher_amount')->default(false);
+            $table->enum('vouchers_type', ['internal', 'external'])
+                ->after('show_voucher_amount')
+                ->default('internal');
         });
 
         Fund::whereHas('fund_config', function(Builder $builder) {
@@ -24,7 +26,7 @@ return new class extends Migration
             $builder->where('show_voucher_amount', 0);
         })->each(function (Fund $fund) {
             $fund->fund_config->update([
-                'has_external_vouchers' => true
+                'vouchers_type' => 'external',
             ]);
         });
     }
@@ -37,7 +39,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->dropColumn('has_external_vouchers');
+            $table->dropColumn('vouchers_type');
         });
     }
 };
