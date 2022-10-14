@@ -1,22 +1,27 @@
 <?php
 
+use App\Models\Implementation;
+
 return [
     'mobile' => array_merge([
-        'me_app-android', 'me_app-ios',
+        Implementation::ME_APP_ANDROID,
+        Implementation::ME_APP_IOS,
     ], env('DISABLE_FALLBACK_TRANSACTIONS', false) ? [] : [
-        'app-me_app'
+        Implementation::ME_APP_DEPRECATED,
     ]),
     'dashboards' => [
-        'sponsor', 'provider', 'validator',
+        Implementation::FRONTEND_SPONSOR_DASHBOARD,
+        Implementation::FRONTEND_PROVIDER_DASHBOARD,
+        Implementation::FRONTEND_VALIDATOR_DASHBOARD,
     ],
     'webshop' => [
-        'webshop',
+        Implementation::FRONTEND_WEBSHOP,
     ],
     'websites' => [
-        'website',
+        Implementation::FRONTEND_WEBSITE,
     ],
     'auth' => [
-        'pin_code-auth',
+        Implementation::FRONTEND_PIN_CODE,
     ],
     'default' => null,
 ];
