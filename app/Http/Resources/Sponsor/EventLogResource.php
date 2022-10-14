@@ -35,7 +35,7 @@ class EventLogResource extends BaseJsonResource
         return array_merge($eventLog->only([
             'id', 'event', 'identity_address', 'loggable_id',
         ]), [
-            'identity_email' => $eventLog->identity?->email,
+            'identity_email' => $eventLog->identity_email,
             'loggable_locale' => $eventLog->loggable_locale_dashboard,
             'event_locale' => $eventLog->event_locale_dashboard,
             'note' => $this->getNote($eventLog),

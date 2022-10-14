@@ -9,6 +9,7 @@ use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,7 +30,9 @@ use Illuminate\Support\Arr;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string|null $event_locale_dashboard
  * @property-read string|null $event_locale_webshop
+ * @property-read string|null $identity_email
  * @property-read string|null $loggable_locale_dashboard
+ * @property-read bool $show_private_details
  * @property-read Identity|null $identity
  * @property-read Model|\Eloquent $loggable
  * @method static Builder|EventLog newModelQuery()
@@ -162,17 +165,22 @@ class EventLog extends Model
     public function getEventLocale(string $type): ?string
     {
         $attributes = [];
+        $eventKey = $this->event;
 
         if ($this->loggable_type === (new Voucher())->getMorphClass()) {
             $transactionType = Arr::get($this->data, 'voucher_transaction_target') === VoucherTransaction::TARGET_TOP_UP
                 ? trans('transaction.type.incoming')
                 : trans('transaction.type.outgoing');
 
+            $showAmount = $this->show_private_details;
+
             $attributes = [
                 'id' => Arr::get($this->data, 'voucher_id'),
                 'transaction_type' => $transactionType,
-                'amount_locale' => Arr::get($this->data, 'voucher_transaction_amount_locale'),
+                'amount_locale' => $showAmount ? Arr::get($this->data, 'voucher_transaction_amount_locale') : '',
             ];
+
+            $eventKey .= ($eventKey === 'transaction' && $showAmount) ? '_with_amount' : '';
         }
 
         if ($this->loggable_type === (new Employee())->getMorphClass()) {
@@ -201,6 +209,37 @@ class EventLog extends Model
             $attributes[$key] = e($attribute);
         }
 
-        return trans("events/$this->loggable_type.$type.$this->event", $attributes);
+        return trans("events/$this->loggable_type.$type.$eventKey", $attributes);
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getShowPrivateDetailsAttribute(): bool
+    {
+        if (key_exists('show_private_details', $this->attributes)) {
+            return $this->attributes['show_private_details'];
+        }
+
+        $identity = Identity::auth();
+
+        return $identity && Employee::whereHas('organization', function (Builder $builder) use ($identity) {
+                OrganizationQuery::whereIsEmployee($builder, $identity->address);
+            })
+                ->where('identity_address', $this->identity_address)
+                ->exists();
+    }
+
+    /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getIdentityEmailAttribute(): ?string
+    {
+        $showEmail = !($this->loggable_type === (new Voucher())->getMorphClass()) ||
+            $this->event !== 'transaction' || $this->show_private_details;
+
+        return $showEmail ? $this->identity?->email : null;
     }
 }

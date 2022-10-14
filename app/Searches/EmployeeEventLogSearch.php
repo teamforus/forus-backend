@@ -62,6 +62,15 @@ class EmployeeEventLogSearch extends BaseSearch
             $builder->orWhere(fn (Builder $q) => $this->whereEvents($q, Fund::class));
         });
 
+        $builder->addSelect([
+            'show_private_details' => Employee::whereHas('organization', function (Builder $builder) {
+                OrganizationQuery::whereIsEmployee($builder, $this->employee->identity_address);
+            })
+                ->selectRaw('IF(count(*) > 0, 1, 0)')
+                ->whereColumn('event_logs.identity_address', 'employees.identity_address')
+                ->limit(1)
+        ]);
+
         if (empty($this->getFilter('loggable', []))) {
             return $builder->whereRaw('FALSE');
         }
