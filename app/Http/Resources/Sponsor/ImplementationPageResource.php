@@ -3,10 +3,10 @@
 namespace App\Http\Resources\Sponsor;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\FaqResource;
 use App\Http\Resources\ImplementationBlockResource;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
-use App\Models\ImplementationPageFaq;
 
 /**
  * @property ImplementationPage $resource
@@ -34,9 +34,7 @@ class ImplementationPageResource extends BaseJsonResource
             'blocks' => ImplementationBlockResource::collection($page->blocks),
             'url_webshop' => $this->webshopUrl($page),
             'implementation' => $this->getImplementationData($page->implementation),
-            'faq' => $page->faq->map(function(ImplementationPageFaq $faq) {
-                return $faq->only('id', 'title', 'description', 'description_html');
-            }),
+            'faq' => FaqResource::collection($page->faq),
         ]);
     }
 

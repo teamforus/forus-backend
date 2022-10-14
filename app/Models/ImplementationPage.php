@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFaq;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Collection;
@@ -26,7 +27,7 @@ use Illuminate\Support\Arr;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\ImplementationBlock[] $blocks
  * @property-read int|null $blocks_count
- * @property-read Collection|\App\Models\ImplementationPageFaq[] $faq
+ * @property-read Collection|\App\Models\Faq[] $faq
  * @property-read int|null $faq_count
  * @property-read string $description_html
  * @property-read \App\Models\Implementation $implementation
@@ -53,7 +54,7 @@ use Illuminate\Support\Arr;
  */
 class ImplementationPage extends BaseModel
 {
-    use HasMedia, HasMarkdownDescription, SoftDeletes;
+    use HasMedia, HasMarkdownDescription, HasFaq, SoftDeletes;
 
     const TYPE_HOME = 'home';
     const TYPE_PRODUCTS = 'products';
@@ -164,14 +165,6 @@ class ImplementationPage extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function faq(): HasMany
-    {
-        return $this->hasMany(ImplementationPageFaq::class);
-    }
-
-    /**
      * @param array|null $blocks
      * @return void
      */
@@ -200,49 +193,6 @@ class ImplementationPage extends BaseModel
 
             $block->attachMediaByUid($blockData['media_uid'] ?? null);
         }
-    }
-
-    /**
-     * Update faq for existing implementation page
-     * @param array $faq
-     * @return $this
-     */
-    public function syncFaq(array $faq = []): self
-    {
-        // remove faq not listed in the array
-        $this->faq()->whereNotIn('id', array_filter(array_pluck($faq, 'id')))->delete();
-
-        foreach ($faq as $question) {
-            $this->syncQuestion($question);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Update faq for existing implementation page when provided
-     * @param array|null $faq
-     * @return $this
-     */
-    public function syncFaqOptional(?array $faq = null): self
-    {
-        return is_array($faq) ? $this->syncFaq($faq) : $this;
-    }
-
-    /**
-     * Update faq question or create new implementation page question
-     *
-     * @param array $question
-     * @return ImplementationPageFaq
-     */
-    protected function syncQuestion(array $question): ImplementationPageFaq
-    {
-        /** @var ImplementationPageFaq $faq */
-        $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
-        $faq->updateModel(array_only($question, ['title', 'description']));
-        $faq->syncDescriptionMarkdownMedia('cms_media');
-
-        return $faq;
     }
 
     /**

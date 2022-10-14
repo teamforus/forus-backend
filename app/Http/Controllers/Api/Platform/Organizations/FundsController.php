@@ -5,21 +5,20 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Events\Funds\FundCreatedEvent;
 use App\Events\Funds\FundUpdatedEvent;
 use App\Exports\FundsExport;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundCriteriaRequest;
-use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundFaqRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundBackofficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
-use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
 use App\Models\Organization;
-use App\Http\Controllers\Controller;
 use App\Scopes\Builders\FundQuery;
 use App\Statistics\Funds\FinancialStatistic;
 use Illuminate\Http\JsonResponse;
@@ -121,22 +120,6 @@ class FundsController extends Controller
      */
     public function storeCriteriaValidate(
         StoreFundCriteriaRequest $request,
-        Organization $organization
-    ): JsonResponse {
-        $this->authorize('show', $organization);
-
-        return response()->json([], $request->isAuthenticated() ? 200 : 403);
-    }
-
-    /**
-     * @param StoreFundFaqRequest $request
-     * @param Organization $organization
-     * @return JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @noinspection PhpUnused
-     */
-    public function storeFaqValidate(
-        StoreFundFaqRequest $request,
         Organization $organization
     ): JsonResponse {
         $this->authorize('show', $organization);

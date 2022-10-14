@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Funds;
+namespace App\Http\Requests\Api\Platform\Organizations;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
@@ -10,7 +10,7 @@ use App\Models\Organization;
  * @property null|Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
-class StoreFundFaqRequest extends BaseFormRequest
+class StoreFaqRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

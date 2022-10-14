@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\ImplementationPageFaq;
 use App\Models\ImplementationPage;
 
 /**
@@ -28,9 +27,7 @@ class ImplementationPageResource extends BaseJsonResource
             'description_html' => $page->external ? '' : $page->description_html,
             'external_url' => $page->external ? $page->external_url : '',
             'blocks' => ImplementationBlockResource::collection($page->blocks),
-            'faq' => $page->faq->map(function(ImplementationPageFaq $faq) {
-                return $faq->only('id', 'title', 'description', 'description_html');
-            }),
+            'faq' => FaqResource::collection($page->faq),
         ]);
     }
 }

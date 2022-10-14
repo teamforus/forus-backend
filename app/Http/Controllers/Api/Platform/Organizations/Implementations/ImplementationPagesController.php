@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\ImplementationPages\ValidateImplementationPageBlocksRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\ImplementationPages\StoreImplementationPageRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\ImplementationPages\UpdateImplementationPageRequest;
-use App\Http\Requests\Api\Platform\Organizations\Implementations\StoreImplementationPageFaqRequest;
 use App\Http\Resources\Sponsor\ImplementationPageResource;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
@@ -84,25 +83,6 @@ class ImplementationPagesController extends Controller
      */
     public function storeBlocksValidate(
         ValidateImplementationPageBlocksRequest $request,
-        Organization $organization,
-        Implementation $implementation
-    ): JsonResponse {
-        $this->authorize('show', $organization);
-        $this->authorize('updateCMS', [$implementation, $organization]);
-
-        return new JsonResponse([], $request->isAuthenticated() ? 200 : 403);
-    }
-
-    /**
-    * @param StoreImplementationPageFaqRequest $request
-    * @param Organization $organization
-    * @param Implementation $implementation
-    * @return JsonResponse
-    * @throws \Illuminate\Auth\Access\AuthorizationException
-    * @noinspection PhpUnused
-    */
-    public function storeFaqValidate(
-        StoreImplementationPageFaqRequest $request,
         Organization $organization,
         Implementation $implementation
     ): JsonResponse {
