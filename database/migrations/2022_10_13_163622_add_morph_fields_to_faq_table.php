@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Faq;
+use App\Services\MediaService\Models\Media;
 
 return new class extends Migration
 {
@@ -15,21 +16,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('faq', function (Blueprint $table) {
-            $table->unsignedInteger('faq_id')->after('description');
-            $table->string('faq_type')->after('faq_id');
+            $table->dropForeign('fund_faq_fund_id_foreign');
+            $table->renameColumn('fund_id', 'faq_id');
         });
-
-        foreach(Faq::all() as $faq) {
-            $faq->update([
-                'faq_id'   => $faq->fund_id,
-                'faq_type' => 'fund',
-            ]);
-        }
 
         Schema::table('faq', function (Blueprint $table) {
-            $table->dropForeign('fund_faq_fund_id_foreign');
-            $table->dropColumn('fund_id');
+            $table->string('faq_type')->default('')->after('faq_id');
         });
+
+        Faq::query()->update([
+            'faq_type' => 'fund',
+        ]);
+
+        Media::where([
+            'mediable_type' => 'fund_faq',
+        ])->update([
+            'mediable_type' => 'faq',
+        ]);
     }
 
     /**
@@ -39,15 +42,21 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('faq', function (Blueprint $table) {
-            $table->unsignedInteger('fund_id')->after('id');
+        Faq::where('faq_type', '!=', 'fund')->delete();
 
-            $table->foreign('fund_id')
+        Schema::table('faq', function (Blueprint $table) {
+            $table->foreign('faq_id', 'fund_faq_fund_id_foreign')
                 ->references('id')->on('funds')
                 ->onDelete('cascade');
 
-            $table->dropColumn('faq_id');
+            $table->renameColumn('faq_id', 'fund_id');
             $table->dropColumn('faq_type');
         });
+
+        Media::where([
+            'mediable_type' => 'faq',
+        ])->update([
+            'mediable_type' => 'fund_faq',
+        ]);
     }
 };

@@ -59,18 +59,21 @@ class ImplementationPagesController extends Controller
         $pageType = $request->input('page_type');
         $isInternalType = ImplementationPage::isInternalType($pageType);
 
-        /** @var ImplementationPage $page */
-        $page = $implementation->pages()->create(array_merge($request->only([
+        $implementationPage = $implementation->pages()->create(array_merge($request->only([
             'description', 'description_alignment', 'external', 'external_url', 'page_type', 'state',
         ]), $isInternalType ? [
             'external' => false,
             'external_url' => null,
         ] : []));
 
-        $page->syncDescriptionMarkdownMedia('cms_media');
-        $page->syncBlocks($request->input('blocks'));
+        $implementationPage->syncDescriptionMarkdownMedia('cms_media');
+        $implementationPage->syncBlocks($request->input('blocks'));
 
-        return new ImplementationPageResource($page);
+        if ($implementationPage->supportsFaq()) {
+            $implementationPage->syncFaqOptional($request->input('faq'));
+        }
+
+        return new ImplementationPageResource($implementationPage);
     }
 
     /**
@@ -145,7 +148,10 @@ class ImplementationPagesController extends Controller
         $implementationPage->update($data);
         $implementationPage->syncDescriptionMarkdownMedia('cms_media');
         $implementationPage->syncBlocks($request->input('blocks'));
-        $implementationPage->syncFaqOptional($request->input('faq'));
+
+        if ($implementationPage->supportsFaq()) {
+            $implementationPage->syncFaqOptional($request->input('faq'));
+        }
 
         return new ImplementationPageResource($implementationPage);
     }

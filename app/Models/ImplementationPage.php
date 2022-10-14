@@ -210,6 +210,14 @@ class ImplementationPage extends BaseModel
     /**
      * @return bool
      */
+    public function supportsFaq(): bool
+    {
+        return Arr::keyBy(self::PAGE_TYPES, 'key')[$this->page_type]['faq'] ?? false;
+    }
+
+    /**
+     * @return bool
+     */
     public function isPublic(): bool
     {
         return $this->state === self::STATE_PUBLIC;

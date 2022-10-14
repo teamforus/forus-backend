@@ -6,16 +6,17 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Rules\MediaUidRule;
+use App\Traits\ValidatesFaq;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 /**
- * Class StoreFundRequest
  * @property Organization|null $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
 class StoreFundRequest extends BaseFormRequest
 {
+    use ValidatesFaq;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -38,6 +39,7 @@ class StoreFundRequest extends BaseFormRequest
         $startAfter = now()->addDays(5)->format('Y-m-d');
         $criteriaRules = $this->criteriaRule();
         $funConfigsRules = $this->funConfigsRules();
+        $faqRules = $this->getFaqRules([]);
 
         return array_merge([
             'type'                          => ['required', Rule::in(Fund::TYPES)],
@@ -49,11 +51,6 @@ class StoreFundRequest extends BaseFormRequest
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
             'notification_amount'           => 'nullable|numeric',
             'faq_title'                     => 'nullable|string|max:200',
-            'faq'                           => 'present|array',
-            'faq.*'                         => 'required|array',
-            'faq.*.id'                      => 'nullable|in:',
-            'faq.*.title'                   => 'required|string|max:200',
-            'faq.*.description'             => 'required|string|max:5000',
             'tag_ids'                       => 'nullable|array',
             'tag_ids.*'                     => 'required|exists:tags,id',
             'allow_fund_requests'           => 'required|boolean',
@@ -62,7 +59,7 @@ class StoreFundRequest extends BaseFormRequest
             'request_btn_text'              => 'nullable|string|max:50',
             'external_link_text'            => 'nullable|string|max:50',
             'external_link_url'             => 'nullable|string|max:200',
-        ], $funConfigsRules, [
+        ], $funConfigsRules, $faqRules, [
             'auto_requests_validation' => 'nullable|boolean',
             'default_validator_employee_id' => 'nullable|in:' . $availableEmployees->join(','),
         ], $criteriaRules, $formulaProductsEditable ? [
@@ -116,24 +113,12 @@ class StoreFundRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
-     */
-    private function mediaRule(): array {
-        return [
-            'required',
-            'string',
-            'exists:media,uid',
-            new MediaUidRule('cms_media')
-        ];
-    }
-
-    /**
      * @return string[]
      */
     public function attributes(): array
     {
-        return [
-            'criteria.*.value' => 'Waarde'
-        ];
+        return array_merge([
+            'criteria.*.value' => 'Waarde',
+        ], $this->getFaqAttributes());
     }
 }

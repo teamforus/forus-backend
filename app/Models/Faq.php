@@ -5,8 +5,6 @@ namespace App\Models;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * App\Models\Faq
@@ -45,6 +43,6 @@ class Faq extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'faq_id', 'faq_type', 'title', 'description'
+        'faq_id', 'faq_type', 'title', 'description',
     ];
 }

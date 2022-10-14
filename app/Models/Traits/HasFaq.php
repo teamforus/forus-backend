@@ -21,18 +21,18 @@ trait HasFaq
 
     /**
      * @param array|null $faq
-     * @return HasFaq|Model
+     * @return static
      */
-    public function syncFaqOptional(?array $faq = null): self
+    public function syncFaqOptional(?array $faq = null): static
     {
         return is_array($faq) ? $this->syncFaq($faq) : $this;
     }
 
     /**
      * @param array $faq
-     * @return Faq|Model
+     * @return static
      */
-    public function syncFaq(array $faq): Faq|Model
+    public function syncFaq(array $faq): static
     {
         // remove faq not listed in the array
         $this->faq()->whereNotIn('id', array_filter(array_pluck($faq, 'id')))->delete();
@@ -52,7 +52,6 @@ trait HasFaq
      */
     protected function syncQuestion(array $question): Faq|Model
     {
-        /** @var Faq $faq */
         $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
         $faq->updateModel(array_only($question, ['title', 'description']));
         $faq->syncDescriptionMarkdownMedia('cms_media');
