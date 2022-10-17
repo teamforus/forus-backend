@@ -150,6 +150,9 @@ class ProductReservationTest extends TestCase
 
         $identity = $organization->identity;
 
+        Organization::where('reservations_subsidy_enabled', true)
+            ->update(['reservations_subsidy_enabled' => false]);
+
         $voucher = $this->getVoucherForFundType($organization, Fund::TYPE_SUBSIDIES);
         $voucherBudget = $this->getVoucherForFundType($organization, Fund::TYPE_BUDGET);
 
@@ -167,6 +170,9 @@ class ProductReservationTest extends TestCase
             'voucher_address' => $voucher->token_without_confirmation->address,
             'product_id' => $product->id
         ], $headers)->assertJsonValidationErrorFor('product_id');
+
+        Organization::where('reservations_subsidy_enabled', false)
+            ->update(['reservations_subsidy_enabled' => true]);
     }
 
     /**
@@ -180,6 +186,9 @@ class ProductReservationTest extends TestCase
         $this->assertNotNull($organization);
 
         $identity = $organization->identity;
+
+        Organization::where('reservations_budget_enabled', true)
+            ->update(['reservations_budget_enabled' => false]);
 
         $voucherSubsidy = $this->getVoucherForFundType($organization, Fund::TYPE_SUBSIDIES);
         $voucher = $this->getVoucherForFundType($organization, Fund::TYPE_BUDGET);
@@ -198,6 +207,9 @@ class ProductReservationTest extends TestCase
             'voucher_address' => $voucher->token_without_confirmation->address,
             'product_id' => $product->id
         ], $headers)->assertJsonValidationErrorFor('product_id');
+
+        Organization::where('reservations_budget_enabled', false)
+            ->update(['reservations_budget_enabled' => true]);
     }
 
     /**
