@@ -505,12 +505,14 @@ class LoremDbSeeder extends Seeder
             'manage_provider_products' => in_array($name, $this->sponsorsWithSponsorProducts),
             'backoffice_available' => in_array($name, $this->sponsorsWithBackoffice),
             'allow_custom_fund_notifications' => in_array($name, $this->organizationsWithCustomNotifications),
+            'reservations_budget_enabled' => true,
+            'reservations_subsidy_enabled' => true,
         ], $fields, compact('name', 'identity_address')), [
             'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
             'identity_address', 'business_type_id', 'manage_provider_products',
             'backoffice_available', 'bsn_enabled', 'is_sponsor', 'is_provider', 'is_validator',
-            'allow_custom_fund_notifications',
+            'allow_custom_fund_notifications', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
         ]));
 
         OrganizationCreated::dispatch($organization);

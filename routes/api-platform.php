@@ -204,7 +204,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ->only('index', 'show', 'destroy');
 
     $router->resource('product-reservations', "Api\Platform\ProductReservationsController")
-        ->only('index', 'store', 'show', 'update', 'destroy');
+        ->only('index', 'store', 'show', 'destroy');
 
     $router->post('product-reservations/validate', "Api\Platform\ProductReservationsController@storeValidate");
 
