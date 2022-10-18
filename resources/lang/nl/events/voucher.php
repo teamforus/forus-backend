@@ -28,7 +28,6 @@ return [
             'basic' => 'Voucher #:id :transaction_type transaction created',
             'complete' => 'Voucher #:id :transaction_type transaction created with amount :amount_locale',
         ],
-        'transaction_complete' => 'Voucher #:id :transaction_type transaction created with amount :amount_locale',
         'transaction_subsidy' => 'Voucher #:id transactie is aangemaakt',
         'transaction_budget' => 'Voucher #:id transactie is aangemaakt',
         'transaction_product' => 'Voucher #:id transactie is aangemaakt',
