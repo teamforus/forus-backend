@@ -111,7 +111,7 @@ class ProductReservationTest extends DuskTestCase
             $browser->type('@productReserveFormLastName', $user['last_name']);
             $browser->press('@btnSubmit');
 
-            $browser->waitForTextIn('@productReserveConfirmDetails', 'John');
+            $browser->waitForTextIn('@productReserveConfirmDetails', $user['first_name']);
 
             $browser->press('@btnConfirmSubmit');
         });
