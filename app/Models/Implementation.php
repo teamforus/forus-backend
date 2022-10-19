@@ -124,6 +124,16 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereUrlValidator($value)
  * @method static Builder|Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
+ * @property bool $show_home_map
+ * @property bool $show_home_products
+ * @property bool $show_providers_map
+ * @property bool $show_provider_map
+ * @property bool $show_office_map
+ * @method static Builder|Implementation whereShowHomeMap($value)
+ * @method static Builder|Implementation whereShowHomeProducts($value)
+ * @method static Builder|Implementation whereShowOfficeMap($value)
+ * @method static Builder|Implementation whereShowProviderMap($value)
+ * @method static Builder|Implementation whereShowProvidersMap($value)
  */
 class Implementation extends BaseModel
 {
@@ -166,7 +176,7 @@ class Implementation extends BaseModel
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
         'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
-        'email_color', 'email_signature',
+        'show_office_map', 'email_color', 'email_signature',
     ];
 
     /**
@@ -193,6 +203,7 @@ class Implementation extends BaseModel
         'show_home_products' => 'boolean',
         'show_providers_map' => 'boolean',
         'show_provider_map' => 'boolean',
+        'show_office_map' => 'boolean',
     ];
 
     /**
@@ -608,7 +619,9 @@ class Implementation extends BaseModel
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
                 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
                 'has_productboard_integration' => !empty(resolve('productboard')),
-            ], $implementation->only('show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map'));
+            ], $implementation->only(
+                'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map', 'show_office_map'
+            ));
         }
 
         return $config ?: [];

@@ -44,6 +44,7 @@ class UpdateImplementationCmsRequest extends FormRequest
     {
         return [
             'show_home_map' => 'nullable|bool',
+            'show_office_map' => 'nullable|boolean',
             'show_home_products' => 'nullable|boolean',
             'show_providers_map' => 'nullable|boolean',
             'show_provider_map' => 'nullable|boolean',
