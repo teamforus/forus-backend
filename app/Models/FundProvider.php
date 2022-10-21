@@ -175,7 +175,7 @@ class FundProvider extends BaseModel
      */
     public function getLastActivity(): ?Carbon
     {
-        return $this->organization->getLastActivity();
+        return $this->organization->last_employee_session?->last_activity_at;
     }
 
     /**
@@ -309,7 +309,7 @@ class FundProvider extends BaseModel
             'organization'
         ])->get()->map(function(FundProvider $fundProvider) use ($transKey) {
             $provider = $fundProvider->organization;
-            $lastActivity = $provider->getLastActivity();
+            $lastActivity = $provider->last_employee_session?->last_activity_at;
 
             $provider_products_count = ProductQuery::whereNotExpired(
                 $provider->products_provider()->getQuery()

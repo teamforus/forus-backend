@@ -22,15 +22,22 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class SponsorProviderResource extends JsonResource
 {
     public const WITH = [
-        'logo',
+        'logo.presets',
         'funds',
-        'offices.photo',
+        'offices.photo.presets',
         'offices.organization.employees.roles.translations',
         'offices.organization.logo',
         'offices.organization.business_type.translations',
+        'offices.schedules',
         'employees.roles.translations',
+        'employees.roles.permissions',
+        'employees.organization',
+        'employees.identity.primary_email',
         'business_type.translations',
         'fund_providers',
+        'tags',
+        'bank_connection_active',
+        'last_employee_session',
     ];
 
     /**
@@ -44,7 +51,7 @@ class SponsorProviderResource extends JsonResource
         /** @var Organization $sponsorOrganization */
         $sponsorOrganization = $request->route('organization');
         $organization = $this->resource;
-        $lastActivity = $organization->getLastActivity();
+        $lastActivity = $organization->last_employee_session?->last_activity_at;
         $organizationData = (new OrganizationWithPrivateResource($this->resource))->toArray($request);
 
         $funds = $this->getProviderFunds($sponsorOrganization, $organization);
@@ -56,8 +63,8 @@ class SponsorProviderResource extends JsonResource
             'business_type' => new BusinessTypeResource($organization->business_type),
             'employees' => EmployeeResource::collection($organization->employees),
             'products_count' => $organization->providerProductsQuery($fundsIds)->count(),
-            'last_activity' => $lastActivity ? $lastActivity->format('Y-m-d H:i:s') : null,
-            'last_activity_locale' => $lastActivity ? $lastActivity->diffForHumans(now()) : null,
+            'last_activity' => $lastActivity?->format('Y-m-d H:i:s'),
+            'last_activity_locale' => $lastActivity?->diffForHumans(now()),
             'funds' => $funds,
             'funds_active' => $funds->filter(function (array $fund) {
                 return $fund['active'];
