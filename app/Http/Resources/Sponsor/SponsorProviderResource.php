@@ -2,28 +2,29 @@
 
 namespace App\Http\Resources\Sponsor;
 
+use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\BusinessTypeResource;
 use App\Http\Resources\EmployeeResource;
 use App\Http\Resources\MediaCompactResource;
 use App\Http\Resources\OfficeResource;
 use App\Http\Resources\OrganizationWithPrivateResource;
-use App\Models\Fund;
+use App\Http\Resources\Tiny\OrganizationTinyResource;
+use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Scopes\Builders\FundProviderQuery;
-use App\Scopes\Builders\FundQuery;
 use Illuminate\Support\Collection;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Class SponsorProviderResource
  * @property Organization $resource
- * @package App\Http\Resources
+ * @property Organization $sponsor_organization
  */
-class SponsorProviderResource extends JsonResource
+class SponsorProviderResource extends BaseJsonResource
 {
-    public const WITH = [
-        'logo.presets',
+    public const LOAD = [
+        'tags',
         'funds',
+        'logo.presets',
+        'fund_providers.fund',
         'offices.photo.presets',
         'offices.organization.employees.roles.translations',
         'offices.organization.logo',
@@ -34,8 +35,6 @@ class SponsorProviderResource extends JsonResource
         'employees.organization',
         'employees.identity.primary_email',
         'business_type.translations',
-        'fund_providers',
-        'tags',
         'bank_connection_active',
         'last_employee_session',
     ];
@@ -48,28 +47,40 @@ class SponsorProviderResource extends JsonResource
      */
     public function toArray($request): array
     {
-        /** @var Organization $sponsorOrganization */
-        $sponsorOrganization = $request->route('organization');
-        $organization = $this->resource;
-        $lastActivity = $organization->last_employee_session?->last_activity_at;
-        $organizationData = (new OrganizationWithPrivateResource($this->resource))->toArray($request);
+        $provider = $this->resource;
 
-        $funds = $this->getProviderFunds($sponsorOrganization, $organization);
-        $fundsIds = $funds->pluck('id')->toArray();
+        if ($this->resource_type == 'select') {
+            return (new OrganizationTinyResource($provider))->toArray($request);
+        }
 
-        return array_merge($organizationData, [
-            'logo' => new MediaCompactResource($organization->logo),
-            'offices' => OfficeResource::collection($organization->offices),
-            'business_type' => new BusinessTypeResource($organization->business_type),
-            'employees' => EmployeeResource::collection($organization->employees),
-            'products_count' => $organization->providerProductsQuery($fundsIds)->count(),
+        $fundsData = $this->fundApprovalDetails($provider);
+        $providerData = (new OrganizationWithPrivateResource($this->resource))->toArray($request);
+        $lastActivity = $provider->last_employee_session?->last_activity_at;
+
+        return array_merge($providerData, $fundsData, [
+            'logo' => new MediaCompactResource($provider->logo),
+            'offices' => OfficeResource::collection($provider->offices),
+            'business_type' => new BusinessTypeResource($provider->business_type),
+            'employees' => EmployeeResource::collection($provider->employees),
             'last_activity' => $lastActivity?->format('Y-m-d H:i:s'),
             'last_activity_locale' => $lastActivity?->diffForHumans(now()),
-            'funds' => $funds,
-            'funds_active' => $funds->filter(function (array $fund) {
-                return $fund['active'];
-            })->count(),
         ]);
+    }
+
+    /**
+     * @param Organization $provider
+     * @return array
+     */
+    protected function fundApprovalDetails(Organization $provider): array
+    {
+        $funds = $this->getProviderFunds($this->sponsor_organization, $provider);
+        $fundsIds = $funds->pluck('id')->toArray();
+
+        return [
+            'funds' => $funds,
+            'funds_active' => $funds->filter(fn (array $fund) => $fund['active'])->count(),
+            'products_count' => $provider->providerProductsQuery($fundsIds)->count(),
+        ];
     }
 
     /**
@@ -81,21 +92,19 @@ class SponsorProviderResource extends JsonResource
         Organization $sponsorOrganization,
         Organization $providerOrganization
     ): Collection {
-        $funds = FundQuery::whereHasProviderFilter(
-            $sponsorOrganization->funds()->getQuery(),
-            $providerOrganization->id
-        )->where('archived', false)->get();
+        $fund_providers = $providerOrganization->fund_providers
+            ->filter(fn(FundProvider $provider) => $provider->fund->organization_id == $sponsorOrganization->id)
+            ->filter(fn(FundProvider $provider) => $provider->fund->archived == false)
+            ->values();
 
-        return $funds->map(function(Fund $fund) use ($providerOrganization) {
-            $fundProvider = $providerOrganization->fund_providers->where('fund_id', $fund->id);
-
-            return array_merge($fund->only('id', 'name', 'organization_id'), [
-                'active' => FundProviderQuery::whereApprovedForFundsFilter(
-                    $providerOrganization->fund_providers()->getQuery(),
-                    $fund->id
-                )->exists(),
-                'fund_provider_id' => $fundProvider->pluck('id')->first(),
-            ]);
-        });
+        return $fund_providers->map(fn (FundProvider $provider) => array_merge($provider->fund->only([
+            'id', 'name', 'organization_id',
+        ]), [
+            'fund_provider_id' => $provider->id,
+            'active' => FundProviderQuery::whereApprovedForFundsFilter(
+                $providerOrganization->fund_providers()->getQuery(),
+                $provider->fund_id
+            )->exists(),
+        ]))->values();
     }
 }

@@ -309,7 +309,7 @@ class FundProvider extends BaseModel
             'organization'
         ])->get()->map(function(FundProvider $fundProvider) use ($transKey) {
             $provider = $fundProvider->organization;
-            $lastActivity = $provider->last_employee_session?->last_activity_at;
+            $lastActivity = $fundProvider->getLastActivity();
 
             $provider_products_count = ProductQuery::whereNotExpired(
                 $provider->products_provider()->getQuery()

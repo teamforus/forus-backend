@@ -36,7 +36,7 @@ class Permission extends BaseModel
      */
     public static function allMemCached(): Collection
     {
-        return self::$memCache ?: self::all();
+        return self::$memCache ?: self::$memCache = self::all();
     }
 
     /**
