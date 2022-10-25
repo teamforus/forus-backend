@@ -74,6 +74,8 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $digests_count
  * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
+ * @property-read Collection|\App\Models\Employee[] $employees_with_trashed
+ * @property-read int|null $employees_with_trashed_count
  * @property-read Collection|Organization[] $external_validators
  * @property-read int|null $external_validators_count
  * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
@@ -559,8 +561,22 @@ class Organization extends BaseModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function employees(): HasMany {
+    public function employees(): HasMany
+    {
         return $this->hasMany(Employee::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function employees_with_trashed(): HasMany
+    {
+        /** @var Employee|HasMany $relation */
+        $relation = $this->hasMany(Employee::class);
+        $relation->withTrashed();
+
+        return $relation;
     }
 
     /**

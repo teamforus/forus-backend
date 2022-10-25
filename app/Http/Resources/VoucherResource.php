@@ -122,7 +122,7 @@ class VoucherResource extends BaseJsonResource
 
         return $logs->map(function(EventLog $eventLog) use ($voucher) {
             return array_merge($eventLog->only('id', 'event'), [
-                'event_locale' => $eventLog->event_locale_webshop,
+                'event_locale' => $eventLog->eventDescriptionLocaleWebshop(),
                 'created_at' => $eventLog->created_at->format('Y-m-d'),
                 'created_at_locale' => format_date_locale($eventLog->created_at),
             ]);
