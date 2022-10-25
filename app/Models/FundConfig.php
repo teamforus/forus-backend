@@ -53,6 +53,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $iconnect_target_binding
  * @property string|null $iconnect_api_oin
  * @property string|null $iconnect_base_url
+ * @property string $iconnect_env
+ * @property string $iconnect_key
+ * @property string $iconnect_key_pass
+ * @property string $iconnect_cert
+ * @property string $iconnect_cert_pass
+ * @property string $iconnect_cert_trust
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -96,6 +102,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashPartnerDeny($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectApiOin($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectBaseUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectCert($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectCertPass($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectCertTrust($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectEnv($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectKeyPass($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectTargetBinding($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereImplementationId($value)
@@ -142,6 +154,8 @@ class FundConfig extends BaseModel
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'allow_fund_requests', 'allow_prevalidations',
         'iconnect_target_binding', 'iconnect_api_oin', 'iconnect_base_url',
+        'iconnect_env', 'iconnect_key', 'iconnect_key_pass',
+        'iconnect_cert', 'iconnect_cert_pass', 'iconnect_cert_trust',
         'allow_direct_payments', 'allow_voucher_top_ups',
         'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
     ];
