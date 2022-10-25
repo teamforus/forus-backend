@@ -61,6 +61,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $digid_shared_secret
  * @property string|null $digid_a_select_server
  * @property string|null $digid_forus_api_url
+ * @property string|null $digid_trusted_cert
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
@@ -100,6 +101,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereDigidRequired($value)
  * @method static Builder|Implementation whereDigidSharedSecret($value)
  * @method static Builder|Implementation whereDigidSignUpAllowed($value)
+ * @method static Builder|Implementation whereDigidTrustedCert($value)
  * @method static Builder|Implementation whereEmailColor($value)
  * @method static Builder|Implementation whereEmailFromAddress($value)
  * @method static Builder|Implementation whereEmailFromName($value)
@@ -466,12 +468,11 @@ class Implementation extends BaseModel
      */
     public function getDigid(): DigIdRepo
     {
-        return new DigIdRepo(
-            $this->digid_env,
-            $this->digid_app_id,
-            $this->digid_shared_secret,
-            $this->digid_a_select_server
-        );
+        return (new DigIdRepo($this->digid_env))
+            ->setAppId($this->digid_app_id)
+            ->setSharedSecret($this->digid_shared_secret)
+            ->setASelectServer($this->digid_a_select_server)
+            ->setTrustedCertificate($this->digid_trusted_cert);
     }
 
     /**
