@@ -90,6 +90,7 @@ use Illuminate\Database\Query\Builder;
  * @property-read \App\Models\Identity|null $identity
  * @property-read Collection|\App\Models\Implementation[] $implementations
  * @property-read int|null $implementations_count
+ * @property-read Session|null $last_employee_session
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -579,18 +580,19 @@ class Organization extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Support\Carbon|null
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      * @noinspection PhpUnused
      */
-    public function getLastActivity(): ?Carbon
+    public function last_employee_session(): HasManyThrough
     {
-        /** @var Session|null $session */
-        $session = Session::whereIn(
+        return $this->hasOneThrough(
+            Session::class,
+            Employee::class,
+            'organization_id',
             'identity_address',
-            $this->employees->pluck('identity_address')
-        )->latest('last_activity_at')->first();
-
-        return $session ? $session->last_activity_at : null;
+            'id',
+            'identity_address'
+        )->latest('last_activity_at');
     }
 
     /**

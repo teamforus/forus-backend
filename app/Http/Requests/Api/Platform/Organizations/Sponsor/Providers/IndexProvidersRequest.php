@@ -6,9 +6,7 @@ use App\Http\Requests\Api\Platform\Organizations\Provider\IndexFundProviderReque
 use App\Models\Organization;
 
 /**
- * Class IndexProvidersRequest
  * @property-read Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers
  */
 class IndexProvidersRequest extends IndexFundProviderRequest
 {
@@ -34,6 +32,8 @@ class IndexProvidersRequest extends IndexFundProviderRequest
             'product_category_ids.*'    => 'nullable|exists:product_categories,id',
             'order_by'                  => 'nullable|in:name,application_date',
             'order_dir'                 => 'nullable|in:asc,desc',
+            'per_page'                  => $this->perPageRule(1000),
+            'resource_type'             => $this->resourceTypeRule(['default', 'select']),
         ]);
     }
 }

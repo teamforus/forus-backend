@@ -286,7 +286,9 @@ class VoucherResource extends BaseJsonResource
         $hideOnMeApp = Config::get('forus.features.me_app.hide_non_provider_transactions');
 
         if ($hideOnMeApp && BaseFormRequest::createFromBase(request())->isMeApp()) {
-            return $voucher->all_transactions->where('target', 'provider');
+            return  VoucherTransactionResource::collection(
+                $voucher->all_transactions->where('target', 'provider')
+            );
         }
 
         return VoucherTransactionResource::collection($voucher->all_transactions);

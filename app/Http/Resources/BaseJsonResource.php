@@ -18,6 +18,8 @@ class BaseJsonResource extends JsonResource
     public const LOAD_COUNT = [];
     public const LOAD_MORPH = [];
 
+    protected string $resource_type = 'default';
+
     /**
      * @param string|null $append
      * @return array

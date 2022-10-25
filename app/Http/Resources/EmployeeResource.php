@@ -14,6 +14,7 @@ class EmployeeResource extends BaseJsonResource
         'organization',
         'roles.translations',
         'roles.permissions',
+        'identity.primary_email',
     ];
 
     /**
