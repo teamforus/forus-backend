@@ -49,7 +49,7 @@ return [
     'digid_app_id'          => env('DB_SEED_DIGID_APP_ID', null),
     'digid_shared_secret'   => env('DB_SEED_DIGID_SHARED_SECRET', null),
     'digid_a_select_server' => env('DB_SEED_DIGID_A_SELECT_SERVER', null),
-
+    'digid_trusted_cert'    => env('DB_SEED_DIGID_TRUSTED_CERT', 'disable'),
 
     // default implementation frontend urls
     'url_webshop' => env(
