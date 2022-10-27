@@ -16,6 +16,9 @@ return [
     'fund_statistics' => [
         'title' => 'Totaal aantal gebruikers :sponsor_name - :fund_name',
     ],
+    'forus_transaction_verify' => [
+        'title' => 'A new transaction to verify',
+    ],
     'provider_invitation' => [
         'title' => 'U wordt uitgenodigd voor :fund_name',
     ],
