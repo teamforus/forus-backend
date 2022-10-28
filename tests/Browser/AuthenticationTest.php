@@ -7,6 +7,7 @@ use App\Mail\User\EmailActivationMail;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
@@ -22,6 +23,7 @@ class AuthenticationTest extends DuskTestCase
      */
     public function testSignInByEmailExample(): void
     {
+        Cache::clear();
         $startTime = now();
 
         $this->browse(function (Browser $browser) use ($startTime) {
@@ -62,16 +64,18 @@ class AuthenticationTest extends DuskTestCase
 
             // Get and follow the auth link from the email then check if the user is authenticated
             $browser->visit($this->findFirstEmalRestoreLink($identity->email, $startTime));
+            $browser->pause(500);
+
             $browser->waitFor('@identityEmail');
             $browser->assertSeeIn('@identityEmail', $identity->email);
 
             // Logout identity
-            $browser->element('@userProfile')->click();
+            $browser->waitFor('@userProfile');
+            $browser->press('@userProfile');
             $browser->waitFor('@btnUserLogout');
-            $browser->element('@btnUserLogout')->click();
+            $browser->press('@btnUserLogout');
         });
     }
-
 
     /**
      * A Dusk test example.
@@ -81,6 +85,7 @@ class AuthenticationTest extends DuskTestCase
      */
     public function testSignUpByEmailExample(): void
     {
+        Cache::clear();
         $startTime = now();
 
         $this->browse(function (Browser $browser) use ($startTime) {
@@ -120,13 +125,13 @@ class AuthenticationTest extends DuskTestCase
 
             // Get and follow the auth link from the email then check if the user is authenticated
             $browser->visit($this->findFirstEmalConfirmationLink($email, $startTime));
-            $browser->waitFor('@identityEmail');
-            $browser->assertSeeIn('@identityEmail', $email);
+            $browser->pause(500);
 
             // Logout identity
-            $browser->element('@userProfile')->click();
+            $browser->waitFor('@userProfile');
+            $browser->press('@userProfile');
             $browser->waitFor('@btnUserLogout');
-            $browser->element('@btnUserLogout')->click();
+            $browser->press('@btnUserLogout');
         });
     }
 }

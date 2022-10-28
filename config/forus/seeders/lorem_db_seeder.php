@@ -49,7 +49,7 @@ return [
     'digid_app_id'          => env('DB_SEED_DIGID_APP_ID', null),
     'digid_shared_secret'   => env('DB_SEED_DIGID_SHARED_SECRET', null),
     'digid_a_select_server' => env('DB_SEED_DIGID_A_SELECT_SERVER', null),
-
+    'digid_trusted_cert'    => env('DB_SEED_DIGID_TRUSTED_CERT', 'disable'),
 
     // default implementation frontend urls
     'url_webshop' => env(
@@ -85,4 +85,11 @@ return [
     'iconnect_binding' => env('DB_SEED_ICONNECT_BINDING', ""),
 
     'productboard_api_key' => env('DB_SEED_PRODUCTBOARD_API_KEY'),
+
+    'iconnect_env' => env('DB_SEED_ICONNECT_ENV', ""),
+    'iconnect_cert' => env('DB_SEED_ICONNECT_API_CERT', ""),
+    'iconnect_cert_pass' => env('DB_SEED_ICONNECT_API_CERT_PASS', ""),
+    'iconnect_key' => env('DB_SEED_ICONNECT_API_KEY', ""),
+    'iconnect_key_pass' => env('DB_SEED_ICONNECT_API_KEY_PASS', ""),
+    'iconnect_cert_trust' => env('DB_SEED_ICONNECT_API_CERT_TRUST', ""),
 ];

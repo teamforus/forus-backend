@@ -1992,11 +1992,14 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return void
+     * @return bool
      */
     public function hasIConnectApiOin(): bool
     {
-        return $this->isIconnectApiConfigured() &&
+        return
+            $this->fund_config &&
+            !$this->is_external &&
+            $this->isIconnectApiConfigured() &&
             $this->organization->bsn_enabled &&
             !empty($this->fund_config->iconnect_target_binding) &&
             !empty($this->fund_config->iconnect_api_oin) &&
@@ -2008,7 +2011,12 @@ class Fund extends BaseModel
      */
     private function isIconnectApiConfigured(): bool
     {
-        return !empty(IConnect::getConfigs());
+        return
+            $this->fund_config &&
+            !empty($this->fund_config->iconnect_env) &&
+            !empty($this->fund_config->iconnect_key) &&
+            !empty($this->fund_config->iconnect_cert) &&
+            !empty($this->fund_config->iconnect_cert_trust);
     }
 
     /**
@@ -2016,11 +2024,7 @@ class Fund extends BaseModel
      */
     public function getIConnect(): ?IConnect
     {
-        return $this->hasIConnectApiOin() ? new IConnect(
-            $this->fund_config->iconnect_api_oin,
-            $this->fund_config->iconnect_target_binding,
-            $this->fund_config->iconnect_base_url
-        ) : null;
+        return $this->hasIConnectApiOin() ? new IConnect($this) : null;
     }
 
     /**

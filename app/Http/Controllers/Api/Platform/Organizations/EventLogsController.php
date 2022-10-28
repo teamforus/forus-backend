@@ -34,6 +34,8 @@ class EventLogsController extends Controller
             'q', 'loggable', 'loggable_id',
         ]));
 
-        return EventLogResource::queryCollection($search->query(), $request);
+        return EventLogResource::queryCollection($search->query(), $request, [
+            'employee' => $request->employee($organization),
+        ]);
     }
 }
