@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Events\Funds\FundVouchersExportedEvent;
+use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Exports\VoucherExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
@@ -22,6 +23,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\Identity;
+use App\Models\VoucherTransaction;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -145,9 +147,11 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('storeSponsor', [Voucher::class, $organization, $fund]);
 
+        $employee = $request->employee($organization);
+
         return SponsorVoucherResource::collection(collect(
             $request->post('vouchers')
-        )->map(function($voucher) use ($fund,  $organization, $request) {
+        )->map(function($voucher) use ($fund,  $organization, $request, $employee) {
             $note       = $voucher['note'] ?? null;
             $email      = $voucher['email'] ?? false;
             $amount     = $fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0;
@@ -184,6 +188,19 @@ class VouchersController extends Controller
                         $voucherModel->makeActivationCode($voucher['activation_code_uid'] ?? null);
                     }
                 }
+            }
+
+            if (!empty($voucher['direct_payment_iban'] ?? null) && $fund->fund_config->allow_generate_direct_payments) {
+                $transaction = $mainVoucher->makeTransaction([
+                    'amount' => $mainVoucher->amount_available,
+                    'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+                    'employee_id' => $employee->id,
+                    'target' => VoucherTransaction::TARGET_IBAN,
+                    'target_iban' => $voucher['direct_payment_iban'],
+                    'target_name' => $voucher['direct_payment_name'],
+                ]);
+
+                VoucherTransactionCreated::dispatch($transaction);
             }
 
             return $mainVoucher;

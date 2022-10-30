@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
+use App\Rules\Base\IbanRule;
 use App\Rules\ProductIdInStockRule;
 use App\Rules\VouchersUploadArrayRule;
 use Illuminate\Validation\Rule;
@@ -36,7 +37,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
         $fund = $this->getFund();
         $bsn_enabled = $this->organization->bsn_enabled;
 
-        return [
+        return array_merge([
             'fund_id'                           => $this->fundIdRule(),
             'vouchers'                          => ['required', new VouchersUploadArrayRule($fund)],
             'vouchers.*'                        => 'required|array',
@@ -50,7 +51,10 @@ class StoreBatchVoucherRequest extends BaseFormRequest
             'vouchers.*.activation_code'        => 'boolean',
             'vouchers.*.activation_code_uid'    => 'nullable|string|max:20',
             'vouchers.*.limit_multiplier'       => 'nullable|numeric|min:1|max:1000',
-        ];
+        ], $fund->fund_config->allow_generate_direct_payments ? [
+            'vouchers.*.direct_payment_iban'    => ['nullable', new IbanRule()],
+            'vouchers.*.direct_payment_name'    => 'required_with:vouchers.*.direct_payment_iban|string|min:3|max:280',
+        ] : []);
     }
 
     /**
@@ -116,5 +120,18 @@ class StoreBatchVoucherRequest extends BaseFormRequest
         $fund = $this->organization->funds()->findOrFail($this->input('fund_id'));
 
         return $fund;
+    }
+
+    /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        $keys = array_dot(array_keys($this->rules()));
+
+        return array_combine($keys, array_map(static function($key) {
+            $value = last(explode('.', $key));
+            return trans_fb("validation.attributes." . $value, $value);
+        }, $keys));
     }
 }

@@ -238,6 +238,8 @@ return [
         'external_link_text' => 'externe linktekst',
         'external_link_url' => 'externe link-url',
         'employee_id' => 'medewerker',
+        'direct_payment_iban' => 'IBAN-nummer',
+        'direct_payment_name' => 'payment name'
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',
