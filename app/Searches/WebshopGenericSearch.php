@@ -85,7 +85,9 @@ class WebshopGenericSearch
      */
     protected function queryProducts(array $options): Builder
     {
-        return Product::search($options)->withoutTrashed();
+        return Product::search(array_merge($options, [
+            'category_search_min_len' => 3
+        ]))->withoutTrashed();
     }
 
     /**

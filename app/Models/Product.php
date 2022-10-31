@@ -426,7 +426,7 @@ class Product extends BaseModel
         $query = ProductQuery::addPriceMinAndMaxColumn($query);
 
         if ($q = Arr::get($options, 'q')) {
-            ProductQuery::queryDeepFilter($query, $q);
+            ProductQuery::queryDeepFilter($query, $q, Arr::get($options, 'category_search_min_len', 1));
         }
 
         if (array_get($options, 'postcode') && array_get($options, 'distance')) {

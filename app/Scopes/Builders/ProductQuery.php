@@ -161,17 +161,24 @@ class ProductQuery
     /**
      * @param Builder $query
      * @param string $q
+     * @param int $category_search_min_len
      * @return Builder
      */
-    public static function queryDeepFilter(Builder $query, string $q = ''): Builder
+    public static function queryDeepFilter(Builder $query, string $q = '', int $category_search_min_len = 1): Builder
     {
-        return $query->where(static function (Builder $query) use ($q) {
+        return $query->where(static function (Builder $query) use ($q, $category_search_min_len) {
             $query->where('products.name', 'LIKE', "%$q%");
             $query->orWhere('products.description_text', 'LIKE', "%$q%");
             $query->orWhereHas('organization', static function(Builder $builder) use ($q) {
                 $builder->where('organizations.name', 'LIKE', "%$q%");
                 $builder->orWhere('organizations.description_text', 'LIKE', "%$q%");
             });
+            if (strlen($q) >= $category_search_min_len) {
+                $query->orWhereHas('product_category.translations', static function(Builder $builder) use ($q) {
+                    $builder->where('name', 'LIKE', "%$q%");
+                    $builder->where('locale', request()->header('Accept-Language', 'nl'));
+                });
+            }
         });
     }
 
