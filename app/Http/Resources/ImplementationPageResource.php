@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\ImplementationBlock;
 use App\Models\ImplementationPage;
 
 /**
@@ -10,6 +9,11 @@ use App\Models\ImplementationPage;
  */
 class ImplementationPageResource extends BaseJsonResource
 {
+    public const LOAD = [
+        'faq',
+        'blocks.photo',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -24,6 +28,7 @@ class ImplementationPageResource extends BaseJsonResource
             'description_html' => $page->external ? '' : $page->description_html,
             'external_url' => $page->external ? $page->external_url : '',
             'blocks' => ImplementationBlockResource::collection($page->blocks),
+            'faq' => FaqResource::collection($page->faq),
         ]);
     }
 }

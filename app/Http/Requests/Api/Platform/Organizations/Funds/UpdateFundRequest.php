@@ -6,6 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Rules\MediaUidRule;
+use App\Traits\ValidatesFaq;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
@@ -15,6 +16,8 @@ use Illuminate\Validation\Rule;
  */
 class UpdateFundRequest extends BaseFormRequest
 {
+    use ValidatesFaq;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -36,6 +39,7 @@ class UpdateFundRequest extends BaseFormRequest
         $availableValidators = $this->organization->employeesOfRoleQuery('validation')->pluck('id')->toArray();
         $criteriaRules = $this->criteriaRule();
         $fundConfigRules = $this->funConfigsRules();
+        $faqRules = $this->getFaqRules($this->fund->faq()->pluck('id')->toArray());
 
         return array_merge([
             'name'                      => 'nullable|between:2,200',
@@ -44,17 +48,12 @@ class UpdateFundRequest extends BaseFormRequest
             'description_short'         => 'nullable|string|max:280',
             'notification_amount'       => 'nullable|numeric',
             'faq_title'                 => 'nullable|string|max:200',
-            'faq'                       => 'nullable|array',
-            'faq.*'                     => 'required|array',
-            'faq.*.id'                  => ['nullable', 'in:' . $this->fund->faq()->pluck('id')->join(',')],
-            'faq.*.title'               => 'required|string|max:100',
-            'faq.*.description'         => 'required|string|max:5000',
             'tag_ids'                   => 'nullable|array',
             'tag_ids.*'                 => 'required|exists:tags,id',
             'request_btn_text'          => 'nullable|string|max:50',
             'external_link_text'        => 'nullable|string|max:50',
             'external_link_url'         => 'nullable|string|max:200',
-        ], $fundConfigRules, [
+        ], $fundConfigRules, $faqRules, [
             'auto_requests_validation'  => 'nullable|boolean',
             'default_validator_employee_id' => [
                 'nullable', Rule::in($availableValidators)
@@ -120,5 +119,15 @@ class UpdateFundRequest extends BaseFormRequest
             'criteria.*.validators'         => 'nullable|array',
             'criteria.*.validators.*'       => Rule::in($validators->toArray())
         ] : [];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function attributes(): array
+    {
+        return array_merge([
+            'criteria.*.value' => 'Waarde',
+        ], $this->getFaqAttributes());
     }
 }

@@ -10,6 +10,7 @@ use App\Events\Funds\FundUnArchivedEvent;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
+use App\Models\Traits\HasFaq;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundCriteriaQuery;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
@@ -85,7 +86,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read int|null $employees_validator_managers_count
  * @property-read Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
- * @property-read Collection|\App\Models\FundFaq[] $faq
+ * @property-read Collection|\App\Models\Faq[] $faq
  * @property-read int|null $faq_count
  * @property-read Collection|\App\Models\Product[] $formula_products
  * @property-read int|null $formula_products_count
@@ -175,7 +176,7 @@ use Illuminate\Support\Facades\DB;
  */
 class Fund extends BaseModel
 {
-    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription;
+    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasFaq;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_PROVIDER_APPLIED = 'provider_applied';
@@ -282,14 +283,6 @@ class Fund extends BaseModel
     public function criteria(): HasMany
     {
         return $this->hasMany(FundCriterion::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function faq(): HasMany
-    {
-        return $this->hasMany(FundFaq::class);
     }
 
     /**
@@ -1371,49 +1364,6 @@ class Fund extends BaseModel
         }
 
         return $this;
-    }
-
-    /**
-     * Update faq for existing fund
-     * @param array $faq
-     * @return $this
-     */
-    public function syncFaq(array $faq = []): self
-    {
-        // remove faq not listed in the array
-        $this->faq()->whereNotIn('id', array_filter(array_pluck($faq, 'id')))->delete();
-
-        foreach ($faq as $question) {
-            $this->syncQuestion($question);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Update faq for existing fund when provided
-     * @param array|null $faq
-     * @return $this
-     */
-    public function syncFaqOptional(?array $faq = null): self
-    {
-        return is_array($faq) ? $this->syncFaq($faq) : $this;
-    }
-
-    /**
-     * Update faq question or create new fund question
-     *
-     * @param array $question
-     * @return FundFaq
-     */
-    protected function syncQuestion(array $question): FundFaq
-    {
-        /** @var FundFaq $faq */
-        $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
-        $faq->updateModel(array_only($question, ['title', 'description']));
-        $faq->syncDescriptionMarkdownMedia('cms_media');
-
-        return $faq;
     }
 
     /**
