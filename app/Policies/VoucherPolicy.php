@@ -574,7 +574,7 @@ class VoucherPolicy
     ): Response|bool {
         $hasPermission = $voucher->fund->organization->identityCan($identity, 'make_direct_payments');
 
-        if (!$hasPermission || !$voucher->isInternal()) {
+        if (!$hasPermission) {
             return false;
         }
 
