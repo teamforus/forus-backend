@@ -22,6 +22,7 @@ use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
 use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
 use App\Services\BackofficeApiService\Responses\ResidencyResponse;
+use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Models\File;
@@ -703,9 +704,28 @@ class Fund extends BaseModel
      */
     public function getTransactionCosts(): float
     {
-        return $this->voucher_transactions()->where(function(Builder $builder) {
-            $builder->where('voucher_transactions.amount', '>', 0);
-        })->count() * 0.10;
+        $costs = 0;
+        $state = VoucherTransaction::STATE_SUCCESS;
+        $targets = VoucherTransaction::TARGETS_OUTGOING;
+        $targetCostOld = VoucherTransaction::TRANSACTION_COST_OLD;
+
+        foreach (Bank::get() as $bank) {
+            $costs += $this->voucher_transactions()
+                ->where('voucher_transactions.amount', '>', 0)
+                ->where('voucher_transactions.state', $state)
+                ->whereIn('voucher_transactions.target', $targets)
+                ->whereRelation('voucher_transaction_bulk.bank_connection', 'bank_id', $bank->id)
+                ->count() * $bank->transaction_cost;
+        }
+
+        $costs += $this->voucher_transactions()
+            ->where('voucher_transactions.amount', '>', 0)
+                ->where('voucher_transactions.state', $state)
+                ->whereIn('voucher_transactions.target', $targets)
+                ->whereDoesntHave('voucher_transaction_bulk')
+                ->count() * $targetCostOld;
+
+        return $costs;
     }
 
     /**
