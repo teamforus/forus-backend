@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->boolean('allow_generate_direct_payments')
+            $table->boolean('allow_generator_direct_payments')
                 ->default(false)
                 ->after('allow_direct_payments');
         });
@@ -28,7 +28,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->dropColumn('allow_generate_direct_payments');
+            $table->dropColumn('allow_generator_direct_payments');
         });
     }
 };

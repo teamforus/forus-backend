@@ -2042,4 +2042,15 @@ class Fund extends BaseModel
 
         return empty($record) || $recordTime > $this->fund_config?->bsn_confirmation_api_time;
     }
+
+    /**
+     * @return bool
+     */
+    public function generatorDirectPaymentsAllowed(): bool
+    {
+        return
+            $this->isTypeBudget() &&
+            $this->fund_config?->allow_direct_payments &&
+            $this->fund_config?->allow_generator_direct_payments;
+    }
 }
