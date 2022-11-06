@@ -76,6 +76,7 @@ class FundRequest extends BaseModel
     public const EVENT_RESOLVED = 'resolved';
     public const EVENT_ASSIGNED = 'assigned';
     public const EVENT_RESIGNED = 'resigned';
+    public const EVENT_DISREGARDED = 'disregarded';
 
     public const STATE_PENDING = 'pending';
     public const STATE_APPROVED = 'approved';
@@ -97,8 +98,8 @@ class FundRequest extends BaseModel
         self::STATE_PENDING,
         self::STATE_APPROVED,
         self::STATE_DECLINED,
-        self::STATE_APPROVED_PARTLY,
         self::STATE_DISREGARDED,
+        self::STATE_APPROVED_PARTLY,
     ];
 
     public const STATES_RESOLVED = [

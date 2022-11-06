@@ -27,9 +27,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Excel as ExcelModel;
 use Illuminate\Support\Carbon;
@@ -1203,18 +1205,11 @@ class Voucher extends BaseModel
     }
 
     /**
-    // TODO: cleanup
      * @return bool
      */
     public function needsTransactionReview(): bool
     {
-        if ($threshold = env('VOUCHER_TRANSACTION_REVIEW_THRESHOLD', 5)) {
-            return $this->transactions()->where(
-                'created_at', '>=', now()->subSeconds($threshold)
-            )->exists();
-        }
-
-        return false;
+        return $this->hasTransactionsWithin(Config::get('forus.transactions.soft_limit'));
     }
 
     /**
@@ -1368,5 +1363,27 @@ class Voucher extends BaseModel
             'attempts' => 50,
             'last_attempt_at' => now(),
         ] : []));
+    }
+
+    /**
+     * @param int|null $seconds
+     * @return Builder|null
+     */
+    protected function transactionsWithinQuery(?int $seconds): ?Relation
+    {
+        if (!is_null($seconds)) {
+            return $this->transactions()->where('created_at', '>=', now()->subSeconds($seconds));
+        }
+
+        return null;
+    }
+
+    /**
+     * @param int|null $seconds
+     * @return bool|null
+     */
+    public function hasTransactionsWithin(?int $seconds): ?bool
+    {
+        return $seconds ? $this->transactionsWithinQuery($seconds)?->exists() : null;
     }
 }
