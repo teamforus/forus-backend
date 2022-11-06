@@ -17,6 +17,7 @@ use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Traits\HasMarkdownDescription;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -418,9 +419,9 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return Collection
+     * @return Collection|Fund[]
      */
-    public static function activeFunds(): Collection
+    public static function activeFunds(): Collection|Arrayable
     {
         return self::activeFundsQuery()->get();
     }
