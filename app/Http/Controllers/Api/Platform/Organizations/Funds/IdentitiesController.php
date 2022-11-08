@@ -39,7 +39,9 @@ class IdentitiesController extends Controller
         $this->authorize('viewIdentitiesSponsor', [$fund, $organization]);
 
         $isManager = $organization->identityCan($request->identity(), 'manage_vouchers');
-        $filters = array_filter(['target', 'has_email', 'order_by', 'order_dir', $isManager ? 'q' : null]);
+        $filters = array_filter([
+            'target', 'has_email', 'order_by', 'order_dir', 'with_reservations', $isManager ? 'q' : null
+        ]);
 
         $search = new FundIdentitiesSearch($request->only($filters), $fund);
         $query = $isManager ? clone $search->query() : Identity::whereRaw('false');
@@ -116,7 +118,7 @@ class IdentitiesController extends Controller
 
         $fields = $request->input('fields', FundIdentitiesExport::getExportFields());
         $search = new FundIdentitiesSearch($request->only([
-            'target', 'has_email', 'q', 'order_by', 'order_dir',
+            'target', 'has_email', 'q', 'order_by', 'order_dir', 'with_reservations',
         ]), $fund);
 
         $exportType = $request->input('export_type', 'csv');
@@ -149,7 +151,9 @@ class IdentitiesController extends Controller
         if ($request->input('target') === 'self') {
             $identities = $request->identity()->id;
         } else {
-            $filters = ['target', 'has_email', 'order_by', 'order_dir', $isManager ? 'q' : null];
+            $filters = [
+                'target', 'has_email', 'order_by', 'order_dir', 'with_reservations', $isManager ? 'q' : null
+            ];
             $search = new FundIdentitiesSearch(array_filter($request->only($filters)), $fund);
             $identities = $search->query()->pluck('id')->toArray();
         }

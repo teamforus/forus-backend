@@ -13,16 +13,22 @@ class IdentityQuery
     /**
      * @param Relation|Builder $builder
      * @param Fund $fund
+     * @param bool $withReservations
      * @return Relation|Builder
      */
     public static function appendVouchersCountFields(
         Relation|Builder $builder,
         Fund $fund,
+        bool $withReservations = false
     ): Relation|Builder {
         $vouchersQuery = $fund
             ->vouchers()
             ->selectRaw('count(*)')
             ->whereColumn('vouchers.identity_address', 'identities.address');
+
+        if (!$withReservations) {
+            $vouchersQuery->whereNull('product_reservation_id');
+        }
 
         return $builder->addSelect([
             'count_vouchers' => clone $vouchersQuery,
