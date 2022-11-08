@@ -28,9 +28,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Excel as ExcelModel;
 use Illuminate\Support\Carbon;
@@ -83,6 +85,7 @@ use ZipArchive;
  * @property-read bool $has_reservations
  * @property-read bool $has_transactions
  * @property-read bool $in_use
+ * @property-read bool $is_external
  * @property-read bool $is_granted
  * @property-read \Illuminate\Support\Carbon|null $last_active_day
  * @property-read string $state_locale
@@ -415,6 +418,31 @@ class Voucher extends BaseModel
     public function getTypeAttribute(): string
     {
         return $this->product_id ? 'product' : 'regular';
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getIsExternalAttribute(): bool
+    {
+        return $this->isExternal();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExternal(): bool
+    {
+        return $this->fund->fund_config->usesExternalVouchers();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInternal(): bool
+    {
+        return !$this->fund->fund_config->usesExternalVouchers();
     }
 
     /**
@@ -1204,18 +1232,11 @@ class Voucher extends BaseModel
     }
 
     /**
-    // TODO: cleanup
      * @return bool
      */
     public function needsTransactionReview(): bool
     {
-        if ($threshold = env('VOUCHER_TRANSACTION_REVIEW_THRESHOLD', 5)) {
-            return $this->transactions()->where(
-                'created_at', '>=', now()->subSeconds($threshold)
-            )->exists();
-        }
-
-        return false;
+        return $this->hasTransactionsWithin(Config::get('forus.transactions.soft_limit'));
     }
 
     /**
@@ -1385,7 +1406,7 @@ class Voucher extends BaseModel
         $transaction = $this->makeTransaction([
             'amount' => $this->amount_available,
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
-            'employee_id' => $employee?->id,
+            'employee_id' => $employee->id,
             'target' => VoucherTransaction::TARGET_IBAN,
             'target_iban' => $target_iban,
             'target_name' => $target_name,
@@ -1394,5 +1415,27 @@ class Voucher extends BaseModel
         VoucherTransactionCreated::dispatch($transaction);
 
         return $transaction;
+    }
+
+    /**
+     * @param int|null $seconds
+     * @return Relation|null
+     */
+    protected function transactionsWithinQuery(?int $seconds): ?Relation
+    {
+        if (!is_null($seconds)) {
+            return $this->transactions()->where('created_at', '>=', now()->subSeconds($seconds));
+        }
+
+        return null;
+    }
+
+    /**
+     * @param int|null $seconds
+     * @return bool|null
+     */
+    public function hasTransactionsWithin(?int $seconds): ?bool
+    {
+        return $seconds ? $this->transactionsWithinQuery($seconds)?->exists() : null;
     }
 }
