@@ -84,6 +84,7 @@ use ZipArchive;
  * @property-read bool $has_reservations
  * @property-read bool $has_transactions
  * @property-read bool $in_use
+ * @property-read bool $is_external
  * @property-read bool $is_granted
  * @property-read \Illuminate\Support\Carbon|null $last_active_day
  * @property-read string $state_locale
@@ -416,6 +417,31 @@ class Voucher extends BaseModel
     public function getTypeAttribute(): string
     {
         return $this->product_id ? 'product' : 'regular';
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getIsExternalAttribute(): bool
+    {
+        return $this->isExternal();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExternal(): bool
+    {
+        return $this->fund->fund_config->usesExternalVouchers();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInternal(): bool
+    {
+        return !$this->fund->fund_config->usesExternalVouchers();
     }
 
     /**

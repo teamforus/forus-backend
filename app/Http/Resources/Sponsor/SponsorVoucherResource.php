@@ -39,7 +39,7 @@ class SponsorVoucherResource extends BaseJsonResource
         return array_merge($voucher->only([
             'id', 'amount', 'amount_total', 'amount_top_up', 'note', 'identity_address', 'state', 'state_locale',
             'is_granted', 'expired', 'activation_code', 'activation_code_uid', 'has_transactions',
-            'in_use', 'limit_multiplier', 'fund_id',
+            'in_use', 'limit_multiplier', 'fund_id', 'is_external',
         ]), [
             'amount_available' => currency_format($amount_available),
             'source' => $voucher->employee_id ? 'employee' : 'user',

@@ -6,6 +6,7 @@ use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Vouchers\DeactivateVoucherRequest;
 use App\Http\Resources\VoucherCollectionResource;
 use App\Http\Resources\VoucherResource;
+use App\Models\FundConfig;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
@@ -28,6 +29,12 @@ class VouchersController extends Controller
             ->where('identity_address', $request->auth_address())
             ->whereDoesntHave('product_reservation')
             ->orderByDesc('created_at');
+
+        if ($request->isMeApp()) {
+            $query->whereRelation('fund.fund_config', [
+                'vouchers_type' => FundConfig::VOUCHERS_TYPE_INTERNAL,
+            ]);
+        }
 
         $search = new VouchersSearch($request->only('type', 'state', 'archived'), $query);
         $per_page = $request->input('per_page', 1000);
