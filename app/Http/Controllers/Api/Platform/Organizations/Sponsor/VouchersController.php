@@ -141,13 +141,14 @@ class VouchersController extends Controller
         Organization $organization
     ): AnonymousResourceCollection {
         $fund = Fund::find($request->post('fund_id'));
+        $employee = $request->employee($organization);
 
         $this->authorize('show', $organization);
         $this->authorize('storeSponsor', [Voucher::class, $organization, $fund]);
 
         return SponsorVoucherResource::collection(collect(
             $request->post('vouchers')
-        )->map(function($voucher) use ($fund,  $organization, $request) {
+        )->map(function($voucher) use ($fund, $organization, $request, $employee) {
             $note       = $voucher['note'] ?? null;
             $email      = $voucher['email'] ?? false;
             $amount     = $fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0;
@@ -156,9 +157,11 @@ class VouchersController extends Controller
             $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
             $multiplier = $voucher['limit_multiplier'] ?? null;
-            $employee_id = $organization->findEmployee($request->auth_address())->id;
-            $extraFields = compact('note', 'employee_id');
-            $productVouchers = [];
+
+            $employee_id        = $employee->id;
+            $extraFields        = compact('note', 'employee_id');
+            $payment_iban       = $voucher['direct_payment_iban'] ?? null;
+            $payment_name       = $voucher['direct_payment_name'] ?? null;
 
             if ($product_id) {
                 $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
@@ -168,7 +171,7 @@ class VouchersController extends Controller
             }
 
             /** @var Voucher[] $vouchers */
-            $vouchers = array_merge([$mainVoucher], $productVouchers);
+            $vouchers = array_merge([$mainVoucher], $productVouchers ?? []);
 
             foreach ($vouchers as $voucherModel) {
                 if ($organization->bsn_enabled && ($bsn = ($voucher['bsn'] ?? false))) {
@@ -184,6 +187,10 @@ class VouchersController extends Controller
                         $voucherModel->makeActivationCode($voucher['activation_code_uid'] ?? null);
                     }
                 }
+            }
+
+            if ($payment_iban && $mainVoucher->isBudgetType() && $fund->generatorDirectPaymentsAllowed()) {
+                $mainVoucher->makeDirectPayment($payment_iban, $payment_name, $employee);
             }
 
             return $mainVoucher;

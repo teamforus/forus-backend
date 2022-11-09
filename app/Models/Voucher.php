@@ -9,6 +9,7 @@ use App\Events\Vouchers\VoucherCreated;
 use App\Events\Vouchers\VoucherDeactivated;
 use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Events\Vouchers\VoucherSendToEmailEvent;
+use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Exports\VoucherExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
@@ -1392,8 +1393,33 @@ class Voucher extends BaseModel
     }
 
     /**
+     * @param string $target_iban
+     * @param string $target_name
+     * @param Employee $employee
+     * @return VoucherTransaction
+     */
+    public function makeDirectPayment(
+        string $target_iban,
+        string $target_name,
+        Employee $employee,
+    ): VoucherTransaction {
+        $transaction = $this->makeTransaction([
+            'amount' => $this->amount_available,
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'employee_id' => $employee->id,
+            'target' => VoucherTransaction::TARGET_IBAN,
+            'target_iban' => $target_iban,
+            'target_name' => $target_name,
+        ]);
+
+        VoucherTransactionCreated::dispatch($transaction);
+
+        return $transaction;
+    }
+
+    /**
      * @param int|null $seconds
-     * @return Builder|null
+     * @return Relation|null
      */
     protected function transactionsWithinQuery(?int $seconds): ?Relation
     {

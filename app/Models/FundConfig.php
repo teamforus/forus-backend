@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
  * @property bool $allow_direct_payments
+ * @property bool $allow_generator_direct_payments
  * @property bool $allow_voucher_top_ups
  * @property bool $employee_can_see_product_vouchers
  * @property string $vouchers_type
@@ -69,6 +70,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectPayments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowFundRequests($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowGenerateDirectPayments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherTopUps($value)
@@ -158,7 +160,7 @@ class FundConfig extends BaseModel
         'iconnect_env', 'iconnect_key', 'iconnect_key_pass',
         'iconnect_cert', 'iconnect_cert_pass', 'iconnect_cert_trust',
         'allow_direct_payments', 'allow_voucher_top_ups',
-        'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
+        'limit_voucher_top_up_amount', 'limit_voucher_total_amount', 'allow_generator_direct_payments',
     ];
 
     /**
@@ -186,6 +188,7 @@ class FundConfig extends BaseModel
         'limit_generator_amount' => 'string',
         'limit_voucher_top_up_amount' => 'string',
         'limit_voucher_total_amount' => 'string',
+        'allow_generator_direct_payments' => 'boolean',
     ];
 
     /**

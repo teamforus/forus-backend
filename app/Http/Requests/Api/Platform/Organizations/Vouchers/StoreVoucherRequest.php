@@ -65,7 +65,7 @@ class StoreVoucherRequest extends BaseFormRequest
             'product_id' => [
                 $fund && $fund->isTypeBudget() ? 'required_without:amount' : 'nullable',
                 'exists:products,id',
-                new ProductIdInStockRule($fund),
+                $fund ? new ProductIdInStockRule($fund) : Rule::in([]),
             ],
             'activate'              => 'boolean',
             'activation_code'       => 'boolean',
