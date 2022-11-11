@@ -36,9 +36,9 @@ class ProductCategorySearch extends BaseSearch
 
         if ($this->hasFilter('used') && $this->getFilter('used', false)) {
             $builder->whereHas('descendants', function (ProductCategory|Builder $builder) {
-                $builder->whereIn('id', Product::searchQuery([
+                $builder->whereIn('id', Product::searchQuery($this->hasFilter('used_type') ? [
                     'type' => $this->getfilter('used_type'),
-                ])->distinct()->select('product_category_id'));
+                ] : [])->distinct()->select('product_category_id'));
             });
         }
 

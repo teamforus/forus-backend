@@ -38,7 +38,7 @@ class SearchProvidersRequest extends BaseFormRequest
             'distance'          => 'nullable|integer|max:1000',
             'per_page'          => 'numeric|max:1000',
             'order_by'          => 'nullable|in:created_at,name',
-            'order_dir'         => 'nullable|in:asc,desc',
+            'order_by_dir'      => 'nullable|in:asc,desc',
         ];
     }
 
