@@ -27,7 +27,7 @@ class IndexProductCategoriesRequest extends BaseFormRequest
         return [
             'q' => 'nullable|string',
             'used' => 'boolean',
-            'used_type' => 'required_if:used,1|in:' . implode(',', Fund::TYPES),
+            'used_type' => 'nullable|in:' . implode(',', Fund::TYPES),
             'parent_id' => $this->parentIdRule(),
             'per_page' => $this->perPageRule(1000),
         ];
