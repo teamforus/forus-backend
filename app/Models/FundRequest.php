@@ -36,6 +36,7 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Fund $fund
  * @property-read int|null $lead_time_days
  * @property-read string $lead_time_locale
+ * @property-read string $state_locale
  * @property-read \App\Models\Identity $identity
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -147,6 +148,21 @@ class FundRequest extends BaseModel
     public function getLeadTimeLocaleAttribute(): string
     {
         return ($this->resolved_at ?: now())->longAbsoluteDiffForHumans($this->created_at);
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getStateLocaleAttribute(): string
+    {
+        return [
+            self::STATE_PENDING => 'Wachten',
+            self::STATE_APPROVED => 'Geaccepteerd',
+            self::STATE_APPROVED_PARTLY => 'Aanvulling gevraagd',
+            self::STATE_DECLINED => 'Geweigerd',
+            self::STATE_DISREGARDED => 'Niet beoordeeld',
+        ][$this->state] ?? '';
     }
 
     /**
