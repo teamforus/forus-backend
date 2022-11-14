@@ -156,16 +156,19 @@ class FundResource extends BaseJsonResource
             'provider_employees_count'      => $providersEmployeeCount,
             'validators_count'              => $validatorsCount,
             'requester_count'               => $requesterCount,
-            'budget'                        => $this->getBudgetData($fund),
+            'budget'                        => $this->getVoucherData($fund),
+            'product_vouchers'              => $this->getVoucherData($fund, 'product'),
         ];
     }
 
     /**
      * @param Fund $fund
+     * @param string $type
      * @return array
      */
-    public function getBudgetData(Fund $fund): array {
-        $details = Fund::getFundDetails($fund->budget_vouchers()->getQuery());
+    public function getVoucherData(Fund $fund, string $type = 'budget'): array {
+        $voucherQuery = $type == 'budget' ? $fund->budget_vouchers() : $fund->product_vouchers();
+        $details = Fund::getFundDetails($voucherQuery->getQuery());
         $reservedQuery = $fund->budget_vouchers()->getQuery();
         $reservedAmount = VoucherQuery::whereNotExpiredAndActive($reservedQuery)->sum('amount');
 
