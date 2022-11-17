@@ -39,11 +39,9 @@ class IdentitiesController extends Controller
         $this->authorize('viewIdentitiesSponsor', [$fund, $organization]);
 
         $isManager = $organization->identityCan($request->identity(), 'manage_vouchers');
-        $filters = array_filter([
-            'target', 'has_email', 'order_by', 'order_dir', 'with_reservations', $isManager ? 'q' : null
-        ]);
+        $filters = ['target', 'has_email', 'order_by', 'order_dir', 'with_reservations', $isManager ? 'q' : null];
 
-        $search = new FundIdentitiesSearch($request->only($filters), $fund);
+        $search = new FundIdentitiesSearch($request->only(array_filter($filters)), $fund);
         $query = $isManager ? clone $search->query() : Identity::whereRaw('false');
 
         $counts = [
@@ -117,9 +115,8 @@ class IdentitiesController extends Controller
         $this->authorize('showIdentities', [$fund, $organization]);
 
         $fields = $request->input('fields', FundIdentitiesExport::getExportFields());
-        $search = new FundIdentitiesSearch($request->only([
-            'target', 'has_email', 'q', 'order_by', 'order_dir', 'with_reservations',
-        ]), $fund);
+        $filters = ['target', 'has_email', 'order_by', 'order_dir', 'with_reservations', 'q'];
+        $search = new FundIdentitiesSearch($request->only($filters), $fund);
 
         $exportType = $request->input('export_type', 'csv');
         $exportData = new FundIdentitiesExport($search->get(), $fields);
@@ -147,14 +144,12 @@ class IdentitiesController extends Controller
         $this->authorize('sendIdentityNotifications', [$fund, $organization]);
 
         $isManager = $organization->identityCan($request->identity(), 'manage_vouchers');
+        $filters = ['target', 'has_email', 'order_by', 'order_dir', 'with_reservations', $isManager ? 'q' : null];
 
         if ($request->input('target') === 'self') {
             $identities = $request->identity()->id;
         } else {
-            $filters = [
-                'target', 'has_email', 'order_by', 'order_dir', 'with_reservations', $isManager ? 'q' : null
-            ];
-            $search = new FundIdentitiesSearch(array_filter($request->only($filters)), $fund);
+            $search = new FundIdentitiesSearch($request->only(array_filter($filters)), $fund);
             $identities = $search->query()->pluck('id')->toArray();
         }
 
