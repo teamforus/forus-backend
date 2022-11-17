@@ -722,6 +722,7 @@ class LoremDbSeeder extends Seeder
             'is_configured'             => true,
             'allow_physical_cards'      => in_array($fund->name, $this->fundsWithPhysicalCards),
             'allow_direct_payments'     => in_array($fund->name, $this->fundsWithDirectPayments),
+            'allow_generator_direct_payments' => in_array($fund->name, $this->fundsWithDirectPayments),
             'allow_voucher_top_ups'     => in_array($fund->name, $this->fundsWithVoucherTopUp),
             'email_required'            => $emailRequired,
             'contact_info_enabled'      => $emailRequired,

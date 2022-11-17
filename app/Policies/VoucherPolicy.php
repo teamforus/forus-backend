@@ -19,6 +19,7 @@ use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 
 class VoucherPolicy
@@ -117,6 +118,7 @@ class VoucherPolicy
             $voucher->fund->organization_id === $organization->id &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->is_granted;
     }
@@ -138,6 +140,7 @@ class VoucherPolicy
             $voucher->fund->organization_id === $organization->id &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             !$voucher->activated &&
             !$voucher->expired;
     }
@@ -206,6 +209,7 @@ class VoucherPolicy
             $this->assignSponsor($identity, $voucher, $organization) &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             !$voucher->activation_code &&
             !$voucher->deactivated &&
             !$voucher->expired;
@@ -225,6 +229,7 @@ class VoucherPolicy
             $voucher->exists &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             $voucher->activation_code &&
             !$voucher->identity_address &&
             !$voucher->deactivated;
@@ -279,6 +284,7 @@ class VoucherPolicy
             $this->show($identity, $voucher) &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->expired;
     }
@@ -296,6 +302,7 @@ class VoucherPolicy
             Gate::allows('create', [PhysicalCard::class, $voucher]) &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->expired;
     }
@@ -318,6 +325,7 @@ class VoucherPolicy
             $voucher->fund->isInternal() &&
             $voucher->fund->fund_config->allow_physical_cards &&
             $voucher->fund->organization_id === $organization->id &&
+            $voucher->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->expired;
     }
@@ -368,6 +376,10 @@ class VoucherPolicy
         // reservation product removed
         if ($voucher->product_reservation && $voucher->product_reservation->product->trashed()) {
             return $this->deny('reservation_product_removed');
+        }
+
+        if (!$voucher->isInternal()) {
+            return $this->deny('External voucher.');
         }
 
         // reservation is not pending
@@ -509,7 +521,7 @@ class VoucherPolicy
         }
 
         if ($voucher->isProductType()) {
-            // Product vouchers should have not transactions
+            // Product vouchers should not have transactions
             if ($voucher->transactions()->exists()) {
                 return $this->deny('product_voucher_used');
             }
@@ -519,6 +531,26 @@ class VoucherPolicy
         }
 
         return false;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Voucher $voucher
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function makeTransactionThrottle(
+        Identity $identity,
+        Voucher $voucher,
+    ): Response|bool {
+        $hardLimit = Config::get('forus.transactions.hard_limit');
+        $hasTransaction = $voucher->hasTransactionsWithin($hardLimit);
+
+        return $hasTransaction ? $this->deny([
+            'key' => 'throttled',
+            'error' => 'throttled',
+            'message' => trans("validation.voucher.throttled", compact('hardLimit')),
+        ]) : $identity->exists();
     }
 
     /**
@@ -561,7 +593,9 @@ class VoucherPolicy
         Voucher $voucher,
         ?Organization $provider = null
     ): Response|bool {
-        if (!$voucher->fund->organization->identityCan($identity, 'make_direct_payments')) {
+        $hasPermission = $voucher->fund->organization->identityCan($identity, 'make_direct_payments');
+
+        if (!$hasPermission) {
             return false;
         }
 

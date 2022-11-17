@@ -25,10 +25,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
  * @property bool $allow_direct_payments
+ * @property bool $allow_generator_direct_payments
  * @property bool $allow_voucher_top_ups
  * @property bool $employee_can_see_product_vouchers
- * @property int $show_voucher_qr
- * @property int $show_voucher_amount
+ * @property string $vouchers_type
  * @property bool $is_configured
  * @property bool $email_required
  * @property bool $contact_info_enabled
@@ -70,6 +70,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectPayments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowFundRequests($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowGenerateDirectPayments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherTopUps($value)
@@ -117,9 +118,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTopUpAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereShowVoucherAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereShowVoucherQr($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVouchersType($value)
  * @mixin \Eloquent
  */
 class FundConfig extends BaseModel
@@ -131,6 +131,9 @@ class FundConfig extends BaseModel
         self::BACKOFFICE_INELIGIBLE_POLICY_REDIRECT,
         self::BACKOFFICE_INELIGIBLE_POLICY_FUND_REQUEST,
     ];
+
+    public const VOUCHERS_TYPE_EXTERNAL = 'external';
+    public const VOUCHERS_TYPE_INTERNAL = 'internal';
 
     protected $fillable = [
         'backoffice_enabled', 'backoffice_url', 'backoffice_key',
@@ -157,7 +160,7 @@ class FundConfig extends BaseModel
         'iconnect_env', 'iconnect_key', 'iconnect_key_pass',
         'iconnect_cert', 'iconnect_cert_pass', 'iconnect_cert_trust',
         'allow_direct_payments', 'allow_voucher_top_ups',
-        'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
+        'limit_voucher_top_up_amount', 'limit_voucher_total_amount', 'allow_generator_direct_payments',
     ];
 
     /**
@@ -185,6 +188,7 @@ class FundConfig extends BaseModel
         'limit_generator_amount' => 'string',
         'limit_voucher_top_up_amount' => 'string',
         'limit_voucher_total_amount' => 'string',
+        'allow_generator_direct_payments' => 'boolean',
     ];
 
     /**
@@ -229,5 +233,13 @@ class FundConfig extends BaseModel
     public function getDefaultContactInfoMessage(): string
     {
         return trans('fund.default_contact_info_message');
+    }
+
+    /**
+     * @return bool
+     */
+    public function usesExternalVouchers(): bool
+    {
+        return $this->vouchers_type == self::VOUCHERS_TYPE_EXTERNAL;
     }
 }
