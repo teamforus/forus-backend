@@ -46,7 +46,7 @@ class IdentityEmailTest extends TestCase
      */
     public function testStoreNewEmailAsGuest(): void
     {
-        $email = microtime(true) . "@example.com";
+        $email = $this->makeUniqueEmail();
         $this->post($this->apiEmailUrl, ['email' => $email], $this->makeApiHeaders())->assertUnauthorized();
     }
 
@@ -55,7 +55,8 @@ class IdentityEmailTest extends TestCase
      */
     public function testStoreInvalidEmail(): void
     {
-        $this->storeNewEmailRequest('not_valid_email')
+        $this
+            ->storeNewEmailRequest('not_valid_email')
             ->assertJsonValidationErrorFor('email');
     }
 
@@ -148,7 +149,7 @@ class IdentityEmailTest extends TestCase
      */
     public function testPrimaryEmail(): void
     {
-        $primaryEmail = microtime(true) . "@example.com";
+        $primaryEmail = $this->makeUniqueEmail();
         $startTime = now();
 
         $identity = $this->makeIdentity($primaryEmail);

@@ -8,17 +8,17 @@ use App\Models\IdentityEmail;
 use App\Models\IdentityProxy;
 use App\Models\Implementation;
 use App\Models\Organization;
-use App\Models\Traits\HasDbTokens;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Carbon\Carbon;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Tests\Traits\MakesTestIdentities;
 
 class IdentityEmailTest extends DuskTestCase
 {
-    use AssertsSentEmails, HasDbTokens;
+    use AssertsSentEmails, MakesTestIdentities;
 
     /**
      * @return void
@@ -30,7 +30,7 @@ class IdentityEmailTest extends DuskTestCase
 
         $this->makeIdentityEmailTests(
             Implementation::where('key', 'nijmegen')->first(),
-            $this->makeIdentity($this->makeUniqueEmail('pr-')),
+            $this->makeIdentity($this->makeUniqueEmail('base-')),
             'webshop'
         );
     }
@@ -61,7 +61,7 @@ class IdentityEmailTest extends DuskTestCase
         $this->makeIdentityEmailTests(
             Implementation::general(),
             Organization::whereHas('products')->first()->identity,
-            'validator'
+            'provider'
         );
     }
 
@@ -131,6 +131,12 @@ class IdentityEmailTest extends DuskTestCase
      */
     private function goToIdentityEmailPage(Browser $browser, Identity $identity): void
     {
+        $browser->pause(500);
+
+        if (!empty($browser->element('@identityEmailConfirmedButton'))) {
+            $browser->element('@identityEmailConfirmedButton')->click();
+        }
+
         $browser->waitFor('@identityEmail');
         $browser->assertSeeIn('@identityEmail', $identity->email);
 
@@ -266,19 +272,5 @@ class IdentityEmailTest extends DuskTestCase
         $browser->element('@userProfile')->click();
         $browser->waitFor('@btnUserLogout');
         $browser->element('@btnUserLogout')->click();
-    }
-
-    /**
-     * @param string $prefix
-     * @param string $domain
-     * @return string
-     */
-    private function makeUniqueEmail(string $prefix = '', string $domain = 'example.com'): string
-    {
-        $token = self::makeUniqueTokenCallback(function($token) use ($prefix, $domain) {
-            return IdentityEmail::whereEmail("$prefix$token@$domain")->exists();
-        }, 32);
-
-        return "$prefix$token@$domain";
     }
 }

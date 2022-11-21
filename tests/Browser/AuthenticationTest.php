@@ -10,10 +10,11 @@ use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Tests\Traits\MakesTestIdentities;
 
 class AuthenticationTest extends DuskTestCase
 {
-    use AssertsSentEmails;
+    use AssertsSentEmails, MakesTestIdentities;
 
     /**
      * A Dusk test example.
@@ -90,7 +91,7 @@ class AuthenticationTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($startTime) {
             // Find nijmegen implementation and define target email
-            $email = microtime(true) . "@example.com";
+            $email = $this->makeUniqueEmail();
             $implementation = Implementation::where('key', 'nijmegen')->first();
 
             // Implementation exist
