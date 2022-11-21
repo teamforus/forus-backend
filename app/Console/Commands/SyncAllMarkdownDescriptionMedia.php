@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Faq;
 use App\Models\Fund;
-use App\Models\FundFaq;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use Illuminate\Database\Eloquent\Collection;
@@ -68,8 +68,8 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
 
         match($type) {
             'all' => $this->syncAll(),
+            'faq' => $this->syncFaq(),
             'fund' => $this->syncFunds(),
-            'fund_faq' => $this->syncFundFaqs(),
             'implementation' => $this->syncImplementations(),
             'implementation_page' => $this->syncImplementationPages(),
             default => $this->warn('Please provide a valid type, ex: --type=fund or --type=all.'),
@@ -84,8 +84,8 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
      */
     public function syncAll(): void
     {
+        $this->syncFaq();
         $this->syncFunds();
-        $this->syncFundFaqs();
         $this->syncImplementations();
         $this->syncImplementationPages();
     }
@@ -101,9 +101,9 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
     /**
      * @return Collection
      */
-    public function syncFundFaqs(): Collection
+    public function syncFaq(): Collection
     {
-        return $this->syncModels(FundFaq::get(), 'cms_media', 'FundFaq');
+        return $this->syncModels(Faq::get(), 'cms_media', 'FundFaq');
     }
 
     /** 
@@ -132,7 +132,7 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
     {
         $this->printHeader($this->green("Processing '$model':\n"));
 
-        $models->each(function (Fund|FundFaq|Implementation|ImplementationPage $model) use ($mediaType) {
+        $models->each(function (Faq|Fund|Implementation|ImplementationPage $model) use ($mediaType) {
             $this->previewModelMedia($model, $mediaType);
 
             if (!$this->dryRun) {
@@ -154,12 +154,12 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
     }
 
     /**
-     * @param Fund|FundFaq|Implementation|ImplementationPage $model
+     * @param Faq|Fund|Implementation|ImplementationPage $model
      * @param string $mediaType
      * @return void
      */
     protected function previewModelMedia(
-        Fund|FundFaq|Implementation|ImplementationPage $model,
+        Faq|Fund|Implementation|ImplementationPage $model,
         string $mediaType
     ): void {
         $mediaSynced = $model->medias->where('type', $mediaType);

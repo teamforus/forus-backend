@@ -361,12 +361,13 @@ class Product extends BaseModel
     }
 
     /**
+     * @param array $fundFilters
      * @return Builder
      */
-    public static function searchQuery(): Builder
+    public static function searchQuery(array $fundFilters = []): Builder
     {
         $query = self::query();
-        $activeFunds = Implementation::activeFundsQuery()->pluck('id')->toArray();
+        $activeFunds = Implementation::activeFundsQuery()->where($fundFilters)->pluck('id')->toArray();
 
         // only in stock and not expired
         $query = ProductQuery::inStockAndActiveFilter($query);

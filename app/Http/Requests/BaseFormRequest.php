@@ -10,11 +10,10 @@ use App\Models\IdentityProxy;
 use App\Services\Forus\Notification\NotificationService;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Log\LogManager;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 {
@@ -128,6 +127,19 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     public function perPageRule(int $max = 100): string
     {
         return "nullable|numeric|min:0|max:$max";
+    }
+
+    /**
+     * @param array|string $types
+     * @return array
+     */
+    public function resourceTypeRule(array|string $types = 'default'): array
+    {
+        return [
+            'nullable',
+            'string',
+            Rule::in($types),
+        ];
     }
 
     /**

@@ -75,7 +75,7 @@ class TransactionsController extends Controller
     ): SponsorVoucherTransactionResource {
         $note = $request->input('note');
         $target = $request->input('target');
-        $targetTopUp = VoucherTransaction::TARGET_TOP_UP;
+        $targetTopUp = $target == VoucherTransaction::TARGET_TOP_UP;
         $targetProvider = $target == VoucherTransaction::TARGET_PROVIDER;
 
         $voucher = Voucher::find($request->input('voucher_id'));

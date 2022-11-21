@@ -30,11 +30,25 @@ class UpdateImplementationCmsRequest extends FormRequest
             'description_alignment' => 'nullable|in:left,center,right',
             'informal_communication' => 'nullable|boolean',
             'banner_media_uid' => ['nullable', new MediaUidRule('implementation_banner')],
-            'overlay_enabled' => 'nullable|bool',
+            'overlay_enabled' => 'nullable|boolean',
             'overlay_type' => 'nullable|in:color,dots,lines,points,circles',
             'overlay_opacity' => 'nullable|numeric|min:0|max:100',
             'header_text_color' => 'nullable|in:bright,dark,auto',
-        ], $this->announcementsRules());
+        ], $this->announcementsRules(), $this->showBlockFlags());
+    }
+
+    /**
+     * @return string[]
+     */
+    private function showBlockFlags(): array
+    {
+        return [
+            'show_home_map' => 'nullable|bool',
+            'show_office_map' => 'nullable|boolean',
+            'show_home_products' => 'nullable|boolean',
+            'show_providers_map' => 'nullable|boolean',
+            'show_provider_map' => 'nullable|boolean',
+        ];
     }
 
     /**

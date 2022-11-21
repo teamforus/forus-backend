@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
+use App\Mail\Forus\TransactionVerifyMail;
 use App\Models\FundProvider;
 use App\Models\Voucher;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherTransactionNotification;
@@ -11,6 +12,7 @@ use App\Notifications\Identities\Voucher\IdentityVoucherSubsidyTransactionNotifi
 use App\Notifications\Identities\Voucher\IdentityVoucherBudgetTransactionNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderTransactionBunqSuccessNotification;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Support\Facades\Config;
 
 class VoucherTransactionsSubscriber
 {
@@ -64,6 +66,16 @@ class VoucherTransactionsSubscriber
                     IdentityVoucherSubsidyTransactionNotification::send($eventLog);
                 }
             }
+        }
+
+        if ($transaction->attempts >= 50 && Config::get('forus.notification_mails.transaction_verify')) {
+            resolve('forus.services.notification')->sendSystemMail(
+                Config::get('forus.notification_mails.transaction_verify'),
+                new TransactionVerifyMail([
+                    'id' => $transaction->id,
+                    'fund_name' => $transaction->voucher?->fund?->name,
+                ]),
+            );
         }
     }
 

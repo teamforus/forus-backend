@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
-use App\Models\FundFaq;
 use App\Models\Organization;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\VoucherQuery;
@@ -69,9 +68,7 @@ class FundResource extends BaseJsonResource
             'organization' => new OrganizationResource($organization),
             'criteria' => FundCriterionResource::collection($fund->criteria),
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
-            'faq' => $fund->faq->map(function(FundFaq $faq) {
-                return $faq->only('id', 'title', 'description', 'description_html');
-            }),
+            'faq' => FaqResource::collection($fund->faq),
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount' => $fund->amountFixedByFormula(),
             'has_pending_fund_requests' => $baseRequest->auth_address() && $fund->fund_requests()->where(function (Builder $builder) {

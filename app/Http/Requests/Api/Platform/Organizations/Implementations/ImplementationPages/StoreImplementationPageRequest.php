@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Implementations\Implement
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Rules\MediaUidRule;
+use App\Traits\ValidatesFaq;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
@@ -13,6 +14,8 @@ use Illuminate\Validation\Rule;
  */
 class StoreImplementationPageRequest extends ValidateImplementationPageBlocksRequest
 {
+    use ValidatesFaq;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -30,6 +33,8 @@ class StoreImplementationPageRequest extends ValidateImplementationPageBlocksReq
      */
     public function rules(): array
     {
+        $faqRules = $this->getFaqRules([]);
+
         return array_merge(parent::rules(), [
             'state'                 => 'nullable|in:' . implode(',', ImplementationPage::STATES),
             'page_type'             => $this->pageTypeRule(),
@@ -39,7 +44,7 @@ class StoreImplementationPageRequest extends ValidateImplementationPageBlocksReq
             'external_url'          => 'nullable|string|max:300',
             'media_uid'             => 'nullable|array',
             'media_uid.*'           => $this->mediaRule(),
-        ]);
+        ], $faqRules);
     }
 
     /**
@@ -64,5 +69,13 @@ class StoreImplementationPageRequest extends ValidateImplementationPageBlocksReq
             'exists:media,uid',
             new MediaUidRule('cms_media')
         ];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function attributes(): array
+    {
+        return $this->getFaqAttributes();
     }
 }

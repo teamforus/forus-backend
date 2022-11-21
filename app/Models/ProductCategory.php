@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use App\Models\Traits\NodeTrait;
+use Kalnoy\Nestedset\NodeTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Http\Request;
 
 /**
  * App\Models\ProductCategory
@@ -123,9 +122,10 @@ class ProductCategory extends BaseModel
      * The attributes that are translatable.
      *
      * @var array
+     * @noinspection PhpUnused
      */
     public $translatedAttributes = [
-        'name'
+        'name',
     ];
 
     /**
@@ -151,6 +151,7 @@ class ProductCategory extends BaseModel
 
     /**
      * @return BelongsTo
+     * @noinspection PhpUnused
      */
     public function root_category(): BelongsTo
     {
@@ -163,72 +164,5 @@ class ProductCategory extends BaseModel
     public function organizations(): BelongsToMany
     {
         return $this->belongsToMany(Organization::class, 'organization_product_categories');
-    }
-
-    /**
-     * @param Request $request
-     * @return ProductCategory|\Illuminate\Database\Query\Builder|\Kalnoy\Nestedset\QueryBuilder
-     */
-    public static function search(Request $request)
-    {
-        $query = self::query();
-        $parent_id = $request->input('parent_id', false);
-        $onlyUsed = $request->input('used', false);
-
-        $disabledCategories = config(
-            'forus.product_categories.disabled_top_categories', []
-        );
-
-        if ($parent_id) {
-            $query->where([
-                'parent_id' => $parent_id == 'null' ? null : $parent_id
-            ]);
-        }
-
-        if ($q = $request->input('q', false)) {
-            $query->whereHas('translations', function(
-                Builder $builder
-            ) use ($q) {
-                $builder->where('name', 'LIKE', "%$q%");
-            });
-        }
-
-        if (count($disabledCategories) > 0) {
-            $query->whereNotIn('id', $disabledCategories);
-        }
-
-        if (!$onlyUsed) {
-            return $query;
-        }
-
-        // List all used product categories used by active products for
-        // current implementation
-        $products = Product::searchQuery()->distinct();
-        $products = $products->pluck('product_category_id');
-
-        $query->select([
-            'id', (new self)->getLftName(), (new self)->getRgtName(),
-        ])->with(['descendants_min']);
-
-        $queryHash = hash('md5', str_replace_array(
-            '?', $query->getBindings(), $query->toSql()
-        ));
-
-        /** @var ProductCategory[]|Collection $categories */
-        $categories = cache_optional($queryHash, function() use ($query) {
-            return $query->get();
-        }, 120);
-
-        // Only categories with products
-        $categories = $categories->filter(function(
-            ProductCategory $productCategory
-        ) use ($products) {
-            $ids = $productCategory->descendants_min->pluck('id');
-            $ids->push($productCategory->id);
-
-            return $products->intersect($ids)->count() > 0;
-        })->pluck('id');
-
-        return self::whereIn('id', $categories);
     }
 }

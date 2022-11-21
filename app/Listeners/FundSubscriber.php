@@ -41,6 +41,7 @@ use App\Notifications\Identities\Fund\IdentityRequesterProductApprovedNotificati
 use App\Notifications\Organizations\Funds\FundUnArchivedNotification;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Support\Facades\Config;
 
 class FundSubscriber
 {
@@ -84,7 +85,7 @@ class FundSubscriber
             $this->getFundLogModels($fund)
         ));
 
-        if ($email = env('EMAIL_FOR_FUND_CREATED', false)) {
+        if ($email = Config::get('forus.notification_mails.fund_created', false)) {
             $this->notificationService->sendSystemMail($email, new ForusFundCreatedMail([
                 'fund_name' => $fund->name,
                 'sponsor_name' => $fund->organization->name,
