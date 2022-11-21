@@ -6,10 +6,13 @@ use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Vouchers\DeactivateVoucherRequest;
 use App\Http\Resources\VoucherCollectionResource;
 use App\Http\Resources\VoucherResource;
+use App\Models\FundConfig;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
+use App\Scopes\Builders\VoucherQuery;
 use App\Searches\VouchersSearch;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -33,6 +36,12 @@ class VouchersController extends Controller
             'type', 'state', 'archived', 'allow_reimbursements',
             'implementation_id', 'implementation_key',
         ]), $query);
+
+        if ($request->isMeApp()) {
+            $query->whereRelation('fund.fund_config', [
+                'vouchers_type' => FundConfig::VOUCHERS_TYPE_INTERNAL,
+            ]);
+        }
 
         // todo: remove fallback pagination 1000, when apps are ready
         return VoucherCollectionResource::queryCollection(

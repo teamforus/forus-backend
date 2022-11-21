@@ -21,7 +21,7 @@ class VouchersSearch extends BaseSearch
     }
 
     /**
-     * @return Builder|null
+     * @return Voucher|Builder
      */
     public function query(): ?Builder
     {

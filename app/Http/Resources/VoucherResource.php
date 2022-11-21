@@ -74,7 +74,7 @@ class VoucherResource extends BaseJsonResource
 
         return array_merge($voucher->only([
             'id', 'identity_address', 'fund_id', 'returnable', 'transactions_count',
-            'expired', 'deactivated', 'type', 'state', 'state_locale',
+            'expired', 'deactivated', 'type', 'state', 'state_locale', 'is_external',
         ]), $this->getBaseFields($voucher), $this->getOptionalFields($voucher), [
             'deactivated_at' => $deactivationDate?->format('Y-m-d'),
             'deactivated_at_locale' => format_date_locale($deactivationDate),
@@ -122,7 +122,7 @@ class VoucherResource extends BaseJsonResource
 
         return $logs->map(function(EventLog $eventLog) use ($voucher) {
             return array_merge($eventLog->only('id', 'event'), [
-                'event_locale' => $eventLog->event_locale_webshop,
+                'event_locale' => $eventLog->eventDescriptionLocaleWebshop(),
                 'created_at' => $eventLog->created_at->format('Y-m-d'),
                 'created_at_locale' => format_date_locale($eventLog->created_at),
             ]);
@@ -233,8 +233,6 @@ class VoucherResource extends BaseJsonResource
             'end_date' => $fund->end_date->format('Y-m-d H:i'),
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
-            'show_voucher_qr' => $fund->fund_config->show_voucher_qr,
-            'show_voucher_amount' => $fund->fund_config->show_voucher_amount,
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
         ], $fund->fund_config->only('allow_reimbursements'));
@@ -284,7 +282,9 @@ class VoucherResource extends BaseJsonResource
         $hideOnMeApp = Config::get('forus.features.me_app.hide_non_provider_transactions');
 
         if ($hideOnMeApp && BaseFormRequest::createFromBase(request())->isMeApp()) {
-            return $voucher->all_transactions->where('target', 'provider');
+            return  VoucherTransactionResource::collection(
+                $voucher->all_transactions->where('target', 'provider')
+            );
         }
 
         return VoucherTransactionResource::collection($voucher->all_transactions);

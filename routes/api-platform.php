@@ -24,7 +24,7 @@ $router->group([], static function() use ($router) {
     $router->resource('search', "Api\Platform\SearchController")->only('index');
     $router->resource('organizations', "Api\Platform\OrganizationsController")->only('index');
     $router->resource('business-types', "Api\Platform\BusinessTypeController")->only('index', 'show');
-    $router->resource('product-categories', "Api\Platform\ProductCategoryController")->only('index', 'show');
+    $router->resource('product-categories', "Api\Platform\ProductCategoriesController")->only('index', 'show');
 
     if (config('forus.features.webshop.funds.fund_requests', FALSE)) {
         $router->resource(
@@ -346,8 +346,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\FundsController@storeCriteriaValidate");
 
     $router->post(
-        'organizations/{organization}/funds/faq/validate',
-        "Api\Platform\Organizations\FundsController@storeFaqValidate");
+        'organizations/{organization}/faq/validate',
+        "Api\Platform\Organizations\FaqController@storeValidate");
 
     $router->post(
         'organizations/{organization}/funds/{fund}/top-up',

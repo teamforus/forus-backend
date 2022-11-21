@@ -691,6 +691,7 @@ class LoremDbSeeder extends Seeder
             'digid_shared_secret'       => config('forus.seeders.lorem_db_seeder.digid_shared_secret'),
             'digid_a_select_server'     => config('forus.seeders.lorem_db_seeder.digid_a_select_server'),
             'digid_sign_up_allowed'     => in_array($key, $digidSignup, true),
+            'digid_trusted_cert'        => config('forus.seeders.lorem_db_seeder.digid_trusted_cert'),
             'productboard_api_key'      => config('forus.seeders.lorem_db_seeder.productboard_api_key'),
         ]);
     }
@@ -726,6 +727,7 @@ class LoremDbSeeder extends Seeder
             'allow_physical_cards'      => in_array($fund->name, $this->fundsWithPhysicalCards),
             'allow_reimbursements'      => in_array($fund->name, $this->fundsWithReimbursements),
             'allow_direct_payments'     => in_array($fund->name, $this->fundsWithDirectPayments),
+            'allow_generator_direct_payments' => in_array($fund->name, $this->fundsWithDirectPayments),
             'allow_voucher_top_ups'     => in_array($fund->name, $this->fundsWithVoucherTopUp),
             'email_required'            => $emailRequired,
             'contact_info_enabled'      => $emailRequired,
@@ -736,6 +738,11 @@ class LoremDbSeeder extends Seeder
             'iconnect_api_oin'          => config('forus.seeders.lorem_db_seeder.iconnect_oin'),
             'iconnect_base_url'         => config('forus.seeders.lorem_db_seeder.iconnect_url'),
             'iconnect_target_binding'   => config('forus.seeders.lorem_db_seeder.iconnect_binding'),
+            'iconnect_cert'             => $this->config('iconnect_cert'),
+            'iconnect_cert_pass'        => $this->config('iconnect_cert_pass'),
+            'iconnect_key'              => $this->config('iconnect_key'),
+            'iconnect_key_pass'         => $this->config('iconnect_key_pass'),
+            'iconnect_cert_trust'       => $this->config('iconnect_cert_trust'),
         ], array_only($fields, [
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox', 'csv_primary_key', 'is_configured',
         ]), $backofficeConfig));

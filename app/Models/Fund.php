@@ -10,6 +10,7 @@ use App\Events\Funds\FundUnArchivedEvent;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
+use App\Models\Traits\HasFaq;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundCriteriaQuery;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
@@ -85,7 +86,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read int|null $employees_validator_managers_count
  * @property-read Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
- * @property-read Collection|\App\Models\FundFaq[] $faq
+ * @property-read Collection|\App\Models\Faq[] $faq
  * @property-read int|null $faq_count
  * @property-read Collection|\App\Models\Product[] $formula_products
  * @property-read int|null $formula_products_count
@@ -175,7 +176,7 @@ use Illuminate\Support\Facades\DB;
  */
 class Fund extends BaseModel
 {
-    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription;
+    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasFaq;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_PROVIDER_APPLIED = 'provider_applied';
@@ -282,14 +283,6 @@ class Fund extends BaseModel
     public function criteria(): HasMany
     {
         return $this->hasMany(FundCriterion::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function faq(): HasMany
-    {
-        return $this->hasMany(FundFaq::class);
     }
 
     /**
@@ -1359,49 +1352,6 @@ class Fund extends BaseModel
     }
 
     /**
-     * Update faq for existing fund
-     * @param array $faq
-     * @return $this
-     */
-    public function syncFaq(array $faq = []): self
-    {
-        // remove faq not listed in the array
-        $this->faq()->whereNotIn('id', array_filter(array_pluck($faq, 'id')))->delete();
-
-        foreach ($faq as $question) {
-            $this->syncQuestion($question);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Update faq for existing fund when provided
-     * @param array|null $faq
-     * @return $this
-     */
-    public function syncFaqOptional(?array $faq = null): self
-    {
-        return is_array($faq) ? $this->syncFaq($faq) : $this;
-    }
-
-    /**
-     * Update faq question or create new fund question
-     *
-     * @param array $question
-     * @return FundFaq
-     */
-    protected function syncQuestion(array $question): FundFaq
-    {
-        /** @var FundFaq $faq */
-        $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
-        $faq->updateModel(array_only($question, ['title', 'description']));
-        $faq->syncDescriptionMarkdownMedia('cms_media');
-
-        return $faq;
-    }
-
-    /**
      * Update existing or create new fund criterion
      * @param array $criterion
      */
@@ -1982,7 +1932,10 @@ class Fund extends BaseModel
      */
     public function hasIConnectApiOin(): bool
     {
-        return $this->isIconnectApiConfigured() &&
+        return
+            $this->fund_config &&
+            !$this->is_external &&
+            $this->isIconnectApiConfigured() &&
             $this->organization->bsn_enabled &&
             !empty($this->fund_config->iconnect_target_binding) &&
             !empty($this->fund_config->iconnect_api_oin) &&
@@ -1994,7 +1947,12 @@ class Fund extends BaseModel
      */
     private function isIconnectApiConfigured(): bool
     {
-        return !empty(IConnect::getConfigs());
+        return
+            $this->fund_config &&
+            !empty($this->fund_config->iconnect_env) &&
+            !empty($this->fund_config->iconnect_key) &&
+            !empty($this->fund_config->iconnect_cert) &&
+            !empty($this->fund_config->iconnect_cert_trust);
     }
 
     /**
@@ -2002,11 +1960,7 @@ class Fund extends BaseModel
      */
     public function getIConnect(): ?IConnect
     {
-        return $this->hasIConnectApiOin() ? new IConnect(
-            $this->fund_config->iconnect_api_oin,
-            $this->fund_config->iconnect_target_binding,
-            $this->fund_config->iconnect_base_url
-        ) : null;
+        return $this->hasIConnectApiOin() ? new IConnect($this) : null;
     }
 
     /**
@@ -2023,5 +1977,16 @@ class Fund extends BaseModel
         }
 
         return empty($record) || $recordTime > $this->fund_config?->bsn_confirmation_api_time;
+    }
+
+    /**
+     * @return bool
+     */
+    public function generatorDirectPaymentsAllowed(): bool
+    {
+        return
+            $this->isTypeBudget() &&
+            $this->fund_config?->allow_direct_payments &&
+            $this->fund_config?->allow_generator_direct_payments;
     }
 }

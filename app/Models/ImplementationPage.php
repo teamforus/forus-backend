@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFaq;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Collection;
@@ -26,6 +27,8 @@ use Illuminate\Support\Arr;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\ImplementationBlock[] $blocks
  * @property-read int|null $blocks_count
+ * @property-read Collection|\App\Models\Faq[] $faq
+ * @property-read int|null $faq_count
  * @property-read string $description_html
  * @property-read \App\Models\Implementation $implementation
  * @property-read Collection|\App\Services\MediaService\Models\Media[] $medias
@@ -51,7 +54,7 @@ use Illuminate\Support\Arr;
  */
 class ImplementationPage extends BaseModel
 {
-    use HasMedia, HasMarkdownDescription, SoftDeletes;
+    use HasMedia, HasMarkdownDescription, HasFaq, SoftDeletes;
 
     const TYPE_HOME = 'home';
     const TYPE_PRODUCTS = 'products';
@@ -77,46 +80,57 @@ class ImplementationPage extends BaseModel
         'key' => self::TYPE_HOME,
         'type' => 'static',
         'blocks' => true,
+        'faq' => false,
     ], [
         'key' => self::TYPE_PRODUCTS,
         'type' => 'static',
         'blocks' => false,
+        'faq' => false,
     ], [
         'key' => self::TYPE_PROVIDERS,
         'type' => 'static',
         'blocks' => false,
+        'faq' => false,
     ], [
         'key' => self::TYPE_FUNDS,
         'type' => 'static',
         'blocks' => false,
+        'faq' => false,
     ], [
         'key' => self::TYPE_PROVIDER,
         'type' => 'static',
         'blocks' => true,
+        'faq' => false,
     ], [
         'key' => self::TYPE_EXPLANATION,
         'type' => 'extra',
         'blocks' => true,
+        'faq' => true,
     ], [
         'key' => self::TYPE_PRIVACY,
         'type' => 'extra',
         'blocks' => true,
+        'faq' => false,
     ], [
         'key' => self::TYPE_ACCESSIBILITY,
         'type' => 'extra',
         'blocks' => true,
+        'faq' => false,
     ], [
         'key' => self::TYPE_TERMS_AND_CONDITIONS,
         'type' => 'extra',
         'blocks' => true,
+        'faq' => false,
     ], [
         'key' => self::TYPE_FOOTER_CONTACT_DETAILS,
         'type' => 'element',
         'blocks' => false,
+        'faq' => false,
     ], [
         'key' => self::TYPE_FOOTER_OPENING_TIMES,
         'type' => 'element',
         'blocks' => false,
+        'faq' => false,
     ]];
 
     /**
@@ -191,6 +205,14 @@ class ImplementationPage extends BaseModel
         $type = $pageType['type'] ?? null;
 
         return !$type || in_array($type, ['static', 'page_element']);
+    }
+
+    /**
+     * @return bool
+     */
+    public function supportsFaq(): bool
+    {
+        return Arr::keyBy(self::PAGE_TYPES, 'key')[$this->page_type]['faq'] ?? false;
     }
 
     /**

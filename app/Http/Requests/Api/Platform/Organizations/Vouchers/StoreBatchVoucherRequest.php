@@ -5,14 +5,13 @@ namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
+use App\Rules\Base\IbanRule;
 use App\Rules\ProductIdInStockRule;
 use App\Rules\VouchersUploadArrayRule;
 use Illuminate\Validation\Rule;
 
 /**
- * Class StoreBatchVoucherRequest
  * @property-read Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
  */
 class StoreBatchVoucherRequest extends BaseFormRequest
 {
@@ -36,7 +35,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
         $fund = $this->getFund();
         $bsn_enabled = $this->organization->bsn_enabled;
 
-        return [
+        return array_merge([
             'fund_id'                           => $this->fundIdRule(),
             'vouchers'                          => ['required', new VouchersUploadArrayRule($fund)],
             'vouchers.*'                        => 'required|array',
@@ -50,6 +49,34 @@ class StoreBatchVoucherRequest extends BaseFormRequest
             'vouchers.*.activation_code'        => 'boolean',
             'vouchers.*.activation_code_uid'    => 'nullable|string|max:20',
             'vouchers.*.limit_multiplier'       => 'nullable|numeric|min:1|max:1000',
+        ], $this->directPaymentRules($fund));
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array|string[]
+     */
+    protected function directPaymentRules(Fund $fund): array
+    {
+        if ($fund->generatorDirectPaymentsAllowed()) {
+            return [
+                'vouchers.*.direct_payment_iban' => [
+                    'nullable',
+                    'prohibits:vouchers.*.product_id',
+                    new IbanRule(),
+                ],
+                'vouchers.*.direct_payment_name' => [
+                    'required_with:vouchers.*.direct_payment_iban',
+                    'string',
+                    'min:3',
+                    'max:280',
+                ],
+            ];
+        }
+
+        return [
+            'vouchers.*.direct_payment_iban' => 'nullable|in:',
+            'vouchers.*.direct_payment_name' => 'required_with:vouchers.*.direct_payment_iban|in:',
         ];
     }
 
@@ -82,7 +109,8 @@ class StoreBatchVoucherRequest extends BaseFormRequest
      * @param Fund $fund
      * @return string|string[]
      */
-    private function amountRule(Fund $fund) {
+    private function amountRule(Fund $fund): array|string
+    {
         return $fund->isTypeBudget() ? [
             'required_without:vouchers.*.product_id',
             'numeric',
@@ -111,10 +139,35 @@ class StoreBatchVoucherRequest extends BaseFormRequest
     /**
      * @return Fund
      */
-    private function getFund(): Fund {
+    private function getFund(): Fund
+    {
         /** @var Fund $fund */
         $fund = $this->organization->funds()->findOrFail($this->input('fund_id'));
 
         return $fund;
+    }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return array_merge(parent::messages(), [
+            'vouchers.*.direct_payment_iban.in' => '[direct_payment_iban] - direct payments are not available for the target fund.',
+            'vouchers.*.direct_payment_name.in' => '[direct_payment_name] - direct payments are not available for the target fund.',
+        ]);
+    }
+
+    /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        $keys = array_dot(array_keys($this->rules()));
+
+        return array_combine($keys, array_map(static function($key) {
+            $value = last(explode('.', $key));
+            return trans_fb("validation.attributes." . $value, $value);
+        }, $keys));
     }
 }

@@ -11,8 +11,8 @@ use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ReimbursementFilePreviewMediaConfig;
 use App\Models\BankConnection;
+use App\Models\Faq;
 use App\Models\Fund;
-use App\Models\FundFaq;
 use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
@@ -49,8 +49,8 @@ class AppServiceProvider extends ServiceProvider
      * @var array|string[]
      */
     public static array $morphMap = [
+        'faq'                           => Faq::class,
         'fund'                          => Fund::class,
-        'fund_faq'                      => FundFaq::class,
         'office'                        => Office::class,
         'voucher'                       => Voucher::class,
         'product'                       => Product::class,
