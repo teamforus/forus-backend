@@ -5,8 +5,10 @@ namespace Tests\Browser;
 use App\Mail\User\IdentityEmailVerificationMail;
 use App\Models\Identity;
 use App\Models\IdentityEmail;
+use App\Models\IdentityProxy;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Traits\HasDbTokens;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Carbon\Carbon;
 use Facebook\WebDriver\Exception\TimeOutException;
@@ -16,12 +18,7 @@ use Tests\DuskTestCase;
 
 class IdentityEmailTest extends DuskTestCase
 {
-    use AssertsSentEmails;
-
-    protected ?Identity $identity;
-    protected ?string $link;
-    protected ?string $titleSelector;
-    protected ?string $title;
+    use AssertsSentEmails, HasDbTokens;
 
     /**
      * @return void
@@ -29,66 +26,87 @@ class IdentityEmailTest extends DuskTestCase
      */
     public function testIdentityEmailWebshopExample(): void
     {
-        Cache::flush();
+        Cache::clear();
 
-        // Find first nijmegen implementation
-        $implementation = Implementation::where('key', 'nijmegen')->first();
-
-        // Models exist
-        $this->assertNotNull($implementation);
-
-        $this->link = $implementation->urlWebshop();
-        $this->title = $implementation->name;
-        $this->titleSelector = '@headerTitle';
-        $this->identity = $this->makeIdentity(time() . "pr@example.com");
-        $this->makeIdentityEmailTests();
+        $this->makeIdentityEmailTests(
+            Implementation::where('key', 'nijmegen')->first(),
+            $this->makeIdentity($this->makeUniqueEmail('pr-')),
+            'webshop'
+        );
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testIdentityEmailDashboardExample(): void
+    public function testIdentityEmailSponsorDashboardExample(): void
     {
-        Cache::flush();
+        Cache::clear();
 
-        // Find first nijmegen implementation and organization
-        $implementation = Implementation::where('key', 'nijmegen')->first();
-        $organization = Organization::where('name', 'Nijmegen')->first();
-
-        // Models exist
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($organization);
-
-        $this->link = $implementation->urlSponsorDashboard();
-        $this->title = null;
-        $this->titleSelector = '@fundsTitle';
-        $this->identity = $organization->identity;
-        $this->makeIdentityEmailTests();
+        $this->makeIdentityEmailTests(
+            Implementation::general(),
+            Organization::whereHas('funds')->first()->identity,
+            'sponsor'
+        );
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    private function makeIdentityEmailTests(): void
+    public function testIdentityEmailProviderDashboardExample(): void
     {
-        $this->browse(function (Browser $browser) {
+        Cache::clear();
+
+        $this->makeIdentityEmailTests(
+            Implementation::general(),
+            Organization::whereHas('products')->first()->identity,
+            'validator'
+        );
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testIdentityEmailValidatorDashboardExample(): void
+    {
+        Cache::clear();
+
+        $this->makeIdentityEmailTests(
+            Implementation::general(),
+            Organization::whereHas('funds')->first()->identity,
+            'validator'
+        );
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param Identity $identity
+     * @param string $frontend
+     * @return void
+     * @throws \Throwable
+     */
+    private function makeIdentityEmailTests(
+        Implementation $implementation,
+        Identity $identity,
+        string $frontend
+    ): void {
+        $this->browse(function (Browser $browser) use ($implementation, $identity, $frontend) {
+            $proxy = $this->makeIdentityProxy($identity, true, 'email_code');
+
             // Visit the url and wait for the page to load
-            $browser->visit($this->link);
+            $browser->visit($implementation->urlFrontend($frontend));
 
             // Authorize identity
-            $proxy = $this->makeIdentityProxy($this->identity, true, 'email_code');
-            $browser->script("localStorage.setItem('active_account', '$proxy->access_token')");
+            $this->applyIdentityProxy($browser, $proxy);
+            $this->goToIdentityEmailPage($browser, $identity);
 
-            $browser->refresh();
-            $this->goToIdentityEmailPage($browser);
-
-            $email = $this->addNewEmail($browser);
+            $email = $this->addNewEmail($browser, $proxy->identity);
 
             // Check if email exists in database
             /** @var IdentityEmail $identityEmail */
-            $identityEmail = $this->identity->emails()->where('email', $email)->first();
+            $identityEmail = $identity->emails()->where('email', $email)->first();
             $this->assertNotNull($identityEmail);
 
             $startTime = now();
@@ -97,28 +115,24 @@ class IdentityEmailTest extends DuskTestCase
             // Verify email
             $browser->visit($this->findFirstEmailVerificationLink($identityEmail->email, $startTime));
 
-            $this->goToIdentityEmailPage($browser);
+            $this->goToIdentityEmailPage($browser, $identity);
 
             $this->setEmailAsPrimary($browser, $identityEmail);
-            $this->deleteEmail($browser);
+            $this->deleteEmail($browser, $identity);
             $this->logout($browser);
         });
     }
 
     /**
      * @param Browser $browser
+     * @param Identity $identity
      * @return void
-     * @throws \Facebook\WebDriver\Exception\TimeOutException
+     * @throws TimeOutException
      */
-    private function goToIdentityEmailPage(Browser $browser): void
+    private function goToIdentityEmailPage(Browser $browser, Identity $identity): void
     {
-        $browser->waitFor($this->titleSelector);
-        if ($this->title) {
-            $browser->assertSeeIn($this->titleSelector, $this->title);
-        }
-
         $browser->waitFor('@identityEmail');
-        $browser->assertSeeIn('@identityEmail', $this->identity->email);
+        $browser->assertSeeIn('@identityEmail', $identity->email);
 
         $browser->waitFor('@identityEmail');
         $browser->element('@userProfile')->click();
@@ -129,12 +143,13 @@ class IdentityEmailTest extends DuskTestCase
 
     /**
      * @param Browser $browser
+     * @param Identity $identity
      * @return void
-     * @throws \Facebook\WebDriver\Exception\TimeOutException
+     * @throws TimeOutException
      */
-    private function deleteEmail(Browser $browser): void
+    private function deleteEmail(Browser $browser, Identity $identity): void
     {
-        $notPrimaryEmail = $this->identity->emails()->where('primary', false)->first();
+        $notPrimaryEmail = $identity->emails()->where('primary', false)->first();
 
         $browser->within('#email_' . $notPrimaryEmail->id, function(Browser $browser) {
             $browser->press('@btnDeleteIdentityEmail');
@@ -143,7 +158,7 @@ class IdentityEmailTest extends DuskTestCase
         $browser->waitUntilMissing('#email_' . $notPrimaryEmail->id);
         $browser->assertNotPresent('#email_' . $notPrimaryEmail->id);
 
-        $this->assertNull($this->identity->emails()->where('email', $notPrimaryEmail->email)->first());
+        $this->assertNull($identity->emails()->where('email', $notPrimaryEmail->email)->first());
     }
 
     /**
@@ -194,12 +209,14 @@ class IdentityEmailTest extends DuskTestCase
 
     /**
      * @param Browser $browser
+     * @param Identity $identity
      * @return string
      * @throws TimeOutException
      */
-    private function addNewEmail(Browser $browser): string
+    private function addNewEmail(Browser $browser, Identity $identity): string
     {
         $startTime = now();
+        $email = $this->makeUniqueEmail();
 
         $browser->waitFor('@btnIdentityNewEmail');
         $browser->element('@btnIdentityNewEmail')->click();
@@ -207,10 +224,9 @@ class IdentityEmailTest extends DuskTestCase
         $browser->waitFor('@identityNewEmailForm');
         $browser->assertVisible('@identityNewEmailForm');
 
-        $email = microtime(true) . "@example.com";
         // Type the email and submit the form for new email
-        $browser->within('@identityNewEmailForm', function(Browser $browser) use ($email) {
-            $browser->type('@identityNewEmailFormEmail', $this->identity->email);
+        $browser->within('@identityNewEmailForm', function(Browser $browser) use ($email, $identity) {
+            $browser->type('@identityNewEmailFormEmail', $identity->email);
             $browser->press('@identityNewEmailFormSubmit');
 
             $browser->waitFor('.form-error');
@@ -231,6 +247,17 @@ class IdentityEmailTest extends DuskTestCase
 
     /**
      * @param Browser $browser
+     * @param IdentityProxy $proxy
+     * @return void
+     */
+    protected function applyIdentityProxy(Browser $browser, IdentityProxy $proxy): void
+    {
+        $browser->script("localStorage.setItem('active_account', '$proxy->access_token')");
+        $browser->refresh();
+    }
+
+    /**
+     * @param Browser $browser
      * @return void
      * @throws TimeOutException
      */
@@ -239,5 +266,19 @@ class IdentityEmailTest extends DuskTestCase
         $browser->element('@userProfile')->click();
         $browser->waitFor('@btnUserLogout');
         $browser->element('@btnUserLogout')->click();
+    }
+
+    /**
+     * @param string $prefix
+     * @param string $domain
+     * @return string
+     */
+    private function makeUniqueEmail(string $prefix = '', string $domain = 'example.com'): string
+    {
+        $token = self::makeUniqueTokenCallback(function($token) use ($prefix, $domain) {
+            return IdentityEmail::whereEmail("$prefix$token@$domain")->exists();
+        }, 32);
+
+        return "$prefix$token@$domain";
     }
 }
