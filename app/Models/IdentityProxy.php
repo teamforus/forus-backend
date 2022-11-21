@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 /**
  * App\Models\IdentityProxy
@@ -104,10 +105,10 @@ class IdentityProxy extends Model
      */
     public function sessions_with_trashed(): HasMany
     {
-        return $this->hasMany(Session::class)->where(function(Builder $builder) {
-            /** @var Builder|SoftDeletes $builder */
-            $builder->withTrashed();
-        });
+        /** @var HasMany|SoftDeletes $relation */
+        $relation = $this->hasMany(Session::class);
+
+        return $relation->withTrashed();
     }
 
     /**
@@ -175,13 +176,16 @@ class IdentityProxy extends Model
     /**
      * @param bool $expired
      * @return IdentityProxy
+     * @throws \Throwable
      */
     public function deactivateBySession(bool $expired = true): static
     {
-        $state = $expired ? static::STATE_EXPIRED : static::STATE_TERMINATED;
+        DB::transaction(function() use ($expired) {
+            $state = $expired ? static::STATE_EXPIRED : static::STATE_TERMINATED;
 
-        $this->deactivate($state);
-        $this->sessions()->delete();
+            $this->deactivate($state);
+            $this->sessions()->delete();
+        });
 
         return $this;
     }
@@ -197,5 +201,13 @@ class IdentityProxy extends Model
         ]);
 
         return (bool) $this->delete();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDeactivated(): bool
+    {
+        return in_array($this->state, [static::STATE_EXPIRED, static::STATE_TERMINATED]);
     }
 }

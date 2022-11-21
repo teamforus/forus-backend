@@ -17,6 +17,7 @@ use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Traits\HasMarkdownDescription;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -61,6 +62,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $digid_shared_secret
  * @property string|null $digid_a_select_server
  * @property string|null $digid_forus_api_url
+ * @property string|null $digid_trusted_cert
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
@@ -100,6 +102,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereDigidRequired($value)
  * @method static Builder|Implementation whereDigidSharedSecret($value)
  * @method static Builder|Implementation whereDigidSignUpAllowed($value)
+ * @method static Builder|Implementation whereDigidTrustedCert($value)
  * @method static Builder|Implementation whereEmailColor($value)
  * @method static Builder|Implementation whereEmailFromAddress($value)
  * @method static Builder|Implementation whereEmailFromName($value)
@@ -124,6 +127,16 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereUrlValidator($value)
  * @method static Builder|Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
+ * @property bool $show_home_map
+ * @property bool $show_home_products
+ * @property bool $show_providers_map
+ * @property bool $show_provider_map
+ * @property bool $show_office_map
+ * @method static Builder|Implementation whereShowHomeMap($value)
+ * @method static Builder|Implementation whereShowHomeProducts($value)
+ * @method static Builder|Implementation whereShowOfficeMap($value)
+ * @method static Builder|Implementation whereShowProviderMap($value)
+ * @method static Builder|Implementation whereShowProvidersMap($value)
  */
 class Implementation extends BaseModel
 {
@@ -135,6 +148,15 @@ class Implementation extends BaseModel
     public const FRONTEND_SPONSOR_DASHBOARD = 'sponsor';
     public const FRONTEND_PROVIDER_DASHBOARD = 'provider';
     public const FRONTEND_VALIDATOR_DASHBOARD = 'validator';
+
+    public const FRONTEND_WEBSITE = 'website';
+    public const FRONTEND_PIN_CODE = 'pin_code-auth';
+
+    public const ME_APP_IOS = 'me_app-ios';
+    public const ME_APP_ANDROID = 'me_app-android';
+    public const ME_APP_DEPRECATED = 'app-me_app';
+
+    public const DEPRECATED_FRONTEND_GENERAL = 'general';
 
     public const FRONTEND_KEYS = [
         self::FRONTEND_WEBSHOP,
@@ -156,7 +178,8 @@ class Implementation extends BaseModel
         'title', 'description', 'description_alignment', 'informal_communication',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
         'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
-        'email_color', 'email_signature',
+        'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
+        'show_office_map', 'email_color', 'email_signature',
     ];
 
     /**
@@ -179,6 +202,11 @@ class Implementation extends BaseModel
         'overlay_enabled' => 'boolean',
         'digid_sign_up_allowed' => 'boolean',
         'informal_communication' => 'boolean',
+        'show_home_map' => 'boolean',
+        'show_home_products' => 'boolean',
+        'show_providers_map' => 'boolean',
+        'show_provider_map' => 'boolean',
+        'show_office_map' => 'boolean',
     ];
 
     /**
@@ -407,9 +435,9 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return Collection
+     * @return Collection|Fund[]
      */
-    public static function activeFunds(): Collection
+    public static function activeFunds(): Collection|Arrayable
     {
         return self::activeFundsQuery()->get();
     }
@@ -457,12 +485,11 @@ class Implementation extends BaseModel
      */
     public function getDigid(): DigIdRepo
     {
-        return new DigIdRepo(
-            $this->digid_env,
-            $this->digid_app_id,
-            $this->digid_shared_secret,
-            $this->digid_a_select_server
-        );
+        return (new DigIdRepo($this->digid_env))
+            ->setAppId($this->digid_app_id)
+            ->setSharedSecret($this->digid_shared_secret)
+            ->setASelectServer($this->digid_a_select_server)
+            ->setTrustedCertificate($this->digid_trusted_cert);
     }
 
     /**
@@ -594,12 +621,13 @@ class Implementation extends BaseModel
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
                 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
                 'has_productboard_integration' => !empty(resolve('productboard')),
-            ]);
+            ], $implementation->only(
+                'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map', 'show_office_map'
+            ));
         }
 
         return $config ?: [];
     }
-
 
     /**
      * @param string $type

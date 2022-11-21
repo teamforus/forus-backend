@@ -65,6 +65,8 @@ class TransactionsController extends Controller
             $this->authorize('useAsProvider', $voucherToken->voucher);
         }
 
+        $this->authorize('makeTransactionThrottle', $voucherToken->voucher);
+
         $note = $request->input('note', false);
         $voucher = $voucherToken->voucher;
         $transactionState = VoucherTransaction::STATE_PENDING;

@@ -21,6 +21,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
 
 class IdentityController extends Controller
@@ -425,11 +426,11 @@ class IdentityController extends Controller
      */
     public function destroy(IdentityDestroyRequest $request): JsonResponse
     {
-        $this->maxAttempts = env('DELETE_IDENTITY_THROTTLE_ATTEMPTS', 10);
-        $this->decayMinutes = env('DELETE_IDENTITY_THROTTLE_DECAY', 10);
+        $this->maxAttempts = Config::get('forus.throttles.identity_destroy.attempts', 10);
+        $this->decayMinutes = Config::get('forus.throttles.identity_destroy.decay', 10);
         $this->throttleWithKey('to_many_attempts', $request, 'delete_identity');
 
-        if ($email = env('EMAIL_FOR_IDENTITY_DESTROY', false)) {
+        if ($email = Config::get('forus.notification_mails.identity_destroy', false)) {
             $request->notification_repo()->sendSystemMail(
                 $email, new IdentityDestroyRequestMail([
                     'email' => $request->identity()?->email ?: 'Identity has no email!',

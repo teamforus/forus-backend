@@ -27,8 +27,6 @@ use Illuminate\Support\Arr;
  * @property array $data
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read string|null $event_locale_dashboard
- * @property-read string|null $event_locale_webshop
  * @property-read string|null $loggable_locale_dashboard
  * @property-read Identity|null $identity
  * @property-read Model|\Eloquent $loggable
@@ -138,41 +136,48 @@ class EventLog extends Model
     }
 
     /**
+     * @param Employee $consumer
      * @return string|null
      * @noinspection PhpUnused
      */
-    public function getEventLocaleDashboardAttribute(): ?string
+    public function eventDescriptionLocaleDashboard(Employee $consumer): ?string
     {
-        return $this->getEventLocale(self::TRANSLATION_DASHBOARD);
+        return $this->getEventLocale(self::TRANSLATION_DASHBOARD, $consumer);
     }
 
     /**
      * @return string|null
      * @noinspection PhpUnused
      */
-    public function getEventLocaleWebshopAttribute(): ?string
+    public function eventDescriptionLocaleWebshop(): ?string
     {
         return $this->getEventLocale(self::TRANSLATION_WEBSHOP);
     }
 
     /**
      * @param string $type
+     * @param Employee|null $consumer
      * @return string|null
      */
-    public function getEventLocale(string $type): ?string
+    public function getEventLocale(string $type, ?Employee $consumer = null): ?string
     {
         $attributes = [];
+        $eventKey = $this->event;
+        $forWebshop = $type == self::TRANSLATION_WEBSHOP;
 
         if ($this->loggable_type === (new Voucher())->getMorphClass()) {
             $transactionType = Arr::get($this->data, 'voucher_transaction_target') === VoucherTransaction::TARGET_TOP_UP
                 ? trans('transaction.type.incoming')
                 : trans('transaction.type.outgoing');
 
-            $attributes = [
+            $canSeeAmount = $forWebshop || ($consumer && $this->isSameOrganization($consumer));
+            $eventKey .= $eventKey == 'transaction' ? ($canSeeAmount ? ".complete" : '.basic') : '';
+
+            $attributes = array_merge([
                 'id' => Arr::get($this->data, 'voucher_id'),
-                'transaction_type' => $transactionType,
                 'amount_locale' => Arr::get($this->data, 'voucher_transaction_amount_locale'),
-            ];
+                'transaction_type' => $transactionType,
+            ]);
         }
 
         if ($this->loggable_type === (new Employee())->getMorphClass()) {
@@ -201,6 +206,18 @@ class EventLog extends Model
             $attributes[$key] = e($attribute);
         }
 
-        return trans("events/$this->loggable_type.$type.$this->event", $attributes);
+        return trans("events/$this->loggable_type.$type.$eventKey", $attributes);
+    }
+
+    /**
+     * @param Employee $consumer
+     * @return bool
+     */
+    public function isSameOrganization(Employee $consumer): bool
+    {
+        return $consumer
+            ->organization
+            ->employees_with_trashed->where('identity_address', $this->identity_address)
+            ->isNotEmpty();
     }
 }

@@ -74,10 +74,14 @@ class FundRequestSubscriber
         $eventsList = [
             $fundRequest::EVENT_DECLINED,
             $fundRequest::EVENT_APPROVED,
-            $fundRequest::EVENT_APPROVED_PARTLY
+            $fundRequest::EVENT_DISREGARDED,
+            $fundRequest::EVENT_APPROVED_PARTLY,
         ];
 
-        $fundRequest->log(array_combine($eventsList, $eventsList)[$fundRequest->state], $eventModels);
+        if (in_array($fundRequest::EVENTS, $eventsList)) {
+            $fundRequest->log(array_combine($eventsList, $eventsList)[$fundRequest->state], $eventModels);
+        }
+
         $eventLog = $fundRequest->log($fundRequest::EVENT_RESOLVED, $eventModels);
 
         if ($fundRequest->isDisregarded() && $fundRequest->disregard_notify) {

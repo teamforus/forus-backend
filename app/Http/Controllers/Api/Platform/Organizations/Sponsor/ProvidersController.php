@@ -16,10 +16,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-/**
- * Class ProvidersController
- * @package App\Http\Controllers\Api\Platform\Organizations\Sponsor
- */
 class ProvidersController extends Controller
 {
     /**
@@ -48,9 +44,10 @@ class ProvidersController extends Controller
             'order_by', 'order_dir',
         ]));
 
-        return SponsorProviderResource::collection($query->with(
-            SponsorProviderResource::WITH
-        )->withCount('products')->paginate($request->input('per_page')));
+        return SponsorProviderResource::queryCollection($query, $request, [
+            'resource_type' => $request->input('resource_type', 'default'),
+            'sponsor_organization' => $organization,
+        ]);
     }
 
     /**
@@ -69,9 +66,7 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('viewSponsorProvider', [$organization, $provider]);
 
-        return (new SponsorProviderResource($provider->load(
-            SponsorProviderResource::WITH
-        )))->additional([
+        return SponsorProviderResource::create($provider, [
             'sponsor_organization' => $organization,
         ]);
     }

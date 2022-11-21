@@ -74,6 +74,8 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $digests_count
  * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
+ * @property-read Collection|\App\Models\Employee[] $employees_with_trashed
+ * @property-read int|null $employees_with_trashed_count
  * @property-read Collection|Organization[] $external_validators
  * @property-read int|null $external_validators_count
  * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
@@ -88,6 +90,7 @@ use Illuminate\Database\Query\Builder;
  * @property-read \App\Models\Identity|null $identity
  * @property-read Collection|\App\Models\Implementation[] $implementations
  * @property-read int|null $implementations_count
+ * @property-read Session|null $last_employee_session
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -558,23 +561,38 @@ class Organization extends BaseModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function employees(): HasMany {
+    public function employees(): HasMany
+    {
         return $this->hasMany(Employee::class);
     }
 
     /**
-     * @return \Illuminate\Support\Carbon|null
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
-    public function getLastActivity(): ?Carbon
+    public function employees_with_trashed(): HasMany
     {
-        /** @var Session|null $session */
-        $session = Session::whereIn(
-            'identity_address',
-            $this->employees->pluck('identity_address')
-        )->latest('last_activity_at')->first();
+        /** @var Employee|HasMany $relation */
+        $relation = $this->hasMany(Employee::class);
+        $relation->withTrashed();
 
-        return $session ? $session->last_activity_at : null;
+        return $relation;
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
+     */
+    public function last_employee_session(): HasManyThrough
+    {
+        return $this->hasOneThrough(
+            Session::class,
+            Employee::class,
+            'organization_id',
+            'identity_address',
+            'id',
+            'identity_address'
+        )->latest('last_activity_at');
     }
 
     /**

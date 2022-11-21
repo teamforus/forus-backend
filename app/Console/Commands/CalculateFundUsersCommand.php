@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\Fund;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
+use Throwable;
 
 class CalculateFundUsersCommand extends Command
 {
@@ -36,14 +38,14 @@ class CalculateFundUsersCommand extends Command
      *
      * @return void
      */
-    public function handle()
+    public function handle(): void
     {
-        if (!$email = env('EMAIL_FOR_FUND_CALC', false)) {
+        if (!$email = Config::get('forus.notification_mails.fund_calc', false)) {
             return;
         }
 
         try {
             Fund::sendUserStatisticsReport($email);
-        } catch (\Throwable $e) {}
+        } catch (Throwable) {}
     }
 }

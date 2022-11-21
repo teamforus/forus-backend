@@ -5,31 +5,26 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Events\Funds\FundCreatedEvent;
 use App\Events\Funds\FundUpdatedEvent;
 use App\Exports\FundsExport;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundCriteriaRequest;
-use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundFaqRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundBackofficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
-use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
 use App\Models\Organization;
-use App\Http\Controllers\Controller;
 use App\Scopes\Builders\FundQuery;
 use App\Statistics\Funds\FinancialStatistic;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-/**
- * Class FundsController
- * @package App\Http\Controllers\Api\Platform\Organizations
- */
 class FundsController extends Controller
 {
     /**
@@ -96,7 +91,7 @@ class FundsController extends Controller
         $fund->attachMediaByUid($request->input('media_uid'));
         $fund->syncDescriptionMarkdownMedia('cms_media');
         $fund->syncTagsOptional($request->input('tag_ids'));
-        $fund->syncFaq($request->input('faq'));
+        $fund->syncFaqOptional($request->input('faq'));
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
             $fund->syncCriteria($request->input('criteria'));
@@ -125,23 +120,7 @@ class FundsController extends Controller
     ): JsonResponse {
         $this->authorize('show', $organization);
 
-        return response()->json([], $request->isAuthenticated() ? 200 : 403);
-    }
-
-    /**
-     * @param StoreFundFaqRequest $request
-     * @param Organization $organization
-     * @return JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @noinspection PhpUnused
-     */
-    public function storeFaqValidate(
-        StoreFundFaqRequest $request,
-        Organization $organization
-    ): JsonResponse {
-        $this->authorize('show', $organization);
-
-        return response()->json([], $request->isAuthenticated() ? 200 : 403);
+        return new JsonResponse([], $request->isAuthenticated() ? 200 : 403);
     }
 
     /**
@@ -195,8 +174,8 @@ class FundsController extends Controller
 
         $fund->attachMediaByUid($request->input('media_uid'));
         $fund->syncDescriptionMarkdownMedia('cms_media');
-        $fund->syncFaqOptional($request->input('faq'));
         $fund->syncTagsOptional($request->input('tag_ids'));
+        $fund->syncFaqOptional($request->input('faq'));
 
         FundUpdatedEvent::dispatch($fund);
 
@@ -252,7 +231,7 @@ class FundsController extends Controller
     ): JsonResponse{
         $this->authorize('show', $organization);
 
-        return response()->json([], $request->isAuthenticated() && $fund->exists ? 200 : 403);
+        return new JsonResponse([], $request->isAuthenticated() && $fund->exists ? 200 : 403);
     }
 
     /**
@@ -302,7 +281,7 @@ class FundsController extends Controller
 
         $log = $fund->getBackofficeApi(true)->checkStatus();
 
-        return response()->json($log->only([
+        return new JsonResponse($log->only([
             'state', 'response_code'
         ]), $request->isAuthenticated() ? 200 : 403);
     }
@@ -327,10 +306,10 @@ class FundsController extends Controller
             'type' => Fund::TYPE_BUDGET,
         ])->where('state', '=', Fund::STATE_ACTIVE);
 
-        return $request->isAuthenticated() ? response()->json([
+        return $request->isAuthenticated() ? new JsonResponse([
             'funds' => Fund::getFundTotals($fundsQuery->get()),
             'budget_funds' => Fund::getFundTotals($activeFundsQuery->get()),
-        ]) : response()->json([], 403);
+        ]) : new JsonResponse([], 403);
     }
 
     /**
@@ -386,7 +365,7 @@ class FundsController extends Controller
             'type', 'type_value', 'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids'
         ]));
 
-        return response()->json($data);
+        return new JsonResponse($data);
     }
 
     /**
@@ -421,7 +400,7 @@ class FundsController extends Controller
         $fund->fund_formula_products()->delete();
         $fund->delete();
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 
     /**
