@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Funds\Identities;
 
 use App\Traits\ThrottleWithMeta;
 
-class SendIdentityNotificationRequest extends ExportIdentitiesRequest
+class SendIdentityNotificationRequest extends IndexIdentitiesRequest
 {
     use ThrottleWithMeta;
 
@@ -36,6 +36,7 @@ class SendIdentityNotificationRequest extends ExportIdentitiesRequest
         return array_merge(parent::rules(), [
             'subject' => 'required|string|min:5|max:400',
             'content' => 'required|string|min:5|max:16384',
+            'per_page' => 'nullable',
         ]);
     }
 }
