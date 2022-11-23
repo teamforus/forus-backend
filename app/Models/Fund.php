@@ -1267,7 +1267,7 @@ class Fund extends BaseModel
      */
     public function isExpired(): bool
     {
-        return $this->end_date->isPast();
+        return $this->end_date->clone()->addDay()->isPast();
     }
 
     /**
