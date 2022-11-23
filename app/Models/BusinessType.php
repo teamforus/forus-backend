@@ -5,7 +5,6 @@ namespace App\Models;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Http\Request;
 
 /**
  * App\Models\BusinessType
@@ -15,6 +14,8 @@ use Illuminate\Http\Request;
  * @property int|null $parent_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|BusinessType[] $descendants
+ * @property-read int|null $descendants_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $organizations
  * @property-read int|null $organizations_count
  * @property-read \App\Models\BusinessTypeTranslation|null $translation
@@ -70,24 +71,10 @@ class BusinessType extends BaseModel
     }
 
     /**
-     * @param Request $request
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return HasMany
      */
-    public static function search(Request $request): Builder {
-        /** @var Builder $query */
-        $query = self::query();
-
-        if ($request->input('used', false)) {
-            $query->whereHas('organizations.supplied_funds_approved', static function(
-                Builder $builder
-            ) {
-                $builder->whereIn(
-                    'funds.id',
-                    Implementation::activeFunds()->pluck('id')->toArray()
-                );
-            });
-        }
-
-        return $query;
+    public function descendants(): HasMany
+    {
+        return $this->hasMany(BusinessType::class, 'parent_id');
     }
 }
