@@ -61,7 +61,7 @@ jobs:
         with:
           repository: teamforus/forus-frontend
           path: forus-frontend
-          ref: develop
+          ref: tests-merge
 
       - name: docker-compose up
         working-directory: forus-frontend
