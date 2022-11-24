@@ -2,10 +2,17 @@
 
 namespace App\Policies;
 
+use App\Models\Fund;
+use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Implementation;
+use App\Models\Organization;
+use App\Models\Product;
+use App\Scopes\Builders\FundProviderQuery;
+use App\Scopes\Builders\OrganizationQuery;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Database\Eloquent\Builder;
 
 class MediaPolicy
 {
@@ -37,6 +44,31 @@ class MediaPolicy
     public function store(Identity $identity): bool
     {
         return $identity->exists;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Media $media
+     * @return bool
+     */
+    public function clone(Identity $identity, Media $media): bool
+    {
+        /** @var Product $product */
+        if (($product = $media->mediable) instanceof Product) {
+            $organizationQuery = OrganizationQuery::whereIsEmployee(Organization::query(), $identity->address)
+                ->select('id');
+
+            $funds = Fund::whereHas('organization', function (Builder $builder) use ($organizationQuery) {
+                $builder->whereIn('organizations.id', $organizationQuery);
+            })->pluck('id')->all();
+
+            return FundProviderQuery::whereApprovedForFundsFilter(
+                FundProvider::query()->where('organization_id', $product->organization_id),
+                $funds
+            )->exists();
+        }
+
+        return false;
     }
 
     /**

@@ -497,6 +497,8 @@ class MediaService
             }
         }
 
+        $mediaConfig->onMediaPresetsUpdated($newMedia);
+
         return $newMedia;
     }
 
