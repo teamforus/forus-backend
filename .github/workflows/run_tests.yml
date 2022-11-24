@@ -119,3 +119,12 @@ jobs:
       - name: --- RUN BROWSER TESTS ----
         working-directory: forus-backend
         run: docker-compose exec -T app bash -c "php artisan dusk --debug --verbose --testdox"
+
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: Screenshots
+          path: |
+            forus-backend/tests/Browser/screenshots/*
+            forus-backend/storage/logs/laravel.log
+          retention-days: 5
