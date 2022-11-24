@@ -8,16 +8,16 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Role;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
-use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Tests\DuskTestCase;
+use Tests\Traits\MakesTestIdentities;
 
 class EmployeeTest extends DuskTestCase
 {
-    use AssertsSentEmails;
-
-    protected ?Identity $identity;
+    use AssertsSentEmails, MakesTestIdentities;
 
     /**
      * @return void
@@ -25,54 +25,165 @@ class EmployeeTest extends DuskTestCase
      */
     public function testEmployeeCreate(): void
     {
-        $startTime = now();
+        Cache::clear();
 
-        $implementation = Implementation::where('key', 'general')->first();
-        $organization = Organization::where('name', 'Nijmegen')->first();
+        $implementation = Implementation::byKey('nijmegen');
 
         $this->assertNotNull($implementation);
-        $this->assertNotNull($organization);
+        $this->assertNotNull($implementation->organization);
 
-        $this->identity = $organization->identity;
-        $link = $implementation->urlSponsorDashboard();
+        $this->browse(function (Browser $browser) use ($implementation) {
+            $initialRole = Role::byKey('finance');
+            $updatedRole = Role::byKey('validation');
 
-        $this->browse(function (Browser $browser) use ($link, $implementation, $startTime) {
-            $browser->visit($link);
+            $browser->visit($implementation->urlSponsorDashboard());
 
             // Authorize identity
-            $proxy = $this->makeIdentityProxy($this->identity);
+            $proxy = $this->makeIdentityProxy($implementation->organization->identity);
             $browser->script("localStorage.setItem('active_account', '$proxy->access_token')");
+            $browser->refresh();
 
+            $browser->waitFor('@identityEmail');
+            $browser->assertSeeIn('@identityEmail', $implementation->organization->identity->email);
             $browser->waitFor('@headerOrganizationSwitcher');
-            $this->createEmployee($browser, $startTime);
+            $browser->press('@headerOrganizationSwitcher');
+            $browser->waitFor("@headerOrganizationItem$implementation->organization_id");
+            $browser->press("@headerOrganizationItem$implementation->organization_id");
+            $browser->pause(1000);
 
+            // Go to employees list and add a new employee of initial role
+            $this->goToEmployeesPage($browser);
+            $employee = $this->createEmployee($browser, $implementation->organization, $initialRole);
+
+            // Search the employee in the table by email
+            $this->searchEmployee($browser, $employee);
+            $this->checkEmployeePermissions($implementation->organization, $employee, $initialRole);
+
+            // Change employee role, test permissions and delete the employee
+            $this->changeEmployeeRoles($browser, $employee, $updatedRole);
+            $this->checkEmployeePermissions($implementation->organization, $employee, $updatedRole);
+            $this->employeeDelete($browser, $employee);
+
+            // Logout
             $this->logout($browser);
         });
     }
 
     /**
      * @param Browser $browser
-     * @param Carbon $startTime
-     * @return void
+     * @param Organization $organization
+     * @param Role|Role[] $role
+     * @return Employee
      * @throws TimeOutException
      */
-    private function createEmployee(Browser $browser, Carbon $startTime): void
+    private function createEmployee(Browser $browser, Organization $organization, Role|array $role): Employee
     {
-        $this->goToEmployeesPage($browser);
+        $email = $this->makeUniqueEmail();
+        $roles = is_array($role) ? $role : [$role];
 
         $browser->waitFor('@addEmployee');
         $browser->press('@addEmployee');
 
-        $role  = Role::first();
-        $email = 'test'. time() .'@example.com';
+        $this->assertNotNull($role);
 
-        $browser->within('@formEmployeeEdit', function(Browser $browser) use ($role, $email) {
-            $browser->click('label[for="role_'. $role->id .'"]');
-            $browser->type('@formEmployeeEmail', $email);
+        $this->selectEmployeeRoles($browser, $roles, [], [
+            '@formEmployeeEmail' => $email,
+        ]);
+
+        $browser->pause(1000);
+
+        $identity = Identity::findByEmail($email);
+        $this->assertNotNull($identity);
+
+        $employee = $organization->findEmployee($identity->address);
+        $this->assertNotNull($employee);
+
+        return $employee;
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Employee $employee
+     * @param Role|Role[] $role
+     * @return void
+     * @throws TimeOutException
+     */
+    private function changeEmployeeRoles(Browser $browser, Employee $employee, Role|array $role): void
+    {
+        $roles = is_array($role) ? $role : [$role];
+
+        // Find and press employee edit button
+        $browser->waitFor("@employeeRow$employee->id");
+        $browser->within("@employeeRow$employee->id", fn(Browser $b) => $b->press("@btnEmployeeEdit"));
+
+        // Update employee roles
+        $this->selectEmployeeRoles($browser, $roles, $employee->roles);
+
+        // Wait for the form to be submitted
+        $browser->waitFor('@successNotification');
+
+        // Check that the new roles have been applied
+        $employee->unsetRelation('roles');
+        $invalidRoles = collect($roles)->pluck('id')->diff($employee->roles->pluck('id'));
+        $this->assertTrue($invalidRoles->isEmpty(), 'Not all roles have been removed from the employee.');
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Collection|Role[] $addRoles
+     * @param Collection|Role[] $removeRoles
+     * @param array $fields
+     * @return void
+     * @throws TimeOutException
+     */
+    protected function selectEmployeeRoles(
+        Browser $browser,
+        Collection|array $addRoles,
+        Collection|array $removeRoles = [],
+        array $fields = []
+    ): void {
+        $browser->waitFor('@formEmployeeEdit');
+
+        // uncheck all previous employee roles and select the given one
+        $browser->within('@formEmployeeEdit', function(Browser $browser) use ($addRoles, $removeRoles, $fields) {
+            foreach ($removeRoles as $role) {
+                $browser->waitFor("label[for=role_$role->id]");
+                $browser->press("label[for=role_$role->id]");
+            }
+
+            foreach ($addRoles as $role) {
+                $browser->waitFor("label[for=role_$role->id]");
+                $browser->press("label[for=role_$role->id]");
+            }
+
+            foreach ($fields as $fieldKey => $fieldValue) {
+                $browser->type($fieldKey, $fieldValue);
+            }
+
             $browser->press('@formEmployeeSubmit');
         });
+    }
 
-        $this->searchEmployee($browser, $email, $startTime);
+    /**
+     * @param Browser $browser
+     * @param Employee $employee
+     * @return void
+     * @throws TimeOutException
+     */
+    private function employeeDelete(Browser $browser, Employee $employee): void
+    {
+        $browser->waitFor("@employeeRow$employee->id");
+        $browser->within("@employeeRow$employee->id", function(Browser $browser) {
+            $browser->press("@btnEmployeeDelete");
+        });
+
+        $browser->waitFor('@modalDangerZone');
+        $browser->waitFor('@btnDangerZoneSubmit');
+        $browser->press('@btnDangerZoneSubmit');
+        $browser->waitFor('@successNotification');
+
+        $this->assertNotNull($employee->identity->fresh());
+        $this->assertTrue($employee->fresh()->trashed());
     }
 
     /**
@@ -82,11 +193,37 @@ class EmployeeTest extends DuskTestCase
      */
     private function goToEmployeesPage(Browser $browser): void
     {
-        $browser->waitFor('@identityEmail');
-        $browser->assertSeeIn('@identityEmail', $this->identity->email);
-
         $browser->waitFor('@employeesPage');
         $browser->element('@employeesPage')->click();
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Employee $employee
+     * @return void
+     * @throws TimeOutException
+     */
+    private function searchEmployee(Browser $browser, Employee $employee): void
+    {
+        $browser->waitFor('@searchEmployee');
+        $browser->type('@searchEmployee', $employee->identity->email);
+
+        $browser->pause(2000);
+        $browser->waitFor('@employeeEmail');
+        $browser->assertSeeIn('@employeeEmail', $employee->identity->email);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Employee $employee
+     * @param Role $role
+     * @return void
+     */
+    private function checkEmployeePermissions(Organization $organization, Employee $employee, Role $role): void
+    {
+        foreach ($role->permissions as $permission) {
+            $this->assertTrue($organization->identityCan($employee->identity, $permission->key));
+        }
     }
 
     /**
@@ -98,33 +235,10 @@ class EmployeeTest extends DuskTestCase
     {
         $browser->refresh();
 
-        $browser->waitFor('@authUserMenu');
-        $browser->element('@authUserMenu')->click();
+        $browser->waitFor('@userProfile');
+        $browser->element('@userProfile')->click();
 
-        $browser->waitFor('@authUserLogout');
-        $browser->element('@authUserLogout')->click();
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $email
-     * @param Carbon $startTime
-     * @return void
-     * @throws TimeOutException
-     */
-    private function searchEmployee(Browser $browser, string $email, Carbon $startTime): void
-    {
-        $browser->waitFor('@searchEmployee');
-        $browser->type('@searchEmployee', $email);
-
-        $browser->pause(1000);
-        $browser->waitFor('@employeeEmail');
-        $browser->assertSeeIn('@employeeEmail', $email);
-
-        Employee::where(
-            'identity_address', Identity::findByEmail($email)->address,
-        )->where(
-            'created_at', '>=', $startTime
-        )->delete();
+        $browser->waitFor('@btnUserLogout');
+        $browser->element('@btnUserLogout')->click();
     }
 }

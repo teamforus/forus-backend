@@ -79,4 +79,15 @@ class Role extends BaseModel
     {
         return $this->hasMany(RolePermission::class);
     }
+
+    /**
+     * @param string $key
+     * @return static|null
+     */
+    public static function byKey(string $key): ?Role
+    {
+        return self::where([
+            'key' => $key,
+        ])->first();
+    }
 }

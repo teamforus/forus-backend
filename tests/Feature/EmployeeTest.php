@@ -5,20 +5,23 @@ namespace Tests\Feature;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Models\Role;
-use App\Scopes\Builders\EmployeeQuery;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use Tests\Traits\MakesTestIdentities;
 
 class EmployeeTest extends TestCase
 {
-    use DatabaseTransactions, WithFaker;
+    use DatabaseTransactions, WithFaker, MakesTestIdentities;
 
     /**
      * @var string
      */
     protected string $apiMediaUrl = '/api/v1/platform/organizations/%s/employees';
 
+    /**
+     * @var array|string[]
+     */
     protected array $resourceStructure = [
         'id',
         'email',
@@ -34,28 +37,23 @@ class EmployeeTest extends TestCase
      */
     public function testEmployeeStore(): void
     {
-        $organization = Organization::where('name', 'Nijmegen')->first();
+        $organization = Organization::first();
         $this->assertNotNull($organization);
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $employeeData = $this->makeEmployeeData();
 
-        $role  = Role::first();
-        $email = 'test'. time() .'@example.com';
+        // make valid store employee request
+        $this->storeEmployee($organization, $employeeData, $headers);
 
-        $response = $this->post(sprintf($this->apiMediaUrl, $organization->id), [
-            'email' => $email,
-            'roles' => [$role->id]
-        ], $headers);
-        $response->assertJsonStructure(['data' => $this->resourceStructure]);
-
-        $employee = Employee::find($response->json('data.id'));
-
-        $this->assertNotNull($employee);
-        $this->assertEquals($email, $employee->identity->email);
-        $this->assertContains($role->id, $employee->roles->pluck('id'));
-
-        $this->post(sprintf($this->apiMediaUrl, $organization->id), [
-            'email' => $email,
+        // test missing roles
+        $this->post($this->getListUrl($organization), [
+            'email' => $employeeData['email'],
         ], $headers)->assertJsonValidationErrorFor('roles');
+
+        // test missing email
+        $this->post(sprintf($this->apiMediaUrl, $organization->id), [
+            'roles' => $employeeData['roles'],
+        ], $headers)->assertJsonValidationErrorFor('email');
     }
 
     /**
@@ -63,26 +61,21 @@ class EmployeeTest extends TestCase
      */
     public function testEmployeeUpdate(): void
     {
-        $organization = Organization::where('name', 'Nijmegen')->first();
+        $organization = Organization::first();
         $this->assertNotNull($organization);
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
-        $response = $this->post(sprintf($this->apiMediaUrl, $organization->id), [
-            'email' => 'test'. time() .'@example.com',
-            'roles' => [Role::first()->id]
-        ], $headers);
-        $employee = Employee::find($response->json('data.id'));
-        $this->assertNotNull($employee);
+        $employeeData = $this->makeEmployeeData();
+        $employee = $this->storeEmployee($organization, $employeeData, $headers);
 
         /** @var Role $role */
-        $role = Role::inRandomOrder()->first();
-        $response = $this->patch(sprintf($this->apiMediaUrl, $organization->id). '/'. $employee->id, [
-            'roles' => [$role->id]
-        ], $headers);
+        $roles = $this->getRandomRoleIds(2, $employeeData['roles']);
+        $employeeData = array_merge($employeeData, compact('roles'));
+        $response = $this->patch($this->getItemUrl($organization, $employee), $employeeData, $headers);
         $response->assertJsonStructure(['data' => $this->resourceStructure]);
 
-        $employee->refresh();
-        $this->assertContains($role->id, $employee->roles->pluck('id'));
+        $employee->unsetRelation('roles');
+        $this->assertTrue($employee->roles->pluck('id')->diff($employeeData['roles'])->isEmpty());
     }
 
     /**
@@ -94,14 +87,10 @@ class EmployeeTest extends TestCase
         $this->assertNotNull($organization);
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
-        $response = $this->post(sprintf($this->apiMediaUrl, $organization->id), [
-            'email' => 'test'. time() .'@example.com',
-            'roles' => [Role::first()->id]
-        ], $headers);
-        $employee = Employee::find($response->json('data.id'));
-        $this->assertNotNull($employee);
+        $employeeData = $this->makeEmployeeData();
+        $employee = $this->storeEmployee($organization, $employeeData, $headers);
 
-        $response = $this->delete(sprintf($this->apiMediaUrl, $organization->id). '/'. $employee->id, [], $headers);
+        $response = $this->deleteJson($this->getItemUrl($organization, $employee), [], $headers);
         $response->assertSuccessful();
 
         $this->assertNull(Employee::find($employee->id));
@@ -116,22 +105,7 @@ class EmployeeTest extends TestCase
         $this->assertNotNull($organization);
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
-        $email = 'test'. time() .'@example.com';
-        $role = Role::first();
-        $response = $this->post(sprintf($this->apiMediaUrl, $organization->id), [
-            'email' => $email,
-            'roles' => [$role->id]
-        ], $headers);
-        $employee = Employee::find($response->json('data.id'));
-        $this->assertNotNull($employee);
-
-        $response = $this->get(sprintf($this->apiMediaUrl, $organization->id). '/'. $employee->id, $headers);
-        $response->assertSuccessful();
-        $this->assertIsArray($response->json('data'));
-
-        $this->assertNotNull($employee);
-        $this->assertEquals($employee->identity->email, $email);
-        $this->assertContains($role->id, $employee->roles->pluck('id'));
+        $this->storeEmployee($organization, $this->makeEmployeeData(), $headers);
     }
     /**
      * @return void
@@ -142,31 +116,101 @@ class EmployeeTest extends TestCase
         $this->assertNotNull($organization);
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
-        // search by email
-        $params = http_build_query([
-            'q' => $organization->identity->email,
-        ]);
-        $response = $this->get(sprintf($this->apiMediaUrl, $organization->id).'?'.$params, $headers);
+        $employeeData = $this->makeEmployeeData();
+        $employee = $this->storeEmployee($organization, $employeeData, $headers);
+
+        // make search by email query
+        $q = $employee->identity->email;
+        $params = http_build_query(compact('q'));
+
+        // make search request
+        $response = $this->getJson($this->getListUrl($organization) . "?$params", $headers);
         $response->assertSuccessful();
         $this->assertIsArray($response->json('data'));
 
-        $employee = Employee::find($response->json('data')[0]['id']);
-        $this->assertNotNull($employee);
-        $this->assertEquals($employee->identity->email, $organization->identity->email);
+        // only one employee should be returned and it should be the requested employee
+        $this->assertTrue(count($response->json('data')) == 1);
+        $this->assertTrue($response->json('data.0.id') == $employee->id);
 
         // search by permission
-        $permissionFilter = 'manage_vouchers';
-        $params = http_build_query([
-            'permission' => $permissionFilter,
-        ]);
-        $response = $this->get(sprintf($this->apiMediaUrl, $organization->id).'?'.$params, $headers);
+        $permission = 'manage_vouchers';
+        $params = http_build_query(compact('permission'));
+
+        // make search by permission query
+        $response = $this->getJson($this->getListUrl($organization) . "?$params", $headers);
         $response->assertSuccessful();
         $this->assertIsArray($response->json('data'));
 
-        $employee = Employee::find($response->json('data')[0]['id']);
+        $employee = Employee::find($response->json('data.0.id'));
         $this->assertNotNull($employee);
-        $this->assertContains($employee->id, EmployeeQuery::whereHasPermissionFilter(
-            $organization->employees(), $permissionFilter)->pluck('id')
-        );
+        $this->assertTrue($organization->employeesWithPermissions($permission)
+            ->where('id', $employee->id)
+            ->isNotEmpty());
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $employeeData
+     * @param array $headers
+     * @return Employee
+     */
+    protected function storeEmployee(
+        Organization $organization,
+        array $employeeData,
+        array $headers = []
+    ): Employee {
+        $response = $this->post($this->getListUrl($organization), $employeeData, $headers);
+        $response->assertJsonStructure(['data' => $this->resourceStructure]);
+
+        $employee = Employee::find($response->json('data.id'));
+        $this->assertNotNull($employee);
+        $this->assertEquals($employee->identity->email, $employeeData['email']);
+        $this->assertTrue($employee->roles->pluck('id')->diff($employeeData['roles'])->isEmpty());
+
+        return $employee;
+    }
+
+    /**
+     * @param int $count
+     * @param array $notIn
+     * @return array
+     */
+    protected function getRandomRoleIds(int $count = 1, array $notIn = []): array
+    {
+        return Role::inRandomOrder()
+            ->whereNotIn('id', $notIn)
+            ->limit($count)
+            ->pluck('id')
+            ->toArray();
+    }
+
+    /**
+     * @return array
+     */
+    protected function makeEmployeeData(): array
+    {
+        return [
+            'roles' => $this->getRandomRoleIds(2),
+            'email' => $this->makeUniqueEmail(),
+        ];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return string
+     */
+    protected function getListUrl(Organization $organization): string
+    {
+        return sprintf($this->apiMediaUrl, $organization->id);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Employee $employee
+     * @return string
+     */
+    protected function getItemUrl(Organization $organization, Employee $employee): string
+    {
+        return sprintf($this->apiMediaUrl, $organization->id) . '/'. $employee->id;
     }
 }

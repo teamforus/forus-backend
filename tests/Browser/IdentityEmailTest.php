@@ -29,7 +29,7 @@ class IdentityEmailTest extends DuskTestCase
         Cache::clear();
 
         $this->makeIdentityEmailTests(
-            Implementation::where('key', 'nijmegen')->first(),
+            Implementation::byKey('nijmegen'),
             $this->makeIdentity($this->makeUniqueEmail('base-')),
             'webshop'
         );
