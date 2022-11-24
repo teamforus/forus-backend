@@ -85,13 +85,8 @@ jobs:
         working-directory: forus-frontend
         run: docker-compose exec -T app sh -c "cd src && gulp serve &"
 
-      - name: Debug - Check connection from front to front
-        working-directory: forus-frontend
-        run: docker-compose exec -T app sh -c "wget http://forus-frontend:3000"
-
-      - name: Debug - Check connection from back to front
-        working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "wget http://forus-frontend:3000"
+      - name: Debug - check docker images
+        run: docker ps
 
       - name: Debug - print .env file
         working-directory: forus-backend
@@ -100,6 +95,22 @@ jobs:
       - name: Debug - print qdt-env.js file
         working-directory: forus-frontend
         run: docker-compose exec -T app sh -c "cd src && cat qdt-env.js"
+
+      - name: Debug - Check connection from front to front
+        working-directory: forus-frontend
+        run: docker-compose exec -T app sh -c "wget http://forus-frontend:3000"
+
+      - name: Debug - Check connection from backend to frontend sponsor dashboard
+        working-directory: forus-backend
+        run: docker-compose exec -T app bash -c "wget http://forus-frontend:4000"
+
+      - name: Debug - Check connection from backend to frontend provider dashboard
+        working-directory: forus-backend
+        run: docker-compose exec -T app bash -c "wget http://forus-frontend:5000"
+
+      - name: Debug - Check connection from backend to frontend validator dashboard
+        working-directory: forus-backend
+        run: docker-compose exec -T app bash -c "wget http://forus-frontend:6000"
 
       - name: Install chrome driver
         working-directory: forus-backend
