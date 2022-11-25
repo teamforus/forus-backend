@@ -679,10 +679,8 @@ class Implementation extends BaseModel
         }
 
         if ($product_category_id = array_get($options, 'product_category_id')) {
-            $query->whereHas('products_provider.product_category', static function (Builder $builder) use ($product_category_id) {
-                $builder->whereIn('id', (array) $product_category_id);
-            })->orWhereHas('products_provider.product_category.ancestors', function(Builder $builder) use ($product_category_id) {
-                $builder->whereIn('id', (array) $product_category_id);
+            $query->whereHas('products', function (Builder $builder) use ($product_category_id) {
+                $builder->whereIn('id', Product::search(compact('product_category_id'))->select('id'));
             });
         }
 
