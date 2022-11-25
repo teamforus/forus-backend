@@ -675,12 +675,15 @@ class Implementation extends BaseModel
         });
 
         if ($business_type_id = array_get($options, 'business_type_id')) {
-            $businessTypes = [$business_type_id];
-            if ($businessType = BusinessType::find($business_type_id)) {
-                $businessTypes = array_merge($businessTypes, $businessType->descendants->pluck('id')->toArray());
-            }
+            $query->where('business_type_id', $business_type_id);
+        }
 
-            $query->whereIn('business_type_id', $businessTypes);
+        if ($product_category_id = array_get($options, 'product_category_id')) {
+            $query->whereHas('products_provider.product_category', static function (Builder $builder) use ($product_category_id) {
+                $builder->whereIn('id', (array) $product_category_id);
+            })->orWhereHas('products_provider.product_category.ancestors', function(Builder $builder) use ($product_category_id) {
+                $builder->whereIn('id', (array) $product_category_id);
+            });
         }
 
         if ($organization_id = array_get($options, 'organization_id')) {

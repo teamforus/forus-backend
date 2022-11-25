@@ -7,7 +7,6 @@ use App\Http\Resources\BusinessTypeResource;
 use App\Models\BusinessType;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Searches\BusinessTypeSearch;
 
 class BusinessTypeController extends Controller
 {
@@ -15,12 +14,11 @@ class BusinessTypeController extends Controller
      * Display a listing of the resource.
      *
      * @param SearchBusinessTypesRequest $request
-     * @return AnonymousResourceCollection
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(SearchBusinessTypesRequest $request): AnonymousResourceCollection
     {
-        $search = new BusinessTypeSearch($request->only('used', 'parent_id', 'per_page'));
-        return BusinessTypeResource::queryCollection($search->query(), $request);
+        return BusinessTypeResource::queryCollection(BusinessType::search($request), $request);
     }
 
     /**
