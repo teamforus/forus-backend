@@ -107,7 +107,8 @@ class MediaController extends Controller
         $this->authorize('clone', $media);
 
         try {
-            $media = resolve('media')->cloneMedia($media, $request->input('type'));
+            $syncPresets = $request->input('sync_presets');
+            $media = $this->mediaService->cloneMedia($media, $media->type, true, $syncPresets);
 
             $media->update([
                 'identity_address' => $request->auth_address(),

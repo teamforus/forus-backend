@@ -2,14 +2,13 @@
 
 namespace App\Http\Requests\Api\Media;
 
-use App\Http\Requests\BaseFormRequest;
+use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
-use Illuminate\Validation\Rule;
 
 /**
  * @property-read Media $media_uid
  */
-class CloneMediaRequest extends BaseFormRequest
+class CloneMediaRequest extends StoreMediaRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,13 +27,6 @@ class CloneMediaRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $media = $this->media_uid;
-
-        return [
-            'type' => [
-                'required',
-                Rule::in([$media->type]),
-            ],
-        ];
+        return $this->syncPresetsRule(MediaService::getMediaConfig($this->media_uid->type));
     }
 }
