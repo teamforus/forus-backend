@@ -54,6 +54,11 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $email_from_name
  * @property string|null $email_color
  * @property string|null $email_signature
+ * @property bool $show_home_map
+ * @property bool $show_home_products
+ * @property bool $show_providers_map
+ * @property bool $show_provider_map
+ * @property bool $show_office_map
  * @property bool $digid_enabled
  * @property bool $digid_required
  * @property bool $digid_sign_up_allowed
@@ -119,6 +124,11 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereOverlayOpacity($value)
  * @method static Builder|Implementation whereOverlayType($value)
  * @method static Builder|Implementation whereProductboardApiKey($value)
+ * @method static Builder|Implementation whereShowHomeMap($value)
+ * @method static Builder|Implementation whereShowHomeProducts($value)
+ * @method static Builder|Implementation whereShowOfficeMap($value)
+ * @method static Builder|Implementation whereShowProviderMap($value)
+ * @method static Builder|Implementation whereShowProvidersMap($value)
  * @method static Builder|Implementation whereTitle($value)
  * @method static Builder|Implementation whereUpdatedAt($value)
  * @method static Builder|Implementation whereUrlApp($value)
@@ -127,16 +137,6 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereUrlValidator($value)
  * @method static Builder|Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
- * @property bool $show_home_map
- * @property bool $show_home_products
- * @property bool $show_providers_map
- * @property bool $show_provider_map
- * @property bool $show_office_map
- * @method static Builder|Implementation whereShowHomeMap($value)
- * @method static Builder|Implementation whereShowHomeProducts($value)
- * @method static Builder|Implementation whereShowOfficeMap($value)
- * @method static Builder|Implementation whereShowProviderMap($value)
- * @method static Builder|Implementation whereShowProvidersMap($value)
  */
 class Implementation extends BaseModel
 {
@@ -676,6 +676,12 @@ class Implementation extends BaseModel
 
         if ($business_type_id = array_get($options, 'business_type_id')) {
             $query->where('business_type_id', $business_type_id);
+        }
+
+        if ($product_category_id = array_get($options, 'product_category_id')) {
+            $query->whereHas('products', function (Builder $builder) use ($product_category_id) {
+                $builder->whereIn('id', Product::search(compact('product_category_id'))->select('id'));
+            });
         }
 
         if ($organization_id = array_get($options, 'organization_id')) {
