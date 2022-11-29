@@ -140,6 +140,7 @@ Route::group(['middleware' => ['api.auth']], static function()  {
         Route::patch('sessions/terminate', 'Api\Identity\SessionController@terminateAll');
     });
 
+    Route::post('medias/{media_uid}/clone', 'Api\MediaController@clone');
     Route::resource('medias', 'Api\MediaController')
         ->only('index', 'show', 'store', 'destroy')
         ->parameter('medias', 'media_uid');

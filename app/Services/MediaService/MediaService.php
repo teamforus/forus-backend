@@ -438,13 +438,15 @@ class MediaService
      * @param Media $media
      * @param string|null $type
      * @param bool $forceRegenerate
+     * @param array|null $syncPresets
      * @return Media
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException|\Exception
+     * @throws \Throwable
      */
     public function cloneMedia(
         Media $media,
         string $type = null,
-        bool $forceRegenerate = false
+        bool $forceRegenerate = false,
+        array $syncPresets = null
     ): Media {
         $type = $type ?? $media->type;
         $copyFiles = $type === $media->type;
@@ -453,23 +455,27 @@ class MediaService
             return $this->cloneMediaCopy($media, $type);
         }
 
-        return $this->cloneMediaGenerate($media, $type);
+        return $this->cloneMediaGenerate($media, $type, $syncPresets);
     }
 
     /**
      * @param Media $media
      * @param string|null $type
+     * @param array|null $syncPresets
      * @return Media
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      * @throws \Exception
      */
-    protected function cloneMediaGenerate(Media $media, ?string $type = null): Media
-    {
+    protected function cloneMediaGenerate(
+        Media $media,
+        ?string $type = null,
+        array $syncPresets = null
+    ): Media {
         $oldMediaConfig = self::getMediaConfig($media->type);
         $source = $media->findPreset($oldMediaConfig->getRegenerationPresetName());
         $file = new TmpFile($this->storage()->get($source->path));
+        $type = $type ?: $media->type;
 
-        return $this->makeMedia($file, $media->original_name, $media->ext, $type ?: $media->type);
+        return $this->makeMedia($file, $media->original_name, $media->ext, $type, $syncPresets);
     }
 
     /**
@@ -496,6 +502,8 @@ class MediaService
                 );
             }
         }
+
+        $mediaConfig->onMediaPresetsUpdated($newMedia);
 
         return $newMedia;
     }
