@@ -4,11 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- * @noinspection PhpIllegalPsrClassPathInspection
- */
-class AddAuthUrlAndAuthParamsToBankConnectionsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -36,4 +32,4 @@ class AddAuthUrlAndAuthParamsToBankConnectionsTable extends Migration
             $table->dropColumn('consent_id', 'auth_url', 'auth_params');
         });
     }
-}
+};
