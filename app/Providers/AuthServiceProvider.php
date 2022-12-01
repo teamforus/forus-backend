@@ -113,7 +113,7 @@ class AuthServiceProvider extends ServiceProvider
 
         // add custom guard
         Auth::extend('header', function ($app, $name, array $config) {
-            return new BearerTokenGuard(Auth::createUserProvider($config['provider']), app()->make('request'));
+            return new BearerTokenGuard(Auth::createUserProvider($config['provider']));
         });
 
         Gate::resource('funds', FundPolicy::class, [

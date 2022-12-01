@@ -41,11 +41,15 @@ use Throwable;
  * @property-read \App\Models\Employee|null $employee
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\FileService\Models\File[] $files
  * @property-read int|null $files_count
+ * @property-read string $amount_locale
  * @property-read \Carbon\Carbon|null $expire_at
+ * @property-read string $expire_at_locale
  * @property-read bool $expired
  * @property-read int|null $lead_time_days
  * @property-read string $lead_time_locale
+ * @property-read string $resolved_at_locale
  * @property-read string $state_locale
+ * @property-read string $submitted_at_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Note[] $notes
@@ -217,6 +221,42 @@ class Reimbursement extends Model
     }
 
     /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getAmountLocaleAttribute(): ?string
+    {
+        return currency_format_locale($this->amount);
+    }
+
+    /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getSubmittedAtLocaleAttribute(): ?string
+    {
+        return format_date_locale($this->submitted_at);
+    }
+
+    /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getResolvedAtLocaleAttribute(): ?string
+    {
+        return format_date_locale($this->resolved_at);
+    }
+
+    /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getExpireAtLocaleAttribute(): ?string
+    {
+        return format_date_locale($this->expire_at);
+    }
+
+    /**
      * @throws \Exception
      */
     public static function makeCode(): int
@@ -258,6 +298,14 @@ class Reimbursement extends Model
     public function isDeclined(): bool
     {
         return $this->state === self::STATE_DECLINED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExpired(): bool
+    {
+        return $this->expired;
     }
 
     /**
