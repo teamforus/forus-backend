@@ -45,6 +45,17 @@ class ReimbursementTest extends DuskTestCase
      * @return void
      * @throws \Throwable
      */
+    public function testPendingReimbursementSkipEmailCreate(): void
+    {
+        Cache::clear();
+
+        $this->makeReimbursementWithState(Implementation::byKey('nijmegen'), 'pending', false);
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
     public function testApprovedReimbursementCreate(): void
     {
         Cache::clear();
@@ -77,16 +88,20 @@ class ReimbursementTest extends DuskTestCase
     /**
      * @param Implementation $implementation
      * @param string $state
+     * @param bool $withEmail
      * @return void
      * @throws \Throwable
      */
-    protected function makeReimbursementWithState(Implementation $implementation, string $state): void
-    {
+    protected function makeReimbursementWithState(
+        Implementation $implementation,
+        string $state,
+        bool $withEmail = true
+    ): void {
         $this->assertNotNull($implementation);
         $this->assertNotNull($implementation->organization);
 
         // Got to identity and make user
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $identity = $this->makeIdentity($withEmail ? $this->makeUniqueEmail() : null);
 
         $this->browse(function (Browser $browser) use ($implementation, $identity, $state) {
             $browser->visit($implementation->urlWebshop());
@@ -186,7 +201,17 @@ class ReimbursementTest extends DuskTestCase
         $browser->press('@btnEmptyBlock');
 
         $browser->waitFor('@reimbursementEditContent');
+
+        if (!$voucher->identity->email) {
+            $browser->waitFor('@reimbursementNoEmail');
+            $browser->assertMissing('@reimbursementForm');
+            $browser->assertVisible('@reimbursementNoEmailAddBtn');
+            $browser->assertVisible('@reimbursementNoEmailSkipBtn');
+            $browser->press('@reimbursementNoEmailSkipBtn');
+        }
+
         $browser->waitFor('@reimbursementForm');
+        $browser->assertMissing('@reimbursementNoEmail');
 
         return $this->fillReimbursementForm($browser, $voucher);
     }
@@ -315,7 +340,10 @@ class ReimbursementTest extends DuskTestCase
         $browser->waitFor('@reimbursementEditContent');
 
         $this->submitReimbursement($browser, $data);
-        $this->assertMailableSent($requesterEmail, ReimbursementSubmittedMail::class, $submitTime);
+
+        if ($requesterEmail) {
+            $this->assertMailableSent($requesterEmail, ReimbursementSubmittedMail::class, $submitTime);
+        }
     }
 
     /**
