@@ -22,15 +22,13 @@ trait HasNotes
     /**
      * @param string $description
      * @param Employee|null $employee
-     * @return HasNotes|\App\Models\Reimbursement
+     * @return Note
      */
-    public function addNote(string $description, ?Employee $employee = null): self
+    public function addNote(string $description, ?Employee $employee = null): Note
     {
-        $this->notes()->create([
+        return $this->notes()->create([
             'description' => $description,
             'employee_id' => $employee?->id,
         ]);
-
-        return $this;
     }
 }

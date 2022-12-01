@@ -1010,20 +1010,20 @@ class Voucher extends BaseModel
      */
     public function makeReimbursement(array $data = []): Reimbursement
     {
-        $submitting = $data['state'] === ProductReservation::STATE_PENDING;
+        $submitNow = Arr::get($data, 'state') === Reimbursement::STATE_PENDING;
 
         /** @var Reimbursement $reimbursement */
         $reimbursement = $this->reimbursements()->create(array_merge([
             'code'          => Reimbursement::makeCode(),
-            'state'         => ProductReservation::STATE_PENDING,
-            'submitted_at'  => $submitting ? now() : null,
+            'state'         => Reimbursement::STATE_DRAFT,
+            'submitted_at'  => $submitNow ? now() : null,
         ], array_only($data, [
             'title', 'description', 'amount', 'email', 'iban', 'iban_name', 'state',
         ])));
 
         ReimbursementCreated::dispatch($reimbursement);
 
-        if ($submitting) {
+        if ($submitNow && $reimbursement->isPending()) {
             ReimbursementSubmitted::dispatch($reimbursement);
         }
 

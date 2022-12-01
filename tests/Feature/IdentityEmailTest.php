@@ -84,7 +84,6 @@ class IdentityEmailTest extends TestCase
         $headers = $this->makeApiHeaders(true);
 
         // Delete as different user
-        $this->refreshApplication();
         $this->delete("$this->apiEmailUrl/$identityEmail->id", [], $headers)->assertForbidden();
     }
 
@@ -98,7 +97,6 @@ class IdentityEmailTest extends TestCase
         $headers = $this->makeApiHeaders();
 
         // Delete as guest
-        $this->refreshApplication();
         $this->delete("$this->apiEmailUrl/$identityEmail->id", [], $headers)->assertUnauthorized();
     }
 
