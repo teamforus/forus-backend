@@ -42,8 +42,8 @@ trait HasMedia
     /**
      * @param string|null $uid
      * @param string $cloneType
-     * @return $this
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @return static
+     * @throws \Throwable
      * @noinspection PhpUnused
      */
     public function attachOrCloneMediaByUid(?string $uid, string $cloneType): static

@@ -103,6 +103,7 @@ class VoucherTransaction extends BaseModel
     protected $perPage = 25;
 
     public const EVENT_BUNQ_TRANSACTION_SUCCESS = 'bunq_transaction_success';
+    public const TRANSACTION_COST_OLD = .11;
 
     public const EVENTS = [
         self::EVENT_BUNQ_TRANSACTION_SUCCESS,
@@ -271,7 +272,15 @@ class VoucherTransaction extends BaseModel
      */
     public function getTransactionCostAttribute(): float
     {
-        return $this->amount > 0 ? .11 : 0;
+        if (!$this->amount || !$this->isPaid() || !$this->isOutgoing()) {
+            return 0;
+        }
+
+        if ($this->voucher_transaction_bulk) {
+            return $this->voucher_transaction_bulk->bank_connection->bank->transaction_cost;
+        }
+
+        return self::TRANSACTION_COST_OLD;
     }
 
     /**
