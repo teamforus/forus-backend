@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Query\Builder as QBuilder;
 
 /**
@@ -73,6 +74,11 @@ class VoucherTransactionQuery
         $builder->addSelect([
             'fund_name' => self::orderFundNameQuery(),
             'provider_name' => self::orderProviderNameQuery(),
+            'voucher_transaction_in' => DB::raw(implode("", [
+                "IF(state = '".VoucherTransaction::STATE_PENDING."' AND transfer_at IS NOT NULL,",
+                "GREATEST((UNIX_TIMESTAMP(transfer_at) - UNIX_TIMESTAMP(current_date)) / 86400, 0), IF(voucher_transaction_bulk_id IS NOT NULL, -1, -2)) ",
+                "as voucher_transaction_in",
+            ])),
         ]);
 
         return $builder->orderBy(

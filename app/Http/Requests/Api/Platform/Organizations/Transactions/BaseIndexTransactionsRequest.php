@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Transactions;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\VoucherTransaction;
+use App\Models\ProductReservation;
 use Illuminate\Validation\Rule;
 
 abstract class BaseIndexTransactionsRequest extends BaseFormRequest
@@ -35,6 +36,8 @@ abstract class BaseIndexTransactionsRequest extends BaseFormRequest
             'to'            => 'nullable|date_format:Y-m-d',
             'amount_min'    => 'nullable|numeric|min:0',
             'amount_max'    => 'nullable|numeric|min:0',
+            'transfer_in_min' => 'nullable|numeric|min:0',
+            'transfer_in_max' => 'nullable|numeric|max:'. ProductReservation::TRANSACTION_DELAY,
             'data_format'   => 'nullable|in:csv,xls',
 
             'fund_id'           => 'nullable|exists:funds,id',

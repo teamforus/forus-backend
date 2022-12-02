@@ -144,7 +144,7 @@ class VoucherTransaction extends BaseModel
     ];
 
     public const SORT_BY_FIELDS = [
-        'id', 'amount', 'created_at', 'state', 'voucher_transaction_bulk_id',
+        'id', 'amount', 'created_at', 'state', 'voucher_transaction_in',
         'fund_name', 'provider_name', 'target',
     ];
 
@@ -362,6 +362,20 @@ class VoucherTransaction extends BaseModel
             $query->where('amount', '<=', $amount_max);
         }
 
+        if ($transfer_in_min = $request->input('transfer_in_min')) {
+            $query->where(function (Builder $builder) use ($transfer_in_min) {
+                return $builder->where('state', self::STATE_PENDING)
+                    ->where('transfer_at', '>=', now()->clone()->addDays($transfer_in_min));
+            });
+        }
+
+        if ($transfer_in_max = $request->input('transfer_in_max')) {
+            $query->where(function (Builder $builder) use ($transfer_in_max) {
+                return $builder->where('state', self::STATE_PENDING)
+                    ->where('transfer_at', '<=', now()->clone()->endOfDay()->addDays($transfer_in_max + 1));
+            });
+        }
+
         if ($request->has('fund_state') && $fund_state = $request->input('fund_state')) {
             $query->whereHas('voucher.fund', static function (Builder $query) use ($fund_state) {
                 $query->where('state', '=',  $fund_state);
@@ -451,15 +465,24 @@ class VoucherTransaction extends BaseModel
 
         $data = $builder->with('voucher.fund', 'provider')->get();
 
-        $data = $data->map(fn(VoucherTransaction $transaction) => array_only([
-            'id' => $transaction->id,
-            'amount' => currency_format($transaction->amount),
-            'date_transaction' => format_datetime_locale($transaction->created_at),
-            'date_payment' => format_datetime_locale($transaction->payment_time),
-            'fund_name' => $transaction->voucher->fund->name,
-            'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
-            'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
-        ], $fields))->values();
+        $data = $data->map(function (VoucherTransaction $transaction) use ($fields) {
+            if ($transaction->state == VoucherTransaction::STATE_PENDING && $transaction->attempts <= 3) {
+                $transferDaysDetails = sprintf('In de wachtrij (%s dagen)', $transaction->daysBeforeTransaction() ?: 1);
+            } else {
+                $transferDaysDetails = $transaction->voucher_transaction_bulk_id ? 'bulk #'. $transaction->voucher_transaction_bulk_id : '-';
+            }
+
+            return array_only([
+                'id' => $transaction->id,
+                'amount' => currency_format($transaction->amount),
+                'date_transaction' => format_datetime_locale($transaction->created_at),
+                'date_payment' => format_datetime_locale($transaction->payment_time),
+                'fund_name' => $transaction->voucher->fund->name,
+                'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
+                'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
+                'transfer_in' => $transferDaysDetails,
+            ], $fields);
+        })->values();
 
         return $data->map(function($item) use ($fieldLabels) {
             return array_reduce(array_keys($item), fn($obj, $key) => array_merge($obj, [
