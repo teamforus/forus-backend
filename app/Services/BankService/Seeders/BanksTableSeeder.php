@@ -7,8 +7,10 @@ use bunq\Context\BunqContext;
 use bunq\Model\Generated\Endpoint\OauthCallbackUrl;
 use bunq\Model\Generated\Endpoint\OauthClient;
 use bunq\Util\BunqEnumApiEnvironmentType;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use App\Services\BankService\Models\Bank;
+use Illuminate\Support\Facades\Config;
 use Throwable;
 
 /**
@@ -49,8 +51,9 @@ class BanksTableSeeder extends Seeder
             echo "Using existing BNG context file from: ./storage$this->bngContextFile.\n";
 
             Bank::firstOrCreate([
-                'name' => 'BNG',
                 'key' => 'bng',
+                'name' => 'BNG',
+                'transaction_cost' => 0,
             ])->update([
                 'data' => json_decode(file_get_contents(storage_path($this->bngContextFile)), true),
             ]);
@@ -128,9 +131,9 @@ class BanksTableSeeder extends Seeder
     }
 
     /**
-     * @return Bank|\Illuminate\Database\Eloquent\Model
+     * @return Model|Bank
      */
-    protected function useExistingBunqBankInstallation()
+    protected function useExistingBunqBankInstallation(): Model|Bank
     {
         $key = 'bunq';
         $name = 'Bunq';
@@ -138,6 +141,7 @@ class BanksTableSeeder extends Seeder
 
         return Bank::updateOrCreate(compact('key'), array_merge(compact('name'), [
             'data' => array_only($data, ['context', 'oauth_client']),
+            'transaction_cost' => .11,
             'oauth_redirect_id' => array_get($data, 'oauth_redirect_id'),
             'oauth_redirect_url' => array_get($data, 'oauth_redirect_url'),
         ]));
@@ -149,18 +153,18 @@ class BanksTableSeeder extends Seeder
     public function makeBunqBankInstallation(): ?Bank
     {
         $key = 'bunq';
-        $bunqKey = env('DB_SEED_BUNQ_KEY');
+        $bunqKey = Config::get('forus.seeders.bank_seeder.bunq_key');
         $environment = $this->apiKeyToEnvironmentType($bunqKey);
         $description = 'Forus PSD2 development installation.';
         $errorPrefix = "Could not create BUNQ bank context/installation: ";
 
-        if (!env('DB_SEED_BUNQ_KEY')) {
+        if (!$bunqKey) {
             $this->printWarning($errorPrefix . "The api key is not present in your .env file.");
             return null;
         }
 
         try {
-            $allPermittedIp = json_decode(env('DB_SEED_BUNQ_IP', "[]"), true);
+            $allPermittedIp = json_decode(Config::get('forus.seeders.bank_seeder.bunq_ip', "[]"), true);
             $context = ApiContext::create($environment, $bunqKey, $description, $allPermittedIp);
 
             BunqContext::loadApiContext(ApiContext::fromJson($context->toJson()));
@@ -169,9 +173,10 @@ class BanksTableSeeder extends Seeder
             $oauth_client = $oauth_client ?: OauthClient::get(OauthClient::create()->getValue())->getValue();
 
             return Bank::updateOrCreate(compact('key'), [
-                'name'                  => 'Bunq',
-                'data->context'         => json_decode($context->toJson()),
-                'data->oauth_client'    => $oauth_client,
+                'name' => 'Bunq',
+                'transaction_cost' => .11,
+                'data->context' => json_decode($context->toJson()),
+                'data->oauth_client' => $oauth_client,
             ]);
         } catch (Throwable $e) {
             $error = "[Error] - " . $e->getMessage();
@@ -212,7 +217,7 @@ class BanksTableSeeder extends Seeder
      * @param int $length
      * @return string
      */
-    public function makeHeader(string $header, $length = 80): string
+    public function makeHeader(string $header, int $length = 80): string
     {
         $size = ($length - strlen($header) - 4) / 2;
         $start = str_repeat('=', ceil($size));
@@ -227,7 +232,7 @@ class BanksTableSeeder extends Seeder
      * @param int $offset
      * @return string
      */
-    public function makeText(string $text, $length = 80, $offset = 4): string
+    public function makeText(string $text, int $length = 80, int $offset = 4): string
     {
         return implode("\n", array_map(function($row) use ($offset) {
             return str_repeat(" ", $offset) . $row;

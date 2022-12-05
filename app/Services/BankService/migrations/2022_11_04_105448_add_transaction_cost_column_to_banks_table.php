@@ -13,14 +13,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('banks', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('key', 200);
-            $table->string('name', 200);
-            $table->string('oauth_redirect_id')->nullable();
-            $table->string('oauth_redirect_url', 2000)->nullable();
-            $table->json('data');
-            $table->timestamps();
+        Schema::table('banks', function (Blueprint $table) {
+            $table->decimal('transaction_cost')->default(0)->after('data');
         });
     }
 
@@ -31,6 +25,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('banks');
+        Schema::table('banks', function (Blueprint $table) {
+            $table->dropColumn('transaction_cost');
+        });
     }
 };

@@ -22,6 +22,7 @@ use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
 use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
 use App\Services\BackofficeApiService\Responses\ResidencyResponse;
+use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Models\File;
@@ -75,6 +76,8 @@ use Illuminate\Support\Facades\DB;
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
+ * @property-read Collection|\App\Models\Voucher[] $product_vouchers
+ * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
@@ -310,6 +313,14 @@ class Fund extends BaseModel
     public function budget_vouchers(): HasMany
     {
         return $this->hasMany(Voucher::class)->whereNull('product_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function product_vouchers(): HasMany
+    {
+        return $this->hasMany(Voucher::class)->whereNotNull('product_id');
     }
 
     /**
@@ -703,9 +714,28 @@ class Fund extends BaseModel
      */
     public function getTransactionCosts(): float
     {
-        return $this->voucher_transactions()->where(function(Builder $builder) {
-            $builder->where('voucher_transactions.amount', '>', 0);
-        })->count() * 0.10;
+        $costs = 0;
+        $state = VoucherTransaction::STATE_SUCCESS;
+        $targets = VoucherTransaction::TARGETS_OUTGOING;
+        $targetCostOld = VoucherTransaction::TRANSACTION_COST_OLD;
+
+        foreach (Bank::get() as $bank) {
+            $costs += $this->voucher_transactions()
+                ->where('voucher_transactions.amount', '>', 0)
+                ->where('voucher_transactions.state', $state)
+                ->whereIn('voucher_transactions.target', $targets)
+                ->whereRelation('voucher_transaction_bulk.bank_connection', 'bank_id', $bank->id)
+                ->count() * $bank->transaction_cost;
+        }
+
+        $costs += $this->voucher_transactions()
+            ->where('voucher_transactions.amount', '>', 0)
+                ->where('voucher_transactions.state', $state)
+                ->whereIn('voucher_transactions.target', $targets)
+                ->whereDoesntHave('voucher_transaction_bulk')
+                ->count() * $targetCostOld;
+
+        return $costs;
     }
 
     /**
@@ -1267,7 +1297,7 @@ class Fund extends BaseModel
      */
     public function isExpired(): bool
     {
-        return $this->end_date->isPast();
+        return $this->end_date->clone()->endOfDay()->isPast();
     }
 
     /**

@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $oauth_redirect_id
  * @property string|null $oauth_redirect_url
  * @property array $data
+ * @property string|null $transaction_cost
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder|Bank newModelQuery()
@@ -30,6 +31,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|Bank whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Bank whereOauthRedirectId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Bank whereOauthRedirectUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Bank whereTransactionCost($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Bank whereUpdatedAt($value)
  * @mixin \Eloquent
  */

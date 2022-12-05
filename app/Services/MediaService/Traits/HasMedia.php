@@ -41,12 +41,12 @@ trait HasMedia
 
     /**
      * @param string|null $uid
-     * @param string|null $cloneType
-     * @return $this
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @param string $cloneType
+     * @return static
+     * @throws \Throwable
      * @noinspection PhpUnused
      */
-    public function attachOrCloneMediaByUid(?string $uid, string $cloneType): self
+    public function attachOrCloneMediaByUid(?string $uid, string $cloneType): static
     {
         if ($uid && $media = resolve('media')->findByUid($uid)) {
             // media already assigned to other entity or the type is wrong
