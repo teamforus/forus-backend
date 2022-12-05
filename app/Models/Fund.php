@@ -1679,7 +1679,7 @@ class Fund extends BaseModel
      * @return EmailFrom
      */
     public function getEmailFrom(): EmailFrom {
-        return $this->fund_config->implementation->getEmailFrom() ??
+        return $this->fund_config?->implementation->getEmailFrom() ??
             EmailFrom::createDefault();
     }
 

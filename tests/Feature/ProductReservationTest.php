@@ -265,7 +265,7 @@ class ProductReservationTest extends TestCase
         /** @var Product $product */
         $product = $product->first();
 
-        $this->assertNotNull($voucher);
+        $this->assertNotNull($product);
 
         return $product;
     }

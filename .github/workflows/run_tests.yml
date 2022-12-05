@@ -110,7 +110,7 @@ jobs:
 
       - name: Debug - Check connection from backend to frontend validator dashboard
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "wget http://forus-frontend:6000"
+        run: docker-compose exec -T app bash -c "wget http://forus-frontend:5500"
 
       - name: Install chrome driver
         working-directory: forus-backend
@@ -121,7 +121,7 @@ jobs:
         run: docker-compose exec -T app bash -c "php artisan dusk --debug --verbose --testdox"
 
       - uses: actions/upload-artifact@v3
-        if: failure()
+        if: always()
         with:
           name: Screenshots
           path: |
