@@ -43,13 +43,15 @@ class EmployeeTest extends DuskTestCase
             $browser->script("localStorage.setItem('active_account', '$proxy->access_token')");
             $browser->refresh();
 
+            $browser->waitFor('@fundsTitle');
+
             $browser->waitFor('@identityEmail');
             $browser->assertSeeIn('@identityEmail', $implementation->organization->identity->email);
             $browser->waitFor('@headerOrganizationSwitcher');
             $browser->press('@headerOrganizationSwitcher');
             $browser->waitFor("@headerOrganizationItem$implementation->organization_id");
             $browser->press("@headerOrganizationItem$implementation->organization_id");
-            $browser->pause(1000);
+            $browser->pause(5000);
 
             // Go to employees list and add a new employee of initial role
             $this->goToEmployeesPage($browser);
@@ -81,7 +83,7 @@ class EmployeeTest extends DuskTestCase
         $email = $this->makeUniqueEmail();
         $roles = is_array($role) ? $role : [$role];
 
-        $browser->waitFor('@addEmployee');
+        $browser->waitFor('@addEmployee', 10);
         $browser->press('@addEmployee');
 
         $this->assertNotNull($role);
@@ -89,6 +91,8 @@ class EmployeeTest extends DuskTestCase
         $this->selectEmployeeRoles($browser, $roles, [], [
             '@formEmployeeEmail' => $email,
         ]);
+
+        $browser->waitUntilMissing('@successNotification');
 
         $browser->pause(1000);
 
@@ -121,9 +125,13 @@ class EmployeeTest extends DuskTestCase
 
         // Wait for the form to be submitted
         $browser->waitFor('@successNotification');
+        $browser->waitUntilMissing('@successNotification');
+
+        $browser->pause(1000);
 
         // Check that the new roles have been applied
         $employee->unsetRelation('roles');
+
         $invalidRoles = collect($roles)->pluck('id')->diff($employee->roles->pluck('id'));
         $this->assertTrue($invalidRoles->isEmpty(), 'Not all roles have been removed from the employee.');
     }
@@ -181,6 +189,7 @@ class EmployeeTest extends DuskTestCase
         $browser->waitFor('@btnDangerZoneSubmit');
         $browser->press('@btnDangerZoneSubmit');
         $browser->waitFor('@successNotification');
+        $browser->waitUntilMissing('@successNotification');
 
         $this->assertNotNull($employee->identity->fresh());
         $this->assertTrue($employee->fresh()->trashed());
