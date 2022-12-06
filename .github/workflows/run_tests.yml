@@ -35,12 +35,12 @@ jobs:
         run: echo "Going to use ${{ env.FRONTEND_BRANCH }}"
 
 
-#      - name: Check out forus-frontend repo
-#        uses: actions/checkout@v3
-#        with:
-#          repository: teamforus/forus-frontend
-#          path: forus-frontend
-#          ref: develop
+      - name: Check out forus-frontend repo
+        uses: actions/checkout@v3
+        with:
+          repository: teamforus/forus-frontend
+          path: forus-frontend
+          ref: ${{ env.FRONTEND_BRANCH }}"
 
       - uses: actions/upload-artifact@v3
         if: always()
