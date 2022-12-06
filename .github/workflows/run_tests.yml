@@ -25,14 +25,14 @@ jobs:
         run: |
           if [[ -z "${{ github.event.inputs.frontend_branch }}" ]]; then
             echo "Not Exists github.event.inputs.frontend_branch, setting default"
-            export FRONTEND_BRANCH="develop"
+            echo "FRONTEND_BRANCH=develop" >> $GITHUB_ENV
           else
             echo "Exists ${{ github.event.inputs.frontend_branch }}"
-            export FRONTEND_BRANCH="${{ github.event.inputs.frontend_branch }}"
+            echo "FRONTEND_BRANCH=${{ github.event.inputs.frontend_branch }}"
           fi
 
       - name: "Echo frontend_branch param"
-        run: echo "Going to use $FRONTEND_BRANCH"
+        run: echo "Going to use ${{ env.FRONTEND_BRANCH }}"
 
 
 #      - name: Check out forus-frontend repo
