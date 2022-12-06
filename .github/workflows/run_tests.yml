@@ -23,7 +23,7 @@ jobs:
 #        env:
 #          FRONTEND_BRANCH: ${${{ github.event.inputs.frontend_branch }}:-default}
         run: |
-          if [[ -z "${STEM_ZI}" ]]; then
+          if [[ -z "${{ github.event.inputs.frontend_branch }}" ]]; then
             echo "Not Exists ${{ github.event.inputs.frontend_branch }}"
           else
             echo "Exists ${{ github.event.inputs.frontend_branch }}"
