@@ -21,7 +21,8 @@ jobs:
 
       - name: "Echo frontend_branch param"
         env:
-          FRONTEND_BRANCH_TMP: ${${{ github.event.inputs.frontend_branch }}:-develop}
+          #FRONTEND_BRANCH_MANUAl: 
+          FRONTEND_BRANCH_TMP: ${{{ github.event.inputs.frontend_branch }}:-develop}
         run: echo "FRONTEND_BRANCH=$FRONTEND_BRANCH_TMP" >> $GITHUB_ENV
 #        |
 #          if [[ -z "${{ github.event.inputs.frontend_branch }}" ]]; then
