@@ -22,11 +22,10 @@ jobs:
       - name: Create files
         working-directory: forus-backend
         run: echo ${{ github.event.inputs.frontend_branch }}
-        #run: touch tests/Browser/screenshots/1.png && tests/Browser/screenshots/2.png
 
-      - name: Check files
-        working-directory: forus-backend/tests/Browser
-        run: pwd && ls -l
+#      - name: Check files
+#        working-directory: forus-backend/tests/Browser
+#        run: pwd && ls -l
 
       - uses: actions/upload-artifact@v3
         if: always()
