@@ -40,7 +40,7 @@ jobs:
         with:
           repository: teamforus/forus-frontend
           path: forus-frontend
-          ref: ${{ env.FRONTEND_BRANCH }}"
+          ref: ${{ env.FRONTEND_BRANCH }}
 
       - uses: actions/upload-artifact@v3
         if: always()
