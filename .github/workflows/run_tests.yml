@@ -20,17 +20,21 @@ jobs:
           path: forus-backend
 
       - name: "Echo frontend_branch paramt"
-        env:
-          FRONTEND_BRANCH: ${${{ github.event.inputs.frontend_branch }}:-default}
+#        env:
+#          FRONTEND_BRANCH: ${${{ github.event.inputs.frontend_branch }}:-default}
         run:
-          echo $FRONTEND_BRANCH
+          if [ -n "${{ github.event.inputs.frontend_branch }}" ]; then
+            echo "Exists ${{ github.event.inputs.frontend_branch }}"
+          else
+            echo "Not exists ${{ github.event.inputs.frontend_branch }}"
+          fi
 
-      - name: Check out forus-frontend repo
-        uses: actions/checkout@v3
-        with:
-          repository: teamforus/forus-frontend
-          path: forus-frontend
-          ref: develop
+#      - name: Check out forus-frontend repo
+#        uses: actions/checkout@v3
+#        with:
+#          repository: teamforus/forus-frontend
+#          path: forus-frontend
+#          ref: develop
 
       - uses: actions/upload-artifact@v3
         if: always()
