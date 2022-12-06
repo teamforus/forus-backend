@@ -19,13 +19,18 @@ jobs:
         with:
           path: forus-backend
 
-      - name: Create files
-        working-directory: forus-backend
-        run: echo ${${{ github.event.inputs.frontend_branch }}:-default}
+      - name: "Echo frontend_branch paramt"
+        env:
+          FRONTEND_BRANCH: ${${{ github.event.inputs.frontend_branch }}:-default}
+        run:
+          echo FRONTEND_BRANCH
 
-#      - name: Check files
-#        working-directory: forus-backend/tests/Browser
-#        run: pwd && ls -l
+      - name: Check out forus-frontend repo
+        uses: actions/checkout@v3
+        with:
+          repository: teamforus/forus-frontend
+          path: forus-frontend
+          ref: develop
 
       - uses: actions/upload-artifact@v3
         if: always()
