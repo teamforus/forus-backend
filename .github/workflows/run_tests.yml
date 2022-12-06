@@ -14,16 +14,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout forus-backend repo
-        uses: actions/checkout@v3
-        with:
-          path: forus-backend
+#      - name: Checkout forus-backend repo
+#        uses: actions/checkout@v3
+#        with:
+#          path: forus-backend
 
       - name: "Echo frontend_branch param"
 #        env:
 #          FRONTEND_BRANCH: ${${{ github.event.inputs.frontend_branch }}:-default}
         run:
-          if [[ -z "${{ github.event.inputs.frontend_branch }}" ]]; then
+          #if [[ -z "${{ github.event.inputs.frontend_branch }}" ]]; then
+          if [[ -z "$STEM_ZI" ]]; then
             echo "Exists ${{ github.event.inputs.frontend_branch }}"
           else
             echo "Not exists ${{ github.event.inputs.frontend_branch }}"
