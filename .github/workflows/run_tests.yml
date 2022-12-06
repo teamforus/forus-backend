@@ -19,7 +19,7 @@ jobs:
         with:
           path: forus-backend
 
-      - name: "Echo frontend_branch paramt"
+      - name: "Echo frontend_branch param"
 #        env:
 #          FRONTEND_BRANCH: ${${{ github.event.inputs.frontend_branch }}:-default}
         run:
