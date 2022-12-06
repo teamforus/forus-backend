@@ -23,7 +23,7 @@ jobs:
 #        env:
 #          FRONTEND_BRANCH: ${${{ github.event.inputs.frontend_branch }}:-default}
         run:
-          if [ -n "${{ github.event.inputs.frontend_branch }}" ]; then
+          if [[ -z "${{ github.event.inputs.frontend_branch }}" ]]; then
             echo "Exists ${{ github.event.inputs.frontend_branch }}"
           else
             echo "Not exists ${{ github.event.inputs.frontend_branch }}"
