@@ -23,7 +23,7 @@ jobs:
         env:
           FRONTEND_BRANCH: ${${{ github.event.inputs.frontend_branch }}:-default}
         run:
-          echo FRONTEND_BRANCH
+          echo $FRONTEND_BRANCH
 
       - name: Check out forus-frontend repo
         uses: actions/checkout@v3
