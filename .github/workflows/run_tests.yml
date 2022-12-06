@@ -28,7 +28,7 @@ jobs:
             echo "FRONTEND_BRANCH=develop" >> $GITHUB_ENV
           else
             echo "Exists ${{ github.event.inputs.frontend_branch }}"
-            echo "FRONTEND_BRANCH=${{ github.event.inputs.frontend_branch }}"
+            echo "FRONTEND_BRANCH=${{ github.event.inputs.frontend_branch }}" >> $GITHUB_ENV
           fi
 
       - name: "Echo frontend_branch param"
