@@ -181,7 +181,7 @@ class ImplementationPage extends BaseModel
         foreach ($blocks as $block) {
             $blockData = Arr::only($block, [
                 'type', 'key', 'media_uid', 'label', 'title', 'description',
-                'button_enabled', 'button_text', 'button_link',
+                'button_enabled', 'button_text', 'button_link', 'button_link_target_is_blank',
             ]);
 
             /** @var ImplementationBLock $block */

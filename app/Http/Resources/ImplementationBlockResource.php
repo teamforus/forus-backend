@@ -21,8 +21,8 @@ class ImplementationBlockResource extends BaseJsonResource
         $block = $this->resource;
 
         return array_merge($block->only([
-            'id', 'label', 'title', 'description', 'button_text', 'button_link', 'button_enabled',
-            'description', 'description_html',
+            'id', 'label', 'title', 'description', 'button_text', 'button_link', 
+            'button_link_target_is_blank', 'button_enabled', 'description', 'description_html',
         ]), [
             'media' => new MediaResource($block->photo),
         ]);

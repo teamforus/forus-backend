@@ -32,6 +32,7 @@ class ValidateImplementationPageBlocksRequest extends BaseFormRequest
             'blocks.*.button_enabled'   => 'nullable|boolean',
             'blocks.*.button_text'      => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
             'blocks.*.button_link'      => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
+            'blocks.*.button_link_target_is_blank' => 'nullable|required_if:blocks.*.button_enabled,true|boolean',
             'blocks.*.media_uid.*'      => $this->blockMediaRule(),
         ];
     }

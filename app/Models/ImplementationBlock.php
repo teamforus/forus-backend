@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property bool $button_enabled
  * @property string|null $button_text
  * @property string|null $button_link
+ * @property bool $button_link_target_is_blank
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $description_html
@@ -53,6 +54,7 @@ class ImplementationBlock extends Model
 
     protected $casts = [
         'button_enabled' => 'bool',
+        'button_link_target_is_blank' => 'bool',
     ];
 
     /**
@@ -60,7 +62,7 @@ class ImplementationBlock extends Model
      */
     protected $fillable = [
         'implementation_page_id', 'key', 'type', 'label', 'title', 'description',
-        'button_enabled', 'button_text', 'button_link',
+        'button_enabled', 'button_text', 'button_link', 'button_link_target_is_blank',
     ];
 
     /**
