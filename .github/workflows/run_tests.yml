@@ -3,6 +3,12 @@ name: Run autotests
 on:
   push:
     branches: '**'
+  workflow_dispatch:
+    inputs:
+      frontend_branch:
+        description: 'Frontend branch name'
+        required: false
+        default: 'develop'
 
 jobs:
 
@@ -56,12 +62,22 @@ jobs:
         working-directory: forus-backend
         run: docker-compose exec -T app bash -c "./vendor/bin/phpunit --debug --verbose --testdox tests/Feature/."
 
+      - name: "Set frontend branch value for manual and auto runs"
+        run: |
+          if [[ -z "${{ github.event.inputs.frontend_branch }}" ]]; then
+            echo "Frontend branch param. is not set, setting default 'develop'"
+            echo "FRONTEND_BRANCH=develop" >> $GITHUB_ENV
+          else
+            echo "Frontend branch param is set: ${{ github.event.inputs.frontend_branch }}"
+            echo "FRONTEND_BRANCH=${{ github.event.inputs.frontend_branch }}" >> $GITHUB_ENV
+          fi
+
       - name: Check out forus-frontend repo
         uses: actions/checkout@v3
         with:
           repository: teamforus/forus-frontend
           path: forus-frontend
-          ref: tests-merge
+          ref: ${{ env.FRONTEND_BRANCH }}
 
       - name: docker-compose up
         working-directory: forus-frontend
