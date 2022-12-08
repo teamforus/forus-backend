@@ -76,6 +76,8 @@ use Illuminate\Support\Facades\DB;
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
+ * @property-read Collection|\App\Models\Voucher[] $product_vouchers
+ * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
@@ -311,6 +313,14 @@ class Fund extends BaseModel
     public function budget_vouchers(): HasMany
     {
         return $this->hasMany(Voucher::class)->whereNull('product_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function product_vouchers(): HasMany
+    {
+        return $this->hasMany(Voucher::class)->whereNotNull('product_id');
     }
 
     /**
@@ -1685,7 +1695,7 @@ class Fund extends BaseModel
      * @return EmailFrom
      */
     public function getEmailFrom(): EmailFrom {
-        return $this->fund_config->implementation->getEmailFrom() ??
+        return $this->fund_config?->implementation->getEmailFrom() ??
             EmailFrom::createDefault();
     }
 
