@@ -66,7 +66,7 @@ jobs:
         run: |
           if [[ -z "${{ github.event.inputs.frontend_branch }}" ]]; then
             echo "Frontend branch param. is not set, setting default 'develop'"
-            echo "FRONTEND_BRANCH=develop" >> $GITHUB_ENV
+            echo "FRONTEND_BRANCH=epic.roi" >> $GITHUB_ENV
           else
             echo "Frontend branch param is set: ${{ github.event.inputs.frontend_branch }}"
             echo "FRONTEND_BRANCH=${{ github.event.inputs.frontend_branch }}" >> $GITHUB_ENV
