@@ -9,7 +9,7 @@ use App\Http\Requests\Api\Platform\Organizations\Reimbursements\IndexReimburseme
 use App\Http\Requests\Api\Platform\Organizations\Reimbursements\StoreReimbursementNoteRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\NoteResource;
-use App\Http\Resources\ReimbursementResource;
+use App\Http\Resources\Sponsor\SponsorReimbursementResource;
 use App\Models\Note;
 use App\Models\Organization;
 use App\Models\Reimbursement;
@@ -42,7 +42,7 @@ class ReimbursementsController extends Controller
             'q', 'fund_id', 'from', 'to', 'amount_min', 'amount_max', 'state', 'expired',
         ]), $query);
 
-        return ReimbursementResource::queryCollection($search->query()->latest(), $request);
+        return SponsorReimbursementResource::queryCollection($search->query()->latest(), $request);
     }
 
     /**
@@ -50,16 +50,16 @@ class ReimbursementsController extends Controller
      *
      * @param Organization $organization
      * @param Reimbursement $reimbursement
-     * @return ReimbursementResource
+     * @return SponsorReimbursementResource
      * @throws AuthorizationException
      */
     public function show(
         Organization $organization,
         Reimbursement $reimbursement
-    ): ReimbursementResource {
+    ): SponsorReimbursementResource {
         $this->authorize('viewAsSponsor', [$reimbursement, $organization]);
 
-        return ReimbursementResource::create($reimbursement);
+        return SponsorReimbursementResource::create($reimbursement);
     }
 
     /**
@@ -68,17 +68,17 @@ class ReimbursementsController extends Controller
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Reimbursement $reimbursement
-     * @return ReimbursementResource
+     * @return SponsorReimbursementResource
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function assign(
         BaseFormRequest $request,
         Organization $organization,
         Reimbursement $reimbursement
-    ): ReimbursementResource {
+    ): SponsorReimbursementResource {
         $this->authorize('assign', [$reimbursement, $organization]);
 
-        return ReimbursementResource::create($reimbursement->assign(
+        return SponsorReimbursementResource::create($reimbursement->assign(
             $request->employee($organization)
         ));
     }
@@ -88,17 +88,17 @@ class ReimbursementsController extends Controller
      *
      * @param Organization $organization
      * @param Reimbursement $reimbursement
-     * @return ReimbursementResource
+     * @return SponsorReimbursementResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
     public function resign(
         Organization $organization,
         Reimbursement $reimbursement
-    ): ReimbursementResource {
+    ): SponsorReimbursementResource {
         $this->authorize('resign', [$reimbursement, $organization]);
 
-        return ReimbursementResource::create($reimbursement->resign());
+        return SponsorReimbursementResource::create($reimbursement->resign());
     }
 
     /**
@@ -107,17 +107,17 @@ class ReimbursementsController extends Controller
      * @param ApproveReimbursementsRequest $request
      * @param Organization $organization
      * @param Reimbursement $reimbursement
-     * @return ReimbursementResource
+     * @return SponsorReimbursementResource
      * @throws Throwable
      */
     public function approve(
         ApproveReimbursementsRequest $request,
         Organization $organization,
         Reimbursement $reimbursement
-    ): ReimbursementResource {
+    ): SponsorReimbursementResource {
         $this->authorize('resolve', [$reimbursement, $organization]);
 
-        return ReimbursementResource::create($reimbursement->approve(
+        return SponsorReimbursementResource::create($reimbursement->approve(
             $request->input('note')
         ));
     }
@@ -128,17 +128,17 @@ class ReimbursementsController extends Controller
      * @param DeclineReimbursementsRequest $request
      * @param Organization $organization
      * @param Reimbursement $reimbursement
-     * @return ReimbursementResource
+     * @return SponsorReimbursementResource
      * @throws Throwable
      */
     public function decline(
         DeclineReimbursementsRequest $request,
         Organization $organization,
         Reimbursement $reimbursement
-    ): ReimbursementResource {
+    ): SponsorReimbursementResource {
         $this->authorize('resolve', [$reimbursement, $organization]);
 
-        return ReimbursementResource::create($reimbursement->decline(
+        return SponsorReimbursementResource::create($reimbursement->decline(
             $request->input('note'),
             $request->input('reason'),
         ));

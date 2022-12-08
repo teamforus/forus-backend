@@ -41,7 +41,7 @@ class StoreReimbursementRequest extends BaseFormRequest
             'amount' => $this->amountRule($this->identity()),
             'email' => 'nullable|string|max:200',
             'iban' => ['required', 'string', new IbanRule()],
-            'iban_name' => 'required|string|min:5|max:200',
+            'iban_name' => 'required|string|min:5|max:100',
             'voucher_id' => $this->voucherIdRule(),
             'state' => 'nullable|in:' . implode(',', [
                 Reimbursement::STATE_DRAFT,

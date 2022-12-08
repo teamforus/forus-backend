@@ -402,7 +402,7 @@ class EventLogService implements IEventLogService
             'employee_id' => $reimbursement->employee_id,
             'iban' => $reimbursement->iban,
             'iban_name' => $reimbursement->iban_name,
-            'reason' => $reimbursement->reason,
+            'reason' => $reimbursement->reason ?: '',
             'state' => $reimbursement->state,
             'submitted_at' => $reimbursement->submitted_at?->format('Y-m-d H:i:s'),
             'resolved_at' => $reimbursement->resolved_at?->format('Y-m-d H:i:s'),

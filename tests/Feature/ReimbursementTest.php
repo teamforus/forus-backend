@@ -46,9 +46,6 @@ class ReimbursementTest extends TestCase
         'employee_id',
         'expired',
         'resolved',
-        'identity_email',
-        'identity_bsn',
-        'employee',
         'fund' => [
             'id',
             'name',
@@ -504,8 +501,8 @@ class ReimbursementTest extends TestCase
     protected function makeReimbursementRequestBody(?Voucher $voucher = null, array $headers = []): array
     {
         return [
-            'title' => fake()->text(60),
-            'description' => fake()->text(600),
+            'title' => $this->faker->text(60),
+            'description' => $this->faker->text(600),
             'amount' => random_int(1, 10),
             'iban' => $this->faker()->iban('NL'),
             'iban_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,

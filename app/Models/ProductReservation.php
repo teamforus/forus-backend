@@ -45,7 +45,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $logs_count
  * @property-read \App\Models\Product $product
  * @property-read \App\Models\Voucher|null $product_voucher
- * @property-read \App\Models\Voucher|null $voucher
+ * @property-read \App\Models\Voucher $voucher
  * @property-read \App\Models\VoucherTransaction|null $voucher_transaction
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation newQuery()

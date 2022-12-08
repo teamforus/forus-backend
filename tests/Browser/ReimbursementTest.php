@@ -471,8 +471,8 @@ class ReimbursementTest extends DuskTestCase
     protected function makeReimbursementData(Voucher $voucher): array
     {
         return [
-            'title' => fake()->text(60),
-            'description' => fake()->text(600),
+            'title' => $this->faker->text(60),
+            'description' => $this->faker->text(600),
             'amount' => random_int(1, 10),
             'iban' => $this->faker()->iban('NL'),
             'iban_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,

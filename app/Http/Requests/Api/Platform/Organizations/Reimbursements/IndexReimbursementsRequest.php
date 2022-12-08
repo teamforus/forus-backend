@@ -43,7 +43,7 @@ class IndexReimbursementsRequest extends BaseFormRequest
     {
         return [
             'nullable',
-            Rule::in(FundQuery::whereIsInternalConfiguredAndActive(
+            Rule::in(FundQuery::whereIsInternalAndConfigured(
                 $this->organization->funds()
             )->pluck('id')->toArray())
         ];

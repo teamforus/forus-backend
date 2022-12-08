@@ -31,16 +31,12 @@ class ReimbursementResource extends BaseJsonResource
     public function toArray($request): array
     {
         $reimbursement = $this->resource;
-        $bsn_enabled = $reimbursement->voucher->fund->organization->bsn_enabled;
 
         return array_merge($reimbursement->only([
             'id', 'title', 'description', 'amount', 'amount_locale', 'iban', 'iban_name', 'voucher_id',
-            'code', 'state', 'state_locale', 'lead_time_locale', 'employee_id', 'expired',
+            'code', 'state', 'state_locale', 'lead_time_locale', 'employee_id', 'expired', 'voucher_deactivated',
         ]), [
             'resolved' => $reimbursement->isResolved(),
-            'identity_email' => $reimbursement->voucher->identity->email,
-            'identity_bsn' => $bsn_enabled ? $reimbursement->voucher->identity->bsn : null,
-            'employee' => EmployeeResource::create($reimbursement->employee),
             'fund' => $this->fundResource($reimbursement->voucher->fund, $request),
             'files' => FileResource::collection($reimbursement->files),
             'resolved_at' => $reimbursement->resolved_at?->format('Y-m-d'),

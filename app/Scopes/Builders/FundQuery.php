@@ -212,6 +212,16 @@ class FundQuery
 
     /**
      * @param Builder|Relation|Fund $query
+     * @return Builder|Relation|Fund
+     */
+    public static function whereIsInternalAndConfigured(
+        Builder|Relation|Fund $query
+    ): Builder|Relation|Fund {
+        return self::whereIsInternal(self::whereIsConfiguredByForus($query));
+    }
+
+    /**
+     * @param Builder|Relation|Fund $query
      * @param string $balanceProvider
      * @return Builder|Relation|Fund
      */

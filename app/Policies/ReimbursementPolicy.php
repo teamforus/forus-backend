@@ -125,6 +125,10 @@ class ReimbursementPolicy
             return $this->deny('not_assigned');
         }
 
+        if ($reimbursement->voucher->isDeactivated()) {
+            return $this->deny('voucher_deactivated');
+        }
+
         if ($reimbursement->expired) {
             return $this->deny('expired');
         }
@@ -280,7 +284,7 @@ class ReimbursementPolicy
             return false;
         }
 
-        if ($note?->employee?->identity_address !== $identity->address) {
+        if ($note->employee?->identity_address !== $identity->address) {
             return $this->deny('not_author');
         }
 

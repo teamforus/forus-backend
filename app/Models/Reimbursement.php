@@ -41,15 +41,16 @@ use Throwable;
  * @property-read \App\Models\Employee|null $employee
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\FileService\Models\File[] $files
  * @property-read int|null $files_count
- * @property-read string $amount_locale
+ * @property-read string|null $amount_locale
  * @property-read \Carbon\Carbon|null $expire_at
- * @property-read string $expire_at_locale
+ * @property-read string|null $expire_at_locale
  * @property-read bool $expired
  * @property-read int|null $lead_time_days
  * @property-read string $lead_time_locale
- * @property-read string $resolved_at_locale
+ * @property-read string|null $resolved_at_locale
  * @property-read string $state_locale
- * @property-read string $submitted_at_locale
+ * @property-read string|null $submitted_at_locale
+ * @property-read bool $voucher_deactivated
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Note[] $notes
@@ -169,6 +170,15 @@ class Reimbursement extends Model
     public function getExpiredAttribute(): bool
     {
         return !$this->isResolved() && $this->voucher->expired;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getVoucherDeactivatedAttribute(): bool
+    {
+        return !$this->isResolved() && $this->voucher->isDeactivated();
     }
 
     /**
@@ -383,7 +393,7 @@ class Reimbursement extends Model
             $this->addNote($note, $this->employee);
         }
 
-        ReimbursementResolved::broadcast($this, $this->employee);
+        ReimbursementResolved::dispatch($this, $this->employee);
 
         return $this;
     }

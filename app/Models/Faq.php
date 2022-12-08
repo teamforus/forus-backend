@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Builder;
  * App\Models\Faq
  *
  * @property int $id
+ * @property int $faq_id
+ * @property string $faq_type
  * @property string $title
  * @property string $description
- * @property int|null $faq_id
- * @property string|null $faq_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $description_html
@@ -23,11 +23,11 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static Builder|Faq newQuery()
  * @method static Builder|Faq query()
  * @method static Builder|Faq whereCreatedAt($value)
- * @method static Builder|Faq whereId($value)
- * @method static Builder|Faq whereTitle($value)
  * @method static Builder|Faq whereDescription($value)
  * @method static Builder|Faq whereFaqId($value)
  * @method static Builder|Faq whereFaqType($value)
+ * @method static Builder|Faq whereId($value)
+ * @method static Builder|Faq whereTitle($value)
  * @method static Builder|Faq whereUpdatedAt($value)
  * @mixin \Eloquent
  */
