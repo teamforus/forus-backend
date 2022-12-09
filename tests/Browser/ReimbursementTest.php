@@ -225,7 +225,7 @@ class ReimbursementTest extends DuskTestCase
     {
         $browser->waitFor('@reimbursementFormSave');
         $browser->press('@reimbursementFormSave');
-        $browser->waitFor('@reimbursementsList');
+        $browser->waitFor('@reimbursementsList', 10);
     }
 
     /**
@@ -245,7 +245,7 @@ class ReimbursementTest extends DuskTestCase
 
         $browser->waitFor('@modalReimbursementConfirmationSubmit');
         $browser->press('@modalReimbursementConfirmationSubmit');
-        $browser->waitFor('@reimbursementsList');
+        $browser->waitFor('@reimbursementsList', 10);
     }
 
     /**
@@ -530,6 +530,6 @@ class ReimbursementTest extends DuskTestCase
             $browser->press('@reimbursementsFilterExpired');
         }
 
-        $browser->waitFor('@reimbursementsList');
+        $browser->waitFor('@reimbursementsList', 10);
     }
 }

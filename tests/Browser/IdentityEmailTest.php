@@ -100,10 +100,10 @@ class IdentityEmailTest extends DuskTestCase
 
             // Authorize identity
             $this->applyIdentityProxy($browser, $proxy);
-            $browser->pause( 5000);
+            $browser->pause(5000);
 
             $this->goToIdentityEmailPage($browser, $identity);
-            $browser->pause( 5000);
+            $browser->pause(5000);
 
             $email = $this->addNewEmail($browser, $proxy->identity);
 
@@ -117,10 +117,10 @@ class IdentityEmailTest extends DuskTestCase
 
             // Verify email
             $browser->visit($this->findFirstEmailVerificationLink($identityEmail->email, $startTime));
-            $browser->pause( 5000);
+            $browser->pause(5000);
 
             $this->goToIdentityEmailPage($browser, $identity);
-            $browser->pause( 5000);
+            $browser->pause(5000);
 
             $this->setEmailAsPrimary($browser, $identityEmail);
             $this->deleteEmail($browser, $identity);
