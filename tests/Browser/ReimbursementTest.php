@@ -225,7 +225,7 @@ class ReimbursementTest extends DuskTestCase
     {
         $browser->waitFor('@reimbursementFormSave');
         $browser->press('@reimbursementFormSave');
-        $browser->waitFor('@reimbursementsList', 10);
+        $browser->waitFor('@reimbursementsList', 20);
     }
 
     /**
