@@ -98,51 +98,75 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
         }
 
         return $funds->map(function(Fund $fund) {
-            $details = Fund::getFundDetails($fund->budget_vouchers()->getQuery());
-
-            $budgetUsedPercentage = $details['vouchers_amount'] ? (
-                $fund->budget_used_active_vouchers / $details['vouchers_amount'] * 100) : 0;
-
-            $averagePerVoucher = $details['vouchers_count'] ?
-                $details['vouchers_amount'] / $details['vouchers_count'] : 0;
-
-            $budgetLeft = $details['vouchers_amount'] - $fund->budget_used_active_vouchers;
-
-            $budgetLeftPercentage = $details['vouchers_amount'] ?
-                (($details['vouchers_amount'] - $fund->budget_used_active_vouchers) / $details['vouchers_amount'] * 100) : 0;
-
-            $inactiveVouchersPercentage = $details['vouchers_amount'] ?
-                ($details['inactive_amount'] / $details['vouchers_amount'] * 100) : 0;
-
-            $activeVouchersPercentage = $details['vouchers_amount'] ?
-                ($details['active_amount'] / $details['vouchers_amount'] * 100) : 0;
-
-            return collect([
-                "name"                          => $fund->name,
-                "amount_per_voucher"            => currency_format($fund->fund_formulas->sum('amount')),
-                "average_per_voucher"           => currency_format($averagePerVoucher),
-                "total_spent_amount"            => currency_format($fund->budget_used_active_vouchers),
-                "total_spent_percentage"        => currency_format($budgetUsedPercentage / 100),
-                "total_left"                    => currency_format($budgetLeft),
-                "total_left_percentage"         => currency_format($budgetLeftPercentage / 100),
-
-                "vouchers_amount"               => currency_format($details['vouchers_amount']),
-                "vouchers_count"                => (string) $details['vouchers_count'],
-                "vouchers_inactive_count"       => currency_format($details['inactive_count'], 0),
-                "vouchers_inactive_amount"      => currency_format($details['inactive_amount']),
-                "vouchers_inactive_percentage"  => currency_format($inactiveVouchersPercentage / 100),
-                "vouchers_active_amount"        => currency_format($details['active_amount']),
-                "vouchers_active_percentage"    => currency_format($activeVouchersPercentage / 100),
-                "vouchers_active_count"         => currency_format($details['active_count'], 0),
-            ])->mapWithKeys(function($value, $key) {
-                return [$this->trans($key) => $value];
-            })->toArray();
+            return $this->getVoucherData($fund);
         });
     }
 
     /**
+     * @param Fund $fund
+     * @return array
+     */
+    protected function getVoucherData (Fund $fund): array
+    {
+        $detailsByType = [
+            'budget'  => Fund::getFundDetails($fund->budget_vouchers()->getQuery()),
+            'product' => Fund::getFundDetails($fund->product_vouchers()->getQuery()),
+        ];
+        $voucherData = [];
+
+        foreach ($detailsByType as $type => $details) {
+            if ($type == "budget") {
+                $budgetUsedPercentage = $details['vouchers_amount'] ? (
+                    $fund->budget_used_active_vouchers / $details['vouchers_amount'] * 100) : 0;
+
+                $averagePerVoucher = $details['vouchers_count'] ?
+                    $details['vouchers_amount'] / $details['vouchers_count'] : 0;
+
+                $budgetLeft = $details['vouchers_amount'] - $fund->budget_used_active_vouchers;
+
+                $budgetLeftPercentage = $details['vouchers_amount'] ?
+                    (($details['vouchers_amount'] - $fund->budget_used_active_vouchers) / $details['vouchers_amount'] * 100) : 0;
+
+                $inactiveVouchersPercentage = $details['vouchers_amount'] ?
+                    ($details['inactive_amount'] / $details['vouchers_amount'] * 100) : 0;
+
+                $activeVouchersPercentage = $details['vouchers_amount'] ?
+                    ($details['active_amount'] / $details['vouchers_amount'] * 100) : 0;
+
+                $voucherData = [
+                    "{$type}_amount_per_voucher"            => currency_format($fund->fund_formulas->sum('amount')),
+                    "{$type}_average_per_voucher"           => currency_format($averagePerVoucher),
+                    "{$type}_total_spent_amount"            => currency_format($fund->budget_used_active_vouchers),
+                    "{$type}_total_spent_percentage"        => currency_format($budgetUsedPercentage / 100),
+                    "{$type}_total_left"                    => currency_format($budgetLeft),
+                    "{$type}_total_left_percentage"         => currency_format($budgetLeftPercentage / 100),
+                    "{$type}_vouchers_count"                => (string) $details['vouchers_count'],
+                    "{$type}_vouchers_inactive_count"       => currency_format($details['inactive_count'], 0),
+                    "{$type}_vouchers_inactive_percentage"  => currency_format($inactiveVouchersPercentage / 100),
+                    "{$type}_vouchers_active_percentage"    => currency_format($activeVouchersPercentage / 100),
+                    "{$type}_vouchers_active_count"         => currency_format($details['active_count'], 0),
+                    "{$type}_deactivated_vouchers_count"    => $details['deactivated_count'],
+                ];
+            }
+
+            $voucherData = array_merge($voucherData, [
+                "{$type}_vouchers_amount"               => currency_format($details['vouchers_amount']),
+                "{$type}_vouchers_active_amount"        => currency_format($details['active_amount']),
+                "{$type}_vouchers_inactive_amount"      => currency_format($details['inactive_amount']),
+                "{$type}_deactivated_amount"            => currency_format($details['deactivated_amount']),
+            ]);
+        }
+
+        return collect(array_merge([
+            "name" => $fund->name,
+        ], $voucherData))->mapWithKeys(function($value, $key) {
+            return [$this->trans($key) => $value];
+        })->toArray();
+    }
+
+    /**
      * @param string $key
-     * @return string
+     * @return string|null
      */
     protected function trans(string $key): ?string
     {
