@@ -45,6 +45,9 @@ class StoreProductReservationRequest extends BaseFormRequest
                 'exists:products,id',
                 new ProductIdToReservationRule($this->input('voucher_address'))
             ],
+            'contact_information_rule' => empty($this->identity()->email) ? [
+                'required'
+            ] : [],
         ];
     }
 }
