@@ -11,7 +11,7 @@ use Illuminate\Support\Arr;
 /**
  * Custom mailing from the sponsor
  */
-class IdentityRequesterSponsorCustomNotification extends BaseIdentityFundNotification
+class  IdentityRequesterSponsorCustomNotification extends BaseIdentityFundNotification
 {
     protected static ?string $key = 'notifications_identities.requester_sponsor_custom_notification';
 

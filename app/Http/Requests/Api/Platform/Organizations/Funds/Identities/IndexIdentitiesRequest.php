@@ -30,7 +30,7 @@ class IndexIdentitiesRequest extends BaseFormRequest
 
         return [
             'per_page' => $this->perPageRule(),
-            'target' => 'nullable|in:all,has_balance,self',
+            'target' => 'nullable|in:all-providers,confirmed-providers,declined-providers,all,has_balance,self',
             'has_email' => 'nullable|boolean',
             'order_by' => 'nullable|in:' . $orderFields,
             'order_dir' => 'nullable|in:asc,desc',

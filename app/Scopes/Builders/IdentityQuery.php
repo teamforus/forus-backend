@@ -44,4 +44,14 @@ class IdentityQuery
                 ->select('email'),
         ]);
     }
+
+
+    public static function countProviders(Relation|Builder $builder, int $fund_id): Relation|Builder
+    {
+        return $builder->addSelect([
+            'email' => IdentityEmail::query()
+                ->where('fund_id', "=", $fund_id)
+                ->count(),
+        ]);
+    }
 }

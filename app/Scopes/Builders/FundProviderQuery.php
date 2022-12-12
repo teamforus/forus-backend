@@ -6,6 +6,7 @@ namespace App\Scopes\Builders;
 use App\Models\FundProvider;
 use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
+use function GuzzleHttp\Psr7\build_query;
 
 /**
  * Class FundProviderQuery
@@ -108,5 +109,15 @@ class FundProviderQuery
         )->whereHas('voucher', function(Builder $builder) use ($fund_id) {
             $builder->whereIn('fund_id', (array) $fund_id);
         }), 'usage')->orderBy('usage', 'DESC');
+    }
+
+    public static function whereDeclinedForFundsFilter($fund_id)
+    {
+        $providersApproved = FundProvider::where(function (Builder $builder) use ($fund_id) {
+            FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id);
+        })->get();
+        $providersApproved = $providersApproved->pluck("id")->toArray();
+        $providersDeclined = FundProvider::where("fund_id", $fund_id)->whereNotIn("id" , $providersApproved)->get();
+        return $providersDeclined;
     }
 }
