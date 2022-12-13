@@ -10,10 +10,11 @@ use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Tests\Traits\MakesTestIdentities;
 
 class AuthenticationTest extends DuskTestCase
 {
-    use AssertsSentEmails;
+    use AssertsSentEmails, MakesTestIdentities;
 
     /**
      * A Dusk test example.
@@ -63,7 +64,7 @@ class AuthenticationTest extends DuskTestCase
             $this->assertEmailRestoreLinkSent($identity->email, $startTime);
 
             // Get and follow the auth link from the email then check if the user is authenticated
-            $browser->visit($this->findFirstEmalRestoreLink($identity->email, $startTime));
+            $browser->visit($this->findFirstEmailRestoreLink($identity->email, $startTime));
             $browser->pause(500);
 
             $browser->waitFor('@identityEmail');
@@ -90,7 +91,7 @@ class AuthenticationTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($startTime) {
             // Find nijmegen implementation and define target email
-            $email = microtime(true) . "@example.com";
+            $email = $this->makeUniqueEmail();
             $implementation = Implementation::where('key', 'nijmegen')->first();
 
             // Implementation exist
@@ -124,7 +125,7 @@ class AuthenticationTest extends DuskTestCase
             $this->assertEmailConfirmationLinkSent($email, $startTime);
 
             // Get and follow the auth link from the email then check if the user is authenticated
-            $browser->visit($this->findFirstEmalConfirmationLink($email, $startTime));
+            $browser->visit($this->findFirstEmailConfirmationLink($email, $startTime));
             $browser->pause(500);
 
             // Logout identity
