@@ -76,7 +76,8 @@ class ProductReservationResource extends JsonResource
             'expired' => $reservation->hasExpired(),
             'product' => array_merge($reservation->product->only('id', 'name'), [
                 'deleted' => $reservation->product->trashed(),
-                'organization' => $reservation->product->organization->only('id', 'name')
+                'organization' => $reservation->product->organization->only('id', 'name'),
+                'photo' => new MediaResource($reservation->product->photo),
             ]),
             'fund' => $voucher->fund->only('id', 'name'),
             'voucher_transaction' => $transaction ? $transaction->only('id', 'address') : null,
