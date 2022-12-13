@@ -528,8 +528,8 @@ class ReimbursementTest extends DuskTestCase
         Reimbursement $reimbursement,
     ): void {
         if ($reimbursement->expired) {
-            $browser->waitFor('@reimbursementsFilterExpired');
-            $browser->press('@reimbursementsFilterExpired');
+            $browser->waitFor('@reimbursementsFilterArchived');
+            $browser->press('@reimbursementsFilterArchived');
         }
 
         $browser->waitFor('@reimbursementsList', 10);
