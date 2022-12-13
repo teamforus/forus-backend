@@ -9,9 +9,8 @@ use App\Http\Requests\Api\Platform\Reimbursements\StoreReimbursementRequest;
 use App\Http\Requests\Api\Platform\Reimbursements\UpdateReimbursementRequest;
 use App\Http\Resources\ReimbursementResource;
 use App\Models\Reimbursement;
-use App\Scopes\Builders\ReimbursementQuery;
+use App\Searches\ReimbursementsSearch;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -28,27 +27,10 @@ class ReimbursementsController extends Controller
     {
         $this->authorize('viewAny', Reimbursement::class);
 
-        $query = Reimbursement::whereHas('voucher', fn(Builder $builder) => $builder->whereIn(
-            'id', $request->identity()->vouchers()->select('vouchers.id')
-        ));
+        $builder = Reimbursement::whereRelation('voucher', 'identity_address', $request->auth_address());
+        $search = new ReimbursementsSearch($request->only('state', 'fund_id', 'archived'), $builder);
 
-        if ($request->input('state')) {
-            $query->where('state', $request->input('state'));
-        }
-
-        if ($request->has('expired') && $request->boolean('expired')) {
-            ReimbursementQuery::whereExpired($query);
-        }
-
-        if ($request->has('expired') && !$request->boolean('expired')) {
-            ReimbursementQuery::whereNotExpired($query);
-        }
-
-        if ($request->input('fund_id')) {
-            $query->whereRelation('voucher', 'fund_id', '=', $request->input('fund_id'));
-        }
-
-        return ReimbursementResource::queryCollection($query->latest(), $request);
+        return ReimbursementResource::queryCollection($search->query()->latest(), $request);
     }
 
     /**

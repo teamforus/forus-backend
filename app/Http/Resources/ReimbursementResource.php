@@ -34,7 +34,8 @@ class ReimbursementResource extends BaseJsonResource
 
         return array_merge($reimbursement->only([
             'id', 'title', 'description', 'amount', 'amount_locale', 'iban', 'iban_name', 'voucher_id',
-            'code', 'state', 'state_locale', 'lead_time_locale', 'employee_id', 'expired', 'voucher_deactivated',
+            'code', 'state', 'state_locale', 'lead_time_locale', 'employee_id', 'expired',
+            'deactivated', 'reason',
         ]), [
             'resolved' => $reimbursement->isResolved(),
             'fund' => $this->fundResource($reimbursement->voucher->fund, $request),

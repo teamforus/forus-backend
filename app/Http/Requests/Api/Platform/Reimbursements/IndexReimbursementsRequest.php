@@ -27,7 +27,7 @@ class IndexReimbursementsRequest extends BaseFormRequest
         return [
             'per_page' => $this->perPageRule(),
             'state' => 'nullable|in:' . implode(',', Reimbursement::STATES),
-            'expired' => 'nullable|boolean',
+            'archived' => 'nullable|boolean',
             'fund_id' => 'nullable|exists:funds,id',
         ];
     }

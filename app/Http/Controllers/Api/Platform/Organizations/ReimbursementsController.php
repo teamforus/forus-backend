@@ -39,7 +39,8 @@ class ReimbursementsController extends Controller
         $query = $query->whereRelation('voucher.fund', 'organization_id', $organization->id);
 
         $search = new ReimbursementsSearch($request->only([
-            'q', 'fund_id', 'from', 'to', 'amount_min', 'amount_max', 'state', 'expired',
+            'q', 'fund_id', 'from', 'to', 'amount_min', 'amount_max', 'state',
+            'expired', 'archived', 'deactivated',
         ]), $query);
 
         return SponsorReimbursementResource::queryCollection($search->query()->latest(), $request);

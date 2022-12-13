@@ -11,7 +11,6 @@ use App\Models\Traits\UpdatesModel;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Traits\HasFiles;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -50,7 +49,7 @@ use Throwable;
  * @property-read string|null $resolved_at_locale
  * @property-read string $state_locale
  * @property-read string|null $submitted_at_locale
- * @property-read bool $voucher_deactivated
+ * @property-read bool $deactivated
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Note[] $notes
@@ -85,7 +84,7 @@ use Throwable;
  */
 class Reimbursement extends Model
 {
-    use HasFactory, SoftDeletes, HasFiles, HasNotes, HasTags, UpdatesModel, HasLogs;
+    use SoftDeletes, HasFiles, HasNotes, HasTags, UpdatesModel, HasLogs;
 
     public const STATE_DRAFT = 'draft';
     public const STATE_PENDING = 'pending';
@@ -176,7 +175,7 @@ class Reimbursement extends Model
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getVoucherDeactivatedAttribute(): bool
+    public function getDeactivatedAttribute(): bool
     {
         return !$this->isResolved() && $this->voucher->isDeactivated();
     }

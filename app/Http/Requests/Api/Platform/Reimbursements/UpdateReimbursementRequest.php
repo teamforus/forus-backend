@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Reimbursements;
 use App\Models\Reimbursement;
 use App\Rules\Base\IbanRule;
 use App\Rules\FileUidRule;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * @property Reimbursement $reimbursement
@@ -18,7 +19,7 @@ class UpdateReimbursementRequest extends StoreReimbursementRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows('update', $this->reimbursement);
     }
 
     /**

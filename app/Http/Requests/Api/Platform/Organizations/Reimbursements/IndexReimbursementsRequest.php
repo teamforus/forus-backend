@@ -31,8 +31,10 @@ class IndexReimbursementsRequest extends BaseFormRequest
     {
         return [
             'fund_id' => $this->fundIdRule(),
-            'per_page' => $this->perPageRule(),
             'expired' => 'nullable|boolean',
+            'archived' => 'nullable|boolean',
+            'deactivated' => 'nullable|boolean',
+            'per_page' => $this->perPageRule(),
         ];
     }
 

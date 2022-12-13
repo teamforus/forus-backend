@@ -35,16 +35,12 @@ class ReimbursementsSearch extends BaseSearch
             $builder->whereRelation('voucher', 'fund_id', $this->getFilter('fund_id'));
         }
 
-        if ($this->hasFilter('state')) {
-            $builder->where('state', $this->getFilter('state'));
-        }
-
         if ($this->hasFilter('from')) {
-            $builder->where('created_at', Carbon::parse($this->getFilter('from'))->startOfDay());
+            $builder->where('created_at', '>=', Carbon::parse($this->getFilter('from'))->startOfDay());
         }
 
         if ($this->hasFilter('to')) {
-            $builder->where('created_at', Carbon::parse($this->getFilter('to'))->endOfDay());
+            $builder->where('created_at', '<=', Carbon::parse($this->getFilter('to'))->endOfDay());
         }
 
         if ($this->hasFilter('amount_min')) {
@@ -55,6 +51,39 @@ class ReimbursementsSearch extends BaseSearch
             $builder->where('amount', '<=', $this->getFilter('amount_max'));
         }
 
+        $this->filterByStateAndExpiration($builder);
+        $this->filterByQueryString($builder);
+
+        return $builder;
+    }
+
+    /**
+     * @param Builder|Relation|Reimbursement $builder
+     * @return Reimbursement|Builder|Relation
+     */
+    protected function filterByStateAndExpiration(
+        Builder|Relation|Reimbursement $builder
+    ): Builder|Relation|Reimbursement {
+        if ($this->hasFilter('state')) {
+            $builder->where('state', $this->getFilter('state'));
+        }
+
+        if ($this->hasFilter('archived') && $this->getFilter('archived')) {
+            ReimbursementQuery::whereArchived($builder);
+        }
+
+        if ($this->hasFilter('archived') && !$this->getFilter('archived')) {
+            ReimbursementQuery::whereNotArchived($builder);
+        }
+
+        if ($this->hasFilter('deactivated') && $this->getFilter('deactivated')) {
+            ReimbursementQuery::whereDeactivated($builder);
+        }
+
+        if ($this->hasFilter('deactivated') && !$this->getFilter('deactivated')) {
+            ReimbursementQuery::whereNotDeactivated($builder);
+        }
+
         if ($this->hasFilter('expired') && $this->getFilter('expired')) {
             ReimbursementQuery::whereExpired($builder);
         }
@@ -63,7 +92,7 @@ class ReimbursementsSearch extends BaseSearch
             ReimbursementQuery::whereNotExpired($builder);
         }
 
-        return $this->filterByQueryString($builder);
+        return $builder;
     }
 
     /**
@@ -80,9 +109,8 @@ class ReimbursementsSearch extends BaseSearch
                 $addresses = IdentityEmail::searchByEmail($q)->pluck('identity_address');
                 $bsnIdentities = Identity::searchByBsn($q)?->pluck('address');
 
-                $builder
-                    ->whereIn('address', $addresses ?: [])
-                    ->orWhereIn('address', $bsnIdentities ?: []);
+                $builder->whereIn('address', $addresses ?: []);
+                $builder->orWhereIn('address', $bsnIdentities ?: []);
             });
         }
 
