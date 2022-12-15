@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('implementation_blocks', function (Blueprint $table) {
-            $table->boolean('button_target_blank')->default(false)->after('button_link');
+            $table->boolean('button_target_blank')->default(true)->after('button_link');
         });
     }
 
