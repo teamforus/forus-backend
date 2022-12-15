@@ -6,7 +6,6 @@ use App\Models\ImplementationBlock;
 
 /**
  * @property ImplementationBlock $resource
- * @noinspection PhpUnused
  */
 class ImplementationBlockResource extends BaseJsonResource
 {
@@ -21,8 +20,8 @@ class ImplementationBlockResource extends BaseJsonResource
         $block = $this->resource;
 
         return array_merge($block->only([
-            'id', 'label', 'title', 'description', 'button_text', 'button_link', 
-            'button_link_target_is_blank', 'button_enabled', 'description', 'description_html',
+            'id', 'label', 'title', 'description', 'description_html',
+            'button_text', 'button_link', 'button_target_blank', 'button_enabled',
         ]), [
             'media' => new MediaResource($block->photo),
         ]);

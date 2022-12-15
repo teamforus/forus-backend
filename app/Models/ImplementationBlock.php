@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Traits\HasMarkdownDescription;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -23,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property bool $button_enabled
  * @property string|null $button_text
  * @property string|null $button_link
- * @property bool $button_link_target_is_blank
+ * @property bool $button_target_blank
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $description_html
@@ -36,6 +35,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock query()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereButtonEnabled($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereButtonLink($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereButtonTargetBlank($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereButtonText($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereDescription($value)
@@ -50,11 +50,11 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  */
 class ImplementationBlock extends Model
 {
-    use HasFactory, HasMedia, HasMarkdownDescription;
+    use HasMedia, HasMarkdownDescription;
 
     protected $casts = [
         'button_enabled' => 'bool',
-        'button_link_target_is_blank' => 'bool',
+        'button_target_blank' => 'bool',
     ];
 
     /**
@@ -62,7 +62,7 @@ class ImplementationBlock extends Model
      */
     protected $fillable = [
         'implementation_page_id', 'key', 'type', 'label', 'title', 'description',
-        'button_enabled', 'button_text', 'button_link', 'button_link_target_is_blank',
+        'button_enabled', 'button_text', 'button_link', 'button_target_blank',
     ];
 
     /**

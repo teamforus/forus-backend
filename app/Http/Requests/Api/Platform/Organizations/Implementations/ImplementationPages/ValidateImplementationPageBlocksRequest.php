@@ -25,15 +25,15 @@ class ValidateImplementationPageBlocksRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'blocks.*'                  => 'nullable|array',
-            'blocks.*.label'            => 'nullable|string|max:200',
-            'blocks.*.title'            => 'required|string|max:200',
-            'blocks.*.description'      => 'required|string|max:5000',
-            'blocks.*.button_enabled'   => 'nullable|boolean',
-            'blocks.*.button_text'      => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
-            'blocks.*.button_link'      => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
-            'blocks.*.button_link_target_is_blank' => 'nullable|required_if:blocks.*.button_enabled,true|boolean',
-            'blocks.*.media_uid.*'      => $this->blockMediaRule(),
+            'blocks.*'                      => 'nullable|array',
+            'blocks.*.label'                => 'nullable|string|max:200',
+            'blocks.*.title'                => 'required|string|max:200',
+            'blocks.*.description'          => 'required|string|max:5000',
+            'blocks.*.button_enabled'       => 'nullable|boolean',
+            'blocks.*.button_text'          => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
+            'blocks.*.button_link'          => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
+            'blocks.*.button_target_blank'  => 'nullable|required_if:blocks.*.button_enabled,true|boolean',
+            'blocks.*.media_uid.*'          => $this->blockMediaRule(),
         ];
     }
 

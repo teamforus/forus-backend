@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('implementation_blocks', function (Blueprint $table) {
-            $table->boolean('button_link_target_is_blank')->default(false)->after('button_link');
+            $table->boolean('button_target_blank')->default(false)->after('button_link');
         });
     }
 
@@ -26,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('implementation_blocks', function (Blueprint $table) {
-            $table->dropColumn('button_link_target_is_blank');
+            $table->dropColumn('button_target_blank');
         });
     }
 };
