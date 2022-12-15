@@ -8,16 +8,19 @@ use App\Services\MediaService\Traits\HasMedia;
 use DOMDocument;
 use DOMElement;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
+use League\CommonMark\Environment\Environment;
+use League\CommonMark\MarkdownConverter;
+use Eloquent;
 
 /**
- * Trait HasMarkdownDescription
  * @property string $description
  * @property string $description_html
  * @property string $description_text
- * @package App\Traits
- * @mixin  \Eloquent
- * @mixin  HasMedia
+ * @mixin Eloquent
+ * @mixin HasMedia
  */
 trait HasMarkdownDescription {
     /**
@@ -35,7 +38,30 @@ trait HasMarkdownDescription {
      */
     public function descriptionToHtml(): string
     {
-        return resolve('markdown.converter')->convert($this->description ?: '')->getContent();
+        return $this->getMarkdownConverter()->convert($this->description ?: '')->getContent();
+    }
+
+    /**
+     * @return MarkdownConverter
+     */
+    protected function getMarkdownConverter(): MarkdownConverter
+    {
+        $config = $this->getMarkdownConverterConfigs();
+        $environment = new Environment(Arr::except($config, ['extensions', 'views']));
+
+        foreach ((array) Arr::get($config, 'extensions') as $extension) {
+            $environment->addExtension(resolve($extension));
+        }
+
+        return new MarkdownConverter($environment);
+    }
+
+    /**
+     * @return array
+     */
+    protected function getMarkdownConverterConfigs(): array
+    {
+        return Config::get('markdown');
     }
 
     /**

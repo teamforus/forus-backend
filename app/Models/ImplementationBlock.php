@@ -8,6 +8,7 @@ use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Facades\Config;
 
 /**
  * App\Models\ImplementationBlock
@@ -83,6 +84,21 @@ class ImplementationBlock extends Model
     {
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'implementation_block_media',
+        ]);
+    }
+
+    /**
+     * @return array
+     */
+    protected function getMarkdownConverterConfigs(): array
+    {
+        $webshopUrl = $this->implementation_page->implementation->urlWebshop();
+
+        return array_merge(Config::get('markdown'), [
+            'external_link' => [
+                'open_in_new_window' => true,
+                'internal_hosts' => parse_url($webshopUrl)['host'] ?? null,
+            ],
         ]);
     }
 }

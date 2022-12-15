@@ -591,6 +591,7 @@ class Implementation extends BaseModel
 
             $request = BaseFormRequest::createFromGlobals();
             $announcements = Announcement::search($request)->get();
+            $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
 
             $config = array_merge($config, [
                 'media' => self::getPlatformMediaConfig(),
@@ -619,7 +620,8 @@ class Implementation extends BaseModel
                 'implementation_name' => $implementation->name,
                 'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
-                'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
+                // 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
+                'pages' => Arr::keyBy($pages, 'page_type'),
                 'has_productboard_integration' => !empty(resolve('productboard')),
             ], $implementation->only(
                 'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map', 'show_office_map'
