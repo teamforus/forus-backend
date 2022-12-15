@@ -109,7 +109,7 @@ class ReimbursementPolicy
         Organization $organization
     ): Response|bool {
         if (!$this->checkIntegrity($reimbursement, $organization)) {
-            return $this->deny('invalid_endpoint');
+            return $this->deny('Ongeldig eindpunt');
         }
 
         if (!$organization->identityCan($identity, 'manage_reimbursements')) {
@@ -117,20 +117,20 @@ class ReimbursementPolicy
         }
 
         if (!$reimbursement->isPending()) {
-            return $this->deny('not_pending');
+            return $this->deny('Niet in behandeling');
         }
 
         if (!$reimbursement->employee ||
             $reimbursement->employee_id !== $organization->findEmployee($identity->address)?->id) {
-            return $this->deny('not_assigned');
+            return $this->deny('Niet toegewezen');
         }
 
         if ($reimbursement->voucher->isDeactivated()) {
-            return $this->deny('voucher_deactivated');
+            return $this->deny('Tegoed gedeactiveerd');
         }
 
         if ($reimbursement->expired) {
-            return $this->deny('expired');
+            return $this->deny('Declaratie(voucher of fonds) verlopen');
         }
 
         return true;
