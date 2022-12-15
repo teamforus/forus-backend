@@ -22,6 +22,7 @@ class ProductReservationResource extends JsonResource
         return [
             'voucher.fund',
             'product.organization',
+            'product.photo.presets',
         ];
     }
 
