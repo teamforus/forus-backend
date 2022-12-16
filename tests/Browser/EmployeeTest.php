@@ -43,7 +43,7 @@ class EmployeeTest extends DuskTestCase
             $browser->script("localStorage.setItem('active_account', '$proxy->access_token')");
             $browser->refresh();
 
-            $browser->waitFor('@fundsTitle');
+            $browser->waitFor('@fundsTitle', 10);
 
             $browser->waitFor('@identityEmail');
             $browser->assertSeeIn('@identityEmail', $implementation->organization->identity->email);

@@ -6,14 +6,10 @@ use App\Services\MediaService\Models\Media;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\Facades\Gate;
 
-/**
- * Class MediaUidRule
- * @package App\Rules
- */
 class MediaUidRule implements Rule
 {
-    protected $type;
-    protected $errorMessage;
+    protected string $type;
+    protected string $errorMessage;
 
     /**
      * Create a new rule instance.

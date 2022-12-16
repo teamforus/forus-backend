@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Events\ProductReservations\ProductReservationCreated;
+use App\Events\Reimbursements\ReimbursementCreated;
+use App\Events\Reimbursements\ReimbursementSubmitted;
 use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
@@ -109,6 +111,10 @@ use ZipArchive;
  * @property-read int|null $product_reservations_count
  * @property-read Collection|Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
+ * @property-read Collection|\App\Models\Reimbursement[] $reimbursements
+ * @property-read int|null $reimbursements_count
+ * @property-read Collection|\App\Models\Reimbursement[] $reimbursements_pending
+ * @property-read int|null $reimbursements_pending_count
  * @property-read \App\Models\VoucherToken|null $token_with_confirmation
  * @property-read \App\Models\VoucherToken|null $token_without_confirmation
  * @property-read Collection|\App\Models\VoucherToken[] $tokens
@@ -276,6 +282,26 @@ class Voucher extends BaseModel
      * @return HasMany
      * @noinspection PhpUnused
      */
+    public function reimbursements(): HasMany
+    {
+        return $this->hasMany(Reimbursement::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function reimbursements_pending(): HasMany
+    {
+        return $this->hasMany(Reimbursement::class)->where([
+            'state' => Reimbursement::STATE_PENDING,
+        ]);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
     public function backoffice_logs(): HasMany
     {
         return $this->hasMany(FundBackofficeLog::class);
@@ -353,7 +379,7 @@ class Voucher extends BaseModel
      */
     public function product(): BelongsTo
     {
-        /** @var BelongsTo|SoftDeletes $relationQuery */
+        /** @var Builder|SoftDeletes|BelongsTo $relationQuery */
         $relationQuery = $this->belongsTo(Product::class, 'product_id', 'id');
 
         return $relationQuery->withTrashed();
@@ -490,6 +516,7 @@ class Voucher extends BaseModel
         return currency_format(array_sum([
             $this->transactions()->sum('amount'),
             $this->product_vouchers()->sum('amount'),
+            $this->reimbursements_pending()->sum('amount'),
         ]));
     }
 
@@ -502,6 +529,7 @@ class Voucher extends BaseModel
         return currency_format(array_sum([
             $this->transactions->sum('amount'),
             $this->product_vouchers->sum('amount'),
+            $this->reimbursements_pending->sum('amount'),
         ]));
     }
 
@@ -550,7 +578,7 @@ class Voucher extends BaseModel
     public function token_with_confirmation(): HasOne
     {
         return $this->hasOne(VoucherToken::class)->where([
-            'need_confirmation' => true
+            'need_confirmation' => true,
         ]);
     }
 
@@ -973,6 +1001,33 @@ class Voucher extends BaseModel
         ProductReservationCreated::dispatch($reservation);
 
         return $reservation;
+    }
+
+    /**
+     * @param array $data
+     * @return Reimbursement
+     * @throws \Exception
+     */
+    public function makeReimbursement(array $data = []): Reimbursement
+    {
+        $submitNow = Arr::get($data, 'state') === Reimbursement::STATE_PENDING;
+
+        /** @var Reimbursement $reimbursement */
+        $reimbursement = $this->reimbursements()->create(array_merge([
+            'code'          => Reimbursement::makeCode(),
+            'state'         => Reimbursement::STATE_DRAFT,
+            'submitted_at'  => $submitNow ? now() : null,
+        ], array_only($data, [
+            'title', 'description', 'amount', 'email', 'iban', 'iban_name', 'state',
+        ])));
+
+        ReimbursementCreated::dispatch($reimbursement);
+
+        if ($submitNow && $reimbursement->isPending()) {
+            ReimbursementSubmitted::dispatch($reimbursement);
+        }
+
+        return $reimbursement;
     }
 
     /**

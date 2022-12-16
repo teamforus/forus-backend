@@ -99,6 +99,10 @@ class LoremDbSeeder extends Seeder
         'Nijmegen', 'Stadjerspas III', 'Stadjerspas IV',
     ];
 
+    private array $fundsWithReimbursements = [
+        'Zuidhorn', 'Nijmegen',
+    ];
+
     private array $fundsWithDirectPayments = [
         'Nijmegen', 'Stadjerspas',
     ];
@@ -728,6 +732,7 @@ class LoremDbSeeder extends Seeder
             'csv_primary_key'           => 'uid',
             'is_configured'             => true,
             'allow_physical_cards'      => in_array($fund->name, $this->fundsWithPhysicalCards),
+            'allow_reimbursements'      => in_array($fund->name, $this->fundsWithReimbursements),
             'allow_direct_payments'     => in_array($fund->name, $this->fundsWithDirectPayments),
             'allow_generator_direct_payments' => in_array($fund->name, $this->fundsWithDirectPayments),
             'allow_voucher_top_ups'     => in_array($fund->name, $this->fundsWithVoucherTopUp),
