@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
 
 class BaseSearch
 {
     protected array $filters;
-    protected ?Builder $builder;
+    protected Builder|null $builder;
 
     /**
      * WebshopSearch constructor.

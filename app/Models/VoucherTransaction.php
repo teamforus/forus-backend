@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
  * @property int $voucher_id
  * @property int|null $organization_id
  * @property int|null $employee_id
+ * @property int|null $reimbursement_id
  * @property int|null $product_id
  * @property int|null $fund_provider_product_id
  * @property int|null $voucher_transaction_bulk_id
@@ -60,6 +61,7 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Product|null $product
  * @property-read \App\Models\ProductReservation|null $product_reservation
  * @property-read \App\Models\Organization|null $provider
+ * @property-read \App\Models\Reimbursement|null $reimbursement
  * @property-read \App\Models\Voucher $voucher
  * @property-read \App\Models\VoucherTransactionBulk|null $voucher_transaction_bulk
  * @method static Builder|VoucherTransaction newModelQuery()
@@ -83,6 +85,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction wherePaymentId($value)
  * @method static Builder|VoucherTransaction wherePaymentTime($value)
  * @method static Builder|VoucherTransaction whereProductId($value)
+ * @method static Builder|VoucherTransaction whereReimbursementId($value)
  * @method static Builder|VoucherTransaction whereState($value)
  * @method static Builder|VoucherTransaction whereTarget($value)
  * @method static Builder|VoucherTransaction whereTargetIban($value)
@@ -158,7 +161,7 @@ class VoucherTransaction extends BaseModel
         'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
         'iban_from', 'iban_to', 'iban_to_name', 'payment_time', 'employee_id', 'transfer_at',
         'voucher_transaction_bulk_id', 'payment_description', 'initiator',
-        'target', 'target_iban', 'target_name',
+        'target', 'target_iban', 'target_name', 'reimbursement_id',
     ];
 
     protected $hidden = [
@@ -200,6 +203,14 @@ class VoucherTransaction extends BaseModel
     public function voucher(): BelongsTo
     {
         return $this->belongsTo(Voucher::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function reimbursement(): BelongsTo
+    {
+        return $this->belongsTo(Reimbursement::class);
     }
 
     /**

@@ -35,6 +35,10 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.fund_request_record_declined" => ["database", "mail"],
         "notifications_identities.fund_request_feedback_requested" => ["database", "mail"],
 
+        "notifications_identities.reimbursement_submitted" => ["database", "mail"],
+        "notifications_identities.reimbursement_approved" => ["database", "mail"],
+        "notifications_identities.reimbursement_declined" => ["database", "mail"],
+
         'notifications_fund_providers.fund_started' => ["database"],
         'notifications_fund_providers.fund_ended' => [], // TODO can database notifications be removed
         'notifications_fund_providers.fund_expiring' => [], // TODO can database notifications be removed
@@ -120,6 +124,10 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.fund_request_disregarded",
         'notifications_identities.fund_request_feedback_requested',
 
+        'notifications_identities.reimbursement_submitted',
+        'notifications_identities.reimbursement_approved',
+        'notifications_identities.reimbursement_declined',
+
         'notifications_identities.product_reservation_created',
         'notifications_identities.product_reservation_accepted',
         'notifications_identities.product_reservation_canceled',
@@ -159,8 +167,11 @@ class SystemNotificationsTableSeeder extends Seeder
 
         'notifications_identities.fund_request_created',
         'notifications_identities.fund_request_approved',
-
         'notifications_identities.fund_request_feedback_requested',
+
+        'notifications_identities.reimbursement_submitted',
+        'notifications_identities.reimbursement_approved',
+        'notifications_identities.reimbursement_declined',
 
         'notifications_identities.identity_voucher_assigned_budget',
         'notifications_identities.identity_voucher_assigned_subsidy',
@@ -180,6 +191,11 @@ class SystemNotificationsTableSeeder extends Seeder
             "notifications_identities.fund_request_disregarded",
             "notifications_identities.fund_request_record_declined",
             "notifications_identities.fund_request_feedback_requested"
+        ],
+        "requester_reimbursements" => [
+            'notifications_identities.reimbursement_submitted',
+            'notifications_identities.reimbursement_approved',
+            'notifications_identities.reimbursement_declined',
         ],
         "requester_vouchers" => [
             "notifications_identities.identity_voucher_assigned_budget",

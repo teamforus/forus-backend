@@ -28,9 +28,9 @@ trait HasLogs
         array $raw_meta = [],
         ?string $identity_address = null
     ): EventLog|Model {
-        $identity_address = $identity_address ?: auth()->id();
-        $logService = resolve(EventLogService::class);
         $request = BaseFormRequest::createFrom(request());
+        $logService = resolve(EventLogService::class);
+        $identity_address = $identity_address ?: $request->auth_address();
 
         $meta = array_reduce(
             array_keys(array_filter($models, fn($model) => $model !== null)),

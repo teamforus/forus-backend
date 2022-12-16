@@ -4,29 +4,30 @@ namespace App\Services\FileService;
 
 use App\Services\FileService\Models\File;
 use Carbon\Carbon;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileService
 {
     /**
-     * @var File $file
+     * @var File|Builder $file
      */
-    protected $model;
+    protected File|Builder $model;
 
     /**
      * Filesystem driver to use for storage
      * @var string $storageDriver
      */
-    protected $storageDriver;
+    protected string $storageDriver;
 
     /**
      * Path to upload files in
      * @var string $storagePath
      */
-    protected $storagePath;
+    protected string $storagePath;
 
     /**
      * FileService constructor.
@@ -40,10 +41,9 @@ class FileService
 
     /**
      * Remove expired and missing from db files
-     *
-     * @throws \Exception
      */
-    public function clear() {
+    public function clear(): void
+    {
         $this->clearFilesWithDeletedFileable();
         $this->clearExpiredFiles();
         $this->clearStorage();
@@ -53,41 +53,31 @@ class FileService
      * Delete all files that were assigned, but objects no longer exists
      *
      * @return int
-     * @throws \Exception
      */
-    public function clearFilesWithDeletedFileable() {
-        $deleted = 0;
-
-        $files = $this->model->with('fileable')->whereNotNull(
-            'fileable_id'
-        )->whereNotNull(
-            'fileable_type'
-        )->get();
-
-        foreach ($files as $file) {
-            if (!$file->fileable) {
-                $this->unlink($file);
-                $deleted++;
-            }
-        }
-
-        return $deleted;
+    public function clearFilesWithDeletedFileable(): int
+    {
+        return $this->model
+            ->with('fileable')
+            ->whereNotNull('fileable_id')
+            ->whereNotNull('fileable_type')
+            ->get()
+            ->filter(fn (File $file) => !$file->fileable)
+            ->each(fn (File $file) => $this->unlink($file))
+            ->count();
     }
 
     /**
      * Clear file that are created but not assigned to any resource
      *
      * @return int
-     * @throws \Exception
      */
-    public function clearExpiredFiles() {
-        $expiredFiles = $this->getExpired();
-
-        foreach ($expiredFiles as $file) {
-            $this->unlink($file);
-        }
-
-        return $expiredFiles->count();
+    public function clearExpiredFiles(): int
+    {
+        return $this
+            ->getExpiredQuery()
+            ->get()
+            ->each(fn (File $file) => $this->unlink($file))
+            ->count();
     }
 
     /**
@@ -95,37 +85,38 @@ class FileService
      *
      * @return int count files deleted
      */
-    public function clearStorage() {
+    public function clearStorage(): int
+    {
         $storage = $this->storage();
 
         $dbFiles = File::query()->pluck('path')->toArray();
-        $storageFiles = collect($storage->allFiles($this->storagePath));
+        $storageFiles = $storage->allFiles($this->storagePath);
 
-        return $storageFiles->filter(function($file) use ($dbFiles) {
-            return !in_array($file, $dbFiles);
-        })->each(function($file) use ($storage) {
-            $storage->delete($file);
-        })->count();
+        return collect($storageFiles)
+            ->filter(fn (string $file) => !in_array($file, $dbFiles))
+            ->each(fn (string $file) => $storage->delete($file))
+            ->count();
     }
 
     /**
      * Returns list of expired File Models
      *
-     * @param null $identity_address
-     * @return Collection
+     * @param string|null $identity_address
+     * @return Builder
      */
-    public function getExpired($identity_address = null) {
-        $expiredFiles = $this->model->where(function(Builder $query) {
-            return $query
-                ->whereNull('fileable_type')
-                ->orWhereNull('fileable_id');
-        })->where('created_at', '<', Carbon::now()->subMinutes(60));
+    public function getExpiredQuery(string $identity_address = null): Builder
+    {
+        $expiredFiles = $this->model
+            ->newQuery()
+            ->whereNotNull('fileable_id')
+            ->whereNotNull('fileable_type')
+            ->where('created_at', '<', Carbon::now()->subMinutes(60));
 
         if ($identity_address) {
-            $expiredFiles->where(compact('identity_address'));
+            $expiredFiles->whereIdentityAddress($identity_address);
         }
 
-        return $expiredFiles->get();
+        return $expiredFiles;
     }
 
     /**
@@ -133,9 +124,9 @@ class FileService
      *
      * @param File $file
      * @return bool|null
-     * @throws \Exception
      */
-    public function unlink(File $file): ?bool {
+    public function unlink(File $file): ?bool
+    {
         self::deleteFile($this->urlPublic($file->path));
 
         return $file->delete();
@@ -148,13 +139,13 @@ class FileService
      * @param $ext
      * @return string
      */
-    protected function makeUniqueFileName($path, $ext) {
+    protected function makeUniqueFileName($path, $ext): string
+    {
         $tokenGenerator = resolve('token_generator');
-        $storage = $this->storage();
 
         do {
             $name = $tokenGenerator->generate('62');
-        } while($storage->exists($path . '/' . $name . '.' . $ext));
+        } while($this->storage()->exists($path . '/' . $name . '.' . $ext));
 
         return $name;
     }
@@ -162,78 +153,63 @@ class FileService
     /**
      * @param UploadedFile $file
      * @param string $type
-     * @param $identity_address
-     * @param string|null $file_name
-     * @param string|null $extension
      * @return File
      */
-    public function uploadSingle(
-        UploadedFile $file,
-        string $type,
-        $identity_address,
-        string $file_name = null,
-        string $extension = null
-    ) {
-        // file info
-        $path   = (string) $file;
-        $name   = $file_name ?: $file->getClientOriginalName();
-        $ext    = $extension ?: $file->getClientOriginalExtension();
-        $size   = $file->getSize();
-
-        // do upload
-        return $this->doUpload($path, $name, $ext, $type, $size, $identity_address);
+    public function uploadSingle(UploadedFile $file, string $type): File
+    {
+        return $this->doUpload(
+            $file->getRealPath(),
+            $file->getClientOriginalName(),
+            $file->getClientOriginalExtension(),
+            $type,
+            $file->getSize()
+        );
     }
 
     /**
-     * @param $path
-     * @param $name
-     * @param $ext
-     * @param $type
-     * @param $size
-     * @param $identity_address
+     * @param string $file_path
+     * @param string $original_name
+     * @param string $ext
+     * @param string $type
+     * @param string $size
      * @return File
      */
-    protected function doUpload($path, $name, $ext, $type, $size, $identity_address) {
-        $model = $this->model->newQuery();
-        $storage = $this->storage();
+    protected function doUpload(
+        string $file_path,
+        string $original_name,
+        string $ext,
+        string $type,
+        string $size
+    ): File {
+        $uid = File::makeUid();
+        $name = $this->makeUniqueFileName($this->storagePath, $ext);
 
-        do {
-            $uid = resolve('token_generator')->generate('255');
-        } while($model->where(compact('uid'))->count() > 0);
+        $path = str_start($name . '.' . $ext, '/');
+        $path = str_start($this->storagePath . $path, '/');
 
-        $uniqueName = $this->makeUniqueFileName($this->storagePath, $ext);
-        $filePath = str_start($uniqueName . '.' . $ext, '/');
-        $filePath = str_start($this->storagePath . $filePath, '/');
+        $this->storage()->put($path, file_get_contents($file_path), 'private');
 
-        $storage->put($filePath, file_get_contents($path), 'private');
-        $original_name = $name;
-        $fileable_type = NULL;
-        $fileable_id = NULL;
-        $path = $filePath;
-
-        /** @var File $file */
-        $file = File::create(compact(
-            'uid', 'identity_address', 'original_name', 'path', 'size',
-            'fileable_id', 'fileable_type', 'ext', 'type'
+        return File::create(compact(
+            'uid', 'original_name', 'path', 'size', 'ext', 'type',
         ));
-
-        return $file;
     }
 
     /**
      * Get storage
      *
-     * @return \Illuminate\Contracts\Filesystem\Filesystem
+     * @return Filesystem
      */
-    private function storage() {
-        return resolve('filesystem')->disk($this->storageDriver);
+    private function storage(): Filesystem
+    {
+        return Storage::disk($this->storageDriver);
     }
 
     /**
      * @param string $path
      * @return string
      */
-    public function urlPublic(string $path): string {
+    public function urlPublic(string $path): string
+    {
         return $this->storage()->url(ltrim($path, '/'));
     }
 
@@ -248,9 +224,19 @@ class FileService
 
     /**
      * @param string $path
-     * @return mixed
+     * @return string|null
      */
-    public function deleteFile(string $path) {
+    public function getContent(string $path): string|null
+    {
+        return $this->storage()->get(ltrim($path, '/'));
+    }
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public function deleteFile(string $path): bool
+    {
         return $this->storage()->delete($path);
     }
 }
