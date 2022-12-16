@@ -126,7 +126,7 @@ class VoucherResource extends BaseJsonResource
                 'created_at' => $eventLog->created_at->format('Y-m-d'),
                 'created_at_locale' => format_date_locale($eventLog->created_at),
             ]);
-        });
+        })->values();
     }
 
     /**
