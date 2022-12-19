@@ -242,7 +242,7 @@ class LoremDbSeeder extends Seeder
             'family_name' => 'Doe'
         ]);
 
-
+        $identity->primary_email->setVerified();
         $proxy = Identity::makeProxy('confirmation_code', $identity, 'active');
 
         if ($print) {

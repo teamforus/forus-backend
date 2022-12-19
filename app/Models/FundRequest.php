@@ -7,8 +7,8 @@ use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequestRecords\FundRequestRecordAssigned;
 use App\Events\FundRequestRecords\FundRequestRecordResigned;
 use App\Events\FundRequests\FundRequestResolved;
-use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundRequestRecordQuery;
+use App\Searches\FundRequestSearch;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -163,50 +163,6 @@ class FundRequest extends BaseModel
             self::STATE_DECLINED => 'Geweigerd',
             self::STATE_DISREGARDED => 'Niet beoordeeld',
         ][$this->state] ?? '';
-    }
-
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param Employee $employee
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public static function search(Request $request, Employee $employee): Builder
-    {
-        /** @var Builder $query */
-        $query = self::query();
-
-        $query->whereHas('records', function(Builder $builder) use ($employee) {
-            FundRequestRecordQuery::whereEmployeeIsValidatorOrSupervisor($builder, $employee);
-        });
-
-        if ($request->has('q') && $q = $request->input('q')) {
-            FundRequestQuery::whereQueryFilter($query, $q);
-        }
-
-        if ($request->has('state') && $state = $request->input('state')) {
-            $query->where('state', $state);
-        }
-
-        if ($request->has('from') && $from = $request->input('from')) {
-            $query->where('created_at', '>=', $from);
-        }
-
-        if ($request->has('to') && $to = $request->input('to')) {
-            $query->where('created_at', '<=', $to);
-        }
-
-        if ($request->has('employee_id') && $employee_id = $request->input('employee_id')) {
-            $employee = Employee::find($employee_id);
-
-            $query->whereHas('records', static function(Builder $builder) use ($employee) {
-                FundRequestRecordQuery::whereEmployeeIsAssignedValidator($builder, $employee);
-            });
-        }
-
-        return $query->orderBy(
-            $request->get('sort_by', 'created_at'),
-            $request->get('sort_order', 'DESC')
-        )->orderBy('created_at');
     }
 
     /**
@@ -582,7 +538,11 @@ class FundRequest extends BaseModel
      */
     public static function exportSponsor(Request $request, Employee $employee): mixed
     {
-        return self::exportTransform(self::search($request, $employee));
+        $search = (new FundRequestSearch($request->only([
+            'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir',
+        ])))->setEmployee($employee);
+
+        return self::exportTransform($search->query());
     }
 
     /**
