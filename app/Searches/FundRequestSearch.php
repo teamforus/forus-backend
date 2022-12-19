@@ -5,7 +5,9 @@ namespace App\Searches;
 
 
 use App\Models\Employee;
+use App\Models\Fund;
 use App\Models\FundRequest;
+use App\Models\IdentityEmail;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundRequestRecordQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,10 +32,8 @@ class FundRequestSearch extends BaseSearch
     {
         $builder = parent::query();
 
-        $employee = $this->employee;
-
-        $builder->whereHas('records', function(Builder $builder) use ($employee) {
-            FundRequestRecordQuery::whereEmployeeIsValidatorOrSupervisor($builder, $employee);
+        $builder->whereHas('records', function(Builder $builder) {
+            FundRequestRecordQuery::whereEmployeeIsValidatorOrSupervisor($builder, $this->employee);
         });
 
         if ($this->hasFilter('q') && $q = $this->getFilter('q')) {
@@ -60,30 +60,61 @@ class FundRequestSearch extends BaseSearch
             });
         }
 
-        return self::orderRequestsBy(
-            $builder,
-            $this->getFilter('order_by', 'created_at'),
-            $this->getFilter('order_dir', 'desc'),
-        );
+        return $this->sort($builder);
     }
 
     /**
-     * @param Builder $query
-     * @param string $orderBy
-     * @param string $orderDir
+     * @param Builder $builder
      * @return Builder
      */
-    public static function orderRequestsBy(
-        Builder $query,
-        string $orderBy,
-        string $orderDir,
-    ): Builder {
-        if ($orderBy == 'fund_name') {
-            $query->leftJoin('funds', 'funds.id', 'fund_requests.fund_id')
-                ->select('fund_requests.*', 'funds.name as fund_name');
-        }
+    protected function sort(Builder $builder): Builder
+    {
+        $orderBy = $this->getFilter('order_by', 'created_at');
+        $orderDir = $this->getFilter('order_dir', 'desc');
 
-        return $query->orderBy($orderBy, $orderDir)->orderBy('fund_requests.created_at');
+        $builder = $this->appendSortableFields($builder, $orderBy);
+        $builder = FundRequest::query()->fromSub($builder, 'fund_requests');
+
+        return $builder->orderBy($orderBy, $orderDir);
+    }
+
+    /**
+     * @param Builder|FundRequest $builder
+     * @param string|null $orderBy
+     * @return Builder|FundRequest
+     */
+    public function appendSortableFields(
+        Builder|FundRequest $builder,
+        ?string $orderBy
+    ): Builder|FundRequest {
+        $subQuery = match($orderBy) {
+            'fund_name' => Fund::query()
+                ->whereColumn('id', 'fund_requests.fund_id')
+                ->select('name')
+                ->limit(1),
+            'assignee_email' => IdentityEmail::query()
+                ->whereHas('identity.employees', function(Builder $builder) {
+                    $builder->where('organization_id', $this->employee->organization_id);
+                    $builder->whereHas('fund_request_records', function(Builder $builder) {
+                        $builder->whereColumn('fund_request_id', 'fund_requests.id');
+                    });
+                })
+                ->where('verified', true)
+                ->where('primary', true)
+                ->select('email')
+                ->limit(1),
+            'requester_email' => IdentityEmail::query()
+                ->whereColumn('identity_address', 'fund_requests.identity_address')
+                ->where('verified', true)
+                ->where('primary', true)
+                ->select('email')
+                ->limit(1),
+            default => null,
+        };
+
+        return $builder->addSelect($subQuery ? [
+            $orderBy => $subQuery,
+        ] : []);
     }
 
     /**

@@ -34,7 +34,7 @@ class IndexFundRequestsRequest extends BaseFormRequest
             'employee_id'   => 'nullable|exists:employees,id',
             'from'          => 'nullable|date:Y-m-d',
             'to'            => 'nullable|date:Y-m-d',
-            'order_by'      => 'nullable|in:id,fund_name,created_at,note,state',
+            'order_by'      => 'nullable|in:id,fund_name,created_at,note,state,requester_email,assignee_email',
             'order_dir'     => 'nullable|in:asc,desc',
             'export_format' => 'nullable|in:csv,xls'
         ];

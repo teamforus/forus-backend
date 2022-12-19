@@ -37,11 +37,9 @@ class FundRequestsController extends Controller
 
         $query = (new FundRequestSearch($request->only([
             'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir',
-        ])))
-            ->setEmployee($request->employee($organization))
-            ->query();
+        ])))->setEmployee($request->employee($organization));
 
-        return ValidatorFundRequestResource::queryCollection($query, $request);
+        return ValidatorFundRequestResource::queryCollection($query->query(), $request);
     }
 
     /**
