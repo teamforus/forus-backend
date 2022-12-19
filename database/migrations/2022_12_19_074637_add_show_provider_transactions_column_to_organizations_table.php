@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
-            $table->boolean('show_transactions_to_providers')->default(false)->after('bank_cron_time');
+            $table->boolean('show_provider_transactions')->default(false)->after('bank_cron_time');
         });
     }
 
@@ -26,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
-            $table->dropColumn('show_transactions_to_providers');
+            $table->dropColumn('show_provider_transactions');
         });
     }
 };
