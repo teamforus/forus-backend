@@ -98,8 +98,8 @@ class OrganizationResource extends JsonResource
             'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
             'allow_custom_fund_notifications', 'validator_auto_accept_funds',
             'reservations_budget_enabled', 'reservations_subsidy_enabled',
-            'is_sponsor', 'is_provider', 'is_validator',
-            'bsn_enabled', 'allow_batch_reservations',
+            'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled',
+            'allow_batch_reservations',
         ])) : [];
     }
 
