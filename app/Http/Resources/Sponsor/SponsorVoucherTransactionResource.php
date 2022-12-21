@@ -48,6 +48,7 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'organization' => $transaction->provider?->only('id', 'name'),
             'fund' => $transaction->voucher->fund->only('id', 'name', 'organization_id'),
             'notes' => VoucherTransactionNoteResource::collection($transaction->notes_sponsor),
+            'product_name' => $transaction->product?->name,
         ]);
     }
 

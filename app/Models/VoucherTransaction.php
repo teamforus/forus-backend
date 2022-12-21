@@ -338,6 +338,11 @@ class VoucherTransaction extends BaseModel
                 });
 
                 $query->orWhere('voucher_transactions.id','LIKE', "%$q%");
+
+                $query->orWhereHas('product', static function (Builder $query) use ($q) {
+                    $query->where('name', 'LIKE', "%$q%");
+                    $query->orWhere('id', 'LIKE', "%$q%");
+                });
             });
         }
 
@@ -468,6 +473,8 @@ class VoucherTransaction extends BaseModel
             'date_transaction' => format_datetime_locale($transaction->created_at),
             'date_payment' => format_datetime_locale($transaction->payment_time),
             'fund_name' => $transaction->voucher->fund->name,
+            'product_id' => $transaction->product?->id,
+            'product_name' => $transaction->product?->name,
             'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
             'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
         ], $fields))->values();
