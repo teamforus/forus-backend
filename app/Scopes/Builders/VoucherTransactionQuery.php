@@ -5,6 +5,7 @@ namespace App\Scopes\Builders;
 
 use App\Models\Fund;
 use App\Models\Organization;
+use App\Models\Product;
 use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QBuilder;
@@ -73,6 +74,7 @@ class VoucherTransactionQuery
         $builder->addSelect([
             'fund_name' => self::orderFundNameQuery(),
             'provider_name' => self::orderProviderNameQuery(),
+            'product_name' => self::orderProductNameQuery(),
         ]);
 
         return $builder->orderBy(
@@ -99,6 +101,16 @@ class VoucherTransactionQuery
         return Organization::where(function(Builder $builder) {
             $builder->whereColumn('organizations.id', 'voucher_transactions.organization_id');
         })->select('organizations.name');
+    }
+
+    /**
+     * @return Builder
+     */
+    protected static function orderProductNameQuery(): Builder
+    {
+        return Product::where(function(Builder $builder) {
+            $builder->whereColumn('products.id', 'voucher_transactions.product_id');
+        })->select('products.name');
     }
 
     /**
