@@ -9,7 +9,7 @@ abstract class BasePolicy
 {
     use HandlesAuthorization;
 
-    private string $policyErrorFilesRoot = "policies";
+    private string $policyRoot = "policies";
 
     /**
      * Name of prevalidation errors file.
@@ -22,14 +22,9 @@ abstract class BasePolicy
      * @param int $code
      * @throws AuthorizationJsonException
      */
-    protected function deny(mixed $message, int $code = 403): void
+    protected function deny($message, $code = 403)
     {
-        $policyError = sprintf(
-            "%s/%s.%s",
-            $this->policyErrorFilesRoot,
-            $this->getPolicyKey(),
-            $message
-        );
+        $policyError = sprintf("%s/%s.%s", $this->policyRoot, $this->getPolicyKey(), $message);
 
         $error = $message;
         $titleKey = sprintf("%s.title", $policyError);

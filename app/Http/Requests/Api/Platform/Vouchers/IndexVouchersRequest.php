@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Vouchers;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Fund;
 use App\Models\Voucher;
 
 class IndexVouchersRequest extends BaseFormRequest
@@ -26,10 +27,13 @@ class IndexVouchersRequest extends BaseFormRequest
     {
         return [
             'state' => 'nullable|in:' . implode(',', Voucher::STATES),
-            'per_page' => 'nullable|numeric|between:1,100',
+            'per_page' => $this->perPageRule(),
             'product_id' => 'nullable|exists:products,id',
             'type' => 'nullable|in:' . implode(',', Voucher::TYPES),
-            'archived' => 'nullable|boolean'
+            'archived' => 'nullable|boolean',
+            'allow_reimbursements' => 'nullable|boolean',
+            'implementation_id' => 'nullable|exists:implementations,id',
+            'implementation_key' => 'nullable|exists:implementations,key',
         ];
     }
 }

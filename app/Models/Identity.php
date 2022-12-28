@@ -30,7 +30,7 @@ use Illuminate\Notifications\Notifiable;
  * @property-read string|null $bsn
  * @property-read string|null $email
  * @property-read \App\Models\IdentityEmail|null $initial_email
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\App\Models\DatabaseNotification[] $notifications
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\App\Models\Notification[] $notifications
  * @property-read int|null $notifications_count
  * @property-read Collection|\App\Models\PhysicalCard[] $physical_cards
  * @property-read int|null $physical_cards_count
@@ -155,7 +155,7 @@ class Identity extends Model implements Authenticatable
      */
     public function notifications(): MorphMany
     {
-        return $this->morphMany(DatabaseNotification::class, 'notifiable')
+        return $this->morphMany(Notification::class, 'notifiable')
             ->orderBy('created_at', 'desc');
     }
 

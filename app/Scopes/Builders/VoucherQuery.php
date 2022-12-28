@@ -3,7 +3,9 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\Fund;
 use App\Models\ProductReservation;
+use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\Identity;
 use App\Models\IdentityEmail;
@@ -300,6 +302,15 @@ class VoucherQuery
      * @param Builder $builder
      * @return Builder
      */
+    public static function whereIsProductVoucherWithoutTransactions(Builder $builder): Builder
+    {
+        return self::whereIsProductVoucher($builder)->whereDoesntHave('transactions');
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
     public static function whereNotInUseQuery(Builder $builder): Builder
     {
         return static::whereInUseQuery($builder, false);
@@ -311,18 +322,18 @@ class VoucherQuery
      */
     public static function whereHasBalance(Relation|Builder $query): Relation|Builder
     {
-        return $query->where(function(Builder $builder) {
-            $builder->where(fn(Builder $builder) => static::whereIsProductVoucher(
-                $builder->whereDoesntHave('transactions')
-            ));
+        $selectQuery = Voucher::fromSub(self::addBalanceFields(Voucher::query()), 'vouchers');
+
+        $selectQuery->where(function(Builder $builder) {
+            $builder->where(fn(Builder $q) => static::whereIsProductVoucherWithoutTransactions($q));
 
             $builder->orWhere(function(Builder $builder) {
                 $builder->whereNull('parent_id');
-                $builder->where('amount', '>', fn (QBuilder $builder) => $builder->fromSub(
-                    self::voucherBalanceSubQuery(), 'voucher_payouts'
-                ));
+                $builder->where('balance', '>', 0);
             });
         });
+
+        return $query->whereIn('id', $selectQuery->select('id'));
     }
 
     /**
@@ -336,37 +347,83 @@ class VoucherQuery
     }
 
     /**
-     * @param Relation|Builder $query
-     * @return Relation|Builder
+     * @param Relation|Builder|QBuilder $query
+     * @return Relation|Builder|QBuilder
      */
-    public static function addBalanceFields(Relation|Builder $query): Relation|Builder
+    public static function addBalanceFields(Relation|Builder|QBuilder $query): Relation|Builder|QBuilder
     {
+        $selectQuery = DB::query()->select([
+            'amount_total' => static::voucherTotalAmountSubQuery(),
+            'amount_spent' => static::voucherAmountSpentSubQuery(),
+        ]);
+
         $query->addSelect([
             'balance' => DB::query()
-                ->fromSub(static::voucherBalanceSubQuery(), 'voucher_payouts')
-                ->selectRaw('vouchers.amount - voucher_payouts.amount_spent'),
+                ->fromSub($selectQuery, 'voucher_payouts')
+                ->selectRaw('`voucher_payouts`.`amount_total` - `voucher_payouts`.`amount_spent`'),
         ]);
 
         return $query;
     }
 
     /**
+     * @return Builder
+     */
+    private static function voucherTotalAmountSubQuery(): Builder
+    {
+        return VoucherTransaction::query()
+            ->where(fn ($builder) => VoucherTransactionQuery::whereIncoming($builder))
+            ->whereColumn('vouchers.id', 'voucher_transactions.voucher_id')
+            ->selectRaw('IFNULL(sum(voucher_transactions.amount), 0) + `vouchers`.`amount`');
+    }
+
+    /**
      * @return QBuilder
      */
-    private static function voucherBalanceSubQuery(): QBuilder
+    private static function voucherAmountSpentSubQuery(): QBuilder
     {
         $selectQuery = DB::query()->select([
-            'transactions_amount' => VoucherTransactionQuery::whereOutgoing(VoucherTransaction::query()
+            'transactions_amount' => VoucherTransaction::query()
+                ->where(fn ($builder) => VoucherTransactionQuery::whereOutgoing($builder))
                 ->whereColumn('vouchers.id', 'voucher_transactions.voucher_id')
-                ->selectRaw('IFNULL(sum(voucher_transactions.amount), 0)')),
+                ->selectRaw('IFNULL(sum(voucher_transactions.amount), 0)'),
             'vouchers_amount' => Voucher::query()
                 ->fromSub(Voucher::query(), 'product_vouchers')
                 ->whereColumn('vouchers.id', 'product_vouchers.parent_id')
                 ->selectRaw('IFNULL(sum(product_vouchers.amount), 0)'),
+            'reimbursements_pending_amount' => Reimbursement::query()
+                ->whereColumn('reimbursements.voucher_id', 'vouchers.id')
+                ->where('reimbursements.state', Reimbursement::STATE_PENDING)
+                ->selectRaw('IFNULL(sum(reimbursements.amount), 0)'),
         ]);
 
         return DB::query()
             ->fromSub($selectQuery, 'voucher_payouts')
-            ->selectRaw('`transactions_amount` + `vouchers_amount` as `amount_spent`');
+            ->selectRaw('`transactions_amount` + `vouchers_amount` + `reimbursements_pending_amount`');
+    }
+
+    /**
+     * @param Builder|Voucher|Relation $builder
+     * @param Reimbursement|null $reimbursement
+     * @return Builder|Voucher|Relation
+     */
+    public static function whereAllowReimbursements(
+        Builder|Voucher|Relation $builder,
+        ?Reimbursement $reimbursement = null,
+    ): Builder|Voucher|Relation {
+        return $builder->where(function(Builder|Voucher $builder) use ($reimbursement) {
+            $builder->where(function(Builder|Voucher $builder) use ($reimbursement) {
+                VoucherQuery::whereHasBalanceIsActiveAndNotExpired($builder);
+
+                if ($reimbursement) {
+                    $builder->orWhere('id', $reimbursement->voucher_id);
+                }
+            });
+
+            $builder->whereNull('product_id');
+            $builder->whereNull('product_reservation_id');
+            $builder->whereRelation('fund', 'type', Fund::TYPE_BUDGET);
+            $builder->whereRelation('fund.fund_config', 'allow_reimbursements', true);
+        });
     }
 }
