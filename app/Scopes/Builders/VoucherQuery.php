@@ -190,7 +190,7 @@ class VoucherQuery
         return $builder->where(static function (Builder $builder) use ($query) {
             $builder->where('note', 'LIKE', "%$query%");
             $builder->orWhere('activation_code', 'LIKE', "%$query%");
-            $builder->orWhere('activation_code_uid', 'LIKE', "%$query%");
+            $builder->orWhere('client_uid', 'LIKE', "%$query%");
 
             if ($addresses = IdentityEmail::searchByEmail($query)->pluck('identity_address')) {
                 $builder->orWhereIn('identity_address', $addresses);
