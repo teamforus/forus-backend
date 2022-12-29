@@ -322,14 +322,14 @@ class VoucherQuery
      */
     public static function whereHasBalance(Relation|Builder $query): Relation|Builder
     {
-        $selectQuery = Voucher::fromSub(self::addBalanceFields(Voucher::query()), 'vouchers');
+        $selectQuery = self::addBalanceFields(Voucher::query());
 
         $selectQuery->where(function(Builder $builder) {
             $builder->where(fn(Builder $q) => static::whereIsProductVoucherWithoutTransactions($q));
 
             $builder->orWhere(function(Builder $builder) {
                 $builder->whereNull('parent_id');
-                $builder->where('balance', '>', 0);
+                $builder->having('balance', '>', 0);
             });
         });
 
