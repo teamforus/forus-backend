@@ -19,6 +19,7 @@ use App\Models\PhysicalCardRequest;
 use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
@@ -42,6 +43,7 @@ use App\Policies\OfficePolicy;
 use App\Policies\FundProviderPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ProductReservationPolicy;
+use App\Policies\ReimbursementPolicy;
 use App\Policies\VoucherPolicy;
 use App\Policies\VoucherTransactionBulkPolicy;
 use App\Policies\VoucherTransactionPolicy;
@@ -88,6 +90,7 @@ class AuthServiceProvider extends ServiceProvider
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
         ProductReservation::class       => ProductReservationPolicy::class,
         PhysicalCardRequest::class      => PhysicalCardRequestPolicy::class,
+        Reimbursement::class     => ReimbursementPolicy::class,
         VoucherTransactionBulk::class   => VoucherTransactionBulkPolicy::class,
         FundProviderInvitation::class   => FundProviderInvitationPolicy::class,
         FundProviderChatMessage::class  => FundProviderChatMessagePolicy::class,
@@ -110,7 +113,7 @@ class AuthServiceProvider extends ServiceProvider
 
         // add custom guard
         Auth::extend('header', function ($app, $name, array $config) {
-            return new BearerTokenGuard(Auth::createUserProvider($config['provider']), app()->make('request'));
+            return new BearerTokenGuard(Auth::createUserProvider($config['provider']));
         });
 
         Gate::resource('funds', FundPolicy::class, [

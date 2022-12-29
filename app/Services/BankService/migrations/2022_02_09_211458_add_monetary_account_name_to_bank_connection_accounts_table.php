@@ -4,11 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- * @noinspection PhpIllegalPsrClassPathInspection
- */
-class AddMonetaryAccountNameToBankConnectionAccountsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -34,4 +30,4 @@ class AddMonetaryAccountNameToBankConnectionAccountsTable extends Migration
             $table->dropColumn('monetary_account_name');
         });
     }
-}
+};

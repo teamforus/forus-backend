@@ -51,7 +51,7 @@ trait DoesTesting
                 Identity::activateAuthorizationEmailProxy($proxy->exchange_token);
             }
 
-            return $proxy;
+            return $proxy->refresh();
         }
 
         $proxy = Identity::makeProxy($tokenType);
@@ -62,7 +62,7 @@ trait DoesTesting
             'qr_code' => $identity->activateAuthorizationTokenProxy($proxy->exchange_token),
         };
 
-        return $proxy;
+        return $proxy->refresh();
     }
 
     /**

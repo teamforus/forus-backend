@@ -47,6 +47,11 @@ class TransactionsController extends Controller
             'date_from' => $request->input('from') ? Carbon::parse($request->input('from')) : null,
         ]);
 
+        if ($request->has('voucher_id') && !$organization->show_provider_transactions) {
+            $options['target'] = [VoucherTransaction::TARGET_TOP_UP, VoucherTransaction::TARGET_IBAN];
+            $options['initiator'] = VoucherTransaction::INITIATOR_SPONSOR;
+        }
+
         $query = VoucherTransaction::searchSponsor($request, $organization);
         $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($organization, $options, $query);
 

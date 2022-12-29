@@ -53,7 +53,7 @@ class FundResource extends BaseJsonResource
         ]), $fund->fund_config->only([
             'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
-            'email_required', 'contact_info_enabled', 'contact_info_required',
+            'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
             'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
         ]), [
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
@@ -156,18 +156,26 @@ class FundResource extends BaseJsonResource
             'provider_employees_count'      => $providersEmployeeCount,
             'validators_count'              => $validatorsCount,
             'requester_count'               => $requesterCount,
-            'budget'                        => $this->getBudgetData($fund),
+            'budget'                        => $this->getVoucherData($fund, 'budget'),
+            'product_vouchers'              => $this->getVoucherData($fund, 'product'),
         ];
     }
 
     /**
      * @param Fund $fund
+     * @param string $type
      * @return array
      */
-    public function getBudgetData(Fund $fund): array {
-        $details = Fund::getFundDetails($fund->budget_vouchers()->getQuery());
+    public function getVoucherData(Fund $fund, string $type): array
+    {
         $reservedQuery = $fund->budget_vouchers()->getQuery();
         $reservedAmount = VoucherQuery::whereNotExpiredAndActive($reservedQuery)->sum('amount');
+
+        $details = match($type) {
+            'budget' => Fund::getFundDetails($fund->budget_vouchers()->getQuery()),
+            'product' => Fund::getFundDetails($fund->product_vouchers()->getQuery()),
+            default => abort(403),
+        };
 
         return [
             'total'                         => currency_format($fund->budget_total),

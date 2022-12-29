@@ -259,6 +259,48 @@
             "content_informal": "Je aanvraag voor :fund_name is onvolledig. :sponsor_name heeft meer informatie nodig om je aanvraag af te handelen. Het bericht is: :fund_request_clarification_question"
         }
     },
+    "notifications_identities.reimbursement_submitted": {
+        "mail": {
+            "title": "Uw :fund_name aanvraag is ontvangen",
+            "title_informal": "Je :fund_name aanvraag is ontvangen",
+            "template": "notifications_identities/reimbursement_submitted.md",
+            "template_informal": "notifications_identities/reimbursement_submitted_informal.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanvraag voor :fund_name is ontvangen.",
+            "content": "De aanvraag voor :fund_name is ontvangen. U ontvangt binnen twee weken een reactie op uw aanvraag.",
+            "content_informal": "De aanvraag voor :fund_name is ontvangen. Je ontvangt binnen twee weken een reactie op jouw aanvraag."
+        }
+    },
+    "notifications_identities.reimbursement_approved": {
+        "mail": {
+            "title": "Uw aanvraag voor :fund_name is goedgekeurd.",
+            "title_informal": "Je aanvraag voor :fund_name is goedgekeurd.",
+            "template": "notifications_identities/reimbursement_approved.md",
+            "template_informal": "notifications_identities/reimbursement_approved_informal.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanvraag is behandeld",
+            "content": ":sponsor_name heeft uw aanvraag voor :fund_name behandeld.",
+            "content_informal": ":sponsor_name heeft jouw aanvraag voor :fund_name behandeld."
+        }
+    },
+    "notifications_identities.reimbursement_declined": {
+        "mail": {
+            "title": "Uw aanvraag voor :fund_name is afgehandeld.",
+            "title_informal": "Uw aanvraag voor :fund_name is afgehandeld.",
+            "template": "notifications_identities/reimbursement_declined.md",
+            "template_informal": "notifications_identities/reimbursement_declined_informal.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanvraag is behandeld",
+            "content": ":sponsor_name heeft uw aanvraag voor :fund_name behandeld.",
+            "content_informal": ":sponsor_name heeft jouw aanvraag voor :fund_name behandeld."
+        }
+    },
     "notifications_funds.created": {
         "mail": {},
         "push": {},

@@ -3,6 +3,12 @@ name: Run autotests
 on:
   push:
     branches: '**'
+  workflow_dispatch:
+    inputs:
+      frontend_branch:
+        description: 'Frontend branch name'
+        required: false
+        default: 'develop'
 
 jobs:
 
@@ -36,6 +42,10 @@ jobs:
         working-directory: forus-backend
         run: docker-compose exec -T app bash -c "composer dumpautoload && php artisan migrate"
 
+      - name: Set app key
+        working-directory: forus-backend
+        run: docker-compose exec -T app bash -c "php artisan key:generate"
+
       - name: Run base seeders
         working-directory: forus-backend
         run: docker-compose exec -T app bash -c "php artisan db:seed"
@@ -52,12 +62,22 @@ jobs:
         working-directory: forus-backend
         run: docker-compose exec -T app bash -c "./vendor/bin/phpunit --debug --verbose --testdox tests/Feature/."
 
+      - name: "Set frontend branch value for manual and auto runs"
+        run: |
+          if [[ -z "${{ github.event.inputs.frontend_branch }}" ]]; then
+            echo "Frontend branch param. is not set, setting default 'develop'"
+            echo "FRONTEND_BRANCH=epic.roi" >> $GITHUB_ENV
+          else
+            echo "Frontend branch param is set: ${{ github.event.inputs.frontend_branch }}"
+            echo "FRONTEND_BRANCH=${{ github.event.inputs.frontend_branch }}" >> $GITHUB_ENV
+          fi
+
       - name: Check out forus-frontend repo
         uses: actions/checkout@v3
         with:
           repository: teamforus/forus-frontend
           path: forus-frontend
-          ref: develop
+          ref: ${{ env.FRONTEND_BRANCH }}
 
       - name: docker-compose up
         working-directory: forus-frontend
@@ -81,13 +101,8 @@ jobs:
         working-directory: forus-frontend
         run: docker-compose exec -T app sh -c "cd src && gulp serve &"
 
-      - name: Debug - Check connection from front to front
-        working-directory: forus-frontend
-        run: docker-compose exec -T app sh -c "wget http://forus-frontend:3000"
-
-      - name: Debug - Check connection from back to front
-        working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "wget http://forus-frontend:3000"
+      - name: Debug - check docker images
+        run: docker ps
 
       - name: Debug - print .env file
         working-directory: forus-backend
@@ -97,6 +112,22 @@ jobs:
         working-directory: forus-frontend
         run: docker-compose exec -T app sh -c "cd src && cat qdt-env.js"
 
+      - name: Debug - Check connection from front to front
+        working-directory: forus-frontend
+        run: docker-compose exec -T app sh -c "wget http://forus-frontend:3000"
+
+      - name: Debug - Check connection from backend to frontend sponsor dashboard
+        working-directory: forus-backend
+        run: docker-compose exec -T app bash -c "wget http://forus-frontend:4000"
+
+      - name: Debug - Check connection from backend to frontend provider dashboard
+        working-directory: forus-backend
+        run: docker-compose exec -T app bash -c "wget http://forus-frontend:5000"
+
+      - name: Debug - Check connection from backend to frontend validator dashboard
+        working-directory: forus-backend
+        run: docker-compose exec -T app bash -c "wget http://forus-frontend:5500"
+
       - name: Install chrome driver
         working-directory: forus-backend
         run: docker-compose exec -T app bash -c "php artisan dusk:chrome"
@@ -104,3 +135,12 @@ jobs:
       - name: --- RUN BROWSER TESTS ----
         working-directory: forus-backend
         run: docker-compose exec -T app bash -c "php artisan dusk --debug --verbose --testdox"
+
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: Screenshots
+          path: |
+            forus-backend/tests/Browser/screenshots/*
+            forus-backend/storage/logs/laravel.log
+          retention-days: 5

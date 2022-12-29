@@ -10,6 +10,7 @@ use App\Services\FileService\Models\File;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
@@ -44,26 +45,48 @@ class FileController extends Controller
      *
      * @param StoreFileRequest $request
      * @return FileResource
+     * @throws \Exception
      */
     public function store(StoreFileRequest $request): FileResource
     {
-        return new FileResource($this->fileService->uploadSingle(
-            $request->file('file'),
-            $request->input('type'),
-            $request->auth_address(),
-        ));
+        $uploadedFile = $request->file('file');
+        $file = $this->fileService->uploadSingle($uploadedFile, $request->input('type'));
+
+        if ($request->input('type') === 'reimbursement_proof') {
+            $isImage = Validator::make($request->only('file'), [
+                'file' => 'required|file|image',
+            ])->passes();
+
+            $isPdf = !$isImage && Validator::make($request->only('file'), [
+                'file' => 'required|file|mimes:pdf'
+            ])->passes();
+
+            if ($isImage) {
+                $file
+                    ->makePreview($request->file('file'), 'reimbursement_file_preview')
+                    ->updateModelValue('identity_address', $request->auth_address());
+            }
+
+            if ($isPdf && $request->has('file_preview')) {
+                $file
+                    ->makePreview($request->file('file_preview'), 'reimbursement_file_preview')
+                    ->updateModelValue('identity_address', $request->auth_address());
+            }
+        }
+
+        return new FileResource($file->updateModelValue('identity_address', $request->auth_address()));
     }
 
     /**
      * Validate file store request
      *
      * @param StoreFileRequest $request
-     * @return JsonResponse
+     * @return ?JsonResponse
      * @noinspection PhpUnused
      */
-    public function storeValidate(StoreFileRequest $request): JsonResponse
+    public function storeValidate(StoreFileRequest $request): ?JsonResponse
     {
-        return new JsonResponse();
+        return $request->authorize() ? new JsonResponse(): null;
     }
 
     /**

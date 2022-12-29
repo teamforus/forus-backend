@@ -5,6 +5,7 @@ namespace App\Services\BankService\Models;
 use bunq\Context\ApiContext;
 use bunq\Context\BunqContext;
 use bunq\Model\Core\BunqEnumOauthGrantType;
+use bunq\Model\Core\BunqModel;
 use bunq\Model\Core\OauthAccessToken;
 use bunq\Model\Generated\Endpoint\OauthClient;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $oauth_redirect_id
  * @property string|null $oauth_redirect_url
  * @property array $data
+<<<<<<< epic.roi
+ * @property string $transaction_cost
+=======
+ * @property string|null $transaction_cost
+>>>>>>> develop
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder|Bank newModelQuery()
@@ -30,6 +36,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|Bank whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Bank whereOauthRedirectId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Bank whereOauthRedirectUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Bank whereTransactionCost($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Bank whereUpdatedAt($value)
  * @mixin \Eloquent
  */
@@ -92,9 +99,9 @@ class Bank extends Model
     }
 
     /**
-     * @return \bunq\Model\Core\BunqModel|OauthClient
+     * @return BunqModel|OauthClient
      */
-    public function getOauthClient(): OauthClient
+    public function getOauthClient(): BunqModel|OauthClient
     {
         return OauthClient::createFromJsonString(json_encode($this->data['oauth_client']));
     }
