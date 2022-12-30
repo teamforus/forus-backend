@@ -64,6 +64,7 @@ use Illuminate\Database\Query\Builder;
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
+ * @property int $show_provider_transactions
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -158,6 +159,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
  * @method static EloquentBuilder|Organization whereReservationsBudgetEnabled($value)
  * @method static EloquentBuilder|Organization whereReservationsSubsidyEnabled($value)
+ * @method static EloquentBuilder|Organization whereShowTransactionsToProvider($value)
  * @method static EloquentBuilder|Organization whereUpdatedAt($value)
  * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
  * @method static EloquentBuilder|Organization whereWebsite($value)
