@@ -120,5 +120,11 @@ return [
         'total_spent_percentage'        => 'Uitgaven %',
         'total_left'                    => 'Restant actieve tegoeden',
         'total_left_percentage'         => 'Totaal percentage restant',
-    ]
+    ],
+
+    'employees'      => [
+        'email'         => 'E-mailadres',
+        'created_at'    => 'Created at',
+        'updated_at'    => 'Updated at',
+    ],
 ];

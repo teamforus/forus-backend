@@ -630,6 +630,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     ]);
 
+    $router->get(
+        'organizations/{organization}/employees/export',
+        'Api\Platform\Organizations\EmployeesController@export'
+    );
+
     $router->resource(
         'organizations.employees',
         "Api\Platform\Organizations\EmployeesController", [
