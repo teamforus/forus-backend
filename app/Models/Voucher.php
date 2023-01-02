@@ -169,6 +169,8 @@ class Voucher extends BaseModel
     public const EVENT_SHARED_BY_EMAIL = 'shared_by_email';
     public const EVENT_PHYSICAL_CARD_REQUESTED = 'physical_card_requested';
 
+    public const EVENT_LIMIT_MULTIPLIER_CHANGED = 'limit_multiplier_changed';
+
     public const TYPE_BUDGET = 'regular';
     public const TYPE_PRODUCT = 'product';
 
