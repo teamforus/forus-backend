@@ -73,8 +73,8 @@ class VoucherTransactionQuery
 
         $builder->addSelect([
             'fund_name' => self::orderFundNameQuery(),
-            'provider_name' => self::orderProviderNameQuery(),
             'product_name' => self::orderProductNameQuery(),
+            'provider_name' => self::orderProviderNameQuery(),
         ]);
 
         return $builder->orderBy(
@@ -84,33 +84,29 @@ class VoucherTransactionQuery
     }
 
     /**
-     * @return Builder
+     * @return Builder|QBuilder
      */
-    protected static function orderFundNameQuery(): Builder
+    protected static function orderFundNameQuery(): Builder|QBuilder
     {
         return Fund::whereHas('vouchers', function(Builder $builder) {
             $builder->whereColumn('voucher_transactions.voucher_id', 'vouchers.id');
-        })->select('funds.name');
+        })->select('name');
     }
 
     /**
-     * @return Builder
+     * @return Builder|QBuilder
      */
-    protected static function orderProviderNameQuery(): Builder
+    protected static function orderProviderNameQuery(): Builder|QBuilder
     {
-        return Organization::where(function(Builder $builder) {
-            $builder->whereColumn('organizations.id', 'voucher_transactions.organization_id');
-        })->select('organizations.name');
+        return Organization::whereColumn('id', 'organization_id')->select('name');
     }
 
     /**
-     * @return Builder
+     * @return Builder|QBuilder
      */
-    protected static function orderProductNameQuery(): Builder
+    protected static function orderProductNameQuery(): Builder|QBuilder
     {
-        return Product::where(function(Builder $builder) {
-            $builder->whereColumn('products.id', 'voucher_transactions.product_id');
-        })->select('products.name');
+        return Product::whereColumn('id', 'product_id')->select('name');
     }
 
     /**

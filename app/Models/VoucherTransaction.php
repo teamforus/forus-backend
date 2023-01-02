@@ -329,20 +329,11 @@ class VoucherTransaction extends BaseModel
 
         if ($request->has('q') && $q = $request->input('q', '')) {
             $query->where(static function (Builder $query) use ($q) {
-                $query->whereHas('provider', static function (Builder $query) use ($q) {
-                    $query->where('name', 'LIKE', "%$q%");
-                });
-
-                $query->orWhereHas('voucher.fund', static function (Builder $query) use ($q) {
-                    $query->where('name', 'LIKE', "%$q%");
-                });
-
-                $query->orWhere('voucher_transactions.id','LIKE', "%$q%");
-
-                $query->orWhereHas('product', static function (Builder $query) use ($q) {
-                    $query->where('name', 'LIKE', "%$q%");
-                    $query->orWhere('id', 'LIKE', "%$q%");
-                });
+                $query->where('voucher_transactions.id', '=', $q);
+                $query->orWhereHas('voucher.fund', fn (Builder $b) => $b->where('name', 'LIKE', "%$q%"));
+                $query->orWhereRelation('product', 'id', "=", $q);
+                $query->orWhereRelation('product', 'name', 'LIKE', "%$q%");
+                $query->orWhereRelation('provider', 'name', 'LIKE', "%$q%");
             });
         }
 
@@ -379,9 +370,7 @@ class VoucherTransaction extends BaseModel
         }
 
         if ($request->has('fund_state') && $fund_state = $request->input('fund_state')) {
-            $query->whereHas('voucher.fund', static function (Builder $query) use ($fund_state) {
-                $query->where('state', '=',  $fund_state);
-            });
+            $query->whereHas('voucher.fund', fn (Builder $b) => $b->where('state', '=', $fund_state));
         }
 
         $query->whereIn('target', is_array($targets) ? $targets : []);
