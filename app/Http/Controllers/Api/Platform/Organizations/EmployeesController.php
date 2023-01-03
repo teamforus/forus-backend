@@ -15,7 +15,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Identity;
 use App\Searches\EmployeesSearch;
 use App\Traits\ThrottleWithMeta;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -135,7 +134,7 @@ class EmployeesController extends Controller
         EmployeeDeleted::broadcast($employee);
         $employee->delete();
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 
     /**
@@ -151,22 +150,15 @@ class EmployeesController extends Controller
         Organization $organization
     ): BinaryFileResponse {
         $this->authorize('show', [$organization]);
-
-        $exportType = $request->input('export_type', 'xls');
-        $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
-
-        $query = $organization->employees()->with([
-            'roles',
-            'logs' => fn (MorphMany $builder) => $builder->where(
-                'event', Employee::EVENT_UPDATED
-            )->latest()
-        ]);
+        $this->authorize('viewAny', [Employee::class, $organization]);
 
         $search = new EmployeesSearch($request->only([
             'role', 'roles', 'permission', 'permissions', 'q',
-        ]), $query->getQuery());
+        ]), $organization->employees()->getQuery());
 
-        $exportData = new EmployeesExport($search->query()->get());
+        $exportType = $request->input('export_type', 'xls');
+        $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
+        $exportData = new EmployeesExport($search->query());
 
         return resolve('excel')->download($exportData, $fileName);
     }

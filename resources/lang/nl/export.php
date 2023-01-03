@@ -124,6 +124,7 @@ return [
 
     'employees'      => [
         'email'         => 'E-mailadres',
+        'owner'         => 'Eigenaar',
         'created_at'    => 'Created at',
         'updated_at'    => 'Updated at',
     ],

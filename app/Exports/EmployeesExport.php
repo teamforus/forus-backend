@@ -4,9 +4,9 @@ namespace App\Exports;
 
 use App\Models\Employee;
 use App\Models\Role;
-use App\Services\EventLogService\Models\EventLog;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Collection;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 
@@ -15,17 +15,26 @@ class EmployeesExport extends BaseFieldedExport
     use Exportable, RegistersEventListeners;
 
     protected Collection $data;
-    protected bool $with_roles;
+    protected bool $withRoles;
+    protected Collection $roles;
 
     /**
      * FundsExport constructor.
-     * @param EloquentCollection $employees
+     * @param Builder $builder
      * @param bool $withRoles
      */
-    public function __construct(EloquentCollection $employees, bool $withRoles = true)
+    public function __construct(Builder $builder, bool $withRoles = true)
     {
-        $this->with_roles = $withRoles;
-        $this->data = $this->exportTransform($employees);
+        $this->roles = Role::get()->collect();
+        $this->withRoles = $withRoles;
+
+        $this->data = $this->exportTransform($builder->with([
+            'roles',
+            'organization',
+            'logs' => fn (MorphMany $b) => $b->where([
+                'event' => Employee::EVENT_UPDATED,
+            ])->take(1)->latest(),
+        ])->get());
     }
 
     /**
@@ -34,48 +43,38 @@ class EmployeesExport extends BaseFieldedExport
      */
     protected function exportTransform(Collection $employees): Collection
     {
-        if (!$this->with_roles) {
-            return $employees->map(function(Employee $employee) {
-                /** @var EventLog|null $lastUpdated */
-                $lastUpdated = $employee->logs->first();
-
-                return [
-                    $this->trans("email") => $employee->identity->email,
-                    $this->trans("created_at") => $employee->created_at,
-                    $this->trans("updated_at") => $lastUpdated->created_at ?? $employee->created_at,
-                ];
-            });
-        }
-
-        $roles = Role::query()->get();
-
-        return $employees->map(function(Employee $employee) use ($roles) {
-            $employeeRoles = $employee->roles->pluck('id')->all();
-            $arr = [
-                $this->trans("email") => $employee->identity->email,
-            ];
-
-            /** @var Role $role */
-            foreach ($roles as $role) {
-                $arr[$role->name] = in_array($role->id, $employeeRoles) ? 'yes' : 'no';
-            }
-
-            /** @var EventLog|null $lastUpdated */
-            $lastUpdated = $employee->logs->first();
-
-            return array_merge($arr, [
-                $this->trans("created_at") => $employee->created_at,
-                $this->trans("updated_at") => $lastUpdated->created_at ?? $employee->created_at,
-            ]);
-        });
+        return $employees->map(fn(Employee $employee) => $this->getEmployeeRow($employee));
     }
 
     /**
-     * @param string $key
-     * @return string|null
+     * @param Employee $employee
+     * @return array
      */
-    protected function trans(string $key): ?string
+    protected function getEmployeeRow(Employee $employee): array
     {
-        return trans("export.employees.$key");
+        $employeeRoles = $this->withRoles ? $this->getRoles($employee) : [];
+        $employeeIsOwner = $employee->identity_address == $employee->organization->identity_address;
+        $employeeLastUpdate = $employee->logs[0]?->created_at ?? $employee->updated_at;
+
+        return array_merge([
+            trans("export.employees.email") => $employee->identity->email,
+            trans("export.employees.owner") => $employeeIsOwner ? 'ja' : 'nee',
+        ], $employeeRoles, [
+            trans("export.employees.created_at") => $employee->created_at,
+            trans("export.employees.updated_at") => $employeeLastUpdate,
+        ]);
+    }
+
+    /**
+     * @param Employee $employee
+     * @return array
+     */
+    protected function getRoles(Employee $employee): array
+    {
+        $employeeRoles = $employee->roles->pluck('id')->toArray();
+
+        return $this->roles->mapWithKeys(fn (Role $role) => [
+            $role->name => in_array($role->id, $employeeRoles) ? 'ja' : 'nee',
+        ])->toArray();
     }
 }
