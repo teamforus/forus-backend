@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\ProductReservations\ProductReservationAccepted;
 use App\Events\ProductReservations\ProductReservationCanceled;
+use App\Events\ProductReservations\ProductReservationCanceledByClient;
 use App\Events\ProductReservations\ProductReservationCreated;
 use App\Events\ProductReservations\ProductReservationRejected;
 use App\Models\ProductReservation;
@@ -11,6 +12,7 @@ use App\Notifications\Identities\ProductReservation\IdentityProductReservationAc
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCanceledNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCreatedNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationRejectedNotification;
+use App\Notifications\Organizations\Products\ProductReservationCanceledNotification;
 use Illuminate\Events\Dispatcher;
 
 class ProductReservationSubscriber
@@ -81,6 +83,20 @@ class ProductReservationSubscriber
     }
 
     /**
+     * @param ProductReservationCanceled $event
+     * @noinspection PhpUnused
+     */
+    public function onProductReservationCanceledByClient(ProductReservationCanceled $event): void
+    {
+        $productReservation = $event->getProductReservation();
+
+        ProductReservationCanceledNotification::send($productReservation->log(
+            $productReservation::EVENT_CANCELED,
+            $this->getReservationLogModels($productReservation)
+        ));
+    }
+
+    /**
      * @param ProductReservationRejected $event
      * @noinspection PhpUnused
      */
@@ -109,5 +125,6 @@ class ProductReservationSubscriber
         $events->listen(ProductReservationAccepted::class, "$class@onProductReservationAccepted");
         $events->listen(ProductReservationRejected::class, "$class@onProductReservationRejected");
         $events->listen(ProductReservationCanceled::class, "$class@onProductReservationCanceled");
+        $events->listen(ProductReservationCanceledByClient::class, "$class@onProductReservationCanceledByClient");
     }
 }

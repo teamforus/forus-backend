@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\ProductReservations\ProductReservationAccepted;
 use App\Events\ProductReservations\ProductReservationCanceled;
+use App\Events\ProductReservations\ProductReservationCanceledByClient;
 use App\Events\ProductReservations\ProductReservationRejected;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -350,6 +351,11 @@ class ProductReservation extends BaseModel
         if ($this->product_voucher) {
             $this->product_voucher->delete();
         }
+
+        ProductReservationCanceledByClient::dispatch($this->updateModel([
+            'state' => self::STATE_CANCELED,
+            'canceled_at' => now(),
+        ]));
 
         return $this->delete();
     }

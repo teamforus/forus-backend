@@ -37,6 +37,7 @@ class IndexProductReservationsRequest extends BaseFormRequest
             'per_page' => 'nullable|numeric|max:100',
             'product_id' => 'nullable|exists:products,id',
             'organization_id' => 'nullable|exists:organizations,id',
+            'archived' => 'nullable|boolean',
         ];
     }
 }

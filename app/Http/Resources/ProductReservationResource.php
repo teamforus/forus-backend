@@ -73,6 +73,8 @@ class ProductReservationResource extends JsonResource
             'canceled_at_locale' => format_date_locale($reservation->canceled_at),
             'expire_at' => $reservation->expire_at ? $reservation->expire_at->format('Y-m-d H:i:s') : null,
             'expire_at_locale' => format_date_locale($reservation->expire_at),
+            'deleted_at' => $reservation->deleted_at ? $reservation->deleted_at->format('Y-m-d H:i:s') : null,
+            'deleted_at_locale' => format_date_locale($reservation->deleted_at),
 
             'expired' => $reservation->hasExpired(),
             'product' => array_merge($reservation->product->only('id', 'name'), [

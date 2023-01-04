@@ -2,7 +2,8 @@
 
 namespace App\Events\ProductReservations;
 
-class ProductReservationCanceledByClient
-{
-
-}
+/**
+ * Class ProductReservationCanceled
+ * @package App\Events\ProductReservations
+ */
+class ProductReservationCanceledByClient extends BaseProductReservationEvent {}

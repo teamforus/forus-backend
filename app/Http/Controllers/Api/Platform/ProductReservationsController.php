@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Events\ProductReservations\ProductReservationCanceled;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\ProductReservations\IndexProductReservationsRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
@@ -36,7 +37,7 @@ class ProductReservationsController extends Controller
         });
 
         $search = new ProductReservationsSearch($request->only([
-            'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id',
+            'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
         ]), $builder);
 
         return ProductReservationResource::collection($search->query()->with(

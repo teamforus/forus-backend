@@ -17,6 +17,8 @@ use App\Scopes\Builders\ProductReservationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Searches\ProductReservationsSearch;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
@@ -54,7 +56,10 @@ class ProductReservationsController extends Controller
             'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id',
         ]), ProductReservationQuery::whereProviderFilter($query, $organization->id));
 
-        return ProductReservationResource::collection($search->query()->with(
+        /** @var Builder|Relation|SoftDeletes $query */
+        $query = $search->query();
+
+        return ProductReservationResource::collection($query->withTrashed()->with(
             ProductReservationResource::load()
         )->orderByDesc('product_reservations.created_at')->paginate(
             $request->input('per_page')
