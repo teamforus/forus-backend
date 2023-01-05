@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\ShowFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundBackofficeRequest;
@@ -21,6 +22,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Scopes\Builders\FundQuery;
 use App\Statistics\Funds\FinancialStatistic;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -52,7 +54,7 @@ class FundsController extends Controller
 
         return FundResource::queryCollection(FundQuery::sortByState($query, [
             'active', 'waiting', 'paused', 'closed',
-        ]), $request);
+        ]), $request, $request->only('stats'));
     }
 
     /**
@@ -126,16 +128,20 @@ class FundsController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param ShowFundRequest $request
      * @param Organization $organization
      * @param Fund $fund
      * @return FundResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
-    public function show(Organization $organization, Fund $fund): FundResource
-    {
+    public function show(
+        ShowFundRequest $request,
+        Organization $organization,
+        Fund $fund
+    ): FundResource {
         $this->authorize('show', [$fund, $organization]);
 
-        return new FundResource($fund);
+        return FundResource::create($fund, $request->only('stats'));
     }
 
     /**

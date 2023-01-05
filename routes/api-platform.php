@@ -593,7 +593,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource(
         'organizations.products.funds',
         "Api\Platform\Organizations\Products\FundsController"
-    )->only('index', 'show', 'store', 'update', 'destroy');
+    )->only('index');
 
     $router->resource(
         'organizations.products.chats',
