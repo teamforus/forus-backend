@@ -76,7 +76,7 @@ class RecordType extends BaseModel
     {
         return static::where(fn(Builder $builder) => $builder->where($withSystem ? [] : [
             'system' => false,
-        ]));
+        ]))->with('translations');
     }
 
     /**
