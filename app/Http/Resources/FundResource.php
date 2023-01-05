@@ -123,8 +123,8 @@ class FundResource extends BaseJsonResource
             'allow_direct_payments', 'allow_voucher_top_ups',
             'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
         ]), [
-            'limit_per_voucher' => currency_format($fund->getMaxAmountPerVoucher()),
-            'limit_sum_vouchers' => currency_format($fund->getMaxAmountSumVouchers()),
+            'limit_per_voucher' => $fund->getMaxAmountPerVoucher(),
+            'limit_sum_vouchers' => $fund->getMaxAmountSumVouchers(),
         ]) : [];
     }
     /**
