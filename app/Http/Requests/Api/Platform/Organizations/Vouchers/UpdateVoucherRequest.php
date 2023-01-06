@@ -33,7 +33,7 @@ class UpdateVoucherRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'limit_multiplier' => 'nullable|numeric|min:1|not_in:'. $this->voucher->limit_multiplier,
+            'limit_multiplier' => 'nullable|numeric|min:1',
         ];
     }
 }

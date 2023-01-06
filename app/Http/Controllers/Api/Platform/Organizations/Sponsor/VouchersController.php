@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Events\Funds\FundVouchersExportedEvent;
+use App\Events\Vouchers\VoucherLimitUpdated;
 use App\Exports\VoucherExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
@@ -272,25 +273,14 @@ class VouchersController extends Controller
         $this->authorize('update', [$voucher, $organization]);
 
         if ($voucher->fund->isTypeSubsidy() && $request->has('limit_multiplier')) {
-            $initialLimitMultiplier = $voucher->limit_multiplier;
+            $currentLimitMultiplier = $voucher->limit_multiplier;
 
-            $voucher->update($request->only('limit_multiplier'));
-
-            $voucher->log(Voucher::EVENT_LIMIT_MULTIPLIER_CHANGED, [
-                'fund' => $voucher->fund,
-                'voucher' => $voucher,
-                'sponsor' => $voucher->fund->organization,
-                'employee' => $voucher->employee,
-                'implementation' => $voucher->fund->getImplementation(),
-            ], [
-                'new_limit_multiplier' => $request->input('limit_multiplier'),
-                'old_limit_multiplier' => $initialLimitMultiplier,
-                'note' => sprintf(
-                    'Voucher limit multiplier changed from %s to %s',
-                    $initialLimitMultiplier,
-                    $request->input('limit_multiplier')
-                ),
-            ]);
+            if ($request->input('limit_multiplier') != $currentLimitMultiplier) {
+                VoucherLimitUpdated::dispatch(
+                    $voucher->updateModel($request->only('limit_multiplier')),
+                    $currentLimitMultiplier,
+                );
+            }
         }
 
         return new SponsorVoucherResource($voucher);
