@@ -79,23 +79,26 @@ class FundsController extends Controller
      */
     public function redeem(RedeemFundsRequest $request): JsonResponse
     {
+        $vouchers = [];
         $vouchersAvailable = $request->getAvailableVouchers();
 
         if ($prevalidation = $request->getPrevalidation()) {
             $this->authorize('redeem', $prevalidation);
             $prevalidation->assignToIdentity($request->identity());
+            $vouchers = Prevalidation::makeVouchersInApplicableFunds($request->identity());
         }
 
         // check permissions of all voucher before assigning
         foreach ($vouchersAvailable as $voucher) {
             if (Gate::allows('redeem', $voucher)) {
                 $voucher->assignToIdentity($request->identity());
+                $vouchers[] = $voucher;
             }
         }
 
         return new JsonResponse([
             'prevalidation' => $prevalidation ? PrevalidationResource::create($prevalidation) : null,
-            'vouchers' => VoucherResource::collection($vouchersAvailable),
+            'vouchers' => VoucherResource::collection($vouchers),
         ]);
     }
 
@@ -126,20 +129,26 @@ class FundsController extends Controller
      *
      * @param CheckFundRequest $request
      * @param Fund $fund
-     * @return array
+     * @return JsonResponse
      * @throws AuthorizationException
      */
-    public function check(CheckFundRequest $request, Fund $fund): array
+    public function check(CheckFundRequest $request, Fund $fund): JsonResponse
     {
         $this->authorize('check', $fund);
 
         $vouchers = Voucher::assignAvailableToIdentityByBsn($request->identity());
         $prevalidations = Prevalidation::assignAvailableToIdentityByBsn($request->identity());
+        $prevalidation_vouchers = $prevalidations > 0
+            ? VoucherResource::collection(Prevalidation::makeVouchersInApplicableFunds($request->identity()))
+            : [];
+
         $hasBackoffice = $fund->fund_config && $fund->organization->backoffice_available;
 
         $backofficeResponse = $fund->checkBackofficeIfAvailable($request->identity());
         $backoffice = $hasBackoffice ? $fund->backofficeResponseToData($backofficeResponse) : null;
 
-        return compact('backoffice', 'vouchers', 'prevalidations');
+        return new JsonResponse(compact(
+            'backoffice', 'vouchers', 'prevalidations', 'prevalidation_vouchers'
+        ));
     }
 }
