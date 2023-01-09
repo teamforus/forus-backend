@@ -84,7 +84,7 @@ trait HasMarkdownDescription {
 
         $htmlDom = new DOMDocument();
 
-        $htmlDom->loadHTML($this->descriptionToHtml());
+        $htmlDom->loadHTML($this->descriptionToHtml(), LIBXML_NOERROR);
         $images = $htmlDom->getElementsByTagName('img');
         $linksArray = [];
 
