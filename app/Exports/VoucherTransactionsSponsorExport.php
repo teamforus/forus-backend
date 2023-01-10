@@ -19,7 +19,7 @@ class VoucherTransactionsSponsorExport extends BaseFieldedExport
         'amount' => 'Bedrag',
         'date_transaction' => 'Datum transactie',
         'date_payment' => 'Datum betaling',
-        'transfer_in'  => 'In de wachtrij (dagen)',
+        'bulk_status_locale'  => 'In de wachtrij (dagen)',
         'fund_name' => 'Fonds',
         'provider' => 'Aanbieder',
         'state' => 'Status',
