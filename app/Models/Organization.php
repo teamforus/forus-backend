@@ -17,7 +17,6 @@ use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use App\Traits\HasMarkdownDescription;
 use App\Statistics\Funds\FinancialStatisticQueries;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Database\Query\Builder;
 
 /**
@@ -637,33 +637,29 @@ class Organization extends BaseModel
     }
 
     /**
-     * Returns identity organization roles
-     *
-     * @param $identityAddress
-     * @return Collection|\Illuminate\Support\Collection
+     * @param Identity $identity
+     * @return EloquentBuilder
      */
-    public function identityRoles($identityAddress) {
-        /** @var Employee $employee */
-        $employee = $this->employees()->where('identity_address', $identityAddress)->first();
-
-        return $employee->roles ?? collect([]);
+    public function identityPermissionsQuery(Identity $identity): EloquentBuilder
+    {
+        return Permission::whereRelation('roles.employees', [
+            'organization_id' => $this->id,
+            'identity_address' => $identity->address,
+        ]);
     }
 
     /**
      * Returns identity organization permissions
-     * @param $identityAddress
-     * @return \Illuminate\Support\Collection
+     * @param ?Identity $identity
+     * @return Collection
      */
-    public function identityPermissions(
-        $identityAddress
-    ): \Illuminate\Support\Collection {
-        if (strcmp($identityAddress, $this->identity_address) === 0) {
+    public function identityPermissions(?Identity $identity): SupportCollection
+    {
+        if ($identity && strcmp($identity->address, $this->identity_address) === 0) {
             return Permission::allMemCached();
         }
 
-        $roles = $this->identityRoles($identityAddress);
-
-        return $roles->pluck('permissions')->flatten()->unique('id');
+        return $identity ? $this->identityPermissionsQuery($identity)->get() : collect();
     }
 
     /**
@@ -700,7 +696,7 @@ class Organization extends BaseModel
         }
 
         // retrieving the list of all the permissions that the identity has
-        $permissionKeys = $this->identityPermissions($identity->address)->pluck('key');
+        $permissionKeys = $this->identityPermissions($identity)->pluck('key');
         $permissionsCount = $permissionKeys->intersect($permissions)->count();
 
         return $all ? $permissionsCount === count($permissions) : $permissionsCount > 0;
