@@ -2,9 +2,15 @@
 
 namespace App\Services\FileService\Models;
 
+use App\Models\Traits\HasDbTokens;
+use App\Models\Traits\UpdatesModel;
+use App\Services\MediaService\Models\Media;
+use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Http\UploadedFile;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -15,6 +21,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * @property string|null $original_name
  * @property string $type
  * @property string $ext
+ * @property int $order
  * @property string $path
  * @property string $size
  * @property string $identity_address
@@ -24,6 +31,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Model|\Eloquent $fileable
  * @property-read string $url_public
+ * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
+ * @property-read int|null $medias_count
+ * @property-read Media|null $preview
  * @method static Builder|File newModelQuery()
  * @method static Builder|File newQuery()
  * @method static Builder|File query()
@@ -33,6 +43,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * @method static Builder|File whereFileableType($value)
  * @method static Builder|File whereId($value)
  * @method static Builder|File whereIdentityAddress($value)
+ * @method static Builder|File whereOrder($value)
  * @method static Builder|File whereOriginalName($value)
  * @method static Builder|File wherePath($value)
  * @method static Builder|File whereSize($value)
@@ -43,6 +54,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class File extends Model
 {
+    use HasDbTokens, HasMedia, UpdatesModel;
+
     /**
      * @return MorphTo
      */
@@ -57,8 +70,18 @@ class File extends Model
      */
     protected $fillable = [
         'identity_address', 'original_name', 'fileable_id',
-        'fileable_type', 'ext', 'uid', 'path', 'size', 'type',
+        'fileable_type', 'ext', 'uid', 'path', 'size', 'type', 'order'
     ];
+
+    /**
+     * @return MorphOne
+     */
+    public function preview(): MorphOne
+    {
+        return $this
+            ->MorphOne(Media::class, 'mediable')
+            ->where('type', 'reimbursement_file_preview');
+    }
 
     /**
      * @return string
@@ -101,5 +124,40 @@ class File extends Model
     public function unlink(): ?bool
     {
         return resolve('file')->unlink($this);
+    }
+
+    /**
+     * @return string
+     */
+    public static function makeUid(): string
+    {
+        return self::makeUniqueToken('uid', '255');
+    }
+
+    /**
+     * @return $this
+     */
+    public function updateModel(array $attributes = [], array $options = []): self
+    {
+        return tap($this)->update($attributes, $options);
+    }
+
+    /**
+     * @param UploadedFile $uploadedFile
+     * @param string $type
+     * @return Media
+     * @throws \Exception
+     */
+    public function makePreview(UploadedFile $uploadedFile, string $type): Media
+    {
+        $media = resolve('media')->uploadSingle(
+            (string) $uploadedFile,
+            $uploadedFile->getClientOriginalName(),
+            $type
+        );
+
+        $this->attachMedia($media);
+
+        return $media;
     }
 }

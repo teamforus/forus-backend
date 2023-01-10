@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read \App\Models\Identity|null $identity
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read \App\Models\Voucher|null $voucher
+ * @property-read \App\Models\Voucher $voucher
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard query()

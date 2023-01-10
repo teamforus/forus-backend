@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
+use App\Models\Reimbursement;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Services\FileService\Models\File;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -39,12 +40,22 @@ class FilePolicy
         }
 
         // is fund request proof
-        if ($file->type === 'fund_request_record_proof') {
-            $requestRecord = $file->fileable instanceof FundRequestRecord ? $file->fileable : null;
+        if ($file->type === 'reimbursement_proof') {
+            $reimbursement = $file->fileable instanceof Reimbursement ? $file->fileable : null;
 
             // is fund validator
-            return $requestRecord && EmployeeQuery::whereCanValidateRecords(
-                $identity->employees(), (array) $requestRecord->id
+            return $reimbursement && $reimbursement->voucher->fund->organization->identityCan(
+                $identity, 'manage_reimbursements'
+            );
+        }
+
+        // is fund request proof
+        if ($file->type === 'fund_request_record_proof') {
+            $reimbursement = $file->fileable instanceof FundRequestRecord ? $file->fileable : null;
+
+            // is fund validator
+            return $reimbursement && EmployeeQuery::whereCanValidateRecords(
+                $identity->employees(), (array) $reimbursement->id
             )->exists();
         }
 
@@ -88,6 +99,17 @@ class FilePolicy
      */
     public function destroy(Identity $identity, File $file): bool
     {
+        if (($file->fileable instanceof Reimbursement) && !$file->fileable->isDraft()) {
+            return false;
+        }
+
+        if ($file->fileable && in_array($file->type, [
+            'fund_request_record_proof',
+            'fund_request_clarification_proof',
+        ])) {
+            return false;
+        }
+
         return $identity->address === $file->identity_address;
     }
 }

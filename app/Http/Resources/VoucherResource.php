@@ -73,7 +73,7 @@ class VoucherResource extends BaseJsonResource
         $deactivationDate = $voucher->deactivated ? $this->getDeactivationDate($voucher): null;
 
         return array_merge($voucher->only([
-            'identity_address', 'fund_id', 'returnable', 'transactions_count',
+            'id', 'identity_address', 'fund_id', 'returnable', 'transactions_count',
             'expired', 'deactivated', 'type', 'state', 'state_locale', 'is_external',
         ]), $this->getBaseFields($voucher), $this->getOptionalFields($voucher), [
             'deactivated_at' => $deactivationDate?->format('Y-m-d'),
@@ -126,7 +126,7 @@ class VoucherResource extends BaseJsonResource
                 'created_at' => $eventLog->created_at->format('Y-m-d'),
                 'created_at_locale' => format_date_locale($eventLog->created_at),
             ]);
-        });
+        })->values();
     }
 
     /**
@@ -225,9 +225,7 @@ class VoucherResource extends BaseJsonResource
      */
     protected function getFundResource(Fund $fund): array
     {
-        return array_merge($fund->only([
-            'id', 'name', 'state', 'type',
-        ]), [
+        return array_merge($fund->only('id', 'name', 'state', 'type'), [
             'url_webshop' => $fund->fund_config->implementation->url_webshop ?? null,
             'logo' => new MediaCompactResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d H:i'),
@@ -237,7 +235,7 @@ class VoucherResource extends BaseJsonResource
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
-        ]);
+        ], $fund->fund_config->only('allow_reimbursements'));
     }
 
     /**

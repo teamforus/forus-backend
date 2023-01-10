@@ -20,7 +20,7 @@ trait AssertsSentEmails
      * @param Carbon|null $after
      * @return EmailLog|null
      */
-    public function findFirstEmalRestoreEmail(
+    public function findFirstEmailRestoreEmail(
         string $email,
         ?Carbon $after = null
     ): ?EmailLog {
@@ -32,11 +32,23 @@ trait AssertsSentEmails
      * @param Carbon|null $after
      * @return EmailLog|null
      */
-    public function findFirstEmalConfirmationEmail(
+    public function findFirstEmailConfirmationEmail(
         string $email,
         ?Carbon $after = null
     ): ?EmailLog {
         return $this->emailsWithLink($email, 'identity/proxy/confirmation/redirect', $after)->first();
+    }
+
+    /**
+     * @param string $email
+     * @param Carbon|null $after
+     * @return EmailLog|null
+     */
+    public function findFirstEmailVerificationEmail(
+        string $email,
+        ?Carbon $after = null
+    ): ?EmailLog {
+        return $this->emailsWithLink($email, 'email-verification', $after)->first();
     }
 
     /**
@@ -70,7 +82,7 @@ trait AssertsSentEmails
         ?Carbon $after = null
     ): void{
         static::assertNotNull(
-            $this->findFirstEmalRestoreLink($email, $after),
+            $this->findFirstEmailRestoreLink($email, $after),
             "No identity email restore link sent."
         );
     }
@@ -87,8 +99,25 @@ trait AssertsSentEmails
         ?Carbon $after = null
     ): void{
         static::assertNotNull(
-            $this->findFirstEmalConfirmationLink($email, $after),
+            $this->findFirstEmailConfirmationLink($email, $after),
             "No identity email confirmation link sent."
+        );
+    }
+
+    /**
+     * Assert that email verification was sent to the identity after given time
+     *
+     * @param string $email
+     * @param Carbon|null $after
+     * @return void
+     */
+    public function assertEmailVerificationLinkSent(
+        string $email,
+        ?Carbon $after = null
+    ): void{
+        static::assertNotNull(
+            $this->findFirstEmailVerificationLink($email, $after),
+            "No identity email verification link sent."
         );
     }
 
@@ -164,10 +193,10 @@ trait AssertsSentEmails
      * @param Carbon|null $startTime
      * @return string|null
      */
-    private function findFirstEmalConfirmationLink(mixed $email, ?Carbon $startTime): ?string
+    private function findFirstEmailConfirmationLink(mixed $email, ?Carbon $startTime): ?string
     {
         return $this->getEmailLink(
-            $this->findFirstEmalConfirmationEmail($email, $startTime)?->content ?: '',
+            $this->findFirstEmailConfirmationEmail($email, $startTime)?->content ?: '',
             'identity/proxy/confirmation/redirect'
         );
     }
@@ -177,11 +206,24 @@ trait AssertsSentEmails
      * @param Carbon|null $startTime
      * @return string|null
      */
-    private function findFirstEmalRestoreLink(mixed $email, ?Carbon $startTime): ?string
+    private function findFirstEmailRestoreLink(mixed $email, ?Carbon $startTime): ?string
     {
         return $this->getEmailLink(
-            $this->findFirstEmalRestoreEmail($email, $startTime)?->content ?: '',
+            $this->findFirstEmailRestoreEmail($email, $startTime)?->content ?: '',
             'identity/proxy/email/redirect'
+        );
+    }
+
+    /**
+     * @param mixed $email
+     * @param Carbon|null $startTime
+     * @return string|null
+     */
+    private function findFirstEmailVerificationLink(mixed $email, ?Carbon $startTime): ?string
+    {
+        return $this->getEmailLink(
+            $this->findFirstEmailVerificationEmail($email, $startTime)?->content ?: '',
+            'email-verification'
         );
     }
 }

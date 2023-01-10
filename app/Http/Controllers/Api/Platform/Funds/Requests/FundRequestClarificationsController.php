@@ -80,9 +80,7 @@ class FundRequestClarificationsController extends Controller
             'state' => FundRequestClarification::STATE_ANSWERED,
         ]));
 
-        foreach ($request->input('files', []) as $fileUid) {
-            $requestClarification->attachFile(File::findByUid($fileUid));
-        }
+        $requestClarification->appendFilesByUid($request->input('files', []));
 
         return FundRequestClarificationResource::create($requestClarification);
     }

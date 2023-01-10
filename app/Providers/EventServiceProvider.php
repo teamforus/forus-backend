@@ -10,6 +10,7 @@ use App\Listeners\FundSubscriber;
 use App\Listeners\OrganizationSubscriber;
 use App\Listeners\ProductReservationSubscriber;
 use App\Listeners\ProductSubscriber;
+use App\Listeners\ReimbursementSubscriber;
 use App\Listeners\VoucherSubscriber;
 use App\Listeners\VoucherTransactionsSubscriber;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -33,6 +34,7 @@ class EventServiceProvider extends ServiceProvider
         FundRequestSubscriber::class,
         OrganizationSubscriber::class,
         FundProviderSubscriber::class,
+        ReimbursementSubscriber::class,
         BankConnectionSubscriber::class,
         ProductReservationSubscriber::class,
         VoucherTransactionsSubscriber::class,

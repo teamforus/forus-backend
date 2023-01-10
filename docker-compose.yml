@@ -56,6 +56,7 @@ services:
       - forus-network
 
   selenium:
+    shm_size: '1gb'
     profiles:
       - testing
     depends_on:
