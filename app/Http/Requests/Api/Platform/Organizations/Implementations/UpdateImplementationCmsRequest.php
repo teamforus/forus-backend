@@ -48,6 +48,8 @@ class UpdateImplementationCmsRequest extends FormRequest
             'show_home_products' => 'nullable|boolean',
             'show_providers_map' => 'nullable|boolean',
             'show_provider_map' => 'nullable|boolean',
+            'show_voucher_map'  => 'nullable|boolean',
+            'show_product_map'  => 'nullable|boolean',
         ];
     }
 
