@@ -107,8 +107,14 @@ class VouchersController extends Controller
                 }
 
                 if ($request->input('activation_code')) {
-                    $voucher->makeActivationCode($request->input('activation_code_uid'));
+                    $voucher->makeActivationCode($request->input('client_uid'));
                 }
+            }
+
+            if ($client_uid = $request->input('client_uid')) {
+                $voucher->update([
+                    'client_uid' => $client_uid,
+                ]);
             }
         }
 
@@ -184,8 +190,14 @@ class VouchersController extends Controller
                     }
 
                     if ($voucher['activation_code'] ?? false) {
-                        $voucherModel->makeActivationCode($voucher['activation_code_uid'] ?? null);
+                        $voucherModel->makeActivationCode($voucher['client_uid'] ?? null);
                     }
+                }
+
+                if ($client_uid = $voucher['client_uid'] ?? null) {
+                    $voucherModel->update([
+                        'client_uid' => $client_uid,
+                    ]);
                 }
             }
 
@@ -343,7 +355,7 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('makeActivationCodeSponsor', [$voucher, $organization]);
 
-        $voucher->makeActivationCode($request->input('activation_code_uid'));
+        $voucher->makeActivationCode($request->input('client_uid'));
 
         return new SponsorVoucherResource($voucher);
     }

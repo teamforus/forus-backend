@@ -54,7 +54,7 @@ use ZipArchive;
  * @property string|null $note
  * @property int|null $employee_id
  * @property string|null $activation_code
- * @property string|null $activation_code_uid
+ * @property string|null $client_uid
  * @property int|null $fund_backoffice_log_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -206,7 +206,7 @@ class Voucher extends BaseModel
     protected $fillable = [
         'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id',
         'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'state',
-        'activation_code', 'activation_code_uid', 'fund_backoffice_log_id',
+        'activation_code', 'client_uid', 'fund_backoffice_log_id',
         'product_reservation_id',
     ];
 
@@ -1221,20 +1221,20 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @param string|null $activation_code_uid
+     * @param string|null $client_uid
      * @return $this
      */
-    public function makeActivationCode(string $activation_code_uid = null): self
+    public function makeActivationCode(string $client_uid = null): self
     {
         $queryUnused = self::whereHas('fund', function(Builder $builder) {
             $builder->where('organization_id', $this->fund->organization_id);
-        })->whereNull('identity_address')->where(compact('activation_code_uid'));
+        })->whereNull('identity_address')->where(compact('client_uid'));
 
         $queryUsed = self::whereHas('fund', function(Builder $builder) {
             $builder->where('organization_id', $this->fund->organization_id);
-        })->whereNotNull('identity_address')->where(compact('activation_code_uid'));
+        })->whereNotNull('identity_address')->where(compact('client_uid'));
 
-        if (!is_null($activation_code_uid) && $queryUnused->exists()) {
+        if (!is_null($client_uid) && $queryUnused->exists()) {
             /** @var Voucher $voucher */
             $voucher = $queryUnused->first();
             $activation_code = $voucher->activation_code;
@@ -1246,13 +1246,13 @@ class Voucher extends BaseModel
             }, 4, 2);
         }
 
-        if (!is_null($activation_code_uid) && $oldVoucher = $queryUsed->first()) {
+        if (!is_null($client_uid) && $oldVoucher = $queryUsed->first()) {
             $this->assignToIdentity($oldVoucher->identity);
         }
 
         return $this->updateModel([
             'activation_code' => $activation_code,
-            'activation_code_uid' => $activation_code_uid,
+            'client_uid' => $client_uid,
         ]);
     }
 
