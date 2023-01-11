@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Traits\RecordTranslationTrait;
+use App\Models\Traits\Translations\RecordTranslationsTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -42,7 +42,7 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class RecordType extends BaseModel
 {
-    use Translatable, RecordTranslationTrait;
+    use Translatable, RecordTranslationsTrait;
 
     /**
      * The attributes that are mass assignable.
