@@ -119,10 +119,10 @@ return [
         'budget_vouchers_active_count'          => 'Totaalaantal actief',
         'budget_total_spent_amount'             => 'Uitgaven €',
         'budget_total_spent_percentage'         => 'Uitgaven %',
-        'budget_total_left'                     => 'Restant actieve tegoeden',
+        'budget_total_left_amount'              => 'Restant actieve tegoeden',
         'budget_total_left_percentage'          => 'Totaal percentage restant',
-        'budget_deactivated_amount'             => 'Totaal gedeactiveerd €',
-        'budget_deactivated_count'              => 'Totaal gedeactiveerd aantal',
+        'budget_vouchers_deactivated_amount'    => 'Totaal gedeactiveerd €',
+        'budget_vouchers_deactivated_count'     => 'Totaal gedeactiveerd aantal',
 
         // Product vouchers
         'product_vouchers_amount'               => 'Totaal aanbiedingsvouchers €',
