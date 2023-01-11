@@ -20,6 +20,8 @@ class VoucherTransactionsSponsorExport extends BaseFieldedExport
         'date_transaction' => 'Datum transactie',
         'date_payment' => 'Datum betaling',
         'fund_name' => 'Fonds',
+        'product_id' => 'Aanbod ID',
+        'product_name' => 'Aanbod naam',
         'provider' => 'Aanbieder',
         'state' => 'Status',
     ];

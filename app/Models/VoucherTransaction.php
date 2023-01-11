@@ -148,7 +148,7 @@ class VoucherTransaction extends BaseModel
 
     public const SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'voucher_transaction_bulk_id',
-        'fund_name', 'provider_name', 'target',
+        'fund_name', 'provider_name', 'product_name', 'target',
     ];
 
     /**
@@ -329,15 +329,11 @@ class VoucherTransaction extends BaseModel
 
         if ($request->has('q') && $q = $request->input('q', '')) {
             $query->where(static function (Builder $query) use ($q) {
-                $query->whereHas('provider', static function (Builder $query) use ($q) {
-                    $query->where('name', 'LIKE', "%$q%");
-                });
-
-                $query->orWhereHas('voucher.fund', static function (Builder $query) use ($q) {
-                    $query->where('name', 'LIKE', "%$q%");
-                });
-
-                $query->orWhere('voucher_transactions.id','LIKE', "%$q%");
+                $query->where('voucher_transactions.id', '=', $q);
+                $query->orWhereHas('voucher.fund', fn (Builder $b) => $b->where('name', 'LIKE', "%$q%"));
+                $query->orWhereRelation('product', 'id', "=", $q);
+                $query->orWhereRelation('product', 'name', 'LIKE', "%$q%");
+                $query->orWhereRelation('provider', 'name', 'LIKE', "%$q%");
             });
         }
 
@@ -374,9 +370,7 @@ class VoucherTransaction extends BaseModel
         }
 
         if ($request->has('fund_state') && $fund_state = $request->input('fund_state')) {
-            $query->whereHas('voucher.fund', static function (Builder $query) use ($fund_state) {
-                $query->where('state', '=',  $fund_state);
-            });
+            $query->whereHas('voucher.fund', fn (Builder $b) => $b->where('state', '=', $fund_state));
         }
 
         $query->whereIn('target', is_array($targets) ? $targets : []);
@@ -468,6 +462,8 @@ class VoucherTransaction extends BaseModel
             'date_transaction' => format_datetime_locale($transaction->created_at),
             'date_payment' => format_datetime_locale($transaction->payment_time),
             'fund_name' => $transaction->voucher->fund->name,
+            'product_id' => $transaction->product?->id,
+            'product_name' => $transaction->product?->name,
             'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
             'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
         ], $fields))->values();

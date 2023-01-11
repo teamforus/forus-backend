@@ -5,6 +5,7 @@ namespace App\Scopes\Builders;
 
 use App\Models\Fund;
 use App\Models\Organization;
+use App\Models\Product;
 use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QBuilder;
@@ -72,6 +73,7 @@ class VoucherTransactionQuery
 
         $builder->addSelect([
             'fund_name' => self::orderFundNameQuery(),
+            'product_name' => self::orderProductNameQuery(),
             'provider_name' => self::orderProviderNameQuery(),
         ]);
 
@@ -82,23 +84,29 @@ class VoucherTransactionQuery
     }
 
     /**
-     * @return Builder
+     * @return Builder|QBuilder
      */
-    protected static function orderFundNameQuery(): Builder
+    protected static function orderFundNameQuery(): Builder|QBuilder
     {
         return Fund::whereHas('vouchers', function(Builder $builder) {
             $builder->whereColumn('voucher_transactions.voucher_id', 'vouchers.id');
-        })->select('funds.name');
+        })->select('name');
     }
 
     /**
-     * @return Builder
+     * @return Builder|QBuilder
      */
-    protected static function orderProviderNameQuery(): Builder
+    protected static function orderProviderNameQuery(): Builder|QBuilder
     {
-        return Organization::where(function(Builder $builder) {
-            $builder->whereColumn('organizations.id', 'voucher_transactions.organization_id');
-        })->select('organizations.name');
+        return Organization::whereColumn('id', 'organization_id')->select('name');
+    }
+
+    /**
+     * @return Builder|QBuilder
+     */
+    protected static function orderProductNameQuery(): Builder|QBuilder
+    {
+        return Product::whereColumn('id', 'product_id')->select('name');
     }
 
     /**
