@@ -507,10 +507,11 @@ class VoucherTransaction extends BaseModel
 
         if ($this->isPending() && $this->attempts <= 3) {
             $daysBefore = $this->daysBeforeTransaction() ?: 1;
+            $shouldDelayTransaction = $this->transfer_at && $this->transfer_at->isAfter(now());
 
             return implode(" ", [
                 'In de wachtrij',
-                $this->transfer_at->isBefore(now()) ? "" : sprintf('(%s dagen)', $daysBefore),
+                $shouldDelayTransaction ? sprintf('(%s dagen)', $daysBefore) : '',
             ]);
         }
 
