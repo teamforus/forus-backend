@@ -17,14 +17,8 @@ use App\Scopes\Builders\ProductReservationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Searches\ProductReservationsSearch;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class ProductReservationsController
- * @package App\Http\Controllers\Api\Platform\Organizations
- */
 class ProductReservationsController extends Controller
 {
     /**
@@ -42,7 +36,7 @@ class ProductReservationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [ProductReservation::class, $organization]);
 
-        $query = ProductReservation::where(function(Builder $builder) {
+        $query = ProductReservation::withTrashed()->where(function(Builder $builder) {
             $builder->where('state', '!=', ProductReservation::STATE_PENDING);
             $builder->orWhere(function(Builder $builder) {
                 $builder->where('state', ProductReservation::STATE_PENDING);
@@ -56,10 +50,7 @@ class ProductReservationsController extends Controller
             'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id',
         ]), ProductReservationQuery::whereProviderFilter($query, $organization->id));
 
-        /** @var Builder|Relation|SoftDeletes $query */
-        $query = $search->query();
-
-        return ProductReservationResource::collection($query->withTrashed()->with(
+        return ProductReservationResource::collection($search->query()->with(
             ProductReservationResource::load()
         )->orderByDesc('product_reservations.created_at')->paginate(
             $request->input('per_page')
@@ -73,7 +64,7 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @return ProductReservationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function store(
         StoreProductReservationRequest $request,
@@ -100,7 +91,7 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @return array
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function storeBatch(
         StoreProductReservationBatchRequest $request,
@@ -167,7 +158,7 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @param \App\Models\ProductReservation $productReservation
      * @return ProductReservationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Throwable
      */
     public function accept(
         AcceptProductReservationRequest $request,
@@ -190,7 +181,7 @@ class ProductReservationsController extends Controller
      * @param \App\Models\ProductReservation $productReservation
      * @return ProductReservationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function reject(
         RejectProductReservationRequest $request,

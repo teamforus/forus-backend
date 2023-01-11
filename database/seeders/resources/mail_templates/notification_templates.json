@@ -470,6 +470,14 @@
             "content": "Aanbod :product_name is gereserveerd."
         }
     },
+    "notifications_products.reservation_canceled": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Reservation canceled by the client.",
+            "content": "The reservation for product :product_name is canceled by client."
+        }
+    },
     "notifications_products.revoked": {
         "mail": {},
         "push": {},

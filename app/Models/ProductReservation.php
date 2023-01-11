@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Events\ProductReservations\ProductReservationAccepted;
 use App\Events\ProductReservations\ProductReservationCanceled;
-use App\Events\ProductReservations\ProductReservationCanceledByClient;
 use App\Events\ProductReservations\ProductReservationRejected;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 
 
 /**
@@ -225,10 +226,15 @@ class ProductReservation extends BaseModel
     /**
      * @param Employee|null $employee
      * @return $this
+     * @throws \Throwable
      */
     public function acceptProvider(?Employee $employee = null): self
     {
-        return $this->setAccepted($this->makeTransaction($employee));
+        DB::transaction(function() use ($employee) {
+            return $this->setAccepted($this->makeTransaction($employee));
+        });
+
+        return $this;
     }
 
     /**
@@ -278,31 +284,33 @@ class ProductReservation extends BaseModel
     /**
      * @param Employee|null $employee
      * @return $this
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function rejectOrCancelProvider(?Employee $employee = null): self
     {
-        $isAccepted = $this->isAccepted();
+        DB::transaction(function() use ($employee) {
+            $isAccepted = $this->isAccepted();
 
-        $this->updateModel($isAccepted ? [
-            'state' => self::STATE_CANCELED,
-            'canceled_at' => now(),
-            'employee_id' => $employee ? $employee->id : null,
-        ] : [
-            'state' => self::STATE_REJECTED,
-            'rejected_at' => now(),
-            'employee_id' => $employee ? $employee->id : null,
-        ]);
+            $this->updateModel($isAccepted ? [
+                'state' => self::STATE_CANCELED,
+                'canceled_at' => now(),
+                'employee_id' => $employee?->id,
+            ] : [
+                'state' => self::STATE_REJECTED,
+                'rejected_at' => now(),
+                'employee_id' => $employee?->id,
+            ]);
 
-        if ($this->voucher_transaction && $this->voucher_transaction->isCancelable()) {
-            $this->voucher_transaction->cancelPending();
-        }
+            if ($this->voucher_transaction && $this->voucher_transaction->isCancelable()) {
+                $this->voucher_transaction->cancelPending();
+            }
 
-        if ($isAccepted) {
-            ProductReservationCanceled::dispatch($this);
-        } else {
-            ProductReservationRejected::dispatch($this);
-        }
+            if ($isAccepted) {
+                Event::dispatch(new ProductReservationCanceled($this));
+            } else {
+                Event::dispatch(new ProductReservationRejected($this));
+            }
+        });
 
         return $this;
     }
@@ -344,26 +352,31 @@ class ProductReservation extends BaseModel
 
     /**
      * @return bool|null
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function cancelByClient(): ?bool
     {
-        if ($this->product_voucher) {
-            $this->product_voucher->delete();
-        }
+        DB::transaction(function() {
+            if ($this->product_voucher) {
+                $this->product_voucher->delete();
+            }
 
-        ProductReservationCanceledByClient::dispatch($this->updateModel([
-            'state' => self::STATE_CANCELED,
-            'canceled_at' => now(),
-        ]));
+            Event::dispatch(new ProductReservationCanceled($this->updateModel([
+                'state' => self::STATE_CANCELED,
+                'canceled_at' => now(),
+            ]), true));
 
-        return $this->delete();
+            $this->delete();
+        });
+
+        return true;
     }
 
     /**
      * @param string|null $identity_address
      * @param string|null $note
      * @return VoucherTransaction
+     * @throws \Throwable
      */
     public function acceptByApp(?string $identity_address, ?string $note = null): VoucherTransaction
     {

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
-use App\Events\ProductReservations\ProductReservationCanceled;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\ProductReservations\IndexProductReservationsRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
@@ -15,10 +14,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class ProductReservationsController
- * @package App\Http\Controllers\Api\Platform
- */
 class ProductReservationsController extends Controller
 {
     /**
@@ -40,9 +35,10 @@ class ProductReservationsController extends Controller
             'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
         ]), $builder);
 
-        return ProductReservationResource::collection($search->query()->with(
-            ProductReservationResource::load()
-        )->orderByDesc('created_at')->paginate($request->input('per_page')));
+        return ProductReservationResource::queryCollection(
+            $search->query()->orderByDesc('created_at'),
+            $request
+        );
     }
 
     /**
@@ -51,7 +47,7 @@ class ProductReservationsController extends Controller
      * @param StoreProductReservationRequest $request
      * @return ProductReservationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function store(StoreProductReservationRequest $request): ProductReservationResource
     {
@@ -68,9 +64,7 @@ class ProductReservationsController extends Controller
             $reservation->acceptProvider();
         }
 
-        return new ProductReservationResource($reservation->load(
-            ProductReservationResource::load()
-        ));
+        return ProductReservationResource::create($reservation);
     }
 
     /**
@@ -90,9 +84,7 @@ class ProductReservationsController extends Controller
     {
         $this->authorize('view', $productReservation);
 
-        return new ProductReservationResource($productReservation->load(
-            ProductReservationResource::load()
-        ));
+        return ProductReservationResource::create($productReservation);
     }
 
     /**
@@ -101,7 +93,7 @@ class ProductReservationsController extends Controller
      * @param \App\Models\ProductReservation $productReservation
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function destroy(ProductReservation $productReservation): JsonResponse
     {
@@ -109,6 +101,6 @@ class ProductReservationsController extends Controller
 
         $productReservation->cancelByClient();
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 }

@@ -5,26 +5,18 @@ namespace App\Http\Resources;
 use App\Models\Identity;
 use App\Models\Product;
 use App\Models\ProductReservation;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Class ProductReservationResource
  * @property ProductReservation $resource
- * @package App\Http\Resources
  */
-class ProductReservationResource extends JsonResource
+class ProductReservationResource extends BaseJsonResource
 {
-    /**
-     * @return array
-     */
-    public static function load(): array
-    {
-        return [
-            'voucher.fund',
-            'product.organization',
-            'product.photo.presets',
-        ];
-    }
+    public const LOAD = [
+        'voucher.fund',
+        'product.organization',
+        'product.photo.presets',
+        'voucher_transaction',
+    ];
 
     /**
      * Transform the resource into an array.
@@ -63,27 +55,18 @@ class ProductReservationResource extends JsonResource
         return array_merge($reservation->only([
             'id', 'state', 'state_locale', 'amount', 'code', 'first_name', 'last_name', 'user_note',
         ]), [
-            'created_at' => $reservation->created_at ? $reservation->created_at->format('Y-m-d H:i:s') : null,
-            'created_at_locale' => format_date_locale($reservation->created_at),
-            'accepted_at' => $reservation->accepted_at ? $reservation->accepted_at->format('Y-m-d H:i:s') : null,
-            'accepted_at_locale' => format_date_locale($reservation->accepted_at),
-            'rejected_at' => $reservation->rejected_at ? $reservation->rejected_at->format('Y-m-d H:i:s') : null,
-            'rejected_at_locale' => format_date_locale($reservation->rejected_at),
-            'canceled_at' => $reservation->canceled_at ? $reservation->canceled_at->format('Y-m-d H:i:s') : null,
-            'canceled_at_locale' => format_date_locale($reservation->canceled_at),
-            'expire_at' => $reservation->expire_at ? $reservation->expire_at->format('Y-m-d H:i:s') : null,
-            'expire_at_locale' => format_date_locale($reservation->expire_at),
-            'deleted_at' => $reservation->deleted_at ? $reservation->deleted_at->format('Y-m-d H:i:s') : null,
-            'deleted_at_locale' => format_date_locale($reservation->deleted_at),
-
+            'price' => $price,
+            'price_locale' => $price_locale,
             'expired' => $reservation->hasExpired(),
-            'product' => array_merge($reservation->product->only('id', 'name'), [
+            'product' => array_merge($reservation->product->only('id', 'name', 'organization_id'), [
                 'deleted' => $reservation->product->trashed(),
                 'organization' => $reservation->product->organization->only('id', 'name'),
                 'photo' => new MediaResource($reservation->product->photo),
             ]),
             'fund' => $voucher->fund->only('id', 'name'),
-            'voucher_transaction' => $transaction ? $transaction->only('id', 'address') : null,
-        ], $identityData, compact('price', 'price_locale'));
+            'voucher_transaction' => $transaction?->only('id', 'address'),
+        ], $identityData, $this->timestamps($reservation, [
+            'created_at', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
+        ]));
     }
 }

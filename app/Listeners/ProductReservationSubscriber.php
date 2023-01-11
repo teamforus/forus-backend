@@ -4,7 +4,6 @@ namespace App\Listeners;
 
 use App\Events\ProductReservations\ProductReservationAccepted;
 use App\Events\ProductReservations\ProductReservationCanceled;
-use App\Events\ProductReservations\ProductReservationCanceledByClient;
 use App\Events\ProductReservations\ProductReservationCreated;
 use App\Events\ProductReservations\ProductReservationRejected;
 use App\Models\ProductReservation;
@@ -12,7 +11,7 @@ use App\Notifications\Identities\ProductReservation\IdentityProductReservationAc
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCanceledNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCreatedNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationRejectedNotification;
-use App\Notifications\Organizations\Products\ProductReservationCanceledNotification;
+use App\Notifications\Organizations\ProductReservations\ProductReservationCanceledNotification;
 use Illuminate\Events\Dispatcher;
 
 class ProductReservationSubscriber
@@ -75,25 +74,18 @@ class ProductReservationSubscriber
     public function onProductReservationCanceled(ProductReservationCanceled $event): void
     {
         $productReservation = $event->getProductReservation();
+        $canceledByClient = $event->isByClient();
+        $models = $this->getReservationLogModels($productReservation);
 
-        IdentityProductReservationCanceledNotification::send($productReservation->log(
-            $productReservation::EVENT_CANCELED,
-            $this->getReservationLogModels($productReservation)
-        ));
-    }
+        $eventLog = $productReservation->log($productReservation::EVENT_CANCELED, $models, [
+            'product_reservation_canceled_by_client' => $canceledByClient,
+        ]);
 
-    /**
-     * @param ProductReservationCanceled $event
-     * @noinspection PhpUnused
-     */
-    public function onProductReservationCanceledByClient(ProductReservationCanceled $event): void
-    {
-        $productReservation = $event->getProductReservation();
-
-        ProductReservationCanceledNotification::send($productReservation->log(
-            $productReservation::EVENT_CANCELED,
-            $this->getReservationLogModels($productReservation)
-        ));
+        if ($canceledByClient) {
+            ProductReservationCanceledNotification::send($eventLog);
+        } else {
+            IdentityProductReservationCanceledNotification::send($eventLog);
+        }
     }
 
     /**
@@ -125,6 +117,5 @@ class ProductReservationSubscriber
         $events->listen(ProductReservationAccepted::class, "$class@onProductReservationAccepted");
         $events->listen(ProductReservationRejected::class, "$class@onProductReservationRejected");
         $events->listen(ProductReservationCanceled::class, "$class@onProductReservationCanceled");
-        $events->listen(ProductReservationCanceledByClient::class, "$class@onProductReservationCanceledByClient");
     }
 }
