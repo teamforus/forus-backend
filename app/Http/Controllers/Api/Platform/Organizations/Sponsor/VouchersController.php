@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Events\Funds\FundVouchersExportedEvent;
+use App\Events\Vouchers\VoucherLimitUpdated;
 use App\Exports\VoucherExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
@@ -284,7 +285,14 @@ class VouchersController extends Controller
         $this->authorize('update', [$voucher, $organization]);
 
         if ($voucher->fund->isTypeSubsidy() && $request->has('limit_multiplier')) {
-            $voucher->update($request->only('limit_multiplier'));
+            $currentLimitMultiplier = $voucher->limit_multiplier;
+
+            if ($request->input('limit_multiplier') != $currentLimitMultiplier) {
+                VoucherLimitUpdated::dispatch(
+                    $voucher->updateModel($request->only('limit_multiplier')),
+                    $currentLimitMultiplier,
+                );
+            }
         }
 
         return new SponsorVoucherResource($voucher);
