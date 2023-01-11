@@ -25,13 +25,13 @@ use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
-use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -1047,7 +1047,7 @@ class Fund extends BaseModel
     /**
      * @return mixed|null
      */
-    public function amountFixedByFormula()
+    public function amountFixedByFormula(): mixed
     {
         if (!$fundFormula = $this->fund_formulas) {
             return null;
@@ -1060,18 +1060,6 @@ class Fund extends BaseModel
         }
 
         return $fundFormula->sum('amount');
-    }
-
-    /**
-     * @return Fund[]|Builder[]|Collection|\Illuminate\Support\Collection
-     * @noinspection PhpUnused
-     */
-    public static function configuredFunds() {
-        try {
-            return static::query()->whereHas('fund_config')->get();
-        } catch (\Throwable $e) {
-            return collect();
-        }
     }
 
     /**
@@ -1365,10 +1353,7 @@ class Fund extends BaseModel
         foreach ($records as $record) {
             /** @var FundRequestRecord $requestRecord */
             $requestRecord = $fundRequest->records()->create($record);
-
-            foreach ($record['files'] ?? [] as $fileUid) {
-                $requestRecord->attachFile(File::findByUid($fileUid));
-            }
+            $requestRecord->appendFilesByUid($record['files'] ?? []);
         }
 
         return $fundRequest;
@@ -1454,7 +1439,6 @@ class Fund extends BaseModel
             ])->getKey();
         }
 
-        /** @var FundCriterionValidator[]|Collection $criterionValidators */
         $criterionValidators = $criterion->fund_criterion_validators()->whereNotIn(
             'fund_criterion_validators.id', $currentValidators
         )->get();
@@ -1471,7 +1455,8 @@ class Fund extends BaseModel
      * Resign fund request record employees be criterion validator
      * @param FundCriterionValidator[]|Collection $criterionValidators
      */
-    protected function resignCriterionValidators($criterionValidators): void {
+    protected function resignCriterionValidators(Collection|Arrayable $criterionValidators): void
+    {
         foreach ($criterionValidators as $criterionValidator) {
             $validator_organization = $criterionValidator
                 ->external_validator->validator_organization;
@@ -1494,7 +1479,8 @@ class Fund extends BaseModel
      * @param array $productIds
      * @return $this
      */
-    public function updateFormulaProducts(array $productIds): self {
+    public function updateFormulaProducts(array $productIds): self
+    {
         /** @var Collection|Product[] $products */
         $products = Product::whereIn('id', $productIds)->get();
 
@@ -1547,7 +1533,7 @@ class Fund extends BaseModel
 
     /**
      * @param string $uri
-     * @return mixed|string
+     * @return string
      * @noinspection PhpUnused
      */
     public function urlValidatorDashboard(string $uri = "/"): string
@@ -1664,7 +1650,7 @@ class Fund extends BaseModel
      * @param Collection|Fund[] $funds
      * @return array
      */
-    public static function getFundTotals(Collection $funds) : array
+    public static function getFundTotals(Collection|Arrayable $funds) : array
     {
         $budget = 0;
         $budget_left = 0;
@@ -1833,7 +1819,7 @@ class Fund extends BaseModel
     public function checkBackofficeIfAvailable(
         Identity $identity
     ): EligibilityResponse|ResidencyResponse|PartnerBsnResponse|null {
-        $bsn = $identity?->bsn;
+        $bsn = $identity->bsn;
         $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity);
 
         if ($bsn && !$alreadyHasActiveVoucher && $this->isBackofficeApiAvailable()) {
@@ -1954,12 +1940,12 @@ class Fund extends BaseModel
         return
             $this->organization->bsn_enabled &&
             $this->organization->backoffice_available &&
-            ($this->fund_config->backoffice_enabled || $skipEnabledCheck);
+            ($this->fund_config?->backoffice_enabled || $skipEnabledCheck);
     }
 
     /**
      * @param string $default
-     * @return string|null
+     * @return string
      * @noinspection PhpUnused
      */
     public function communicationType(string $default = 'formal'): string

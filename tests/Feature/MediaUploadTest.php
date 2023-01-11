@@ -124,7 +124,7 @@ class MediaUploadTest extends TestCase
         $headers = $this->makeApiHeaders($mediaAuthor);
 
         // Delete as creator
-        $this->delete("$this->apiMediaUrl/$media->uid", [], $headers)->assertSuccessful();
+        $this->deleteJson("$this->apiMediaUrl/$media->uid", [], $headers)->assertSuccessful();
 
         // Check if deleted
         Storage::disk('public')->assertMissing($media->presets->pluck('path')->toArray());
@@ -141,8 +141,7 @@ class MediaUploadTest extends TestCase
         $headers = $this->makeApiHeaders(true);
 
         // Delete as different user
-        $this->refreshApplication();
-        $this->delete("$this->apiMediaUrl/$media->uid", [], $headers)->assertForbidden();
+        $this->deleteJson("$this->apiMediaUrl/$media->uid", [], $headers)->assertForbidden();
     }
 
     /**
@@ -155,8 +154,7 @@ class MediaUploadTest extends TestCase
         $headers = $this->makeApiHeaders();
 
         // Delete as guest
-        $this->refreshApplication();
-        $this->delete("$this->apiMediaUrl/$media->uid", [], $headers)->assertUnauthorized();
+        $this->deleteJson("$this->apiMediaUrl/$media->uid", [], $headers)->assertUnauthorized();
     }
 
     /**

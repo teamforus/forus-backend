@@ -12,6 +12,7 @@ class ImplementationPageResource extends BaseJsonResource
     public const LOAD = [
         'faq',
         'blocks.photo',
+        'blocks.implementation_page.implementation',
     ];
 
     /**

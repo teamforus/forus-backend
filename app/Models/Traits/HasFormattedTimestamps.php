@@ -3,17 +3,17 @@
 namespace App\Models\Traits;
 
 /**
- * Trait NodeTrait
  * @property string|null $created_at_string
  * @property string|null $created_at_string_locale
  * @property string|null $updated_at_string
  * @property string|null $updated_at_string_locale
- * @package App\Models\Traits
+ * @mixin \Eloquent
  */
 trait HasFormattedTimestamps
 {
     /**
      * @return string|null
+     * @noinspection PhpUnused
      */
     public function getCreatedAtStringAttribute(): ?string
     {
@@ -22,6 +22,7 @@ trait HasFormattedTimestamps
 
     /**
      * @return string|null
+     * @noinspection PhpUnused
      */
     public function getCreatedAtStringLocaleAttribute(): ?string
     {
@@ -30,6 +31,7 @@ trait HasFormattedTimestamps
 
     /**
      * @return string|null
+     * @noinspection PhpUnused
      */
     public function getUpdatedAtStringAttribute(): ?string
     {
@@ -38,6 +40,7 @@ trait HasFormattedTimestamps
 
     /**
      * @return string|null
+     * @noinspection PhpUnused
      */
     public function getUpdatedAtStringLocaleAttribute(): ?string
     {

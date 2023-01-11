@@ -47,7 +47,6 @@ return [
         League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension::class,
         League\CommonMark\Extension\ExternalLink\ExternalLinkExtension::class,
         League\CommonMark\Extension\Table\TableExtension::class,
-        League\CommonMark\Extension\Table\TableExtension::class,
         Zoon\CommonMark\Ext\YouTubeIframe\YouTubeIframeExtension::class,
     ],
 

@@ -79,7 +79,7 @@ class StoreFundRequestRequest extends BaseFormRequest
                 new FundRequestRecordRecordTypeKeyRule($this, $fund),
             ],
             'records.*.files' => 'nullable|array',
-            'records.*.files.*' => 'required', 'exists:files,uid',
+            'records.*.files.*' => 'required|exists:files,uid',
         ];
     }
 

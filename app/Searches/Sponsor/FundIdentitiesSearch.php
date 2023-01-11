@@ -21,9 +21,10 @@ class FundIdentitiesSearch extends BaseSearch
     {
         $withBalance = Arr::get($filters, 'target', 'all') === 'has_balance';
         $withEmail = Arr::get($filters, 'has_email', true);
+        $withReservations = Arr::get($filters, 'with_reservations', false);
         $builder = $fund->activeIdentityQuery($withBalance, $withEmail);
 
-        IdentityQuery::appendVouchersCountFields($builder, $fund);
+        IdentityQuery::appendVouchersCountFields($builder, $fund, $withReservations);
         IdentityQuery::appendEmailField($builder);
 
         parent::__construct($filters, $builder);

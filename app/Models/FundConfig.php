@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
+ * @property bool $allow_reimbursements
  * @property bool $allow_direct_payments
  * @property bool $allow_generator_direct_payments
  * @property bool $allow_voucher_top_ups
@@ -70,9 +71,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectPayments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowFundRequests($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowGenerateDirectPayments($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowGeneratorDirectPayments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowReimbursements($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherTopUps($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
@@ -185,6 +187,7 @@ class FundConfig extends BaseModel
         'contact_info_enabled' => 'boolean',
         'contact_info_required' => 'boolean',
         'contact_info_message_custom' => 'boolean',
+        'allow_reimbursements' => 'boolean',
         'limit_generator_amount' => 'string',
         'limit_voucher_top_up_amount' => 'string',
         'limit_voucher_total_amount' => 'string',
