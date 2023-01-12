@@ -27,7 +27,7 @@ class VoucherExport extends BaseFieldedExport
         'activation_code' => 'Activatiecode',
         'fund_name' => 'Fondsnaam',
         'reference_bsn' => 'BSN (door medewerker)',
-        'activation_code_uid' => 'Uniek nummer',
+        'client_uid' => 'Uniek nummer',
         'created_at' => 'Aangemaakt op',
         'identity_bsn' => 'BSN (DigiD)',
         'source' => 'Aangemaakt door',

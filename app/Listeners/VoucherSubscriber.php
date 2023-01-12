@@ -11,6 +11,7 @@ use App\Events\Vouchers\VoucherExpired;
 use App\Events\Vouchers\VoucherExpireSoon;
 use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Events\Vouchers\VoucherSendToEmailEvent;
+use App\Events\Vouchers\VoucherLimitUpdated;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
@@ -96,6 +97,25 @@ class VoucherSubscriber
         }
 
         $voucher->reportBackofficeReceived();
+    }
+
+    /**
+     * @param VoucherLimitUpdated $event
+     * @noinspection PhpUnused
+     */
+    public function onVoucherLimitUpdated(VoucherLimitUpdated $event): void
+    {
+        $voucher = $event->getVoucher();
+
+        $voucher->log(Voucher::EVENT_LIMIT_MULTIPLIER_CHANGED, [
+            'fund' => $voucher->fund,
+            'voucher' => $voucher,
+            'sponsor' => $voucher->fund->organization,
+            'employee' => $voucher->employee,
+            'implementation' => $voucher->fund->getImplementation(),
+        ], [
+            'voucher_limit_multiplier_old' => $event->getOldLimitMultiplier(),
+        ]);
     }
 
     /**
@@ -307,6 +327,7 @@ class VoucherSubscriber
         $class = '\\' . static::class;
 
         $events->listen(VoucherCreated::class, "$class@onVoucherCreated");
+        $events->listen(VoucherLimitUpdated::class, "$class@onVoucherLimitUpdated");
         $events->listen(ProductVoucherShared::class, "$class@onProductVoucherShared");
         $events->listen(VoucherAssigned::class, "$class@onVoucherAssigned");
         $events->listen(VoucherExpireSoon::class, "$class@onVoucherExpireSoon");

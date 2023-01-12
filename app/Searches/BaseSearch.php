@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Arr;
 
 class BaseSearch
 {
@@ -17,7 +16,6 @@ class BaseSearch
     protected Builder|null $builder;
 
     /**
-     * WebshopSearch constructor.
      * @param array $filters
      * @param Builder|null $builder
      */

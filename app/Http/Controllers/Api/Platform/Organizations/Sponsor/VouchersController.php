@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Events\Funds\FundVouchersExportedEvent;
+use App\Events\Vouchers\VoucherLimitUpdated;
 use App\Exports\VoucherExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
@@ -107,8 +108,14 @@ class VouchersController extends Controller
                 }
 
                 if ($request->input('activation_code')) {
-                    $voucher->makeActivationCode($request->input('activation_code_uid'));
+                    $voucher->makeActivationCode($request->input('client_uid'));
                 }
+            }
+
+            if ($client_uid = $request->input('client_uid')) {
+                $voucher->update([
+                    'client_uid' => $client_uid,
+                ]);
             }
         }
 
@@ -184,8 +191,14 @@ class VouchersController extends Controller
                     }
 
                     if ($voucher['activation_code'] ?? false) {
-                        $voucherModel->makeActivationCode($voucher['activation_code_uid'] ?? null);
+                        $voucherModel->makeActivationCode($voucher['client_uid'] ?? null);
                     }
+                }
+
+                if ($client_uid = $voucher['client_uid'] ?? null) {
+                    $voucherModel->update([
+                        'client_uid' => $client_uid,
+                    ]);
                 }
             }
 
@@ -272,7 +285,14 @@ class VouchersController extends Controller
         $this->authorize('update', [$voucher, $organization]);
 
         if ($voucher->fund->isTypeSubsidy() && $request->has('limit_multiplier')) {
-            $voucher->update($request->only('limit_multiplier'));
+            $currentLimitMultiplier = $voucher->limit_multiplier;
+
+            if ($request->input('limit_multiplier') != $currentLimitMultiplier) {
+                VoucherLimitUpdated::dispatch(
+                    $voucher->updateModel($request->only('limit_multiplier')),
+                    $currentLimitMultiplier,
+                );
+            }
         }
 
         return new SponsorVoucherResource($voucher);
@@ -343,7 +363,7 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('makeActivationCodeSponsor', [$voucher, $organization]);
 
-        $voucher->makeActivationCode($request->input('activation_code_uid'));
+        $voucher->makeActivationCode($request->input('client_uid'));
 
         return new SponsorVoucherResource($voucher);
     }

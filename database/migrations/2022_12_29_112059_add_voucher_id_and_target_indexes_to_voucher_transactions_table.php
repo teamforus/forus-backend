@@ -27,8 +27,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('voucher_transactions', function (Blueprint $table) {
+            $table->dropForeign('voucher_transactions_voucher_id_foreign');
             $table->dropIndex('voucher_transactions_voucher_id_target_index');
             $table->dropIndex('voucher_transactions_target_index');
+            $table->foreign('voucher_id')->references('id')->on('vouchers')->onDelete('cascade');
         });
     }
 };

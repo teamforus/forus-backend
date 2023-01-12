@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Funds\Requests\FundRequestPersonRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Arr\FundRequestPersonArrResource;
 use App\Models\Employee;
+use App\Searches\FundRequestSearch;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
@@ -34,10 +35,11 @@ class FundRequestsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyAsValidator', [FundRequest::class, $organization]);
 
-        return ValidatorFundRequestResource::queryCollection(FundRequest::search(
-            $request,
-            $request->employee($organization)
-        ), $request);
+        $query = (new FundRequestSearch($request->only([
+            'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir',
+        ])))->setEmployee($request->employee($organization));
+
+        return ValidatorFundRequestResource::queryCollection($query->query(), $request);
     }
 
     /**

@@ -62,6 +62,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property bool $show_providers_map
  * @property bool $show_provider_map
  * @property bool $show_office_map
+ * @property bool $show_voucher_map
+ * @property bool $show_product_map
  * @property bool $digid_enabled
  * @property bool $digid_required
  * @property bool $digid_sign_up_allowed
@@ -130,8 +132,10 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereShowHomeMap($value)
  * @method static Builder|Implementation whereShowHomeProducts($value)
  * @method static Builder|Implementation whereShowOfficeMap($value)
+ * @method static Builder|Implementation whereShowProductMap($value)
  * @method static Builder|Implementation whereShowProviderMap($value)
  * @method static Builder|Implementation whereShowProvidersMap($value)
+ * @method static Builder|Implementation whereShowVoucherMap($value)
  * @method static Builder|Implementation whereTitle($value)
  * @method static Builder|Implementation whereUpdatedAt($value)
  * @method static Builder|Implementation whereUrlApp($value)
@@ -182,7 +186,7 @@ class Implementation extends BaseModel
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
         'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
-        'show_office_map', 'email_color', 'email_signature',
+        'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
     ];
 
     /**
@@ -210,6 +214,8 @@ class Implementation extends BaseModel
         'show_providers_map' => 'boolean',
         'show_provider_map' => 'boolean',
         'show_office_map' => 'boolean',
+        'show_voucher_map' => 'boolean',
+        'show_product_map' => 'boolean',
     ];
 
     /**
@@ -631,7 +637,8 @@ class Implementation extends BaseModel
                 'pages' => Arr::keyBy($pages, 'page_type'),
                 'has_productboard_integration' => !empty(resolve('productboard')),
             ], $implementation->only(
-                'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map', 'show_office_map'
+                'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
+                'show_office_map', 'show_voucher_map', 'show_product_map',
             ));
         }
 
