@@ -38,7 +38,7 @@ class IndexFundRequest extends BaseFormRequest
             'configured' => 'nullable|bool',
             'with_archived' => 'nullable|bool',
             'with_external' => 'nullable|bool',
-            'stats' => 'nullable|string|in:all,budget,product_vouchers',
+            'stats' => 'nullable|string|in:all,budget,product_vouchers,min',
             'per_page' => $this->perPageRule(),
         ];
     }
