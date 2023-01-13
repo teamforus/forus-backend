@@ -148,6 +148,15 @@ class FundResource extends BaseJsonResource
             return [];
         }
 
+        if ($stats == 'min') {
+            return [
+                'budget' => [
+                    'used' => currency_format($fund->budget_used),
+                    'total' => currency_format($fund->budget_total),
+                ]
+            ];
+        }
+
         $approvedCount = $fund->provider_organizations_approved;
         $providersEmployeeCount = $approvedCount->map(function (Organization $organization) {
             return $organization->employees->count();
