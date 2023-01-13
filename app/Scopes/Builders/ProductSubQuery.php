@@ -228,7 +228,7 @@ class ProductSubQuery
                     ->select([])
                     ->selectRaw('count(*)')
                     ->whereNotIn('state', [
-                        ProductReservation::STATE_CANCELED,
+                        ProductReservation::STATE_CANCELED_BY_PROVIDER,
                         ProductReservation::STATE_REJECTED,
                     ])
                     ->whereDoesntHave('voucher_transaction')

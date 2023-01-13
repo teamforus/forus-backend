@@ -58,6 +58,7 @@ class ProductReservationResource extends BaseJsonResource
             'price' => $price,
             'price_locale' => $price_locale,
             'expired' => $reservation->hasExpired(),
+            'canceled' => $reservation->isCanceled(),
             'product' => array_merge($reservation->product->only('id', 'name', 'organization_id'), [
                 'deleted' => $reservation->product->trashed(),
                 'organization' => $reservation->product->organization->only('id', 'name'),

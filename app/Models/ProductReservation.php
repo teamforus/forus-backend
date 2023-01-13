@@ -87,12 +87,14 @@ class ProductReservation extends BaseModel
     public const EVENT_CREATED = 'created';
     public const EVENT_REJECTED = 'rejected';
     public const EVENT_ACCEPTED = 'accepted';
-    public const EVENT_CANCELED = 'canceled';
+    public const EVENT_CANCELED_BY_CLIENT = 'canceled_by_client';
+    public const EVENT_CANCELED_BY_PROVIDER = 'canceled';
 
     public const STATE_PENDING = 'pending';
     public const STATE_ACCEPTED = 'accepted';
     public const STATE_REJECTED = 'rejected';
-    public const STATE_CANCELED = 'canceled';
+    public const STATE_CANCELED_BY_CLIENT = 'canceled_by_client';
+    public const STATE_CANCELED_BY_PROVIDER = 'canceled';
 
     /**
      * The events of the product reservation.
@@ -101,7 +103,8 @@ class ProductReservation extends BaseModel
         self::EVENT_CREATED,
         self::EVENT_REJECTED,
         self::EVENT_ACCEPTED,
-        self::EVENT_CANCELED,
+        self::EVENT_CANCELED_BY_CLIENT,
+        self::EVENT_CANCELED_BY_PROVIDER,
     ];
 
     /**
@@ -111,7 +114,16 @@ class ProductReservation extends BaseModel
         self::STATE_PENDING,
         self::STATE_ACCEPTED,
         self::STATE_REJECTED,
-        self::STATE_CANCELED,
+        self::STATE_CANCELED_BY_CLIENT,
+        self::STATE_CANCELED_BY_PROVIDER,
+    ];
+
+    /**
+     * The states of a canceled product reservation.
+     */
+    public const STATES_CANCELED = [
+        self::STATE_CANCELED_BY_CLIENT,
+        self::STATE_CANCELED_BY_PROVIDER,
     ];
 
     /**
@@ -224,6 +236,14 @@ class ProductReservation extends BaseModel
     }
 
     /**
+     * @return bool
+     */
+    public function isCanceled(): bool
+    {
+        return in_array($this->state, self::STATES_CANCELED);
+    }
+
+    /**
      * @param Employee|null $employee
      * @return $this
      * @throws \Throwable
@@ -292,7 +312,7 @@ class ProductReservation extends BaseModel
             $isAccepted = $this->isAccepted();
 
             $this->updateModel($isAccepted ? [
-                'state' => self::STATE_CANCELED,
+                'state' => self::STATE_CANCELED_BY_PROVIDER,
                 'canceled_at' => now(),
                 'employee_id' => $employee?->id,
             ] : [
@@ -362,11 +382,9 @@ class ProductReservation extends BaseModel
             }
 
             Event::dispatch(new ProductReservationCanceled($this->updateModel([
-                'state' => self::STATE_CANCELED,
+                'state' => self::STATE_CANCELED_BY_CLIENT,
                 'canceled_at' => now(),
             ]), true));
-
-            $this->delete();
         });
 
         return true;

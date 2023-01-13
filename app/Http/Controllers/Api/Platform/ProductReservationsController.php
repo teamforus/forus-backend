@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\ProductReservations\IndexProductReservationsRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
+use App\Http\Requests\Api\Platform\ProductReservations\UpdateProductReservationsRequest;
 use App\Http\Resources\ProductReservationResource;
 use App\Models\Product;
 use App\Models\ProductReservation;
@@ -88,18 +89,24 @@ class ProductReservationsController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Update the specified resource in storage.
      *
-     * @param \App\Models\ProductReservation $productReservation
+     * @param UpdateProductReservationsRequest $request
+     * @param ProductReservation $productReservation
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Throwable
      */
-    public function destroy(ProductReservation $productReservation): JsonResponse
+    public function update(
+        UpdateProductReservationsRequest $request,
+        ProductReservation $productReservation
+    ): JsonResponse
     {
-        $this->authorize('delete', $productReservation);
+        $this->authorize('update', $productReservation);
 
-        $productReservation->cancelByClient();
+        if ($request->input('state') == ProductReservation::STATE_CANCELED_BY_CLIENT) {
+            $productReservation->cancelByClient();
+        }
 
         return new JsonResponse([]);
     }

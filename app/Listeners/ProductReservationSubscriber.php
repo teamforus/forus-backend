@@ -76,8 +76,11 @@ class ProductReservationSubscriber
         $productReservation = $event->getProductReservation();
         $canceledByClient = $event->isByClient();
         $models = $this->getReservationLogModels($productReservation);
+        $eventType = $canceledByClient ?
+            $productReservation::EVENT_CANCELED_BY_CLIENT :
+            $productReservation::EVENT_CANCELED_BY_PROVIDER;
 
-        $eventLog = $productReservation->log($productReservation::EVENT_CANCELED, $models, [
+        $eventLog = $productReservation->log($eventType, $models, [
             'product_reservation_canceled_by_client' => $canceledByClient,
         ]);
 

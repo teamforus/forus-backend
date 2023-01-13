@@ -216,7 +216,7 @@ class Product extends BaseModel
             ->whereHas('product_reservations', function(Builder $builder) {
                 $builder->whereNotIn('state', [
                     ProductReservation::STATE_REJECTED,
-                    ProductReservation::STATE_CANCELED
+                    ProductReservation::STATE_CANCELED_BY_PROVIDER
                 ]);
             })
             ->whereDoesntHave('transactions');
