@@ -149,6 +149,9 @@ class VoucherTransaction extends BaseModel
         self::TARGET_TOP_UP,
     ];
 
+    public const TARGET_IBAN_SOURCE_MANUAL = 'manual';
+    public const TARGET_IBAN_SOURCE_REIMBURSEMENT = 'reimbursement';
+
     public const SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'transaction_in', 'fund_name',
         'provider_name', 'product_name', 'target',

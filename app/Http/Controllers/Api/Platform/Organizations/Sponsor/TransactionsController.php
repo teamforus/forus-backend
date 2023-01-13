@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\StoreTrans
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
+use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
@@ -80,8 +81,11 @@ class TransactionsController extends Controller
     ): SponsorVoucherTransactionResource {
         $note = $request->input('note');
         $target = $request->input('target');
+        $ibanSource = $request->input('iban_source');
         $targetTopUp = $target == VoucherTransaction::TARGET_TOP_UP;
         $targetProvider = $target == VoucherTransaction::TARGET_PROVIDER;
+        $targetIban = $target == VoucherTransaction::TARGET_IBAN;
+        $eventData = [];
 
         $voucher = Voucher::find($request->input('voucher_id'));
         $provider = Organization::find($request->input('organization_id')) ?: false;
@@ -95,6 +99,16 @@ class TransactionsController extends Controller
             default => [],
         };
 
+        if ($targetIban && $ibanSource === VoucherTransaction::TARGET_IBAN_SOURCE_REIMBURSEMENT) {
+            $reimbursement = Reimbursement::find($request->get('reimbursement_id'));
+            $fields = array_merge($fields, [
+                'target_iban' => $reimbursement->iban,
+                'target_name' => $reimbursement->iban_name,
+            ]);
+
+            $eventData['reimbursement_id'] = $reimbursement->id;
+        }
+
         $transaction = $voucher->makeTransaction(array_merge([
             'amount' => $request->input('amount'),
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
@@ -106,11 +120,10 @@ class TransactionsController extends Controller
 
         if ($note) {
             $transaction->addNote('sponsor', $note);
+            $eventData['voucher_transaction_note'] = $note;
         }
 
-        VoucherTransactionCreated::dispatch($transaction, $note ? [
-            'voucher_transaction_note' => $note,
-        ] : []);
+        VoucherTransactionCreated::dispatch($transaction, $eventData);
 
         return SponsorVoucherTransactionResource::create($transaction);
     }
