@@ -100,8 +100,7 @@ class ProductReservationsController extends Controller
     public function update(
         UpdateProductReservationsRequest $request,
         ProductReservation $productReservation
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->authorize('update', $productReservation);
 
         if ($request->input('state') == ProductReservation::STATE_CANCELED_BY_CLIENT) {

@@ -74,20 +74,19 @@ class ProductReservationSubscriber
     public function onProductReservationCanceled(ProductReservationCanceled $event): void
     {
         $productReservation = $event->getProductReservation();
-        $canceledByClient = $event->isByClient();
-        $models = $this->getReservationLogModels($productReservation);
-        $eventType = $canceledByClient ?
-            $productReservation::EVENT_CANCELED_BY_CLIENT :
-            $productReservation::EVENT_CANCELED_BY_PROVIDER;
 
-        $eventLog = $productReservation->log($eventType, $models, [
-            'product_reservation_canceled_by_client' => $canceledByClient,
-        ]);
+        if ($productReservation->isCanceledByClient()) {
+            ProductReservationCanceledNotification::send($productReservation->log(
+                $productReservation::EVENT_CANCELED_BY_CLIENT,
+                $this->getReservationLogModels($productReservation),
+            ));
+        }
 
-        if ($canceledByClient) {
-            ProductReservationCanceledNotification::send($eventLog);
-        } else {
-            IdentityProductReservationCanceledNotification::send($eventLog);
+        if ($productReservation->isCanceledByProvider()) {
+            IdentityProductReservationCanceledNotification::send($productReservation->log(
+                $productReservation::EVENT_CANCELED_BY_PROVIDER,
+                $this->getReservationLogModels($productReservation),
+            ));
         }
     }
 

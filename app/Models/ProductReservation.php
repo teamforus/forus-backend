@@ -244,6 +244,24 @@ class ProductReservation extends BaseModel
     }
 
     /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function isCanceledByClient(): bool
+    {
+        return $this->state == self::STATE_CANCELED_BY_CLIENT;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function isCanceledByProvider(): bool
+    {
+        return $this->state == self::STATE_CANCELED_BY_PROVIDER;
+    }
+
+    /**
      * @param Employee|null $employee
      * @return $this
      * @throws \Throwable
@@ -311,7 +329,7 @@ class ProductReservation extends BaseModel
         DB::transaction(function() use ($employee) {
             $isAccepted = $this->isAccepted();
 
-            $this->updateModel($isAccepted ? [
+            $this->update($isAccepted ? [
                 'state' => self::STATE_CANCELED_BY_PROVIDER,
                 'canceled_at' => now(),
                 'employee_id' => $employee?->id,
@@ -381,10 +399,12 @@ class ProductReservation extends BaseModel
                 $this->product_voucher->delete();
             }
 
-            Event::dispatch(new ProductReservationCanceled($this->updateModel([
+            $this->update([
                 'state' => self::STATE_CANCELED_BY_CLIENT,
                 'canceled_at' => now(),
-            ]), true));
+            ]);
+
+            Event::dispatch(new ProductReservationCanceled($this));
         });
 
         return true;
