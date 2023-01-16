@@ -327,9 +327,9 @@ class ProductReservation extends BaseModel
     public function rejectOrCancelProvider(?Employee $employee = null): self
     {
         DB::transaction(function() use ($employee) {
-            $isAccepted = $this->isAccepted();
+            $isRefund = $this->isAccepted();
 
-            $this->update($isAccepted ? [
+            $this->update($isRefund ? [
                 'state' => self::STATE_CANCELED_BY_PROVIDER,
                 'canceled_at' => now(),
                 'employee_id' => $employee?->id,
@@ -343,7 +343,7 @@ class ProductReservation extends BaseModel
                 $this->voucher_transaction->cancelPending();
             }
 
-            if ($isAccepted) {
+            if ($isRefund) {
                 Event::dispatch(new ProductReservationCanceled($this));
             } else {
                 Event::dispatch(new ProductReservationRejected($this));

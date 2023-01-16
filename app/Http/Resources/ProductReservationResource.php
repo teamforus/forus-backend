@@ -66,8 +66,26 @@ class ProductReservationResource extends BaseJsonResource
             ]),
             'fund' => $voucher->fund->only('id', 'name'),
             'voucher_transaction' => $transaction?->only('id', 'address'),
-        ], $identityData, $this->timestamps($reservation, [
-            'created_at', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
-        ]));
+        ], $this->getReservationDates($reservation), $identityData);
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @return array
+     */
+    protected function getReservationDates(ProductReservation $reservation): array
+    {
+        return [
+            'created_at' => $reservation->created_at?->format('Y-m-d H:i:s'),
+            'created_at_locale' => format_date_locale($reservation->created_at),
+            'accepted_at' => $reservation->accepted_at?->format('Y-m-d H:i:s'),
+            'accepted_at_locale' => format_date_locale($reservation->accepted_at),
+            'rejected_at' => $reservation->rejected_at?->format('Y-m-d H:i:s'),
+            'rejected_at_locale' => format_date_locale($reservation->rejected_at),
+            'canceled_at' => $reservation->canceled_at?->format('Y-m-d H:i:s'),
+            'canceled_at_locale' => format_date_locale($reservation->canceled_at),
+            'expire_at' => $reservation->expire_at->format('Y-m-d H:i:s'),
+            'expire_at_locale' => format_date_locale($reservation->expire_at),
+        ];
     }
 }
