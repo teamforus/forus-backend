@@ -81,33 +81,28 @@ class TransactionsController extends Controller
     ): SponsorVoucherTransactionResource {
         $note = $request->input('note');
         $target = $request->input('target');
-        $ibanSource = $request->input('iban_source');
+
         $targetTopUp = $target == VoucherTransaction::TARGET_TOP_UP;
         $targetProvider = $target == VoucherTransaction::TARGET_PROVIDER;
-        $targetIban = $target == VoucherTransaction::TARGET_IBAN;
-        $eventData = [];
 
         $voucher = Voucher::find($request->input('voucher_id'));
         $provider = Organization::find($request->input('organization_id')) ?: false;
+
+        $reimbursement = $request->input('target_reimbursement_id');
+        $reimbursement = $reimbursement ? Reimbursement::find($reimbursement) : null;
 
         $this->authorize('show', $organization);
         $this->authorize('useAsSponsor', [$voucher, $targetProvider ? $provider : null]);
 
         $fields = match($target) {
-            VoucherTransaction::TARGET_IBAN => $request->only('target_iban', 'target_name'),
+            VoucherTransaction::TARGET_IBAN => $reimbursement ? [
+                'target_iban' => $reimbursement->iban,
+                'target_name' => $reimbursement->iban_name,
+                'target_reimbursement_id' => $reimbursement->id,
+            ] : $request->only('target_iban', 'target_name'),
             VoucherTransaction::TARGET_PROVIDER => $request->only('organization_id'),
             default => [],
         };
-
-        if ($targetIban && $ibanSource === VoucherTransaction::TARGET_IBAN_SOURCE_REIMBURSEMENT) {
-            $reimbursement = Reimbursement::find($request->get('reimbursement_id'));
-            $fields = array_merge($fields, [
-                'target_iban' => $reimbursement->iban,
-                'target_name' => $reimbursement->iban_name,
-            ]);
-
-            $eventData['reimbursement_id'] = $reimbursement->id;
-        }
 
         $transaction = $voucher->makeTransaction(array_merge([
             'amount' => $request->input('amount'),
@@ -120,10 +115,11 @@ class TransactionsController extends Controller
 
         if ($note) {
             $transaction->addNote('sponsor', $note);
-            $eventData['voucher_transaction_note'] = $note;
         }
 
-        VoucherTransactionCreated::dispatch($transaction, $eventData);
+        VoucherTransactionCreated::dispatch($transaction, $note ? [
+            'voucher_transaction_note' => $note,
+        ] : []);
 
         return SponsorVoucherTransactionResource::create($transaction);
     }

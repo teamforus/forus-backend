@@ -63,7 +63,6 @@ class StoreTransactionRequest extends BaseFormRequest
         $fundConfig = $voucher?->fund?->fund_config;
         $allowTopUps = (bool) $fundConfig?->allow_voucher_top_ups;
         $allowDirectPayments = (bool) $fundConfig?->allow_direct_payments;
-        $allowReimbursements = (bool) $fundConfig?->allow_reimbursements;
 
         $targets = [
             $allowDirectPayments ? VoucherTransaction::TARGET_IBAN : null,
@@ -71,30 +70,16 @@ class StoreTransactionRequest extends BaseFormRequest
             VoucherTransaction::TARGET_PROVIDER
         ];
 
-        $ibanSources = [
-            VoucherTransaction::TARGET_IBAN_SOURCE_MANUAL,
-            $allowReimbursements ? VoucherTransaction::TARGET_IBAN_SOURCE_REIMBURSEMENT : null,
-        ];
-
-        return [
-            'target' => [
-                'required', Rule::in(array_filter($targets)),
+        return array_merge([
+            'target' => ['required', Rule::in(array_filter($targets))]
+        ], $this->input('target') == VoucherTransaction::TARGET_IBAN ? [
+            'target_iban' => ['required_without:target_reimbursement_id', new IbanRule()],
+            'target_name' => 'required_without:target_reimbursement_id|string|min:3|max:200',
+            'target_reimbursement_id' => [
+                'required_without:target_iban',
+                Rule::exists('reimbursements', 'id')->whereIn('id', $this->reimbursementIds($voucher))
             ],
-            'target_iban' => [
-                'required_if:target,' . VoucherTransaction::TARGET_IBAN, new IbanRule(),
-            ],
-            'target_name' => [
-                'required_if:target,' . VoucherTransaction::TARGET_IBAN, 'string', 'min:3', 'max:200',
-            ],
-            'iban_source' => [
-                'required_if:target,' . VoucherTransaction::TARGET_IBAN,
-                Rule::in(array_filter($ibanSources)),
-            ],
-            'reimbursement_id' => [
-                'required_if:iban_source,' . VoucherTransaction::TARGET_IBAN_SOURCE_REIMBURSEMENT,
-                Rule::in($this->reimbursementIds($voucher)),
-            ],
-        ];
+        ]: []);
     }
 
     /**
@@ -151,14 +136,21 @@ class StoreTransactionRequest extends BaseFormRequest
 
     /**
      * @param Voucher|null $voucher
-     * @return array
+     * @return Builder|array
      */
-    protected function reimbursementIds(?Voucher $voucher): array
+    protected function reimbursementIds(?Voucher $voucher): Builder|array
     {
-        return $voucher ? Reimbursement::where('state', Reimbursement::STATE_APPROVED)
-            ->whereRelation('voucher.fund', 'organization_id', $this->organization->id)
-            ->whereRelation('voucher', 'identity_address', $voucher->identity_address)
-            ->pluck('reimbursements.id')->toArray() : [];
+        if (!$voucher) {
+            return [];
+        }
+
+        return Reimbursement::query()
+            ->whereHas('voucher', fn (Builder|Voucher $builder) => $builder->where([
+                'fund_id' => $voucher->fund_id,
+                'identity_address' => $voucher->identity_address,
+            ]))
+            ->where('state', Reimbursement::STATE_APPROVED)
+            ->select('id');
     }
 
 }
