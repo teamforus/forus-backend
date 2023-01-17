@@ -7,8 +7,6 @@ namespace App\Searches;
 use App\Models\ProductReservation;
 use App\Scopes\Builders\ProductReservationQuery;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductReservationsSearch extends BaseSearch
 {
@@ -62,8 +60,11 @@ class ProductReservationsSearch extends BaseSearch
         }
 
         if ($this->hasFilter('archived') && $this->getFilter('archived')) {
-            /** @var Builder|Relation|SoftDeletes $builder */
-            $builder->onlyTrashed();
+            ProductReservationQuery::whereArchived($builder);
+        }
+
+        if ($this->hasFilter('archived') && !$this->getFilter('archived')) {
+            ProductReservationQuery::whereNotArchived($builder);
         }
 
         return $builder;

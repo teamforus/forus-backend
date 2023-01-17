@@ -36,7 +36,7 @@ class ProductReservationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [ProductReservation::class, $organization]);
 
-        $query = ProductReservation::withTrashed()->where(function(Builder $builder) {
+        $query = ProductReservation::where(function(Builder $builder) {
             $builder->where('state', '!=', ProductReservation::STATE_PENDING);
             $builder->orWhere(function(Builder $builder) {
                 $builder->where('state', ProductReservation::STATE_PENDING);
