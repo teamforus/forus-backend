@@ -474,8 +474,8 @@
         "mail": {},
         "push": {},
         "database": {
-            "title": "Reservation canceled by the client.",
-            "content": "The reservation for product :product_name is canceled by client."
+            "title": "Reservering is geannuleerd door de aanvrager.",
+            "content": "De reservering van :product_name is geannuleerd door de aanvrager."
         }
     },
     "notifications_products.revoked": {
