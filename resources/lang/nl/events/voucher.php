@@ -24,6 +24,7 @@ return [
         'expired' => 'Voucher #:id is verlopen',
         'expired_budget' => 'Voucher #:id is verlopen',
         'expired_product' => 'Voucher #:id is verlopen',
+        'limit_multiplier_changed' => 'Voucher #:id aantal personen bijgewerkt',
         'transaction' => [
             'basic' => 'Voucher #:id :transaction_type transaction created',
             'complete' => 'Voucher #:id :transaction_type transaction created with amount :amount_locale',

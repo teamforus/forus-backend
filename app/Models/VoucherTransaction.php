@@ -9,10 +9,12 @@ use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * App\Models\VoucherTransaction
@@ -46,6 +48,7 @@ use Illuminate\Http\Request;
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read string $bulk_status_locale
  * @property-read bool $iban_final
  * @property-read string $state_locale
  * @property-read string $target_locale
@@ -147,8 +150,8 @@ class VoucherTransaction extends BaseModel
     ];
 
     public const SORT_BY_FIELDS = [
-        'id', 'amount', 'created_at', 'state', 'voucher_transaction_bulk_id',
-        'fund_name', 'provider_name', 'target',
+        'id', 'amount', 'created_at', 'state', 'transaction_in', 'fund_name',
+        'provider_name', 'product_name', 'target',
     ];
 
     /**
@@ -329,15 +332,11 @@ class VoucherTransaction extends BaseModel
 
         if ($request->has('q') && $q = $request->input('q', '')) {
             $query->where(static function (Builder $query) use ($q) {
-                $query->whereHas('provider', static function (Builder $query) use ($q) {
-                    $query->where('name', 'LIKE', "%$q%");
-                });
-
-                $query->orWhereHas('voucher.fund', static function (Builder $query) use ($q) {
-                    $query->where('name', 'LIKE', "%$q%");
-                });
-
-                $query->orWhere('voucher_transactions.id','LIKE', "%$q%");
+                $query->where('voucher_transactions.id', '=', $q);
+                $query->orWhereHas('voucher.fund', fn (Builder $b) => $b->where('name', 'LIKE', "%$q%"));
+                $query->orWhereRelation('product', 'id', "=", $q);
+                $query->orWhereRelation('product', 'name', 'LIKE', "%$q%");
+                $query->orWhereRelation('provider', 'name', 'LIKE', "%$q%");
             });
         }
 
@@ -373,10 +372,24 @@ class VoucherTransaction extends BaseModel
             $query->where('amount', '<=', $amount_max);
         }
 
-        if ($request->has('fund_state') && $fund_state = $request->input('fund_state')) {
-            $query->whereHas('voucher.fund', static function (Builder $query) use ($fund_state) {
-                $query->where('state', '=',  $fund_state);
+        if ($transfer_in_min = $request->input('transfer_in_min')) {
+            $query->where(function (Builder $builder) use ($transfer_in_min) {
+                $builder->where('state', self::STATE_PENDING);
+                $builder->where('transfer_at', '>=', now()->addDays($transfer_in_min));
+                $builder->whereNull('voucher_transaction_bulk_id');
             });
+        }
+
+        if ($transfer_in_max = $request->input('transfer_in_max')) {
+            $query->where(function (Builder $builder) use ($transfer_in_max) {
+                $builder->where('state', self::STATE_PENDING);
+                $builder->where('transfer_at', '<=', now()->addDays($transfer_in_max + 1));
+                $builder->whereNull('voucher_transaction_bulk_id');
+            });
+        }
+
+        if ($request->has('fund_state') && $fund_state = $request->input('fund_state')) {
+            $query->whereHas('voucher.fund', fn (Builder $b) => $b->where('state', '=', $fund_state));
         }
 
         $query->whereIn('target', is_array($targets) ? $targets : []);
@@ -451,9 +464,9 @@ class VoucherTransaction extends BaseModel
     /**
      * @param Builder $builder
      * @param array $fields
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     * @return SupportCollection
      */
-    private static function exportTransform(Builder $builder, array $fields)
+    private static function exportTransform(Builder $builder, array $fields): SupportCollection
     {
         $fieldLabels = array_pluck(array_merge(
             VoucherTransactionsSponsorExport::getExportFields(),
@@ -462,14 +475,17 @@ class VoucherTransaction extends BaseModel
 
         $data = $builder->with('voucher.fund', 'provider')->get();
 
-        $data = $data->map(fn(VoucherTransaction $transaction) => array_only([
+        $data = $data->map(fn (VoucherTransaction $transaction) => array_only([
             'id' => $transaction->id,
             'amount' => currency_format($transaction->amount),
             'date_transaction' => format_datetime_locale($transaction->created_at),
             'date_payment' => format_datetime_locale($transaction->payment_time),
             'fund_name' => $transaction->voucher->fund->name,
+            'product_id' => $transaction->product?->id,
+            'product_name' => $transaction->product?->name,
             'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
             'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
+            'bulk_status_locale' => $transaction->bulk_status_locale,
         ], $fields))->values();
 
         return $data->map(function($item) use ($fieldLabels) {
@@ -480,13 +496,39 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getBulkStatusLocaleAttribute(): string
+    {
+        if ($this->voucher_transaction_bulk_id) {
+            return "bulk #$this->voucher_transaction_bulk_id";
+        }
+
+        if ($this->isPending() && $this->attempts <= 3) {
+            $daysBefore = $this->daysBeforeTransaction() ?: 1;
+            $shouldDelayTransaction = $this->transfer_at && $this->transfer_at->isAfter(now());
+
+            return implode(" ", [
+                'In de wachtrij',
+                $shouldDelayTransaction ? sprintf('(%s dagen)', $daysBefore) : '',
+            ]);
+        }
+
+        return '-';
+    }
+
+    /**
      * @param Request $request
      * @param Organization $organization
      * @param array $fields
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     * @return \Illuminate\Support\Collection
      */
-    public static function exportProvider(Request $request, Organization $organization, array $fields)
-    {
+    public static function exportProvider(
+        Request $request,
+        Organization $organization,
+        array $fields
+    ): SupportCollection {
         return self::exportTransform(VoucherTransactionQuery::order(
             self::searchProvider($request, $organization),
             $request->get('order_by'),
@@ -498,13 +540,13 @@ class VoucherTransaction extends BaseModel
      * @param Request $request
      * @param Organization $organization
      * @param array $fields
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     * @return \Illuminate\Support\Collection
      */
     public static function exportSponsor(
         Request $request,
         Organization $organization,
         array $fields
-    ) {
+    ): SupportCollection {
         return static::exportTransform(VoucherTransactionQuery::order(
             static::searchSponsor($request, $organization),
             $request->get('order_by'),
@@ -515,9 +557,9 @@ class VoucherTransaction extends BaseModel
     /**
      * @param string $group
      * @param string $note
-     * @return \Illuminate\Database\Eloquent\Model|VoucherTransactionNote
+     * @return Model|VoucherTransactionNote
      */
-    public function addNote(string $group, string $note): VoucherTransactionNote
+    public function addNote(string $group, string $note): VoucherTransactionNote|Model
     {
         return $this->notes()->create([
             'message' => $note,
@@ -547,7 +589,7 @@ class VoucherTransaction extends BaseModel
     public function isCancelable(): bool
     {
         return !$this->voucher_transaction_bulk &&
-            ($this->state === $this::STATE_PENDING) &&
+            ($this->isPending()) &&
             ($this->transfer_at && $this->transfer_at->isFuture());
     }
 
