@@ -31,7 +31,6 @@ class IndexFundRequest extends BaseFormRequest
             'q' => 'nullable|string|max:100',
             'tag' => 'nullable|string|exists:tags,key',
             'fund_id' => 'nullable|exists:funds,id',
-            'per_page' => $this->perPageRule(),
             'organization_id' => 'nullable|exists:organizations,id',
             'implementation_id' => 'nullable|exists:implementations,id',
             'order_by' => 'nullable|in:created_at',
@@ -39,6 +38,8 @@ class IndexFundRequest extends BaseFormRequest
             'configured' => 'nullable|bool',
             'with_archived' => 'nullable|bool',
             'with_external' => 'nullable|bool',
+            'stats' => 'nullable|string|in:all,budget,product_vouchers,min',
+            'per_page' => $this->perPageRule(),
         ];
     }
 }

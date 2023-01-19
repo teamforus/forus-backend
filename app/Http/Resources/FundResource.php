@@ -3,8 +3,10 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Organization;
+use App\Models\Role;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,18 +14,28 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * @property Fund $resource
+ * @property ?string $stats
  */
 class FundResource extends BaseJsonResource
 {
     public const LOAD = [
         'faq',
         'tags',
+        'logo.presets',
         'criteria.fund',
-        'organization.logo',
+        'criteria.fund_criterion_validators.external_validator',
+        'organization.logo.presets',
         'organization.employees',
-        'organization.business_type',
+        'organization.employees.roles.permissions',
+        'organization.business_type.translations',
+        'organization.bank_connection_active',
+        'organization.tags',
         'fund_config.implementation',
+        'fund_formula_products',
         'provider_organizations_approved.employees',
+        'tags_webshop',
+        'fund_formulas',
+        'top_up_transactions',
     ];
 
     /**
@@ -36,14 +48,16 @@ class FundResource extends BaseJsonResource
     {
         $fund = $this->resource;
         $organization = $fund->organization;
-        $checkCriteria = $request->get('check_criteria', false);
 
         $baseRequest = BaseFormRequest::createFrom($request);
-        $isWebshop = $baseRequest->isWebshop();
+        $identity = $baseRequest->identity();
+        $isWebShop = $baseRequest->isWebshop();
         $isDashboard = $baseRequest->isDashboard();
 
-        $financialData = $isDashboard ? $this->getFinancialData($fund) : [];
+        $financialData = $this->getFinancialData($fund, $this->stats);
+        $criteriaData = $isWebShop ? $this->getCriteriaData($fund, $baseRequest) : [];
         $generatorData = $isDashboard ? $this->getVoucherGeneratorData($fund) : [];
+        $prevalidationCsvData = $isDashboard ? $this->getPrevalidationCsvData($fund) : [];
 
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'description_html', 'description_short',
@@ -71,14 +85,12 @@ class FundResource extends BaseJsonResource
             'faq' => FaqResource::collection($fund->faq),
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount' => $fund->amountFixedByFormula(),
-            'has_pending_fund_requests' => $baseRequest->auth_address() && $fund->fund_requests()->where(function (Builder $builder) {
+            'has_pending_fund_requests' => $isWebShop && $baseRequest->auth_address() && $fund->fund_requests()->where(function (Builder $builder) {
                 FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth()->id());
             })->exists(),
-        ], $isWebshop && $checkCriteria ? [
-            'taken_by_partner' => $this->isTakenByPartner($fund, $baseRequest),
-        ]: [], $financialData, $generatorData);
+        ], $criteriaData, $financialData, $generatorData, $prevalidationCsvData);
 
-        if ($isDashboard && $organization->identityCan($baseRequest->identity(), 'manage_funds')) {
+        if ($isDashboard && $organization->identityCan($identity, 'manage_funds')) {
             $data = array_merge($data, $fund->only([
                 'default_validator_employee_id', 'auto_requests_validation',
             ]), [
@@ -88,14 +100,7 @@ class FundResource extends BaseJsonResource
             $data['backoffice'] = $this->getBackofficeData($fund);
         }
 
-        if ($isDashboard && $organization->identityCan($baseRequest->identity(), 'validate_records')) {
-            $data = array_merge($data, [
-                'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',
-                'csv_required_keys' => $fund->requiredPrevalidationKeys()->toArray()
-            ]);
-        }
-
-        return $data;
+        return array_merge($data, $fund->only(array_keys($this->select ?? [])));
     }
 
     /**
@@ -108,7 +113,7 @@ class FundResource extends BaseJsonResource
         $identity = $request->identity();
         $hashPartnerDeny = $fund->fund_config->hash_partner_deny ?? false;
 
-         return $identity && $hashPartnerDeny && $fund->isTakenByPartner($identity);
+        return $identity && $hashPartnerDeny && $fund->isTakenByPartner($identity);
     }
 
     /**
@@ -123,18 +128,33 @@ class FundResource extends BaseJsonResource
             'allow_direct_payments', 'allow_voucher_top_ups',
             'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
         ]), [
-            'limit_per_voucher' => currency_format($fund->getMaxAmountPerVoucher()),
-            'limit_sum_vouchers' => currency_format($fund->getMaxAmountSumVouchers()),
+            'limit_per_voucher' => $fund->getMaxAmountPerVoucher(),
+            'limit_sum_vouchers' => $fund->getMaxAmountSumVouchers(),
         ]) : [];
     }
+
     /**
      * @param Fund $fund
+     * @param string|null $stats
      * @return array
      */
-    public function getFinancialData(Fund $fund): array
+    public function getFinancialData(Fund $fund, ?string $stats = null): array
     {
+        if ($stats == null) {
+            return [];
+        }
+
         if (!Gate::allows('funds.showFinances', [$fund, $fund->organization])) {
             return [];
+        }
+
+        if ($stats == 'min') {
+            return [
+                'budget' => [
+                    'used' => currency_format($fund->budget_used),
+                    'total' => currency_format($fund->budget_total),
+                ]
+            ];
         }
 
         $approvedCount = $fund->provider_organizations_approved;
@@ -142,13 +162,18 @@ class FundResource extends BaseJsonResource
             return $organization->employees->count();
         })->sum();
 
-        $validatorsCount = $fund->organization->employeesWithPermissionsQuery([
-            'validate_records'
-        ])->count();
+        $validatorsCount = $fund->organization->employees->filter(function (Employee $employee) {
+            return $employee->roles->filter(function (Role $role) {
+                return $role->permissions->where('key', 'validate_records')->isNotEmpty();
+            });
+        })->count();
 
-        $requesterCount = VoucherQuery::whereNotExpiredAndActive(
-            $fund->vouchers()->getQuery()
-        )->whereNull('parent_id')->count();
+        $requesterCount = VoucherQuery::whereNotExpiredAndActive($fund->vouchers())
+            ->whereNull('parent_id')
+            ->count();
+
+        $loadBudgetStats = $stats == 'all' || $stats == 'budget';
+        $loadProductVouchersStats = $stats == 'all' || $stats == 'product_vouchers';
 
         return [
             'sponsor_count'                 => $fund->organization->employees->count(),
@@ -156,8 +181,8 @@ class FundResource extends BaseJsonResource
             'provider_employees_count'      => $providersEmployeeCount,
             'validators_count'              => $validatorsCount,
             'requester_count'               => $requesterCount,
-            'budget'                        => $this->getVoucherData($fund, 'budget'),
-            'product_vouchers'              => $this->getVoucherData($fund, 'product'),
+            'budget'                        => $loadBudgetStats ? $this->getVoucherData($fund, 'budget') : null,
+            'product_vouchers'              => $loadProductVouchersStats ? $this->getVoucherData($fund, 'product') : null,
         ];
     }
 
@@ -168,23 +193,19 @@ class FundResource extends BaseJsonResource
      */
     public function getVoucherData(Fund $fund, string $type): array
     {
-        $reservedQuery = $fund->budget_vouchers()->getQuery();
-        $reservedAmount = VoucherQuery::whereNotExpiredAndActive($reservedQuery)->sum('amount');
-
         $details = match($type) {
             'budget' => Fund::getFundDetails($fund->budget_vouchers()->getQuery()),
             'product' => Fund::getFundDetails($fund->product_vouchers()->getQuery()),
-            default => abort(403),
         };
 
-        return [
+        return array_merge($type == 'budget' ? [
             'total'                         => currency_format($fund->budget_total),
             'validated'                     => currency_format($fund->budget_validated),
             'used'                          => currency_format($fund->budget_used),
             'used_active_vouchers'          => currency_format($fund->budget_used_active_vouchers),
             'left'                          => currency_format($fund->budget_left),
             'transaction_costs'             => currency_format($fund->getTransactionCosts()),
-            'reserved'                      => round($reservedAmount, 2),
+        ] : [], [
             'vouchers_amount'               => currency_format($details['vouchers_amount']),
             'vouchers_count'                => $details['vouchers_count'],
             'active_vouchers_amount'        => currency_format($details['active_amount']),
@@ -193,7 +214,7 @@ class FundResource extends BaseJsonResource
             'inactive_vouchers_count'       => $details['inactive_count'],
             'deactivated_vouchers_amount'   => currency_format($details['deactivated_amount']),
             'deactivated_vouchers_count'    => $details['deactivated_count'],
-        ];
+        ]);
     }
 
     /**
@@ -207,5 +228,29 @@ class FundResource extends BaseJsonResource
             'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
             'backoffice_key', 'backoffice_certificate', 'backoffice_fallback',
         ]);
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array
+     */
+    protected function getPrevalidationCsvData(Fund $fund): array
+    {
+        return [
+            'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',
+            'csv_required_keys' => $fund->requiredPrevalidationKeys()->toArray(),
+        ];
+    }
+
+    /**
+     * @param Fund $fund
+     * @param BaseFormRequest $baseRequest
+     * @return array|bool[]
+     */
+    protected function getCriteriaData(Fund $fund, BaseFormRequest $baseRequest): array
+    {
+        return $baseRequest->get('check_criteria', false) ? [
+            'taken_by_partner' => $this->isTakenByPartner($fund, $baseRequest),
+        ]: [];
     }
 }
