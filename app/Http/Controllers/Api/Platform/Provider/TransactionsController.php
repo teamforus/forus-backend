@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Platform\Provider\Transactions\IndexTransactionsReques
 use App\Http\Resources\Provider\ProviderVoucherTransactionEmployeeResource;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
+use App\Searches\VoucherTransactionsSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -25,7 +26,12 @@ class TransactionsController extends Controller
     {
         $this->authorize('viewAny', VoucherTransaction::class);
 
-        $query = VoucherTransaction::search($request);
+        $query = new VoucherTransactionsSearch($request->only([
+            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+            'transfer_in_min', 'transfer_in_max', 'fund_state',
+        ]), VoucherTransaction::query());
+        $query = $query->query();
+
         $query->whereHas('employee', fn(Builder $builder) => $builder->where(array_merge([
             'identity_address' => $request->auth_address(),
         ], $request->input('organization_id') ? [

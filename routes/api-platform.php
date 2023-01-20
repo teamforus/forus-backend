@@ -701,6 +701,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\Sponsor\TransactionsController@export"
     );
 
+    $router->post(
+        'organizations/{organization}/sponsor/transactions/batch',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@storeBatch"
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/transactions',
         "Api\Platform\Organizations\Sponsor\TransactionsController"

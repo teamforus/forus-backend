@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
-use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Exports\VoucherTransactionsSponsorExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\IndexTransactionsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\StoreTransactionBatchRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\StoreTransactionRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
@@ -16,6 +16,7 @@ use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -95,24 +96,71 @@ class TransactionsController extends Controller
             default => [],
         };
 
-        $transaction = $voucher->makeTransaction(array_merge([
+        $transaction = $voucher->makeTransactionBySponsor($request->employee($organization), array_merge([
             'amount' => $request->input('amount'),
-            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
-            'employee_id' => $request->employee($organization)->id,
             'target' => $target,
             'state' => $targetTopUp ? VoucherTransaction::STATE_SUCCESS : VoucherTransaction::STATE_PENDING,
             'payment_time' => $targetTopUp ? now() : null,
-        ], $fields));
-
-        if ($note) {
-            $transaction->addNote('sponsor', $note);
-        }
-
-        VoucherTransactionCreated::dispatch($transaction, $note ? [
+            'note' => $note,
+        ], $fields), $note ? [
             'voucher_transaction_note' => $note,
         ] : []);
 
         return SponsorVoucherTransactionResource::create($transaction);
+    }
+
+    /**
+     * @param StoreTransactionBatchRequest $request
+     * @param Organization $organization
+     * @return JsonResponse
+     * @throws AuthorizationException
+     */
+    public function storeBatch(
+        StoreTransactionBatchRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('storeBatchAsSponsor', [VoucherTransaction::class, $organization]);
+
+        $transactions = $request->input('transactions');
+        $employee = $request->employee($organization);
+
+        $index = 0;
+        $createdItems = [];
+        $errorsItems = [];
+
+        while (count($transactions) > $index) {
+            $slice = array_slice($transactions, $index++, 1, true);
+            $item = array_slice($slice, 0, 1)[0];
+            $validator = $request->validateRows($slice);
+
+            if ($validator->passes()) {
+                $voucher = Voucher::find(array_get($item, 'voucher_id'));
+
+                $note = $item['note'] ?? null;
+
+                $transaction = $voucher->makeTransactionBySponsor($employee, array_merge([
+                    'target' => VoucherTransaction::TARGET_IBAN,
+                    'target_iban' => $item['direct_payment_iban'],
+                    'target_name' => $item['direct_payment_name'],
+                    'note' => $note,
+                ], array_only($item, ['amount', 'uid'])), $note ? [
+                    'voucher_transaction_note' => $note,
+                ] : []);
+
+                $createdItems[] = $transaction->id;
+            } else {
+                $errorsItems[] = $validator->messages()->toArray();
+            }
+        }
+
+        $transactions = SponsorVoucherTransactionResource::queryCollection(
+            VoucherTransaction::query()->whereIn('id', $createdItems)
+        );
+
+        return new JsonResponse([
+            'created' => $transactions,
+            'errors' => array_reduce($errorsItems, fn($array, $item) => array_merge($array, $item), []),
+        ]);
     }
 
     /**

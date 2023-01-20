@@ -1460,16 +1460,35 @@ class Voucher extends BaseModel
         string $target_name,
         Employee $employee,
     ): VoucherTransaction {
-        $transaction = $this->makeTransaction([
+        return $this->makeTransactionBySponsor($employee, [
             'amount' => $this->amount_available,
-            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
-            'employee_id' => $employee->id,
             'target' => VoucherTransaction::TARGET_IBAN,
             'target_iban' => $target_iban,
             'target_name' => $target_name,
         ]);
+    }
 
-        VoucherTransactionCreated::dispatch($transaction);
+    /**
+     * @param Employee $employee
+     * @param array $attributes
+     * @param array $logData
+     * @return VoucherTransaction
+     */
+    public function makeTransactionBySponsor(
+        Employee $employee,
+        array $attributes,
+        array $logData = []
+    ): VoucherTransaction {
+        $transaction = $this->makeTransaction(array_merge($attributes, [
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'employee_id' => $employee->id,
+        ]));
+
+        if ($note = ($attributes['note'] ?? null)) {
+            $transaction->addNote('sponsor', $note);
+        }
+
+        VoucherTransactionCreated::dispatch($transaction, $logData);
 
         return $transaction;
     }

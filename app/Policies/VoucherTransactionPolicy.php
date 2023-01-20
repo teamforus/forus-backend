@@ -126,4 +126,16 @@ class VoucherTransactionPolicy
             $fund->organization_id === $organization->id &&
             $transaction->voucher->fund_id === $fund->id;
     }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
+    public function storeBatchAsSponsor(
+        Identity $identity,
+        Organization $organization
+    ): bool {
+        return $organization->identityCan($identity, 'make_direct_payments');
+    }
 }
