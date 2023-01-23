@@ -149,6 +149,9 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         "notifications_products.reserved" => [
             "expiration_date", "product_name",
         ],
+        "notifications_products.reservation_canceled" => [
+            "product_name",
+        ],
         "notifications_products.revoked" => [
             "fund_name", "product_name", "sponsor_name",
         ],

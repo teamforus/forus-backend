@@ -58,9 +58,16 @@ class ProductReservationQuery
      */
     public static function whereNotExpired(Builder $builder): Builder
     {
-        return $builder->where(static function(Builder $builder) {
-            $builder->where('product_reservations.expire_at', '>=', today());
-        });
+        return  $builder->where('product_reservations.expire_at', '>=', today());
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereExpired(Builder $builder): Builder
+    {
+        return  $builder->where('product_reservations.expire_at', '<', today());
     }
 
     /**
@@ -79,5 +86,37 @@ class ProductReservationQuery
     public static function whereNotExpiredAndPending(Builder $builder): Builder
     {
         return self::whereNotExpired($builder)->where('state', ProductReservation::STATE_PENDING);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereExpiredAndPending(Builder $builder): Builder
+    {
+        return self::whereExpired($builder)->where('state', ProductReservation::STATE_PENDING);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereArchived(Builder $builder): Builder
+    {
+        return $builder->where(function (Builder $builder) {
+            $builder->whereIn('state', ProductReservation::STATES_CANCELED);
+            $builder->orWhere(fn (Builder $builder) => self::whereExpiredAndPending($builder));
+        });
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereNotArchived(Builder $builder): Builder
+    {
+        return $builder->whereNotIn('id', self::whereArchived(
+            ProductReservation::query()->select('id')
+        ));
     }
 }
