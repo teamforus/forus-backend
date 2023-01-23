@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\StoreTrans
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
+use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
@@ -80,17 +81,25 @@ class TransactionsController extends Controller
     ): SponsorVoucherTransactionResource {
         $note = $request->input('note');
         $target = $request->input('target');
+
         $targetTopUp = $target == VoucherTransaction::TARGET_TOP_UP;
         $targetProvider = $target == VoucherTransaction::TARGET_PROVIDER;
 
         $voucher = Voucher::find($request->input('voucher_id'));
         $provider = Organization::find($request->input('organization_id')) ?: false;
 
+        $reimbursement = $request->input('target_reimbursement_id');
+        $reimbursement = $reimbursement ? Reimbursement::find($reimbursement) : null;
+
         $this->authorize('show', $organization);
         $this->authorize('useAsSponsor', [$voucher, $targetProvider ? $provider : null]);
 
         $fields = match($target) {
-            VoucherTransaction::TARGET_IBAN => $request->only('target_iban', 'target_name'),
+            VoucherTransaction::TARGET_IBAN => $reimbursement ? [
+                'target_iban' => $reimbursement->iban,
+                'target_name' => $reimbursement->iban_name,
+                'target_reimbursement_id' => $reimbursement->id,
+            ] : $request->only('target_iban', 'target_name'),
             VoucherTransaction::TARGET_PROVIDER => $request->only('organization_id'),
             default => [],
         };

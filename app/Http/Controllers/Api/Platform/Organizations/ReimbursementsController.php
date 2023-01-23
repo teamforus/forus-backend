@@ -40,7 +40,7 @@ class ReimbursementsController extends Controller
 
         $search = new ReimbursementsSearch($request->only([
             'q', 'fund_id', 'from', 'to', 'amount_min', 'amount_max', 'state',
-            'expired', 'archived', 'deactivated',
+            'expired', 'archived', 'deactivated', 'identity_address',
         ]), $query);
 
         return SponsorReimbursementResource::queryCollection($search->query()->latest(), $request);
