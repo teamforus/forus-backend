@@ -253,7 +253,7 @@ class ProductReservationTest extends DuskTestCase
 
         $browser->waitFor('@modalProductReserveCancel');
         $browser->within('@modalProductReserveCancel', fn(Browser $el) => $el->click('@btnSubmit'));
-        $browser->waitUntilMissingText($reservation->code, 10);
+        $browser->waitUntilMissingText($reservation->code);
 
         $reservationElement = $this->findReservationElement($browser, $reservation);
         $this->assertNull($reservationElement, 'Reservation not deleted.');
@@ -379,6 +379,7 @@ class ProductReservationTest extends DuskTestCase
      */
     private function logout(Browser $browser): void
     {
+        $browser->waitFor('@userProfile');
         $browser->element('@userProfile')->click();
         $browser->waitFor('@btnUserLogout');
         $browser->element('@btnUserLogout')->click();
