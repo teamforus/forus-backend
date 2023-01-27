@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Excel as ExcelModel;
 use Illuminate\Support\Carbon;
@@ -1471,24 +1472,30 @@ class Voucher extends BaseModel
     /**
      * @param Employee $employee
      * @param array $attributes
-     * @param array $logData
      * @return VoucherTransaction
      */
     public function makeTransactionBySponsor(
         Employee $employee,
         array $attributes,
-        array $logData = []
     ): VoucherTransaction {
-        $transaction = $this->makeTransaction(array_merge($attributes, [
+        $isTopUp = Arr::get($attributes, 'target') == VoucherTransaction::TARGET_TOP_UP;
+        $state = $isTopUp ? VoucherTransaction::STATE_SUCCESS : VoucherTransaction::STATE_PENDING;
+        $note = Arr::get($attributes, 'note');
+
+        $transaction = $this->makeTransaction(array_merge(Arr::except($attributes, 'note'), [
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
             'employee_id' => $employee->id,
+            'payment_time' => $isTopUp ? now() : null,
+            'state' => $state,
         ]));
 
-        if ($note = ($attributes['note'] ?? null)) {
+        if ($note) {
             $transaction->addNote('sponsor', $note);
         }
 
-        VoucherTransactionCreated::dispatch($transaction, $logData);
+        Event::dispatch(new VoucherTransactionCreated($transaction, $note ? [
+            'voucher_transaction_note' => $note,
+        ] : []));
 
         return $transaction;
     }

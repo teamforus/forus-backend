@@ -10,11 +10,11 @@ class VoucherTransactionBatchItemAmountRule extends BaseRule
 {
     /**
      * @param Organization $organization
-     * @param array $transactionData
+     * @param array $transactions
      */
     public function __construct(
         protected Organization $organization,
-        protected array $transactionData = []
+        protected array $transactions = [],
     ) {}
 
     /**
@@ -30,13 +30,44 @@ class VoucherTransactionBatchItemAmountRule extends BaseRule
         $index = (int) (explode('.', $attribute)[1] ?? 0);
 
         /** @var Voucher|null $voucher current row voucher */
-        $voucher = $this->transactionData[$index]['voucher'] ?? null;
-        $amount = $this->transactionData[$index]['amount'] ?? 0;
+        $voucher = $this->transactions[$index]['voucher'] ?? null;
+        $amount = $this->transactions[$index]['amount'] ?? 0;
 
         if (!$voucher) {
-            return $this->reject('Voucher not found');
+            return $this->reject('The voucher was not found or you have no permissions to use the voucher.');
         }
 
-        return $voucher->amount_available_cached >= $amount || $this->reject('Amount is bigger then available');
+        $transactionToIndex = array_slice($this->transactions, 0, $index);
+        $amountToIndex = $this->getAmountToOffsetOld($transactionToIndex, $voucher->id) + $amount;
+
+        if ($voucher->amount_available_cached < $amount) {
+            return $this->reject(sprintf(
+                'The amount of the transaction (%s) is higher than the balance of the voucher (%s).',
+                currency_format_locale($amount),
+                currency_format_locale($voucher->amount_available_cached),
+            ));
+        }
+
+        if ($voucher->amount_available_cached < $amountToIndex) {
+            return $this->reject(sprintf(
+                'The sum of the transactions from for selected voucher (%s) is higher than the balance of the voucher (%s).',
+                currency_format_locale($amountToIndex),
+                currency_format_locale($voucher->amount_available_cached),
+            ));
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array $transactions
+     * @param int $voucherId
+     * @return float
+     */
+    protected function getAmountToOffsetOld(array $transactions, int $voucherId): float
+    {
+        return array_reduce($transactions, static function (float $total, $transaction) use ($voucherId) {
+            return $transaction['voucher_id'] == $voucherId ? $total + $transaction['amount'] : $total;
+        }, 0);
     }
 }

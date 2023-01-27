@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
@@ -79,34 +80,38 @@ class TransactionsController extends Controller
         StoreTransactionRequest $request,
         Organization $organization
     ): SponsorVoucherTransactionResource {
-        $note = $request->input('note');
         $target = $request->input('target');
-        $targetTopUp = $target == VoucherTransaction::TARGET_TOP_UP;
-        $targetProvider = $target == VoucherTransaction::TARGET_PROVIDER;
-
         $voucher = Voucher::find($request->input('voucher_id'));
+        $employee = $request->employee($organization);
+
         $provider = Organization::find($request->input('organization_id')) ?: false;
+        $provider = $target == VoucherTransaction::TARGET_PROVIDER ? $provider : null;
 
         $this->authorize('show', $organization);
-        $this->authorize('useAsSponsor', [$voucher, $targetProvider ? $provider : null]);
+        $this->authorize('useAsSponsor', [$voucher, $provider]);
 
-        $fields = match($target) {
-            VoucherTransaction::TARGET_IBAN => $request->only('target_iban', 'target_name'),
-            VoucherTransaction::TARGET_PROVIDER => $request->only('organization_id'),
-            default => [],
-        };
+        $fields = array_merge(match($target) {
+            VoucherTransaction::TARGET_PROVIDER => $request->only('amount', 'organization_id', 'note'),
+            VoucherTransaction::TARGET_IBAN => $request->only('amount', 'target_iban', 'target_name', 'note'),
+            default => $request->only('amount', 'note'),
+        }, compact('target'));
 
-        $transaction = $voucher->makeTransactionBySponsor($request->employee($organization), array_merge([
-            'amount' => $request->input('amount'),
-            'target' => $target,
-            'state' => $targetTopUp ? VoucherTransaction::STATE_SUCCESS : VoucherTransaction::STATE_PENDING,
-            'payment_time' => $targetTopUp ? now() : null,
-            'note' => $note,
-        ], $fields), $note ? [
-            'voucher_transaction_note' => $note,
-        ] : []);
+        return SponsorVoucherTransactionResource::create($voucher->makeTransactionBySponsor($employee, $fields));
+    }
 
-        return SponsorVoucherTransactionResource::create($transaction);
+    /**
+     * @param StoreTransactionBatchRequest $request
+     * @param Organization $organization
+     * @return JsonResponse
+     * @throws AuthorizationException
+     */
+    public function storeBatchValidate(
+        StoreTransactionBatchRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('storeBatchAsSponsor', [VoucherTransaction::class, $organization]);
+
+        return new JsonResponse([], $request->isAuthenticated() ? 200 : 403);
     }
 
     /**
@@ -130,35 +135,26 @@ class TransactionsController extends Controller
 
         while (count($transactions) > $index) {
             $slice = array_slice($transactions, $index++, 1, true);
-            $item = array_slice($slice, 0, 1)[0];
+            $item = array_first($slice);
             $validator = $request->validateRows($slice);
 
             if ($validator->passes()) {
-                $voucher = Voucher::find(array_get($item, 'voucher_id'));
+                $voucher = Voucher::find(Arr::get($item, 'voucher_id'));
 
-                $note = $item['note'] ?? null;
-
-                $transaction = $voucher->makeTransactionBySponsor($employee, array_merge([
-                    'target' => VoucherTransaction::TARGET_IBAN,
+                $createdItems[] = $voucher->makeTransactionBySponsor($employee, array_merge([
                     'target_iban' => $item['direct_payment_iban'],
                     'target_name' => $item['direct_payment_name'],
-                    'note' => $note,
-                ], array_only($item, ['amount', 'uid'])), $note ? [
-                    'voucher_transaction_note' => $note,
-                ] : []);
-
-                $createdItems[] = $transaction->id;
+                    'target' => VoucherTransaction::TARGET_IBAN,
+                ], array_only($item, ['amount', 'uid', 'note'])))->id;
             } else {
                 $errorsItems[] = $validator->messages()->toArray();
             }
         }
 
-        $transactions = SponsorVoucherTransactionResource::queryCollection(
-            VoucherTransaction::query()->whereIn('id', $createdItems)
-        );
+        $query = VoucherTransaction::query()->whereIn('id', $createdItems);
 
         return new JsonResponse([
-            'created' => $transactions,
+            'created' => SponsorVoucherTransactionResource::queryCollection($query, (clone $query)->count()),
             'errors' => array_reduce($errorsItems, fn($array, $item) => array_merge($array, $item), []),
         ]);
     }
