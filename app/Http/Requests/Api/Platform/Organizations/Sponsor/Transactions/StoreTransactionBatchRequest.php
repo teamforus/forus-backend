@@ -128,10 +128,14 @@ class StoreTransactionBatchRequest extends BaseFormRequest
             ->get()
             ->keyBy('id');
 
-        return array_map(fn ($transaction) => array_merge([
-            'voucher' => $vouchers[$transaction['voucher_id'] ?? null] ?? null,
-            'voucher_id' => ($vouchers[$transaction['voucher_id'] ?? null] ?? null)?->id ?? null,
-        ], $transaction), $transactions);
+        return array_map(function ($transaction) use ($vouchers) {
+            $voucher = $vouchers[$transaction['voucher_id'] ?? null] ?? null;
+
+            return array_merge($transaction, [
+                'voucher' => $voucher,
+                'voucher_id' => $voucher?->id,
+            ]);
+        }, $transactions);
     }
 
     /**
@@ -144,6 +148,8 @@ class StoreTransactionBatchRequest extends BaseFormRequest
             ->whereNull('product_id');
 
         $builder->whereHas('fund', function(Builder $builder) {
+            $builder->whereRelation('fund_config', 'allow_direct_payments', true);
+
             FundQuery::whereIsInternalConfiguredAndActive($builder->where([
                 'type' => Fund::TYPE_BUDGET,
                 'organization_id' => $this->organization->id,

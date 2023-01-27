@@ -34,7 +34,7 @@ class VoucherTransactionBatchItemAmountRule extends BaseRule
         $amount = $this->transactions[$index]['amount'] ?? 0;
 
         if (!$voucher) {
-            return $this->reject('The voucher was not found or you have no permissions to use the voucher.');
+            return $this->reject('Voucher not found, direct payments not available, or you are not authorized to use the voucher.');
         }
 
         $transactionToIndex = array_slice($this->transactions, 0, $index);
