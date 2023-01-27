@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Implementation;
+use App\Models\Organization;
 use App\Models\ProductReservation;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
@@ -16,12 +17,19 @@ use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestIdentities;
+use Illuminate\Support\Facades\Cache;
+use Tests\Traits\ProductReservationData;
 
 class ProductReservationTest extends DuskTestCase
 {
-    use AssertsSentEmails, MakesTestIdentities;
+    use AssertsSentEmails, MakesTestIdentities, ProductReservationData;
 
     protected ?Identity $identity;
+
+    /**
+     * @var string
+     */
+    protected string $organizationName = 'Stadjerspas';
 
     /**
      * @return void
@@ -63,6 +71,107 @@ class ProductReservationTest extends DuskTestCase
             // Logout user
             $this->logout($browser);
         });
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testReservationState(): void
+    {
+        Cache::clear();
+
+        $implementation = Implementation::general();
+        $this->assertNotNull($implementation);
+
+        /** @var Organization $organization */
+        $organization = Organization::where('name', $this->organizationName)->first();
+        $this->assertNotNull($organization);
+
+        $reservation = $this->makeReservationInDb($organization);
+        $reservation = ProductReservation::find($reservation->id);
+
+        $this->browse(function (Browser $browser) use ($implementation, $reservation) {
+            $provider = $reservation->product->organization;
+            $identity = $provider->identity;
+            $this->assertNotNull($identity);
+
+            $browser->visit($implementation->urlFrontend('provider'));
+
+            // Authorize identity
+            $proxy = $this->makeIdentityProxy($identity);
+            $browser->script("localStorage.setItem('active_account', '$proxy->access_token')");
+            $browser->refresh();
+
+            $browser->waitFor('@providerOverview');
+            $this->switchToOrganization($browser, $provider, $identity);
+
+            $browser->waitFor('@providerOverview', 10);
+            $browser->element('@reservationsPage')->click();
+            $browser->waitFor('@reservationsTitle');
+
+            $this->checkReservationState($browser, $reservation);
+
+            if ($reservation->isPending()) {
+                $reservation->acceptProvider();
+                $reservation = ProductReservation::find($reservation->id);
+
+                $this->assertTrue($reservation->state === ProductReservation::STATE_ACCEPTED);
+
+                $browser->refresh();
+                $this->checkReservationState($browser, $reservation);
+            }
+
+            if ($reservation->isAccepted()) {
+                $reservation->rejectOrCancelProvider();
+                $reservation = ProductReservation::find($reservation->id);
+
+                $this->assertTrue($reservation->state === ProductReservation::STATE_CANCELED_BY_PROVIDER);
+
+                $browser->refresh();
+                $this->checkReservationState($browser, $reservation);
+            }
+
+            // Logout
+            $this->logout($browser);
+        });
+    }
+
+    /**
+     * @param Browser $browser
+     * @param ProductReservation $reservation
+     * @return void
+     * @throws TimeOutException
+     */
+    private function checkReservationState(
+        Browser $browser,
+        ProductReservation $reservation
+    ): void {
+        $browser->waitFor('@reservationRow' . $reservation->id);
+        $browser->within('@reservationRow' . $reservation->id, function(Browser $browser) use ($reservation) {
+            $browser->assertSeeIn('@reservationState', $reservation->state_locale);
+        });
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Organization $organization
+     * @param Identity $identity
+     * @return void
+     * @throws TimeOutException
+     */
+    private function switchToOrganization(
+        Browser $browser,
+        Organization $organization,
+        Identity $identity
+    ): void {
+        $browser->waitFor('@identityEmail');
+        $browser->assertSeeIn('@identityEmail', $identity->email);
+        $browser->waitFor('@headerOrganizationSwitcher');
+        $browser->press('@headerOrganizationSwitcher');
+        $browser->waitFor("@headerOrganizationItem$organization->id");
+        $browser->press("@headerOrganizationItem$organization->id");
+        $browser->pause(5000);
     }
 
     /**
@@ -144,7 +253,7 @@ class ProductReservationTest extends DuskTestCase
 
         $browser->waitFor('@modalProductReserveCancel');
         $browser->within('@modalProductReserveCancel', fn(Browser $el) => $el->click('@btnSubmit'));
-        $browser->waitUntilMissingText($reservation->code);
+        $browser->waitUntilMissingText($reservation->code, 10);
 
         $reservationElement = $this->findReservationElement($browser, $reservation);
         $this->assertNull($reservationElement, 'Reservation not deleted.');
