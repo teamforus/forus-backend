@@ -45,6 +45,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $target
  * @property string|null $target_iban
  * @property string|null $target_name
+ * @property int|null $target_reimbursement_id
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
@@ -93,6 +94,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static Builder|VoucherTransaction whereTarget($value)
  * @method static Builder|VoucherTransaction whereTargetIban($value)
  * @method static Builder|VoucherTransaction whereTargetName($value)
+ * @method static Builder|VoucherTransaction whereTargetReimbursementId($value)
  * @method static Builder|VoucherTransaction whereTransferAt($value)
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
@@ -163,8 +165,8 @@ class VoucherTransaction extends BaseModel
         'voucher_id', 'organization_id', 'product_id', 'fund_provider_product_id',
         'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
         'iban_from', 'iban_to', 'iban_to_name', 'payment_time', 'employee_id', 'transfer_at',
-        'voucher_transaction_bulk_id', 'payment_description', 'initiator',
-        'target', 'target_iban', 'target_name', 'reimbursement_id', 'uid',
+        'voucher_transaction_bulk_id', 'payment_description', 'initiator', 'reimbursement_id',
+        'target', 'target_iban', 'target_name', 'target_reimbursement_id', 'uid',
     ];
 
     protected $hidden = [

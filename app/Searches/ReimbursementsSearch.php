@@ -51,6 +51,10 @@ class ReimbursementsSearch extends BaseSearch
             $builder->where('amount', '<=', $this->getFilter('amount_max'));
         }
 
+        if ($this->hasFilter('identity_address')) {
+            $builder->whereRelation('voucher', 'identity_address', $this->getFilter('identity_address'));
+        }
+
         $this->filterByStateAndExpiration($builder);
         $this->filterByQueryString($builder);
 
