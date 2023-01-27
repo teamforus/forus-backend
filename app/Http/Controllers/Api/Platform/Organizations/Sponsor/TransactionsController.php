@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\StoreTrans
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
+use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
@@ -87,13 +88,26 @@ class TransactionsController extends Controller
         $provider = Organization::find($request->input('organization_id')) ?: false;
         $provider = $target == VoucherTransaction::TARGET_PROVIDER ? $provider : null;
 
+        $reimbursement = $request->input('target_reimbursement_id');
+        $reimbursement = $reimbursement ? Reimbursement::find($reimbursement) : null;
+
         $this->authorize('show', $organization);
         $this->authorize('useAsSponsor', [$voucher, $provider]);
 
         $fields = array_merge(match($target) {
-            VoucherTransaction::TARGET_PROVIDER => $request->only('amount', 'organization_id', 'note'),
-            VoucherTransaction::TARGET_IBAN => $request->only('amount', 'target_iban', 'target_name', 'note'),
-            default => $request->only('amount', 'note'),
+            VoucherTransaction::TARGET_PROVIDER => $request->only([
+                'amount', 'organization_id', 'note',
+            ]),
+            VoucherTransaction::TARGET_IBAN => array_merge($reimbursement ? [
+                'target_iban' => $reimbursement->iban,
+                'target_name' => $reimbursement->iban_name,
+                'target_reimbursement_id' => $reimbursement->id,
+            ] : $request->only([
+                'target_iban', 'target_name',
+            ]), $request->only('amount', 'note')),
+            default => $request->only([
+                'amount', 'note'
+            ]),
         }, compact('target'));
 
         return SponsorVoucherTransactionResource::create($voucher->makeTransactionBySponsor($employee, $fields));

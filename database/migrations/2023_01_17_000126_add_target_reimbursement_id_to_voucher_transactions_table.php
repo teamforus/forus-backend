@@ -14,7 +14,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('voucher_transactions', function (Blueprint $table) {
-            $table->string('uid')->nullable()->after('id');
+            $table->unsignedBigInteger('target_reimbursement_id')
+                ->after('target_name')
+                ->nullable();
+
+            $table->foreign('target_reimbursement_id')
+                ->references('id')->on('reimbursements')
+                ->onDelete('cascade');
         });
     }
 
@@ -26,7 +32,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('voucher_transactions', function (Blueprint $table) {
-            $table->dropColumn('uid');
+            $table->dropForeign('voucher_transactions_target_reimbursement_id_foreign');
+            $table->dropColumn('target_reimbursement_id');
         });
     }
 };

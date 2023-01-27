@@ -214,10 +214,9 @@ class Product extends BaseModel
     {
         return $this->hasMany(Voucher::class)
             ->whereHas('product_reservations', function(Builder $builder) {
-                $builder->whereNotIn('state', [
+                $builder->whereNotIn('state', array_merge([
                     ProductReservation::STATE_REJECTED,
-                    ProductReservation::STATE_CANCELED
-                ]);
+                ], ProductReservation::STATES_CANCELED));
             })
             ->whereDoesntHave('transactions');
     }
