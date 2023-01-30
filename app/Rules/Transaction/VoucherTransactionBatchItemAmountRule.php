@@ -34,7 +34,7 @@ class VoucherTransactionBatchItemAmountRule extends BaseRule
         $amount = $this->transactions[$index]['amount'] ?? 0;
 
         if (!$voucher) {
-            return $this->reject('Voucher not found, direct payments not available, or you are not authorized to use the voucher.');
+            return $this->reject('Geen voucher gevonden, een directe betaling is niet mogelijk');
         }
 
         $transactionToIndex = array_slice($this->transactions, 0, $index);
@@ -42,7 +42,7 @@ class VoucherTransactionBatchItemAmountRule extends BaseRule
 
         if ($voucher->amount_available_cached < $amount) {
             return $this->reject(sprintf(
-                'The amount of the transaction (%s) is higher than the balance of the voucher (%s).',
+                'Het bedrag van transactie (%s) is hoger dan het het resterend bedrag op het tegoed (%s).',
                 currency_format_locale($amount),
                 currency_format_locale($voucher->amount_available_cached),
             ));
@@ -50,7 +50,7 @@ class VoucherTransactionBatchItemAmountRule extends BaseRule
 
         if ($voucher->amount_available_cached < $amountToIndex) {
             return $this->reject(sprintf(
-                'The sum of the transactions from for selected voucher (%s) is higher than the balance of the voucher (%s).',
+                'Het totale bedrag van de transactie (%s) is hoger dan het het resterend bedrag op het tegoed (%s).',
                 currency_format_locale($amountToIndex),
                 currency_format_locale($voucher->amount_available_cached),
             ));
