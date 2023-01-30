@@ -206,7 +206,7 @@ class VoucherResource extends BaseJsonResource
             } else if ($voucher->fund->isTypeBudget()) {
                 $reservable = FundQuery::whereProductsAreApprovedAndActiveFilter(
                     Fund::whereId($voucher->fund_id), $product
-                )->exists() && $voucher->amount_available > $product->price;
+                )->exists() && $voucher->amount_available >= $product->price;
             }
         }
 
