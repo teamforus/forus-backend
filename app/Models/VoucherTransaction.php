@@ -5,8 +5,8 @@ namespace App\Models;
 use App\Exports\VoucherTransactionsProviderExport;
 use App\Exports\VoucherTransactionsSponsorExport;
 use App\Scopes\Builders\VoucherTransactionQuery;
+use App\Searches\VoucherTransactionsSearch;
 use App\Services\EventLogService\Traits\HasLogs;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -153,7 +153,7 @@ class VoucherTransaction extends BaseModel
 
     public const SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'transaction_in', 'fund_name',
-        'provider_name', 'product_name', 'target',
+        'provider_name', 'product_name', 'target', 'uid',
     ];
 
     /**
@@ -166,7 +166,7 @@ class VoucherTransaction extends BaseModel
         'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
         'iban_from', 'iban_to', 'iban_to_name', 'payment_time', 'employee_id', 'transfer_at',
         'voucher_transaction_bulk_id', 'payment_description', 'initiator', 'reimbursement_id',
-        'target', 'target_iban', 'target_name', 'target_reimbursement_id',
+        'target', 'target_iban', 'target_name', 'target_reimbursement_id', 'uid',
     ];
 
     protected $hidden = [
@@ -324,113 +324,18 @@ class VoucherTransaction extends BaseModel
 
     /**
      * @param Request $request
-     * @return Builder
-     */
-    public static function search(Request $request): Builder
-    {
-        /** @var Builder|VoucherTransaction $query */
-        $query = self::query();
-        $targets = $request->input('targets', static::TARGETS_OUTGOING);
-
-        if ($request->has('q') && $q = $request->input('q', '')) {
-            $query->where(static function (Builder $query) use ($q) {
-                $query->where('voucher_transactions.id', '=', $q);
-                $query->orWhereHas('voucher.fund', fn (Builder $b) => $b->where('name', 'LIKE', "%$q%"));
-                $query->orWhereRelation('product', 'id', "=", $q);
-                $query->orWhereRelation('product', 'name', 'LIKE', "%$q%");
-                $query->orWhereRelation('provider', 'name', 'LIKE', "%$q%");
-            });
-        }
-
-        if ($request->has('state') && $state = $request->input('state')) {
-            $query->where('state', $state);
-        }
-
-        if ($request->has('from') && $from = $request->input('from')) {
-            $from = (Carbon::createFromFormat('Y-m-d', $from));
-
-            $query->where(
-                'created_at',
-                '>=',
-                $from->startOfDay()->format('Y-m-d H:i:s')
-            );
-        }
-
-        if ($request->has('to') && $to = $request->input('to')) {
-            $to = (Carbon::createFromFormat('Y-m-d', $to));
-
-            $query->where(
-                'created_at',
-                '<=',
-                $to->endOfDay()->format('Y-m-d H:i:s')
-            );
-        }
-
-        if ($amount_min = $request->input('amount_min')) {
-            $query->where('amount', '>=', $amount_min);
-        }
-
-        if ($amount_max = $request->input('amount_max')) {
-            $query->where('amount', '<=', $amount_max);
-        }
-
-        if ($transfer_in_min = $request->input('transfer_in_min')) {
-            $query->where(function (Builder $builder) use ($transfer_in_min) {
-                $builder->where('state', self::STATE_PENDING);
-                $builder->where('transfer_at', '>=', now()->addDays($transfer_in_min));
-                $builder->whereNull('voucher_transaction_bulk_id');
-            });
-        }
-
-        if ($transfer_in_max = $request->input('transfer_in_max')) {
-            $query->where(function (Builder $builder) use ($transfer_in_max) {
-                $builder->where('state', self::STATE_PENDING);
-                $builder->where('transfer_at', '<=', now()->addDays($transfer_in_max + 1));
-                $builder->whereNull('voucher_transaction_bulk_id');
-            });
-        }
-
-        if ($request->has('fund_state') && $fund_state = $request->input('fund_state')) {
-            $query->whereHas('voucher.fund', fn (Builder $b) => $b->where('state', '=', $fund_state));
-        }
-
-        $query->whereIn('target', is_array($targets) ? $targets : []);
-
-        return $query;
-    }
-
-    /**
-     * @param Request $request
      * @param Organization $organization
      * @return Builder
      */
     public static function searchSponsor(Request $request, Organization $organization): Builder
     {
-        $builder = self::search($request)->whereHas('voucher.fund', function (
-            Builder $query
-        ) use ($organization, $request) {
-            if ($fund_id = $request->input('fund_id')) {
-                $query->where('id', $fund_id);
-            }
+        $builder = new VoucherTransactionsSearch($request->only([
+            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+            'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
+            'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
+        ]), self::query());
 
-            $query->whereHas('organization', function (Builder $query) use ($organization) {
-                $query->where('id', $organization->id);
-            });
-        });
-
-        if ($voucher_transaction_bulk_id = $request->input('voucher_transaction_bulk_id')) {
-            $builder->where(compact('voucher_transaction_bulk_id'));
-        }
-
-        if ($voucher_id = $request->input('voucher_id')) {
-            $builder->where(compact('voucher_id'));
-        }
-
-        if ($request->input('pending_bulking')) {
-            VoucherTransactionQuery::whereAvailableForBulking($builder);
-        }
-
-        return $builder;
+        return $builder->searchSponsor($organization);
     }
 
     /**
@@ -440,15 +345,14 @@ class VoucherTransaction extends BaseModel
      */
     public static function searchProvider(Request $request, Organization $organization): Builder
     {
-        $builder = self::search($request)->where([
+        $builder = new VoucherTransactionsSearch($request->only([
+            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+            'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
+        ]), self::query());
+
+        return $builder->searchProvider()->where([
             'organization_id' => $organization->id,
         ]);
-
-        if ($request->has('fund_id')) {
-            $builder->whereRelation('voucher', 'fund_id', $request->get('fund_id'));
-        }
-
-        return VoucherTransactionQuery::whereOutgoing($builder);
     }
 
     /**
@@ -458,7 +362,12 @@ class VoucherTransaction extends BaseModel
      */
     public static function searchVoucher(Voucher $voucher, Request $request): Builder
     {
-        return self::search($request)->where([
+        $builder = new VoucherTransactionsSearch($request->only([
+            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+            'transfer_in_min', 'transfer_in_max', 'fund_state',
+        ]), self::query());
+
+        return $builder->query()->where([
             'voucher_id' => $voucher->id
         ]);
     }
