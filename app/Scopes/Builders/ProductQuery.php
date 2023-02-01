@@ -90,6 +90,15 @@ class ProductQuery
 
     /**
      * @param Builder $query
+     * @return Builder
+     */
+    public static function whereFundExcluded(Builder $query, $fund_id): Builder
+    {
+        return $query->whereNotIn('id', self::whereFundNotExcluded(Product::query(), $fund_id)->select('id'));
+    }
+
+    /**
+     * @param Builder $query
      * @param $fund_id
      * @return Builder
      */
@@ -215,6 +224,15 @@ class ProductQuery
             $builder->whereNull('products.expire_at');
             $builder->orWhere('products.expire_at', '>=', today());
         });
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function whereExpired(Builder $query): Builder
+    {
+        return $query->whereNotIn('id', self::whereNotExpired(Product::query())->select('id'));
     }
 
     /**
