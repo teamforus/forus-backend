@@ -258,24 +258,18 @@ class FundProvider extends BaseModel
             })->where('allow_budget', (bool) $allow_budget);
         }
 
-        if ($has_products !== null) {
-            if ($request->input('has_products')) {
-                $query->whereHas('organization.products', function(Builder $builder) use ($fundsQuery) {
-                    $productsQuery = ProductQuery::whereNotExpired($builder);
-                    ProductQuery::whereFundNotExcluded($productsQuery, $fundsQuery->pluck('id')->toArray());
-                });
-            } else {
-                $query->where(function(Builder $query) use ($fundsQuery) {
-                    $query->whereHas('organization.products', function(Builder $builder) use ($fundsQuery) {
-                        ProductQuery::whereExpired($builder);
-                        $builder->orWhere(function() use ($fundsQuery) {
-                            ProductQuery::whereFundExcluded(Product::query(), $fundsQuery->pluck('id')->toArray());
-                        });
-                    })->orWhereDoesntHave(
-                        'organization.products'
-                    );
-                });
-            }
+        if ($has_products) {
+            $query->whereHas('organization.products', function (Builder $builder) use ($fundsQuery) {
+                ProductQuery::whereNotExpired($builder);
+                ProductQuery::whereFundNotExcluded($builder, $fundsQuery->pluck('id')->toArray());
+            });
+        }
+
+        if (!$has_products && $has_products !== null) {
+            $query->whereDoesntHave('organization.products', function (Builder $builder) use ($fundsQuery) {
+                ProductQuery::whereNotExpired($builder);
+                ProductQuery::whereFundNotExcluded($builder, $fundsQuery->pluck('id')->toArray());
+            });
         }
 
         if ($allow_products !== null) {

@@ -41,7 +41,7 @@ class IndexFundProviderRequest extends BaseFormRequest
             'state'             => 'nullable|in:' . implode(',', FundProvider::STATES),
             'allow_budget'      => 'nullable|boolean',
             'allow_products'    => 'nullable|in:1,0,some',
-            'has_products'      => 'nullable|in:1,0',
+            'has_products'      => 'nullable|boolean',
             'per_page'          => 'nullable|numeric|min:1|max:1000',
             'fund_id'           => 'nullable|in:' . implode(',', $fundIds),
             'organization_id'   => 'nullable|in:' . implode(',', $providerIds),
