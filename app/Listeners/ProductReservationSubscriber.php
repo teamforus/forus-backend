@@ -11,6 +11,7 @@ use App\Notifications\Identities\ProductReservation\IdentityProductReservationAc
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCanceledNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCreatedNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationRejectedNotification;
+use App\Notifications\Organizations\ProductReservations\ProductReservationCanceledNotification;
 use Illuminate\Events\Dispatcher;
 
 class ProductReservationSubscriber
@@ -74,10 +75,19 @@ class ProductReservationSubscriber
     {
         $productReservation = $event->getProductReservation();
 
-        IdentityProductReservationCanceledNotification::send($productReservation->log(
-            $productReservation::EVENT_CANCELED,
-            $this->getReservationLogModels($productReservation)
-        ));
+        if ($productReservation->isCanceledByClient()) {
+            ProductReservationCanceledNotification::send($productReservation->log(
+                $productReservation::EVENT_CANCELED_BY_CLIENT,
+                $this->getReservationLogModels($productReservation),
+            ));
+        }
+
+        if ($productReservation->isCanceledByProvider()) {
+            IdentityProductReservationCanceledNotification::send($productReservation->log(
+                $productReservation::EVENT_CANCELED_BY_PROVIDER,
+                $this->getReservationLogModels($productReservation),
+            ));
+        }
     }
 
     /**

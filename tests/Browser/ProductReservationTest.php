@@ -150,7 +150,7 @@ class ProductReservationTest extends DuskTestCase
         $this->assertNull($reservationElement, 'Reservation not deleted.');
 
         $reservation->refresh();
-        $this->assertTrue($reservation->trashed(), 'Reservation not deleted.');
+        $this->assertTrue($reservation->isCanceledByClient(), 'Reservation not canceled.');
     }
 
     /**

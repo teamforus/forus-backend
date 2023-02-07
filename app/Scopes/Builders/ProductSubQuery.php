@@ -228,10 +228,9 @@ class ProductSubQuery
                 $builder->selectSub(ProductReservation::query()
                     ->select([])
                     ->selectRaw('count(*)')
-                    ->whereNotIn('state', [
-                        ProductReservation::STATE_CANCELED,
+                    ->whereNotIn('state', array_merge([
                         ProductReservation::STATE_REJECTED,
-                    ])
+                    ], ProductReservation::STATES_CANCELED))
                     ->whereDoesntHave('voucher_transaction')
                     ->whereColumn('product_id', '=', 'products.id')
                     ->where(function(Builder $builder) use ($options) {

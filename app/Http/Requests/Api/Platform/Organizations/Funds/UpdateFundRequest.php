@@ -45,7 +45,7 @@ class UpdateFundRequest extends BaseFormRequest
             'name'                      => 'nullable|between:2,200',
             'media_uid'                 => ['nullable', new MediaUidRule('fund_logo')],
             'description'               => 'nullable|string|max:15000',
-            'description_short'         => 'nullable|string|max:280',
+            'description_short'         => 'nullable|string|max:500',
             'notification_amount'       => 'nullable|numeric',
             'faq_title'                 => 'nullable|string|max:200',
             'tag_ids'                   => 'nullable|array',

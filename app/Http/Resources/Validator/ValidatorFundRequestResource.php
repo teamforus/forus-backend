@@ -62,7 +62,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
 
         return array_merge($fundRequest->only([
             'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
-            'contact_information',
+            'contact_information', 'state_locale',
         ]), [
             'bsn' => $bsn_enabled ? $fundRequest->identity->bsn : null,
             'fund' => $this->fundDetails($fundRequest),
@@ -178,10 +178,10 @@ class ValidatorFundRequestResource extends BaseJsonResource
             'value' => $is_assignable || $is_assigned ? $record->value : null,
         ]);
 
-        $filesAndClarifications = $is_assigned ? [
+        $filesAndClarifications = [
             'files' => FileResource::collection($record->files),
             'clarifications' => FundRequestClarificationResource::collection($record->fund_request_clarifications),
-        ] : [];
+        ];
 
         return array_merge($baseFields, $filesAndClarifications, [
             'employee' => new EmployeeResource($record->employee),

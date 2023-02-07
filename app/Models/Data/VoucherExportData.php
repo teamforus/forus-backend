@@ -75,7 +75,7 @@ class VoucherExportData
             'identity_email' => $assigned ? ($identity?->email) : null,
             'state' => $this->voucher->state ?? null,
             'activation_code' => $this->voucher->activation_code ?? null,
-            'activation_code_uid' => $this->voucher->activation_code_uid ?? null,
+            'client_uid' => $this->voucher->client_uid ?? null,
             'note' => $this->voucher->note,
             'source' => $this->voucher->employee_id ? 'employee': 'user',
             'amount' => $this->voucher->amount_total,

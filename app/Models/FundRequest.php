@@ -7,8 +7,8 @@ use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequestRecords\FundRequestRecordAssigned;
 use App\Events\FundRequestRecords\FundRequestRecordResigned;
 use App\Events\FundRequests\FundRequestResolved;
-use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundRequestRecordQuery;
+use App\Searches\FundRequestSearch;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -36,6 +36,7 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Fund $fund
  * @property-read int|null $lead_time_days
  * @property-read string $lead_time_locale
+ * @property-read string $state_locale
  * @property-read \App\Models\Identity $identity
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -150,47 +151,18 @@ class FundRequest extends BaseModel
     }
 
     /**
-     * @param \Illuminate\Http\Request $request
-     * @param Employee $employee
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return string
+     * @noinspection PhpUnused
      */
-    public static function search(Request $request, Employee $employee): Builder
+    public function getStateLocaleAttribute(): string
     {
-        /** @var Builder $query */
-        $query = self::query();
-
-        $query->whereHas('records', function(Builder $builder) use ($employee) {
-            FundRequestRecordQuery::whereEmployeeIsValidatorOrSupervisor($builder, $employee);
-        });
-
-        if ($request->has('q') && $q = $request->input('q')) {
-            FundRequestQuery::whereQueryFilter($query, $q);
-        }
-
-        if ($request->has('state') && $state = $request->input('state')) {
-            $query->where('state', $state);
-        }
-
-        if ($request->has('from') && $from = $request->input('from')) {
-            $query->where('created_at', '>=', $from);
-        }
-
-        if ($request->has('to') && $to = $request->input('to')) {
-            $query->where('created_at', '<=', $to);
-        }
-
-        if ($request->has('employee_id') && $employee_id = $request->input('employee_id')) {
-            $employee = Employee::find($employee_id);
-
-            $query->whereHas('records', static function(Builder $builder) use ($employee) {
-                FundRequestRecordQuery::whereEmployeeIsAssignedValidator($builder, $employee);
-            });
-        }
-
-        return $query->orderBy(
-            $request->get('sort_by', 'created_at'),
-            $request->get('sort_order', 'DESC')
-        )->orderBy('created_at');
+        return [
+            self::STATE_PENDING => 'Wachten',
+            self::STATE_APPROVED => 'Geaccepteerd',
+            self::STATE_APPROVED_PARTLY => 'Aanvulling gevraagd',
+            self::STATE_DECLINED => 'Geweigerd',
+            self::STATE_DISREGARDED => 'Niet beoordeeld',
+        ][$this->state] ?? '';
     }
 
     /**
@@ -566,7 +538,11 @@ class FundRequest extends BaseModel
      */
     public static function exportSponsor(Request $request, Employee $employee): mixed
     {
-        return self::exportTransform(self::search($request, $employee));
+        $search = (new FundRequestSearch($request->only([
+            'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir',
+        ])))->setEmployee($employee);
+
+        return self::exportTransform($search->query());
     }
 
     /**

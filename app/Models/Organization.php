@@ -159,7 +159,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
  * @method static EloquentBuilder|Organization whereReservationsBudgetEnabled($value)
  * @method static EloquentBuilder|Organization whereReservationsSubsidyEnabled($value)
- * @method static EloquentBuilder|Organization whereShowTransactionsToProvider($value)
+ * @method static EloquentBuilder|Organization whereShowProviderTransactions($value)
  * @method static EloquentBuilder|Organization whereUpdatedAt($value)
  * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
  * @method static EloquentBuilder|Organization whereWebsite($value)

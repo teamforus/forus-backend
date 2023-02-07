@@ -19,10 +19,6 @@ use App\Searches\ProductReservationsSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class ProductReservationsController
- * @package App\Http\Controllers\Api\Platform\Organizations
- */
 class ProductReservationsController extends Controller
 {
     /**
@@ -68,7 +64,7 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @return ProductReservationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function store(
         StoreProductReservationRequest $request,
@@ -95,7 +91,7 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @return array
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function storeBatch(
         StoreProductReservationBatchRequest $request,
@@ -162,7 +158,7 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @param \App\Models\ProductReservation $productReservation
      * @return ProductReservationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Throwable
      */
     public function accept(
         AcceptProductReservationRequest $request,
@@ -185,7 +181,7 @@ class ProductReservationsController extends Controller
      * @param \App\Models\ProductReservation $productReservation
      * @return ProductReservationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function reject(
         RejectProductReservationRequest $request,
