@@ -55,7 +55,7 @@ class VoucherTransactionsSubscriber
                 IdentityVoucherBudgetTransactionNotification::send($event);
             }
         } elseif ($type == 'subsidy') {
-            $fundProviderProduct = $transaction->product->getSubsidyDetailsForFund($fund);
+            $fundProviderProduct = $transaction->product->getFundProviderProduct($fund);
 
             if ($fundProviderProduct) {
                 $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION_SUBSIDY, $eventMeta, array_merge([

@@ -980,7 +980,7 @@ class Voucher extends BaseModel
         array $extraData = []
     ): ProductReservation {
         $isSubsidy = $this->fund->isTypeSubsidy();
-        $fundProviderProduct = $isSubsidy ? $product->getSubsidyDetailsForFund($this->fund) : null;
+        $fundProviderProduct = $product->getFundProviderProduct($this->fund);
         $amount = $isSubsidy && $fundProviderProduct ? $fundProviderProduct->amount : $product->price;
 
         /** @var ProductReservation $reservation */
@@ -990,7 +990,7 @@ class Voucher extends BaseModel
             'state'                     => ProductReservation::STATE_PENDING,
             'product_id'                => $product->id,
             'employee_id'               => $employee?->id,
-            'fund_provider_product_id'  => $fundProviderProduct ? $fundProviderProduct->id : null,
+            'fund_provider_product_id'  => $fundProviderProduct?->id,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
         ], array_only($extraData, [
             'first_name', 'last_name', 'user_note', 'note',

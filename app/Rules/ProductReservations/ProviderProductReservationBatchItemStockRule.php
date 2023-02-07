@@ -44,7 +44,6 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
         /** @var Product|null $product current row product */
         $product = $this->reservationsData[$this->index]['product'] ?? null;
         $voucher = $this->reservationsData[$this->index]['voucher'] ?? null;
-        $allowed = false;
 
         // get current and previous reservation from the list
         $currenRowNumber = array_search($this->index, array_keys($this->reservationsData)) + 1;
@@ -54,10 +53,12 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
             return $row['is_valid'] !== false;
         });
 
-        if ($voucher->fund->isTypeBudget()) {
+        // check stock
+        $allowed = $this->isValidProductStock($voucher, $product, $prevReservations);
+
+        // when product is in stock check the amount on the voucher as well
+        if ($allowed === true && $voucher->fund->isTypeBudget()) {
             $allowed = $this->isValidProductAmount($voucher, $prevReservations);
-        } elseif ($voucher->fund->isTypeSubsidy()) {
-            $allowed = $this->isValidProductStock($voucher, $product, $prevReservations);
         }
 
         $state = is_string($allowed) ? $this->reject($allowed) : $allowed;
@@ -75,7 +76,7 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
         Voucher $voucher,
         Product $product,
         array $prevReservations = []
-    ) {
+    ): bool|string {
         // total amount of reservations of the target product
         $target_products_count = count(array_filter($prevReservations, function($reservation) use ($product) {
             return $reservation['product_id'] == $product->id;
@@ -86,15 +87,19 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
             return $reservation['product_id'] == $product->id && $reservation['voucher_id'] == $voucher->id;
         }));
 
+        // skip limits check budget products where limits are not set
+        $skipTotalLimit = $voucher->fund->isTypeBudget() && is_null($product['limit_total_available']);
+        $skipVoucherLimit = $voucher->fund->isTypeBudget() && is_null($product['limit_available']);
+
         // Sponsor total limit for the product reached.
-        // Total limit of %s for the product \"%s\" reached!
-        if ($target_products_count > $product['limit_total_available']) {
-            return sprintf("Het aanbod \"%s\" heeft het limiet bereikt!", $product['limit_total']);
+        // Total limit of %s for the product "%s" reached!
+        if (!$skipTotalLimit && $target_products_count > $product['limit_total_available']) {
+            return sprintf('Het aanbod "%s" heeft het limiet bereikt!', $product['limit_total']);
         }
 
         // The total limit of %s for the voucher was reached!
-        if ($target_voucher_products_count > $product['limit_available']) {
-            return sprintf('Het aanbod \"%s\" heeft het limiet bereikt!', $product['limit_per_identity']);
+        if (!$skipVoucherLimit && $target_voucher_products_count > $product['limit_available']) {
+            return sprintf('Het aanbod "%s" heeft het limiet bereikt!', $product['limit_per_identity']);
         }
 
         return true;
@@ -105,8 +110,10 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
      * @param array $prevReservations
      * @return bool|string
      */
-    protected function isValidProductAmount(Voucher $voucher, array $prevReservations = [])
-    {
+    protected function isValidProductAmount(
+        Voucher $voucher,
+        array $prevReservations = []
+    ): bool|string {
         // filter reservations by voucher
         $reservationsProducts = array_filter($prevReservations, function($reservation) use ($voucher) {
             return $reservation['voucher_id'] == $voucher->id;

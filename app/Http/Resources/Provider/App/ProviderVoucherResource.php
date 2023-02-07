@@ -103,7 +103,7 @@ class ProviderVoucherResource extends BaseJsonResource
         $voucher = $voucherToken->voucher;
 
         if ($voucher->fund->isTypeSubsidy()) {
-            $productData = $voucher->product->getSubsidyDetailsForFund($voucher->fund);
+            $productData = $voucher->product->getFundProviderProduct($voucher->fund);
             $productData = ProviderSubsidyProductResource::create($productData)->toArray($this->request);
         } else {
             $productData = ProviderProductAppResource::create($voucher->product);
@@ -157,7 +157,9 @@ class ProviderVoucherResource extends BaseJsonResource
     {
         $builder = Organization::where(static function(Builder $builder) use ($voucher, $identityAddress) {
             // Has products available for purchase
-            $builder->where(function(Builder $builder) use ($voucher) {
+            $builder->where(function(Builder $builder) use ($voucher, $identityAddress) {
+                OrganizationQuery::whereHasPermissions($builder, $identityAddress, 'scan_vouchers');
+
                 if ($voucher->fund->isTypeSubsidy()) {
                     $builder->whereHas('fund_providers', function(Builder $builder) use ($voucher) {
                         $builder->whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {

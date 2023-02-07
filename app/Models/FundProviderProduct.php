@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Models\FundProviderProduct
- *
  * @property int $id
  * @property int $fund_provider_id
  * @property int $product_id
@@ -23,10 +21,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\FundProvider $fund_provider
+ * @property-read \App\Models\FundProvider|null $fund_provider
+ * @property-read bool $active
  * @property-read float $user_price
  * @property-read string $user_price_locale
- * @property-read \App\Models\Product $product
+ * @property-read \App\Models\Product|null $product
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservation[] $product_reservations
+ * @property-read int|null $product_reservations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservation[] $product_reservations_pending
+ * @property-read int|null $product_reservations_pending_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @method static Builder|FundProviderProduct newModelQuery()
@@ -58,13 +61,19 @@ class FundProviderProduct extends BaseModel
      */
     protected $fillable = [
         'product_id', 'fund_provider_id', 'limit_total', 'limit_total_unlimited',
-        'limit_per_identity', 'price', 'old_price', 'amount', 'expire_at'
+        'limit_per_identity', 'price', 'old_price', 'amount', 'expire_at',
     ];
 
+    /**
+     * @var string[]
+     */
     protected $casts = [
         'limit_total_unlimited' => 'bool',
     ];
 
+    /**
+     * @var string[]
+     */
     protected $dates = [
         'expire_at'
     ];
@@ -90,11 +99,32 @@ class FundProviderProduct extends BaseModel
      */
     public function voucher_transactions(): HasMany
     {
-        return $this->hasMany(VoucherTransaction::class);
+        return $this
+            ->hasMany(VoucherTransaction::class)
+            ->where('state', '!=', VoucherTransaction::STATE_CANCELED);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function product_reservations(): HasMany
+    {
+        return $this->hasMany(ProductReservation::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function product_reservations_pending(): HasMany
+    {
+        return $this
+            ->hasMany(ProductReservation::class)
+            ->where('state', ProductReservation::STATE_PENDING);
     }
 
     /**
      * @return float
+     * @noinspection PhpUnused
      */
     public function getUserPriceAttribute(): float
     {
@@ -156,7 +186,7 @@ class FundProviderProduct extends BaseModel
         switch ($price_type) {
             case $this->product::PRICE_TYPE_DISCOUNT_FIXED: return currency_format_locale($price_discount);
             case $this->product::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
-                $isWhole = (double) ($price_discount - round($price_discount)) === (double) 0;
+                $isWhole = (double) ($price_discount - round($price_discount)) === 0.0;
                 return currency_format($price_discount, $isWhole ? 0 : 2) . '%';
             }
             default: return '';
@@ -164,7 +194,7 @@ class FundProviderProduct extends BaseModel
     }
 
     /**
-     * @param Voucher|null $voucher
+     * @param Voucher $voucher
      * @return int|null
      * @throws \Exception
      */
@@ -173,5 +203,14 @@ class FundProviderProduct extends BaseModel
         return (int) max(ProductSubQuery::appendReservationStats([
             'voucher_id' => $voucher->id,
         ], Product::whereId($this->product_id))->first()['limit_available'] ?? 0, 0);
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getActiveAttribute(): bool
+    {
+        return !$this->trashed();
     }
 }
