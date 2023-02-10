@@ -25,7 +25,7 @@ class UpdateFundRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return Gate::allows('update', [$this->fund, $this->organization]);
+        return Gate::any(['update', 'updateTexts'], [$this->fund, $this->organization]);
     }
 
     /**

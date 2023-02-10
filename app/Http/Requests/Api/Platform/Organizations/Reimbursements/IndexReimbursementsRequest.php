@@ -34,6 +34,7 @@ class IndexReimbursementsRequest extends BaseFormRequest
             'expired' => 'nullable|boolean',
             'archived' => 'nullable|boolean',
             'deactivated' => 'nullable|boolean',
+            'identity_address' => 'nullable|exists:identities,address',
             'per_page' => $this->perPageRule(),
         ];
     }

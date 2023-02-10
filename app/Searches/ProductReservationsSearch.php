@@ -59,6 +59,14 @@ class ProductReservationsSearch extends BaseSearch
             $builder->where('product_id', $this->getFilter('product_id'));
         }
 
+        if ($this->hasFilter('archived') && $this->getFilter('archived')) {
+            ProductReservationQuery::whereArchived($builder);
+        }
+
+        if ($this->hasFilter('archived') && !$this->getFilter('archived')) {
+            ProductReservationQuery::whereNotArchived($builder);
+        }
+
         return $builder;
     }
 }

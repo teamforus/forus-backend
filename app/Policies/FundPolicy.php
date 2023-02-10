@@ -175,6 +175,21 @@ class FundPolicy
      * @param Fund $fund
      * @param Organization $organization
      * @return bool
+     */
+    public function updateTexts(Identity $identity, Fund $fund, Organization $organization): bool
+    {
+        if ($fund->organization_id !== $organization->id) {
+            return false;
+        }
+
+        return $fund->organization->identityCan($identity, 'manage_fund_texts');
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param Organization $organization
+     * @return bool
      * @noinspection PhpUnused
      */
     public function archive(Identity $identity, Fund $fund, Organization $organization): bool

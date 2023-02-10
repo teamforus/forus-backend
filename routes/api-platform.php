@@ -194,7 +194,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ->only('index', 'store', 'show', 'update', 'destroy');
 
     $router->resource('product-reservations', "Api\Platform\ProductReservationsController")
-        ->only('index', 'store', 'show', 'destroy');
+        ->only('index', 'store', 'show', 'update');
 
     $router->post('product-reservations/validate', "Api\Platform\ProductReservationsController@storeValidate");
 
@@ -593,7 +593,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource(
         'organizations.products.funds',
         "Api\Platform\Organizations\Products\FundsController"
-    )->only('index', 'show', 'store', 'update', 'destroy');
+    )->only('index');
 
     $router->resource(
         'organizations.products.chats',
@@ -629,6 +629,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             'validators' => 'validator_organization'
         ]
     ]);
+
+    $router->get(
+        'organizations/{organization}/employees/export',
+        'Api\Platform\Organizations\EmployeesController@export'
+    );
 
     $router->resource(
         'organizations.employees',
@@ -694,6 +699,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->get(
         'organizations/{organization}/sponsor/transactions/export',
         "Api\Platform\Organizations\Sponsor\TransactionsController@export"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/transactions/batch',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@storeBatch"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/transactions/batch/validate',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@storeBatchValidate"
     );
 
     $router->resource(

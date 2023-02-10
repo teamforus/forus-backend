@@ -20,7 +20,7 @@ class RolePermissionsTableSeeder extends Seeder
             "manage_implementation", "manage_implementation_cms",
             "manage_bank_connections", "manage_transaction_bulks",
             "manage_reimbursements", "manage_implementation_notifications",
-            "view_funds", "view_person_bsn_data", "make_direct_payments",
+            "view_funds", "view_person_bsn_data", "make_direct_payments", 'manage_fund_texts',
         ],
         "finance_manager" => [
             "view_finances", "manage_vouchers", "manage_bank_connections",

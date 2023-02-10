@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Excel as ExcelModel;
 use Illuminate\Support\Carbon;
@@ -54,7 +55,7 @@ use ZipArchive;
  * @property string|null $note
  * @property int|null $employee_id
  * @property string|null $activation_code
- * @property string|null $activation_code_uid
+ * @property string|null $client_uid
  * @property int|null $fund_backoffice_log_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -169,6 +170,8 @@ class Voucher extends BaseModel
     public const EVENT_SHARED_BY_EMAIL = 'shared_by_email';
     public const EVENT_PHYSICAL_CARD_REQUESTED = 'physical_card_requested';
 
+    public const EVENT_LIMIT_MULTIPLIER_CHANGED = 'limit_multiplier_changed';
+
     public const TYPE_BUDGET = 'regular';
     public const TYPE_PRODUCT = 'product';
 
@@ -206,7 +209,7 @@ class Voucher extends BaseModel
     protected $fillable = [
         'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id',
         'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'state',
-        'activation_code', 'activation_code_uid', 'fund_backoffice_log_id',
+        'activation_code', 'client_uid', 'fund_backoffice_log_id',
         'product_reservation_id',
     ];
 
@@ -1221,20 +1224,20 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @param string|null $activation_code_uid
+     * @param string|null $client_uid
      * @return $this
      */
-    public function makeActivationCode(string $activation_code_uid = null): self
+    public function makeActivationCode(string $client_uid = null): self
     {
         $queryUnused = self::whereHas('fund', function(Builder $builder) {
             $builder->where('organization_id', $this->fund->organization_id);
-        })->whereNull('identity_address')->where(compact('activation_code_uid'));
+        })->whereNull('identity_address')->where(compact('client_uid'));
 
         $queryUsed = self::whereHas('fund', function(Builder $builder) {
             $builder->where('organization_id', $this->fund->organization_id);
-        })->whereNotNull('identity_address')->where(compact('activation_code_uid'));
+        })->whereNotNull('identity_address')->where(compact('client_uid'));
 
-        if (!is_null($activation_code_uid) && $queryUnused->exists()) {
+        if (!is_null($client_uid) && $queryUnused->exists()) {
             /** @var Voucher $voucher */
             $voucher = $queryUnused->first();
             $activation_code = $voucher->activation_code;
@@ -1246,13 +1249,13 @@ class Voucher extends BaseModel
             }, 4, 2);
         }
 
-        if (!is_null($activation_code_uid) && $oldVoucher = $queryUsed->first()) {
+        if (!is_null($client_uid) && $oldVoucher = $queryUsed->first()) {
             $this->assignToIdentity($oldVoucher->identity);
         }
 
         return $this->updateModel([
             'activation_code' => $activation_code,
-            'activation_code_uid' => $activation_code_uid,
+            'client_uid' => $client_uid,
         ]);
     }
 
@@ -1458,16 +1461,41 @@ class Voucher extends BaseModel
         string $target_name,
         Employee $employee,
     ): VoucherTransaction {
-        $transaction = $this->makeTransaction([
+        return $this->makeTransactionBySponsor($employee, [
             'amount' => $this->amount_available,
-            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
-            'employee_id' => $employee->id,
             'target' => VoucherTransaction::TARGET_IBAN,
             'target_iban' => $target_iban,
             'target_name' => $target_name,
         ]);
+    }
 
-        VoucherTransactionCreated::dispatch($transaction);
+    /**
+     * @param Employee $employee
+     * @param array $attributes
+     * @return VoucherTransaction
+     */
+    public function makeTransactionBySponsor(
+        Employee $employee,
+        array $attributes,
+    ): VoucherTransaction {
+        $isTopUp = Arr::get($attributes, 'target') == VoucherTransaction::TARGET_TOP_UP;
+        $state = $isTopUp ? VoucherTransaction::STATE_SUCCESS : VoucherTransaction::STATE_PENDING;
+        $note = Arr::get($attributes, 'note');
+
+        $transaction = $this->makeTransaction(array_merge(Arr::except($attributes, 'note'), [
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'employee_id' => $employee->id,
+            'payment_time' => $isTopUp ? now() : null,
+            'state' => $state,
+        ]));
+
+        if ($note) {
+            $transaction->addNote('sponsor', $note);
+        }
+
+        Event::dispatch(new VoucherTransactionCreated($transaction, $note ? [
+            'voucher_transaction_note' => $note,
+        ] : []));
 
         return $transaction;
     }

@@ -24,10 +24,10 @@ class RecordTypeController extends Controller
     {
         $insertableOnly = $request->input('insertable_only', false);
         $system = $request->input('system', false);
-        $recordTypes = RecordType::searchQuery(!$insertableOnly || $system);
 
-        return new JsonResponse(RecordTypeResource::queryCollection(
-            $recordTypes
-        )->toArray($request));
+        $recordTypes = RecordType::searchQuery(!$insertableOnly || $system);
+        $recordTypesCollection = RecordTypeResource::queryCollection($recordTypes, 1000);
+
+        return new JsonResponse($recordTypesCollection->toArray($request));
     }
 }

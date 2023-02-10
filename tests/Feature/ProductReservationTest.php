@@ -317,9 +317,11 @@ class ProductReservationTest extends TestCase
         $response->assertJsonStructure(['data' => $this->resourceStructure]);
 
         // cancel reservation
-        $this->delete($reservationUrl, [], $headers)->assertSuccessful();
+        $this->patch($reservationUrl, [
+            'state' => ProductReservation::STATE_CANCELED_BY_CLIENT,
+        ], $headers)->assertSuccessful();
 
         $reservation = ProductReservation::find($reservation->id);
-        $this->assertNull($reservation);
+        $this->assertTrue($reservation->isCanceledByClient());
     }
 }
