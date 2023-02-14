@@ -34,9 +34,9 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
         $transaction = $this->resource;
 
         return array_merge($transaction->only([
-            'id', 'organization_id', 'product_id', 'state_locale',
-            'updated_at', 'address', 'state', 'payment_id', 'voucher_transaction_bulk_id',
-            'transaction_cost', 'attempts', 'transfer_at', 'iban_final', 'target', 'target_locale',
+            'id', 'organization_id', 'product_id', 'state_locale', 'updated_at', 'address', 'state',
+            'payment_id', 'voucher_transaction_bulk_id', 'transaction_cost', 'attempts',
+            'transfer_at', 'iban_final', 'target', 'target_locale', 'uid',
         ]), $this->getIbanFields($transaction), [
             'amount' => currency_format($transaction->amount),
             'timestamp' => $transaction->created_at->timestamp,

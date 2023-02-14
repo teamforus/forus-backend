@@ -1362,20 +1362,20 @@ class Fund extends BaseModel
     /**
      * Update criteria for existing fund
      * @param array $criteria
+     * @param bool $textsOnly
      * @return $this
      */
-    public function syncCriteria(array $criteria): self
+    public function syncCriteria(array $criteria, bool $textsOnly = false): self
     {
         // remove criteria not listed in the array
-        if ($this->criteriaIsEditable()) {
+        if ($this->criteriaIsEditable() && !$textsOnly) {
             $this->criteria()->whereNotIn('id', array_filter(
-                array_pluck($criteria, 'id'), static function($id) {
-                return !empty($id);
-            }))->delete();
+                array_pluck($criteria, 'id'), fn ($id) => !empty($id)
+            ))->delete();
         }
 
         foreach ($criteria as $criterion) {
-            $this->syncCriterion($criterion);
+            $this->syncCriterion($criterion, $textsOnly);
         }
 
         return $this;
@@ -1384,8 +1384,10 @@ class Fund extends BaseModel
     /**
      * Update existing or create new fund criterion
      * @param array $criterion
+     * @param bool $textsOnly
      */
-    protected function syncCriterion(array $criterion): void {
+    protected function syncCriterion(array $criterion, bool $textsOnly = false): void
+    {
         /** @var FundCriterion $fundCriterion */
         $validators = $criterion['validators'] ?? null;
         $fundCriterion = $this->criteria()->find($criterion['id'] ?? null);
@@ -1401,12 +1403,14 @@ class Fund extends BaseModel
         ] : ['show_attachment', 'description', 'title']);
 
         if ($fundCriterion) {
-            $fundCriterion->update($data_criterion);
-        } else {
+            $fundCriterion->update($textsOnly ? array_only($data_criterion, [
+                'title', 'description',
+            ]): $data_criterion);
+        } elseif (!$textsOnly) {
             $fundCriterion = $this->criteria()->create($data_criterion);
         }
 
-        if (is_array($validators)) {
+        if (!$textsOnly && is_array($validators)) {
             $this->syncCriterionValidators($fundCriterion, $validators);
         }
     }

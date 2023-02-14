@@ -90,13 +90,15 @@ class FundResource extends BaseJsonResource
             })->exists(),
         ], $criteriaData, $financialData, $generatorData, $prevalidationCsvData);
 
-        if ($isDashboard && $organization->identityCan($identity, 'manage_funds')) {
+        if ($isDashboard && $organization->identityCan($identity, ['manage_funds', 'manage_fund_texts'], false)) {
             $data = array_merge($data, $fund->only([
                 'default_validator_employee_id', 'auto_requests_validation',
             ]), [
                 'criteria_editable' => $fund->criteriaIsEditable(),
             ]);
+        }
 
+        if ($isDashboard && $organization->identityCan($identity, 'manage_funds')) {
             $data['backoffice'] = $this->getBackofficeData($fund);
         }
 

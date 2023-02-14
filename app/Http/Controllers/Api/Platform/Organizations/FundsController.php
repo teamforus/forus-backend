@@ -25,6 +25,7 @@ use App\Statistics\Funds\FinancialStatistic;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FundsController extends Controller
@@ -159,40 +160,48 @@ class FundsController extends Controller
         Fund $fund
     ): FundResource {
         $this->authorize('show', $organization);
-        $this->authorize('update', [$fund, $organization]);
 
-        $fund->updateModel(array_merge($request->only([
-            'name', 'description', 'description_short', 'notification_amount',
-            'default_validator_employee_id', 'auto_requests_validation', 'faq_title',
-            'request_btn_text', 'external_link_text', 'external_link_url',
-        ])));
+        $manageFund = Gate::allows('update', [$fund, $organization]);
+        $manageFundTexts = Gate::allows('updateTexts', [$fund, $organization]);
 
-        if (!$fund->default_validator_employee_id) {
-            $fund->updateModelValue('auto_requests_validation', false);
+        $fund->update($request->only(array_merge($manageFundTexts || $manageFund ? [
+            'name', 'description', 'description_short', 'request_btn_text',
+            'external_link_text', 'external_link_url', 'faq_title',
+        ] : [], $manageFund ? [
+            'notification_amount', 'default_validator_employee_id',
+            'auto_requests_validation', 'request_btn_text',
+        ] : [])));
+
+        if ($manageFund) {
+            if (!$fund->default_validator_employee_id) {
+                $fund->updateModelValue('auto_requests_validation', false);
+            }
+
+            $fund->updateFundsConfig($request->only(array_merge($fund->isWaiting() ? [
+                'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+            ] : [], [
+                'email_required', 'contact_info_enabled', 'contact_info_required',
+                'contact_info_message_custom', 'contact_info_message_text',
+            ])));
         }
 
-        $fund->updateFundsConfig($request->only(array_merge($fund->isWaiting() ? [
-            'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
-        ] : [], [
-            'email_required', 'contact_info_enabled', 'contact_info_required',
-            'contact_info_message_custom', 'contact_info_message_text',
-        ])));
-
-        $fund->attachMediaByUid($request->input('media_uid'));
-        $fund->syncDescriptionMarkdownMedia('cms_media');
-        $fund->syncTagsOptional($request->input('tag_ids'));
-        $fund->syncFaqOptional($request->input('faq'));
-
-        FundUpdatedEvent::dispatch($fund);
+        if ($manageFund || $manageFundTexts) {
+            $fund->attachMediaByUid($request->input('media_uid'));
+            $fund->syncDescriptionMarkdownMedia('cms_media');
+            $fund->syncTagsOptional($request->input('tag_ids'));
+            $fund->syncFaqOptional($request->input('faq'));
+        }
 
         if (config('forus.features.dashboard.organizations.funds.criteria') && $request->has('criteria')) {
-            $fund->syncCriteria($request->input('criteria'));
+            $fund->syncCriteria($request->input('criteria'), !$manageFund);
         }
 
-        if (config('forus.features.dashboard.organizations.funds.formula_products') &&
+        if ($manageFund && config('forus.features.dashboard.organizations.funds.formula_products') &&
             $request->has('formula_products')) {
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
+
+        FundUpdatedEvent::dispatch($fund);
 
         return new FundResource($fund);
     }
