@@ -61,7 +61,7 @@ use Illuminate\Support\Arr;
  * @property-read bool $expired
  * @property-read string $price_discount_locale
  * @property-read string $price_locale
- * @property-read int $stock_amount
+ * @property-read int|null $stock_amount
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
@@ -354,14 +354,16 @@ class Product extends BaseModel
     }
 
     /**
-     * @return int
+     * @return int|null
      * @noinspection PhpUnused
      */
-    public function getStockAmountAttribute(): int
+    public function getStockAmountAttribute(): ?int
     {
-        return $this->total_amount - (
-            $this->countReservedCached() +
-            $this->voucher_transactions->count());
+        if ($this->unlimited_stock) {
+            return null;
+        }
+
+        return $this->total_amount - ($this->countReservedCached() + $this->voucher_transactions->count());
     }
 
     /**

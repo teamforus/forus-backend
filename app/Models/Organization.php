@@ -59,6 +59,7 @@ use Illuminate\Database\Query\Builder;
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
  * @property bool $allow_custom_fund_notifications
+ * @property bool $allow_budget_fund_limits
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
@@ -131,6 +132,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization newQuery()
  * @method static EloquentBuilder|Organization query()
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
+ * @method static EloquentBuilder|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
  * @method static EloquentBuilder|Organization whereBankCronTime($value)
@@ -209,6 +211,7 @@ class Organization extends BaseModel
         'reservations_auto_accept'              => 'boolean',
         'allow_batch_reservations'              => 'boolean',
         'allow_custom_fund_notifications'       => 'boolean',
+        'allow_budget_fund_limits'              => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
     ];

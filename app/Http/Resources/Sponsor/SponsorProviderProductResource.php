@@ -50,8 +50,8 @@ class SponsorProviderProductResource extends BaseJsonResource
             'sponsor_organization' => new OrganizationBasicResource($this->resource->sponsor_organization),
             'total_amount' => $product->total_amount,
             'unlimited_stock' => $product->unlimited_stock,
-            'reserved_amount' => $product->countReservedCached($fundProvider->fund),
-            'sold_amount' => $product->countSold($fundProvider->fund),
+            'reserved_amount' => $product->countReservedCached($fundProvider?->fund),
+            'sold_amount' => $product->countSold($fundProvider?->fund),
             'stock_amount' => $product->stock_amount,
             'price' => currency_format($product->price),
             'price_locale' => $product->price_locale,
@@ -67,7 +67,7 @@ class SponsorProviderProductResource extends BaseJsonResource
             'product_category' => new ProductCategoryResource($product->product_category),
             'unseen_messages' => $this->hasUnseenMessages($product),
             'is_available' => $this->isAvailable($product, $fundProvider) ,
-            'deals_history' => $this->getDealsHistory($product, $fundProvider),
+            'deals_history' => $fundProvider ? $this->getDealsHistory($product, $fundProvider) : null,
         ]);
     }
 
