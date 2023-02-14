@@ -18,18 +18,13 @@ use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestIdentities;
 use Illuminate\Support\Facades\Cache;
-use Tests\Traits\ProductReservationData;
+use Tests\Traits\MakesProductReservations;
 
 class ProductReservationTest extends DuskTestCase
 {
-    use AssertsSentEmails, MakesTestIdentities, ProductReservationData;
+    use AssertsSentEmails, MakesTestIdentities, MakesProductReservations;
 
     protected ?Identity $identity;
-
-    /**
-     * @var string
-     */
-    protected string $organizationName = 'Stadjerspas';
 
     /**
      * @return void
@@ -82,13 +77,11 @@ class ProductReservationTest extends DuskTestCase
         Cache::clear();
 
         $implementation = Implementation::general();
-        $this->assertNotNull($implementation);
+        $this->assertNotNull($implementation, 'Implementation not found.');
 
-        /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationName)->first();
-        $this->assertNotNull($organization);
+        $organization = Organization::where('name', 'Nijmegen')->first();
 
-        $reservation = $this->makeReservationInDb($organization);
+        $reservation = $this->makeBudgetReservationInDb($organization);
         $reservation = ProductReservation::find($reservation->id);
 
         $this->browse(function (Browser $browser) use ($implementation, $reservation) {

@@ -11,11 +11,11 @@ use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Tests\TestCase;
-use Tests\Traits\ProductReservationData;
+use Tests\Traits\MakesProductReservations;
 
 class ProductReservationTest extends TestCase
 {
-    use AssertsSentEmails, ProductReservationData;
+    use AssertsSentEmails, MakesProductReservations;
 
     /**
      * @var string
@@ -73,8 +73,8 @@ class ProductReservationTest extends TestCase
         $this->assertNotNull($organization);
 
         $identity = $organization->identity;
-        $voucher = $this->getVoucherForFundType($organization, Fund::TYPE_BUDGET);
-        $product = $this->getProductForFundType($voucher, $identity->address, Fund::TYPE_BUDGET);
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $product = $this->findProductForReservation($voucher);
 
         $this->checkValidReservation($identity, $voucher, $product);
     }
@@ -90,8 +90,8 @@ class ProductReservationTest extends TestCase
         $this->assertNotNull($organization);
 
         $identity = $organization->identity;
-        $voucher = $this->getVoucherForFundType($organization, Fund::TYPE_SUBSIDIES);
-        $product = $this->getProductForFundType($voucher, $identity->address, Fund::TYPE_SUBSIDIES);
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
+        $product = $this->findProductForReservation($voucher);
 
         $this->checkValidReservation($identity, $voucher, $product);
     }
@@ -106,9 +106,8 @@ class ProductReservationTest extends TestCase
         $organization = Organization::where('name', $this->organizationName)->first();
         $this->assertNotNull($organization);
 
-        $identity = $organization->identity;
-        $voucher = $this->getVoucherForFundType($organization, Fund::TYPE_BUDGET);
-        $product = $this->getProductForFundType($voucher, $identity->address, Fund::TYPE_BUDGET);
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $product = $this->findProductForReservation($voucher);
 
         $this->post($this->apiUrl, [
             'first_name' => 'John',
@@ -129,9 +128,8 @@ class ProductReservationTest extends TestCase
         $organization = Organization::where('name', $this->organizationName)->first();
         $this->assertNotNull($organization);
 
-        $identity = $organization->identity;
-        $voucher = $this->getVoucherForFundType($organization, Fund::TYPE_SUBSIDIES);
-        $product = $this->getProductForFundType($voucher, $identity->address, Fund::TYPE_SUBSIDIES);
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
+        $product = $this->findProductForReservation($voucher);
 
         $this->post($this->apiUrl, [
             'first_name' => 'John',
@@ -157,12 +155,9 @@ class ProductReservationTest extends TestCase
         Organization::where('reservations_subsidy_enabled', true)
             ->update(['reservations_subsidy_enabled' => false]);
 
-        $voucher = $this->getVoucherForFundType($organization, Fund::TYPE_SUBSIDIES);
-        $voucherBudget = $this->getVoucherForFundType($organization, Fund::TYPE_BUDGET);
-
-        $product = $this->getProductForFundType(
-            $voucherBudget, $identity->address, Fund::TYPE_BUDGET
-        );
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
+        $voucherBudget = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $product = $this->findProductForReservation($voucherBudget);
 
         $proxy = $this->makeIdentityProxy($identity);
         $headers = $this->makeApiHeaders($proxy);
@@ -194,12 +189,9 @@ class ProductReservationTest extends TestCase
         Organization::where('reservations_budget_enabled', true)
             ->update(['reservations_budget_enabled' => false]);
 
-        $voucherSubsidy = $this->getVoucherForFundType($organization, Fund::TYPE_SUBSIDIES);
-        $voucher = $this->getVoucherForFundType($organization, Fund::TYPE_BUDGET);
-
-        $product = $this->getProductForFundType(
-            $voucherSubsidy, $identity->address, Fund::TYPE_SUBSIDIES
-        );
+        $voucherSubsidy = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $product = $this->findProductForReservation($voucherSubsidy);
 
         $proxy = $this->makeIdentityProxy($identity);
         $headers = $this->makeApiHeaders($proxy);
@@ -227,8 +219,8 @@ class ProductReservationTest extends TestCase
         $this->assertNotNull($organization);
 
         $identity = $organization->identity;
-        $voucher = $this->getVoucherForFundType($organization, Fund::TYPE_BUDGET);
-        $product = $this->getProductForFundType($voucher, $identity->address, Fund::TYPE_BUDGET);
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $product = $this->findProductForReservation($voucher);
 
         $this->checkAcceptAndRejectByProvider($identity, $voucher, $product);
     }
@@ -244,8 +236,8 @@ class ProductReservationTest extends TestCase
         $this->assertNotNull($organization);
 
         $identity = $organization->identity;
-        $voucher = $this->getVoucherForFundType($organization, Fund::TYPE_SUBSIDIES);
-        $product = $this->getProductForFundType($voucher, $identity->address, Fund::TYPE_SUBSIDIES);
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
+        $product = $this->findProductForReservation($voucher);
 
         $this->checkAcceptAndRejectByProvider($identity, $voucher, $product);
     }

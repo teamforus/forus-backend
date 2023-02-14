@@ -12,7 +12,7 @@ use App\Scopes\Builders\ProductSubQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Models\ProductReservation;
 
-trait ProductReservationData
+trait MakesProductReservations
 {
     use HasDbTokens;
 
@@ -21,55 +21,51 @@ trait ProductReservationData
      * @param string $fundType
      * @return Voucher
      */
-    public function getVoucherForFundType(Organization $organization, string $fundType): Voucher
+    public function findVoucherForReservation(Organization $organization, string $fundType): Voucher
     {
-        /** @var Fund $fund */
-        $fund = $organization->funds()->where('type', $fundType)->first();
-        $this->assertNotNull($fund);
+        $funds = $organization->funds()->where('type', $fundType)->get();
+        $this->assertNotNull($funds->count() ?: null);
 
         /** @var Voucher $voucher */
         $voucher = VoucherQuery::whereNotExpiredAndActive(
-            $organization->identity->vouchers()->where('fund_id', $fund->id)
+            $organization->identity->vouchers()->whereIn('fund_id', $funds->pluck('id'))
         )->whereNull('product_id')->first();
 
-        $this->assertNotNull($voucher);
+        $this->assertNotNull($voucher, 'No suitable voucher found.');
 
         return $voucher;
     }
 
     /**
      * @param Voucher $voucher
-     * @param string $identity_address
-     * @param string $fundType
      * @return Product
      * @throws \Exception
      */
-    public function getProductForFundType(
-        Voucher $voucher,
-        string $identity_address,
-        string $fundType
-    ): Product {
+    public function findProductForReservation(Voucher $voucher): Product
+    {
         $product = ProductQuery::approvedForFundsAndActiveFilter(
             ProductSubQuery::appendReservationStats([
                 'voucher_id' => $voucher->id,
                 'fund_id' => $voucher->fund_id,
-                'identity_address' => $identity_address,
+                'identity_address' => $voucher->identity_address,
             ]),
             $voucher->fund_id
         );
 
-        if ($fundType === Fund::TYPE_SUBSIDIES) {
-            $product->where('reservations_subsidy_enabled', true)
-                ->where('limit_per_identity', '>', 0);
+        if ($voucher->fund->isTypeSubsidy()) {
+            $product
+                ->where('reservations_subsidy_enabled', true)
+                ->where('limit_available', '>', 0);
         } else {
-            $product->where('reservations_budget_enabled', true)
+            $product
+                ->where('reservations_budget_enabled', true)
                 ->where('price', '<=', $voucher->amount_available);
         }
 
         /** @var Product $product */
         $product = $product->first();
 
-        $this->assertNotNull($product);
+        $this->assertNotNull($product, 'No product suitable for reservation found.');
 
         return $product;
     }
@@ -79,18 +75,16 @@ trait ProductReservationData
      * @return ProductReservation
      * @throws \Throwable
      */
-    public function makeReservationInDb(Organization $organization): ProductReservation
+    public function makeBudgetReservationInDb(Organization $organization): ProductReservation
     {
-        $voucher = $this->getVoucherForFundType($organization, Fund::TYPE_BUDGET);
-        $product = $this->getProductForFundType($voucher, $organization->identity->address, Fund::TYPE_BUDGET);
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $product = $this->findProductForReservation($voucher);
 
         $reservation = $voucher->reserveProduct($product, null, [
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
         ]);
-
-        $this->assertNotNull($product);
 
         if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
             $reservation->acceptProvider();
