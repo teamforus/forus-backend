@@ -127,6 +127,10 @@ class LoremDbSeeder extends Seeder
         'Zuidhorn', 'Nijmegen',
     ];
 
+    private array $organizationsWithBudgetFundLimits = [
+        'Nijmegen', 'Stadjerspas',
+    ];
+
     private array $fundsWithVoucherTopUp = [
         'Nijmegen', 'Zuidhorn',
     ];
@@ -514,6 +518,7 @@ class LoremDbSeeder extends Seeder
             'manage_provider_products' => in_array($name, $this->sponsorsWithSponsorProducts),
             'backoffice_available' => in_array($name, $this->sponsorsWithBackoffice),
             'allow_custom_fund_notifications' => in_array($name, $this->organizationsWithCustomNotifications),
+            'allow_budget_fund_limits' => in_array($name, $this->organizationsWithBudgetFundLimits),
             'reservations_budget_enabled' => true,
             'reservations_subsidy_enabled' => true,
         ], $fields, compact('name', 'identity_address')), [
@@ -521,7 +526,8 @@ class LoremDbSeeder extends Seeder
             'email_public', 'phone_public', 'website_public',
             'identity_address', 'business_type_id', 'manage_provider_products',
             'backoffice_available', 'bsn_enabled', 'is_sponsor', 'is_provider', 'is_validator',
-            'allow_custom_fund_notifications', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
+            'allow_custom_fund_notifications', 'reservations_budget_enabled',
+            'reservations_subsidy_enabled', 'allow_budget_fund_limits',
         ]));
 
         OrganizationCreated::dispatch($organization);
