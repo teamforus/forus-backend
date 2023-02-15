@@ -20,6 +20,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * App\Models\VoucherTransaction
  *
  * @property int $id
+ * @property string|null $uid
  * @property int $voucher_id
  * @property int|null $organization_id
  * @property int|null $employee_id
@@ -96,6 +97,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static Builder|VoucherTransaction whereTargetName($value)
  * @method static Builder|VoucherTransaction whereTargetReimbursementId($value)
  * @method static Builder|VoucherTransaction whereTransferAt($value)
+ * @method static Builder|VoucherTransaction whereUid($value)
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
  * @method static Builder|VoucherTransaction whereVoucherTransactionBulkId($value)

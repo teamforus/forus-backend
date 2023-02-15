@@ -37,7 +37,8 @@ class VoucherTransactionBatchItemAmountRule extends BaseRule
             return $this->reject('Geen voucher gevonden, een directe betaling is niet mogelijk');
         }
 
-        $transactionToIndex = array_slice($this->transactions, 0, $index);
+        $transactionIndex = count($this->transactions) > 1 ? $index : 0;
+        $transactionToIndex = array_slice($this->transactions, 0, $transactionIndex);
         $amountToIndex = $this->getAmountToOffsetOld($transactionToIndex, $voucher->id) + $amount;
 
         if ($voucher->amount_available_cached < $amount) {
