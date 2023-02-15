@@ -322,14 +322,14 @@ class VoucherQuery
      */
     public static function whereHasBalance(Relation|Builder $query): Relation|Builder
     {
-        $selectQuery = self::addBalanceFields(Voucher::query());
+        $selectQuery = Voucher::fromSub(self::addBalanceFields(Voucher::query()), 'vouchers');
 
         $selectQuery->where(function(Builder $builder) {
             $builder->where(fn(Builder $q) => static::whereIsProductVoucherWithoutTransactions($q));
 
             $builder->orWhere(function(Builder $builder) {
                 $builder->whereNull('parent_id');
-                $builder->having('balance', '>', 0);
+                $builder->where('balance', '>', 0);
             });
         });
 
@@ -413,7 +413,7 @@ class VoucherQuery
     ): Builder|Voucher|Relation {
         return $builder->where(function(Builder|Voucher $builder) use ($reimbursement) {
             $builder->where(function(Builder|Voucher $builder) use ($reimbursement) {
-                VoucherQuery::whereHasBalanceIsActiveAndNotExpired($builder);
+                VoucherQuery::whereNotExpiredAndActive($builder);
 
                 if ($reimbursement) {
                     $builder->orWhere('id', $reimbursement->voucher_id);
