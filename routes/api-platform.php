@@ -521,12 +521,9 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions/{transaction_address}',
         "Api\Platform\Organizations\Funds\FundProviderController@transaction");
 
-    $router->resource(
-        'organizations.funds.providers',
-        "Api\Platform\Organizations\Funds\FundProviderController"
-    )->parameters([
-        'providers' => 'fund_provider'
-    ])->only('update');
+    $router->resource('organizations.funds.providers', "Api\Platform\Organizations\Funds\FundProviderController")
+        ->parameter('providers', 'fund_provider')
+        ->only('update');
 
     $router->resource(
         'organizations.funds.providers.chats',
@@ -563,8 +560,12 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->only('index', 'show', 'store', 'update', 'destroy');
 
     // Product reservations
+    $router->post(
+        'organizations/{organization}/product-reservations/batch',
+        "Api\Platform\Organizations\ProductReservationsController@storeBatch"
+    );
+
     $router->group(['prefix' => 'organizations/{organization}/product-reservations/{product_reservation}'], function() use ($router) {
-        $router->post('batch', "Api\Platform\Organizations\ProductReservationsController@storeBatch");
         $router->post('accept', "Api\Platform\Organizations\ProductReservationsController@accept");
         $router->post('reject', "Api\Platform\Organizations\ProductReservationsController@reject");
     });

@@ -76,8 +76,6 @@ use Illuminate\Support\Facades\DB;
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
- * @property-read Collection|\App\Models\Voucher[] $product_vouchers
- * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
@@ -121,6 +119,8 @@ use Illuminate\Support\Facades\DB;
  * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
+ * @property-read Collection|\App\Models\Voucher[] $product_vouchers
+ * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @property-read Collection|\App\Models\FundProviderInvitation[] $provider_invitations
