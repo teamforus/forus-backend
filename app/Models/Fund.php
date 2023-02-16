@@ -1791,9 +1791,9 @@ class Fund extends BaseModel
     public function getMaxAmountPerVoucher(): float
     {
         return min(
-            $this->budget_left,
             $this->fund_config->limit_generator_amount,
             $this->fund_config->limit_voucher_total_amount,
+            $this->fund_config->generator_ignore_fund_budget ? 1_000_000 : $this->budget_left,
         );
     }
 
@@ -1802,7 +1802,7 @@ class Fund extends BaseModel
      */
     public function getMaxAmountSumVouchers(): float
     {
-        return (float) ($this->fund_config->limit_generator_amount ? $this->budget_left : 1000000);
+        return $this->fund_config->generator_ignore_fund_budget ? 1_000_000 : $this->budget_left;
     }
 
     /**
