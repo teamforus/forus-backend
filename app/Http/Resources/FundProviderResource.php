@@ -52,6 +52,8 @@ class FundProviderResource extends BaseJsonResource
             'cancelable' => !$fundProvider->hasTransactions() && !$fundProvider->isApproved() && $fundProvider->isPending(),
             'last_activity' => $lastActivity?->format('Y-m-d H:i:s'),
             'last_activity_locale' => $lastActivity?->diffForHumans(now()),
+            'has_pending_fund_unsubscribes' => $fundProvider->pending_fund_unsubscribes()->exists(),
+            'has_accepted_fund_unsubscribes' => $fundProvider->approved_fund_unsubscribes()->exists(),
         ]);
     }
 

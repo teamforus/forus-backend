@@ -179,6 +179,27 @@ class FundProvider extends BaseModel
     }
 
     /**
+     * @return HasMany
+     */
+    public function fund_unsubscribes() : HasMany {
+        return $this->hasMany(FundUnsubscribe::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function pending_fund_unsubscribes(): HasMany {
+        return $this->fund_unsubscribes()->where('state', FundUnsubscribe::STATE_PENDING);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function approved_fund_unsubscribes(): HasMany {
+        return $this->fund_unsubscribes()->where('state', FundUnsubscribe::STATE_APPROVED);
+    }
+
+    /**
      * @return bool
      */
     public function isPending(): bool
@@ -488,6 +509,12 @@ class FundProvider extends BaseModel
         $approvedBefore = $this->isApproved();
         $this->update(compact('state'));
         $approvedAfter = $this->isApproved();
+
+        if ($this->isRejected() && $this->pending_fund_unsubscribes()->exists()) {
+            $this->pending_fund_unsubscribes()->latest()->update([
+                'state' => FundUnsubscribe::STATE_APPROVED
+            ]);
+        }
 
         FundProviderStateUpdated::dispatch($this, compact([
             'originalState', 'approvedBefore', 'approvedAfter',
