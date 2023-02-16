@@ -50,7 +50,7 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
         }
 
         if ($this->has('product_id') && $this->has('amount')) {
-            abort(422, 'You can only submit `product_id` or `amount` at the same time but not both.');
+            abort(422, 'Je kan alleen `product_id` of `amount` indienen maar niet beide tegelijkertijd.');
         }
 
         $authorized = $this->has('product_id') ?
