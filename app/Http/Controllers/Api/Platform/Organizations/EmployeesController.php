@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Events\Employees\EmployeeDeleted;
 use App\Events\Employees\EmployeeUpdated;
+use App\Exports\EmployeesExport;
 use App\Http\Requests\Api\Platform\Organizations\Employees\IndexEmployeesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\StoreEmployeeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\UpdateEmployeeRequest;
@@ -11,11 +12,12 @@ use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
-use App\Scopes\Builders\EmployeeQuery;
 use App\Models\Identity;
+use App\Searches\EmployeesSearch;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class EmployeesController extends Controller
 {
@@ -42,23 +44,11 @@ class EmployeesController extends Controller
         $this->authorize('show', [$organization]);
         $this->authorize('viewAny', [Employee::class, $organization]);
 
-        $query = $organization->employees();
-        $roleFilters = $request->only('role', 'roles');
-        $permissionFilters = $request->only('permission', 'permissions');
+        $search = new EmployeesSearch($request->only([
+            'role', 'roles', 'permission', 'permissions', 'q',
+        ]), $organization->employees()->getQuery());
 
-        foreach ($roleFilters as $roleFilter) {
-            EmployeeQuery::whereHasRoleFilter($query, $roleFilter);
-        }
-
-        foreach ($permissionFilters as $permissionFilter) {
-            EmployeeQuery::whereHasPermissionFilter($query, $permissionFilter);
-        }
-
-        if ($q = $request->get('q')) {
-            EmployeeQuery::whereQueryFilter($query, $q);
-        }
-
-        return EmployeeResource::queryCollection($query, $request);
+        return EmployeeResource::queryCollection($search->query(), $request);
     }
 
     /**
@@ -144,6 +134,32 @@ class EmployeesController extends Controller
         EmployeeDeleted::broadcast($employee);
         $employee->delete();
 
-        return response()->json([]);
+        return new JsonResponse([]);
+    }
+
+    /**
+     * @param IndexEmployeesRequest $request
+     * @param Organization $organization
+     * @return BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
+    public function export(
+        IndexEmployeesRequest $request,
+        Organization $organization
+    ): BinaryFileResponse {
+        $this->authorize('show', [$organization]);
+        $this->authorize('viewAny', [Employee::class, $organization]);
+
+        $search = new EmployeesSearch($request->only([
+            'role', 'roles', 'permission', 'permissions', 'q',
+        ]), $organization->employees()->getQuery());
+
+        $exportType = $request->input('export_type', 'xls');
+        $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
+        $exportData = new EmployeesExport($search->query());
+
+        return resolve('excel')->download($exportData, $fileName);
     }
 }

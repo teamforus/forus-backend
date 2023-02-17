@@ -47,7 +47,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
             'vouchers.*.bsn'                    => $bsn_enabled ? 'nullable|string|digits:9' : 'nullable|in:',
             'vouchers.*.activate'               => 'boolean',
             'vouchers.*.activation_code'        => 'boolean',
-            'vouchers.*.activation_code_uid'    => 'nullable|string|max:20',
+            'vouchers.*.client_uid'             => 'nullable|string|max:20',
             'vouchers.*.limit_multiplier'       => 'nullable|numeric|min:1|max:1000',
         ], $this->directPaymentRules($fund));
     }

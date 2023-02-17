@@ -69,7 +69,7 @@ class StoreVoucherRequest extends BaseFormRequest
             ],
             'activate'              => 'boolean',
             'activation_code'       => 'boolean',
-            'activation_code_uid'   => 'nullable|string|max:20',
+            'client_uid'            => 'nullable|string|max:20',
             'assign_by_type'        => 'required|in:' . $this->availableAssignTypes($bsn_enabled),
             'limit_multiplier'      => 'nullable|numeric|min:1|max:1000',
         ];
@@ -82,7 +82,7 @@ class StoreVoucherRequest extends BaseFormRequest
     protected function availableAssignTypes(bool $bsn_enabled): string
     {
         return implode(",", array_filter([
-            'email', 'activation_code_uid', $bsn_enabled ? 'bsn' : null,
+            'email', 'activation_code', $bsn_enabled ? 'bsn' : null,
         ]));
     }
 

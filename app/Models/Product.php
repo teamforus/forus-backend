@@ -61,7 +61,7 @@ use Illuminate\Support\Arr;
  * @property-read bool $expired
  * @property-read string $price_discount_locale
  * @property-read string $price_locale
- * @property-read int $stock_amount
+ * @property-read int|null $stock_amount
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
@@ -73,13 +73,13 @@ use Illuminate\Support\Arr;
  * @property-read int|null $product_exclusions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservation[] $product_reservations
  * @property-read int|null $product_reservations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservation[] $product_reservations_pending
+ * @property-read int|null $product_reservations_pending_count
  * @property-read \App\Models\Organization|null $sponsor_organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers_reserved
- * @property-read int|null $vouchers_reserved_count
  * @method static Builder|Product newModelQuery()
  * @method static Builder|Product newQuery()
  * @method static \Illuminate\Database\Query\Builder|Product onlyTrashed()
@@ -208,18 +208,13 @@ class Product extends BaseModel
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
      */
-    public function vouchers_reserved(): HasMany
+    public function product_reservations_pending(): HasMany
     {
-        return $this->hasMany(Voucher::class)
-            ->whereHas('product_reservations', function(Builder $builder) {
-                $builder->whereNotIn('state', [
-                    ProductReservation::STATE_REJECTED,
-                    ProductReservation::STATE_CANCELED
-                ]);
-            })
-            ->whereDoesntHave('transactions');
+        return $this->product_reservations()->whereIn('state', [
+            ProductReservation::STATE_PENDING,
+            ProductReservation::STATE_ACCEPTED
+        ])->whereDoesntHave('voucher_transaction');
     }
 
     /**
@@ -265,6 +260,7 @@ class Product extends BaseModel
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
     public function product_exclusions(): HasMany
     {
@@ -315,32 +311,59 @@ class Product extends BaseModel
     /**
      * Count vouchers generated for this product but not used
      *
+     * @param Fund|null $fund
      * @return int
      */
-    public function countReserved(): int
+    public function countReserved(?Fund $fund = null): int
     {
-        return $this->vouchers_reserved()->count();
+        return $this->product_reservations_pending()->where(function (Builder $builder) use ($fund) {
+            if ($fund) {
+                $builder->whereRelation('voucher', 'fund_id', $fund->id);
+            }
+        })->count();
+    }
+
+    /**
+     * Count vouchers generated for this product but not used
+     *
+     * @param Fund|null $fund
+     * @return int
+     */
+    public function countReservedCached(?Fund $fund = null): int
+    {
+        return $this->product_reservations_pending->filter(function(ProductReservation $reservation) use ($fund) {
+            return !$fund || $reservation->voucher->fund_id == $fund->id;
+        })->count();
     }
 
     /**
      * Count actually sold products
      *
+     * @param Fund|null $fund
      * @return int
      */
-    public function countSold(): int
+    public function countSold(?Fund $fund = null): int
     {
-        return $this->voucher_transactions()->count();
+        return $this->voucher_transactions()->where(function (Builder $builder) use ($fund) {
+            $builder->where('state', '!=', VoucherTransaction::STATE_CANCELED);
+
+            if ($fund) {
+                $builder->whereRelation('voucher', 'fund_id', $fund->id);
+            }
+        })->count();
     }
 
     /**
-     * @return int
+     * @return int|null
      * @noinspection PhpUnused
      */
-    public function getStockAmountAttribute(): int
+    public function getStockAmountAttribute(): ?int
     {
-        return $this->total_amount - (
-            $this->vouchers_reserved->count() +
-            $this->voucher_transactions->count());
+        if ($this->unlimited_stock) {
+            return null;
+        }
+
+        return $this->total_amount - ($this->countReservedCached() + $this->voucher_transactions->count());
     }
 
     /**
@@ -393,11 +416,12 @@ class Product extends BaseModel
 
     /**
      * @param array $options
-     * @param Builder|null $builder
-     * @return Builder|SoftDeletes
+     * @param Builder|Product|null $builder
+     * @return Builder|Product
      */
-    public static function search(array $options, Builder $builder = null): Builder
+    public static function search(array $options, Builder|Product $builder = null): Builder|Product
     {
+        /** @var Builder|Product $query */
         $query = $builder ?: self::searchQuery();
 
         if ($fund_type = Arr::get($options, 'fund_type')) {
@@ -477,9 +501,8 @@ class Product extends BaseModel
         $query = $query ?: self::query();
 
         // filter by unlimited stock
-        if ($request->has('unlimited_stock') &&
-            $unlimited_stock = filter_bool($request->input('unlimited_stock'))) {
-            ProductQuery::unlimitedStockFilter($query, $unlimited_stock);
+        if ($request->has('unlimited_stock')) {
+            ProductQuery::unlimitedStockFilter($query, filter_bool($request->input('unlimited_stock')));
         }
 
         // filter by string query
@@ -530,8 +553,7 @@ class Product extends BaseModel
                 return currency_format_locale($this->price_discount);
             }
             case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
-                $isWhole = (double) ($this->price_discount -
-                        round($this->price_discount)) === (double) 0;
+                $isWhole = (double) ($this->price_discount - round($this->price_discount)) === 0.0;
 
                 return currency_format($this->price_discount, $isWhole ? 0 : 2) . '%';
             }
@@ -542,14 +564,13 @@ class Product extends BaseModel
 
     /**
      * @param Fund $fund
-     * @return FundProviderProduct|null|mixed
+     * @return FundProviderProduct|null
      */
-    public function getSubsidyDetailsForFund(Fund $fund): ?FundProviderProduct
+    public function getFundProviderProduct(Fund $fund): ?FundProviderProduct
     {
-        return $this->fund_provider_products()->whereHas('fund_provider.fund', function(Builder $builder) use ($fund) {
-            $builder->where('funds.id', $fund->id);
-            $builder->where('funds.type', $fund::TYPE_SUBSIDIES);
-        })->first();
+        return $this->fund_provider_products()->whereRelation('fund_provider.fund', [
+            'id' => $fund->id,
+        ])->latest()->first();
     }
 
     /**
@@ -557,11 +578,11 @@ class Product extends BaseModel
      * @param int $errorCode
      * @return FundProviderProduct
      */
-    public function getSubsidyDetailsForFundOrFail(
+    public function getFundProviderProductOrFail(
         Fund $fund,
         int $errorCode = 403
     ): FundProviderProduct {
-        if (!$fundProviderProduct = $this->getSubsidyDetailsForFund($fund)) {
+        if (!$fundProviderProduct = $this->getFundProviderProduct($fund)) {
             abort($errorCode);
         }
 

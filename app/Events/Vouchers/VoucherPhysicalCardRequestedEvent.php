@@ -11,9 +11,9 @@ use App\Models\Voucher;
  */
 class VoucherPhysicalCardRequestedEvent extends BaseVoucherEvent
 {
-    protected $cardRequest;
     protected Voucher $voucher;
-    protected $shouldNotifyRequester;
+    protected PhysicalCardRequest $cardRequest;
+    protected bool $shouldNotifyRequester;
 
     /**
      * @param Voucher $voucher

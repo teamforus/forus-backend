@@ -129,5 +129,12 @@ return [
         'product_vouchers_active_amount'        => 'Totaal aanbiedingsvouchers actief €',
         'product_vouchers_inactive_amount'      => 'Totaal aanbiedingsvouchers inactief €',
         'product_vouchers_deactivated_amount'   => 'Totaal aanbiedingsvouchers gedeactiveerd €',
-    ]
+    ],
+
+    'employees'      => [
+        'email'         => 'E-mailadres',
+        'owner'         => 'Eigenaar',
+        'created_at'    => 'Created at',
+        'updated_at'    => 'Updated at',
+    ],
 ];

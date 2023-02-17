@@ -3,15 +3,26 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
-use Illuminate\Http\Resources\Json\JsonResource;
+use App\Models\Product;
+use App\Scopes\Builders\FundQuery;
 
 /**
- * Class ProductFundResource
  * @property Fund $resource
- * @package App\Http\Resources
+ * @property Product $product
  */
-class ProductFundResource extends JsonResource
+class ProductFundResource extends BaseJsonResource
 {
+    public const LOAD = [
+        'logo.presets',
+        'organization.logo.presets',
+        'organization.employees',
+        'organization.employees.roles.permissions',
+        'organization.business_type.translations',
+        'organization.bank_connection_active',
+        'organization.tags',
+        'fund_config.implementation.page_provider'
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -23,7 +34,7 @@ class ProductFundResource extends JsonResource
         $fund = $this->resource;
 
         return array_merge($fund->only([
-            'id', 'name', 'description', 'organization_id', 'state', 'approved',
+            'id', 'name', 'description', 'organization_id', 'state',
         ]), [
             'key' => $fund->fund_config->key ?? '',
             'logo' => new MediaResource($fund->logo),
@@ -33,6 +44,10 @@ class ProductFundResource extends JsonResource
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationResource($fund->organization),
             'implementation' => new ImplementationResource($fund->fund_config->implementation),
+            'approved' => FundQuery::whereProductsAreApprovedFilter(
+                Fund::query()->whereId($fund->id),
+                $this->product
+            )->exists(),
         ]);
     }
 }

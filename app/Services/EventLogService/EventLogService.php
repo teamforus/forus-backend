@@ -240,6 +240,7 @@ class EventLogService implements IEventLogService
             'amount' => currency_format($voucher->amount_available),
             'amount_locale' => currency_format_locale($voucher->amount_available),
             'expire_date' => $voucher->last_active_day->format('Y-m-d'),
+            'limit_multiplier' => $voucher->limit_multiplier,
             'expire_date_locale' => format_date_locale($voucher->last_active_day),
         ], 'voucher_');
     }
@@ -308,7 +309,7 @@ class EventLogService implements IEventLogService
             'address' => $physicalCardRequest->address,
             'postcode' => $physicalCardRequest->postcode,
             'house_addition' => $physicalCardRequest->house_addition,
-        ], 'physical_card_request_i');
+        ], 'physical_card_request_');
     }
 
     /**

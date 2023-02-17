@@ -39,6 +39,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $limit_generator_amount
  * @property string|null $limit_voucher_top_up_amount
  * @property string|null $limit_voucher_total_amount
+ * @property bool $generator_ignore_fund_budget
  * @property int|null $bsn_confirmation_time
  * @property int|null $bsn_confirmation_api_time
  * @property bool $backoffice_enabled
@@ -100,6 +101,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereEmailRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereEmployeeCanSeeProductVouchers($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereGeneratorIgnoreFundBudget($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsn($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsnSalt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashPartnerDeny($value)
@@ -192,6 +194,7 @@ class FundConfig extends BaseModel
         'limit_voucher_top_up_amount' => 'string',
         'limit_voucher_total_amount' => 'string',
         'allow_generator_direct_payments' => 'boolean',
+        'generator_ignore_fund_budget' => 'boolean',
     ];
 
     /**
