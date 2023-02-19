@@ -149,7 +149,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
 
         foreach ($detailsByType as $type => $details) {
             if ($type == "budget") {
-                $budgetUsedPercentage = $details['vouchers_amount'] ? (
+                $budgetUsedPercentage = (float) $details['vouchers_amount'] ? (
                     $fund->budget_used_active_vouchers / $details['vouchers_amount'] * 100) : 0;
 
                 $averagePerVoucher = $details['vouchers_count'] ?
@@ -157,13 +157,13 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
 
                 $budgetLeftAmount = $details['vouchers_amount'] - $fund->budget_used_active_vouchers;
 
-                $budgetLeftPercentage = $details['vouchers_amount'] ?
+                $budgetLeftPercentage = (float) $details['vouchers_amount'] ?
                     (($details['vouchers_amount'] - $fund->budget_used_active_vouchers) / $details['vouchers_amount'] * 100) : 0;
 
-                $inactiveVouchersPercentage = $details['vouchers_amount'] ?
+                $inactiveVouchersPercentage = (float) $details['vouchers_amount'] ?
                     ($details['inactive_amount'] / $details['vouchers_amount'] * 100) : 0;
 
-                $activeVouchersPercentage = $details['vouchers_amount'] ?
+                $activeVouchersPercentage = (float) $details['vouchers_amount'] ?
                     ($details['active_amount'] / $details['vouchers_amount'] * 100) : 0;
 
                 $voucherData = [
