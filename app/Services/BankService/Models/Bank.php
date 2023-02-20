@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $oauth_redirect_id
  * @property string|null $oauth_redirect_url
  * @property array $data
- * @property string|null $transaction_cost
+ * @property string $transaction_cost
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder|Bank newModelQuery()

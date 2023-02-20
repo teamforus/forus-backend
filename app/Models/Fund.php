@@ -76,8 +76,6 @@ use Illuminate\Support\Facades\DB;
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
- * @property-read Collection|\App\Models\Voucher[] $product_vouchers
- * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
@@ -121,6 +119,8 @@ use Illuminate\Support\Facades\DB;
  * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
+ * @property-read Collection|\App\Models\Voucher[] $product_vouchers
+ * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @property-read Collection|\App\Models\FundProviderInvitation[] $provider_invitations
@@ -1791,9 +1791,9 @@ class Fund extends BaseModel
     public function getMaxAmountPerVoucher(): float
     {
         return min(
-            $this->budget_left,
             $this->fund_config->limit_generator_amount,
             $this->fund_config->limit_voucher_total_amount,
+            $this->fund_config->generator_ignore_fund_budget ? 1_000_000 : $this->budget_left,
         );
     }
 
@@ -1802,7 +1802,7 @@ class Fund extends BaseModel
      */
     public function getMaxAmountSumVouchers(): float
     {
-        return (float) ($this->fund_config->limit_generator_amount ? $this->budget_left : 1000000);
+        return $this->fund_config->generator_ignore_fund_budget ? 1_000_000 : $this->budget_left;
     }
 
     /**

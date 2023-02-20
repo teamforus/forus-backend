@@ -309,7 +309,7 @@ class EventLogService implements IEventLogService
             'address' => $physicalCardRequest->address,
             'postcode' => $physicalCardRequest->postcode,
             'house_addition' => $physicalCardRequest->house_addition,
-        ], 'physical_card_request_i');
+        ], 'physical_card_request_');
     }
 
     /**

@@ -4,37 +4,35 @@
 namespace App\Scopes\Builders;
 
 use App\Models\FundProvider;
+use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
-/**
- * Class FundProviderProductQuery
- * @package App\Scopes\Builders
- */
 class FundProviderProductQuery
 {
     /**
-     * @param Builder|SoftDeletes $builder
-     * @return Builder|SoftDeletes
+     * @param Builder|FundProvider $builder
+     * @return Builder|FundProvider
      */
-    public static function withTrashed(Builder $builder): Builder {
+    public static function withTrashed(Builder|FundProvider $builder): Builder|FundProvider
+    {
         return $builder->withTrashed();
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|FundProvider $query
      * @param Voucher $voucher
      * @param null|int|array|Builder $organization_id
      * @param bool $validateLimits
      * @return Builder
      */
     public static function whereAvailableForSubsidyVoucher(
-        Builder $query,
+        Builder|FundProvider $query,
         Voucher $voucher,
-        $organization_id = null,
-        $validateLimits = true
+        null|int|array|Builder $organization_id = null,
+        bool $validateLimits = true
     ): Builder {
         $query->whereHas('product', static function(Builder $query) use ($voucher, $organization_id) {
             $query->where(static function(Builder $builder) use ($voucher, $organization_id) {
@@ -64,7 +62,7 @@ class FundProviderProductQuery
             $query->where('product_id', $voucher->product_id);
         }
 
-        return $validateLimits ? self::whereInSubsidyLimitsFilter($query, $voucher) : $query;
+        return $validateLimits ? self::whereInLimitsFilter($query, $voucher) : $query;
     }
 
     /**
@@ -72,14 +70,37 @@ class FundProviderProductQuery
      * @param Voucher $voucher
      * @return Builder
      */
-    public static function whereInSubsidyLimitsFilter(Builder $builder, Voucher $voucher): Builder
+    public static function whereInLimitsFilter(Builder $builder, Voucher $voucher): Builder
     {
         return $builder->whereHas('product', function(Builder $builder) use ($voucher) {
             $query = ProductSubQuery::appendReservationStats([
                 'voucher_id' => $voucher->id,
-            ], Product::query())->where('limit_available', '>', 0);
+            ], Product::query());
+
+            $query->where(function(Builder $builder) use ($voucher) {
+                $builder->where('limit_available', '>', 0);
+
+                if ($voucher->fund->isTypeBudget()) {
+                    $builder->orWhereNull('limit_available');
+                }
+            });
 
             $builder->whereIn('id', $query->select('id'));
+        });
+    }
+
+    /**
+     * @param Builder|Relation|FundProviderProduct $builder
+     * @return Builder|Relation|FundProviderProduct
+     */
+    public static function whereConfigured(
+        Builder|Relation|FundProviderProduct $builder
+    ): Builder|Relation|FundProviderProduct {
+        return $builder->where(function(Builder|FundProviderProduct $builder) {
+            $builder->whereNotNull('expire_at');
+            $builder->whereNotNull('limit_total');
+            $builder->orWhereNotNull('limit_per_identity');
+            $builder->orWhere('limit_total_unlimited', true);
         });
     }
 }

@@ -34,7 +34,7 @@ class VouchersController extends Controller
 
         $search = new VouchersSearch($request->only([
             'type', 'state', 'archived', 'allow_reimbursements',
-            'implementation_id', 'implementation_key',
+            'implementation_id', 'implementation_key', 'product_id',
         ]), $query);
 
         if ($request->isMeApp()) {

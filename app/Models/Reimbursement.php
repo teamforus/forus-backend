@@ -41,6 +41,7 @@ use Throwable;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\FileService\Models\File[] $files
  * @property-read int|null $files_count
  * @property-read string|null $amount_locale
+ * @property-read bool $deactivated
  * @property-read \Carbon\Carbon|null $expire_at
  * @property-read string|null $expire_at_locale
  * @property-read bool $expired
@@ -49,7 +50,6 @@ use Throwable;
  * @property-read string|null $resolved_at_locale
  * @property-read string $state_locale
  * @property-read string|null $submitted_at_locale
- * @property-read bool $deactivated
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Note[] $notes
