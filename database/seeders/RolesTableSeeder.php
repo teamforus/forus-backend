@@ -12,7 +12,7 @@ class RolesTableSeeder extends Seeder
             'en' => 'Admin',
             'nl' => 'Beheerder',
         ],
-        'finance_manager' => [
+        'finance' => [
             'en' => 'Finance manager',
             'nl' => 'Financieel manager',
         ],
@@ -48,6 +48,14 @@ class RolesTableSeeder extends Seeder
             'en' => 'Finance reader',
             'nl' => 'Financieel analist',
         ],
+        'bank_manager' => [
+            'en' => 'Finance admin',
+            'nl' => 'Financieel beheerder',
+        ],
+        'voucher_officer' => [
+            'en' => 'Voucher admin',
+            'nl' => 'Voucher beheerder',
+        ]
     ];
 
     /**
