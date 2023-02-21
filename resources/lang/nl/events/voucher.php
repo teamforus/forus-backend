@@ -26,8 +26,8 @@ return [
         'expired_product' => 'Voucher #:id is verlopen',
         'limit_multiplier_changed' => 'Voucher #:id aantal personen bijgewerkt',
         'transaction' => [
-            'basic' => 'Voucher #:id :transaction_type transaction created',
-            'complete' => 'Voucher #:id :transaction_type transaction created with amount :amount_locale',
+            'basic' => 'Voucher #:id :transaction_type transactie aangemaakt',
+            'complete' => 'Voucher #:id :transaction_type transactie met het bedrag van :amount_locale',
         ],
         'transaction_subsidy' => 'Voucher #:id transactie is aangemaakt',
         'transaction_budget' => 'Voucher #:id transactie is aangemaakt',
