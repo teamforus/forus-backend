@@ -1203,12 +1203,16 @@ class Fund extends BaseModel
         $vouchers = [];
         $fundEndDate = $this->end_date;
 
-        if ($this->fund_formula_products->count() > 0) {
-            foreach ($this->fund_formula_products as $fund_formula_product) {
-                $productExpireDate = $fund_formula_product->product->expire_at;
-                $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
-                $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
+        foreach ($this->fund_formula_products as $fund_formula_product) {
+            $count = $this->getVoucherCountForFundFormulaProduct(
+                $fund_formula_product, $identity_address
+            );
 
+            $productExpireDate = $fund_formula_product->product->expire_at;
+            $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
+            $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
+
+            for ($i = 0; $i < $count; $i++) {
                 $voucher = $this->makeProductVoucher(
                     $identity_address,
                     $extraFields,
@@ -1224,6 +1228,28 @@ class Fund extends BaseModel
         }
 
         return $vouchers;
+    }
+
+    /**
+     * @param FundFormulaProduct $fundFormulaProduct
+     * @param string $identity_address
+     * @return float|int
+     */
+    private function getVoucherCountForFundFormulaProduct(
+        FundFormulaProduct $fundFormulaProduct,
+        string $identity_address
+    ): float|int {
+        $count = is_null($fundFormulaProduct->record_type_key_multiplier) ? 1 : 0;
+
+        if (!is_null($fundFormulaProduct->record_type_key_multiplier)) {
+            $record = $this->getTrustedRecordOfType(
+                $identity_address, $fundFormulaProduct->record_type_key_multiplier
+            );
+
+            $count = is_numeric($record?->value) ? $record->value : 0;
+        }
+
+        return $count;
     }
 
     /**
@@ -1480,30 +1506,20 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param array $productIds
+     * @param array $items
      * @return $this
      */
-    public function updateFormulaProducts(array $productIds): self
+    public function updateFormulaProducts(array $items): self
     {
-        /** @var Collection|Product[] $products */
-        $products = Product::whereIn('id', $productIds)->get();
-
-        $this->fund_formula_products()->whereNotIn(
-            'product_id',
-            $products->pluck('id')
-        )->delete();
-
-        foreach ($products as $product) {
-            $where = [
-                'product_id' => $product->id
-            ];
-
-            if (!$this->fund_formula_products()->where($where)->exists()) {
-                $this->fund_formula_products()->create($where)->update([
-                    'price' => $product->price
-                ]);
-            }
+        $products = [];
+        foreach ($items as $item) {
+            $products[] = $this->fund_formula_products()->updateOrCreate(
+                array_only($item, 'product_id'),
+                ['record_type_key_multiplier' => $item['record_type_key_multiplier'] ?? null]
+            )->getKey();
         }
+
+        $this->fund_formula_products()->whereNotIn('id', $products)->delete();
 
         return $this;
     }

@@ -64,9 +64,14 @@ class StoreFundRequest extends BaseFormRequest
             'default_validator_employee_id' => 'nullable|in:' . $availableEmployees->join(','),
         ], $criteriaRules, $formulaProductsEditable ? [
             'formula_products'              => 'nullable|array',
-            'formula_products.*'            => [
+            'formula_products.*'            => 'required|array',
+            'formula_products.*.product_id' => [
                 'required',
                 Rule::exists('products', 'id')->where('unlimited_stock', true)
+            ],
+            'formula_products.*.record_type_key_multiplier' => [
+                'nullable',
+                Rule::exists('record_types', 'key')
             ],
         ] : []);
     }
