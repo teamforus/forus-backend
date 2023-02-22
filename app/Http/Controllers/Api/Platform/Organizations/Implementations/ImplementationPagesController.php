@@ -60,7 +60,7 @@ class ImplementationPagesController extends Controller
         $isInternalType = ImplementationPage::isInternalType($pageType);
 
         $implementationPage = $implementation->pages()->create(array_merge($request->only([
-            'description', 'description_alignment', 'external', 'external_url', 'page_type', 'state',
+            'description', 'description_alignment', 'description_default_position', 'external', 'external_url', 'page_type', 'state',
         ]), $isInternalType ? [
             'external' => false,
             'external_url' => null,
@@ -139,7 +139,7 @@ class ImplementationPagesController extends Controller
         $isInternalType = ImplementationPage::isInternalType($implementationPage->page_type);
 
         $data = array_merge($request->only([
-            'state', 'description', 'description_alignment', 'external', 'external_url',
+            'state', 'description', 'description_default_position', 'description_alignment', 'external', 'external_url',
         ]), $isInternalType ? [
             'external' => false,
             'external_url' => null,

@@ -27,8 +27,8 @@ class ImplementationPrivateResource extends BaseJsonResource
       
         $data = array_merge($implementation->only([
             'id', 'key', 'name', 'url_webshop', 'title', 'organization_id',
-            'description', 'description_alignment', 'description_html', 'informal_communication',
-            'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+            'description', 'description_alignment', 'description_html', 'description_default_position',
+            'informal_communication', 'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
             'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
             'show_office_map', 'show_voucher_map', 'show_product_map',
         ]), [

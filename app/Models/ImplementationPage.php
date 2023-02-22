@@ -30,6 +30,7 @@ use Illuminate\Support\Arr;
  * @property-read Collection|\App\Models\Faq[] $faq
  * @property-read int|null $faq_count
  * @property-read string $description_html
+ * @property-read string $description_default_position
  * @property-read \App\Models\Implementation $implementation
  * @property-read Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
@@ -81,56 +82,67 @@ class ImplementationPage extends BaseModel
         'type' => 'static',
         'blocks' => true,
         'faq' => false,
+        'default_description_settings' => false,
     ], [
         'key' => self::TYPE_PRODUCTS,
         'type' => 'static',
         'blocks' => false,
         'faq' => false,
+        'default_description_settings' => false,
     ], [
         'key' => self::TYPE_PROVIDERS,
         'type' => 'static',
         'blocks' => false,
         'faq' => false,
+        'default_description_settings' => false,
     ], [
         'key' => self::TYPE_FUNDS,
         'type' => 'static',
         'blocks' => false,
         'faq' => false,
+        'default_description_settings' => false,
     ], [
         'key' => self::TYPE_PROVIDER,
         'type' => 'static',
         'blocks' => true,
         'faq' => false,
+        'default_description_settings' => true,
     ], [
         'key' => self::TYPE_EXPLANATION,
         'type' => 'extra',
         'blocks' => true,
         'faq' => true,
+        'default_description_settings' => false,
     ], [
         'key' => self::TYPE_PRIVACY,
         'type' => 'extra',
         'blocks' => true,
         'faq' => false,
+        'default_description_settings' => false,
     ], [
         'key' => self::TYPE_ACCESSIBILITY,
         'type' => 'extra',
         'blocks' => true,
         'faq' => false,
+        'default_description_settings' => false,
     ], [
         'key' => self::TYPE_TERMS_AND_CONDITIONS,
         'type' => 'extra',
         'blocks' => true,
         'faq' => false,
+        'default_description_settings' => false,
     ], [
         'key' => self::TYPE_FOOTER_CONTACT_DETAILS,
         'type' => 'element',
         'blocks' => false,
         'faq' => false,
+        'default_description_settings' => false,
     ], [
         'key' => self::TYPE_FOOTER_OPENING_TIMES,
         'type' => 'element',
         'blocks' => false,
         'faq' => false,
+        'default_description_settings' => false,
     ]];
 
     /**
@@ -138,7 +150,7 @@ class ImplementationPage extends BaseModel
      */
     protected $fillable = [
         'implementation_id', 'page_type', 'description', 'description_alignment',
-        'external', 'external_url', 'state',
+        'external', 'external_url', 'state', 'description_default_position',
     ];
 
     /**

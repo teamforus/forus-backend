@@ -40,6 +40,7 @@ class StoreImplementationPageRequest extends ValidateImplementationPageBlocksReq
             'page_type'             => $this->pageTypeRule(),
             'description'           => 'nullable|string|max:10000',
             'description_alignment' => 'nullable|in:left,center,right',
+            'description_default_position' => 'nullable|in:top,bottom',
             'external'              => 'present|boolean',
             'external_url'          => 'nullable|string|max:300',
             'media_uid'             => 'nullable|array',
