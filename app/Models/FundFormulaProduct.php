@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
  * @property-read \App\Models\Product $product
+ * @property-read \App\Models\RecordType|null $record_type
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct query()
@@ -58,8 +59,24 @@ class FundFormulaProduct extends BaseModel
      */
     public function record_type(): BelongsTo
     {
-        return $this->belongsTo(
-            RecordType::class, 'record_type_key_multiplier', 'key'
+        return $this->belongsTo(RecordType::class, 'record_type_key_multiplier', 'key');
+    }
+
+    /**
+     * @param string $identity_address
+     * @return int
+     */
+    public function getIdentityMultiplier(string $identity_address): int
+    {
+        if (is_null($this->record_type_key_multiplier)) {
+            return 1;
+        }
+
+        $record = $this->fund->getTrustedRecordOfType(
+            $identity_address,
+            $this->record_type_key_multiplier,
         );
+
+        return is_numeric($record?->value) ? intval($record->value) : 0;
     }
 }

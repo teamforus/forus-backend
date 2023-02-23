@@ -42,7 +42,9 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 
 /**
  * App\Models\Fund
@@ -1190,66 +1192,38 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string|null $identity_address
+     * @param string|null $identityAddress
      * @param array $extraFields
      * @param Carbon|null $expireAt
      * @return array|Voucher[]
      */
     public function makeFundFormulaProductVouchers(
-        string $identity_address = null,
+        string $identityAddress = null,
         array $extraFields = [],
         Carbon $expireAt = null
     ): array {
         $vouchers = [];
         $fundEndDate = $this->end_date;
 
-        foreach ($this->fund_formula_products as $fund_formula_product) {
-            $count = $this->getVoucherCountForFundFormulaProduct(
-                $fund_formula_product, $identity_address
-            );
-
-            $productExpireDate = $fund_formula_product->product->expire_at;
+        foreach ($this->fund_formula_products as $formulaProduct) {
+            $productExpireDate = $formulaProduct->product->expire_at;
             $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
             $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
 
-            for ($i = 0; $i < $count; $i++) {
-                $voucher = $this->makeProductVoucher(
-                    $identity_address,
-                    $extraFields,
-                    $fund_formula_product->product->id,
-                    $voucherExpireAt,
-                    $fund_formula_product->price
-                );
+            $vouchers = array_map(fn () => $this->makeProductVoucher(
+                $identityAddress,
+                $extraFields,
+                $formulaProduct->product->id,
+                $voucherExpireAt,
+                $formulaProduct->price
+            ), array_fill(0, $formulaProduct->getIdentityMultiplier($identityAddress), null));
 
-                $vouchers[] = $voucher;
-
-                VoucherAssigned::broadcast($voucher);
+            foreach ($vouchers as $voucher) {
+                Event::dispatch(new VoucherAssigned($voucher));
             }
         }
 
         return $vouchers;
-    }
-
-    /**
-     * @param FundFormulaProduct $fundFormulaProduct
-     * @param string $identity_address
-     * @return float|int
-     */
-    private function getVoucherCountForFundFormulaProduct(
-        FundFormulaProduct $fundFormulaProduct,
-        string $identity_address
-    ): float|int {
-        $count = is_null($fundFormulaProduct->record_type_key_multiplier) ? 1 : 0;
-
-        if (!is_null($fundFormulaProduct->record_type_key_multiplier)) {
-            $record = $this->getTrustedRecordOfType(
-                $identity_address, $fundFormulaProduct->record_type_key_multiplier
-            );
-
-            $count = is_numeric($record?->value) ? $record->value : 0;
-        }
-
-        return $count;
     }
 
     /**
@@ -1511,13 +1485,10 @@ class Fund extends BaseModel
      */
     public function updateFormulaProducts(array $items): self
     {
-        $products = [];
-        foreach ($items as $item) {
-            $products[] = $this->fund_formula_products()->updateOrCreate(
-                array_only($item, 'product_id'),
-                ['record_type_key_multiplier' => $item['record_type_key_multiplier'] ?? null]
-            )->getKey();
-        }
+        $products = array_map(fn (array $item) => $this->fund_formula_products()->updateOrCreate([
+            'product_id' => Arr::get($item, 'product_id'),
+            'record_type_key_multiplier' => Arr::get($item, 'record_type_key_multiplier'),
+        ])->id, $items);
 
         $this->fund_formula_products()->whereNotIn('id', $products)->delete();
 
