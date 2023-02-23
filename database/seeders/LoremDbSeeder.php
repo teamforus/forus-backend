@@ -131,6 +131,10 @@ class LoremDbSeeder extends Seeder
         'Nijmegen', 'Zuidhorn',
     ];
 
+    private array $fundsWithVoucherRecords = [
+        'Nijmegen', 'Zuidhorn',
+    ];
+
     private Generator $faker;
 
     /**
@@ -736,6 +740,7 @@ class LoremDbSeeder extends Seeder
             'allow_direct_payments'     => in_array($fund->name, $this->fundsWithDirectPayments),
             'allow_generator_direct_payments' => in_array($fund->name, $this->fundsWithDirectPayments),
             'allow_voucher_top_ups'     => in_array($fund->name, $this->fundsWithVoucherTopUp),
+            'allow_voucher_records'     => in_array($fund->name, $this->fundsWithVoucherRecords),
             'email_required'            => $emailRequired,
             'contact_info_enabled'      => $emailRequired,
             'contact_info_required'     => $emailRequired,

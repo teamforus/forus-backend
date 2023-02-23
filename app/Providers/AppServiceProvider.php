@@ -26,6 +26,7 @@ use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
+use App\Models\VoucherRecord;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use App\Observers\FundProviderObserver;
@@ -72,6 +73,7 @@ class AppServiceProvider extends ServiceProvider
         'physical_card_request'         => PhysicalCardRequest::class,
         'fund_request_record'           => FundRequestRecord::class,
         'fund_request_clarification'    => FundRequestClarification::class,
+        'voucher_record'                => VoucherRecord::class,
         'voucher_transaction'           => VoucherTransaction::class,
         'voucher_transaction_bulk'      => VoucherTransactionBulk::class,
     ];

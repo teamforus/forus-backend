@@ -18,6 +18,7 @@ use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
+use App\Models\VoucherRecord;
 use App\Models\VoucherTransactionBulk;
 use App\Models\VoucherTransaction;
 use App\Services\BankService\Models\Bank;
@@ -69,6 +70,7 @@ class EventLogService implements IEventLogService
             'employee' => fn() => $this->employeeMeta($model),
             'product_reservation' => fn() => $this->productReservationMeta($model),
             'voucher_transaction' => fn() => $this->voucherTransactionMeta($model),
+            'voucher_record' => fn() => $this->voucherRecordMeta($model),
             'physical_card' => fn() => $this->physicalCardMeta($model),
             'physical_card_request' => fn() => $this->physicalCardRequestMeta($model),
             'bank' => fn() => $this->bankMeta($model),
@@ -268,6 +270,26 @@ class EventLogService implements IEventLogService
             'employee_id' => $transaction->employee_id,
             'employee_email' => $transaction->employee->identity->email,
         ] : []), 'voucher_transaction_');
+    }
+
+    /**
+     * @param VoucherRecord $transaction
+     * @return array
+     */
+    protected function voucherRecordMeta(VoucherRecord $transaction): array
+    {
+        return $this->keyPrepend([
+            'id' => $transaction->id,
+            'value' => $transaction->value,
+            'note' => $transaction->note,
+            'voucher_id' => $transaction->voucher_id,
+            'record_type_id' => $transaction->record_type_id,
+            'record_type_key' => $transaction->record_type?->key,
+            'deleted_at' => $transaction->deleted_at?->format('Y-m-d H:i:s'),
+            'deleted_at_locale' => format_datetime_locale($transaction->deleted_at),
+            'created_at' => $transaction->created_at?->format('Y-m-d H:i:s'),
+            'created_at_locale' => format_datetime_locale($transaction->created_at),
+        ], 'voucher_record_');
     }
 
     /**
