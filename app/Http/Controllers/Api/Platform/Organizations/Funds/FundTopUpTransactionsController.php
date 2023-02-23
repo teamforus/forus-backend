@@ -9,7 +9,7 @@ use App\Models\Fund;
 use App\Models\FundTopUp;
 use App\Models\FundTopUpTransaction;
 use App\Models\Organization;
-use App\Searches\FundTopsUpSearch;
+use App\Searches\FundTopUpTransactionSearch;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundTopUpTransactionsController extends Controller
@@ -35,8 +35,8 @@ class FundTopUpTransactionsController extends Controller
             ->whereRelation('fund_top_up.fund', 'funds.id', $fund->id)
             ->whereNotNull('amount');
 
-        $search = new FundTopsUpSearch($request->only([
-            'q', 'from', 'to', 'amount_min', 'amount_max',
+        $search = new FundTopUpTransactionSearch($request->only([
+            'q', 'from', 'to', 'amount_min', 'amount_max', 'order_dir', 'order_by',
         ]), $query);
 
         return TopUpTransactionResource::queryCollection($search->query());
