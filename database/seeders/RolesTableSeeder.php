@@ -14,19 +14,19 @@ class RolesTableSeeder extends Seeder
         ],
         'finance' => [
             'en' => 'Finance manager',
-            'nl' => 'Financieel manager',
+            'nl' => 'Financieel medewerker',
         ],
         'validation' => [
             'en' => 'Validator',
-            'nl' => 'Validator',
+            'nl' => 'Beoordelaar',
         ],
         'supervisor_validation' => [
             'en' => 'Supervisor validator',
-            'nl' => 'Supervisor validator',
+            'nl' => 'Manager beoordelaars',
         ],
         'policy_officer' => [
             'en' => 'Manager',
-            'nl' => 'Manager',
+            'nl' => 'Manager aanbieders',
         ],
         'operation_officer' => [
             'en' => 'Kassa',
@@ -38,18 +38,18 @@ class RolesTableSeeder extends Seeder
         ],
         'implementation_cms_manager' => [
             'en' => 'Implementation CMS manager',
-            'nl' => 'Implementatie CMS manager',
+            'nl' => 'CMS manager',
         ],
         'implementation_communication_manager' => [
             'en' => 'Implementatie communicatiemanager',
-            'nl' => 'Implementatie communicatiemanager',
+            'nl' => 'Communicatie',
         ],
         'finance_reader' => [
             'en' => 'Finance reader',
-            'nl' => 'Financieel analist',
+            'nl' => 'Financieel raadpleger',
         ],
         'bank_manager' => [
-            'en' => 'Finance admin',
+            'en' => 'Bank manager',
             'nl' => 'Financieel beheerder',
         ],
         'voucher_officer' => [
