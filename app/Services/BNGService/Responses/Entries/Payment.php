@@ -2,9 +2,8 @@
 
 namespace App\Services\BNGService\Responses\Entries;
 
+use App\Models\BankHoliday;
 use Carbon\Carbon;
-use Yasumi\Yasumi;
-use function now;
 
 class Payment
 {
@@ -93,12 +92,21 @@ class Payment
     public static function getNextBusinessDay(): Carbon
     {
         $date = now()->addDay();
-        $holidays = Yasumi::create('Netherlands', date('Y'));
 
-        while (!$holidays->isWorkingDay($date->toDateTime())) {
+        while (!self::isWorkingDay($date)) {
             $date->addDay();
         }
 
         return $date;
+    }
+
+    /**
+     * @param Carbon $date
+     * @return bool
+     */
+    public static function isWorkingDay(Carbon $date): bool
+    {
+        return !$date->isWeekend() &&
+            !BankHoliday::query()->where('date', $date->toDateString())->exists();
     }
 }
