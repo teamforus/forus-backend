@@ -65,6 +65,7 @@ class VoucherExportData
         $export_data = array_merge($this->onlyData ? [] : [
             'name' => $this->name,
         ], [
+            'id' => $this->voucher->id,
             'granted' => $assigned ? 'Ja': 'Nee',
             'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
             'in_use_date' => $firstUseDate ? format_date_locale($firstUseDate) : null,
