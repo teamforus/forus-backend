@@ -42,7 +42,9 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 
 /**
  * App\Models\Fund
@@ -1190,36 +1192,34 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string|null $identity_address
+     * @param string|null $identityAddress
      * @param array $extraFields
      * @param Carbon|null $expireAt
      * @return array|Voucher[]
      */
     public function makeFundFormulaProductVouchers(
-        string $identity_address = null,
+        string $identityAddress = null,
         array $extraFields = [],
         Carbon $expireAt = null
     ): array {
         $vouchers = [];
         $fundEndDate = $this->end_date;
 
-        if ($this->fund_formula_products->count() > 0) {
-            foreach ($this->fund_formula_products as $fund_formula_product) {
-                $productExpireDate = $fund_formula_product->product->expire_at;
-                $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
-                $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
+        foreach ($this->fund_formula_products as $formulaProduct) {
+            $productExpireDate = $formulaProduct->product->expire_at;
+            $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
+            $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
 
-                $voucher = $this->makeProductVoucher(
-                    $identity_address,
-                    $extraFields,
-                    $fund_formula_product->product->id,
-                    $voucherExpireAt,
-                    $fund_formula_product->price
-                );
+            $vouchers = array_map(fn () => $this->makeProductVoucher(
+                $identityAddress,
+                $extraFields,
+                $formulaProduct->product->id,
+                $voucherExpireAt,
+                $formulaProduct->price
+            ), array_fill(0, $formulaProduct->getIdentityMultiplier($identityAddress), null));
 
-                $vouchers[] = $voucher;
-
-                VoucherAssigned::broadcast($voucher);
+            foreach ($vouchers as $voucher) {
+                Event::dispatch(new VoucherAssigned($voucher));
             }
         }
 
@@ -1480,30 +1480,17 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param array $productIds
+     * @param array $items
      * @return $this
      */
-    public function updateFormulaProducts(array $productIds): self
+    public function updateFormulaProducts(array $items): self
     {
-        /** @var Collection|Product[] $products */
-        $products = Product::whereIn('id', $productIds)->get();
+        $products = array_map(fn (array $item) => $this->fund_formula_products()->updateOrCreate([
+            'product_id' => Arr::get($item, 'product_id'),
+            'record_type_key_multiplier' => Arr::get($item, 'record_type_key_multiplier'),
+        ])->id, $items);
 
-        $this->fund_formula_products()->whereNotIn(
-            'product_id',
-            $products->pluck('id')
-        )->delete();
-
-        foreach ($products as $product) {
-            $where = [
-                'product_id' => $product->id
-            ];
-
-            if (!$this->fund_formula_products()->where($where)->exists()) {
-                $this->fund_formula_products()->create($where)->update([
-                    'price' => $product->price
-                ]);
-            }
-        }
+        $this->fund_formula_products()->whereNotIn('id', $products)->delete();
 
         return $this;
     }

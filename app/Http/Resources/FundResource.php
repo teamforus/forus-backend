@@ -83,7 +83,7 @@ class FundResource extends BaseJsonResource
             'criteria' => FundCriterionResource::collection($fund->criteria),
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'faq' => FaqResource::collection($fund->faq),
-            'formula_products' => $fund->fund_formula_products->pluck('product_id'),
+            'formula_products' => FundFormulaProductResource::collection($fund->fund_formula_products),
             'fund_amount' => $fund->amountFixedByFormula(),
             'has_pending_fund_requests' => $isWebShop && $baseRequest->auth_address() && $fund->fund_requests()->where(function (Builder $builder) {
                 FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth()->id());
