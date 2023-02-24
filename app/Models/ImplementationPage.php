@@ -112,19 +112,19 @@ class ImplementationPage extends BaseModel
         'type' => 'extra',
         'blocks' => true,
         'faq' => true,
-        'default_description_settings' => false,
+        'default_description_settings' => true,
     ], [
         'key' => self::TYPE_PRIVACY,
         'type' => 'extra',
         'blocks' => true,
         'faq' => false,
-        'default_description_settings' => false,
+        'default_description_settings' => true,
     ], [
         'key' => self::TYPE_ACCESSIBILITY,
         'type' => 'extra',
         'blocks' => true,
         'faq' => false,
-        'default_description_settings' => false,
+        'default_description_settings' => true,
     ], [
         'key' => self::TYPE_TERMS_AND_CONDITIONS,
         'type' => 'extra',
