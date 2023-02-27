@@ -1,10 +1,14 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Provider\FundUnsubscribes;
+namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\FundUnsubscribes;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Voucher;
 use App\Searches\FundUnsubscribeSearch;
 
+/**
+ * @property-read Voucher $voucher
+ */
 class IndexFundUnsubscribeRequest extends BaseFormRequest
 {
     /**

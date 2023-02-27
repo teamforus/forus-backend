@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Provider\FundUnsubscribes;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\FundUnsubscribe;
+use App\Models\FundProviderUnsubscribe;
 
 class UpdateFundUnsubscribeRequest extends BaseFormRequest
 {
@@ -25,7 +25,7 @@ class UpdateFundUnsubscribeRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'state' => 'nullable|in:'.FundUnsubscribe::STATE_CANCELED,
+            'canceled' => 'nullable|boolean|required',
         ];
     }
 }

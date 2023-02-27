@@ -13,12 +13,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('fund_unsubscribes', function (Blueprint $table) {
+        Schema::create('fund_provider_unsubscribes', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('fund_provider_id');
-            $table->string('note', 1000);
-            $table->date('unsubscribe_date');
-            $table->enum('state', ['pending', 'approved', 'canceled'])->default('pending');
+            $table->text('note')->nullable();
+            $table->boolean('canceled')->default(false);
+            $table->timestamp('unsubscribe_at');
             $table->timestamps();
 
             $table->foreign('fund_provider_id')
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('fund_unsubscribes');
+        Schema::dropIfExists('fund_provider_unsubscribes');
     }
 };

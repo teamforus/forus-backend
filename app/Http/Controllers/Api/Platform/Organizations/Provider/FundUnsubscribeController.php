@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Provider\FundUnsubscribes\IndexFundUnsubscribeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Provider\FundUnsubscribes\StoreFundUnsubscribeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Provider\FundUnsubscribes\UpdateFundUnsubscribeRequest;
-use App\Http\Resources\FundUnsubscribeResource;
-use App\Models\FundProvider;
-use App\Models\FundUnsubscribe;
+use App\Http\Resources\FundProviderUnsubscribeResource;
+use App\Models\FundProviderUnsubscribe;
 use App\Models\Organization;
+use App\Searches\FundUnsubscribeSearch;
+use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundUnsubscribeController extends Controller
@@ -27,15 +30,15 @@ class FundUnsubscribeController extends Controller
         Organization $organization,
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
-        $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
+        $this->authorize('viewAnyProvider', [FundProviderUnsubscribe::class, $organization]);
 
-        $query = FundUnsubscribe::searchProvider(
-            $organization, $request->only('state', 'q', 'fund_id', 'from', 'to')
-        )->with(FundUnsubscribeResource::load());
+        $search = new FundUnsubscribeSearch($request->only([
+            'q', 'state', 'fund_id', 'from', 'to',
+        ]), FundProviderUnsubscribe::whereHas('fund_provider', fn (Builder $q) => $q->where([
+            'organization_id' => $organization->id,
+        ]))->latest());
 
-        return FundUnsubscribeResource::collection(
-            $query->paginate($request->input('per_page', 10))
-        );
+        return FundProviderUnsubscribeResource::queryCollection($search->query(), $request);
     }
 
     /**
@@ -43,21 +46,41 @@ class FundUnsubscribeController extends Controller
      *
      * @param StoreFundUnsubscribeRequest $request
      * @param Organization $organization
-     * @return FundUnsubscribeResource
+     * @return FundProviderUnsubscribeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
         StoreFundUnsubscribeRequest $request,
         Organization $organization,
-    ): FundUnsubscribeResource {
+    ): FundProviderUnsubscribeResource {
         $this->authorize('show', $organization);
-        $this->authorize('storeProvider', [FundProvider::class, $organization]);
+        $this->authorize('store', [FundProviderUnsubscribe::class, $organization]);
 
-        $fundUnsubscribe = FundUnsubscribe::query()->create(
-            $request->only('note', 'unsubscribe_date', 'fund_provider_id')
-        );
+        $fundProviderUnsubscribe = FundProviderUnsubscribe::create(array_merge([
+            'unsubscribe_at' => Carbon::parse($request->input('unsubscribe_at'))->endOfDay(),
+        ], $request->only([
+            'note', 'fund_provider_id',
+        ])));
 
-        return FundUnsubscribeResource::create($fundUnsubscribe);
+        return FundProviderUnsubscribeResource::create($fundProviderUnsubscribe);
+    }
+
+    /**
+     * View fund unsubscribe request.
+     *
+     * @param Organization $organization
+     * @param FundProviderUnsubscribe $fundUnsubscribe
+     * @return FundProviderUnsubscribeResource
+     * @throws AuthorizationException
+     */
+    public function view(
+        Organization $organization,
+        FundProviderUnsubscribe $fundUnsubscribe
+    ): FundProviderUnsubscribeResource {
+        $this->authorize('show', $organization);
+        $this->authorize('show', [$fundUnsubscribe, $organization]);
+
+        return FundProviderUnsubscribeResource::create($fundUnsubscribe);
     }
 
     /**
@@ -65,20 +88,20 @@ class FundUnsubscribeController extends Controller
      *
      * @param UpdateFundUnsubscribeRequest $request
      * @param Organization $organization
-     * @param FundUnsubscribe $fundUnsubscribe
-     * @return FundUnsubscribeResource
+     * @param FundProviderUnsubscribe $fundUnsubscribe
+     * @return FundProviderUnsubscribeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(
         UpdateFundUnsubscribeRequest $request,
         Organization $organization,
-        FundUnsubscribe $fundUnsubscribe
-    ): FundUnsubscribeResource {
+        FundProviderUnsubscribe $fundUnsubscribe
+    ): FundProviderUnsubscribeResource {
         $this->authorize('show', $organization);
-        $this->authorize('updateProvider', [$fundUnsubscribe->fund_provider, $organization]);
+        $this->authorize('cancel', [$fundUnsubscribe, $organization]);
 
-        $fundUnsubscribe->update($request->only('state'));
+        $fundUnsubscribe->update($request->only('canceled'));
 
-        return new FundUnsubscribeResource($fundUnsubscribe);
+        return FundProviderUnsubscribeResource::create($fundUnsubscribe);
     }
 }

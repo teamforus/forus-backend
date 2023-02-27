@@ -3,7 +3,14 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Provider\FundUnsubscribes;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\FundProvider;
+use App\Models\Organization;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rule;
 
+/**
+ * @property-read Organization $organization
+ */
 class StoreFundUnsubscribeRequest extends BaseFormRequest
 {
     /**
@@ -24,9 +31,25 @@ class StoreFundUnsubscribeRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'unsubscribe_date'  => 'date|date_format:Y-m-d|after:today',
-            'fund_provider_id'  => 'nullable|exists:fund_providers,id',
-            'note'              => 'nullable|string|max:1000',
+            'note'              => 'nullable|string|max:2000',
+            'unsubscribe_at'    => 'required|date_format:Y-m-d|after:today',
+            'fund_provider_id'  => $this->fundProviderIdRule(),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function fundProviderIdRule(): array
+    {
+        $fundProviders = FundProvider::queryActive($this->organization)
+            ->whereDoesntHave('fund_unsubscribes_active')
+            ->pluck('id')
+            ->toArray();
+
+        return [
+            'required',
+            Rule::in($fundProviders),
         ];
     }
 }

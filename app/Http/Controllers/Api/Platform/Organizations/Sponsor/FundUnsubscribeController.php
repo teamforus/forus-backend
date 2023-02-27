@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\Platform\Organizations\Provider\FundUnsubscribes\IndexFundUnsubscribeRequest;
-use App\Http\Resources\FundUnsubscribeResource;
-use App\Models\FundProvider;
-use App\Models\FundUnsubscribe;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\FundUnsubscribes\IndexFundUnsubscribeRequest;
+use App\Http\Resources\FundProviderUnsubscribeResource;
+use App\Models\FundProviderUnsubscribe;
 use App\Models\Organization;
+use App\Searches\FundUnsubscribeSearch;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundUnsubscribeController extends Controller
@@ -25,14 +26,14 @@ class FundUnsubscribeController extends Controller
         Organization $organization,
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
-        $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
+        $this->authorize('viewAnySponsor', [FundProviderUnsubscribe::class, $organization]);
 
-        $query = FundUnsubscribe::searchSponsor(
-            $organization, $request->only('states')
-        )->with(FundUnsubscribeResource::load());
+        $search = new FundUnsubscribeSearch($request->only([
+            'q', 'state', 'fund_id', 'from', 'to',
+        ]), FundProviderUnsubscribe::whereHas('fund_provider.fund', fn (Builder $q) => $q->where([
+            'organization_id' => $organization->id,
+        ])));
 
-        return FundUnsubscribeResource::collection(
-            $query->paginate($request->input('per_page', 10))
-        );
+        return FundProviderUnsubscribeResource::queryCollection($search->query(), $request);
     }
 }

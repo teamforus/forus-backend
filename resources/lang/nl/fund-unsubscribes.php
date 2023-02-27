@@ -2,7 +2,7 @@
 
 return [
     "states" => [
-        "expired"  => "Verlopen",
+        "overdue"  => "Verlopen",
         "approved" => "Goedgekeurd",
         "pending"  => "In behandeling",
         "canceled" => "Geannuleerd",
