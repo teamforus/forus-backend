@@ -17,7 +17,6 @@ use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use App\Traits\HasMarkdownDescription;
 use App\Statistics\Funds\FinancialStatisticQueries;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Database\Query\Builder;
 
 /**
@@ -59,11 +59,13 @@ use Illuminate\Database\Query\Builder;
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
  * @property bool $allow_custom_fund_notifications
+ * @property bool $allow_budget_fund_limits
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
+ * @property int $show_provider_transactions
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -130,6 +132,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization newQuery()
  * @method static EloquentBuilder|Organization query()
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
+ * @method static EloquentBuilder|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
  * @method static EloquentBuilder|Organization whereBankCronTime($value)
@@ -158,6 +161,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
  * @method static EloquentBuilder|Organization whereReservationsBudgetEnabled($value)
  * @method static EloquentBuilder|Organization whereReservationsSubsidyEnabled($value)
+ * @method static EloquentBuilder|Organization whereShowProviderTransactions($value)
  * @method static EloquentBuilder|Organization whereUpdatedAt($value)
  * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
  * @method static EloquentBuilder|Organization whereWebsite($value)
@@ -207,6 +211,7 @@ class Organization extends BaseModel
         'reservations_auto_accept'              => 'boolean',
         'allow_batch_reservations'              => 'boolean',
         'allow_custom_fund_notifications'       => 'boolean',
+        'allow_budget_fund_limits'              => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
     ];
@@ -635,33 +640,29 @@ class Organization extends BaseModel
     }
 
     /**
-     * Returns identity organization roles
-     *
-     * @param $identityAddress
-     * @return Collection|\Illuminate\Support\Collection
+     * @param Identity $identity
+     * @return EloquentBuilder
      */
-    public function identityRoles($identityAddress) {
-        /** @var Employee $employee */
-        $employee = $this->employees()->where('identity_address', $identityAddress)->first();
-
-        return $employee->roles ?? collect([]);
+    public function identityPermissionsQuery(Identity $identity): EloquentBuilder
+    {
+        return Permission::whereRelation('roles.employees', [
+            'organization_id' => $this->id,
+            'identity_address' => $identity->address,
+        ]);
     }
 
     /**
      * Returns identity organization permissions
-     * @param $identityAddress
-     * @return \Illuminate\Support\Collection
+     * @param ?Identity $identity
+     * @return Collection
      */
-    public function identityPermissions(
-        $identityAddress
-    ): \Illuminate\Support\Collection {
-        if (strcmp($identityAddress, $this->identity_address) === 0) {
+    public function identityPermissions(?Identity $identity): SupportCollection
+    {
+        if ($identity && strcmp($identity->address, $this->identity_address) === 0) {
             return Permission::allMemCached();
         }
 
-        $roles = $this->identityRoles($identityAddress);
-
-        return $roles->pluck('permissions')->flatten()->unique('id');
+        return $identity ? $this->identityPermissionsQuery($identity)->get() : collect();
     }
 
     /**
@@ -698,7 +699,7 @@ class Organization extends BaseModel
         }
 
         // retrieving the list of all the permissions that the identity has
-        $permissionKeys = $this->identityPermissions($identity->address)->pluck('key');
+        $permissionKeys = $this->identityPermissions($identity)->pluck('key');
         $permissionsCount = $permissionKeys->intersect($permissions)->count();
 
         return $all ? $permissionsCount === count($permissions) : $permissionsCount > 0;

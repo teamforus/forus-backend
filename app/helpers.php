@@ -119,7 +119,7 @@ if (!function_exists('record_types_cached')) {
     /**
      * @param float $minutes
      * @param bool $reset
-     * @return mixed
+     * @return array[]
      */
     function record_types_cached(
         float $minutes = 1,
@@ -269,13 +269,17 @@ if (!function_exists('trans_fb')) {
      * Translate the given message with a fallback string if none exists.
      *
      * @param string $id
-     * @param string $fallback
+     * @param string|array $fallback
      * @param array|null $parameters
      * @param string|null $locale
-     * @return string
+     * @return string|array
      */
-    function trans_fb(string $id, string $fallback, ?array $parameters = [], ?string $locale = null): string
-    {
+    function trans_fb(
+        string $id,
+        string|array $fallback,
+        ?array $parameters = [],
+        ?string $locale = null
+    ): string|array {
         return ($id === ($translation = trans($id, $parameters, $locale))) ? $fallback : $translation;
     }
 }

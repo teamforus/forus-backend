@@ -30,7 +30,7 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
      */
     public function rules(): array
     {
-        $faqRules = $this->getFaqRules($this->implementationPage->faq()->pluck('id')->toArray());
+        $faqRules = $this->faqRules($this->implementationPage->faq()->pluck('id')->toArray());
 
         return array_merge(parent::rules(), [
             'state'                 => 'nullable|in:' . implode(',', ImplementationPage::STATES),

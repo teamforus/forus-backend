@@ -65,6 +65,7 @@ class VoucherExportData
         $export_data = array_merge($this->onlyData ? [] : [
             'name' => $this->name,
         ], [
+            'id' => $this->voucher->id,
             'granted' => $assigned ? 'Ja': 'Nee',
             'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
             'in_use_date' => $firstUseDate ? format_date_locale($firstUseDate) : null,
@@ -75,7 +76,7 @@ class VoucherExportData
             'identity_email' => $assigned ? ($identity?->email) : null,
             'state' => $this->voucher->state ?? null,
             'activation_code' => $this->voucher->activation_code ?? null,
-            'activation_code_uid' => $this->voucher->activation_code_uid ?? null,
+            'client_uid' => $this->voucher->client_uid ?? null,
             'note' => $this->voucher->note,
             'source' => $this->voucher->employee_id ? 'employee': 'user',
             'amount' => $this->voucher->amount_total,

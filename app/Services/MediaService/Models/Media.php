@@ -3,6 +3,7 @@
 namespace App\Services\MediaService\Models;
 
 use App\Helpers\Color;
+use App\Models\Traits\UpdatesModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -48,6 +49,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class Media extends Model
 {
+    use UpdatesModel;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -119,7 +122,6 @@ class Media extends Model
     /**
      * @param string $key
      * @return string|null
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function getContent(string $key): ?string
     {
@@ -137,5 +139,13 @@ class Media extends Model
     public function getIsDarkAttribute(): ?bool
     {
         return $this->dominant_color ? Color::createFromHex($this->dominant_color)->isDark() : null;
+    }
+
+    /**
+     * @return $this
+     */
+    public function updateModel(array $attributes = [], array $options = []): self
+    {
+        return tap($this)->update($attributes, $options);
     }
 }

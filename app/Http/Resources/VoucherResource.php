@@ -12,12 +12,11 @@ use App\Services\EventLogService\Models\EventLog;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 
 /**
- * Class VoucherResource
  * @property Voucher $resource
- * @package App\Http\Resources
  */
 class VoucherResource extends BaseJsonResource
 {
@@ -53,6 +52,7 @@ class VoucherResource extends BaseJsonResource
         'fund.organization.logo.presets',
         'physical_cards',
         'last_deactivation_log',
+        'voucher_records.record_type',
     ];
 
     public const LOAD_COUNT = [
@@ -73,7 +73,7 @@ class VoucherResource extends BaseJsonResource
         $deactivationDate = $voucher->deactivated ? $this->getDeactivationDate($voucher): null;
 
         return array_merge($voucher->only([
-            'identity_address', 'fund_id', 'returnable', 'transactions_count',
+            'id', 'identity_address', 'fund_id', 'returnable', 'transactions_count',
             'expired', 'deactivated', 'type', 'state', 'state_locale', 'is_external',
         ]), $this->getBaseFields($voucher), $this->getOptionalFields($voucher), [
             'deactivated_at' => $deactivationDate?->format('Y-m-d'),
@@ -100,7 +100,31 @@ class VoucherResource extends BaseJsonResource
             'physical_card' => $physical_cards ? $physical_cards->only('id', 'code') : false,
             'product_vouchers' => $this->getProductVouchers($voucher->product_vouchers),
             'query_product' => $this->queryProduct($voucher, $request->get('product_id')),
-        ], $this->timestamps($voucher, 'created_at'));
+        ], array_merge(
+             $this->getRecords($voucher),
+            $this->timestamps($voucher, 'created_at'),
+        ));
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return array
+     */
+    protected function getRecords(Voucher $voucher): array
+    {
+        if (!$voucher->fund?->fund_config?->allow_voucher_records) {
+            return [];
+        }
+
+        $records = $voucher->voucher_records->sortBy(['record_type_id']);
+        $recordsMap = $records->pluck('value', 'record_type.key');
+        $givenName = Arr::get($recordsMap, 'given_name');
+        $familyName = Arr::get($recordsMap, 'family_name');
+
+        return [
+            'records' => VoucherRecordResource::collection($records),
+            'records_title' => $givenName ? strtoupper($givenName[0]) . '. ' . $familyName : null,
+        ];
     }
 
     /**
@@ -126,7 +150,7 @@ class VoucherResource extends BaseJsonResource
                 'created_at' => $eventLog->created_at->format('Y-m-d'),
                 'created_at_locale' => format_date_locale($eventLog->created_at),
             ]);
-        });
+        })->values();
     }
 
     /**
@@ -194,20 +218,20 @@ class VoucherResource extends BaseJsonResource
         }
 
         $expire_at = $voucher->calcExpireDateForProduct($product);
-        $reservable = false;
         $reservable_count = $product['limit_available'] ?? null;
         $reservable_count = is_numeric($reservable_count) ? intval($reservable_count) : null;
         $reservable_expire_at = $expire_at?->format('Y-m-d');
         $reservable_enabled = $product->reservationsEnabled($voucher->fund);
+        $reservable = $reservable_count === null;
 
-        if ($voucher->isBudgetType()) {
-            if ($voucher->fund->isTypeSubsidy()) {
-                $reservable = $reservable_count > 0;
-            } else if ($voucher->fund->isTypeBudget()) {
-                $reservable = FundQuery::whereProductsAreApprovedAndActiveFilter(
-                    Fund::whereId($voucher->fund_id), $product
-                )->exists() && $voucher->amount_available > $product->price;
-            }
+        if ($voucher->isBudgetType() && $reservable_count !== null) {
+            $reservable = FundQuery::whereProductsAreApprovedAndActiveFilter(
+                Fund::whereId($voucher->fund_id), $product
+            )->exists() && $reservable_count > 0;
+        }
+
+        if (!$voucher->fund->isTypeSubsidy()) {
+            $reservable = $reservable && $voucher->amount_available >= $product->price;
         }
 
         return [
@@ -225,9 +249,7 @@ class VoucherResource extends BaseJsonResource
      */
     protected function getFundResource(Fund $fund): array
     {
-        return array_merge($fund->only([
-            'id', 'name', 'state', 'type',
-        ]), [
+        return array_merge($fund->only('id', 'name', 'state', 'type'), [
             'url_webshop' => $fund->fund_config->implementation->url_webshop ?? null,
             'logo' => new MediaCompactResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d H:i'),
@@ -237,7 +259,7 @@ class VoucherResource extends BaseJsonResource
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
-        ]);
+        ], $fund->fund_config->only('allow_reimbursements'));
     }
 
     /**

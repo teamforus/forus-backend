@@ -49,14 +49,13 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
             abort(429, 'To many requests, please try again later.');
         }
 
-        if ($voucher->fund->isTypeBudget() && $voucher->isBudgetType() && $this->has('product_id')) {
-            $authorized = Gate::allows('useAsProviderWithProducts', [
-                $voucher,
-                $this->input('product_id'),
-            ]);
-        } else {
-            $authorized = Gate::allows('useAsProvider', $voucher);
+        if ($this->has('product_id') && $this->has('amount')) {
+            abort(422, 'Je kan alleen `product_id` of `amount` indienen maar niet beide tegelijkertijd.');
         }
+
+        $authorized = $this->has('product_id') ?
+            Gate::allows('useAsProviderWithProducts', [$voucher, $this->input('product_id')]) :
+            Gate::allows('useAsProvider', $voucher);
 
         Gate::authorize('makeTransactionThrottle', $voucher);
 

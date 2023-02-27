@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class IndexProductRequest extends FormRequest
+class IndexProductRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +25,9 @@ class IndexProductRequest extends FormRequest
     {
         return [
             'q' => 'nullable|string',
-            'per_page' => 'nullable|numeric|max:100',
+            'source' => 'nullable|in:sponsor,provider,archive',
+            'unlimited_stock' => 'nullable|boolean',
+            'per_page' => $this->perPageRule(),
         ];
     }
 }

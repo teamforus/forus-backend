@@ -31,9 +31,13 @@ class FundTopUpTransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showFinances', [$fund, $organization]);
 
+        $query = FundTopUpTransaction::query()
+            ->whereRelation('fund_top_up.fund', 'funds.id', $fund->id)
+            ->whereNotNull('amount');
+
         $search = new FundTopsUpSearch($request->only([
             'q', 'from', 'to', 'amount_min', 'amount_max',
-        ]), FundTopUpTransaction::whereRelation('fund_top_up.fund', 'funds.id', $fund->id));
+        ]), $query);
 
         return TopUpTransactionResource::queryCollection($search->query());
     }

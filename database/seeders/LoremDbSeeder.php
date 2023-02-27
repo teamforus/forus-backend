@@ -30,7 +30,8 @@ use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
 use Carbon\Carbon;
-use Faker\Provider\Payment;
+use Faker\Factory;
+use Faker\Generator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
@@ -98,6 +99,10 @@ class LoremDbSeeder extends Seeder
         'Nijmegen', 'Stadjerspas III', 'Stadjerspas IV',
     ];
 
+    private array $fundsWithReimbursements = [
+        'Zuidhorn', 'Nijmegen',
+    ];
+
     private array $fundsWithDirectPayments = [
         'Nijmegen', 'Stadjerspas',
     ];
@@ -122,9 +127,19 @@ class LoremDbSeeder extends Seeder
         'Zuidhorn', 'Nijmegen',
     ];
 
+    private array $organizationsWithBudgetFundLimits = [
+        'Nijmegen', 'Stadjerspas',
+    ];
+
     private array $fundsWithVoucherTopUp = [
         'Nijmegen', 'Zuidhorn',
     ];
+
+    private array $fundsWithVoucherRecords = [
+        'Nijmegen', 'Zuidhorn',
+    ];
+
+    private Generator $faker;
 
     /**
      * LoremDbSeeder constructor.
@@ -142,6 +157,8 @@ class LoremDbSeeder extends Seeder
         $this->primaryEmail = config('forus.seeders.lorem_db_seeder.default_email');
         $this->fundRequestEmailPattern = config('forus.seeders.lorem_db_seeder.fund_request_email_pattern');
         $this->vouchersPerFund = config('forus.seeders.lorem_db_seeder.vouchers_per_fund_count');
+
+        $this->faker = Factory::create(Config::get('app.locale'));
     }
 
     /**
@@ -242,7 +259,7 @@ class LoremDbSeeder extends Seeder
             'family_name' => 'Doe'
         ]);
 
-
+        $identity->primary_email->setVerified();
         $proxy = Identity::makeProxy('confirmation_code', $identity, 'active');
 
         if ($print) {
@@ -469,7 +486,7 @@ class LoremDbSeeder extends Seeder
 
         while ($count-- > 0) {
             $out[] = $this->makeOrganization(
-                sprintf('%s #%s', $prefix, $nth++),
+                sprintf('%s #%s: %s', $prefix, $nth++, $this->makeRandomName(20, 40)),
                 $identity_address,
                 $fields,
                 $offices_count
@@ -495,7 +512,7 @@ class LoremDbSeeder extends Seeder
     ): Organization {
         $organization = Organization::create(array_only(array_merge([
             'kvk' => '69599068',
-            'iban' => $this->config('default_organization_iban') ?: Payment::iban('NL'),
+            'iban' => $this->config('default_organization_iban') ?: $this->faker->iban('NL'),
             'phone' => '123456789',
             'email' => $this->primaryEmail,
             'bsn_enabled' => true,
@@ -505,6 +522,7 @@ class LoremDbSeeder extends Seeder
             'manage_provider_products' => in_array($name, $this->sponsorsWithSponsorProducts),
             'backoffice_available' => in_array($name, $this->sponsorsWithBackoffice),
             'allow_custom_fund_notifications' => in_array($name, $this->organizationsWithCustomNotifications),
+            'allow_budget_fund_limits' => in_array($name, $this->organizationsWithBudgetFundLimits),
             'reservations_budget_enabled' => true,
             'reservations_subsidy_enabled' => true,
         ], $fields, compact('name', 'identity_address')), [
@@ -512,7 +530,8 @@ class LoremDbSeeder extends Seeder
             'email_public', 'phone_public', 'website_public',
             'identity_address', 'business_type_id', 'manage_provider_products',
             'backoffice_available', 'bsn_enabled', 'is_sponsor', 'is_provider', 'is_validator',
-            'allow_custom_fund_notifications', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
+            'allow_custom_fund_notifications', 'reservations_budget_enabled',
+            'reservations_subsidy_enabled', 'allow_budget_fund_limits',
         ]));
 
         OrganizationCreated::dispatch($organization);
@@ -723,9 +742,11 @@ class LoremDbSeeder extends Seeder
             'csv_primary_key'           => 'uid',
             'is_configured'             => true,
             'allow_physical_cards'      => in_array($fund->name, $this->fundsWithPhysicalCards),
+            'allow_reimbursements'      => in_array($fund->name, $this->fundsWithReimbursements),
             'allow_direct_payments'     => in_array($fund->name, $this->fundsWithDirectPayments),
             'allow_generator_direct_payments' => in_array($fund->name, $this->fundsWithDirectPayments),
             'allow_voucher_top_ups'     => in_array($fund->name, $this->fundsWithVoucherTopUp),
+            'allow_voucher_records'     => in_array($fund->name, $this->fundsWithVoucherRecords),
             'email_required'            => $emailRequired,
             'contact_info_enabled'      => $emailRequired,
             'contact_info_required'     => $emailRequired,
@@ -922,7 +943,7 @@ class LoremDbSeeder extends Seeder
         array $fields = []
     ): Product {
         do {
-            $name = 'Product #' . random_int(100000, 999999);
+            $name = '#' . random_int(100000, 999999) . " " . $this->makeRandomName();
         } while(Product::query()->where('name', $name)->count() > 0);
 
         $price = random_int(1, 20);
@@ -961,6 +982,21 @@ class LoremDbSeeder extends Seeder
         return $product;
     }
 
+    /**
+     * @param int $minLength
+     * @param int $maxLength
+     * @return string
+     * @throws \Exception
+     */
+    protected function makeRandomName(int $minLength = 75, int $maxLength = 150): string
+    {
+        return $this->faker->text(random_int(10, random_int(0, 3) >= 3 ? $maxLength : $minLength));
+    }
+
+    /**
+     * @param $fundName
+     * @return bool
+     */
     private function isUsingAutoValidation($fundName): bool
     {
         return in_array($fundName, $this->fundsWithAutoValidation, true);

@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use App\Events\ProductReservations\ProductReservationCreated;
+use App\Events\Reimbursements\ReimbursementCreated;
+use App\Events\Reimbursements\ReimbursementSubmitted;
+use App\Events\VoucherRecords\VoucherRecordCreated;
 use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
@@ -33,6 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Excel as ExcelModel;
 use Illuminate\Support\Carbon;
@@ -52,7 +56,7 @@ use ZipArchive;
  * @property string|null $note
  * @property int|null $employee_id
  * @property string|null $activation_code
- * @property string|null $activation_code_uid
+ * @property string|null $client_uid
  * @property int|null $fund_backoffice_log_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -109,6 +113,10 @@ use ZipArchive;
  * @property-read int|null $product_reservations_count
  * @property-read Collection|Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
+ * @property-read Collection|\App\Models\Reimbursement[] $reimbursements
+ * @property-read int|null $reimbursements_count
+ * @property-read Collection|\App\Models\Reimbursement[] $reimbursements_pending
+ * @property-read int|null $reimbursements_pending_count
  * @property-read \App\Models\VoucherToken|null $token_with_confirmation
  * @property-read \App\Models\VoucherToken|null $token_without_confirmation
  * @property-read Collection|\App\Models\VoucherToken[] $tokens
@@ -117,13 +125,15 @@ use ZipArchive;
  * @property-read int|null $top_up_transactions_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $transactions
  * @property-read int|null $transactions_count
+ * @property-read Collection|\App\Models\VoucherRecord[] $voucher_records
+ * @property-read int|null $voucher_records_count
  * @property-read \App\Models\VoucherRelation|null $voucher_relation
  * @method static Builder|Voucher newModelQuery()
  * @method static Builder|Voucher newQuery()
  * @method static Builder|Voucher query()
  * @method static Builder|Voucher whereActivationCode($value)
- * @method static Builder|Voucher whereActivationCodeUid($value)
  * @method static Builder|Voucher whereAmount($value)
+ * @method static Builder|Voucher whereClientUid($value)
  * @method static Builder|Voucher whereCreatedAt($value)
  * @method static Builder|Voucher whereEmployeeId($value)
  * @method static Builder|Voucher whereExpireAt($value)
@@ -163,6 +173,8 @@ class Voucher extends BaseModel
     public const EVENT_SHARED_BY_EMAIL = 'shared_by_email';
     public const EVENT_PHYSICAL_CARD_REQUESTED = 'physical_card_requested';
 
+    public const EVENT_LIMIT_MULTIPLIER_CHANGED = 'limit_multiplier_changed';
+
     public const TYPE_BUDGET = 'regular';
     public const TYPE_PRODUCT = 'product';
 
@@ -200,7 +212,7 @@ class Voucher extends BaseModel
     protected $fillable = [
         'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id',
         'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'state',
-        'activation_code', 'activation_code_uid', 'fund_backoffice_log_id',
+        'activation_code', 'client_uid', 'fund_backoffice_log_id',
         'product_reservation_id',
     ];
 
@@ -270,6 +282,26 @@ class Voucher extends BaseModel
     public function identity(): BelongsTo
     {
         return $this->belongsTo(Identity::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function reimbursements(): HasMany
+    {
+        return $this->hasMany(Reimbursement::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function reimbursements_pending(): HasMany
+    {
+        return $this->hasMany(Reimbursement::class)->where([
+            'state' => Reimbursement::STATE_PENDING,
+        ]);
     }
 
     /**
@@ -353,7 +385,7 @@ class Voucher extends BaseModel
      */
     public function product(): BelongsTo
     {
-        /** @var BelongsTo|SoftDeletes $relationQuery */
+        /** @var Builder|SoftDeletes|BelongsTo $relationQuery */
         $relationQuery = $this->belongsTo(Product::class, 'product_id', 'id');
 
         return $relationQuery->withTrashed();
@@ -409,6 +441,15 @@ class Voucher extends BaseModel
         return $this->hasMany(self::class, 'parent_id')->where(function(Builder $builder) {
             VoucherQuery::whereIsProductVoucher($builder);
         });
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function voucher_records(): HasMany
+    {
+        return $this->hasMany(VoucherRecord::class);
     }
 
     /**
@@ -490,6 +531,7 @@ class Voucher extends BaseModel
         return currency_format(array_sum([
             $this->transactions()->sum('amount'),
             $this->product_vouchers()->sum('amount'),
+            $this->reimbursements_pending()->sum('amount'),
         ]));
     }
 
@@ -502,6 +544,7 @@ class Voucher extends BaseModel
         return currency_format(array_sum([
             $this->transactions->sum('amount'),
             $this->product_vouchers->sum('amount'),
+            $this->reimbursements_pending->sum('amount'),
         ]));
     }
 
@@ -550,7 +593,7 @@ class Voucher extends BaseModel
     public function token_with_confirmation(): HasOne
     {
         return $this->hasOne(VoucherToken::class)->where([
-            'need_confirmation' => true
+            'need_confirmation' => true,
         ]);
     }
 
@@ -952,7 +995,7 @@ class Voucher extends BaseModel
         array $extraData = []
     ): ProductReservation {
         $isSubsidy = $this->fund->isTypeSubsidy();
-        $fundProviderProduct = $isSubsidy ? $product->getSubsidyDetailsForFund($this->fund) : null;
+        $fundProviderProduct = $product->getFundProviderProduct($this->fund);
         $amount = $isSubsidy && $fundProviderProduct ? $fundProviderProduct->amount : $product->price;
 
         /** @var ProductReservation $reservation */
@@ -962,7 +1005,7 @@ class Voucher extends BaseModel
             'state'                     => ProductReservation::STATE_PENDING,
             'product_id'                => $product->id,
             'employee_id'               => $employee?->id,
-            'fund_provider_product_id'  => $fundProviderProduct ? $fundProviderProduct->id : null,
+            'fund_provider_product_id'  => $fundProviderProduct?->id,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
         ], array_only($extraData, [
             'first_name', 'last_name', 'user_note', 'note',
@@ -973,6 +1016,33 @@ class Voucher extends BaseModel
         ProductReservationCreated::dispatch($reservation);
 
         return $reservation;
+    }
+
+    /**
+     * @param array $data
+     * @return Reimbursement
+     * @throws \Exception
+     */
+    public function makeReimbursement(array $data = []): Reimbursement
+    {
+        $submitNow = Arr::get($data, 'state') === Reimbursement::STATE_PENDING;
+
+        /** @var Reimbursement $reimbursement */
+        $reimbursement = $this->reimbursements()->create(array_merge([
+            'code'          => Reimbursement::makeCode(),
+            'state'         => Reimbursement::STATE_DRAFT,
+            'submitted_at'  => $submitNow ? now() : null,
+        ], array_only($data, [
+            'title', 'description', 'amount', 'email', 'iban', 'iban_name', 'state',
+        ])));
+
+        ReimbursementCreated::dispatch($reimbursement);
+
+        if ($submitNow && $reimbursement->isPending()) {
+            ReimbursementSubmitted::dispatch($reimbursement);
+        }
+
+        return $reimbursement;
     }
 
     /**
@@ -1166,20 +1236,20 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @param string|null $activation_code_uid
+     * @param string|null $client_uid
      * @return $this
      */
-    public function makeActivationCode(string $activation_code_uid = null): self
+    public function makeActivationCode(string $client_uid = null): self
     {
         $queryUnused = self::whereHas('fund', function(Builder $builder) {
             $builder->where('organization_id', $this->fund->organization_id);
-        })->whereNull('identity_address')->where(compact('activation_code_uid'));
+        })->whereNull('identity_address')->where(compact('client_uid'));
 
         $queryUsed = self::whereHas('fund', function(Builder $builder) {
             $builder->where('organization_id', $this->fund->organization_id);
-        })->whereNotNull('identity_address')->where(compact('activation_code_uid'));
+        })->whereNotNull('identity_address')->where(compact('client_uid'));
 
-        if (!is_null($activation_code_uid) && $queryUnused->exists()) {
+        if (!is_null($client_uid) && $queryUnused->exists()) {
             /** @var Voucher $voucher */
             $voucher = $queryUnused->first();
             $activation_code = $voucher->activation_code;
@@ -1191,13 +1261,13 @@ class Voucher extends BaseModel
             }, 4, 2);
         }
 
-        if (!is_null($activation_code_uid) && $oldVoucher = $queryUsed->first()) {
+        if (!is_null($client_uid) && $oldVoucher = $queryUsed->first()) {
             $this->assignToIdentity($oldVoucher->identity);
         }
 
         return $this->updateModel([
             'activation_code' => $activation_code,
-            'activation_code_uid' => $activation_code_uid,
+            'client_uid' => $client_uid,
         ]);
     }
 
@@ -1403,16 +1473,41 @@ class Voucher extends BaseModel
         string $target_name,
         Employee $employee,
     ): VoucherTransaction {
-        $transaction = $this->makeTransaction([
+        return $this->makeTransactionBySponsor($employee, [
             'amount' => $this->amount_available,
-            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
-            'employee_id' => $employee->id,
             'target' => VoucherTransaction::TARGET_IBAN,
             'target_iban' => $target_iban,
             'target_name' => $target_name,
         ]);
+    }
 
-        VoucherTransactionCreated::dispatch($transaction);
+    /**
+     * @param Employee $employee
+     * @param array $attributes
+     * @return VoucherTransaction
+     */
+    public function makeTransactionBySponsor(
+        Employee $employee,
+        array $attributes,
+    ): VoucherTransaction {
+        $isTopUp = Arr::get($attributes, 'target') == VoucherTransaction::TARGET_TOP_UP;
+        $state = $isTopUp ? VoucherTransaction::STATE_SUCCESS : VoucherTransaction::STATE_PENDING;
+        $note = Arr::get($attributes, 'note');
+
+        $transaction = $this->makeTransaction(array_merge(Arr::except($attributes, 'note'), [
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'employee_id' => $employee->id,
+            'payment_time' => $isTopUp ? now() : null,
+            'state' => $state,
+        ]));
+
+        if ($note) {
+            $transaction->addNote('sponsor', $note);
+        }
+
+        Event::dispatch(new VoucherTransactionCreated($transaction, $note ? [
+            'voucher_transaction_note' => $note,
+        ] : []));
 
         return $transaction;
     }
@@ -1437,5 +1532,35 @@ class Voucher extends BaseModel
     public function hasTransactionsWithin(?int $seconds): ?bool
     {
         return $seconds ? $this->transactionsWithinQuery($seconds)?->exists() : null;
+    }
+
+    /**
+     * @param array $records
+     * @return Collection
+     */
+    public function appendRecords(array $records): Collection
+    {
+         return new Collection(array_map(function ($key) use ($records) {
+             $this->appendRecord($key, $records[$key]);
+         }, array_keys($records)));
+    }
+
+    /**
+     * @param string $key
+     * @param string $value
+     * @param string $note
+     * @return VoucherRecord
+     */
+    public function appendRecord(string $key, string $value, string $note = ''): VoucherRecord
+    {
+        $record = $this->voucher_records()->create([
+            'record_type_id' => RecordType::findByKey($key)->id,
+            'value' => $value,
+            'note' => $note,
+        ]);
+
+        VoucherRecordCreated::dispatch($record);
+
+        return $record;
     }
 }

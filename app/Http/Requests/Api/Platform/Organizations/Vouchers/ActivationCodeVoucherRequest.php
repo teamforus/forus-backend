@@ -35,7 +35,7 @@ class ActivationCodeVoucherRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'activation_code_uid' => 'nullable|string|max:20',
+            'client_uid' => 'nullable|string|max:20',
         ];
     }
 }

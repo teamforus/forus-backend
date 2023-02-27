@@ -300,7 +300,7 @@ class DigIdSession extends Model
         if ($request->input('request') === 'fund_request') {
             $fund = Fund::find($request->input('fund_id'));
 
-            return $fund->urlWebshop(sprintf('/funds/%s/activate', $fund->id));
+            return $fund->urlWebshop(sprintf('/fondsen/%s/activeer', $fund->id));
         }
 
         if (($request->input('request') === 'auth')) {

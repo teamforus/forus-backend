@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Events\FundProviders\FundProviderStateUpdated;
 use App\Events\Products\ProductApproved;
 use App\Events\Products\ProductRevoked;
-use App\Scopes\Builders\FundProviderChatQuery;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -16,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Event;
 use Carbon\Carbon;
 
 /**
@@ -378,32 +379,165 @@ class FundProvider extends BaseModel
     public function approveProducts(array $products): self
     {
         $productIds = array_pluck($products, 'id');
-        $isTypeSubsidy = $this->fund->isTypeSubsidy();
-
         $oldProducts = $this->products()->pluck('products.id')->toArray();
         $newProducts = array_diff($productIds, $oldProducts);
 
         foreach ($products as $product) {
-            $productModel = Product::findOrFail($product['id']);
-            $product['price'] = $productModel->price;
-
-            if ($product['limit_total_unlimited'] ?? false) {
-                $product['limit_total'] = 0;
-                $product['limit_total_unlimited'] = 1;
+            if ($this->fund->isTypeBudget()) {
+                $this->approveProduct($this->prepareProductApproveData($product));
+            } else {
+                $this->approveSubsidyProduct($this->prepareProductApproveData($product));
             }
-
-            $this->fund_provider_products()->firstOrCreate([
-                'product_id' => $product['id'],
-            ])->update($isTypeSubsidy ? array_only($product, [
-                'limit_total', 'limit_total_unlimited', 'limit_per_identity',
-                'expire_at', 'amount', 'price',
-            ]) : []);
         }
 
-        $newProducts = Product::whereIn('products.id', $newProducts)->get();
-        $newProducts->each(function(Product $product) {
-            ProductApproved::dispatch($product, $this->fund);
-        });
+        foreach (Product::whereIn('products.id', $newProducts)->get() as $product) {
+            Event::dispatch(new ProductApproved($product, $this->fund));
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param array $productData
+     * @return array
+     */
+    protected function prepareProductApproveData(array $productData): array
+    {
+        $isTypeSubsidy = $this->fund->isTypeSubsidy();
+
+        if (is_null($productData['limit_total'] ?? null) && $isTypeSubsidy) {
+            $productData['limit_total'] = 1;
+        }
+
+        if (is_null($productData['limit_per_identity'] ?? null) && $isTypeSubsidy) {
+            $productData['limit_per_identity'] = 1;
+        }
+
+        if ($productData['limit_total_unlimited'] ?? false) {
+            $productData['limit_total'] = null;
+            $productData['limit_total_unlimited'] = 1;
+        }
+
+        return array_merge(array_only($productData, [
+            'id', 'limit_total', 'limit_total_unlimited', 'limit_per_identity', 'expire_at', 'amount',
+        ]), $isTypeSubsidy ? [
+            'price' => Product::findOrFail($productData['id'])->price,
+        ] : []);
+    }
+
+    /**
+     * @param array $data
+     * @param bool $withTrashed
+     * @return FundProviderProduct
+     */
+    protected function findFundProviderProductByIdOrCreate(array $data, bool $withTrashed = false): FundProviderProduct
+    {
+        $query = $this->fund_provider_products()
+            ->latest('created_at')
+            ->latest('id');
+
+        if ($withTrashed) {
+            $query->withTrashed();
+        }
+
+        return $query->firstOrCreate([
+            'product_id' => $data['id'],
+        ]);
+    }
+
+    /**
+     * @param array $data
+     * @return FundProviderProduct
+     */
+    protected function approveSubsidyProduct(array $data): FundProviderProduct
+    {
+        return $this->findFundProviderProductByIdOrCreate($data)->updateModel($data);
+    }
+
+    /**
+     * @param array $data
+     * @return FundProviderProduct
+     */
+    protected function approveProduct(array $data): FundProviderProduct
+    {
+        $fundProviderProduct = $this->findFundProviderProductByIdOrCreate($data, true);
+
+        if ($fundProviderProduct->trashed()) {
+            $fundProviderProduct->restore();
+        }
+
+        $hasConfigs =
+            !is_null(Arr::get($data, 'expire_at')) ||
+            !is_null(Arr::get($data, 'limit_total')) ||
+            !is_null(Arr::get($data, 'limit_per_identity')) ||
+            !is_null(Arr::get($data, 'limit_total_unlimited'));
+
+        $hasChanged =
+            (Arr::get($data, 'expire_at') != $fundProviderProduct->expire_at?->format('Y-m-d')) ||
+            (Arr::get($data, 'limit_total') != $fundProviderProduct->limit_total) ||
+            (Arr::get($data, 'limit_per_identity') != $fundProviderProduct->limit_per_identity) ||
+            (((bool) Arr::get($data, 'limit_total_unlimited')) != $fundProviderProduct->limit_total_unlimited);
+
+        if ($hasChanged) {
+            $fundProviderProduct->delete();
+            $fundProviderProduct = $this->findFundProviderProductByIdOrCreate($data);
+        }
+
+        return $fundProviderProduct->updateModel(array_merge($hasConfigs ? $data : []));
+    }
+
+    /**
+     * @param array $products
+     * @return $this
+     */
+    public function resetProducts(array $products): self
+    {
+        foreach ($products as $product) {
+            $this->resetProduct($product);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param array $data
+     * @return FundProviderProduct|null
+     */
+    protected function resetProduct(array $data): ?FundProviderProduct
+    {
+        $query = $this->fund_provider_products()->latest();
+
+        if ($this->fund->isTypeBudget()) {
+            $fundProviderProducts = (clone $query)->where('product_id', $data['id'])->latest()->get();
+            $fundProviderProducts->each(fn(FundProviderProduct $product) => $product->delete());
+
+            return $query->firstOrCreate([
+                'product_id' => $data['id'],
+            ]);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array $products
+     * @return $this
+     */
+    public function declineProducts(array $products): self
+    {
+        $attachedProducts = $this->products()->pluck('products.id')->toArray();
+        $products = Product::whereIn('id', array_intersect($products, $attachedProducts))->get();
+
+        $this->fund_provider_products()->whereIn('product_id', $products->pluck('id'))->delete();
+        $chats = $this->fund_provider_chats()->whereIn('product_id', $products->pluck('id'))->get();
+
+        foreach ($products as $product) {
+            Event::dispatch(new ProductRevoked($product, $this->fund));
+        }
+
+        foreach ($chats as $chat) {
+            $chat->addSystemMessage('Aanbieding afgewezen.', auth()->id());
+        }
 
         return $this;
     }
@@ -425,36 +559,6 @@ class FundProvider extends BaseModel
         return FundProviderQuery::whereHasTransactions(
             self::query()->where('id', $this->id), $this->fund_id
         )->exists();
-    }
-
-    /**
-     * @param array $products
-     * @return $this
-     */
-    public function declineProducts(array $products): self
-    {
-        $oldProducts = $this->products()->pluck('products.id')->toArray();
-        $detachedProducts = array_intersect($oldProducts, $products);
-
-        $this->fund_provider_products()->whereHas('product', static function(
-            Builder $builder
-        ) use ($products) {
-            $builder->whereIn('products.id', $products);
-        })->delete();
-
-        $detachedProducts = Product::whereIn('products.id', $detachedProducts)->get();
-        $detachedProducts->each(function(Product $product) {
-            ProductRevoked::dispatch($product, $this->fund);
-        });
-
-        FundProviderChatQuery::whereProductFilter(
-            $this->fund_provider_chats()->getQuery(),
-            $products
-        )->get()->each(static function(FundProviderChat $chat) {
-            $chat->addSystemMessage('Aanbieding afgewezen.', auth()->id());
-        });
-
-        return $this;
     }
 
     /**

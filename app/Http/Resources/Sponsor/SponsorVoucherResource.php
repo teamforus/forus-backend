@@ -6,16 +6,29 @@ use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Models\Voucher;
-use App\Services\EventLogService\Models\EventLog;
-use Illuminate\Support\Arr;
 
 /**
- * Class SponsorVoucherResource
  * @property Voucher $resource
- * @package App\Http\Resources\Sponsor
  */
 class SponsorVoucherResource extends BaseJsonResource
 {
+    /**
+     * @var array
+     */
+    public const LOAD = [
+        'token_without_confirmation',
+        'transactions.voucher.fund.logo.presets',
+        'transactions.provider.logo.presets',
+        'transactions.product.photo.presets',
+        'product_vouchers',
+        'fund.fund_config',
+        'physical_cards',
+        'voucher_records.record_type',
+        'voucher_relation',
+        'identity.primary_email',
+        'top_up_transactions',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -26,7 +39,7 @@ class SponsorVoucherResource extends BaseJsonResource
     {
         $voucher = $this->resource;
         $address = $voucher->token_without_confirmation->address ?? null;
-        $physical_cards = $voucher->physical_cards()->first();
+        $physical_cards = $voucher->physical_cards->first();
         $bsn_enabled = $voucher->fund->organization->bsn_enabled;
         $amount_available = $voucher->fund->isTypeBudget() ? $voucher->amount_available_cached : 0;
         $first_use_date = $voucher->first_use_date;
@@ -38,7 +51,7 @@ class SponsorVoucherResource extends BaseJsonResource
 
         return array_merge($voucher->only([
             'id', 'amount', 'amount_total', 'amount_top_up', 'note', 'identity_address', 'state', 'state_locale',
-            'is_granted', 'expired', 'activation_code', 'activation_code_uid', 'has_transactions',
+            'is_granted', 'expired', 'activation_code', 'client_uid', 'has_transactions',
             'in_use', 'limit_multiplier', 'fund_id', 'is_external',
         ]), [
             'amount_available' => currency_format($amount_available),
@@ -49,6 +62,7 @@ class SponsorVoucherResource extends BaseJsonResource
             'address' => $address ?? null,
             'fund' => array_merge($voucher->fund->only('id', 'name', 'organization_id', 'state', 'type'), [
                 'allow_physical_cards' => $voucher->fund->fund_config->allow_physical_cards ?? false,
+                'allow_voucher_records' => $voucher->fund->fund_config->allow_voucher_records ?? false,
             ]),
             'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,

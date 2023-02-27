@@ -10,6 +10,7 @@ class PermissionsTableSeeder extends Seeder
     protected array $permissions = [
         'manage_organization'       => "Manage organization",
         'manage_funds'              => "Manage funds",
+        'manage_fund_texts'         => "Manage funds texts",
         'manage_providers'          => "Manage providers",
         'manage_provider_funds'     => "Manage providers funds",
         'manage_products'           => "Manage products",
@@ -22,6 +23,7 @@ class PermissionsTableSeeder extends Seeder
         'manage_implementation_notifications' => "Manage implementation notifications",
         'manage_bank_connections'   => "Manage bank connections",
         'manage_transaction_bulks'  => "Manage transaction bulks",
+        'manage_reimbursements'     => "Manage reimbursements",
         'view_finances'             => "See financial overview",
         'validate_records'          => "Validate records",
         'scan_vouchers'             => "Scan vouchers",

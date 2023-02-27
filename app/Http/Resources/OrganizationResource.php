@@ -3,6 +3,9 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Identity;
+use App\Models\Permission;
+use App\Models\Role;
 use Gate;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -19,7 +22,7 @@ class OrganizationResource extends JsonResource
         'funds_count',
         'business_type',
         'permissions',
-        'employees',
+        'employees.roles.permissions',
         'bank_connection_active',
     ];
 
@@ -61,9 +64,10 @@ class OrganizationResource extends JsonResource
         $fundsCountDep = api_dependency_requested('funds_count', $request, false);
         $permissionsCountDep = api_dependency_requested('permissions', $request, $baseRequest->isDashboard());
 
-        $ownerData = $this->ownerData($organization);
+        $ownerData = $baseRequest->isDashboard() ? $this->ownerData($organization) : [];
         $privateData = $this->privateData($organization);
-        $employeeOnlyData = $this->employeeOnlyData($baseRequest, $organization);
+        $employeeOnlyData = $baseRequest->isDashboard() ? $this->employeeOnlyData($baseRequest, $organization) : [];
+        $permissionsData = $permissionsCountDep ? $this->getIdentityPermissions($organization, $baseRequest->identity()) : null;
         
         return array_filter(array_merge($organization->only([
             'id', 'identity_address', 'name', 'kvk', 'business_type_id',
@@ -75,10 +79,32 @@ class OrganizationResource extends JsonResource
             'business_type' => new BusinessTypeResource($organization->business_type),
             'funds' => $fundsDep ? $organization->funds->map(fn (Fund $fund) => $fund->only('id', 'name')) : '_null_',
             'funds_count' => $fundsCountDep ? $organization->funds_count : '_null_',
-            'permissions' => $permissionsCountDep ? $organization->identityPermissions(auth()->id())->pluck('key') : '_null_',
+            'permissions' => is_array($permissionsData) ? $permissionsData : '_null_',
         ]), static function($item) {
             return $item !== '_null_';
         });
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|null $identity
+     * @return array|null
+     */
+    protected function getIdentityPermissions(Organization $organization, ?Identity $identity): ?array
+    {
+        if (!$identity) {
+            return null;
+        }
+
+        if ($identity->address === $organization->identity_address) {
+            return Permission::allMemCached()->pluck('key')->toArray();
+        }
+
+        $employee = $organization->employees->firstWhere('identity_address', $identity->address);
+
+        return $employee ? array_unique($employee->roles->reduce(function (array $acc, Role $role) {
+            return array_merge($acc, $role->permissions->pluck('key')->toArray());
+        }, [])) : [];
     }
 
     /**
@@ -98,8 +124,8 @@ class OrganizationResource extends JsonResource
             'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
             'allow_custom_fund_notifications', 'validator_auto_accept_funds',
             'reservations_budget_enabled', 'reservations_subsidy_enabled',
-            'is_sponsor', 'is_provider', 'is_validator',
-            'bsn_enabled', 'allow_batch_reservations',
+            'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled',
+            'allow_batch_reservations', 'allow_budget_fund_limits',
         ])) : [];
     }
 

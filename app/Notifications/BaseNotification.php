@@ -87,6 +87,15 @@ abstract class BaseNotification extends Notification implements ShouldQueue
             "fund_name", "fund_request_clarification_question", "sponsor_name",
             "webshop_clarification_link", "webshop_clarification_button",
         ],
+        "notifications_identities.reimbursement_submitted" => [
+            "app_link", "fund_name", "sponsor_name", "webshop_button", "webshop_link"
+        ],
+        "notifications_identities.reimbursement_approved" => [
+            "app_link", "fund_name", "sponsor_name", "webshop_button", "webshop_link"
+        ],
+        "notifications_identities.reimbursement_declined" => [
+            "app_link", "fund_name", "sponsor_name", "webshop_button", "webshop_link"
+        ],
         "notifications_funds.created" => [
             "fund_name",
         ],
@@ -139,6 +148,9 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         ],
         "notifications_products.reserved" => [
             "expiration_date", "product_name",
+        ],
+        "notifications_products.reservation_canceled" => [
+            "product_name",
         ],
         "notifications_products.revoked" => [
             "fund_name", "product_name", "sponsor_name",

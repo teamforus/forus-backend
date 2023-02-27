@@ -34,6 +34,7 @@ return [
             'physical_card_requested',
             'expiring_soon_budget',
             'expiring_soon_product',
+            'limit_multiplier_changed',
 
             // 'shared',
             // 'shared_by_email',
