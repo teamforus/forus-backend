@@ -4,7 +4,6 @@
 namespace App\Searches;
 
 
-use App\Models\Fund;
 use App\Models\Voucher;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -42,13 +41,13 @@ class VouchersSearch extends BaseSearch
 
         if ($this->getFilter('implementation_id')) {
             $builder->whereRelation('fund.fund_config', [
-                'implementation_id' => $this->getFilter('implementation_id')
+                'implementation_id' => $this->getFilter('implementation_id'),
             ]);
         }
 
         if ($this->getFilter('implementation_key')) {
             $builder->whereRelation('fund.fund_config.implementation', [
-                'key' => $this->getFilter('implementation_key')
+                'key' => $this->getFilter('implementation_key'),
             ]);
         }
 

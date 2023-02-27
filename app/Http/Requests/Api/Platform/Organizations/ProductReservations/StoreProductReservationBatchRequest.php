@@ -57,9 +57,9 @@ class StoreProductReservationBatchRequest extends BaseFormRequest
 
     /**
      * @param array $reservations
-     * @return \Illuminate\Contracts\Validation\Validator|\Illuminate\Validation\Validator
+     * @return \Illuminate\Validation\Validator
      */
-    public function validateRows($reservations = [])
+    public function validateRows(array $reservations = []): \Illuminate\Validation\Validator
     {
         return Validator::make(compact('reservations'), $this->rules($reservations));
     }

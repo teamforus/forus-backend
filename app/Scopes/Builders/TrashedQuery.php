@@ -11,17 +11,19 @@ class TrashedQuery
 {
     /**
      * @param Builder|SoftDeletes|Relation $query
-     * @return Builder|SoftDeletes|Relation
+     * @return Builder|Relation
      */
-    public static function withTrashed($query) {
+    public static function withTrashed(mixed $query): Builder|Relation
+    {
         return $query->withTrashed();
     }
 
     /**
      * @param Builder|SoftDeletes|Relation $query
-     * @return Builder|SoftDeletes|Relation
+     * @return Builder|Relation
      */
-    public static function onlyTrashed($query) {
+    public static function onlyTrashed(mixed $query): Builder|Relation
+    {
         return $query->onlyTrashed();
     }
 }

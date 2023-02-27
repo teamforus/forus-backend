@@ -3,7 +3,6 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\Fund;
 use App\Models\FundProviderProduct;
 use App\Models\BaseModel;
 use App\Models\Organization;
@@ -93,7 +92,6 @@ class ProductSubQuery
                 $voucher_id && $builder->whereIn('vouchers.id', (array) $voucher_id);
                 $identity_address && $builder->whereIn('vouchers.identity_address', (array) $identity_address);
             })->whereHas('fund', function(Builder $builder) use ($fund_id) {
-                $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
                 $fund_id && $builder->whereIn('funds.id', (array) $fund_id);
             })->whereNull('product_id')
                 ->select([])->selectRaw("CAST(IFNULL(SUM(limit_multiplier), 1) as SIGNED)")
@@ -154,8 +152,6 @@ class ProductSubQuery
             if ($fund_id || $voucher_id || $identity_address) {
                 $builder->whereHas('fund_provider', function(Builder $builder) use ($fund_id, $voucher_id, $identity_address) {
                     $builder->whereHas('fund', function(Builder $builder) use ($fund_id, $voucher_id, $identity_address) {
-                        $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
-
                         $fund_id && $builder->whereIn('funds.id', (array) $fund_id);
 
                         if ($voucher_id || $identity_address) {
@@ -197,7 +193,12 @@ class ProductSubQuery
                     ->whereColumn('product_id', '=', 'products.id')
                     ->where(function(Builder $builder) use ($options) {
                         if ($options['voucher_id'] ?? false) {
-                            $builder->whereIn('voucher_id', (array) $options['voucher_id']);
+                            $builder->where(function(Builder|VoucherTransaction $builder) use ($options) {
+                                $builder->whereIn('voucher_id', (array) $options['voucher_id']);
+                                $builder->orWhereRelation('voucher.product_reservation', function (Builder $builder) use ($options) {
+                                    $builder->whereIn('voucher_id', (array) $options['voucher_id']);
+                                });
+                            });
                         }
 
                         $builder->whereHas('voucher', function(Builder $builder) use ($options) {
@@ -270,8 +271,6 @@ class ProductSubQuery
         }
 
         return $builder->whereHas('fund', function(Builder $builder) use ($options) {
-            $builder->where('type', Fund::TYPE_SUBSIDIES);
-
             /** @var int|null $fund_voucher_id */
             if ($fund_voucher_id = array_get($options, 'fund_voucher_id')) {
                 $builder->whereHas('vouchers', function(Builder $builder) use ($fund_voucher_id) {

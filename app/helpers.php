@@ -119,7 +119,7 @@ if (!function_exists('record_types_cached')) {
     /**
      * @param float $minutes
      * @param bool $reset
-     * @return mixed
+     * @return array[]
      */
     function record_types_cached(
         float $minutes = 1,

@@ -3,14 +3,12 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders;
 
 use App\Models\FundProvider;
-use App\Rules\FundProviderProductSubsidyRule;
+use App\Rules\FundProviderProductAvailableRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Class UpdateFundProviderRequest
  * @property FundProvider|null $fund_provider
- * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
 class UpdateFundProviderRequest extends FormRequest
 {
@@ -33,8 +31,9 @@ class UpdateFundProviderRequest extends FormRequest
     {
         return array_merge(
             $this->baseRules(),
-            $this->enabledProductsRules(),
-            $this->disabledProductsRules()
+            $this->resetProductsRules(),
+            $this->enableProductsRules(),
+            $this->disableProductsRules(),
         );
     }
 
@@ -56,29 +55,47 @@ class UpdateFundProviderRequest extends FormRequest
     }
 
     /**
+     * @return array[]
+     */
+    private function resetProductsRules(): array
+    {
+        $isBudgetType = $this->fund_provider?->fund?->isTypeBudget();
+
+        $productsRule = $isBudgetType ? Rule::exists('products', 'id')->where(
+            'organization_id', $this->fund_provider->organization_id
+        ) : Rule::in([]);
+
+        return [
+            'reset_products' => 'nullable|array',
+            'reset_products.*.id' => ['required', 'numeric', $productsRule],
+        ];
+    }
+
+    /**
      * @return array
      */
-    private function enabledProductsRules(): array
+    private function enableProductsRules(): array
     {
         return array_merge([
             'enable_products' => 'nullable|array',
             'enable_products.*.id' => ['required', 'numeric', Rule::exists('products', 'id')->where(
                 'organization_id', $this->fund_provider->organization_id
             )],
+            'enable_products.*.expire_at' => 'nullable|date_format:Y-m-d',
+            'enable_products.*.limit_total' => 'nullable|numeric|min:0',
+            'enable_products.*.limit_total_unlimited' => 'nullable|boolean',
+            'enable_products.*.limit_per_identity' => 'nullable|numeric|min:0',
         ], $this->fund_provider->fund->isTypeSubsidy() ? [
             'enable_products.*.amount' => 'required|numeric|min:0',
-            'enable_products.*.expire_at' => 'nullable|date_format:Y-m-d',
-            'enable_products.*.limit_total' => 'required|numeric|min:0',
-            'enable_products.*.limit_total_unlimited' => 'nullable|boolean',
-            'enable_products.*.limit_per_identity' => 'required|numeric|min:0',
-            'enable_products.*' => new FundProviderProductSubsidyRule($this->fund_provider)
-        ] : []);
+        ] : [], [
+            'enable_products.*' => new FundProviderProductAvailableRule($this->fund_provider)
+        ]);
     }
 
     /**
      * @return array[]
      */
-    private function disabledProductsRules(): array
+    private function disableProductsRules(): array
     {
         return [
             'disable_products' => 'nullable|array',

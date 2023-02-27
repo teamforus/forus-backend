@@ -12,18 +12,14 @@ use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Lang;
 
-/**
- * Class ProductQuery
- * @package App\Scopes\Builders
- */
 class ProductQuery
 {
     /**
      * @param Builder $query
-     * @param int|array $fund_id
+     * @param array|int $fund_id
      * @return Builder
      */
-    public static function approvedForFundsFilter(Builder $query, $fund_id): Builder
+    public static function approvedForFundsFilter(Builder $query, array|int $fund_id): Builder
     {
         return $query->where(static function(Builder $builder) use ($fund_id) {
             self::whereFundNotExcluded($builder, $fund_id);
@@ -269,18 +265,30 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $builder
+     * @param Builder|Product $builder
      * @param Voucher $voucher
      * @param Builder|null $providerOrganization
      * @param bool $checkReservationFlags
      * @return Builder
      */
     public static function whereAvailableForVoucher(
-        Builder $builder,
+        Builder|Product $builder,
         Voucher $voucher,
         Builder $providerOrganization = null,
         bool $checkReservationFlags = true
     ): Builder {
+        $builder->where(function(Builder $builder) use ($voucher) {
+            $builder->whereHas('fund_provider_products', function (Builder $builder) use ($voucher) {
+                FundProviderProductQuery::whereInLimitsFilter($builder, $voucher);
+            });
+
+            if ($voucher->isBudgetType()) {
+                $builder->orWhereDoesntHave('fund_provider_products', function (Builder $builder) use ($voucher) {
+                    $builder->whereRelation('fund_provider', 'fund_id', $voucher->fund_id);
+                });
+            }
+        });
+
         $builder = $builder->where('price', '<=', $voucher->amount_available);
         $builder = ProductQuery::approvedForFundsAndActiveFilter($builder, $voucher->fund_id);
 

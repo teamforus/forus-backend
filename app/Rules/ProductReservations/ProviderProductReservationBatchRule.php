@@ -11,7 +11,6 @@ use App\Scopes\Builders\ProductSubQuery;
 class ProviderProductReservationBatchRule extends BaseRule
 {
     protected BaseFormRequest $request;
-    protected ?array $reservationsData = null;
 
     /**
      * ProviderProductReservationBatchRule constructor.
@@ -63,7 +62,7 @@ class ProviderProductReservationBatchRule extends BaseRule
      * @param array $reservations
      * @return array
      */
-    public function inflateReservationsData($reservations = []): array
+    public function inflateReservationsData(array $reservations = []): array
     {
         $data = collect($reservations)->map(function($reservation) {
             $voucher = Voucher::findByPhysicalCard($reservation['number']);
@@ -91,13 +90,5 @@ class ProviderProductReservationBatchRule extends BaseRule
                 'is_valid' => null,
             ]);
         })->toArray();
-    }
-
-    /**
-     * @return array|null
-     */
-    public function getReservationsData(): ?array
-    {
-        return $this->reservationsData;
     }
 }

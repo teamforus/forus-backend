@@ -127,7 +127,7 @@ class OrganizationResource extends JsonResource
             'allow_custom_fund_notifications', 'validator_auto_accept_funds',
             'reservations_budget_enabled', 'reservations_subsidy_enabled',
             'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled',
-            'allow_batch_reservations',
+            'allow_batch_reservations', 'allow_budget_fund_limits',
         ])) : [];
     }
 

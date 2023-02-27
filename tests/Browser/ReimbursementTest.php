@@ -192,6 +192,7 @@ class ReimbursementTest extends DuskTestCase
     protected function prepareReimbursementRequestForm(Browser $browser, Voucher $voucher): array
     {
         $browser->press('@userVouchers');
+        $browser->pause(1000);
         $browser->waitFor('@menuBtnReimbursements');
         $browser->press('@menuBtnReimbursements');
 
