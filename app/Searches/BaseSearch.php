@@ -8,18 +8,19 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class BaseSearch
 {
     protected array $filters;
-    protected Builder|null $builder;
+    protected Builder|Relation|null $builder;
 
     /**
      * @param array $filters
-     * @param Builder|null $builder
+     * @param Builder|Relation|null $builder
      */
-    public function __construct(array $filters, Builder $builder = null)
+    public function __construct(array $filters, Builder|Relation|null $builder = null)
     {
         $this->filters = $filters;
         $this->builder = clone $builder;
@@ -44,19 +45,19 @@ class BaseSearch
     }
 
     /**
-     * @param Builder $builder
+     * @param Builder|Relation $builder
      * @noinspection PhpUnused
      */
-    public function setBuilder(Builder $builder): void
+    public function setBuilder(Builder|Relation $builder): void
     {
         $this->builder = $builder;
     }
 
     /**
-     * @return Builder
+     * @return Builder|Relation
      * @noinspection PhpUnused
      */
-    public function getBuilder(): Builder
+    public function getBuilder(): Builder|Relation
     {
         return $this->builder;
     }
@@ -95,9 +96,9 @@ class BaseSearch
     }
 
     /**
-     * @return Builder|null
+     * @return Builder|Relation|null
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|null
     {
         return $this->getBuilder();
     }

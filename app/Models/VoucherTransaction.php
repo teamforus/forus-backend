@@ -541,14 +541,17 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
+     * @param int $maxLength
      * @return string
      */
-    public function makePaymentDescription(): string
+    public function makePaymentDescription(int $maxLength = 2000): string
     {
-        return trans('bunq.transaction.from_fund', [
+        $note = $this->notes_provider->first()?->message;
+
+        return str_limit(trans('bunq.transaction.from_fund', [
             'fund_name' => $this->voucher->fund->name,
             'transaction_id' => $this->id
-        ]);
+        ]) . ($note ? ": $note" : ''), $maxLength);
     }
 
     /**
