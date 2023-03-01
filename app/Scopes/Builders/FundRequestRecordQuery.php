@@ -75,9 +75,9 @@ class FundRequestRecordQuery
      * @param string|array $permission
      * @return Builder|Relation
      */
-    protected static function whereValidatorEmployeeHasPermission($query, Employee $employee, $permission = 'validate_records')
+    public static function whereValidatorEmployeeHasPermission($query, Employee $employee, $permission = 'validate_records')
     {
-        return $query->orWhereHas('fund_criterion.fund_criterion_validators', function(Builder $builder) use ($employee, $permission) {
+        return $query->whereHas('fund_criterion.fund_criterion_validators', function(Builder $builder) use ($employee, $permission) {
             $builder->whereHas('external_validator.validator_organization', fn(Builder $q) => OrganizationQuery::whereHasPermissions(
                 $q->whereHas('employees', fn(Builder $q) => $q->where('employees.id', $employee->id)),
                 $employee->identity_address,
