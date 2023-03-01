@@ -12,12 +12,11 @@ use App\Services\EventLogService\Models\EventLog;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 
 /**
- * Class VoucherResource
  * @property Voucher $resource
- * @package App\Http\Resources
  */
 class VoucherResource extends BaseJsonResource
 {
@@ -53,6 +52,7 @@ class VoucherResource extends BaseJsonResource
         'fund.organization.logo.presets',
         'physical_cards',
         'last_deactivation_log',
+        'voucher_records.record_type',
     ];
 
     public const LOAD_COUNT = [
@@ -100,7 +100,31 @@ class VoucherResource extends BaseJsonResource
             'physical_card' => $physical_cards ? $physical_cards->only('id', 'code') : false,
             'product_vouchers' => $this->getProductVouchers($voucher->product_vouchers),
             'query_product' => $this->queryProduct($voucher, $request->get('product_id')),
-        ], $this->timestamps($voucher, 'created_at'));
+        ], array_merge(
+             $this->getRecords($voucher),
+            $this->timestamps($voucher, 'created_at'),
+        ));
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return array
+     */
+    protected function getRecords(Voucher $voucher): array
+    {
+        if (!$voucher->fund?->fund_config?->allow_voucher_records) {
+            return [];
+        }
+
+        $records = $voucher->voucher_records->sortBy(['record_type_id']);
+        $recordsMap = $records->pluck('value', 'record_type.key');
+        $givenName = Arr::get($recordsMap, 'given_name');
+        $familyName = Arr::get($recordsMap, 'family_name');
+
+        return [
+            'records' => VoucherRecordResource::collection($records),
+            'records_title' => $givenName ? strtoupper($givenName[0]) . '. ' . $familyName : null,
+        ];
     }
 
     /**
