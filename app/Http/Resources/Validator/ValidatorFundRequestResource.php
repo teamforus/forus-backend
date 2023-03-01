@@ -31,7 +31,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
      */
     public const LOAD = [
         'records.files.preview.presets',
-        'records.record_type',
+        'records.record_type.translations',
         'records.employee.organization',
         'records.employee.roles.translations',
         'records.employee.roles.permissions',

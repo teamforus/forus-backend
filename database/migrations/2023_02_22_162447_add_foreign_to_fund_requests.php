@@ -16,11 +16,15 @@ return new class extends Migration
         Schema::table('fund_requests', function (Blueprint $table) {
             $table->foreign('fund_id')
                 ->references('id')->on('funds')->onDelete('cascade');
+
+            $table->index('fund_id');
         });
 
         Schema::table('fund_request_records', function (Blueprint $table) {
             $table->foreign('employee_id')
                 ->references('id')->on('employees')->onDelete('set null');
+
+            $table->index('employee_id');
         });
     }
 
@@ -33,10 +37,12 @@ return new class extends Migration
     {
         Schema::table('fund_requests', function (Blueprint $table) {
             $table->dropForeign(['fund_id']);
+            $table->dropIndex(['fund_id']);
         });
 
         Schema::table('fund_request_records', function (Blueprint $table) {
             $table->dropForeign(['employee_id']);
+            $table->dropIndex(['employee_id']);
         });
     }
 };

@@ -119,10 +119,9 @@ class FundRequestQuery
             $builder->where(fn(Builder $q) => static::whereSponsorEmployeeHasPermission($q, $employee));
 
             // sponsor employees
-            $builder->orWhereHas(
-                'records',
-                fn(Builder $q) => FundRequestRecordQuery::whereValidatorEmployeeHasPermission($q, $employee)
-            );
+            $builder->orWhereHas('records', function(Builder $q) use ($employee) {
+                return FundRequestRecordQuery::whereValidatorEmployeeHasPermission($q, $employee);
+            });
         });
     }
 
@@ -142,12 +141,11 @@ class FundRequestQuery
             ));
 
             // sponsor employees
-            $builder->orWhereHas(
-                'records',
-                fn(Builder $q) => FundRequestRecordQuery::whereValidatorEmployeeHasPermission(
+            $builder->orWhereHas('records', function(Builder $q) use ($employee) {
+                return FundRequestRecordQuery::whereValidatorEmployeeHasPermission(
                     $q, $employee, 'manage_validators'
-                )
-            );
+                );
+            });
         });
     }
 
@@ -157,7 +155,7 @@ class FundRequestQuery
      * @param array|string $permission
      * @return Builder|Relation
      */
-    protected static function whereSponsorEmployeeHasPermission(
+    public static function whereSponsorEmployeeHasPermission(
         Relation|Builder $query,
         Employee $employee,
         array|string $permission = 'validate_records'

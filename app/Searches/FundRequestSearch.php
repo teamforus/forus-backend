@@ -34,10 +34,6 @@ class FundRequestSearch extends BaseSearch
 
         FundRequestQuery::whereEmployeeIsValidatorOrSupervisor($builder, $this->employee);
 
-//        $builder->whereHas('records', function(Builder $builder) {
-//            FundRequestRecordQuery::whereEmployeeIsValidatorOrSupervisor($builder, $this->employee);
-//        });
-
         if ($this->hasFilter('q') && $q = $this->getFilter('q')) {
             FundRequestQuery::whereQueryFilter($builder, $q);
         }
