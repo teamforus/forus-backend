@@ -65,7 +65,7 @@ class ProductResource extends BaseJsonResource
             'offices' => OfficeResource::collection($product->organization->offices),
             'product_category' => new ProductCategoryResource($product->product_category),
             'bookmarked' => $product->isBookmarkedBy($baseRequest->identity()),
-        ]);
+        ], $this->productReservationFieldSettings($product));
     }
 
     /**
@@ -150,5 +150,17 @@ class ProductResource extends BaseJsonResource
             $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
             $builder->whereIn('funds.id', $this->fundsQuery()->select('funds.id'));
         })->$type('amount'), 0);
+    }
+
+    /**
+     * @param Product $product
+     * @return array
+     */
+    private function productReservationFieldSettings(Product $product): array {
+        return array_merge($product->only('reservation_phone', 'reservation_address', 'reservation_requester_birth_date'), [
+            'show_reservation_requester_birth_date'  => $product->show_reservation_requester_birth_date,
+            'show_reservation_address'               => $product->show_reservation_address,
+            'show_reservation_phone'                 => $product->show_reservation_phone,
+        ]);
     }
 }

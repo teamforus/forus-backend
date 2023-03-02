@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\ProductReservations;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Rules\ProductReservations\ProductIdToReservationRule;
@@ -32,10 +33,27 @@ class StoreProductReservationRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+        $product = Product::find($this->input('product_id'));
+
         return [
             'first_name' => 'required|string|max:20',
             'last_name' => 'required|string|max:20',
             'user_note' => 'nullable|string|max:400',
+            'phone' => [
+                $product->reservation_phone_is_required ? 'required' : 'nullable',
+                'string',
+                'max:50',
+            ],
+            'address' => [
+                $product->reservation_address_is_required ? 'required' : 'nullable',
+                'string',
+                'max:100',
+            ],
+            'birth_date' => [
+                $product->reservation_requester_birth_date_is_required ? 'required' : 'nullable',
+                'date_format:Y-m-d',
+                'before:today',
+            ],
             'voucher_address' => [
                 'required',
                 new IdentityVoucherAddressRule($this->auth_address(), Voucher::TYPE_BUDGET),
