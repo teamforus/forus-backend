@@ -26,6 +26,7 @@ use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\RecordType;
+use App\Models\Tag;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
@@ -37,6 +38,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
 use Kalnoy\Nestedset\Collection as NestedsetCollection;
 
 /**
@@ -1180,10 +1182,17 @@ class LoremDbSeeder extends Seeder
     private function makeSponsorFunds(Organization $sponsor): void
     {
         $countFunds = $this->sponsorsWithMultipleFunds[$sponsor->name] ?? 1;
+        $fundTag = collect(['Tag I', 'Tag II', 'Tag III'])->random();
 
         while ($countFunds-- > 0) {
             $fund = $this->makeFund($sponsor, true);
             $fundConfig = $this->makeFundConfig($fund);
+
+            $fund->tags()->save(Tag::firstOrCreate([
+                'key' => Str::slug($fundTag),
+                'name' => $fundTag,
+                'scope' => 'provider',
+            ]));
 
             // Make prevalidations
             if (!$fund->auto_requests_validation && $fund->fund_config->allow_prevalidations) {

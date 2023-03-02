@@ -4,6 +4,7 @@
 namespace App\Searches;
 
 
+use App\Http\Requests\BaseFormRequest;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Exception;
@@ -119,5 +120,15 @@ class BaseSearch
     public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null): LengthAwarePaginator
     {
         return $this->query()->paginate($perPage, $columns, $pageName, $page);
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function rules(?BaseFormRequest $request = null): array
+    {
+        return [
+            'per_page' => $request->perPageRule(),
+        ];
     }
 }
