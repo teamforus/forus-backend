@@ -73,7 +73,7 @@ class FundRequestSearch extends BaseSearch
         $builder = $this->appendSortableFields($builder, $orderBy);
         $builder = FundRequest::query()->fromSub($builder, 'fund_requests');
 
-        return $builder->orderBy($orderBy, $orderDir);
+        return $builder->orderBy($orderBy, $orderDir)->latest();
     }
 
     /**
