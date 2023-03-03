@@ -55,6 +55,9 @@ class StoreProductRequest extends BaseFormRequest
             'product_category_id'   => 'required|exists:product_categories,id',
             'reservation_enabled'   => 'nullable|boolean',
             'reservation_policy'    => 'nullable|in:' . join(',', Product::RESERVATION_POLICIES),
+            'reservation_phone'     => 'required|in:no,global,optional,required',
+            'reservation_address'   => 'required|in:no,global,optional,required',
+            'reservation_requester_birth_date' => 'required|in:no,global,optional,required',
         ];
     }
 

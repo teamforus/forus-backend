@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\Products\IndexProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\StoreProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductExclusionsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductRequest;
+use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductReservationSettingsRequest;
 use App\Http\Resources\Provider\ProviderProductResource;
 use App\Models\Organization;
 use App\Models\Product;

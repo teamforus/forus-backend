@@ -1008,7 +1008,7 @@ class Voucher extends BaseModel
             'fund_provider_product_id'  => $fundProviderProduct?->id,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
         ], array_only($extraData, [
-            'first_name', 'last_name', 'user_note', 'note',
+            'first_name', 'last_name', 'user_note', 'note', 'phone', 'address', 'birth_date'
         ]), $product->only('price', 'price_type', 'price_discount')));
 
         $reservation->makeVoucher();

@@ -41,6 +41,9 @@ use Illuminate\Support\Arr;
  * @property int $show_on_webshop
  * @property bool $reservation_enabled
  * @property string $reservation_policy
+ * @property string $reservation_phone
+ * @property string $reservation_address
+ * @property string $reservation_requester_birth_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -61,6 +64,12 @@ use Illuminate\Support\Arr;
  * @property-read bool $expired
  * @property-read string $price_discount_locale
  * @property-read string $price_locale
+ * @property-read bool $show_reservation_address
+ * @property-read bool $show_reservation_phone
+ * @property-read bool $show_reservation_requester_birth_date
+ * @property-read bool $reservation_address_is_required
+ * @property-read bool $reservation_phone_is_required
+ * @property-read bool $reservation_requester_birth_date_is_required
  * @property-read int|null $stock_amount
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -96,8 +105,11 @@ use Illuminate\Support\Arr;
  * @method static Builder|Product wherePriceDiscount($value)
  * @method static Builder|Product wherePriceType($value)
  * @method static Builder|Product whereProductCategoryId($value)
+ * @method static Builder|Product whereReservationAddress($value)
  * @method static Builder|Product whereReservationEnabled($value)
+ * @method static Builder|Product whereReservationPhone($value)
  * @method static Builder|Product whereReservationPolicy($value)
+ * @method static Builder|Product whereReservationRequesterBirthDate($value)
  * @method static Builder|Product whereShowOnWebshop($value)
  * @method static Builder|Product whereSoldOut($value)
  * @method static Builder|Product whereSponsorOrganizationId($value)
@@ -157,7 +169,62 @@ class Product extends BaseModel
         'price', 'total_amount', 'expire_at', 'sold_out',
         'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id',
         'reservation_enabled', 'reservation_policy',
+        'reservation_phone', 'reservation_address', 'reservation_requester_birth_date'
     ];
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getShowReservationPhoneAttribute(): bool {
+        return ($this->reservation_phone == 'global') ?
+            $this->organization->reservation_phone != 'no' : $this->reservation_phone != 'no';
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getShowReservationAddressAttribute(): bool {
+        return ($this->reservation_address == 'global') ?
+            $this->organization->reservation_address != 'no' : $this->reservation_address != 'no';
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getShowReservationRequesterBirthDateAttribute(): bool {
+        return ($this->reservation_requester_birth_date == 'global') ?
+            $this->organization->reservation_requester_birth_date != 'no' : $this->reservation_requester_birth_date != 'no';
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getReservationPhoneIsRequiredAttribute(): bool {
+        return ($this->reservation_phone == 'global') ?
+            $this->organization->reservation_phone == 'required' : $this->reservation_phone == 'required';
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getReservationAddressIsRequiredAttribute(): bool {
+        return ($this->reservation_address == 'global') ?
+            $this->organization->reservation_address == 'required' : $this->reservation_address == 'required';
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getReservationRequesterBirthDateIsRequiredAttribute(): bool {
+        return ($this->reservation_requester_birth_date == 'global') ?
+            $this->organization->reservation_requester_birth_date == 'required' : $this->reservation_requester_birth_date == 'required';
+    }
 
     /**
      * The attributes that should be mutated to dates.
@@ -726,6 +793,7 @@ class Product extends BaseModel
         return $this->updateModel(array_merge($request->only([
             'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
             'reservation_enabled', 'reservation_policy',
+            'reservation_phone', 'reservation_address', 'reservation_requester_birth_date',
         ]), [
             'total_amount' => $this->unlimited_stock ? 0 : $total_amount,
         ], compact('price', 'price_type', 'price_discount')));

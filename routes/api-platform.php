@@ -174,6 +174,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->patch('roles', "Api\Platform\OrganizationsController@updateRoles");
         $router->patch('update-business', "Api\Platform\OrganizationsController@updateBusinessType");
         $router->patch('accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
+        $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFieldSettings");
     });
 
     $router->resource('organizations', "Api\Platform\OrganizationsController")

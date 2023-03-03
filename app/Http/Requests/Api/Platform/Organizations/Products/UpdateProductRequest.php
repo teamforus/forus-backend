@@ -54,6 +54,9 @@ class UpdateProductRequest extends BaseFormRequest
             'media_uid'             => ['nullable', new MediaUidRule('product_photo')],
             'reservation_enabled'   => 'nullable|boolean',
             'reservation_policy'    => 'nullable|in:' . join(',', Product::RESERVATION_POLICIES),
+            'reservation_phone'     => 'required|in:no,global,optional,required',
+            'reservation_address'   => 'required|in:no,global,optional,required',
+            'reservation_requester_birth_date' => 'required|in:no,global,optional,required',
         ];
     }
 
