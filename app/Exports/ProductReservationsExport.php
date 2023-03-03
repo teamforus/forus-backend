@@ -20,14 +20,17 @@ class ProductReservationsExport extends BaseFieldedExport
      */
     protected static array $exportFields = [
         'code'          => 'Code',
-        'product_name'  => 'Product name',
+        'product_name'  => 'Aanbod',
         'amount'        => 'Bedrag',
-        'email'         => 'E-mail',
-        'first_name'    => 'First name',
-        'last_name'     => 'Last name',
-        'user_note'     => 'User note',
+        'email'         => 'E-mailadres',
+        'first_name'    => 'Naam',
+        'last_name'     => 'Voornamen',
+        'user_note'     => 'Opmerking',
+        'phone'         => 'Telefoonnummer',
+        'address'       => 'Adres',
+        'birth_date'    => 'Geboortedatum',
         'state'         => 'Status',
-        'created_at'    => 'Created at',
+        'created_at'    => 'Indien datum',
         'expire_at'     => 'Verlopen op',
     ];
 
@@ -66,6 +69,9 @@ class ProductReservationsExport extends BaseFieldedExport
                 'first_name'    => $reservation->first_name,
                 'last_name'     => $reservation->last_name,
                 'user_note'     => $reservation->user_note,
+                'phone'         => $reservation->phone,
+                'address'       => $reservation->address,
+                'birth_date'    => $reservation->birth_date,
                 'state'         => $reservation->state,
                 'created_at'    => format_date_locale($reservation->created_at),
                 'expire_at'     => format_date_locale($reservation->expire_at),
