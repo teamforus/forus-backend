@@ -6,10 +6,6 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Implementation;
 use Illuminate\Validation\Rule;
 
-/**
- * Class StartDigIdRequest
- * @package App\Http\Requests\DigID
- */
 class StartDigIdRequest extends BaseFormRequest
 {
     /**
