@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use App\Models\Traits\HasDbTokens;
-use App\Scopes\Builders\FundQuery;
-use App\Scopes\Builders\VoucherQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -13,7 +11,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Gate;
 
 /**
  * App\Models\Prevalidation
@@ -401,31 +398,5 @@ class Prevalidation extends BaseModel
                 Prevalidation::whereUid($value)->doesntExist() &&
                 Voucher::whereActivationCode('activation_code')->doesntExist();
         }, 4, 2);
-    }
-
-    /**
-     * @param Identity $identity
-     * @return array|Voucher[]
-     */
-    public static function makeVouchersInApplicableFunds(Identity $identity): array
-    {
-        $vouchers = [];
-
-        $funds = FundQuery::whereIsInternalConfiguredAndActive(Implementation::activeFundsQuery())
-            ->whereNotIn('id', VoucherQuery::whereNotExpired($identity->vouchers()->select('fund_id')))
-            ->get();
-
-        foreach ($funds as $fund) {
-            if (Gate::forUser($identity)->allows('apply', [$fund, 'apply'])) {
-                if ($voucher = $fund->makeVoucher($identity->address)) {
-                    $vouchers[] = $voucher;
-                }
-
-                $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($identity->address);
-                $vouchers = array_merge($vouchers, $formulaProductVouchers);
-            }
-        }
-
-        return $vouchers;
     }
 }

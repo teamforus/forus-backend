@@ -74,25 +74,23 @@ class FundsController extends Controller
     /**
      * @param RedeemFundsRequest $request
      * @return \Illuminate\Http\JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
     public function redeem(RedeemFundsRequest $request): JsonResponse
     {
         $vouchers = [];
+        $prevalidation = $request->getPrevalidation();
         $vouchersAvailable = $request->getAvailableVouchers();
 
-        if ($prevalidation = $request->getPrevalidation()) {
-            $this->authorize('redeem', $prevalidation);
+        if ($prevalidation && Gate::allows('redeem', $prevalidation)) {
             $prevalidation->assignToIdentity($request->identity());
-            $vouchers = Prevalidation::makeVouchersInApplicableFunds($request->identity());
+            $vouchers = $request->implementation()->makeVouchersInApplicableFunds($request->identity());
         }
 
         // check permissions of all voucher before assigning
         foreach ($vouchersAvailable as $voucher) {
             if (Gate::allows('redeem', $voucher)) {
-                $voucher->assignToIdentity($request->identity());
-                $vouchers[] = $voucher;
+                $vouchers[] = $voucher->assignToIdentity($request->identity());
             }
         }
 
@@ -138,9 +136,9 @@ class FundsController extends Controller
 
         $vouchers = Voucher::assignAvailableToIdentityByBsn($request->identity());
         $prevalidations = Prevalidation::assignAvailableToIdentityByBsn($request->identity());
-        $prevalidation_vouchers = $prevalidations > 0
-            ? VoucherResource::collection(Prevalidation::makeVouchersInApplicableFunds($request->identity()))
-            : [];
+        $prevalidation_vouchers = $prevalidations > 0 ? VoucherResource::collection(
+            $request->implementation()->makeVouchersInApplicableFunds($request->identity())
+        ) : [];
 
         $hasBackoffice = $fund->fund_config && $fund->organization->backoffice_available;
 
