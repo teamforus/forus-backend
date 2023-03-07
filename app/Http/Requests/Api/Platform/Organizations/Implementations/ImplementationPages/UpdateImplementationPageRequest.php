@@ -31,12 +31,14 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
     public function rules(): array
     {
         $faqRules = $this->getFaqRules($this->implementationPage->faq()->pluck('id')->toArray());
+        $states = implode(',', ImplementationPage::STATES);
+        $descriptionPositions = implode(',', ImplementationPage::DESCRIPTION_POSITIONS);
 
         return array_merge(parent::rules(), [
-            'state'                 => 'nullable|in:' . implode(',', ImplementationPage::STATES),
+            'state'                 => "nullable|in:$states",
             'description'           => 'nullable|string|max:10000',
+            'description_position'  => "nullable|in:$descriptionPositions",
             'description_alignment' => 'nullable|in:left,center,right',
-            'description_default_position' => 'nullable|in:top,bottom',
             'external'              => 'present|boolean',
             'external_url'          => 'nullable|string|max:300',
             'media_uid'             => 'nullable|array',

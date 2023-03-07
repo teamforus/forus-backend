@@ -14,7 +14,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('implementation_pages', function (Blueprint $table) {
-            $table->enum('description_default_position', ['top', 'bottom'])->nullable()->after('description_alignment');
+            $table
+                ->enum('description_position', ['replace', 'before', 'after'])
+                ->default('replace')
+                ->after('description_alignment');
         });
     }
 
@@ -26,7 +29,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('implementation_pages', function (Blueprint $table) {
-            $table->removeColumn('description_default_position');
+            $table->removeColumn('description_position');
         });
     }
 };
