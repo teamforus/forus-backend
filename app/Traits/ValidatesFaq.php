@@ -9,7 +9,7 @@ trait ValidatesFaq
     /**
      * @return string[]
      */
-    protected function getFaqRules(?array $allowedIds = null): array
+    protected function faqRules(?array $allowedIds = null): array
     {
         return array_merge([
             'faq' => 'nullable|array',

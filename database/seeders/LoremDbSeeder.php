@@ -26,6 +26,7 @@ use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\RecordType;
+use App\Models\Tag;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
@@ -37,6 +38,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
 use Kalnoy\Nestedset\Collection as NestedsetCollection;
 
 /**
@@ -132,6 +134,10 @@ class LoremDbSeeder extends Seeder
     ];
 
     private array $fundsWithVoucherTopUp = [
+        'Nijmegen', 'Zuidhorn',
+    ];
+
+    private array $fundsWithVoucherRecords = [
         'Nijmegen', 'Zuidhorn',
     ];
 
@@ -742,6 +748,7 @@ class LoremDbSeeder extends Seeder
             'allow_direct_payments'     => in_array($fund->name, $this->fundsWithDirectPayments),
             'allow_generator_direct_payments' => in_array($fund->name, $this->fundsWithDirectPayments),
             'allow_voucher_top_ups'     => in_array($fund->name, $this->fundsWithVoucherTopUp),
+            'allow_voucher_records'     => in_array($fund->name, $this->fundsWithVoucherRecords),
             'email_required'            => $emailRequired,
             'contact_info_enabled'      => $emailRequired,
             'contact_info_required'     => $emailRequired,
@@ -1175,10 +1182,17 @@ class LoremDbSeeder extends Seeder
     private function makeSponsorFunds(Organization $sponsor): void
     {
         $countFunds = $this->sponsorsWithMultipleFunds[$sponsor->name] ?? 1;
+        $fundTag = collect(['Tag I', 'Tag II', 'Tag III'])->random();
 
         while ($countFunds-- > 0) {
             $fund = $this->makeFund($sponsor, true);
             $fundConfig = $this->makeFundConfig($fund);
+
+            $fund->tags()->save(Tag::firstOrCreate([
+                'key' => Str::slug($fundTag),
+                'name' => $fundTag,
+                'scope' => 'provider',
+            ]));
 
             // Make prevalidations
             if (!$fund->auto_requests_validation && $fund->fund_config->allow_prevalidations) {
