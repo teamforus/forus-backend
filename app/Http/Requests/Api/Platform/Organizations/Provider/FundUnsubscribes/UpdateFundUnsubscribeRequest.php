@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\FundProviderInvitations;
+namespace App\Http\Requests\Api\Platform\Organizations\Provider\FundUnsubscribes;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
+use App\Models\FundProviderUnsubscribe;
 
-class IndexFundProviderInvitationRequest extends FormRequest
+class UpdateFundUnsubscribeRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,9 +25,7 @@ class IndexFundProviderInvitationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'q'                 => 'nullable|string',
-            'expired'           => 'nullable|boolean',
-            'per_page'          => 'numeric|between:1,100',
+            'canceled' => 'nullable|boolean|required',
         ];
     }
 }

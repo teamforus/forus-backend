@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
 use App\Models\FundProviderInvitation;
+use App\Models\FundProviderUnsubscribe;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
@@ -29,6 +30,7 @@ use App\Policies\FilePolicy;
 use App\Policies\FundProviderChatMessagePolicy;
 use App\Policies\FundProviderChatPolicy;
 use App\Policies\FundProviderInvitationPolicy;
+use App\Policies\FundProviderUnsubscribePolicy;
 use App\Policies\FundRequestClarificationPolicy;
 use App\Policies\FundRequestPolicy;
 use App\Policies\FundRequestRecordPolicy;
@@ -80,6 +82,7 @@ class AuthServiceProvider extends ServiceProvider
         Organization::class             => OrganizationPolicy::class,
         FundProvider::class             => FundProviderPolicy::class,
         PhysicalCard::class             => PhysicalCardPolicy::class,
+        Reimbursement::class            => ReimbursementPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
         IdentityEmail::class            => IdentityEmailPolicy::class,
         Implementation::class           => ImplementationPolicy::class,
@@ -90,10 +93,10 @@ class AuthServiceProvider extends ServiceProvider
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
         ProductReservation::class       => ProductReservationPolicy::class,
         PhysicalCardRequest::class      => PhysicalCardRequestPolicy::class,
-        Reimbursement::class     => ReimbursementPolicy::class,
         VoucherTransactionBulk::class   => VoucherTransactionBulkPolicy::class,
         FundProviderInvitation::class   => FundProviderInvitationPolicy::class,
         FundProviderChatMessage::class  => FundProviderChatMessagePolicy::class,
+        FundProviderUnsubscribe::class  => FundProviderUnsubscribePolicy::class,
         FundRequestClarification::class => FundRequestClarificationPolicy::class,
     ];
 

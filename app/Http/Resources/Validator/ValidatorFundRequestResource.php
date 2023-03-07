@@ -30,12 +30,13 @@ class ValidatorFundRequestResource extends BaseJsonResource
      * @var string[]
      */
     public const LOAD = [
-        'records.files',
-        'records.record_type',
+        'records.files.preview.presets',
+        'records.record_type.translations',
         'records.employee.organization',
         'records.employee.roles.translations',
         'records.employee.roles.permissions',
-        'records.fund_request_clarifications',
+        'records.fund_request_clarifications.files.preview.presets',
+        'records.fund_request_clarifications.fund_request_record.record_type.translations',
         'identity.primary_email',
         'fund.criteria.fund_criterion_validators.external_validator',
         'fund.tags',
@@ -86,7 +87,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         FundRequest $fundRequest,
         Organization $organization
     ): Relation|Builder {
-        $recordsQuery = $fundRequest->records_pending()->whereDoesntHave('employee');
+        $recordsQuery = $fundRequest->records_pending()->whereNull('employee_id');
         $employeesQuery = $organization->employees();
         $isSponsorOrganization = $organization->id === $fundRequest->fund->organization_id;
 

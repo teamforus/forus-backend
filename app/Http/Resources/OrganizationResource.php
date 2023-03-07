@@ -24,6 +24,7 @@ class OrganizationResource extends JsonResource
         'permissions',
         'employees.roles.permissions',
         'bank_connection_active',
+        'offices',
     ];
 
     /**
@@ -81,6 +82,7 @@ class OrganizationResource extends JsonResource
             'funds' => $fundsDep ? $organization->funds->map(fn (Fund $fund) => $fund->only('id', 'name')) : '_null_',
             'funds_count' => $fundsCountDep ? $organization->funds_count : '_null_',
             'permissions' => is_array($permissionsData) ? $permissionsData : '_null_',
+            'offices_count' => $organization->offices->count(),
         ]), static function($item) {
             return $item !== '_null_';
         });

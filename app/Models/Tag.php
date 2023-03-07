@@ -39,6 +39,11 @@ class Tag extends BaseModel
     protected $perPage = 100;
 
     /**
+     * @var bool
+     */
+    public $timestamps = false;
+
+    /**
      * Get all funds with the tag
      *
      * @return MorphToMany
