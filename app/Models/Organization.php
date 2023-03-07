@@ -68,7 +68,7 @@ use Illuminate\Database\Query\Builder;
  * @property int $show_provider_transactions
  * @property string $reservation_phone
  * @property string $reservation_address
- * @property string $reservation_requester_birth_date
+ * @property string $reservation_birth_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -196,7 +196,7 @@ class Organization extends BaseModel
         'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
-        'reservation_phone', 'reservation_address', 'reservation_requester_birth_date',
+        'reservation_phone', 'reservation_address', 'reservation_birth_date',
     ];
 
     /**

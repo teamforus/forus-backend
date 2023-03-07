@@ -16,9 +16,9 @@ return new class extends Migration
         Schema::table('organizations', function (Blueprint $table) {
             $options = ['no', 'optional', 'required'];
 
-            $table->enum('reservation_phone', $options)->default('no')->after('show_provider_transactions');
+            $table->enum('reservation_phone', $options)->default('no')->after('reservations_auto_accept');
             $table->enum('reservation_address', $options)->default('no')->after('reservation_phone');
-            $table->enum('reservation_requester_birth_date', $options)->default('no')->after('reservation_address');
+            $table->enum('reservation_birth_date', $options)->default('no')->after('reservation_address');
         });
     }
 
@@ -32,7 +32,7 @@ return new class extends Migration
         Schema::table('organizations', function (Blueprint $table) {
             $table->dropColumn('reservation_phone');
             $table->dropColumn('reservation_address');
-            $table->dropColumn('reservation_requester_birth_date');
+            $table->dropColumn('reservation_birth_date');
         });
     }
 };

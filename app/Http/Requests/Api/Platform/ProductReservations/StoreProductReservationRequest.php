@@ -35,6 +35,27 @@ class StoreProductReservationRequest extends BaseFormRequest
     {
         $product = Product::find($this->input('product_id'));
 
+        return array_merge([
+            'voucher_address' => [
+                'required',
+                new IdentityVoucherAddressRule($this->auth_address(), Voucher::TYPE_BUDGET),
+            ],
+            'product_id' => [
+                'required',
+                'exists:products,id',
+                new ProductIdToReservationRule($this->input('voucher_address'))
+            ],
+        ], array_merge(
+            $this->fieldsRules($product),
+        ));
+    }
+
+    /**
+     * @param Product|null $product
+     * @return array[]
+     */
+    protected function fieldsRules(?Product $product): array
+    {
         return [
             'first_name' => 'required|string|max:20',
             'last_name' => 'required|string|max:20',
@@ -50,22 +71,10 @@ class StoreProductReservationRequest extends BaseFormRequest
                 'max:100',
             ],
             'birth_date' => [
-                $product->reservation_requester_birth_date_is_required ? 'required' : 'nullable',
+                $product->reservation_birth_date_is_required ? 'required' : 'nullable',
                 'date_format:Y-m-d',
                 'before:today',
             ],
-            'voucher_address' => [
-                'required',
-                new IdentityVoucherAddressRule($this->auth_address(), Voucher::TYPE_BUDGET),
-            ],
-            'product_id' => [
-                'required',
-                'exists:products,id',
-                new ProductIdToReservationRule($this->input('voucher_address'))
-            ],
-            'contact_information_rule' => empty($this->identity()->email) ? [
-                'required'
-            ] : [],
         ];
     }
 }

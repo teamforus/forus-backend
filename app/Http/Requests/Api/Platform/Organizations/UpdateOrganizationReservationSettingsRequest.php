@@ -2,14 +2,12 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations;
 
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 
 /**
- * Class UpdateOrganizationReservationSettingsRequest
  * @property-read Organization $organization
  */
-class UpdateOrganizationReservationSettingsRequest extends BaseFormRequest
+class UpdateOrganizationReservationSettingsRequest extends BaseOrganizationRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -18,7 +16,7 @@ class UpdateOrganizationReservationSettingsRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->organization->identity_address === $this->auth_address();
+        return true;
     }
 
     /**
@@ -28,10 +26,8 @@ class UpdateOrganizationReservationSettingsRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return [
-            "reservation_phone" => "required|in:no,optional,required",
-            "reservation_address" => "required|in:no,optional,required",
-            "reservation_requester_birth_date" => "required|in:no,optional,required",
-        ];
+        return array_merge(
+            $this->reservationRules(),
+        );
     }
 }
