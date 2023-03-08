@@ -106,7 +106,6 @@ class Payment
      */
     public static function isWorkingDay(Carbon $date): bool
     {
-        return !$date->isWeekend() &&
-            !BankHoliday::query()->where('date', $date->toDateString())->exists();
+        return !$date->isWeekend() && !BankHoliday::where('date', $date->toDateString())->exists();
     }
 }
