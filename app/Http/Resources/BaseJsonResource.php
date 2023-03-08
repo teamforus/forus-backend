@@ -130,12 +130,42 @@ class BaseJsonResource extends JsonResource
             }, []);
         }
 
-        $datetime = $model[$key[0]] ?? null;
+        return self::makeTimestampsStatic([
+            $key[0] => $model[$key[0]] ?? null,
+        ]);
+    }
 
-        return [
-            $key[0] => $datetime instanceof Carbon ? $datetime->format('Y-m-d H:i:s') : null,
-            $key[0] . '_locale' => $datetime instanceof Carbon ? format_datetime_locale($datetime) : null,
-        ];
+    /**
+     * @param array $dates
+     * @param bool $dateOnly
+     * @param string|null $format
+     * @return array
+     */
+    protected static function makeTimestampsStatic(array $dates, bool $dateOnly = false, string $format = null): array
+    {
+        return array_reduce(array_keys($dates), function($out, $key) use ($dates, $format, $dateOnly) {
+            $date = $dates[$key] instanceof Carbon ? $dates[$key] : null;
+
+            return array_merge($out, [
+                $key => $dateOnly ?
+                    $date?->format('Y-m-d') :
+                    $date?->format('Y-m-d H:i:s'),
+                $key . '_locale' => $dateOnly ?
+                    format_date_locale($date, $format ?: 'short_date_locale') :
+                    format_datetime_locale($date, $format ?: 'short_date_time_locale'),
+            ]);
+        }, []);
+    }
+
+    /**
+     * @param array $dates
+     * @param bool $dateOnly
+     * @param string|null $format
+     * @return array
+     */
+    protected function makeTimestamps(array $dates, bool $dateOnly = false, string $format = null): array
+    {
+        return static::makeTimestampsStatic($dates, $dateOnly, $format);
     }
 
     /**

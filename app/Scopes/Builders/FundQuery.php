@@ -152,11 +152,11 @@ class FundQuery
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|Relation $query
      * @param string $q
-     * @return Builder
+     * @return Builder|Relation
      */
-    public static function whereQueryFilter(Builder $query, string $q): Builder
+    public static function whereQueryFilter(Builder|Relation $query, string $q): Builder|Relation
     {
         return $query->where(function(Builder $builder) use ($q) {
             $builder->where('name', 'LIKE', "%$q%");
@@ -198,6 +198,15 @@ class FundQuery
     public static function whereIsInternal(Builder|Relation|Fund $query): Builder|Relation|Fund
     {
         return $query->where('type', '!=', Fund::TYPE_EXTERNAL);
+    }
+
+    /**
+     * @param Builder|Relation|Fund $query
+     * @return Builder|Relation|Fund
+     */
+    public static function whereExpired(Builder|Relation|Fund $query): Builder|Relation|Fund
+    {
+        return $query->where('end_date', '<', now()->format('Y-m-d'));
     }
   
     /**

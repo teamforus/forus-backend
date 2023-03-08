@@ -26,7 +26,7 @@ class StoreFaqValidateRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return $this->getFaqRules();
+        return $this->faqRules();
     }
 
     /**

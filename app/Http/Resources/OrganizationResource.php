@@ -24,6 +24,7 @@ class OrganizationResource extends JsonResource
         'permissions',
         'employees.roles.permissions',
         'bank_connection_active',
+        'offices',
     ];
 
     /**
@@ -80,6 +81,7 @@ class OrganizationResource extends JsonResource
             'funds' => $fundsDep ? $organization->funds->map(fn (Fund $fund) => $fund->only('id', 'name')) : '_null_',
             'funds_count' => $fundsCountDep ? $organization->funds_count : '_null_',
             'permissions' => is_array($permissionsData) ? $permissionsData : '_null_',
+            'offices_count' => $organization->offices->count(),
         ]), static function($item) {
             return $item !== '_null_';
         });
@@ -125,7 +127,7 @@ class OrganizationResource extends JsonResource
             'allow_custom_fund_notifications', 'validator_auto_accept_funds',
             'reservations_budget_enabled', 'reservations_subsidy_enabled',
             'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled',
-            'allow_batch_reservations',
+            'allow_batch_reservations', 'allow_budget_fund_limits',
         ])) : [];
     }
 

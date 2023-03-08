@@ -32,9 +32,7 @@ class FundRequestSearch extends BaseSearch
     {
         $builder = parent::query();
 
-        $builder->whereHas('records', function(Builder $builder) {
-            FundRequestRecordQuery::whereEmployeeIsValidatorOrSupervisor($builder, $this->employee);
-        });
+        FundRequestQuery::whereEmployeeIsValidatorOrSupervisor($builder, $this->employee);
 
         if ($this->hasFilter('q') && $q = $this->getFilter('q')) {
             FundRequestQuery::whereQueryFilter($builder, $q);
@@ -75,7 +73,7 @@ class FundRequestSearch extends BaseSearch
         $builder = $this->appendSortableFields($builder, $orderBy);
         $builder = FundRequest::query()->fromSub($builder, 'fund_requests');
 
-        return $builder->orderBy($orderBy, $orderDir);
+        return $builder->orderBy($orderBy, $orderDir)->latest();
     }
 
     /**

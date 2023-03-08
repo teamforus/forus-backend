@@ -6,6 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Rules\Base\IbanRule;
+use App\Rules\BatchVoucherRecordsRule;
 use App\Rules\ProductIdInStockRule;
 use App\Rules\VouchersUploadArrayRule;
 use Illuminate\Validation\Rule;
@@ -49,7 +50,20 @@ class StoreBatchVoucherRequest extends BaseFormRequest
             'vouchers.*.activation_code'        => 'boolean',
             'vouchers.*.client_uid'             => 'nullable|string|max:20',
             'vouchers.*.limit_multiplier'       => 'nullable|numeric|min:1|max:1000',
+            'vouchers.*.records'                => $this->recordsRule(),
         ], $this->directPaymentRules($fund));
+    }
+
+    /**
+     * @return array
+     */
+    protected function recordsRule(): array
+    {
+        return [
+            'nullable',
+            'array',
+            new BatchVoucherRecordsRule(),
+        ];
     }
 
     /**

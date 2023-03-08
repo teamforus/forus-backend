@@ -10,6 +10,7 @@ class PermissionsTableSeeder extends Seeder
     protected array $permissions = [
         'manage_organization'       => "Manage organization",
         'manage_funds'              => "Manage funds",
+        'manage_fund_texts'         => "Manage funds texts",
         'manage_providers'          => "Manage providers",
         'manage_provider_funds'     => "Manage providers funds",
         'manage_products'           => "Manage products",
