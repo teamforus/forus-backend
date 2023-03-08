@@ -74,7 +74,7 @@ class OrganizationResource extends JsonResource
             'id', 'identity_address', 'name', 'kvk', 'business_type_id',
             'email_public', 'phone_public', 'website_public',
             'description', 'description_html', 'reservation_phone',
-            'reservation_address', 'reservation_requester_birth_date'
+            'reservation_address', 'reservation_birth_date'
         ]), $privateData, $ownerData, $employeeOnlyData, [
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),

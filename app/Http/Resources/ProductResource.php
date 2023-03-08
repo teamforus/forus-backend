@@ -65,7 +65,9 @@ class ProductResource extends BaseJsonResource
             'offices' => OfficeResource::collection($product->organization->offices),
             'product_category' => new ProductCategoryResource($product->product_category),
             'bookmarked' => $product->isBookmarkedBy($baseRequest->identity()),
-        ], $this->productReservationFieldSettings($product));
+        ], array_merge(
+            $this->productReservationFieldSettings($product),
+        ));
     }
 
     /**
@@ -156,11 +158,31 @@ class ProductResource extends BaseJsonResource
      * @param Product $product
      * @return array
      */
-    private function productReservationFieldSettings(Product $product): array {
-        return array_merge($product->only('reservation_phone', 'reservation_address', 'reservation_requester_birth_date'), [
-            'show_reservation_requester_birth_date'  => $product->show_reservation_requester_birth_date,
-            'show_reservation_address'               => $product->show_reservation_address,
-            'show_reservation_phone'                 => $product->show_reservation_phone,
-        ]);
+    private function productReservationFieldSettings(Product $product): array
+    {
+        $global = $product::RESERVATION_FIELD_GLOBAL;
+        $request = BaseFormRequest::createFromBase(request());
+
+        if ($request->isWebshop()) {
+            return [
+                'reservation' => [
+                    'phone' => $product->reservation_phone == $global ?
+                        $product->organization->reservation_phone :
+                        $product->reservation_phone,
+                    'address' => $product->reservation_address == $global ?
+                        $product->organization->reservation_address :
+                        $product->reservation_address,
+                    'birth_date' => $product->reservation_birth_date == $global ?
+                        $product->organization->reservation_birth_date :
+                        $product->reservation_birth_date,
+                ],
+            ];
+        }
+
+        return [
+            'reservation_phone' => $product->reservation_phone,
+            'reservation_address' => $product->reservation_address,
+            'reservation_birth_date' => $product->reservation_birth_date,
+        ];
     }
 }

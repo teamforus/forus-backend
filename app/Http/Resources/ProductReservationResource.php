@@ -65,9 +65,12 @@ class ProductReservationResource extends BaseJsonResource
                 'organization' => $reservation->product->organization->only('id', 'name'),
                 'photo' => new MediaResource($reservation->product->photo),
             ]),
-            'fund' => $voucher->fund->only('id', 'name'),
-            'sponsor_organization' => $voucher->fund->organization->only('id', 'name'),
-            'voucher_transaction' => new VoucherTransactionResource($transaction),
+            'fund' => array_merge($voucher->fund->only([
+                'id', 'name',
+            ]), [
+                'organization' => $voucher->fund->organization->only('id', 'name'),
+            ]),
+            'voucher_transaction' => $transaction?->only('id', 'address'),
             'birth_date_locale' => format_date_locale($reservation->birth_date),
         ], $this->getReservationDates($reservation), $identityData);
     }

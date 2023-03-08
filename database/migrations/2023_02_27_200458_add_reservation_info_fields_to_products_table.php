@@ -14,11 +14,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $options = ['no', 'global', 'optional', 'required'];
+            $options = ['global', 'no', 'optional', 'required'];
 
             $table->enum('reservation_phone', $options)->default('global')->after('reservation_policy');
             $table->enum('reservation_address', $options)->default('global')->after('reservation_phone');
-            $table->enum('reservation_requester_birth_date', $options)->default('global')->after('reservation_address');
+            $table->enum('reservation_birth_date', $options)->default('global')->after('reservation_address');
         });
     }
 
@@ -32,7 +32,7 @@ return new class extends Migration
         Schema::table('products', function (Blueprint $table) {
             $table->dropColumn('reservation_phone');
             $table->dropColumn('reservation_address');
-            $table->dropColumn('reservation_requester_birth_date');
+            $table->dropColumn('reservation_birth_date');
         });
     }
 };
