@@ -46,8 +46,6 @@ class StoreProductRequest extends BaseProductRequest
 
             'expire_at'             => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
-            'reservation_enabled'   => 'nullable|boolean',
-            'reservation_policy'    => 'nullable|in:' . join(',', Product::RESERVATION_POLICIES),
         ], array_merge(
             $this->reservationRules(),
         ));

@@ -575,6 +575,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->only('index', 'show', 'store', 'update', 'destroy');
 
     // Product reservations
+    $router->get(
+        'organizations/{organization}/product-reservations/export-fields',
+        "Api\Platform\Organizations\ProductReservationsController@getExportFields"
+    );
+
+    $router->get(
+        'organizations/{organization}/product-reservations/export',
+        "Api\Platform\Organizations\ProductReservationsController@export"
+    );
+
     $router->post(
         'organizations/{organization}/product-reservations/batch',
         "Api\Platform\Organizations\ProductReservationsController@storeBatch"
