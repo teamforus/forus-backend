@@ -20,11 +20,11 @@ class RolePermissionsTableSeeder extends Seeder
             "manage_implementation", "manage_implementation_cms",
             "manage_bank_connections", "manage_transaction_bulks",
             "manage_reimbursements", "manage_implementation_notifications",
-            "view_funds", "view_person_bsn_data", "make_direct_payments", 'manage_fund_texts',
+            "view_funds", "view_person_bsn_data", 'manage_fund_texts',
         ],
         "finance" => [
             "view_finances", "manage_vouchers",
-            "manage_reimbursements", "manage_organization", "manage_funds", "manage_transaction_bulks",
+            "manage_reimbursements", "manage_organization", "manage_funds", "manage_transaction_bulks", "make_direct_payments",
         ],
         "validation" => [
             "validate_records", "view_funds", "view_person_bsn_data"
@@ -40,7 +40,7 @@ class RolePermissionsTableSeeder extends Seeder
             "scan_vouchers",
         ],
         "voucher_officer" => [
-            "manage_funds", "manage_vouchers", "view_person_bsn_data"
+            "manage_funds", "manage_vouchers", "view_person_bsn_data", "make_direct_payments",
         ],
         "implementation_manager" => [
             "view_funds", "manage_implementation", "manage_implementation_cms",
