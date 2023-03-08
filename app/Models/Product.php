@@ -65,8 +65,8 @@ use Illuminate\Support\Arr;
  * @property-read string $price_discount_locale
  * @property-read string $price_locale
  * @property-read bool $reservation_address_is_required
+ * @property-read bool $reservation_birth_date_is_required
  * @property-read bool $reservation_phone_is_required
- * @property-read bool $reservation_requester_birth_date_is_required
  * @property-read int|null $stock_amount
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Services\EventLogService\Models\EventLog> $logs
  * @property-read int|null $logs_count
@@ -344,7 +344,7 @@ class Product extends BaseModel
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getReservationRequesterBirthDateIsRequiredAttribute(): bool
+    public function getReservationBirthDateIsRequiredAttribute(): bool
     {
         if ($this->reservation_birth_date == self::RESERVATION_FIELD_GLOBAL) {
             return $this->organization->reservation_birth_date == self::RESERVATION_FIELD_REQUIRED;
