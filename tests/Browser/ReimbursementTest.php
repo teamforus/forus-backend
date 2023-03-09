@@ -261,6 +261,7 @@ class ReimbursementTest extends DuskTestCase
      */
     private function goToReimbursementsPage(Browser $browser) : void {
         $browser->press('@userVouchers');
+        $browser->pause(1000);
         $browser->waitFor('@menuBtnReimbursements');
         $browser->press('@menuBtnReimbursements');
     }

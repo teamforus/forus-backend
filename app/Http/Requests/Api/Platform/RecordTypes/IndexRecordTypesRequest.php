@@ -4,10 +4,6 @@ namespace App\Http\Requests\Api\Platform\RecordTypes;
 
 use App\Http\Requests\BaseFormRequest;
 
-/**
- * Class IndexRecordTypesRequest
- * @package App\Http\Requests\Api\Platform\RecordTypes
- */
 class IndexRecordTypesRequest extends BaseFormRequest
 {
     /**
@@ -28,6 +24,7 @@ class IndexRecordTypesRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
+            'vouchers' => 'nullable|boolean',
             'insertable_only' => 'nullable|boolean',
         ];
     }

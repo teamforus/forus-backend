@@ -33,7 +33,7 @@ class StoreImplementationPageRequest extends ValidateImplementationPageBlocksReq
      */
     public function rules(): array
     {
-        $faqRules = $this->getFaqRules([]);
+        $faqRules = $this->faqRules([]);
 
         return array_merge(parent::rules(), [
             'state'                 => 'nullable|in:' . implode(',', ImplementationPage::STATES),

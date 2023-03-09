@@ -11,6 +11,7 @@ use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class FundProviderController extends Controller
 {
@@ -75,6 +76,7 @@ class FundProviderController extends Controller
      * @param FundProvider $fundProvider
      * @return FundProviderResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Throwable
      */
     public function update(
         UpdateFundProviderRequest $request,
@@ -86,25 +88,31 @@ class FundProviderController extends Controller
         $this->authorize('show', [$fund, $organization]);
         $this->authorize('updateSponsor', [$fundProvider, $organization, $fund]);
 
-        $fundProvider->update($request->only($fund->isTypeBudget() ? [
-            'allow_products', 'allow_budget',
-        ] : []));
+        DB::transaction(function() use ($fundProvider, $request, $fund){
+            $fundProvider->update($request->only($fund->isTypeBudget() ? [
+                'allow_products', 'allow_budget',
+            ] : []));
 
-        if ($request->has('state') && ($request->input('state') != $fundProvider->state)) {
-            $fundProvider->setState($request->input('state'));
-        }
+            if ($request->has('state') && ($request->input('state') != $fundProvider->state)) {
+                $fundProvider->setState($request->input('state'));
+            }
 
-        if ($request->has('enable_products')) {
-            $fundProvider->approveProducts($request->input('enable_products'));
-        }
+            if ($request->has('enable_products')) {
+                $fundProvider->approveProducts($request->input('enable_products'));
+            }
 
-        if ($request->has('disable_products')) {
-            $fundProvider->declineProducts($request->input('disable_products'));
-        }
+            if ($request->has('disable_products')) {
+                $fundProvider->declineProducts($request->input('disable_products'));
+            }
 
-        $fundProvider->update([
-            'allow_some_products' => $fundProvider->fund_provider_products()->count() > 0
-        ]);
+            if ($fundProvider->fund->isTypeBudget() && $request->has('reset_products')) {
+                $fundProvider->resetProducts($request->input('reset_products'));
+            }
+
+            $fundProvider->update([
+                'allow_some_products' => $fundProvider->fund_provider_products()->count() > 0
+            ]);
+        });
 
         return new FundProviderResource($fundProvider);
     }

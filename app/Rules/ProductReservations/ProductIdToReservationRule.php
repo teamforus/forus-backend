@@ -15,8 +15,8 @@ use App\Scopes\Builders\ProductSubQuery;
 class ProductIdToReservationRule extends BaseRule
 {
     protected string $messageTransPrefix = 'validation.product_reservation.';
-    private $voucherAddress;
-    private $priceType;
+    private ?string $voucherAddress;
+    private ?string $priceType;
 
     /**
      * Create a new rule instance.
@@ -33,7 +33,7 @@ class ProductIdToReservationRule extends BaseRule
     /**
      * Determine if the validation rule passes.
      *
-     * @param string|any $attribute
+     * @param string $attribute
      * @param mixed $value
      * @return bool
      * @throws \Exception
@@ -70,21 +70,29 @@ class ProductIdToReservationRule extends BaseRule
             return $this->rejectTrans('not_enough_voucher_funds');
         }
 
-        // validate per-identity limit
-        if ($voucher->fund->isTypeSubsidy()) {
-            if (($product['limit_total_available'] ?? 0) < 1) {
-                return $this->reject(trans('validation.product_reservation.no_total_stock'));
-            }
+        // validate total limit
+        if (!$this->hasStock($voucher, $product['limit_total_available'] ?? null)) {
+            return $this->reject(trans('validation.product_reservation.no_total_stock'));
+        }
 
-            if (($product['limit_available'] ?? 0) < 1) {
-                return $this->reject(trans('validation.product_reservation.no_identity_stock'));
-            }
+        // validate voucher limit
+        if (!$this->hasStock($voucher, $product['limit_available'] ?? null)) {
+            return $this->reject(trans('validation.product_reservation.no_identity_stock'));
         }
 
         // check validity
-        return ProductQuery::approvedForFundsAndActiveFilter(
-            Product::query(),
-            $voucher->fund_id
-        )->where('id', $product->id)->exists() || $this->reject('Product not available.');
+        return ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $voucher->fund_id)
+            ->where('id', $product->id)
+            ->exists() || $this->reject('Product not available.');
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param ?int $limit
+     * @return bool
+     */
+    protected function hasStock(Voucher $voucher, ?int $limit): bool
+    {
+        return $voucher->fund->isTypeBudget() ? (is_null($limit) || ($limit > 0)) : ($limit > 0);
     }
 }

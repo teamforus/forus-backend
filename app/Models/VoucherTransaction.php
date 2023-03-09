@@ -20,6 +20,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * App\Models\VoucherTransaction
  *
  * @property int $id
+ * @property string|null $uid
  * @property int $voucher_id
  * @property int|null $organization_id
  * @property int|null $employee_id
@@ -96,6 +97,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static Builder|VoucherTransaction whereTargetName($value)
  * @method static Builder|VoucherTransaction whereTargetReimbursementId($value)
  * @method static Builder|VoucherTransaction whereTransferAt($value)
+ * @method static Builder|VoucherTransaction whereUid($value)
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
  * @method static Builder|VoucherTransaction whereVoucherTransactionBulkId($value)
@@ -539,14 +541,17 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
+     * @param int $maxLength
      * @return string
      */
-    public function makePaymentDescription(): string
+    public function makePaymentDescription(int $maxLength = 2000): string
     {
-        return trans('bunq.transaction.from_fund', [
+        $note = $this->notes_provider->first()?->message;
+
+        return str_limit(trans('bunq.transaction.from_fund', [
             'fund_name' => $this->voucher->fund->name,
             'transaction_id' => $this->id
-        ]);
+        ]) . ($note ? ": $note" : ''), $maxLength);
     }
 
     /**

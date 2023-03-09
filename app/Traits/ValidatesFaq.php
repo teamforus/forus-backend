@@ -9,10 +9,10 @@ trait ValidatesFaq
     /**
      * @return string[]
      */
-    protected function getFaqRules(?array $allowedIds = null): array
+    protected function faqRules(?array $allowedIds = null): array
     {
         return array_merge([
-            'faq' => 'present|array',
+            'faq' => 'nullable|array',
             'faq.*' => 'required|array',
             'faq.*.title' => 'required|string|max:200',
             'faq.*.description' => 'required|string|max:5000',

@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_direct_payments
  * @property bool $allow_generator_direct_payments
  * @property bool $allow_voucher_top_ups
+ * @property bool $allow_voucher_records
  * @property bool $employee_can_see_product_vouchers
  * @property string $vouchers_type
  * @property bool $is_configured
@@ -39,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $limit_generator_amount
  * @property string|null $limit_voucher_top_up_amount
  * @property string|null $limit_voucher_total_amount
+ * @property bool $generator_ignore_fund_budget
  * @property int|null $bsn_confirmation_time
  * @property int|null $bsn_confirmation_api_time
  * @property bool $backoffice_enabled
@@ -75,6 +77,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowReimbursements($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherRecords($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherTopUps($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
@@ -100,6 +103,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereEmailRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereEmployeeCanSeeProductVouchers($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereGeneratorIgnoreFundBudget($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsn($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsnSalt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashPartnerDeny($value)
@@ -161,7 +165,7 @@ class FundConfig extends BaseModel
         'iconnect_target_binding', 'iconnect_api_oin', 'iconnect_base_url',
         'iconnect_env', 'iconnect_key', 'iconnect_key_pass',
         'iconnect_cert', 'iconnect_cert_pass', 'iconnect_cert_trust',
-        'allow_direct_payments', 'allow_voucher_top_ups',
+        'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
         'limit_voucher_top_up_amount', 'limit_voucher_total_amount', 'allow_generator_direct_payments',
     ];
 
@@ -181,6 +185,7 @@ class FundConfig extends BaseModel
         'allow_blocking_vouchers' => 'boolean',
         'allow_direct_payments' => 'boolean',
         'allow_voucher_top_ups' => 'boolean',
+        'allow_voucher_records' => 'boolean',
         'backoffice_check_partner' => 'boolean',
         'employee_can_see_product_vouchers' => 'boolean',
         'email_required' => 'boolean',
@@ -192,6 +197,7 @@ class FundConfig extends BaseModel
         'limit_voucher_top_up_amount' => 'string',
         'limit_voucher_total_amount' => 'string',
         'allow_generator_direct_payments' => 'boolean',
+        'generator_ignore_fund_budget' => 'boolean',
     ];
 
     /**

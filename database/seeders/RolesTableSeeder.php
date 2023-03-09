@@ -5,9 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Role;
 
-/**
- * Class RolesTableSeeder
- */
 class RolesTableSeeder extends Seeder
 {
     protected array $roles = [
@@ -15,9 +12,9 @@ class RolesTableSeeder extends Seeder
             'en' => 'Admin',
             'nl' => 'Beheerder',
         ],
-        'finance' => [
-            'en' => 'Finance',
-            'nl' => 'Financien',
+        'finance_manager' => [
+            'en' => 'Finance manager',
+            'nl' => 'Financieel manager',
         ],
         'validation' => [
             'en' => 'Validator',
@@ -47,6 +44,10 @@ class RolesTableSeeder extends Seeder
             'en' => 'Implementatie communicatiemanager',
             'nl' => 'Implementatie communicatiemanager',
         ],
+        'finance_reader' => [
+            'en' => 'Finance reader',
+            'nl' => 'Financieel analist',
+        ],
     ];
 
     /**
@@ -55,7 +56,7 @@ class RolesTableSeeder extends Seeder
      * @param bool $withTranslations
      * @return void
      */
-    public function run($withTranslations = true): void
+    public function run(bool $withTranslations = true): void
     {
         foreach ($this->roles as $key => $translations) {
             $role = Role::firstOrCreate(compact('key'));

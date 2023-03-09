@@ -17,7 +17,7 @@ class ProductResource extends BaseJsonResource
 {
     public const LOAD = [
         'voucher_transactions',
-        'vouchers_reserved',
+        'product_reservations_pending',
         'photo.presets',
         'product_category.translations',
         'organization.offices.photo.presets',
@@ -50,7 +50,7 @@ class ProductResource extends BaseJsonResource
             'price_discount_locale' => $product->price_discount_locale,
 
             'unlimited_stock' => $product->unlimited_stock,
-            'reserved_amount' => $product->vouchers_reserved->count(),
+            'reserved_amount' => $product->countReservedCached(),
             'sold_amount' => $product->countSold(),
             'stock_amount' => $product->stock_amount,
             'expire_at' => $product->expire_at?->format('Y-m-d'),
@@ -116,17 +116,18 @@ class ProductResource extends BaseJsonResource
                 'reservations_enabled' => $product->reservationsEnabled($fund),
             ];
 
-            if (!$fund->isTypeSubsidy()) {
-                return $data;
-            }
-
-            $fundProviderProduct = $product->getSubsidyDetailsForFund($fund);
             $productData = ProductSubQuery::appendReservationStats([
                 'identity_address' => $request->auth_address(),
-                'fund_id' => $fund->id
+                'fund_id' => $fund->id,
             ], Product::whereId($product->id))->firstOrFail()->only([
-                'limit_total', 'limit_per_identity', 'limit_available'
+                'limit_total', 'limit_per_identity', 'limit_available',
             ]);
+
+            if (!$fund->isTypeSubsidy()) {
+                return array_merge($data, $productData);
+            }
+
+            $fundProviderProduct = $product->getFundProviderProduct($fund);
 
             return array_merge($data, $productData, [
                 'price' => $fundProviderProduct->user_price,

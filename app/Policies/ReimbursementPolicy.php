@@ -77,7 +77,7 @@ class ReimbursementPolicy
             'allow_reimbursements' => true,
         ]);
 
-        return VoucherQuery::whereHasBalanceIsActiveAndNotExpired($vouchersQuery)->exists();
+        return VoucherQuery::whereNotExpiredAndActive($vouchersQuery)->exists();
     }
 
     /**

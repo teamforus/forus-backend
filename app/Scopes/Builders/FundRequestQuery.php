@@ -3,6 +3,7 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\Employee;
 use App\Models\FundRequest;
 use App\Models\Identity;
 use Illuminate\Database\Eloquent\Builder;
@@ -84,5 +85,86 @@ class FundRequestQuery
 
             $query->orWhere('id', '=', $q);
         });
+    }
+
+    /**
+     * @param Builder|Relation $query
+     * @param Employee $employee
+     * @return Builder|Relation
+     */
+    public static function whereEmployeeIsValidatorOrSupervisor(
+        Relation|Builder $query,
+        Employee $employee
+    ): Relation|Builder {
+        return $query->where(static function(Builder $builder) use ($employee) {
+            // validator
+            $builder->where(fn(Builder $q) => static::whereEmployeeCanBeValidator($q, $employee));
+
+            // supervisor
+            $builder->orWhere(fn(Builder $q) => static::whereEmployeeIsValidatorsSupervisor($q, $employee));
+        });
+    }
+
+    /**
+     * @param Builder|Relation $query
+     * @param Employee $employee
+     * @return Builder|Relation
+     */
+    public static function whereEmployeeCanBeValidator(
+        Relation|Builder $query,
+        Employee $employee
+    ): Relation|Builder {
+        return $query->where(static function(Builder $builder) use ($employee) {
+            // sponsor employees
+            $builder->where(fn(Builder $q) => static::whereSponsorEmployeeHasPermission($q, $employee));
+
+            // sponsor employees
+            $builder->orWhereHas('records', function(Builder $q) use ($employee) {
+                return FundRequestRecordQuery::whereValidatorEmployeeHasPermission($q, $employee);
+            });
+        });
+    }
+
+    /**
+     * @param Builder|Relation $query
+     * @param Employee $employee
+     * @return Builder|Relation
+     */
+    public static function whereEmployeeIsValidatorsSupervisor(
+        Relation|Builder $query,
+        Employee $employee
+    ): Relation|Builder {
+        return $query->where(static function(Builder $builder) use ($employee) {
+            // sponsor employees
+            $builder->where(fn(Builder $q) => static::whereSponsorEmployeeHasPermission(
+                $q, $employee, 'manage_validators'
+            ));
+
+            // sponsor employees
+            $builder->orWhereHas('records', function(Builder $q) use ($employee) {
+                return FundRequestRecordQuery::whereValidatorEmployeeHasPermission(
+                    $q, $employee, 'manage_validators'
+                );
+            });
+        });
+    }
+
+    /**
+     * @param Builder|Relation $query
+     * @param Employee $employee
+     * @param array|string $permission
+     * @return Builder|Relation
+     */
+    public static function whereSponsorEmployeeHasPermission(
+        Relation|Builder $query,
+        Employee $employee,
+        array|string $permission = 'validate_records'
+    ): Relation|Builder {
+        $organization = $employee->organization;
+        $hasPermissions = $organization->identityCan($employee->identity, $permission);
+
+        return $query->whereIn('fund_id',
+            $hasPermissions ? $organization->funds()->select('funds.id') : []
+        );
     }
 }

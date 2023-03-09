@@ -99,7 +99,7 @@ class FundProviderPolicy
         }
 
         return $organization->identityCan($identity, [
-            'manage_funds', 'view_finances',
+            'view_finances', 'manage_providers',
         ], false);
     }
 
@@ -144,8 +144,9 @@ class FundProviderPolicy
             return false;
         }
 
-        return !$fund->isArchived() &&
-            $fund->organization->identityCan($identity, 'manage_funds');
+        return !$fund->isArchived() && $fund->organization->identityCan($identity, [
+            'view_finances', 'manage_providers',
+        ], false);
     }
 
     /**

@@ -14,8 +14,10 @@ class FundRequestRecordQuery
      * @param Employee $employee
      * @return Builder|Relation
      */
-    public static function whereEmployeeIsAssignedValidator($query, Employee $employee)
-    {
+    public static function whereEmployeeIsAssignedValidator(
+        Relation|Builder $query,
+        Employee $employee
+    ): Relation|Builder {
         return $query->whereHas('employee', static function(Builder $builder) use ($employee) {
             $builder->where('employees.identity_address', $employee->identity_address);
             $builder->where('employees.id', $employee->id);
@@ -27,8 +29,10 @@ class FundRequestRecordQuery
      * @param Employee $employee
      * @return Builder|Relation
      */
-    public static function whereEmployeeIsValidatorOrSupervisor($query, Employee $employee)
-    {
+    public static function whereEmployeeIsValidatorOrSupervisor(
+        Relation|Builder $query,
+        Employee $employee
+    ): Relation|Builder {
         return $query->where(static function(Builder $builder) use ($employee) {
             // validator
             $builder->where(fn(Builder $q) => static::whereEmployeeCanBeValidator($q, $employee));
@@ -43,8 +47,10 @@ class FundRequestRecordQuery
      * @param Employee $employee
      * @return Builder|Relation
      */
-    public static function whereEmployeeCanBeValidator($query, Employee $employee)
-    {
+    public static function whereEmployeeCanBeValidator(
+        Relation|Builder $query,
+        Employee $employee
+    ): Relation|Builder {
         return $query->where(static function(Builder $builder) use ($employee) {
             // sponsor employees
             $builder->where(fn(Builder $q) => static::whereSponsorEmployeeHasPermission($q, $employee));
@@ -57,16 +63,17 @@ class FundRequestRecordQuery
     /**
      * @param Builder|Relation $query
      * @param Employee $employee
-     * @param string|array $permission
+     * @param array|string $permission
      * @return Builder|Relation
      */
-    protected static function whereSponsorEmployeeHasPermission($query, Employee $employee, $permission = 'validate_records')
-    {
-        return $query->whereHas('fund_request.fund.organization', fn(Builder $q) => OrganizationQuery::whereHasPermissions(
-            $q->whereHas('employees', fn(Builder $q) => $q->where('employees.id', $employee->id)),
-            $employee->identity_address,
-            $permission
-        ));
+    protected static function whereSponsorEmployeeHasPermission(
+        Relation|Builder $query,
+        Employee $employee,
+        array|string $permission = 'validate_records'
+    ): Relation|Builder {
+        return $query->whereHas('fund_request', function(Builder $q) use ($employee, $permission) {
+            FundRequestQuery::whereSponsorEmployeeHasPermission($q, $employee, $permission);
+        });
     }
 
     /**
@@ -75,9 +82,12 @@ class FundRequestRecordQuery
      * @param string|array $permission
      * @return Builder|Relation
      */
-    protected static function whereValidatorEmployeeHasPermission($query, Employee $employee, $permission = 'validate_records')
-    {
-        return $query->orWhereHas('fund_criterion.fund_criterion_validators', function(Builder $builder) use ($employee, $permission) {
+    public static function whereValidatorEmployeeHasPermission(
+        Relation|Builder $query,
+        Employee $employee,
+        array|string $permission = 'validate_records'
+    ): Relation|Builder {
+        return $query->whereHas('fund_criterion.fund_criterion_validators', function(Builder $builder) use ($employee, $permission) {
             $builder->whereHas('external_validator.validator_organization', fn(Builder $q) => OrganizationQuery::whereHasPermissions(
                 $q->whereHas('employees', fn(Builder $q) => $q->where('employees.id', $employee->id)),
                 $employee->identity_address,
@@ -91,8 +101,10 @@ class FundRequestRecordQuery
      * @param Employee $employee
      * @return Builder|Relation
      */
-    public static function whereEmployeeIsValidatorsSupervisor($query, Employee $employee)
-    {
+    public static function whereEmployeeIsValidatorsSupervisor(
+        Relation|Builder $query,
+        Employee $employee
+    ): Relation|Builder {
         return $query->where(static function(Builder $builder) use ($employee) {
             // sponsor employees
             $builder->where(fn(Builder $q) => static::whereSponsorEmployeeHasPermission($q, $employee, 'manage_validators'));

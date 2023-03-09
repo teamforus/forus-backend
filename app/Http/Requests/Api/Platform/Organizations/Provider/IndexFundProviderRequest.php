@@ -38,13 +38,13 @@ class IndexFundProviderRequest extends BaseFormRequest
         )->pluck('id')->toArray();
 
         return [
+            'q'                 => 'nullable|string',
             'state'             => 'nullable|in:' . implode(',', FundProvider::STATES),
             'allow_budget'      => 'nullable|boolean',
             'allow_products'    => 'nullable|in:1,0,some',
             'per_page'          => 'nullable|numeric|min:1|max:1000',
             'fund_id'           => 'nullable|in:' . implode(',', $fundIds),
             'organization_id'   => 'nullable|in:' . implode(',', $providerIds),
-            'q'                 => 'nullable|string',
             'export_format'     => 'nullable|in:csv,xls',
         ];
     }

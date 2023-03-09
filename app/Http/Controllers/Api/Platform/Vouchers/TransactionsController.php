@@ -69,6 +69,7 @@ class TransactionsController extends Controller
 
         $note = $request->input('note', false);
         $voucher = $voucherToken->voucher;
+        $product = null;
         $transactionState = VoucherTransaction::STATE_PENDING;
 
         // Product reservation voucher
@@ -101,12 +102,12 @@ class TransactionsController extends Controller
                 $product = $voucher->product;
                 $organization = $product->organization;
             }
+
+            $fundProviderProduct = $product?->getFundProviderProductOrFail($voucher->fund);
         } else {
             // Subsidy fund voucher
             $product = Product::findOrFail($request->input('product_id'));
-            $fundProviderProduct = $product->getSubsidyDetailsForFundOrFail($voucher->fund);
-
-            $fundProviderProductId = $fundProviderProduct->id;
+            $fundProviderProduct = $product->getFundProviderProductOrFail($voucher->fund);
             $organization = $product->organization;
             $amount = $fundProviderProduct->amount;
 
@@ -120,7 +121,7 @@ class TransactionsController extends Controller
             'product_id' => $product->id ?? null,
             'employee_id' => $organization->findEmployee($request->auth_address())->id,
             'state' => $transactionState,
-            'fund_provider_product_id' => $fundProviderProductId ?? null,
+            'fund_provider_product_id' => $fundProviderProduct?->id ?? null,
             'target' => VoucherTransaction::TARGET_PROVIDER,
             'organization_id' => $organization->id,
         ], $voucher->needsTransactionReview());

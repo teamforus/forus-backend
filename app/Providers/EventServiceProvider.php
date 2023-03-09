@@ -11,6 +11,7 @@ use App\Listeners\OrganizationSubscriber;
 use App\Listeners\ProductReservationSubscriber;
 use App\Listeners\ProductSubscriber;
 use App\Listeners\ReimbursementSubscriber;
+use App\Listeners\VoucherRecordSubscriber;
 use App\Listeners\VoucherSubscriber;
 use App\Listeners\VoucherTransactionsSubscriber;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -35,6 +36,7 @@ class EventServiceProvider extends ServiceProvider
         OrganizationSubscriber::class,
         FundProviderSubscriber::class,
         ReimbursementSubscriber::class,
+        VoucherRecordSubscriber::class,
         BankConnectionSubscriber::class,
         ProductReservationSubscriber::class,
         VoucherTransactionsSubscriber::class,
@@ -56,7 +58,7 @@ class EventServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         parent::boot();
     }
