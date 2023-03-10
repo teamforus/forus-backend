@@ -219,7 +219,7 @@ class NotificationRepo implements INotificationRepo
      */
     protected static array $mandatoryEmail = [
         'auth.user_login', 'auth.email_activation', 'vouchers.share_voucher',
-        'vouchers.send_voucher', 'funds.balance_warning',
+        'vouchers.send_voucher',
     ];
 
     /**

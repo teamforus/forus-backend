@@ -417,7 +417,7 @@ class VoucherTransactionBulk extends BaseModel
                         'iban_to' => $ibanTo,
                         'iban_to_name' => $ibanToName,
                         'iban_from' => $this->monetary_account_iban,
-                        'payment_description' => $transaction->makePaymentDescription(),
+                        'payment_description' => $transaction->makePaymentDescription(140),
                     ]);
 
                     $payments[] = new PaymentBNG(

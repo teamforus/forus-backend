@@ -99,7 +99,7 @@ class AuthenticationTest extends DuskTestCase
 
             // Visit the implementation webshop and wait for the page to load
             $browser->visit($implementation->urlWebshop());
-            $browser->waitFor('@header');
+            $browser->waitFor('@header', 10);
             $browser->assertSeeIn('@headerTitle', $implementation->name);
 
             // Click on the navbar start button to go to the auth page
@@ -126,7 +126,7 @@ class AuthenticationTest extends DuskTestCase
 
             // Get and follow the auth link from the email then check if the user is authenticated
             $browser->visit($this->findFirstEmailConfirmationLink($email, $startTime));
-            $browser->pause(500);
+            $browser->pause(1000);
 
             // Logout identity
             $browser->waitFor('@userProfile');
