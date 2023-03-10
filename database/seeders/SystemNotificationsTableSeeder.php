@@ -94,6 +94,7 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_bank_connections.activated" => ["database"],
         "notifications_bank_connections.disabled_invalid" => ["database"],
         "notifications_bank_connections.monetary_account_changed" => ["database"],
+        "notifications_bank_connections.expiration" => ["database", "mail"],
 
         "notifications_physical_card_requests.physical_card_request_created" => [], // TODO can database notifications be removed
     ];

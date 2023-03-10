@@ -35,6 +35,7 @@ class BNGController extends Controller
 
             $connection->setMonetaryAccounts($connection->fetchConnectionMonetaryAccounts());
             $connection->setActive();
+            $connection->setExpirationDate();
             $connection->updateFundBalances();
         } catch (Throwable $e) {
             $error_message = $e->getMessage();

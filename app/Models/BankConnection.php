@@ -8,6 +8,7 @@ use App\Events\BankConnections\BankConnectionDisabled;
 use App\Events\BankConnections\BankConnectionDisabledInvalid;
 use App\Events\BankConnections\BankConnectionMonetaryAccountChanged;
 use App\Events\BankConnections\BankConnectionReplaced;
+use App\Models\Traits\HasAnnouncements;
 use App\Models\Traits\HasDbTokens;
 use App\Services\BankService\Models\Bank;
 use App\Services\BankService\Values\BankBalance;
@@ -83,7 +84,7 @@ use Throwable;
  */
 class BankConnection extends BaseModel
 {
-    use HasLogs, HasDbTokens;
+    use HasLogs, HasDbTokens, HasAnnouncements;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_REPLACED = 'replaced';
@@ -92,6 +93,7 @@ class BankConnection extends BaseModel
     public const EVENT_ACTIVATED = 'activated';
     public const EVENT_DISABLED_INVALID = 'disabled_invalid';
     public const EVENT_MONETARY_ACCOUNT_CHANGED = 'monetary_account_changed';
+    public const EVENT_EXPIRATION = 'expiration';
     public const EVENT_ERROR = 'error';
 
     public const EVENTS = [
@@ -392,6 +394,25 @@ class BankConnection extends BaseModel
         BankConnectionActivated::dispatch($this->updateModel([
             'state' => static::STATE_ACTIVE,
         ]));
+
+        return $this;
+    }
+
+    /**
+     * @return BankConnection
+     */
+    public function setExpirationDate(): self
+    {
+        if ($this->bank->isBNG()) {
+            $expireAt = now()->add(
+                config('forus.bng.expire_time.unit'),
+                config('forus.bng.expire_time.value')
+            );
+
+            $this->update([
+                'session_expire_at' => $expireAt,
+            ]);
+        }
 
         return $this;
     }

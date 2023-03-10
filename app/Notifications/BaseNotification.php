@@ -225,6 +225,9 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         'notifications_identities.requester_sponsor_custom_notification' => [
             "fund_name", "sponsor_name", "webshop_link", "webshop_button",
         ],
+        "notifications_bank_connections.expiration" => [
+            "sponsor_name",
+        ],
     ];
 
     /**

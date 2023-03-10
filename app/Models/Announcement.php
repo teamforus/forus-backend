@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use App\Http\Requests\BaseFormRequest;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -22,12 +22,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $announcementable_type
+ * @property int|null $announcementable_id
+ * @property-read Model|\Eloquent $announcementable
  * @property-read string $description_html
  * @method static Builder|Announcement newModelQuery()
  * @method static Builder|Announcement newQuery()
  * @method static \Illuminate\Database\Query\Builder|Announcement onlyTrashed()
  * @method static Builder|Announcement query()
  * @method static Builder|Announcement whereActive($value)
+ * @method static Builder|Announcement whereAnnouncementableId($value)
+ * @method static Builder|Announcement whereAnnouncementableType($value)
  * @method static Builder|Announcement whereCreatedAt($value)
  * @method static Builder|Announcement whereDeletedAt($value)
  * @method static Builder|Announcement whereDescription($value)
@@ -51,6 +56,7 @@ class Announcement extends Model
      */
     protected $fillable = [
         'type', 'title', 'description', 'expire_at', 'scope', 'active', 'implementation_id',
+        'announcementable_type', 'announcementable_id',
     ];
 
     /**
@@ -68,33 +74,11 @@ class Announcement extends Model
     ];
 
     /**
-     * @param BaseFormRequest $request
-     * @param null $query
-     * @return Builder
+     * @return MorphTo
+     * @noinspection PhpUnused
      */
-    public static function search(BaseFormRequest $request, $query = null): Builder
+    public function announcementable(): MorphTo
     {
-        $query = $query ?: static::query();
-        $clientType = $request->client_type();
-        $implementation = $request->implementation();
-
-        if ($clientType !== $implementation::FRONTEND_WEBSHOP) {
-            $clientType = [$clientType, 'dashboards'];
-        }
-
-        return $query
-            ->where(function(Builder $builder) use ($clientType, $implementation) {
-                if ($clientType === $implementation::FRONTEND_WEBSHOP) {
-                    $builder->whereNull('implementation_id');
-                    $builder->orWhere('implementation_id', $implementation->id);
-                }
-            })
-            ->where('active', true)
-            ->whereIn('scope', (array) $clientType)
-            ->where(function (Builder $builder) {
-                $builder->whereNull('expire_at');
-                $builder->orWhere('expire_at', '>=', now()->startOfDay());
-            })
-            ->orderByDesc('created_at');
+        return $this->morphTo();
     }
 }

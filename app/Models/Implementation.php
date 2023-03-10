@@ -9,6 +9,7 @@ use App\Http\Resources\MediaResource;
 use App\Models\Traits\ValidatesValues;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
+use App\Searches\AnnouncementSearch;
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\MediaImageConfig;
@@ -602,7 +603,7 @@ class Implementation extends BaseModel
             $banner = $implementation->banner;
 
             $request = BaseFormRequest::createFromGlobals();
-            $announcements = Announcement::search($request)->get();
+            $announcements = (new AnnouncementSearch($request, []))->query()->get();
             $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
 
             $config = array_merge($config, [
