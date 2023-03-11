@@ -43,11 +43,14 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
+        $from = $request->input('from');
+        $to = $request->input('to');
+
         $options = array_merge($request->only([
             'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids', 'targets', 'initiator',
         ]), [
-            'date_to' => $request->input('to') ? Carbon::parse($request->input('to')) : null,
-            'date_from' => $request->input('from') ? Carbon::parse($request->input('from')) : null,
+            'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
+            'date_to' => $from ? Carbon::parse($to)->endOfDay() : null,
         ]);
 
         if ($request->has('voucher_id') && !$organization->show_provider_transactions) {
