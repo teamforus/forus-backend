@@ -67,8 +67,8 @@ class VoucherTransactionBatchItemAmountRule extends BaseRule
      */
     protected function getAmountToOffsetOld(array $transactions, int $voucherId): float
     {
-        return array_reduce($transactions, static function (float $total, $transaction) use ($voucherId) {
+        return round(array_reduce($transactions, static function (float $total, $transaction) use ($voucherId) {
             return $transaction['voucher_id'] == $voucherId ? $total + $transaction['amount'] : $total;
-        }, 0);
+        }, 0), 2);
     }
 }

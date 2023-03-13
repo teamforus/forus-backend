@@ -7,7 +7,7 @@ use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherQuery;
-use App\Searches\VoucherTransactionsSearch;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,7 +17,7 @@ use Tests\Traits\MakesVoucherTransaction;
 
 class VoucherTransactionBatchTest extends TestCase
 {
-    use MakesVoucherTransaction, WithFaker;
+    use MakesVoucherTransaction, WithFaker, DatabaseTransactions;
 
     /**
      * @var string
@@ -32,7 +32,7 @@ class VoucherTransactionBatchTest extends TestCase
     /**
      * @var int
      */
-    protected int $transactionCountPerVoucher = 10;
+    protected int $transactionsPerVoucher = 10;
 
     /**
      * @var int
@@ -46,58 +46,45 @@ class VoucherTransactionBatchTest extends TestCase
     public function testVoucherTransactionBatchWithValidData(): void
     {
         $organization = $this->getOrganization();
-
-        $vouchers = $this->getVouchersQuery($organization)->take($this->vouchersCount)->get();
+        $vouchers = $this->getVouchersForBatchTransactionsQuery($organization)->take($this->vouchersCount)->get();
         $this->assertNotEmpty($vouchers);
 
-        $transactions = $vouchers->reduce(function ($arr, Voucher $voucher) {
-            $amount = $voucher->amount_available / $this->transactionCountPerVoucher;
-
-            for ($i = 1; $i <= $this->transactionCountPerVoucher; $i++) {
-                $arr[] = array_merge($this->getDefaultValidData(), [
-                    'amount' => $amount,
-                    'voucher_id' => $voucher->id,
-                ]);
-            }
-
-            return $arr;
+        $transactions = $vouchers->reduce(function (array $arr, Voucher $voucher) {
+            return array_merge($arr, array_map(fn () => array_merge([
+                'amount' => $voucher->amount_available / $this->transactionsPerVoucher,
+                'voucher_id' => $voucher->id,
+            ], $this->getDefaultTransactionData()), range(1, $this->transactionsPerVoucher)));
         }, []);
 
-        $this->checkTransactionBatch(compact('transactions'));
+        $this->checkTransactionBatch($transactions);
     }
 
     /**
      * @return void
      * @throws \Exception
      */
-    public function testVoucherTransactionBatchBigData(): void
+    public function testVoucherTransactionsBatchWithInvalidTotalAmount(): void
     {
         $organization = $this->getOrganization();
-
-        $voucher = $this->getVouchersQuery($organization)->first();
+        $voucher = $this->getVouchersForBatchTransactionsQuery($organization)->first();
         $this->assertNotNull($voucher);
 
         $transactions = [];
         $errors = [];
         $rows = 3000;
-        $totalAmount = 0;
-        $amount = 1;
-
-        $arr = array_merge($this->getDefaultValidData(), [
-            'amount' => $amount,
-            'voucher_id' => $voucher->id,
-        ]);
 
         foreach (range(0, $rows) as $item) {
-            $totalAmount += $amount;
-            $transactions[] = $arr;
+            $transactions[] = array_merge($this->getDefaultTransactionData(), [
+                'amount' => 1,
+                'voucher_id' => $voucher->id,
+            ]);
 
-            if ($voucher->amount_available_cached < $totalAmount) {
-                $errors[] = "transactions.{$item}.amount";
+            if ($voucher->amount_available_cached < array_sum(array_pluck($transactions, 'amount'))) {
+                $errors[] = "transactions.$item.amount";
             }
         }
 
-        $this->checkTransactionBatch(compact('transactions'), $errors);
+        $this->checkTransactionBatch($transactions, $errors);
     }
 
     /**
@@ -109,88 +96,77 @@ class VoucherTransactionBatchTest extends TestCase
         $organization = $this->getOrganization();
 
         /** @var Voucher|null $voucher */
-        $voucher = Voucher::whereNotIn(
-            'id', $this->getVouchersQuery($organization)->select('id')
-        )->first();
+        $vouchersQuery = $this->getVouchersForBatchTransactionsQuery($organization);
+        $voucher = Voucher::whereNotIn('id', $vouchersQuery->select('id'))->first();
         $this->assertNotNull($voucher);
 
-        $transactions = [
-            array_merge($this->getDefaultValidData(), [
-                'amount' => $voucher->amount_available,
-                'voucher_id' => $voucher->id,
-            ])
-        ];
+        $transaction = array_merge($this->getDefaultTransactionData(), [
+            'amount' => $voucher->amount_available,
+            'voucher_id' => $voucher->id,
+        ]);
 
-        $errors = [
+        $this->checkTransactionBatch([$transaction], [
             'transactions.0.voucher_id',
-        ];
-
-        $this->checkTransactionBatch(compact('transactions'), $errors);
+        ]);
     }
 
     /**
      * @return void
      * @throws \Exception
      */
-    public function testVoucherTransactionBatchWithInvalidSingleAmount(): void
+    public function testVoucherTransactionBatchWithInvalidAmount(): void
     {
         $organization = $this->getOrganization();
 
-        $voucher = $this->getVouchersQuery($organization)->first();
+        $voucher = $this->getVouchersForBatchTransactionsQuery($organization)->first();
         $this->assertNotNull($voucher);
 
         $transactions = [
-            array_merge($this->getDefaultValidData(), [
+            array_merge($this->getDefaultTransactionData(), [
                 'amount' => 0.01,
                 'voucher_id' => $voucher->id,
             ]),
-            array_merge($this->getDefaultValidData(), [
+            array_merge($this->getDefaultTransactionData(), [
+                'amount' => 0.02,
+                'voucher_id' => $voucher->id,
+            ]),
+            array_merge($this->getDefaultTransactionData(), [
                 'amount' => floatval($voucher->amount_available) + 100,
                 'voucher_id' => $voucher->id,
             ]),
         ];
 
-        $errors = [
+        $this->checkTransactionBatch($transactions, [
             'transactions.0.amount',
-            'transactions.1.amount',
-        ];
-
-        $this->checkTransactionBatch(compact('transactions'), $errors);
+            'transactions.2.amount',
+        ]);
     }
 
     /**
      * @return void
      * @throws \Exception
      */
-    public function testVoucherTransactionBatchWithInvalidMultipleAmount(): void
+    public function testVoucherTransactionBatchWithInvalidMultipleAmounts(): void
     {
         $organization = $this->getOrganization();
-
-        $vouchers = $this->getVouchersQuery($organization)->take($this->vouchersCount)->get();
+        $vouchers = $this->getVouchersForBatchTransactionsQuery($organization)->take($this->vouchersCount)->get();
         $this->assertNotEmpty($vouchers);
 
-        $transactions = $vouchers->reduce(function ($arr, Voucher $voucher) {
-            $amount = $voucher->amount_available / $this->transactionCountPerVoucher;
-
-            for ($i = 1; $i <= $this->transactionCountPerVoucher; $i++) {
-                $amount += $this->transactionCountPerVoucher === $i ? 100 : 0;
-
-                $arr[] = array_merge($this->getDefaultValidData(), [
-                    'amount' => $amount,
-                    'voucher_id' => $voucher->id,
-                ]);
-            }
-
-            return $arr;
+        $transactions = $vouchers->reduce(function (array $arr, Voucher $voucher) {
+            return array_merge($arr, array_map(fn ($index) => array_merge([
+                'amount' => array_sum([
+                    $voucher->amount_available / $this->transactionsPerVoucher,
+                    $index == $this->transactionsPerVoucher ? 100 : 0,
+                ]),
+                'voucher_id' => $voucher->id,
+            ], $this->getDefaultTransactionData()), range(1, $this->transactionsPerVoucher)));
         }, []);
 
-        $errors = $vouchers->reduce(function (array $arr, Voucher $voucher, int $key) {
-            return array_merge($arr, [
-                'transactions.' . ($key + 1) * $this->transactionCountPerVoucher - 1 . '.amount'
-            ]);
-        }, []);
+        $errors = $vouchers->keys()->map(function ($key) {
+            return 'transactions.' . ($key + 1) * $this->transactionsPerVoucher - 1 . '.amount';
+        })->toArray();
 
-        $this->checkTransactionBatch(compact('transactions'), $errors);
+        $this->checkTransactionBatch($transactions, $errors);
     }
 
     /**
@@ -200,12 +176,11 @@ class VoucherTransactionBatchTest extends TestCase
     public function testVoucherTransactionBatchWithInvalidData(): void
     {
         $organization = $this->getOrganization();
-
-        $voucher = $this->getVouchersQuery($organization)->first();
+        $voucher = $this->getVouchersForBatchTransactionsQuery($organization)->first();
         $this->assertNotNull($voucher);
 
         $transactions = [
-            array_merge($this->getDefaultValidData(), [
+            array_merge($this->getDefaultTransactionData(), [
                 'uid' => Str::random(50),
                 'amount' => $voucher->amount_available,
                 'voucher_id' => $voucher->id,
@@ -215,14 +190,12 @@ class VoucherTransactionBatchTest extends TestCase
             ])
         ];
 
-        $errors = [
+        $this->checkTransactionBatch($transactions, [
             'transactions.0.uid',
             'transactions.0.note',
             'transactions.0.direct_payment_iban',
             'transactions.0.direct_payment_name',
-        ];
-
-        $this->checkTransactionBatch(compact('transactions'), $errors);
+        ]);
     }
 
     /**
@@ -245,7 +218,7 @@ class VoucherTransactionBatchTest extends TestCase
         $this->assertNotNull($voucher);
 
         $transactions = [
-            array_merge($this->getDefaultValidData(), [
+            array_merge($this->getDefaultTransactionData(), [
                 'amount' => $voucher->amount_available,
                 'voucher_id' => $voucher->id,
             ])
@@ -255,13 +228,13 @@ class VoucherTransactionBatchTest extends TestCase
             'transactions.0.voucher_id',
         ];
 
-        $this->checkTransactionBatch(compact('transactions'), $errors);
+        $this->checkTransactionBatch($transactions, $errors);
     }
 
     /**
      * @return array
      */
-    private function getDefaultValidData(): array
+    private function getDefaultTransactionData(): array
     {
         return [
             'uid' => Str::random(15),
@@ -284,49 +257,37 @@ class VoucherTransactionBatchTest extends TestCase
     }
 
     /**
-     * @param array $data
+     * @param array $transactions
      * @param array $errors
      * @return void
      */
-    private function checkTransactionBatch(array $data, array $errors = []): void
+    private function checkTransactionBatch(array $transactions, array $errors = []): void
     {
         $startDate = now();
         $organization = $this->getOrganization();
-
-        $identity = $organization->identity;
-        $this->assertNotNull($identity);
-
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($identity));
+        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $data = compact('transactions');
 
         // validate
-        $response = $this->post(sprintf($this->apiUrl, $organization->id) . '/validate', $data, $headers);
-        count($errors) ? $response->assertJsonValidationErrors($errors) : $response->assertSuccessful();
-
-        // store
-        $response = $this->post(sprintf($this->apiUrl, $organization->id), $data, $headers);
+        $validateResponse = $this->post(sprintf($this->apiUrl, $organization->id) . '/validate', $data, $headers);
+        $uploadResponse = $this->post(sprintf($this->apiUrl, $organization->id), $data, $headers);
 
         if (count($errors) > 0) {
-            $response->assertJsonValidationErrors($errors);
+            $validateResponse->assertJsonValidationErrors($errors);
+            $uploadResponse->assertJsonValidationErrors($errors);
         } else {
-            $response
-                ->assertSuccessful()
-                ->assertJsonStructure([
-                    'created'
-                ]);
+            $validateResponse->assertSuccessful();
+            $uploadResponse->assertSuccessful()->assertJsonStructure(['created']);
 
             // check transactions
-            $query = VoucherTransaction::query()->whereIn(
-                'voucher_id', array_unique(Arr::pluck($data['transactions'], 'voucher_id'))
-            )->where('created_at', '>=', $startDate);
+            $createdTransactions = VoucherTransaction::query()
+                ->whereIn('voucher_id', array_unique(Arr::pluck($transactions, 'voucher_id')))
+                ->where('created_at', '>=', $startDate)
+                ->whereRelation('voucher.fund', 'organization_id', $organization->id)
+                ->get();
 
-            $builder = new VoucherTransactionsSearch([], $query);
-            $transactions = $builder->searchSponsor($organization)->get();
-
-            $this->assertEquals(count($data['transactions']), $transactions->count());
-            $this->assertEquals(
-                array_sum(Arr::pluck($data['transactions'], 'amount')),
-                $transactions->sum('amount')
-            );
+            $this->assertEquals(count($transactions), $createdTransactions->count());
+            $this->assertEquals(array_sum(Arr::pluck($transactions, 'amount')), $createdTransactions->sum('amount'));
         }
     }
 }

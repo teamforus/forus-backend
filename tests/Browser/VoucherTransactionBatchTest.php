@@ -34,7 +34,7 @@ class VoucherTransactionBatchTest extends DuskTestCase
     /**
      * @var int
      */
-    protected int $transactionCountPerVoucher = 10;
+    protected int $transactionPerVoucher = 10;
 
     /**
      * @return void
@@ -68,7 +68,7 @@ class VoucherTransactionBatchTest extends DuskTestCase
 
             $this->goToTransactionsPage($browser);
 
-            $voucher = $this->getVouchersQuery($implementation->organization)->first();
+            $voucher = $this->getVouchersForBatchTransactionsQuery($implementation->organization)->first();
             $this->assertNotNull($voucher);
 
             // create file with transactions for voucher and upload it
@@ -76,7 +76,7 @@ class VoucherTransactionBatchTest extends DuskTestCase
 
             // check transaction exists
             $transactions = $this->getTransactions($implementation->organization, $voucher, $startDate);
-            $this->assertEquals($transactions->count(), $this->transactionCountPerVoucher);
+            $this->assertEquals($transactions->count(), $this->transactionPerVoucher);
 
             foreach ($transactions as $transaction) {
                 $this->searchTransaction($browser, $transaction);
@@ -153,16 +153,16 @@ class VoucherTransactionBatchTest extends DuskTestCase
      */
     private function createFile(Voucher $voucher): void
     {
-        $filename =  storage_path($this->csvPath);
+        $filename = storage_path($this->csvPath);
         $handle = fopen($filename, 'w');
 
         fputcsv($handle, [
             'voucher_id', 'amount', 'direct_payment_iban', 'direct_payment_name', 'uid', 'note',
         ]);
 
-        $amount = $voucher->amount_available / $this->transactionCountPerVoucher;
+        $amount = $voucher->amount_available / $this->transactionPerVoucher;
 
-        for ($i = 1; $i <= $this->transactionCountPerVoucher; $i++) {
+        for ($i = 1; $i <= $this->transactionPerVoucher; $i++) {
             $transaction = [
                 'voucher_id' => $voucher->id,
                 'amount' => $amount,
