@@ -15,6 +15,7 @@ use Facebook\WebDriver\Remote\RemoteWebElement;
 use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestIdentities;
 use Illuminate\Support\Facades\Cache;
@@ -22,7 +23,7 @@ use Tests\Traits\MakesProductReservations;
 
 class ProductReservationTest extends DuskTestCase
 {
-    use AssertsSentEmails, MakesTestIdentities, MakesProductReservations;
+    use AssertsSentEmails, MakesTestIdentities, MakesProductReservations, HasFrontendActions;
 
     protected ?Identity $identity;
 
@@ -48,13 +49,12 @@ class ProductReservationTest extends DuskTestCase
                  return FundProviderQuery::whereApprovedForFundsFilter(FundProvider::query(), $fund->id)->exists();
             });
 
-            $identity = $this->makeIdentity($this->makeUniqueEmail());
-            $proxy = $this->makeIdentityProxy($identity);
-            $identity->primary_email->setVerified();
+            $identity = $this->makeIdentity();
+            $identity->addEmail($this->makeUniqueEmail(), true, true, true);
             $funds->each(fn (Fund $fund) => $fund->makeVoucher($identity->address));
 
-            $browser->script("localStorage.setItem('active_account', '$proxy->access_token')");
-            $browser->refresh();
+            $this->loginIdentity($browser, $identity);
+            $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
             $browser->waitFor('@headerTitle');
 
             // Assert at lease one fund exist
@@ -92,14 +92,11 @@ class ProductReservationTest extends DuskTestCase
             $browser->visit($implementation->urlFrontend('provider'));
 
             // Authorize identity
-            $proxy = $this->makeIdentityProxy($identity);
-            $browser->script("localStorage.setItem('active_account', '$proxy->access_token')");
-            $browser->refresh();
+            $this->loginIdentity($browser, $identity);
+            $this->assertIdentityAuthenticatedOnProviderDashboard($browser, $identity);
+            $this->selectDashboardOrganization($browser, $provider);
 
-            $browser->waitFor('@providerOverview');
-            $this->switchToOrganization($browser, $provider, $identity);
-
-            $browser->waitFor('@providerOverview', 10);
+            $browser->waitFor('@reservationsPage');
             $browser->element('@reservationsPage')->click();
             $browser->waitFor('@reservationsTitle');
 
@@ -144,27 +141,6 @@ class ProductReservationTest extends DuskTestCase
         $browser->within('@reservationRow' . $reservation->id, function(Browser $browser) use ($reservation) {
             $browser->assertSeeIn('@reservationState', $reservation->state_locale);
         });
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Organization $organization
-     * @param Identity $identity
-     * @return void
-     * @throws TimeOutException
-     */
-    private function switchToOrganization(
-        Browser $browser,
-        Organization $organization,
-        Identity $identity
-    ): void {
-        $browser->waitFor('@identityEmail');
-        $browser->assertSeeIn('@identityEmail', $identity->email);
-        $browser->waitFor('@headerOrganizationSwitcher');
-        $browser->press('@headerOrganizationSwitcher');
-        $browser->waitFor("@headerOrganizationItem$organization->id");
-        $browser->press("@headerOrganizationItem$organization->id");
-        $browser->pause(5000);
     }
 
     /**
@@ -340,8 +316,7 @@ class ProductReservationTest extends DuskTestCase
      */
     private function goToVouchersPage(Browser $browser, Identity $identity): void
     {
-        $browser->waitFor('@identityEmail');
-        $browser->assertSeeIn('@identityEmail', $identity->email);
+        $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
 
         $browser->waitFor('@userVouchers');
         $browser->element('@userVouchers')->click();
@@ -363,18 +338,5 @@ class ProductReservationTest extends DuskTestCase
 
         $browser->waitFor('@voucherTitle');
         $browser->assertSeeIn('@voucherTitle', $fund->name);
-    }
-
-    /**
-     * @param Browser $browser
-     * @return void
-     * @throws TimeOutException
-     */
-    private function logout(Browser $browser): void
-    {
-        $browser->waitFor('@userProfile');
-        $browser->element('@userProfile')->click();
-        $browser->waitFor('@btnUserLogout');
-        $browser->element('@btnUserLogout')->click();
     }
 }
