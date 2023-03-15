@@ -17,6 +17,7 @@ use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use App\Traits\HasMarkdownDescription;
 use App\Statistics\Funds\FinancialStatisticQueries;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -814,7 +815,10 @@ class Organization extends BaseModel
     ): EloquentBuilder {
         $postcodes = array_get($options, 'postcodes');
         $providerIds = array_get($options, 'provider_ids');
+
+        /** @var Carbon|null $dateFrom */
         $dateFrom = array_get($options, 'date_from');
+        /** @var Carbon|null $dateTo */
         $dateTo = array_get($options, 'date_to');
 
         $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $sponsor);
@@ -831,7 +835,8 @@ class Organization extends BaseModel
 
         if ($dateFrom && $dateTo) {
             $query->whereHas('voucher_transactions', function(EloquentBuilder $builder) use ($dateFrom, $dateTo) {
-                $builder->whereBetween('created_at', [$dateFrom, $dateTo]);
+                $builder->where('created_at', '>=', $dateFrom->clone()->startOfDay());
+                $builder->where('created_at', '<=', $dateTo->clone()->endOfDay());
             });
         }
 

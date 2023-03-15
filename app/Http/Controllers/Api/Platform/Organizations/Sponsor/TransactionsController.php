@@ -50,7 +50,7 @@ class TransactionsController extends Controller
             'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids', 'targets', 'initiator',
         ]), [
             'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
-            'date_to' => $from ? Carbon::parse($to)->endOfDay() : null,
+            'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,
         ]);
 
         if ($request->has('voucher_id') && !$organization->show_provider_transactions) {
