@@ -28,9 +28,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('product_reservations', function (Blueprint $table) {
-            $table->removeColumn('phone');
-            $table->removeColumn('address');
-            $table->removeColumn('birth_date');
+            $table->dropColumn('phone');
+            $table->dropColumn('address');
+            $table->dropColumn('birth_date');
         });
     }
 };

@@ -205,7 +205,7 @@ class OrganizationsController extends Controller
         $this->authorize('update', $organization);
 
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
-            'reservation_phone', 'reservation_address', 'reservation_requester_birth_date',
+            'reservation_phone', 'reservation_address', 'reservation_birth_date',
         ])));
 
         return new OrganizationResource($organization);
