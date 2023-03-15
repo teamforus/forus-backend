@@ -287,7 +287,11 @@ class VoucherTransactionBatchTest extends TestCase
                 ->get();
 
             $this->assertEquals(count($transactions), $createdTransactions->count());
-            $this->assertEquals(array_sum(Arr::pluck($transactions, 'amount')), $createdTransactions->sum('amount'));
+
+            $this->assertEquals(
+                round(array_sum(Arr::pluck($transactions, 'amount')), 2),
+                round($createdTransactions->sum('amount'), 2),
+            );
         }
     }
 }

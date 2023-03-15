@@ -10,16 +10,17 @@ use App\Searches\VoucherTransactionsSearch;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Facebook\WebDriver\Exception\TimeOutException;
+use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesVoucherTransaction;
 
 class VoucherTransactionBatchTest extends DuskTestCase
 {
-    use MakesVoucherTransaction, WithFaker;
+    use MakesVoucherTransaction, WithFaker, HasFrontendActions;
 
     /**
      * @var string
@@ -29,7 +30,7 @@ class VoucherTransactionBatchTest extends DuskTestCase
     /**
      * @var string
      */
-    protected string $csvPath = "app/public/transactions_test.csv";
+    protected string $csvPath = "public/transactions_batch_test.csv";
 
     /**
      * @var int
@@ -46,37 +47,27 @@ class VoucherTransactionBatchTest extends DuskTestCase
 
         $this->assertNotNull($implementation);
         $this->assertNotNull($implementation->organization);
-        $startDate = now();
 
-        $this->browse(function (Browser $browser) use ($implementation, $startDate) {
+        $this->browse(function (Browser $browser) use ($implementation) {
             $browser->visit($implementation->urlSponsorDashboard());
 
             // Authorize identity
-            $proxy = $this->makeIdentityProxy($implementation->organization->identity);
-            $browser->script("localStorage.setItem('active_account', '$proxy->access_token')");
-            $browser->refresh();
-
-            $browser->waitFor('@fundsTitle', 10);
-
-            $browser->waitFor('@identityEmail');
-            $browser->assertSeeIn('@identityEmail', $implementation->organization->identity->email);
-            $browser->waitFor('@headerOrganizationSwitcher');
-            $browser->press('@headerOrganizationSwitcher');
-            $browser->waitFor("@headerOrganizationItem$implementation->organization_id");
-            $browser->press("@headerOrganizationItem$implementation->organization_id");
-            $browser->pause(5000);
+            $this->loginIdentity($browser, $implementation->organization->identity);
+            $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $implementation->organization->identity);
+            $this->selectDashboardOrganization($browser, $implementation->organization);
 
             $this->goToTransactionsPage($browser);
 
+            $startDate = now();
             $voucher = $this->getVouchersForBatchTransactionsQuery($implementation->organization)->first();
             $this->assertNotNull($voucher);
 
             // create file with transactions for voucher and upload it
-            $this->uploadTransactionsPage($browser, $voucher);
+            $this->uploadTransactionsBatch($browser, $voucher);
 
             // check transaction exists
             $transactions = $this->getTransactions($implementation->organization, $voucher, $startDate);
-            $this->assertEquals($transactions->count(), $this->transactionPerVoucher);
+            $this->assertEquals($this->transactionPerVoucher, $transactions->count());
 
             foreach ($transactions as $transaction) {
                 $this->searchTransaction($browser, $transaction);
@@ -124,7 +115,7 @@ class VoucherTransactionBatchTest extends DuskTestCase
      * @return void
      * @throws TimeOutException
      */
-    private function uploadTransactionsPage(Browser $browser, Voucher $voucher): void
+    private function uploadTransactionsBatch(Browser $browser, Voucher $voucher): void
     {
         $browser->waitFor('@uploadTransactionsBatchButton');
         $browser->element('@uploadTransactionsBatchButton')->click();
@@ -135,7 +126,7 @@ class VoucherTransactionBatchTest extends DuskTestCase
         $browser->element('@selectFileButton')->click();
 
         $this->createFile($voucher);
-        $browser->attach('@inputUpload', storage_path($this->csvPath));
+        $browser->attach('@inputUpload', Storage::path($this->csvPath));
 
         $browser->waitFor('@uploadFileButton');
         $browser->element('@uploadFileButton')->click();
@@ -144,7 +135,7 @@ class VoucherTransactionBatchTest extends DuskTestCase
 
         $browser->element('@closeModalButton')->click();
 
-        File::delete(storage_path($this->csvPath));
+        Storage::delete($this->csvPath);
     }
 
     /**
@@ -153,26 +144,22 @@ class VoucherTransactionBatchTest extends DuskTestCase
      */
     private function createFile(Voucher $voucher): void
     {
-        $filename = storage_path($this->csvPath);
+        $filename = Storage::path($this->csvPath);
         $handle = fopen($filename, 'w');
 
         fputcsv($handle, [
             'voucher_id', 'amount', 'direct_payment_iban', 'direct_payment_name', 'uid', 'note',
         ]);
 
-        $amount = $voucher->amount_available / $this->transactionPerVoucher;
-
         for ($i = 1; $i <= $this->transactionPerVoucher; $i++) {
-            $transaction = [
+            fputcsv($handle, [
                 'voucher_id' => $voucher->id,
-                'amount' => $amount,
+                'amount' => $voucher->amount_available / $this->transactionPerVoucher,
                 'direct_payment_iban' => $this->faker()->iban('NL'),
                 'direct_payment_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,
                 'uid' => Str::random(15),
                 'note' => $this->faker()->sentence(),
-            ];
-
-            fputcsv($handle, $transaction);
+            ]);
         }
 
         fclose($handle);
