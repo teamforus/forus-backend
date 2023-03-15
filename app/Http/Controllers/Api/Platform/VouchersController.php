@@ -4,15 +4,14 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Vouchers\DeactivateVoucherRequest;
+use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
 use App\Http\Resources\VoucherCollectionResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\FundConfig;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
-use App\Scopes\Builders\VoucherQuery;
 use App\Searches\VouchersSearch;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -86,14 +85,14 @@ class VouchersController extends Controller
      * Share product voucher to email.
      *
      * @param VoucherToken $voucherToken
-     * @param DeactivateVoucherRequest $request
+     * @param ShareProductVoucherRequest $request
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
     public function shareVoucher(
         VoucherToken $voucherToken,
-        DeactivateVoucherRequest $request
+        ShareProductVoucherRequest $request
     ): JsonResponse {
         $this->authorize('shareVoucher', $voucherToken->voucher);
 
