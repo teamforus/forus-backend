@@ -148,7 +148,6 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
 
         $this->printText($this->green(sprintf("%s models processed", $models->count())));
         $this->printSeparator("#");
-        $this->printText();
 
         return $models;
     }

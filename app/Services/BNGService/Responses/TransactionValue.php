@@ -35,8 +35,26 @@ class TransactionValue extends Value
      * @return string
      * @noinspection PhpUnused
      */
+    public function getTransactionDate(): string
+    {
+        return $this->data['bookingDate'];
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
     public function getTransactionDescription(): string
     {
         return $this->data['remittanceInformationUnstructured'];
+    }
+
+    /**
+     * @return array
+     * @noinspection PhpUnused
+     */
+    public function getRaw(): array
+    {
+        return $this->data;
     }
 }
