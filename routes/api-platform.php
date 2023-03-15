@@ -743,6 +743,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\Sponsor\TransactionBulksController@export"
     );
 
+    $router->get(
+        'organizations/{organization}/sponsor/transaction-bulks/{voucher_transaction_bulks}/export-bulk-to-bng',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController@exportBulkToBNG"
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/transaction-bulks/{voucher_transaction_bulks}/set-accepted-manually',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController@setAcceptedManually"
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/transaction-bulks',
         "Api\Platform\Organizations\Sponsor\TransactionBulksController"

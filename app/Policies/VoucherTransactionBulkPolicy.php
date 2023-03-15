@@ -117,11 +117,11 @@ class VoucherTransactionBulkPolicy
             $this->checkIntegrity($voucherTransactionBulk, $organization) &&
             $organization->identityCan($identity, 'manage_transaction_bulks');
 
-        if (!$voucherTransactionBulk->isPending()) {
-            return $this->deny("Only pending bulks can be approved manually.");
+        if (!$voucherTransactionBulk->isPending() && !$voucherTransactionBulk->isDraft()) {
+            return $this->deny("Only pending or draft bulks can be approved manually.");
         }
 
-        return $hasPermission;
+        return $hasPermission && $voucherTransactionBulk->bank_connection->bank->isBNG();
     }
 
     /**

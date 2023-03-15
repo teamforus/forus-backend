@@ -13,6 +13,7 @@ use App\Services\BNGService\BNGService;
 use App\Services\BNGService\Data\PaymentInfoData;
 use App\Services\BNGService\Exceptions\ApiException;
 use App\Services\BNGService\Responses\BulkPaymentValue;
+use App\Services\BNGService\Responses\Consent\BulkPaymentConsentValue;
 use App\Services\BNGService\Responses\Entries\Account;
 use App\Services\BNGService\Responses\Entries\Amount as AmountBNG;
 use App\Services\BNGService\Responses\Entries\BulkPayment;
@@ -57,6 +58,7 @@ use Throwable;
  * @property array|null $auth_params
  * @property string $state
  * @property int $accepted_manually
+ * @property int $is_exported
  * @property int $state_fetched_times
  * @property string|null $state_fetched_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -81,6 +83,7 @@ use Throwable;
  * @method static Builder|VoucherTransactionBulk whereExecutionDate($value)
  * @method static Builder|VoucherTransactionBulk whereId($value)
  * @method static Builder|VoucherTransactionBulk whereImplementationId($value)
+ * @method static Builder|VoucherTransactionBulk whereIsExported($value)
  * @method static Builder|VoucherTransactionBulk whereMonetaryAccountIban($value)
  * @method static Builder|VoucherTransactionBulk whereMonetaryAccountId($value)
  * @method static Builder|VoucherTransactionBulk whereMonetaryAccountName($value)
@@ -103,6 +106,8 @@ class VoucherTransactionBulk extends BaseModel
     public const EVENT_ACCEPTED = 'accepted';
     public const EVENT_REJECTED = 'rejected';
     public const EVENT_ERROR = 'error';
+    public const EVENT_MANUALLY_ACCEPTED = 'manually_accepted';
+    public const EVENT_EXPORTED = 'exported';
 
     public const EVENTS = [
         self::EVENT_RESET,
@@ -136,7 +141,8 @@ class VoucherTransactionBulk extends BaseModel
     ];
 
     protected $casts = [
-        'auth_params' => 'array',
+        'auth_params'       => 'array',
+        'accepted_manually' => 'boolean',
     ];
 
     protected $hidden = [
@@ -151,7 +157,7 @@ class VoucherTransactionBulk extends BaseModel
         'bank_connection_id', 'state', 'state_fetched_times', 'state_fetched_at',
         'payment_id', 'accepted_manually', 'monetary_account_id', 'monetary_account_iban',
         'monetary_account_name', 'code', 'access_token', 'redirect_token', 'sepa_xml',
-        'execution_date', 'auth_url', 'auth_params', 'implementation_id',
+        'execution_date', 'auth_url', 'auth_params', 'implementation_id', 'is_exported',
     ];
 
     /**
@@ -403,52 +409,20 @@ class VoucherTransactionBulk extends BaseModel
     ): self {
         try {
             $implementation = $implementation ?: Implementation::general();
-            $bngService = resolve('bng_service');
 
-            DB::transaction(function() use ($employee, $bngService, $implementation) {
-                $payments = [];
+            DB::transaction(function() use ($employee, $implementation) {
                 $requestedExecutionDate = PaymentBNG::getNextBusinessDay()->format('Y-m-d');
 
-                foreach ($this->voucher_transactions as $transaction) {
-                    $ibanTo = $transaction->getTargetIban();
-                    $ibanToName = $transaction->getTargetName();
-
-                    $transaction->update([
-                        'iban_to' => $ibanTo,
-                        'iban_to_name' => $ibanToName,
-                        'iban_from' => $this->monetary_account_iban,
-                        'payment_description' => $transaction->makePaymentDescription(140),
-                    ]);
-
-                    $payments[] = new PaymentBNG(
-                        new AmountBNG(number_format($transaction->amount, 2, '.', ''), 'EUR'),
-                        new Account($this->monetary_account_iban, $this->monetary_account_name),
-                        new Account($ibanTo, $ibanToName),
-                        $transaction->id,
-                        $transaction->payment_description,
-                        $requestedExecutionDate
-                    );
-                }
-
-                $redirectToken = static::makeUniqueToken('redirect_token', 200);
-
-                $bulkPayment = new BulkPayment(
-                    new PaymentInitiator(Arr::get($this->bank_connection->bank->data, 'paymentInitiatorName')),
-                    new Account($this->monetary_account_iban, $this->monetary_account_name),
-                    $payments,
-                    new PaymentInfoData($this->id, $requestedExecutionDate, $redirectToken),
-                    token_generator()->generate(32)
-                );
-
-                $response = $bngService->bulkPayment($bulkPayment);
+                $bulkPayment = $this->createBulkPaymentToBNG($requestedExecutionDate);
+                $bulkPaymentConsentValue = $this->submitBulkPaymentToBNG($bulkPayment);
 
                 $this->updateModel([
                     'state' => self::STATE_PENDING,
-                    'payment_id' => $response->getPaymentId(),
-                    'auth_url' => $response->getAuthData()->getUrl(),
+                    'payment_id' => $bulkPaymentConsentValue->getPaymentId(),
+                    'auth_url' => $bulkPaymentConsentValue->getAuthData()->getUrl(),
                     'sepa_xml' => $bulkPayment->toXml(),
                     'redirect_token' => $bulkPayment->getRedirectToken(),
-                    'auth_params' => $response->getAuthData()->getParams(),
+                    'auth_params' => $bulkPaymentConsentValue->getAuthData()->getParams(),
                     'execution_date' => $requestedExecutionDate,
                     'implementation_id' => $implementation->id,
                 ])->log(self::EVENT_SUBMITTED, $this->getLogModels($employee));
@@ -472,6 +446,66 @@ class VoucherTransactionBulk extends BaseModel
     }
 
     /**
+     * @param string $requestedExecutionDate
+     * @return BulkPayment
+     */
+    private function createBulkPaymentToBNG(string $requestedExecutionDate): BulkPayment {
+        $payments = [];
+
+        foreach ($this->voucher_transactions as $transaction) {
+            $ibanTo = $transaction->getTargetIban();
+            $ibanToName = $transaction->getTargetName();
+
+            $transaction->update([
+                'iban_to' => $ibanTo,
+                'iban_to_name' => $ibanToName,
+                'iban_from' => $this->monetary_account_iban,
+                'payment_description' => $transaction->makePaymentDescription(140),
+            ]);
+
+            $payments[] = new PaymentBNG(
+                new AmountBNG(number_format($transaction->amount, 2, '.', ''), 'EUR'),
+                new Account($this->monetary_account_iban, $this->monetary_account_name),
+                new Account($ibanTo, $ibanToName),
+                $transaction->id,
+                $transaction->payment_description,
+                $requestedExecutionDate
+            );
+        }
+
+        $redirectToken = static::makeUniqueToken('redirect_token', 200);
+
+        return new BulkPayment(
+            new PaymentInitiator(Arr::get($this->bank_connection->bank->data, 'paymentInitiatorName')),
+            new Account($this->monetary_account_iban, $this->monetary_account_name),
+            $payments,
+            new PaymentInfoData($this->id, $requestedExecutionDate, $redirectToken),
+            token_generator()->generate(32)
+        );
+    }
+
+    /**
+     * @param BulkPayment $bulkPayment
+     * @return BulkPaymentConsentValue
+     */
+    private function submitBulkPaymentToBNG(
+        BulkPayment $bulkPayment
+    ): BulkPaymentConsentValue {
+        $bngService = resolve('bng_service');
+
+        return $bngService->bulkPayment($bulkPayment);
+    }
+
+    /**
+     * @return string
+     */
+    public function getBulkPaymentToBNGXML(): string {
+        $bulkPayment = $this->createBulkPaymentToBNG(PaymentBNG::getNextBusinessDay()->format('Y-m-d'));
+
+        return $bulkPayment->toXml();
+    }
+
+    /**
      * @return $this
      */
     public function setRejected(): self
@@ -479,6 +513,30 @@ class VoucherTransactionBulk extends BaseModel
         $this->updateModel([
             'state' => static::STATE_REJECTED,
         ])->log(static::STATE_REJECTED, $this->getLogModels());
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function setManuallyAccepted(): self
+    {
+        $this->updateModel([
+            'accepted_manually' => true
+        ])->log(self::EVENT_MANUALLY_ACCEPTED, $this->getLogModels());
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function setIsExported(): self
+    {
+        $this->updateModel([
+            'is_exported' => true
+        ])->log(self::EVENT_EXPORTED, $this->getLogModels());
 
         return $this;
     }
