@@ -24,6 +24,8 @@ use App\Console\Commands\Digests\SendValidatorDigestCommand;
 use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
+use App\Console\Commands\UpdateProductCategoriesCommand;
+use App\Console\Commands\UpdateRolesCommand;
 use App\Console\Commands\UpdateSystemNotificationsCommand;
 use App\Services\Forus\Session\Commands\UpdateSessionsExpirationCommand;
 use App\Services\BackofficeApiService\Commands\SendBackofficeLogsCommand;
@@ -91,6 +93,10 @@ class Kernel extends ConsoleKernel
         MigratePhysicalCardsCommand::class,
         UpdateSessionsExpirationCommand::class,
         SendBackofficeLogsCommand::class,
+
+        // seeders
+        UpdateProductCategoriesCommand::class,
+        UpdateRolesCommand::class,
     ];
 
     /**
