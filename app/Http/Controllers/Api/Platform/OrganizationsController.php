@@ -34,9 +34,12 @@ class OrganizationsController extends Controller
     {
         $this->authorize('viewAny', Organization::class);
 
-        return OrganizationResource::collection(Organization::searchQuery($request)->with(
-            OrganizationResource::load($request)
-        )->orderBy('name')->paginate($request->input('per_page', 10)));
+        $organizations = Organization::searchQuery($request)
+            ->with(OrganizationResource::load($request))
+            ->orderBy('name')
+            ->paginate($request->input('per_page', 10));
+
+        return OrganizationResource::collection($organizations);
     }
 
     /**
