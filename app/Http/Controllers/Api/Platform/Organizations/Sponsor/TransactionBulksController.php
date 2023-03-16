@@ -126,6 +126,7 @@ class TransactionBulksController extends Controller
      * @param VoucherTransactionBulk $transactionBulk
      * @return VoucherTransactionBulkResource
      * @throws AuthorizationException
+     * @throws Throwable
      *
      * @noinspection PhpUnused
      */
@@ -137,6 +138,7 @@ class TransactionBulksController extends Controller
         $this->authorize('setAcceptedManually', [$transactionBulk, $organization]);
 
         $transactionBulk->setManuallyAccepted();
+        $transactionBulk->updatePaymentStatus();
 
         return VoucherTransactionBulkResource::create($transactionBulk);
     }
@@ -154,9 +156,9 @@ class TransactionBulksController extends Controller
         VoucherTransactionBulk $transactionBulk
     ): string {
         $this->authorize('show', $organization);
-        $this->authorize('resetBulk', [$transactionBulk, $organization]);
+        $this->authorize('exportBulkToBNG', [$transactionBulk, $organization]);
 
-        $transactionBulk->setIsExported();
+        $transactionBulk->setExported();
 
         return $transactionBulk->getBulkPaymentToBNGXML();
     }

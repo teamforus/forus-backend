@@ -100,7 +100,7 @@ class VoucherTransactionBulkPolicy
     }
 
     /**
-     * Determine whether the user can build a new voucher transaction bulk.
+     * Determine whether the user can manually accept bulk transaction
      *
      * @param Identity $identity
      * @param VoucherTransactionBulk $voucherTransactionBulk
@@ -115,10 +115,36 @@ class VoucherTransactionBulkPolicy
     ): Response|bool {
         $hasPermission =
             $this->checkIntegrity($voucherTransactionBulk, $organization) &&
+            $organization->identityCan($identity, 'manage_transaction_bulks') &&
+            $voucherTransactionBulk->is_exported;
+
+        if (!$voucherTransactionBulk->isDraft()) {
+            return $this->deny("Only draft bulks can be approved manually.");
+        }
+
+        return $hasPermission && $voucherTransactionBulk->bank_connection->bank->isBNG();
+    }
+
+    /**
+     * Determine whether the user can manually accept bulk transaction
+     *
+     * @param Identity $identity
+     * @param VoucherTransactionBulk $voucherTransactionBulk
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function exportBulkToBNG(
+        Identity $identity,
+        VoucherTransactionBulk $voucherTransactionBulk,
+        Organization $organization
+    ): Response|bool {
+        $hasPermission =
+            $this->checkIntegrity($voucherTransactionBulk, $organization) &&
             $organization->identityCan($identity, 'manage_transaction_bulks');
 
-        if (!$voucherTransactionBulk->isPending() && !$voucherTransactionBulk->isDraft()) {
-            return $this->deny("Only pending or draft bulks can be approved manually.");
+        if (!$voucherTransactionBulk->isDraft()) {
+            return $this->deny("Only draft bulks can be exported.");
         }
 
         return $hasPermission && $voucherTransactionBulk->bank_connection->bank->isBNG();

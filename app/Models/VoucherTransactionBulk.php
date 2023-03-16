@@ -524,7 +524,11 @@ class VoucherTransactionBulk extends BaseModel
     {
         $this->updateModel([
             'accepted_manually' => true
-        ])->log(self::EVENT_MANUALLY_ACCEPTED, $this->getLogModels());
+        ])->log(self::EVENT_MANUALLY_ACCEPTED, $this->getLogModels(), [
+            'manually_accepted'             => true,
+            'manually_accepted_at'          => now()->format('Y-m-d'),
+            'manually_accepted_at_locale'   => format_date_locale(now()),
+        ]);
 
         return $this;
     }
@@ -532,11 +536,15 @@ class VoucherTransactionBulk extends BaseModel
     /**
      * @return $this
      */
-    public function setIsExported(): self
+    public function setExported(): self
     {
         $this->updateModel([
             'is_exported' => true
-        ])->log(self::EVENT_EXPORTED, $this->getLogModels());
+        ])->log(self::EVENT_EXPORTED, $this->getLogModels(), [
+            'is_exported'           => true,
+            'exported_at'           => now()->format('Y-m-d'),
+            'exported_at_locale'    => format_date_locale(now()),
+        ]);
 
         return $this;
     }
