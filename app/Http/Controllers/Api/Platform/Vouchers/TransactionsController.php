@@ -103,7 +103,7 @@ class TransactionsController extends Controller
                 $organization = $product->organization;
             }
 
-            $fundProviderProduct = $product?->getFundProviderProductOrFail($voucher->fund);
+            $fundProviderProduct = $product?->getFundProviderProduct($voucher->fund);
         } else {
             // Subsidy fund voucher
             $product = Product::findOrFail($request->input('product_id'));

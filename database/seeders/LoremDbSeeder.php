@@ -305,8 +305,8 @@ class LoremDbSeeder extends Seeder
             foreach (Fund::take(Fund::count() / 2)->get() as $fund) {
                 FundProviderApplied::dispatch($fund, $fund->providers()->create([
                     'organization_id'   => $organization->id,
-                    'allow_budget'      => $fund->isTypeBudget() && random_int(0, 2),
-                    'allow_products'    => $fund->isTypeBudget() && random_int(0, 2),
+                    'allow_budget'      => $fund->isTypeBudget() && random_int(0, 1) == 0,
+                    'allow_products'    => $fund->isTypeBudget() && random_int(0, 10) == 0,
                     'state'             => FundProvider::STATE_ACCEPTED,
                 ]));
             }
@@ -326,7 +326,7 @@ class LoremDbSeeder extends Seeder
 
                 /** @var FundProvider $provider */
                 $provider = $fund->providers()->firstOrCreate([
-                    'organization_id'   => $providers->random(),
+                    'organization_id' => $providers->random(),
                 ]);
 
                 FundProviderApplied::dispatch($fund, $provider->updateModel([
@@ -337,22 +337,19 @@ class LoremDbSeeder extends Seeder
             }
         }
 
-        Fund::whereType(Fund::TYPE_SUBSIDIES)->get()->each(static function(Fund $fund) {
+        Fund::get()->each(static function(Fund $fund) {
             $fund->providers()->get()->each(static function(FundProvider $provider) {
-                $fundProviderProducts = $provider->organization->products->random(
-                    ceil($provider->organization->products->count() / 2)
-                )->map(static function(Product $product) {
-                    return [
-                        'amount' => random_int(0, 10) < 7 ? $product->price / 2 : $product->price,
-                        'product_id' => $product->id,
-                        'limit_total' => $product->unlimited_stock ? 1000 : $product->stock_amount,
-                        'limit_per_identity' => $product->unlimited_stock ? 25 : ceil(
-                            max($product->stock_amount / 10, 1)
-                        ),
-                    ];
-                })->toArray();
+                $products = $provider->organization->products;
+                $products = $products->shuffle()->take(ceil($products->count() / 2));
 
-                $provider->fund_provider_products()->createMany($fundProviderProducts);
+                $provider->fund_provider_products()->insert($products->map(fn (Product $product) => [
+                    'amount' => random_int(0, 10) < 7 ? $product->price / 2 : $product->price,
+                    'product_id' => $product->id,
+                    'fund_provider_id' => $provider->id,
+                    'limit_total' => $product->unlimited_stock ? 1000 : $product->stock_amount,
+                    'limit_per_identity' => $product->unlimited_stock ? 25 : ceil(max($product->stock_amount / 10, 1)),
+                    'created_at' => now(),
+                ])->toArray());
             });
         });
 
@@ -513,7 +510,7 @@ class LoremDbSeeder extends Seeder
         int $offices_count = 0
     ): Organization {
         $organization = Organization::create(array_only(array_merge([
-            'kvk' => '69599068',
+            'kvk' => Organization::GENERIC_KVK,
             'iban' => $this->config('default_organization_iban') ?: $this->faker->iban('NL'),
             'phone' => '123456789',
             'email' => $this->primaryEmail,
@@ -547,21 +544,17 @@ class LoremDbSeeder extends Seeder
      * @param Organization $organization
      * @param int $count
      * @param array $fields
-     * @return array
+     * @return void
      * @throws \Throwable
      */
     public function makeOffices(
         Organization $organization,
         int $count = 1,
         array $fields = []
-    ): array {
-        $out = [];
-
+    ): void {
         while ($count-- > 0) {
-            $out[] = $this->makeOffice($organization, $fields);
+            $this->makeOffice($organization, $fields);
         }
-
-        return $out;
     }
 
     /**
@@ -594,13 +587,13 @@ class LoremDbSeeder extends Seeder
             'parsed'            => true
         ], $fields));
 
-        foreach (range(0, 4) as $week_day) {
-            $office->schedules()->create([
-                'week_day' => $week_day,
-                'start_time' => '08:00',
-                'end_time' => '16:00'
-            ]);
-        }
+        $office->schedules()->insert(array_map(fn ($week_day) => [
+            'start_time' => '08:00',
+            'end_time' => '16:00',
+            'week_day' => $week_day,
+            'created_at' => now(),
+            'office_id' => $office->id,
+        ], range(0, 4)));
 
         return $office;
     }
