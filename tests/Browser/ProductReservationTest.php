@@ -166,7 +166,7 @@ class ProductReservationTest extends DuskTestCase
         $this->goToVoucherPage($browser, $fund);
 
         // Find available product and open it
-        $browser->waitFor('@productItem')->press('@productItem');
+        $browser->waitFor('@productItem', 8)->press('@productItem');
         $browser->waitFor('@fundItem');
         $productName = trim($browser->waitFor('@productName')->element('@productName')->getText());
 

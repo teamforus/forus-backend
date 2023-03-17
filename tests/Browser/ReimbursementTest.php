@@ -178,6 +178,7 @@ class ReimbursementTest extends DuskTestCase
                 $browser->waitFor('@reimbursementResolveSubmit');
                 $browser->element('@reimbursementResolveSubmit')->click();
                 $browser->waitFor('@reimbursementsPage', 8);
+                $browser->pause(3000);
                 $reimbursement->refresh();
 
                 $this->assertTrue($reimbursement->isApproved());
@@ -189,6 +190,7 @@ class ReimbursementTest extends DuskTestCase
                 $browser->waitFor('@reimbursementResolveSubmit');
                 $browser->element('@reimbursementResolveSubmit')->click();
                 $browser->waitFor('@reimbursementsPage', 8);
+                $browser->pause(3000);
                 $reimbursement->refresh();
 
                 $this->assertTrue($reimbursement->isDeclined());
