@@ -58,7 +58,7 @@ class ProductReservationsController extends Controller
         $voucher = Voucher::findByAddress($request->input('voucher_address'), $request->auth_address());
 
         $reservation = $voucher->reserveProduct($product, null, $request->only([
-            'first_name', 'last_name', 'user_note',
+            'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date',
         ]));
 
         if ($reservation->product->autoAcceptsReservations($voucher->fund)) {

@@ -65,7 +65,9 @@ class ProductResource extends BaseJsonResource
             'offices' => OfficeResource::collection($product->organization->offices),
             'product_category' => new ProductCategoryResource($product->product_category),
             'bookmarked' => $product->isBookmarkedBy($baseRequest->identity()),
-        ]);
+        ], array_merge(
+            $this->productReservationFieldSettings($product),
+        ));
     }
 
     /**
@@ -150,5 +152,37 @@ class ProductResource extends BaseJsonResource
             $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
             $builder->whereIn('funds.id', $this->fundsQuery()->select('funds.id'));
         })->$type('amount'), 0);
+    }
+
+    /**
+     * @param Product $product
+     * @return array
+     */
+    private function productReservationFieldSettings(Product $product): array
+    {
+        $global = $product::RESERVATION_FIELD_GLOBAL;
+        $request = BaseFormRequest::createFromBase(request());
+
+        if ($request->isWebshop()) {
+            return [
+                'reservation' => [
+                    'phone' => $product->reservation_phone == $global ?
+                        $product->organization->reservation_phone :
+                        $product->reservation_phone,
+                    'address' => $product->reservation_address == $global ?
+                        $product->organization->reservation_address :
+                        $product->reservation_address,
+                    'birth_date' => $product->reservation_birth_date == $global ?
+                        $product->organization->reservation_birth_date :
+                        $product->reservation_birth_date,
+                ],
+            ];
+        }
+
+        return [
+            'reservation_phone' => $product->reservation_phone,
+            'reservation_address' => $product->reservation_address,
+            'reservation_birth_date' => $product->reservation_birth_date,
+        ];
     }
 }
