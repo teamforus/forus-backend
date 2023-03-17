@@ -761,6 +761,7 @@ class Product extends BaseModel
         $product = $organization->products()->create(array_merge($request->only([
             'name', 'description', 'price', 'product_category_id', 'expire_at',
             'reservation_enabled', 'reservation_policy',
+            'reservation_phone', 'reservation_address', 'reservation_birth_date',
         ]), [
             'total_amount' => $unlimited_stock ? 0 : $total_amount,
             'unlimited_stock' => $unlimited_stock

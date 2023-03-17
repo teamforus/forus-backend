@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -12,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('reservations', function () {
-            DB::statement(
-                "ALTER TABLE `product_reservations` CHANGE `state` `state` ".
-                "ENUM('pending', 'accepted', 'rejected', 'canceled', 'canceled_by_client', 'complete') DEFAULT 'pending';"
-            );
-        });
+        DB::statement(
+            "ALTER TABLE `product_reservations` CHANGE `state` `state` ".
+            "ENUM('pending', 'accepted', 'rejected', 'canceled', 'canceled_by_client') DEFAULT 'pending';"
+        );
     }
 
     /**
@@ -25,5 +22,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down(): void {}
+    public function down(): void {
+        DB::statement(
+            "ALTER TABLE `product_reservations` CHANGE `state` `state` ".
+            "ENUM('pending', 'accepted', 'rejected', 'canceled', 'canceled_by_client', 'complete') DEFAULT 'pending';"
+        );}
 };
