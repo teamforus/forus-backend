@@ -123,17 +123,14 @@ class ProductResource extends BaseJsonResource
                 'limit_total', 'limit_per_identity', 'limit_available',
             ]);
 
-            if (!$fund->isTypeSubsidy()) {
-                return array_merge($data, $productData);
-            }
-
             $fundProviderProduct = $product->getFundProviderProduct($fund);
 
             return array_merge($data, $productData, [
+                'limit_per_identity' => $fundProviderProduct->limit_per_identity,
+            ], $fund->isTypeSubsidy() ? [
                 'price' => $fundProviderProduct->user_price,
                 'price_locale' => $fundProviderProduct->user_price_locale,
-                'limit_per_identity' => $fundProviderProduct->limit_per_identity,
-            ]);
+            ] : []);
         })->values();
     }
 
