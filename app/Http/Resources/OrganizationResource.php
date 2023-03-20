@@ -35,6 +35,7 @@ class OrganizationResource extends JsonResource
     {
         $load = [
             'tags',
+            'offices',
             'bank_connection_active',
         ];
 
