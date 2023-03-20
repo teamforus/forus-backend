@@ -11,10 +11,12 @@ use App\Events\FundRequests\FundRequestCreated;
 use App\Events\FundRequestRecords\FundRequestRecordAssigned;
 use App\Events\FundRequestRecords\FundRequestRecordResigned;
 use App\Events\FundRequests\FundRequestResolved;
+use App\Mail\Funds\FundRequests\FundRequestAssignedMail;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
+use App\Models\Implementation;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRequestedNotification;
@@ -131,6 +133,16 @@ class FundRequestSubscriber
         $fundRequest->log($fundRequest::EVENT_ASSIGNED, $eventModels, array_merge(
             $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [],
         ));
+
+        resolve('forus.services.notification')->sendSystemMail(
+            $event->getEmployee()->identity?->email,
+            new FundRequestAssignedMail([
+                'fund_name'             => $fundRequest->fund->name,
+                'button_link'           => Implementation::active()->urlFrontend('validator'),
+                'assigned_at_locale'    => format_datetime_locale(now()),
+                'supervisor_employee'   => $supervisorEmployee->identity?->email,
+            ])
+        );
     }
 
     /**
