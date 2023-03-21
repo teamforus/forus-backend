@@ -92,7 +92,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
         switch ($this->ask("Please select next step:", 1)) {
             case 1: $this->migrationSource = static::SOURCE_IDENTITY; break;
             case 2: $this->migrationSource = static::SOURCE_RELATION; break;
-            case 3: $this->exit(); break;
+            case 3: $this->exit();
             default: $this->printText("Invalid input!\nPlease try again:\n");
         }
 
@@ -137,7 +137,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
             case 3: $this->printCards($this->buildEdgeCasePhysicalCardsQuery($fund)->get()); break;
             case 4: $this->printCards($this->buildEdgeCasePhysicalCardsQuery($fund)->get(), true); break;
             case 5: $this->printCards($this->buildPhysicalCardsQuery($fund)->get()); break;
-            case 6: $this->exit(); break;
+            case 6: $this->exit();
             default: $this->printText("Invalid input!\nPlease try again:\n"); break;
         }
 
@@ -364,7 +364,6 @@ class MigratePhysicalCardsCommand extends BaseCommand
             }
 
             $this->printSeparator();
-            $this->printText("\n");
             return;
         }
 
@@ -535,6 +534,5 @@ class MigratePhysicalCardsCommand extends BaseCommand
         $this->printHeader($header);
         $this->table($headers, $body);
         $this->printSeparator();
-        $this->printText();
     }
 }

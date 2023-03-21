@@ -41,6 +41,10 @@ abstract class BaseCommand extends Command
                 echo str_repeat("    ", $depth) . " - $item  \n";
             }
 
+            if (is_null($item)) {
+                echo str_repeat("    ", $depth) . "====================\n";
+            }
+
             if (is_array($item)) {
                 echo str_repeat("    ", $depth) . " - $item[0]  \n";
                 $this->printList($item[1], $depth + 1);
@@ -50,11 +54,12 @@ abstract class BaseCommand extends Command
 
     /**
      * @param string $char
+     * @param string $append
      * @return void
      */
-    protected function printSeparator(string $char = "="): void
+    protected function printSeparator(string $char = "=", string $append = "\n"): void
     {
-        echo str_repeat($char, 80) . "\n";
+        echo str_repeat($char, 80) . "$append\n";
     }
 
     /**
