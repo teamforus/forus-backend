@@ -3,7 +3,6 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\Fund;
 use App\Models\FundProviderProduct;
 use App\Models\BaseModel;
 use App\Models\Organization;
@@ -32,7 +31,7 @@ class ProductSubQuery
             throw new \Exception("At least one filter is required.");
         }
 
-        $builder ?: Product::query();
+        $builder = $builder ?: Product::query();
 
         $baseQuery = $builder->addSelect([
             'limit_multiplier' => self::limitMultiplierQuery($options),
@@ -93,7 +92,6 @@ class ProductSubQuery
                 $voucher_id && $builder->whereIn('vouchers.id', (array) $voucher_id);
                 $identity_address && $builder->whereIn('vouchers.identity_address', (array) $identity_address);
             })->whereHas('fund', function(Builder $builder) use ($fund_id) {
-                $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
                 $fund_id && $builder->whereIn('funds.id', (array) $fund_id);
             })->whereNull('product_id')
                 ->select([])->selectRaw("CAST(IFNULL(SUM(limit_multiplier), 1) as SIGNED)")
@@ -110,7 +108,8 @@ class ProductSubQuery
             ->whereColumn('fund_provider_products.product_id', '=', 'products.id')
             ->select([])
             ->selectRaw('CAST(if(`limit_total_unlimited`, null, `limit_total`) as SIGNED) as `limit_total`')
-            ->getQuery();
+            ->getQuery()
+            ->whereNull('deleted_at');
 
         return BaseModel::query()->fromSub($builder, 'reservations')
             ->selectRaw('cast(sum(`limit_total`) as signed) as `limit_total`');
@@ -126,9 +125,11 @@ class ProductSubQuery
             ->whereColumn('fund_provider_products.product_id', '=', 'products.id')
             ->select([])
             ->selectRaw('CAST(`limit_per_identity` * `limit_multiplier` AS SIGNED) as `limit`')
-            ->getQuery();
+            ->getQuery()
+            ->whereNull('deleted_at');
 
-        return BaseModel::query()->fromSub($builder, 'reservations')
+        return BaseModel::query()
+            ->fromSub($builder, 'reservations')
             ->selectRaw('cast(sum(`limit`) as signed) as `limit`');
     }
 
@@ -151,8 +152,6 @@ class ProductSubQuery
             if ($fund_id || $voucher_id || $identity_address) {
                 $builder->whereHas('fund_provider', function(Builder $builder) use ($fund_id, $voucher_id, $identity_address) {
                     $builder->whereHas('fund', function(Builder $builder) use ($fund_id, $voucher_id, $identity_address) {
-                        $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
-
                         $fund_id && $builder->whereIn('funds.id', (array) $fund_id);
 
                         if ($voucher_id || $identity_address) {
@@ -194,7 +193,12 @@ class ProductSubQuery
                     ->whereColumn('product_id', '=', 'products.id')
                     ->where(function(Builder $builder) use ($options) {
                         if ($options['voucher_id'] ?? false) {
-                            $builder->whereIn('voucher_id', (array) $options['voucher_id']);
+                            $builder->where(function(Builder|VoucherTransaction $builder) use ($options) {
+                                $builder->whereIn('voucher_id', (array) $options['voucher_id']);
+                                $builder->orWhereRelation('voucher.product_reservation', function (Builder $builder) use ($options) {
+                                    $builder->whereIn('voucher_id', (array) $options['voucher_id']);
+                                });
+                            });
                         }
 
                         $builder->whereHas('voucher', function(Builder $builder) use ($options) {
@@ -224,10 +228,9 @@ class ProductSubQuery
                 $builder->selectSub(ProductReservation::query()
                     ->select([])
                     ->selectRaw('count(*)')
-                    ->whereNotIn('state', [
-                        ProductReservation::STATE_CANCELED,
+                    ->whereNotIn('state', array_merge([
                         ProductReservation::STATE_REJECTED,
-                    ])
+                    ], ProductReservation::STATES_CANCELED))
                     ->whereDoesntHave('voucher_transaction')
                     ->whereColumn('product_id', '=', 'products.id')
                     ->where(function(Builder $builder) use ($options) {
@@ -268,8 +271,6 @@ class ProductSubQuery
         }
 
         return $builder->whereHas('fund', function(Builder $builder) use ($options) {
-            $builder->where('type', Fund::TYPE_SUBSIDIES);
-
             /** @var int|null $fund_voucher_id */
             if ($fund_voucher_id = array_get($options, 'fund_voucher_id')) {
                 $builder->whereHas('vouchers', function(Builder $builder) use ($fund_voucher_id) {

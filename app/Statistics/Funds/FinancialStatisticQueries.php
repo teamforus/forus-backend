@@ -10,8 +10,10 @@ use App\Models\ProductCategory;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as BaseCollection;
 
 /**
@@ -146,8 +148,11 @@ class FinancialStatisticQueries
         $providerIds = array_get($options, 'provider_ids');
         $postcodes = array_get($options, 'postcodes');
         $fundIds = array_get($options, 'fund_ids');
+        $targets = array_get($options, 'targets', VoucherTransaction::TARGETS_OUTGOING);
 
+        /** @var Carbon|null $dateFrom */
         $dateFrom = array_get($options, 'date_from');
+        /** @var Carbon|null $dateTo */
         $dateTo = array_get($options, 'date_to');
 
         $query = $query ?: VoucherTransaction::query();
@@ -188,8 +193,15 @@ class FinancialStatisticQueries
 
         // filter by interval
         if ($dateFrom && $dateTo) {
-            $query->whereBetween('voucher_transactions.created_at', [$dateFrom, $dateTo]);
+            $query->where('voucher_transactions.created_at', '>=', $dateFrom->clone()->startOfDay());
+            $query->where('voucher_transactions.created_at', '<=', $dateTo->clone()->endOfDay());
         }
+
+        if (Arr::get($options, 'initiator')) {
+            $query->whereInitiator(Arr::get($options, 'initiator'));
+        }
+
+        $query->whereIn('target', is_array($targets) ? $targets : []);
 
         return $query;
     }

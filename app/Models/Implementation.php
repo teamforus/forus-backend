@@ -6,8 +6,10 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\ImplementationPageResource;
 use App\Http\Resources\MediaResource;
+use App\Models\Traits\ValidatesValues;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
+use App\Scopes\Builders\VoucherQuery;
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\MediaImageConfig;
@@ -16,6 +18,10 @@ use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use Illuminate\Config\Repository;
+use Illuminate\Contracts\Foundation\Application;
+use App\Traits\HasMarkdownDescription;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -24,6 +30,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * App\Models\Implementation
@@ -52,6 +59,13 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $email_from_name
  * @property string|null $email_color
  * @property string|null $email_signature
+ * @property bool $show_home_map
+ * @property bool $show_home_products
+ * @property bool $show_providers_map
+ * @property bool $show_provider_map
+ * @property bool $show_office_map
+ * @property bool $show_voucher_map
+ * @property bool $show_product_map
  * @property bool $digid_enabled
  * @property bool $digid_required
  * @property bool $digid_sign_up_allowed
@@ -60,6 +74,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $digid_shared_secret
  * @property string|null $digid_a_select_server
  * @property string|null $digid_forus_api_url
+ * @property string|null $digid_trusted_cert
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
@@ -99,6 +114,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereDigidRequired($value)
  * @method static Builder|Implementation whereDigidSharedSecret($value)
  * @method static Builder|Implementation whereDigidSignUpAllowed($value)
+ * @method static Builder|Implementation whereDigidTrustedCert($value)
  * @method static Builder|Implementation whereEmailColor($value)
  * @method static Builder|Implementation whereEmailFromAddress($value)
  * @method static Builder|Implementation whereEmailFromName($value)
@@ -115,6 +131,13 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereOverlayOpacity($value)
  * @method static Builder|Implementation whereOverlayType($value)
  * @method static Builder|Implementation whereProductboardApiKey($value)
+ * @method static Builder|Implementation whereShowHomeMap($value)
+ * @method static Builder|Implementation whereShowHomeProducts($value)
+ * @method static Builder|Implementation whereShowOfficeMap($value)
+ * @method static Builder|Implementation whereShowProductMap($value)
+ * @method static Builder|Implementation whereShowProviderMap($value)
+ * @method static Builder|Implementation whereShowProvidersMap($value)
+ * @method static Builder|Implementation whereShowVoucherMap($value)
  * @method static Builder|Implementation whereTitle($value)
  * @method static Builder|Implementation whereUpdatedAt($value)
  * @method static Builder|Implementation whereUrlApp($value)
@@ -126,7 +149,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  */
 class Implementation extends BaseModel
 {
-    use HasMedia;
+    use HasMedia, HasMarkdownDescription, ValidatesValues;
 
     public const KEY_GENERAL = 'general';
 
@@ -134,6 +157,15 @@ class Implementation extends BaseModel
     public const FRONTEND_SPONSOR_DASHBOARD = 'sponsor';
     public const FRONTEND_PROVIDER_DASHBOARD = 'provider';
     public const FRONTEND_VALIDATOR_DASHBOARD = 'validator';
+
+    public const FRONTEND_WEBSITE = 'website';
+    public const FRONTEND_PIN_CODE = 'pin_code-auth';
+
+    public const ME_APP_IOS = 'me_app-ios';
+    public const ME_APP_ANDROID = 'me_app-android';
+    public const ME_APP_DEPRECATED = 'app-me_app';
+
+    public const DEPRECATED_FRONTEND_GENERAL = 'general';
 
     public const FRONTEND_KEYS = [
         self::FRONTEND_WEBSHOP,
@@ -155,7 +187,8 @@ class Implementation extends BaseModel
         'title', 'description', 'description_alignment', 'informal_communication',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
         'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
-        'email_color', 'email_signature',
+        'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
+        'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
     ];
 
     /**
@@ -178,6 +211,13 @@ class Implementation extends BaseModel
         'overlay_enabled' => 'boolean',
         'digid_sign_up_allowed' => 'boolean',
         'informal_communication' => 'boolean',
+        'show_home_map' => 'boolean',
+        'show_home_products' => 'boolean',
+        'show_providers_map' => 'boolean',
+        'show_provider_map' => 'boolean',
+        'show_office_map' => 'boolean',
+        'show_voucher_map' => 'boolean',
+        'show_product_map' => 'boolean',
     ];
 
     /**
@@ -391,24 +431,27 @@ class Implementation extends BaseModel
      */
     public static function queryFundsByState(...$states): Builder
     {
-        /** @var Builder $query */
-        $query = Fund::where(function(Builder $builder) {
-            FundQuery::whereIsConfiguredByForus($builder);
-        })->whereIn('state', is_array($states[0] ?? null) ? $states[0] : $states);
+        return self::queryFunds()->whereIn('state', is_array($states[0] ?? null) ? $states[0] : $states);
+    }
+
+    /**
+     * @return Builder|Fund
+     */
+    public static function queryFunds(): Builder|Fund
+    {
+        $query = FundQuery::whereIsConfiguredByForus(Fund::query());
 
         if (self::activeKey() !== self::KEY_GENERAL) {
-            $query->whereHas('fund_config.implementation', static function (Builder $builder) {
-                $builder->where('key', self::activeKey());
-            });
+            $query->whereRelation('fund_config.implementation', 'key', self::activeKey());
         }
 
         return $query;
     }
 
     /**
-     * @return Collection
+     * @return Collection|Fund[]
      */
-    public static function activeFunds(): Collection
+    public static function activeFunds(): Collection|Arrayable
     {
         return self::activeFundsQuery()->get();
     }
@@ -456,12 +499,11 @@ class Implementation extends BaseModel
      */
     public function getDigid(): DigIdRepo
     {
-        return new DigIdRepo(
-            $this->digid_env,
-            $this->digid_app_id,
-            $this->digid_shared_secret,
-            $this->digid_a_select_server
-        );
+        return (new DigIdRepo($this->digid_env))
+            ->setAppId($this->digid_app_id)
+            ->setSharedSecret($this->digid_shared_secret)
+            ->setASelectServer($this->digid_a_select_server)
+            ->setTrustedCertificate($this->digid_trusted_cert);
     }
 
     /**
@@ -540,10 +582,10 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @param $value
-     * @return array|\Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed|void
+     * @param string $value
+     * @return array|Repository|Application|mixed|void
      */
-    public static function platformConfig($value)
+    public static function platformConfig(string $value)
     {
         if (!self::isValidKey(self::activeKey())) {
             abort(403, 'unknown_implementation_key');
@@ -551,23 +593,25 @@ class Implementation extends BaseModel
 
         $ver = request()->input('ver');
 
-        if (preg_match('/[^a-z_\-\d]/i', $value) || preg_match('/[^a-z_\-\d]/i', $ver)) {
+        if ($ver && self::validateValueStatic($ver, 'alpha_num')->fails()) {
             abort(403);
         }
 
         $config = config('forus.features.' . $value . ($ver ? '.' . $ver : ''));
 
         if (is_array($config)) {
-            $implementation = self::active();
+            $implementation = self::active() ?? abort(403);
             $banner = $implementation->banner;
 
             $request = BaseFormRequest::createFromGlobals();
             $announcements = Announcement::search($request)->get();
+            $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
 
             $config = array_merge($config, [
                 'media' => self::getPlatformMediaConfig(),
                 'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
+                'has_reimbursements' => $implementation->hasReimbursements(),
                 'announcements' => AnnouncementResource::collection($announcements)->toArray($request),
                 'digid' => $implementation->digidEnabled(),
                 'digid_sign_up_allowed' => $implementation->digid_sign_up_allowed,
@@ -591,14 +635,17 @@ class Implementation extends BaseModel
                 'implementation_name' => $implementation->name,
                 'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
-                'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
+                // 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
+                'pages' => Arr::keyBy($pages, 'page_type'),
                 'has_productboard_integration' => !empty(resolve('productboard')),
-            ]);
+            ], $implementation->only(
+                'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
+                'show_office_map', 'show_voucher_map', 'show_product_map',
+            ));
         }
 
         return $config ?: [];
     }
-
 
     /**
      * @param string $type
@@ -607,6 +654,16 @@ class Implementation extends BaseModel
     public static function hasFundsOfType(string $type): bool
     {
         return self::activeFundsQuery()->where('type', $type)->exists();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasReimbursements(): bool
+    {
+        return self::queryFunds()->whereRelation('fund_config', [
+            'allow_reimbursements' => true,
+        ])->exists();
     }
 
     /**
@@ -647,6 +704,12 @@ class Implementation extends BaseModel
 
         if ($business_type_id = array_get($options, 'business_type_id')) {
             $query->where('business_type_id', $business_type_id);
+        }
+
+        if ($product_category_id = array_get($options, 'product_category_id')) {
+            $query->whereHas('products', function (Builder $builder) use ($product_category_id) {
+                $builder->whereIn('id', Product::search(compact('product_category_id'))->select('id'));
+            });
         }
 
         if ($organization_id = array_get($options, 'organization_id')) {
@@ -732,15 +795,6 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function getDescriptionHtmlAttribute(): string
-    {
-        return resolve('markdown.converter')->convert($this->description ?? '')->getContent();
-    }
-
-    /**
      * @return ?string
      */
     private function getBannerTextColor(): ?string
@@ -782,5 +836,28 @@ class Implementation extends BaseModel
     public function getProductboardApiKey(): ?string
     {
         return $this->productboard_api_key ?: Implementation::general()->productboard_api_key;
+    }
+
+    /**
+     * @param Identity $identity
+     * @return array|Voucher[]
+     */
+    public function makeVouchersInApplicableFunds(Identity $identity): array
+    {
+        $funds = FundQuery::whereIsInternalConfiguredAndActive($this->funds())
+            ->whereNotIn('funds.id', VoucherQuery::whereNotExpired($identity->vouchers()->select('fund_id')))
+            ->get();
+
+        return $funds->reduce(function(array $vouchers, Fund $fund) use ($identity) {
+            if (Gate::forUser($identity)->denies('apply', [$fund, 'apply'])) {
+                return $vouchers;
+            }
+
+            if ($voucher = $fund->makeVoucher($identity->address)) {
+                $vouchers[] = $voucher;
+            }
+
+            return array_merge($vouchers, $fund->makeFundFormulaProductVouchers($identity->address));
+        }, []);
     }
 }

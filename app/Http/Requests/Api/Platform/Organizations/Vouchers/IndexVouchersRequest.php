@@ -44,7 +44,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'amount_max'        => 'nullable|numeric',
             'from'              => 'nullable|date_format:Y-m-d',
             'to'                => 'nullable|date_format:Y-m-d',
-            'type'              => 'required|in:fund_voucher,product_voucher',
+            'type'              => 'required|in:fund_voucher,product_voucher,all',
             'unassigned'        => 'nullable|boolean',
             'source'            => 'required|in:all,user,employee',
             'qr_format'         => 'nullable|in:pdf,png,data,all',
@@ -61,6 +61,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'count_per_identity_max'    => 'nullable|numeric',
             'fields'            => 'nullable|array',
             'fields.*'          => ['nullable', Rule::in($fields)],
+            'identity_address'  => 'nullable|exists:identities,address',
         ];
     }
 

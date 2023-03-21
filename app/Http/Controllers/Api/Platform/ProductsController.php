@@ -3,15 +3,13 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\SearchProductsRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Requester\ProductResource;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class ProductsController
- * @package App\Http\Controllers\Api\Platform
- */
 class ProductsController extends Controller
 {
     /**
@@ -27,8 +25,13 @@ class ProductsController extends Controller
 
         $query = Product::search($request->only([
             'fund_type', 'product_category_id', 'fund_id', 'price_type', 'unlimited_stock',
-            'organization_id', 'q', 'order_by', 'order_by_dir', 'postcode', 'distance',
+            'organization_id', 'q', 'order_by', 'order_by_dir', 'postcode',
+            'distance',
         ]));
+
+        if ($request->input('bookmarked', false)) {
+            $query->whereRelation('bookmarks', 'identity_address', $request->auth_address());
+        }
 
         if (!$request->input('show_all', false)) {
             $query->where('show_on_webshop', true);
@@ -76,5 +79,35 @@ class ProductsController extends Controller
         $this->authorize('showPublic', $product);
 
         return ProductResource::create($product);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Product $product
+     * @return ProductResource
+     * @throws AuthorizationException
+     */
+    public function bookmark(BaseFormRequest $request, Product $product): ProductResource
+    {
+        $this->authorize('bookmark', $product);
+
+        return ProductResource::create($product->closure(function(Product $product) use ($request) {
+            $product->addBookmark($request->identity());
+        }));
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Product $product
+     * @return ProductResource
+     * @throws AuthorizationException
+     */
+    public function removeBookmark(BaseFormRequest $request, Product $product): ProductResource
+    {
+        $this->authorize('removeBookmark', $product);
+
+        return ProductResource::create($product->closure(function(Product $product) use ($request) {
+            $product->removeBookmark($request->identity());
+        }));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Translations\RoleTranslationsTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -40,6 +41,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Role extends BaseModel
 {
     use Translatable;
+    use RoleTranslationsTrait;
 
     protected $fillable = [
         'key'
@@ -78,5 +80,16 @@ class Role extends BaseModel
     public function role_permissions(): HasMany
     {
         return $this->hasMany(RolePermission::class);
+    }
+
+    /**
+     * @param string $key
+     * @return static|null
+     */
+    public static function byKey(string $key): ?Role
+    {
+        return self::where([
+            'key' => $key,
+        ])->first();
     }
 }

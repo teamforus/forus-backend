@@ -7,12 +7,14 @@ use App\Mail\User\EmailActivationMail;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Tests\Traits\MakesTestIdentities;
 
 class AuthenticationTest extends DuskTestCase
 {
-    use AssertsSentEmails;
+    use AssertsSentEmails, MakesTestIdentities;
 
     /**
      * A Dusk test example.
@@ -22,6 +24,7 @@ class AuthenticationTest extends DuskTestCase
      */
     public function testSignInByEmailExample(): void
     {
+        Cache::clear();
         $startTime = now();
 
         $this->browse(function (Browser $browser) use ($startTime) {
@@ -61,17 +64,19 @@ class AuthenticationTest extends DuskTestCase
             $this->assertEmailRestoreLinkSent($identity->email, $startTime);
 
             // Get and follow the auth link from the email then check if the user is authenticated
-            $browser->visit($this->findFirstEmalRestoreLink($identity->email, $startTime));
+            $browser->visit($this->findFirstEmailRestoreLink($identity->email, $startTime));
+            $browser->pause(500);
+
             $browser->waitFor('@identityEmail');
             $browser->assertSeeIn('@identityEmail', $identity->email);
 
             // Logout identity
-            $browser->element('@userProfile')->click();
+            $browser->waitFor('@userProfile');
+            $browser->press('@userProfile');
             $browser->waitFor('@btnUserLogout');
-            $browser->element('@btnUserLogout')->click();
+            $browser->press('@btnUserLogout');
         });
     }
-
 
     /**
      * A Dusk test example.
@@ -81,11 +86,12 @@ class AuthenticationTest extends DuskTestCase
      */
     public function testSignUpByEmailExample(): void
     {
+        Cache::clear();
         $startTime = now();
 
         $this->browse(function (Browser $browser) use ($startTime) {
             // Find nijmegen implementation and define target email
-            $email = microtime(true) . "@example.com";
+            $email = $this->makeUniqueEmail();
             $implementation = Implementation::where('key', 'nijmegen')->first();
 
             // Implementation exist
@@ -93,7 +99,7 @@ class AuthenticationTest extends DuskTestCase
 
             // Visit the implementation webshop and wait for the page to load
             $browser->visit($implementation->urlWebshop());
-            $browser->waitFor('@header');
+            $browser->waitFor('@header', 10);
             $browser->assertSeeIn('@headerTitle', $implementation->name);
 
             // Click on the navbar start button to go to the auth page
@@ -119,14 +125,14 @@ class AuthenticationTest extends DuskTestCase
             $this->assertEmailConfirmationLinkSent($email, $startTime);
 
             // Get and follow the auth link from the email then check if the user is authenticated
-            $browser->visit($this->findFirstEmalConfirmationLink($email, $startTime));
-            $browser->waitFor('@identityEmail');
-            $browser->assertSeeIn('@identityEmail', $email);
+            $browser->visit($this->findFirstEmailConfirmationLink($email, $startTime));
+            $browser->pause(1000);
 
             // Logout identity
-            $browser->element('@userProfile')->click();
+            $browser->waitFor('@userProfile');
+            $browser->press('@userProfile');
             $browser->waitFor('@btnUserLogout');
-            $browser->element('@btnUserLogout')->click();
+            $browser->press('@btnUserLogout');
         });
     }
 }

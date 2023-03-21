@@ -10,6 +10,7 @@ use App\Events\Funds\FundUnArchivedEvent;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
+use App\Models\Traits\HasFaq;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundCriteriaQuery;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
@@ -21,15 +22,16 @@ use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
 use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
 use App\Services\BackofficeApiService\Responses\ResidencyResponse;
+use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
-use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -40,7 +42,9 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 
 /**
  * App\Models\Fund
@@ -85,7 +89,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read int|null $employees_validator_managers_count
  * @property-read Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
- * @property-read Collection|\App\Models\FundFaq[] $faq
+ * @property-read Collection|\App\Models\Faq[] $faq
  * @property-read int|null $faq_count
  * @property-read Collection|\App\Models\Product[] $formula_products
  * @property-read int|null $formula_products_count
@@ -117,6 +121,8 @@ use Illuminate\Support\Facades\DB;
  * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
+ * @property-read Collection|\App\Models\Voucher[] $product_vouchers
+ * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @property-read Collection|\App\Models\FundProviderInvitation[] $provider_invitations
@@ -175,7 +181,7 @@ use Illuminate\Support\Facades\DB;
  */
 class Fund extends BaseModel
 {
-    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription;
+    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasFaq;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_PROVIDER_APPLIED = 'provider_applied';
@@ -285,14 +291,6 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function faq(): HasMany
-    {
-        return $this->hasMany(FundFaq::class);
-    }
-
-    /**
      * Get fund logo
      * @return MorphOne
      */
@@ -320,11 +318,20 @@ class Fund extends BaseModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function product_vouchers(): HasMany
+    {
+        return $this->hasMany(Voucher::class)->whereNotNull('product_id');
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
     public function voucher_transactions(): HasManyThrough
     {
-        return $this->hasManyThrough(VoucherTransaction::class, Voucher::class);
+        return $this->hasManyThrough(VoucherTransaction::class, Voucher::class)
+            ->whereIn('target', VoucherTransaction::TARGETS_OUTGOING);
     }
 
     /**
@@ -505,12 +512,12 @@ class Fund extends BaseModel
     /**
      * @param bool|null $withBalance
      * @param bool|null $withEmail
-     * @return Builder
+     * @return Builder|Identity
      */
     public function activeIdentityQuery(
         bool $withBalance = false,
         ?bool $withEmail = null
-    ): Builder {
+    ): Builder|Identity {
         $builder = Identity::whereHas('vouchers', function(Builder $builder) use ($withBalance) {
             VoucherQuery::whereNotExpiredAndActive($builder->where([
                 'fund_id' => $this->id,
@@ -709,9 +716,28 @@ class Fund extends BaseModel
      */
     public function getTransactionCosts(): float
     {
-        return $this->voucher_transactions()->where(function(Builder $builder) {
-            $builder->where('voucher_transactions.amount', '>', 0);
-        })->count() * 0.10;
+        $costs = 0;
+        $state = VoucherTransaction::STATE_SUCCESS;
+        $targets = VoucherTransaction::TARGETS_OUTGOING;
+        $targetCostOld = VoucherTransaction::TRANSACTION_COST_OLD;
+
+        foreach (Bank::get() as $bank) {
+            $costs += $this->voucher_transactions()
+                ->where('voucher_transactions.amount', '>', 0)
+                ->where('voucher_transactions.state', $state)
+                ->whereIn('voucher_transactions.target', $targets)
+                ->whereRelation('voucher_transaction_bulk.bank_connection', 'bank_id', $bank->id)
+                ->count() * $bank->transaction_cost;
+        }
+
+        $costs += $this->voucher_transactions()
+            ->where('voucher_transactions.amount', '>', 0)
+                ->where('voucher_transactions.state', $state)
+                ->whereIn('voucher_transactions.target', $targets)
+                ->whereDoesntHave('voucher_transaction_bulk')
+                ->count() * $targetCostOld;
+
+        return $costs;
     }
 
     /**
@@ -1023,7 +1049,7 @@ class Fund extends BaseModel
     /**
      * @return mixed|null
      */
-    public function amountFixedByFormula()
+    public function amountFixedByFormula(): mixed
     {
         if (!$fundFormula = $this->fund_formulas) {
             return null;
@@ -1036,18 +1062,6 @@ class Fund extends BaseModel
         }
 
         return $fundFormula->sum('amount');
-    }
-
-    /**
-     * @return Fund[]|Builder[]|Collection|\Illuminate\Support\Collection
-     * @noinspection PhpUnused
-     */
-    public static function configuredFunds() {
-        try {
-            return static::query()->whereHas('fund_config')->get();
-        } catch (\Throwable $e) {
-            return collect();
-        }
     }
 
     /**
@@ -1178,36 +1192,39 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string|null $identity_address
+     * @param string|null $identityAddress
      * @param array $extraFields
      * @param Carbon|null $expireAt
-     * @return array|Voucher[]
+     * @return Voucher[]
      */
     public function makeFundFormulaProductVouchers(
-        string $identity_address = null,
+        string $identityAddress = null,
         array $extraFields = [],
         Carbon $expireAt = null
     ): array {
         $vouchers = [];
         $fundEndDate = $this->end_date;
 
-        if ($this->fund_formula_products->count() > 0) {
-            foreach ($this->fund_formula_products as $fund_formula_product) {
-                $productExpireDate = $fund_formula_product->product->expire_at;
-                $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
-                $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
+        if (!$identityAddress) {
+            return [];
+        }
 
-                $voucher = $this->makeProductVoucher(
-                    $identity_address,
-                    $extraFields,
-                    $fund_formula_product->product->id,
-                    $voucherExpireAt,
-                    $fund_formula_product->price
-                );
+        foreach ($this->fund_formula_products as $formulaProduct) {
+            $productExpireDate = $formulaProduct->product->expire_at;
+            $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
+            $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
+            $multiplier = $formulaProduct->getIdentityMultiplier($identityAddress);
 
-                $vouchers[] = $voucher;
+            $vouchers = array_map(fn () => $this->makeProductVoucher(
+                $identityAddress,
+                $extraFields,
+                $formulaProduct->product->id,
+                $voucherExpireAt,
+                $formulaProduct->price
+            ), array_fill(0, $multiplier, null));
 
-                VoucherAssigned::broadcast($voucher);
+            foreach ($vouchers as $voucher) {
+                Event::dispatch(new VoucherAssigned($voucher));
             }
         }
 
@@ -1273,7 +1290,7 @@ class Fund extends BaseModel
      */
     public function isExpired(): bool
     {
-        return $this->end_date->isPast();
+        return $this->end_date->clone()->endOfDay()->isPast();
     }
 
     /**
@@ -1341,10 +1358,7 @@ class Fund extends BaseModel
         foreach ($records as $record) {
             /** @var FundRequestRecord $requestRecord */
             $requestRecord = $fundRequest->records()->create($record);
-
-            foreach ($record['files'] ?? [] as $fileUid) {
-                $requestRecord->attachFile(File::findByUid($fileUid));
-            }
+            $requestRecord->appendFilesByUid($record['files'] ?? []);
         }
 
         return $fundRequest;
@@ -1353,72 +1367,32 @@ class Fund extends BaseModel
     /**
      * Update criteria for existing fund
      * @param array $criteria
+     * @param bool $textsOnly
      * @return $this
      */
-    public function syncCriteria(array $criteria): self
+    public function syncCriteria(array $criteria, bool $textsOnly = false): self
     {
         // remove criteria not listed in the array
-        if ($this->criteriaIsEditable()) {
+        if ($this->criteriaIsEditable() && !$textsOnly) {
             $this->criteria()->whereNotIn('id', array_filter(
-                array_pluck($criteria, 'id'), static function($id) {
-                return !empty($id);
-            }))->delete();
+                array_pluck($criteria, 'id'), fn ($id) => !empty($id)
+            ))->delete();
         }
 
         foreach ($criteria as $criterion) {
-            $this->syncCriterion($criterion);
+            $this->syncCriterion($criterion, $textsOnly);
         }
 
         return $this;
-    }
-
-    /**
-     * Update faq for existing fund
-     * @param array $faq
-     * @return $this
-     */
-    public function syncFaq(array $faq = []): self
-    {
-        // remove faq not listed in the array
-        $this->faq()->whereNotIn('id', array_filter(array_pluck($faq, 'id')))->delete();
-
-        foreach ($faq as $question) {
-            $this->syncQuestion($question);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Update faq for existing fund when provided
-     * @param array|null $faq
-     * @return $this
-     */
-    public function syncFaqOptional(?array $faq = null): self
-    {
-        return is_array($faq) ? $this->syncFaq($faq) : $this;
-    }
-
-    /**
-     * Update faq question or create new fund question
-     *
-     * @param array $question
-     * @return FundFaq
-     */
-    protected function syncQuestion(array $question): FundFaq
-    {
-        /** @var FundFaq $faq */
-        $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
-        $faq->appendMedia($question['description_media_uid'] ?? [], 'cms_media');
-
-        return $faq->updateModel(array_only($question, ['title', 'description']));
     }
 
     /**
      * Update existing or create new fund criterion
      * @param array $criterion
+     * @param bool $textsOnly
      */
-    protected function syncCriterion(array $criterion): void {
+    protected function syncCriterion(array $criterion, bool $textsOnly = false): void
+    {
         /** @var FundCriterion $fundCriterion */
         $validators = $criterion['validators'] ?? null;
         $fundCriterion = $this->criteria()->find($criterion['id'] ?? null);
@@ -1434,12 +1408,14 @@ class Fund extends BaseModel
         ] : ['show_attachment', 'description', 'title']);
 
         if ($fundCriterion) {
-            $fundCriterion->update($data_criterion);
-        } else {
+            $fundCriterion->update($textsOnly ? array_only($data_criterion, [
+                'title', 'description',
+            ]): $data_criterion);
+        } elseif (!$textsOnly) {
             $fundCriterion = $this->criteria()->create($data_criterion);
         }
 
-        if (is_array($validators)) {
+        if (!$textsOnly && is_array($validators)) {
             $this->syncCriterionValidators($fundCriterion, $validators);
         }
     }
@@ -1472,7 +1448,6 @@ class Fund extends BaseModel
             ])->getKey();
         }
 
-        /** @var FundCriterionValidator[]|Collection $criterionValidators */
         $criterionValidators = $criterion->fund_criterion_validators()->whereNotIn(
             'fund_criterion_validators.id', $currentValidators
         )->get();
@@ -1489,7 +1464,8 @@ class Fund extends BaseModel
      * Resign fund request record employees be criterion validator
      * @param FundCriterionValidator[]|Collection $criterionValidators
      */
-    protected function resignCriterionValidators($criterionValidators): void {
+    protected function resignCriterionValidators(Collection|Arrayable $criterionValidators): void
+    {
         foreach ($criterionValidators as $criterionValidator) {
             $validator_organization = $criterionValidator
                 ->external_validator->validator_organization;
@@ -1509,29 +1485,17 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param array $productIds
+     * @param array $items
      * @return $this
      */
-    public function updateFormulaProducts(array $productIds): self {
-        /** @var Collection|Product[] $products */
-        $products = Product::whereIn('id', $productIds)->get();
+    public function updateFormulaProducts(array $items): self
+    {
+        $products = array_map(fn (array $item) => $this->fund_formula_products()->updateOrCreate([
+            'product_id' => Arr::get($item, 'product_id'),
+            'record_type_key_multiplier' => Arr::get($item, 'record_type_key_multiplier'),
+        ])->id, $items);
 
-        $this->fund_formula_products()->whereNotIn(
-            'product_id',
-            $products->pluck('id')
-        )->delete();
-
-        foreach ($products as $product) {
-            $where = [
-                'product_id' => $product->id
-            ];
-
-            if (!$this->fund_formula_products()->where($where)->exists()) {
-                $this->fund_formula_products()->create($where)->update([
-                    'price' => $product->price
-                ]);
-            }
-        }
+        $this->fund_formula_products()->whereNotIn('id', $products)->delete();
 
         return $this;
     }
@@ -1565,7 +1529,7 @@ class Fund extends BaseModel
 
     /**
      * @param string $uri
-     * @return mixed|string
+     * @return string
      * @noinspection PhpUnused
      */
     public function urlValidatorDashboard(string $uri = "/"): string
@@ -1682,7 +1646,7 @@ class Fund extends BaseModel
      * @param Collection|Fund[] $funds
      * @return array
      */
-    public static function getFundTotals(Collection $funds) : array
+    public static function getFundTotals(Collection|Arrayable $funds) : array
     {
         $budget = 0;
         $budget_left = 0;
@@ -1727,7 +1691,7 @@ class Fund extends BaseModel
      * @return EmailFrom
      */
     public function getEmailFrom(): EmailFrom {
-        return $this->fund_config->implementation->getEmailFrom() ??
+        return $this->fund_config?->implementation->getEmailFrom() ??
             EmailFrom::createDefault();
     }
 
@@ -1814,22 +1778,15 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return bool
-     */
-    public function limitGeneratorAmount(): bool
-    {
-        return $this->fund_config->limit_generator_amount ?? true;
-    }
-
-    /**
      * @return float
      */
     public function getMaxAmountPerVoucher(): float
     {
-        $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
-        $max = min($this->budget_left ?? $max_allowed, $max_allowed);
-
-        return (float) ($this->limitGeneratorAmount() ? $max : $max_allowed);
+        return min(
+            $this->fund_config->limit_generator_amount,
+            $this->fund_config->limit_voucher_total_amount,
+            $this->fund_config->generator_ignore_fund_budget ? 1_000_000 : $this->budget_left,
+        );
     }
 
     /**
@@ -1837,7 +1794,7 @@ class Fund extends BaseModel
      */
     public function getMaxAmountSumVouchers(): float
     {
-        return (float) ($this->limitGeneratorAmount() ? $this->budget_left : 1000000);
+        return $this->fund_config->generator_ignore_fund_budget ? 1_000_000 : $this->budget_left;
     }
 
     /**
@@ -1858,7 +1815,7 @@ class Fund extends BaseModel
     public function checkBackofficeIfAvailable(
         Identity $identity
     ): EligibilityResponse|ResidencyResponse|PartnerBsnResponse|null {
-        $bsn = $identity?->bsn;
+        $bsn = $identity->bsn;
         $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity);
 
         if ($bsn && !$alreadyHasActiveVoucher && $this->isBackofficeApiAvailable()) {
@@ -1979,12 +1936,12 @@ class Fund extends BaseModel
         return
             $this->organization->bsn_enabled &&
             $this->organization->backoffice_available &&
-            ($this->fund_config->backoffice_enabled || $skipEnabledCheck);
+            ($this->fund_config?->backoffice_enabled || $skipEnabledCheck);
     }
 
     /**
      * @param string $default
-     * @return string|null
+     * @return string
      * @noinspection PhpUnused
      */
     public function communicationType(string $default = 'formal'): string
@@ -1997,11 +1954,14 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return void
+     * @return bool
      */
     public function hasIConnectApiOin(): bool
     {
-        return $this->isIconnectApiConfigured() &&
+        return
+            $this->fund_config &&
+            !$this->is_external &&
+            $this->isIconnectApiConfigured() &&
             $this->organization->bsn_enabled &&
             !empty($this->fund_config->iconnect_target_binding) &&
             !empty($this->fund_config->iconnect_api_oin) &&
@@ -2013,7 +1973,12 @@ class Fund extends BaseModel
      */
     private function isIconnectApiConfigured(): bool
     {
-        return !empty(IConnect::getConfigs());
+        return
+            $this->fund_config &&
+            !empty($this->fund_config->iconnect_env) &&
+            !empty($this->fund_config->iconnect_key) &&
+            !empty($this->fund_config->iconnect_cert) &&
+            !empty($this->fund_config->iconnect_cert_trust);
     }
 
     /**
@@ -2021,11 +1986,7 @@ class Fund extends BaseModel
      */
     public function getIConnect(): ?IConnect
     {
-        return $this->hasIConnectApiOin() ? new IConnect(
-            $this->fund_config->iconnect_api_oin,
-            $this->fund_config->iconnect_target_binding,
-            $this->fund_config->iconnect_base_url
-        ) : null;
+        return $this->hasIConnectApiOin() ? new IConnect($this) : null;
     }
 
     /**
@@ -2042,5 +2003,16 @@ class Fund extends BaseModel
         }
 
         return empty($record) || $recordTime > $this->fund_config?->bsn_confirmation_api_time;
+    }
+
+    /**
+     * @return bool
+     */
+    public function generatorDirectPaymentsAllowed(): bool
+    {
+        return
+            $this->isTypeBudget() &&
+            $this->fund_config?->allow_direct_payments &&
+            $this->fund_config?->allow_generator_direct_payments;
     }
 }

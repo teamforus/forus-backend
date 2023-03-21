@@ -113,17 +113,30 @@ class ImplementationMail extends Mailable implements ShouldQueue
      */
     protected function escapeData(array $data): array
     {
-        $data = array_filter($data, fn ($value) => is_string($value) || is_numeric($value) || is_bool($value));
+        $data = array_filter($data, fn ($value) => $this->dataValueIsValid($value));
 
         foreach ($data as $key => $value) {
             if (!ends_with($key, '_html')) {
                 $data[$key] = e($value);
+            }
+
+            if (is_null($value)) {
+                $data[$key] = '';
             }
         }
 
         ksort($data);
 
         return $data;
+    }
+
+    /**
+     * @param $value
+     * @return bool
+     */
+    protected function dataValueIsValid($value): bool
+    {
+        return is_string($value) || is_numeric($value) || is_bool($value) || is_null($value);
     }
 
     /**

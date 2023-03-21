@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Vouchers\DeactivateVoucherRequest;
+use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
 use App\Http\Resources\VoucherCollectionResource;
 use App\Http\Resources\VoucherResource;
+use App\Models\FundConfig;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
@@ -29,11 +31,22 @@ class VouchersController extends Controller
             ->whereDoesntHave('product_reservation')
             ->orderByDesc('created_at');
 
-        $search = new VouchersSearch($request->only('type', 'state', 'archived'), $query);
-        $per_page = $request->input('per_page', 1000);
+        $search = new VouchersSearch($request->only([
+            'type', 'state', 'archived', 'allow_reimbursements',
+            'implementation_id', 'implementation_key', 'product_id',
+        ]), $query);
+
+        if ($request->isMeApp()) {
+            $query->whereRelation('fund.fund_config', [
+                'vouchers_type' => FundConfig::VOUCHERS_TYPE_INTERNAL,
+            ]);
+        }
 
         // todo: remove fallback pagination 1000, when apps are ready
-        return VoucherCollectionResource::queryCollection($search->query(), $per_page);
+        return VoucherCollectionResource::queryCollection(
+            $search->query(),
+            $request->input('per_page', 1000)
+        );
     }
 
     /**
@@ -72,14 +85,14 @@ class VouchersController extends Controller
      * Share product voucher to email.
      *
      * @param VoucherToken $voucherToken
-     * @param DeactivateVoucherRequest $request
+     * @param ShareProductVoucherRequest $request
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
     public function shareVoucher(
         VoucherToken $voucherToken,
-        DeactivateVoucherRequest $request
+        ShareProductVoucherRequest $request
     ): JsonResponse {
         $this->authorize('shareVoucher', $voucherToken->voucher);
 

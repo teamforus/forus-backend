@@ -18,6 +18,8 @@ class BaseJsonResource extends JsonResource
     public const LOAD_COUNT = [];
     public const LOAD_MORPH = [];
 
+    protected string $resource_type = 'default';
+
     /**
      * @param string|null $append
      * @return array
@@ -55,25 +57,28 @@ class BaseJsonResource extends JsonResource
 
     /**
      * @param Model|Collection|array $resource
+     * @param array $attributes
      * @return static
      */
-    public static function create(mixed $resource): static
+    public static function create(mixed $resource, array $attributes = []): static
     {
         if ($resource instanceof Model) {
             $resource = static::load_morph($resource)->load(static::load())->loadCount(static::load_count());
         }
 
-        return new static($resource);
+        return (new static($resource))->setAttributes($attributes);
     }
 
     /**
      * @param Builder|Relation $query
      * @param int|Request|null $request
+     * @param array $attributes
      * @return AnonymousResourceCollection
      */
     public static function queryCollection(
         Relation|Builder $query,
-        Request|int|null $request = null
+        Request|int|null $request = null,
+        array $attributes = []
     ): AnonymousResourceCollection {
         if (!$request || $request instanceof Request) {
             $request = ($request ?: request())->input('per_page');
@@ -83,7 +88,10 @@ class BaseJsonResource extends JsonResource
             ->with(static::load())
             ->withCount(static::load_count());
 
-        return self::collection($query->paginate(is_numeric($request) ? $request : null));
+        $collection = self::collection($query->paginate(is_numeric($request) ? $request : null));
+        $collection->collection->map(fn (self $resource) => $resource->setAttributes($attributes));
+
+        return $collection;
     }
 
     /**
@@ -122,11 +130,54 @@ class BaseJsonResource extends JsonResource
             }, []);
         }
 
-        $datetime = $model[$key[0]] ?? null;
+        return self::makeTimestampsStatic([
+            $key[0] => $model[$key[0]] ?? null,
+        ]);
+    }
 
-        return [
-            $key[0] => $datetime instanceof Carbon ? $datetime->format('Y-m-d H:i:s') : null,
-            $key[0] . '_locale' => $datetime instanceof Carbon ? format_datetime_locale($datetime) : null,
-        ];
+    /**
+     * @param array $dates
+     * @param bool $dateOnly
+     * @param string|null $format
+     * @return array
+     */
+    protected static function makeTimestampsStatic(array $dates, bool $dateOnly = false, string $format = null): array
+    {
+        return array_reduce(array_keys($dates), function($out, $key) use ($dates, $format, $dateOnly) {
+            $date = $dates[$key] instanceof Carbon ? $dates[$key] : null;
+
+            return array_merge($out, [
+                $key => $dateOnly ?
+                    $date?->format('Y-m-d') :
+                    $date?->format('Y-m-d H:i:s'),
+                $key . '_locale' => $dateOnly ?
+                    format_date_locale($date, $format ?: 'short_date_locale') :
+                    format_datetime_locale($date, $format ?: 'short_date_time_locale'),
+            ]);
+        }, []);
+    }
+
+    /**
+     * @param array $dates
+     * @param bool $dateOnly
+     * @param string|null $format
+     * @return array
+     */
+    protected function makeTimestamps(array $dates, bool $dateOnly = false, string $format = null): array
+    {
+        return static::makeTimestampsStatic($dates, $dateOnly, $format);
+    }
+
+    /**
+     * @param array $attributes
+     * @return $this
+     */
+    public function setAttributes(array $attributes = []): static
+    {
+        foreach ($attributes as $key => $value) {
+            $this->$key = $value;
+        }
+
+        return $this;
     }
 }

@@ -5,11 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\BankConnection;
 
-/**
- * @noinspection PhpUnused
- * @noinspection PhpIllegalPsrClassPathInspection
- */
-class CreateBankConnectionAccountsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -84,4 +80,4 @@ class CreateBankConnectionAccountsTable extends Migration
 
         Schema::dropIfExists('bank_connection_accounts');
     }
-}
+};

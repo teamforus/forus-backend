@@ -13,7 +13,11 @@ return [
     |
     */
 
-    'header'               => 'De opgegeven gegevens waren ongeldig.',
+    'header'                => 'De opgegeven gegevens waren ongeldig.',
+    "prohibited"            => ":attribute is niet toegestaan.",
+    "prohibited_if"         => ":attribute is niet toegestaan indien :other gelijk is aan :value.",
+    "prohibited_unless"     => ":attribute is niet toegestaan tenzij :other gelijk is aan :values.",
+    "prohibits"             => ":attribute is niet toegestaan in combinatie met :other.",
 
     'accepted'             => ':attribute dient te worden geaccepteerd.',
     'active_url'           => ':attribute is geen geldige URL.',
@@ -108,7 +112,7 @@ return [
         'string'  => ':attribute moet :size karakters lang zijn.',
         'array'   => ':attribute moet :size items bevatten.',
     ],
-    'starts_with' => ':Attribute moet starten met een van de volgende: :values',
+    'starts_with' => ':attribute moet starten met een van de volgende: :values',
     'string'               => 'Het :attribute moet een reeks zijn.',
     'timezone'             => ':attribute moet een geldige tijdszone zijn.',
     'unique'               => ':attribute is al bezet.',
@@ -174,6 +178,7 @@ return [
         'product_sold_out' => 'Uw aanbod is uitverkocht, verhoog in uw beheeromgeving het aantal dat nog te koop is.',
         'reservation_used' => 'De reservering is al gebruikt.',
         'reservation_product_removed' => 'Het aanbod is verwijderd van deze reservering.',
+        'throttled' => "Sorry, but you can make only one transaction per voucher within :hardLimit seconds.\n Please try in :hardLimit seconds.",
     ],
     'product_voucher' => [
         'product_not_found' => 'Aanbod niet gevonden.',
@@ -238,6 +243,11 @@ return [
         'external_link_text' => 'externe linktekst',
         'external_link_url' => 'externe link-url',
         'employee_id' => 'medewerker',
+        'direct_payment_iban' => 'IBAN-nummer',
+        'direct_payment_name' => 'payment name',
+        'voucher_id' => 'voucher',
+        'product_id' => 'product',
+        'record_type_key_multiplier' => 'record type',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',

@@ -97,6 +97,26 @@ class ProductPolicy
 
     /**
      * @param Identity $identity
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function bookmark(Identity $identity): bool
+    {
+        return $identity->exists;
+    }
+
+    /**
+     * @param Identity $identity
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function removeBookmark(Identity $identity): bool
+    {
+        return $this->bookmark($identity);
+    }
+
+    /**
+     * @param Identity $identity
      * @param Product $product
      * @param Organization $organization
      * @return bool
@@ -247,15 +267,16 @@ class ProductPolicy
         Organization $provider,
         ?Product $product = null
     ): bool {
-        $isSponsorManagingProducts = $sponsor->manage_provider_products;
-        $identityIsProviderManager = $sponsor->identityCan($identity, 'manage_providers');
-        $isSponsorForTheProvider = OrganizationQuery::whereIsProviderOrganization(
+        $sponsorManagesProviderProducts = $sponsor->manage_provider_products;
+        $identityIsManagingSponsorProviders = $sponsor->identityCan($identity, 'manage_providers');
+        $sponsorIsActiveProviderSponsor = OrganizationQuery::whereIsProviderOrganization(
             Organization::query(), $sponsor
         )->whereKey($provider->id)->exists();
 
-        return $isSponsorManagingProducts &&
-            $identityIsProviderManager &&
-            $isSponsorForTheProvider &&
+        return
+            $sponsorManagesProviderProducts &&
+            $identityIsManagingSponsorProviders &&
+            $sponsorIsActiveProviderSponsor &&
             (!$product || $product->organization_id === $provider->id) &&
             (!$product || $product->sponsor_organization_id === $sponsor->id);
     }

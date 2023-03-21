@@ -7,12 +7,13 @@ use Exception;
 
 class DigIdException extends Exception
 {
-    protected $digIdErrorCode;
+    protected mixed $digIdErrorCode;
 
     /**
      * @return mixed
      */
-    public function getDigIdCode() {
+    public function getDigIdCode(): mixed
+    {
         return $this->digIdErrorCode;
     }
 

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use JetBrains\PhpStorm\NoReturn;
@@ -40,6 +41,10 @@ abstract class BaseCommand extends Command
                 echo str_repeat("    ", $depth) . " - $item  \n";
             }
 
+            if (is_null($item)) {
+                echo str_repeat("    ", $depth) . "====================\n";
+            }
+
             if (is_array($item)) {
                 echo str_repeat("    ", $depth) . " - $item[0]  \n";
                 $this->printList($item[1], $depth + 1);
@@ -49,18 +54,20 @@ abstract class BaseCommand extends Command
 
     /**
      * @param string $char
+     * @param string $append
      * @return void
      */
-    protected function printSeparator(string $char = "="): void
+    protected function printSeparator(string $char = "=", string $append = "\n"): void
     {
-        echo str_repeat($char, 80) . "\n";
+        echo str_repeat($char, 80) . "$append\n";
     }
 
     /**
-     * @param Collection|Model[] $cards
+     * @param Collection|Model $cards
+     * @param mixed ...$only
      * @return void
      */
-    protected function printModels(Collection $cards, ...$only)
+    protected function printModels(Collection|Arrayable $cards, ...$only): void
     {
         $only = is_array($only[0] ?? null) ? $only[0] : $only;
         $only = is_array($only) ? $only : null;
@@ -113,6 +120,7 @@ abstract class BaseCommand extends Command
     /**
      * @return void
      */
+    #[NoReturn]
     protected function exit(): void
     {
         $this->printSeparator();

@@ -16,6 +16,7 @@ class VoucherExport extends BaseFieldedExport
      * @var array|\string[][]
      */
     protected static array $exportFields = [
+        'id' => 'ID',
         'granted' => 'Toegekend',
         'identity_email' => 'E-mailadres',
         'in_use' => 'In gebruik',
@@ -27,7 +28,7 @@ class VoucherExport extends BaseFieldedExport
         'activation_code' => 'Activatiecode',
         'fund_name' => 'Fondsnaam',
         'reference_bsn' => 'BSN (door medewerker)',
-        'activation_code_uid' => 'Uniek nummer',
+        'client_uid' => 'Uniek nummer',
         'created_at' => 'Aangemaakt op',
         'identity_bsn' => 'BSN (DigiD)',
         'source' => 'Aangemaakt door',

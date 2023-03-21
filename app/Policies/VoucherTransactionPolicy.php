@@ -90,16 +90,16 @@ class VoucherTransactionPolicy
     /**
      * @param Identity $identity
      * @param VoucherTransaction $transaction
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
     public function showProvider(
         Identity $identity,
         VoucherTransaction $transaction,
-        Organization $organization = null
+        Organization $organization
     ): bool {
-        if ($organization && ($transaction->organization_id !== $organization->id)) {
+        if (!$transaction->provider || $transaction->organization_id !== $organization->id) {
             return false;
         }
 
@@ -125,5 +125,17 @@ class VoucherTransactionPolicy
             $fund->public &&
             $fund->organization_id === $organization->id &&
             $transaction->voucher->fund_id === $fund->id;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
+    public function storeBatchAsSponsor(
+        Identity $identity,
+        Organization $organization
+    ): bool {
+        return $organization->identityCan($identity, 'make_direct_payments');
     }
 }

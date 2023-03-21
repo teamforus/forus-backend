@@ -30,6 +30,8 @@ class IndexFundTopUpTransactionRequest extends BaseFormRequest
             'amount_min'        => 'numeric|min:0',
             'amount_max'        => 'numeric|min:0',
             'per_page'          => $this->perPageRule(),
+            'order_by'          => 'nullable|in:code,iban,amount,created_at',
+            'order_dir'         => 'nullable|in:asc,desc',
         ];
     }
 }

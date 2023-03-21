@@ -6,8 +6,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use App\Models\Tag;
 
 /**
- * Trait HasTags
- * @package App\Models\Traits
+ * @mixin \Eloquent
  */
 trait HasTags
 {

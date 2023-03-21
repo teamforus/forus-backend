@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFaq;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,8 +18,8 @@ use Illuminate\Support\Arr;
  * @property int $implementation_id
  * @property string|null $page_type
  * @property string $state
- * @property string|null $content
- * @property string $content_alignment
+ * @property string|null $description
+ * @property string $description_alignment
  * @property string|null $external_url
  * @property bool $external
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -25,7 +27,10 @@ use Illuminate\Support\Arr;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\ImplementationBlock[] $blocks
  * @property-read int|null $blocks_count
- * @property-read string $content_html
+ * @property-read Collection|\App\Models\Faq[] $faq
+ * @property-read int|null $faq_count
+ * @property-read string $description_html
+ * @property-read string $description_position
  * @property-read \App\Models\Implementation $implementation
  * @property-read Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
@@ -33,10 +38,10 @@ use Illuminate\Support\Arr;
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newQuery()
  * @method static \Illuminate\Database\Query\Builder|ImplementationPage onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage query()
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereContent($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereContentAlignment($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDescriptionAlignment($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternal($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternalUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereId($value)
@@ -50,7 +55,7 @@ use Illuminate\Support\Arr;
  */
 class ImplementationPage extends BaseModel
 {
-    use HasMedia, SoftDeletes;
+    use HasMedia, HasMarkdownDescription, HasFaq, SoftDeletes;
 
     const TYPE_HOME = 'home';
     const TYPE_PRODUCTS = 'products';
@@ -72,58 +77,90 @@ class ImplementationPage extends BaseModel
         self::STATE_PUBLIC,
     ];
 
+    const DESCRIPTION_POSITION_AFTER = 'after';
+    const DESCRIPTION_POSITION_BEFORE = 'before';
+    const DESCRIPTION_POSITION_REPLACE = 'replace';
+
+    const DESCRIPTION_POSITIONS = [
+        self::DESCRIPTION_POSITION_AFTER,
+        self::DESCRIPTION_POSITION_BEFORE,
+        self::DESCRIPTION_POSITION_REPLACE,
+    ];
+
     const PAGE_TYPES = [[
         'key' => self::TYPE_HOME,
         'type' => 'static',
         'blocks' => true,
+        'faq' => false,
+        'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_PRODUCTS,
         'type' => 'static',
         'blocks' => false,
+        'faq' => false,
+        'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_PROVIDERS,
         'type' => 'static',
         'blocks' => false,
+        'faq' => false,
+        'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_FUNDS,
         'type' => 'static',
         'blocks' => false,
+        'faq' => false,
+        'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_PROVIDER,
         'type' => 'static',
         'blocks' => true,
+        'faq' => false,
+        'description_position_configurable' => true,
     ], [
         'key' => self::TYPE_EXPLANATION,
         'type' => 'extra',
         'blocks' => true,
+        'faq' => true,
+        'description_position_configurable' => true,
     ], [
         'key' => self::TYPE_PRIVACY,
         'type' => 'extra',
         'blocks' => true,
+        'faq' => false,
+        'description_position_configurable' => true,
     ], [
         'key' => self::TYPE_ACCESSIBILITY,
         'type' => 'extra',
         'blocks' => true,
+        'faq' => false,
+        'description_position_configurable' => true,
     ], [
         'key' => self::TYPE_TERMS_AND_CONDITIONS,
         'type' => 'extra',
         'blocks' => true,
+        'faq' => false,
+        'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_FOOTER_CONTACT_DETAILS,
         'type' => 'element',
         'blocks' => false,
+        'faq' => false,
+        'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_FOOTER_OPENING_TIMES,
         'type' => 'element',
         'blocks' => false,
+        'faq' => false,
+        'description_position_configurable' => false,
     ]];
 
     /**
      * @var string[]
      */
     protected $fillable = [
-        'implementation_id', 'page_type', 'content', 'content_alignment',
-        'external', 'external_url', 'state',
+        'implementation_id', 'page_type', 'description', 'description_alignment',
+        'external', 'external_url', 'state', 'description_position',
     ];
 
     /**
@@ -139,15 +176,6 @@ class ImplementationPage extends BaseModel
     public function implementation(): BelongsTo
     {
         return $this->belongsTo(Implementation::class);
-    }
-
-    /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function getContentHtmlAttribute(): string
-    {
-        return resolve('markdown.converter')->convert($this->content ?: '')->getContent();
     }
 
     /**
@@ -175,7 +203,7 @@ class ImplementationPage extends BaseModel
         foreach ($blocks as $block) {
             $blockData = Arr::only($block, [
                 'type', 'key', 'media_uid', 'label', 'title', 'description',
-                'button_enabled', 'button_text', 'button_link',
+                'button_enabled', 'button_text', 'button_link', 'button_target_blank',
             ]);
 
             /** @var ImplementationBLock $block */
@@ -199,6 +227,14 @@ class ImplementationPage extends BaseModel
         $type = $pageType['type'] ?? null;
 
         return !$type || in_array($type, ['static', 'page_element']);
+    }
+
+    /**
+     * @return bool
+     */
+    public function supportsFaq(): bool
+    {
+        return Arr::keyBy(self::PAGE_TYPES, 'key')[$this->page_type]['faq'] ?? false;
     }
 
     /**

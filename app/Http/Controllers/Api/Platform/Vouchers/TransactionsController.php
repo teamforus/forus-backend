@@ -11,7 +11,9 @@ use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Config;
 
 class TransactionsController extends Controller
 {
@@ -30,10 +32,14 @@ class TransactionsController extends Controller
         $this->authorize('show', $voucherToken->voucher);
         $this->authorize('viewAny', [VoucherTransaction::class, $voucherToken]);
 
-        return VoucherTransactionResource::queryCollection(
-            VoucherTransaction::searchVoucher($voucherToken->voucher, $request),
-            $request
-        );
+        $query = VoucherTransaction::searchVoucher($voucherToken->voucher, $request);
+        $hideOnMeApp = Config::get('forus.features.me_app.hide_non_provider_transactions');
+
+        if ($hideOnMeApp && $request->isMeApp()) {
+            $query->where('target', 'provider');
+        }
+
+        return VoucherTransactionResource::queryCollection($query, $request);
     }
 
     /**
@@ -41,8 +47,8 @@ class TransactionsController extends Controller
      *
      * @param StoreVoucherTransactionRequest $request
      * @param VoucherToken $voucherToken
-     * @return VoucherTransactionResource|\Illuminate\Http\JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return VoucherTransactionResource
+     * @throws AuthorizationException
      */
     public function store(
         StoreVoucherTransactionRequest $request,
@@ -59,8 +65,11 @@ class TransactionsController extends Controller
             $this->authorize('useAsProvider', $voucherToken->voucher);
         }
 
+        $this->authorize('makeTransactionThrottle', $voucherToken->voucher);
+
         $note = $request->input('note', false);
         $voucher = $voucherToken->voucher;
+        $product = null;
         $transactionState = VoucherTransaction::STATE_PENDING;
 
         // Product reservation voucher
@@ -93,12 +102,12 @@ class TransactionsController extends Controller
                 $product = $voucher->product;
                 $organization = $product->organization;
             }
+
+            $fundProviderProduct = $product?->getFundProviderProduct($voucher->fund);
         } else {
             // Subsidy fund voucher
             $product = Product::findOrFail($request->input('product_id'));
-            $fundProviderProduct = $product->getSubsidyDetailsForFundOrFail($voucher->fund);
-
-            $fundProviderProductId = $fundProviderProduct->id;
+            $fundProviderProduct = $product->getFundProviderProductOrFail($voucher->fund);
             $organization = $product->organization;
             $amount = $fundProviderProduct->amount;
 
@@ -112,7 +121,8 @@ class TransactionsController extends Controller
             'product_id' => $product->id ?? null,
             'employee_id' => $organization->findEmployee($request->auth_address())->id,
             'state' => $transactionState,
-            'fund_provider_product_id' => $fundProviderProductId ?? null,
+            'fund_provider_product_id' => $fundProviderProduct?->id ?? null,
+            'target' => VoucherTransaction::TARGET_PROVIDER,
             'organization_id' => $organization->id,
         ], $voucher->needsTransactionReview());
 

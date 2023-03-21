@@ -11,15 +11,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
- * Class ProductResource
  * @property Product $resource
- * @package App\Http\Resources
  */
 class ProductResource extends BaseJsonResource
 {
     public const LOAD = [
         'voucher_transactions',
-        'vouchers_reserved',
+        'product_reservations_pending',
         'photo.presets',
         'product_category.translations',
         'organization.offices.photo.presets',
@@ -28,6 +26,7 @@ class ProductResource extends BaseJsonResource
         'organization.offices.organization.logo.presets',
         'organization.logo.presets',
         'organization.business_type.translations',
+        'bookmarks',
     ];
 
     /**
@@ -51,7 +50,7 @@ class ProductResource extends BaseJsonResource
             'price_discount_locale' => $product->price_discount_locale,
 
             'unlimited_stock' => $product->unlimited_stock,
-            'reserved_amount' => $product->vouchers_reserved->count(),
+            'reserved_amount' => $product->countReservedCached(),
             'sold_amount' => $product->countSold(),
             'stock_amount' => $product->stock_amount,
             'expire_at' => $product->expire_at?->format('Y-m-d'),
@@ -64,8 +63,11 @@ class ProductResource extends BaseJsonResource
             'price_min' => currency_format($this->getProductSubsidyPrice($product, 'max')),
             'price_max' => currency_format($this->getProductSubsidyPrice($product, 'min')),
             'offices' => OfficeResource::collection($product->organization->offices),
-            'product_category' => new ProductCategoryResource($product->product_category)
-        ]);
+            'product_category' => new ProductCategoryResource($product->product_category),
+            'bookmarked' => $product->isBookmarkedBy($baseRequest->identity()),
+        ], array_merge(
+            $this->productReservationFieldSettings($product),
+        ));
     }
 
     /**
@@ -116,23 +118,21 @@ class ProductResource extends BaseJsonResource
                 'reservations_enabled' => $product->reservationsEnabled($fund),
             ];
 
-            if (!$fund->isTypeSubsidy()) {
-                return $data;
-            }
-
-            $fundProviderProduct = $product->getSubsidyDetailsForFund($fund);
             $productData = ProductSubQuery::appendReservationStats([
                 'identity_address' => $request->auth_address(),
-                'fund_id' => $fund->id
+                'fund_id' => $fund->id,
             ], Product::whereId($product->id))->firstOrFail()->only([
-                'limit_total', 'limit_per_identity', 'limit_available'
+                'limit_total', 'limit_per_identity', 'limit_available',
             ]);
 
+            $fundProviderProduct = $product->getFundProviderProduct($fund);
+
             return array_merge($data, $productData, [
+                'limit_per_identity' => $fundProviderProduct->limit_per_identity,
+            ], $fund->isTypeSubsidy() ? [
                 'price' => $fundProviderProduct->user_price,
                 'price_locale' => $fundProviderProduct->user_price_locale,
-                'limit_per_identity' => $fundProviderProduct->limit_per_identity,
-            ]);
+            ] : []);
         })->values();
     }
 
@@ -149,5 +149,37 @@ class ProductResource extends BaseJsonResource
             $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
             $builder->whereIn('funds.id', $this->fundsQuery()->select('funds.id'));
         })->$type('amount'), 0);
+    }
+
+    /**
+     * @param Product $product
+     * @return array
+     */
+    private function productReservationFieldSettings(Product $product): array
+    {
+        $global = $product::RESERVATION_FIELD_GLOBAL;
+        $request = BaseFormRequest::createFromBase(request());
+
+        if ($request->isWebshop()) {
+            return [
+                'reservation' => [
+                    'phone' => $product->reservation_phone == $global ?
+                        $product->organization->reservation_phone :
+                        $product->reservation_phone,
+                    'address' => $product->reservation_address == $global ?
+                        $product->organization->reservation_address :
+                        $product->reservation_address,
+                    'birth_date' => $product->reservation_birth_date == $global ?
+                        $product->organization->reservation_birth_date :
+                        $product->reservation_birth_date,
+                ],
+            ];
+        }
+
+        return [
+            'reservation_phone' => $product->reservation_phone,
+            'reservation_address' => $product->reservation_address,
+            'reservation_birth_date' => $product->reservation_birth_date,
+        ];
     }
 }

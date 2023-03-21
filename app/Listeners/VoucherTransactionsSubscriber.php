@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
+use App\Mail\Forus\TransactionVerifyMail;
 use App\Models\FundProvider;
 use App\Models\Voucher;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherTransactionNotification;
@@ -11,6 +12,7 @@ use App\Notifications\Identities\Voucher\IdentityVoucherSubsidyTransactionNotifi
 use App\Notifications\Identities\Voucher\IdentityVoucherBudgetTransactionNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderTransactionBunqSuccessNotification;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Support\Facades\Config;
 
 class VoucherTransactionsSubscriber
 {
@@ -48,9 +50,12 @@ class VoucherTransactionsSubscriber
             IdentityProductVoucherTransactionNotification::send($event);
         } elseif ($type == 'budget') {
             $event = $voucher->log(Voucher::EVENT_TRANSACTION, $eventMeta, $logData);
-            IdentityVoucherBudgetTransactionNotification::send($event);
+
+            if ($transaction->isOutgoing()) {
+                IdentityVoucherBudgetTransactionNotification::send($event);
+            }
         } elseif ($type == 'subsidy') {
-            $fundProviderProduct = $transaction->product->getSubsidyDetailsForFund($fund);
+            $fundProviderProduct = $transaction->product->getFundProviderProduct($fund);
 
             if ($fundProviderProduct) {
                 $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION_SUBSIDY, $eventMeta, array_merge([
@@ -62,6 +67,16 @@ class VoucherTransactionsSubscriber
                 }
             }
         }
+
+        if ($transaction->attempts >= 50 && Config::get('forus.notification_mails.transaction_verify')) {
+            resolve('forus.services.notification')->sendSystemMail(
+                Config::get('forus.notification_mails.transaction_verify'),
+                new TransactionVerifyMail([
+                    'id' => $transaction->id,
+                    'fund_name' => $transaction->voucher?->fund?->name,
+                ]),
+            );
+        }
     }
 
     /**
@@ -71,6 +86,10 @@ class VoucherTransactionsSubscriber
     public function onVoucherTransactionBunqSuccess(VoucherTransactionBunqSuccess $event): void
     {
         $transaction = $event->getVoucherTransaction();
+
+        if (!$transaction->targetIsProvider() || !$transaction->organization_id) {
+            return;
+        }
 
         $fundProvider = $transaction->voucher->fund->providers()->where([
             'organization_id' => $transaction->organization_id,

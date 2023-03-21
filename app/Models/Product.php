@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Products\ProductSoldOut;
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Traits\HasBookmarks;
 use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
@@ -40,46 +41,54 @@ use Illuminate\Support\Arr;
  * @property int $show_on_webshop
  * @property bool $reservation_enabled
  * @property string $reservation_policy
+ * @property string $reservation_phone
+ * @property string $reservation_address
+ * @property string $reservation_birth_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $expire_at
  * @property bool $sold_out
  * @property int|null $sponsor_organization_id
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderChat[] $fund_provider_chats
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Bookmark> $bookmarks
+ * @property-read int|null $bookmarks_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FundProviderChat> $fund_provider_chats
  * @property-read int|null $fund_provider_chats_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FundProviderProduct> $fund_provider_products
  * @property-read int|null $fund_provider_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $fund_providers
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FundProvider> $fund_providers
  * @property-read int|null $fund_providers_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Fund> $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
  * @property-read bool $expired
  * @property-read string $price_discount_locale
  * @property-read string $price_locale
- * @property-read int $stock_amount
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read bool $reservation_address_is_required
+ * @property-read bool $reservation_birth_date_is_required
+ * @property-read bool $reservation_phone_is_required
+ * @property-read int|null $stock_amount
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Services\EventLogService\Models\EventLog> $logs
  * @property-read int|null $logs_count
- * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Media> $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
  * @property-read Media|null $photo
  * @property-read \App\Models\ProductCategory $product_category
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProductExclusion[] $product_exclusions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FundProviderProductExclusion> $product_exclusions
  * @property-read int|null $product_exclusions_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservation[] $product_reservations
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductReservation> $product_reservations
  * @property-read int|null $product_reservations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductReservation> $product_reservations_pending
+ * @property-read int|null $product_reservations_pending_count
  * @property-read \App\Models\Organization|null $sponsor_organization
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\VoucherTransaction> $voucher_transactions
  * @property-read int|null $voucher_transactions_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Voucher> $vouchers
  * @property-read int|null $vouchers_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers_reserved
- * @property-read int|null $vouchers_reserved_count
  * @method static Builder|Product newModelQuery()
  * @method static Builder|Product newQuery()
- * @method static \Illuminate\Database\Query\Builder|Product onlyTrashed()
+ * @method static Builder|Product onlyTrashed()
  * @method static Builder|Product query()
  * @method static Builder|Product whereCreatedAt($value)
  * @method static Builder|Product whereDeletedAt($value)
@@ -93,7 +102,10 @@ use Illuminate\Support\Arr;
  * @method static Builder|Product wherePriceDiscount($value)
  * @method static Builder|Product wherePriceType($value)
  * @method static Builder|Product whereProductCategoryId($value)
+ * @method static Builder|Product whereReservationAddress($value)
+ * @method static Builder|Product whereReservationBirthDate($value)
  * @method static Builder|Product whereReservationEnabled($value)
+ * @method static Builder|Product whereReservationPhone($value)
  * @method static Builder|Product whereReservationPolicy($value)
  * @method static Builder|Product whereShowOnWebshop($value)
  * @method static Builder|Product whereSoldOut($value)
@@ -101,13 +113,13 @@ use Illuminate\Support\Arr;
  * @method static Builder|Product whereTotalAmount($value)
  * @method static Builder|Product whereUnlimitedStock($value)
  * @method static Builder|Product whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|Product withTrashed()
- * @method static \Illuminate\Database\Query\Builder|Product withoutTrashed()
+ * @method static Builder|Product withTrashed()
+ * @method static Builder|Product withoutTrashed()
  * @mixin \Eloquent
  */
 class Product extends BaseModel
 {
-    use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription;
+    use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription, HasBookmarks;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_SOLD_OUT = 'sold_out';
@@ -125,6 +137,24 @@ class Product extends BaseModel
     public const RESERVATION_POLICY_ACCEPT = 'accept';
     public const RESERVATION_POLICY_REVIEW = 'review';
     public const RESERVATION_POLICY_GLOBAL = 'global';
+
+    public const RESERVATION_FIELD_REQUIRED = 'required';
+    public const RESERVATION_FIELD_OPTIONAL = 'optional';
+    public const RESERVATION_FIELD_GLOBAL = 'global';
+    public const RESERVATION_FIELD_NO = 'no';
+
+    public const RESERVATION_FIELDS_PRODUCT = [
+        self::RESERVATION_FIELD_REQUIRED,
+        self::RESERVATION_FIELD_OPTIONAL,
+        self::RESERVATION_FIELD_GLOBAL,
+        self::RESERVATION_FIELD_NO,
+    ];
+
+    public const RESERVATION_FIELDS_ORGANIZATION = [
+        self::RESERVATION_FIELD_REQUIRED,
+        self::RESERVATION_FIELD_OPTIONAL,
+        self::RESERVATION_FIELD_NO,
+    ];
 
     public const RESERVATION_POLICIES = [
         self::RESERVATION_POLICY_ACCEPT,
@@ -154,6 +184,7 @@ class Product extends BaseModel
         'price', 'total_amount', 'expire_at', 'sold_out',
         'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id',
         'reservation_enabled', 'reservation_policy',
+        'reservation_phone', 'reservation_address', 'reservation_birth_date'
     ];
 
     /**
@@ -205,18 +236,13 @@ class Product extends BaseModel
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
      */
-    public function vouchers_reserved(): HasMany
+    public function product_reservations_pending(): HasMany
     {
-        return $this->hasMany(Voucher::class)
-            ->whereHas('product_reservations', function(Builder $builder) {
-                $builder->whereNotIn('state', [
-                    ProductReservation::STATE_REJECTED,
-                    ProductReservation::STATE_CANCELED
-                ]);
-            })
-            ->whereDoesntHave('transactions');
+        return $this->product_reservations()->whereIn('state', [
+            ProductReservation::STATE_PENDING,
+            ProductReservation::STATE_ACCEPTED
+        ])->whereDoesntHave('voucher_transaction');
     }
 
     /**
@@ -262,6 +288,7 @@ class Product extends BaseModel
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
     public function product_exclusions(): HasMany
     {
@@ -285,6 +312,45 @@ class Product extends BaseModel
     public function fund_provider_chats(): HasMany
     {
         return $this->hasMany(FundProviderChat::class);
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getReservationPhoneIsRequiredAttribute(): bool
+    {
+        if ($this->reservation_phone == self::RESERVATION_FIELD_GLOBAL) {
+            return $this->organization->reservation_phone == self::RESERVATION_FIELD_REQUIRED;
+        }
+
+        return $this->reservation_phone == self::RESERVATION_FIELD_REQUIRED;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getReservationAddressIsRequiredAttribute(): bool
+    {
+        if ($this->reservation_address == self::RESERVATION_FIELD_GLOBAL) {
+            return $this->organization->reservation_address == self::RESERVATION_FIELD_REQUIRED;
+        }
+
+        return $this->reservation_address == self::RESERVATION_FIELD_REQUIRED;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getReservationBirthDateIsRequiredAttribute(): bool
+    {
+        if ($this->reservation_birth_date == self::RESERVATION_FIELD_GLOBAL) {
+            return $this->organization->reservation_birth_date == self::RESERVATION_FIELD_REQUIRED;
+        }
+
+        return $this->reservation_birth_date == self::RESERVATION_FIELD_REQUIRED;
     }
 
     /**
@@ -312,32 +378,59 @@ class Product extends BaseModel
     /**
      * Count vouchers generated for this product but not used
      *
+     * @param Fund|null $fund
      * @return int
      */
-    public function countReserved(): int
+    public function countReserved(?Fund $fund = null): int
     {
-        return $this->vouchers_reserved()->count();
+        return $this->product_reservations_pending()->where(function (Builder $builder) use ($fund) {
+            if ($fund) {
+                $builder->whereRelation('voucher', 'fund_id', $fund->id);
+            }
+        })->count();
+    }
+
+    /**
+     * Count vouchers generated for this product but not used
+     *
+     * @param Fund|null $fund
+     * @return int
+     */
+    public function countReservedCached(?Fund $fund = null): int
+    {
+        return $this->product_reservations_pending->filter(function(ProductReservation $reservation) use ($fund) {
+            return !$fund || $reservation->voucher->fund_id == $fund->id;
+        })->count();
     }
 
     /**
      * Count actually sold products
      *
+     * @param Fund|null $fund
      * @return int
      */
-    public function countSold(): int
+    public function countSold(?Fund $fund = null): int
     {
-        return $this->voucher_transactions()->count();
+        return $this->voucher_transactions()->where(function (Builder $builder) use ($fund) {
+            $builder->where('state', '!=', VoucherTransaction::STATE_CANCELED);
+
+            if ($fund) {
+                $builder->whereRelation('voucher', 'fund_id', $fund->id);
+            }
+        })->count();
     }
 
     /**
-     * @return int
+     * @return int|null
      * @noinspection PhpUnused
      */
-    public function getStockAmountAttribute(): int
+    public function getStockAmountAttribute(): ?int
     {
-        return $this->total_amount - (
-            $this->vouchers_reserved->count() +
-            $this->voucher_transactions->count());
+        if ($this->unlimited_stock) {
+            return null;
+        }
+
+        return $this->total_amount - ($this->countReservedCached() + $this->voucher_transactions->count());
     }
 
     /**
@@ -358,12 +451,13 @@ class Product extends BaseModel
     }
 
     /**
+     * @param array $fundFilters
      * @return Builder
      */
-    public static function searchQuery(): Builder
+    public static function searchQuery(array $fundFilters = []): Builder
     {
         $query = self::query();
-        $activeFunds = Implementation::activeFundsQuery()->pluck('id')->toArray();
+        $activeFunds = Implementation::activeFundsQuery()->where($fundFilters)->pluck('id')->toArray();
 
         // only in stock and not expired
         $query = ProductQuery::inStockAndActiveFilter($query);
@@ -389,11 +483,12 @@ class Product extends BaseModel
 
     /**
      * @param array $options
-     * @param Builder|null $builder
-     * @return Builder|SoftDeletes
+     * @param Builder|Product|null $builder
+     * @return Builder|Product
      */
-    public static function search(array $options, Builder $builder = null): Builder
+    public static function search(array $options, Builder|Product $builder = null): Builder|Product
     {
+        /** @var Builder|Product $query */
         $query = $builder ?: self::searchQuery();
 
         if ($fund_type = Arr::get($options, 'fund_type')) {
@@ -473,9 +568,8 @@ class Product extends BaseModel
         $query = $query ?: self::query();
 
         // filter by unlimited stock
-        if ($request->has('unlimited_stock') &&
-            $unlimited_stock = filter_bool($request->input('unlimited_stock'))) {
-            ProductQuery::unlimitedStockFilter($query, $unlimited_stock);
+        if ($request->has('unlimited_stock')) {
+            ProductQuery::unlimitedStockFilter($query, filter_bool($request->input('unlimited_stock')));
         }
 
         // filter by string query
@@ -526,8 +620,7 @@ class Product extends BaseModel
                 return currency_format_locale($this->price_discount);
             }
             case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
-                $isWhole = (double) ($this->price_discount -
-                        round($this->price_discount)) === (double) 0;
+                $isWhole = (double) ($this->price_discount - round($this->price_discount)) === 0.0;
 
                 return currency_format($this->price_discount, $isWhole ? 0 : 2) . '%';
             }
@@ -538,14 +631,13 @@ class Product extends BaseModel
 
     /**
      * @param Fund $fund
-     * @return FundProviderProduct|null|mixed
+     * @return FundProviderProduct|null
      */
-    public function getSubsidyDetailsForFund(Fund $fund): ?FundProviderProduct
+    public function getFundProviderProduct(Fund $fund): ?FundProviderProduct
     {
-        return $this->fund_provider_products()->whereHas('fund_provider.fund', function(Builder $builder) use ($fund) {
-            $builder->where('funds.id', $fund->id);
-            $builder->where('funds.type', $fund::TYPE_SUBSIDIES);
-        })->first();
+        return $this->fund_provider_products()->whereRelation('fund_provider.fund', [
+            'id' => $fund->id,
+        ])->latest()->first();
     }
 
     /**
@@ -553,11 +645,11 @@ class Product extends BaseModel
      * @param int $errorCode
      * @return FundProviderProduct
      */
-    public function getSubsidyDetailsForFundOrFail(
+    public function getFundProviderProductOrFail(
         Fund $fund,
         int $errorCode = 403
     ): FundProviderProduct {
-        if (!$fundProviderProduct = $this->getSubsidyDetailsForFund($fund)) {
+        if (!$fundProviderProduct = $this->getFundProviderProduct($fund)) {
             abort($errorCode);
         }
 
@@ -669,6 +761,7 @@ class Product extends BaseModel
         $product = $organization->products()->create(array_merge($request->only([
             'name', 'description', 'price', 'product_category_id', 'expire_at',
             'reservation_enabled', 'reservation_policy',
+            'reservation_phone', 'reservation_address', 'reservation_birth_date',
         ]), [
             'total_amount' => $unlimited_stock ? 0 : $total_amount,
             'unlimited_stock' => $unlimited_stock
@@ -701,6 +794,7 @@ class Product extends BaseModel
         return $this->updateModel(array_merge($request->only([
             'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
             'reservation_enabled', 'reservation_policy',
+            'reservation_phone', 'reservation_address', 'reservation_birth_date',
         ]), [
             'total_amount' => $this->unlimited_stock ? 0 : $total_amount,
         ], compact('price', 'price_type', 'price_discount')));
@@ -732,5 +826,14 @@ class Product extends BaseModel
         return $reservationsEnabled &&
             ($this->reservation_policy === self::RESERVATION_POLICY_GLOBAL) &&
             $this->organization->reservations_auto_accept;
+    }
+
+    /**
+     * @param Identity|null $identity
+     * @return bool
+     */
+    public function isBookmarkedBy(?Identity $identity = null): bool
+    {
+        return $identity && $this->bookmarks->where('identity_address', $identity->address)->isNotEmpty();
     }
 }

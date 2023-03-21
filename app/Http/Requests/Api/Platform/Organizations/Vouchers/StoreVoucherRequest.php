@@ -59,17 +59,17 @@ class StoreVoucherRequest extends BaseFormRequest
             'expire_at' => [
                 'nullable',
                 'date_format:Y-m-d',
-                'after:' . ($fund ? $fund->start_date->format('Y-m-d') : null),
-                'before_or_equal:' . ($fund ? $fund->end_date->format('Y-m-d') : null),
+                'after:' . ($fund?->start_date->format('Y-m-d')),
+                'before_or_equal:' . ($fund?->end_date->format('Y-m-d')),
             ],
             'product_id' => [
                 $fund && $fund->isTypeBudget() ? 'required_without:amount' : 'nullable',
                 'exists:products,id',
-                new ProductIdInStockRule($fund),
+                $fund ? new ProductIdInStockRule($fund) : Rule::in([]),
             ],
             'activate'              => 'boolean',
             'activation_code'       => 'boolean',
-            'activation_code_uid'   => 'nullable|string|max:20',
+            'client_uid'            => 'nullable|string|max:20',
             'assign_by_type'        => 'required|in:' . $this->availableAssignTypes($bsn_enabled),
             'limit_multiplier'      => 'nullable|numeric|min:1|max:1000',
         ];
@@ -82,7 +82,7 @@ class StoreVoucherRequest extends BaseFormRequest
     protected function availableAssignTypes(bool $bsn_enabled): string
     {
         return implode(",", array_filter([
-            'email', 'activation_code_uid', $bsn_enabled ? 'bsn' : null,
+            'email', 'activation_code', $bsn_enabled ? 'bsn' : null,
         ]));
     }
 

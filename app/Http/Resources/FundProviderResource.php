@@ -10,14 +10,24 @@ use App\Scopes\Builders\ProductQuery;
  */
 class FundProviderResource extends BaseJsonResource
 {
-    public static array $load = [
+    public const LOAD = [
+        'fund.faq',
+        'fund.tags',
         'fund.logo.presets',
-        'fund.providers',
-        'fund.organization.logo',
+        'fund.criteria.fund',
+        'fund.criteria.fund_criterion_validators.external_validator',
+        'fund.organization.logo.presets',
+        'fund.organization.employees',
+        'fund.organization.employees.roles.permissions',
         'fund.organization.business_type.translations',
-        'fund.employees',
-        'fund.top_up_transactions',
+        'fund.organization.bank_connection_active',
+        'fund.organization.tags',
+        'fund.fund_config.implementation',
+        'fund.fund_formula_products',
         'fund.provider_organizations_approved.employees',
+        'fund.tags_webshop',
+        'fund.fund_formulas',
+        'fund.top_up_transactions',
         'organization.offices.organization.business_type.translations',
         'organization.offices.organization.logo',
         'organization.offices.photo',
@@ -25,7 +35,7 @@ class FundProviderResource extends BaseJsonResource
         'organization.logo',
         'organization.employees.roles.translations',
         'organization.business_type.translations',
-        'fund_provider_products'
+        'fund_provider_products',
     ];
 
     /**
@@ -49,7 +59,8 @@ class FundProviderResource extends BaseJsonResource
             'organization' => array_merge((new OrganizationWithPrivateResource(
                 $fundProvider->organization
             ))->toArray($request), $fundProvider->organization->only((array) 'iban')),
-            'cancelable' => !$fundProvider->hasTransactions() && !$fundProvider->isApproved() && $fundProvider->isPending(),
+            'can_cancel' => !$fundProvider->hasTransactions() && !$fundProvider->isApproved() && $fundProvider->isPending(),
+            'can_unsubscribe' => $fundProvider->canUnsubscribe(),
             'last_activity' => $lastActivity?->format('Y-m-d H:i:s'),
             'last_activity_locale' => $lastActivity?->diffForHumans(now()),
         ]);

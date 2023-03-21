@@ -47,7 +47,7 @@ class ProductReservationPolicy
      */
     public function view(Identity $identity, ProductReservation $productReservation): bool
     {
-        return $this->update($identity, $productReservation);
+        return $productReservation->voucher->identity_address === $identity->address;
     }
 
     /**
@@ -97,7 +97,6 @@ class ProductReservationPolicy
     public function createProviderBatch(Identity $identity, Organization $organization): bool
     {
         return
-            $identity->exists &&
             $organization->allow_batch_reservations &&
             $organization->identityCan($identity, 'scan_vouchers');
     }
@@ -112,7 +111,9 @@ class ProductReservationPolicy
      */
     public function update(Identity $identity, ProductReservation $productReservation): bool
     {
-        return $productReservation->voucher->identity_address === $identity->address;
+        return
+            $productReservation->isPending() &&
+            $productReservation->voucher->identity_address === $identity->address;
     }
 
     /**
@@ -130,7 +131,6 @@ class ProductReservationPolicy
         Organization $organization
     ): bool {
         return
-            $identity->exists &&
             $productReservation->product->organization_id == $organization->id &&
             $organization->identityCan($identity, 'scan_vouchers');
     }

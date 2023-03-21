@@ -35,6 +35,10 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.fund_request_record_declined" => ["database", "mail"],
         "notifications_identities.fund_request_feedback_requested" => ["database", "mail"],
 
+        "notifications_identities.reimbursement_submitted" => ["database", "mail"],
+        "notifications_identities.reimbursement_approved" => ["database", "mail"],
+        "notifications_identities.reimbursement_declined" => ["database", "mail"],
+
         'notifications_fund_providers.fund_started' => ["database"],
         'notifications_fund_providers.fund_ended' => [], // TODO can database notifications be removed
         'notifications_fund_providers.fund_expiring' => [], // TODO can database notifications be removed
@@ -64,6 +68,7 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_products.reserved" => ["database", "mail"],
         "notifications_products.revoked" => ["database"],
         "notifications_products.sold_out" => ["database", "mail"],
+        "notifications_products.reservation_canceled" => ["database"],
 
         "notifications_identities.product_voucher_shared" => ["database", "mail"],
         "notifications_identities.identity_voucher_assigned_budget" => ["database", "mail", "push"],
@@ -120,6 +125,10 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.fund_request_disregarded",
         'notifications_identities.fund_request_feedback_requested',
 
+        'notifications_identities.reimbursement_submitted',
+        'notifications_identities.reimbursement_approved',
+        'notifications_identities.reimbursement_declined',
+
         'notifications_identities.product_reservation_created',
         'notifications_identities.product_reservation_accepted',
         'notifications_identities.product_reservation_canceled',
@@ -130,6 +139,7 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_products.reserved',
         'notifications_products.revoked',
         'notifications_products.sold_out',
+        'notifications_products.reservation_canceled',
 
         'notifications_identities.identity_voucher_assigned_budget',
         'notifications_identities.identity_voucher_assigned_subsidy',
@@ -159,8 +169,11 @@ class SystemNotificationsTableSeeder extends Seeder
 
         'notifications_identities.fund_request_created',
         'notifications_identities.fund_request_approved',
-
         'notifications_identities.fund_request_feedback_requested',
+
+        'notifications_identities.reimbursement_submitted',
+        'notifications_identities.reimbursement_approved',
+        'notifications_identities.reimbursement_declined',
 
         'notifications_identities.identity_voucher_assigned_budget',
         'notifications_identities.identity_voucher_assigned_subsidy',
@@ -180,6 +193,11 @@ class SystemNotificationsTableSeeder extends Seeder
             "notifications_identities.fund_request_disregarded",
             "notifications_identities.fund_request_record_declined",
             "notifications_identities.fund_request_feedback_requested"
+        ],
+        "requester_reimbursements" => [
+            'notifications_identities.reimbursement_submitted',
+            'notifications_identities.reimbursement_approved',
+            'notifications_identities.reimbursement_declined',
         ],
         "requester_vouchers" => [
             "notifications_identities.identity_voucher_assigned_budget",
@@ -218,6 +236,7 @@ class SystemNotificationsTableSeeder extends Seeder
             'notifications_fund_providers.state_accepted',
             'notifications_fund_providers.state_rejected',
             "notifications_products.approved",
+            'notifications_products.reservation_canceled',
             "notifications_fund_providers.revoked_budget",
             "notifications_fund_providers.revoked_products",
             "notifications_products.revoked",

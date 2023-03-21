@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
 use App\Models\FundProviderInvitation;
+use App\Models\FundProviderUnsubscribe;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
@@ -19,6 +20,7 @@ use App\Models\PhysicalCardRequest;
 use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
@@ -28,6 +30,7 @@ use App\Policies\FilePolicy;
 use App\Policies\FundProviderChatMessagePolicy;
 use App\Policies\FundProviderChatPolicy;
 use App\Policies\FundProviderInvitationPolicy;
+use App\Policies\FundProviderUnsubscribePolicy;
 use App\Policies\FundRequestClarificationPolicy;
 use App\Policies\FundRequestPolicy;
 use App\Policies\FundRequestRecordPolicy;
@@ -42,6 +45,7 @@ use App\Policies\OfficePolicy;
 use App\Policies\FundProviderPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ProductReservationPolicy;
+use App\Policies\ReimbursementPolicy;
 use App\Policies\VoucherPolicy;
 use App\Policies\VoucherTransactionBulkPolicy;
 use App\Policies\VoucherTransactionPolicy;
@@ -78,6 +82,7 @@ class AuthServiceProvider extends ServiceProvider
         Organization::class             => OrganizationPolicy::class,
         FundProvider::class             => FundProviderPolicy::class,
         PhysicalCard::class             => PhysicalCardPolicy::class,
+        Reimbursement::class            => ReimbursementPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
         IdentityEmail::class            => IdentityEmailPolicy::class,
         Implementation::class           => ImplementationPolicy::class,
@@ -91,6 +96,7 @@ class AuthServiceProvider extends ServiceProvider
         VoucherTransactionBulk::class   => VoucherTransactionBulkPolicy::class,
         FundProviderInvitation::class   => FundProviderInvitationPolicy::class,
         FundProviderChatMessage::class  => FundProviderChatMessagePolicy::class,
+        FundProviderUnsubscribe::class  => FundProviderUnsubscribePolicy::class,
         FundRequestClarification::class => FundRequestClarificationPolicy::class,
     ];
 
@@ -110,7 +116,7 @@ class AuthServiceProvider extends ServiceProvider
 
         // add custom guard
         Auth::extend('header', function ($app, $name, array $config) {
-            return new BearerTokenGuard(Auth::createUserProvider($config['provider']), app()->make('request'));
+            return new BearerTokenGuard(Auth::createUserProvider($config['provider']));
         });
 
         Gate::resource('funds', FundPolicy::class, [

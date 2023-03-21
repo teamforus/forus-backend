@@ -22,7 +22,7 @@
             <div style="position: absolute; bottom: 25px; left: 0;">
                 <span>{{ $voucherData->getName() }}</span>
                 @if ($voucherData->getVoucher()->fund->isTypeBudget())
-                    <span> - {{ $voucherData->getVoucher()->amount }}€</span>
+                    <span> - {{ $voucherData->getVoucher()->amount_total }}€</span>
                 @endif
             </div>
         </div>

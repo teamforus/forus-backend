@@ -24,18 +24,25 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
+ * @property bool $allow_reimbursements
+ * @property bool $allow_direct_payments
+ * @property bool $allow_generator_direct_payments
+ * @property bool $allow_voucher_top_ups
+ * @property bool $allow_voucher_records
  * @property bool $employee_can_see_product_vouchers
- * @property bool $show_voucher_qr
- * @property bool $show_voucher_amount
+ * @property string $vouchers_type
  * @property bool $is_configured
  * @property bool $email_required
  * @property bool $contact_info_enabled
  * @property bool $contact_info_required
  * @property bool $contact_info_message_custom
  * @property string|null $contact_info_message_text
- * @property bool $limit_generator_amount
+ * @property string|null $limit_generator_amount
+ * @property string|null $limit_voucher_top_up_amount
+ * @property string|null $limit_voucher_total_amount
+ * @property bool $generator_ignore_fund_budget
  * @property int|null $bsn_confirmation_time
- * @property int $bsn_confirmation_api_time
+ * @property int|null $bsn_confirmation_api_time
  * @property bool $backoffice_enabled
  * @property bool $backoffice_check_partner
  * @property string|null $backoffice_url
@@ -49,6 +56,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $iconnect_target_binding
  * @property string|null $iconnect_api_oin
  * @property string|null $iconnect_base_url
+ * @property string $iconnect_env
+ * @property string $iconnect_key
+ * @property string $iconnect_key_pass
+ * @property string $iconnect_cert
+ * @property string $iconnect_cert_pass
+ * @property string $iconnect_cert_trust
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -57,10 +70,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig query()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowBlockingVouchers($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectPayments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowFundRequests($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowGeneratorDirectPayments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowReimbursements($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherRecords($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherTopUps($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeClientCert($value)
@@ -85,19 +103,29 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereEmailRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereEmployeeCanSeeProductVouchers($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereGeneratorIgnoreFundBudget($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsn($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsnSalt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashPartnerDeny($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectApiOin($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectBaseUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectCert($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectCertPass($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectCertTrust($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectEnv($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectKeyPass($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectTargetBinding($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIsConfigured($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTopUpAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVouchersType($value)
  * @mixin \Eloquent
  */
 class FundConfig extends BaseModel
@@ -109,6 +137,9 @@ class FundConfig extends BaseModel
         self::BACKOFFICE_INELIGIBLE_POLICY_REDIRECT,
         self::BACKOFFICE_INELIGIBLE_POLICY_FUND_REQUEST,
     ];
+
+    public const VOUCHERS_TYPE_EXTERNAL = 'external';
+    public const VOUCHERS_TYPE_INTERNAL = 'internal';
 
     protected $fillable = [
         'backoffice_enabled', 'backoffice_url', 'backoffice_key',
@@ -132,6 +163,10 @@ class FundConfig extends BaseModel
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'allow_fund_requests', 'allow_prevalidations',
         'iconnect_target_binding', 'iconnect_api_oin', 'iconnect_base_url',
+        'iconnect_env', 'iconnect_key', 'iconnect_key_pass',
+        'iconnect_cert', 'iconnect_cert_pass', 'iconnect_cert_trust',
+        'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
+        'limit_voucher_top_up_amount', 'limit_voucher_total_amount', 'allow_generator_direct_payments',
     ];
 
     /**
@@ -147,14 +182,22 @@ class FundConfig extends BaseModel
         'allow_prevalidations' => 'boolean',
         'allow_physical_cards' => 'boolean',
         'allow_direct_requests' => 'boolean',
-        'limit_generator_amount' => 'boolean',
         'allow_blocking_vouchers' => 'boolean',
+        'allow_direct_payments' => 'boolean',
+        'allow_voucher_top_ups' => 'boolean',
+        'allow_voucher_records' => 'boolean',
         'backoffice_check_partner' => 'boolean',
         'employee_can_see_product_vouchers' => 'boolean',
         'email_required' => 'boolean',
         'contact_info_enabled' => 'boolean',
         'contact_info_required' => 'boolean',
         'contact_info_message_custom' => 'boolean',
+        'allow_reimbursements' => 'boolean',
+        'limit_generator_amount' => 'string',
+        'limit_voucher_top_up_amount' => 'string',
+        'limit_voucher_total_amount' => 'string',
+        'allow_generator_direct_payments' => 'boolean',
+        'generator_ignore_fund_budget' => 'boolean',
     ];
 
     /**
@@ -199,5 +242,13 @@ class FundConfig extends BaseModel
     public function getDefaultContactInfoMessage(): string
     {
         return trans('fund.default_contact_info_message');
+    }
+
+    /**
+     * @return bool
+     */
+    public function usesExternalVouchers(): bool
+    {
+        return $this->vouchers_type == self::VOUCHERS_TYPE_EXTERNAL;
     }
 }

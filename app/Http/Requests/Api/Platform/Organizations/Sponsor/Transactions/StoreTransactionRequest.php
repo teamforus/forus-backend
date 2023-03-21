@@ -6,7 +6,10 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
+use App\Models\Reimbursement;
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
+use App\Rules\Base\IbanRule;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherQuery;
@@ -35,32 +38,67 @@ class StoreTransactionRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return [
+        $voucher = $this->has('voucher_id') ? Voucher::find($this->input('voucher_id')) : null;
+
+        return array_merge([
             'voucher_id' => [
                 'required',
                 Rule::in($this->voucherIds()),
             ],
-            'provider_id' => [
-                'required',
-                Rule::in($this->fundProviderIds()),
+            'organization_id' => [
+                'required_if:target,' . VoucherTransaction::TARGET_PROVIDER,
+                Rule::in($this->fundProviderIds($voucher)),
             ],
             'note' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:.02|max:' . currency_format($this->maxAmount()),
-        ];
+            'amount' => $this->amountRule($voucher),
+        ], $this->targetRules($voucher));
     }
 
     /**
-     * @return float
+     * @param Voucher|null $voucher
+     * @return array
      */
-    protected function maxAmount(): float
+    protected function targetRules(?Voucher $voucher): array
     {
-        $voucher = $this->has('voucher_id') ? Voucher::find($this->input('voucher_id')) : null;
+        $fundConfig = $voucher?->fund?->fund_config;
+        $allowTopUps = (bool) $fundConfig?->allow_voucher_top_ups;
+        $allowDirectPayments = (bool) $fundConfig?->allow_direct_payments;
 
-        if ($voucher) {
-            return $voucher->amount_available;
-        }
+        $targets = [
+            $allowDirectPayments ? VoucherTransaction::TARGET_IBAN : null,
+            $allowTopUps ? VoucherTransaction::TARGET_TOP_UP : null,
+            VoucherTransaction::TARGET_PROVIDER
+        ];
 
-        return 0;
+        return array_merge([
+            'target' => ['required', Rule::in(array_filter($targets))]
+        ], $this->input('target') == VoucherTransaction::TARGET_IBAN ? [
+            'target_iban' => ['required_without:target_reimbursement_id', new IbanRule()],
+            'target_name' => 'required_without:target_reimbursement_id|string|min:3|max:200',
+            'target_reimbursement_id' => [
+                'required_without:target_iban',
+                Rule::exists('reimbursements', 'id')->whereIn('id', $this->reimbursementIds($voucher))
+            ],
+        ]: []);
+    }
+
+    /**
+     * @param Voucher|null $voucher
+     * @return string
+     */
+    protected function amountRule(?Voucher $voucher): string
+    {
+        $max = match($this->input('target')) {
+            VoucherTransaction::TARGET_IBAN,
+            VoucherTransaction::TARGET_PROVIDER => $voucher->amount_available,
+            VoucherTransaction::TARGET_TOP_UP => min([
+                $voucher->fund->fund_config->limit_voucher_top_up_amount,
+                $voucher->fund->fund_config->limit_voucher_total_amount - $voucher->amount_total,
+            ]),
+            default => 0,
+        };
+
+        return 'required|numeric|min:.02|max:' . currency_format($max);
     }
 
     /**
@@ -82,12 +120,11 @@ class StoreTransactionRequest extends BaseFormRequest
     }
 
     /**
+     * @param Voucher|null $voucher
      * @return array
      */
-    protected function fundProviderIds(): array
+    protected function fundProviderIds(?Voucher $voucher): array
     {
-        $voucher = $this->has('voucher_id') ? Voucher::find($this->input('voucher_id')) : null;
-
         return $voucher ? FundProviderQuery::whereApprovedForFundsFilter(
             FundProvider::query(),
             $voucher->fund_id,
@@ -96,4 +133,24 @@ class StoreTransactionRequest extends BaseFormRequest
             $builder->where('type', Fund::TYPE_BUDGET);
         })->pluck('fund_providers.organization_id')->toArray() : [];
     }
+
+    /**
+     * @param Voucher|null $voucher
+     * @return Builder|array
+     */
+    protected function reimbursementIds(?Voucher $voucher): Builder|array
+    {
+        if (!$voucher) {
+            return [];
+        }
+
+        return Reimbursement::query()
+            ->whereHas('voucher', fn (Builder|Voucher $builder) => $builder->where([
+                'fund_id' => $voucher->fund_id,
+                'identity_address' => $voucher->identity_address,
+            ]))
+            ->where('state', Reimbursement::STATE_APPROVED)
+            ->select('id');
+    }
+
 }

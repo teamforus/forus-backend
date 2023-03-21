@@ -9,22 +9,17 @@ use App\Http\Resources\FundResource;
 use App\Http\Resources\FundProviderResource;
 use App\Http\Resources\TagResource;
 use App\Models\Fund;
-use App\Models\Implementation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use App\Models\Tag;
-use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Database\Eloquent\Builder;
 
-/**
- * Class FundProviderController
- * @package App\Http\Controllers\Api\Platform\Organizations\Provider
- */
 class FundProviderController extends Controller
 {
     /**
@@ -42,12 +37,9 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
-        $query = Implementation::queryFundsByState(Fund::STATE_ACTIVE, Fund::STATE_PAUSED);
-        $query->where('type', '!=', Fund::TYPE_EXTERNAL);
-        $query->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'));
-
-        FundQuery::whereIsInternal($query);
-        FundQuery::whereIsConfiguredByForus($query);
+        $query = Fund::search($request->only([
+            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
+        ]), FundProvider::queryAvailableFunds($organization))->latest();
 
         $meta = [
             'organizations' => Organization::whereHas('funds', function(Builder $builder) use ($query) {
@@ -58,11 +50,10 @@ class FundProviderController extends Controller
             'tags' => TagResource::collection(Tag::whereHas('funds', static function(Builder $builder) use ($query) {
                 return $builder->whereIn('funds.id', (clone($query))->select('funds.id'));
             })->where('scope', 'provider')->get()),
+            'totals' => FundProvider::makeTotalsMeta($organization),
         ];
 
-        return FundResource::collection(Fund::search($request->only([
-            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
-        ]), $query)->latest()->paginate(
+        return FundResource::collection($query->paginate(
             $request->input('per_page', 10))
         )->additional(compact('meta'));
     }
@@ -82,14 +73,29 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
-        $state = $request->input('state', false);
-        $fund_providers = $organization->fund_providers();
+        $query = $organization->fund_providers();
 
-        if ($state) {
-            $fund_providers->where('state', $state);
+        if ($state = $request->input('state')) {
+            $query->where('state', $state);
         }
 
-        return FundProviderResource::queryCollection($fund_providers, $request);
+        if ($q = $request->input('q')) {
+            FundProviderQuery::queryFilterFund($query, $q);
+        }
+
+        if ($request->input('active')) {
+            $query->whereIn('id', FundProvider::queryActive($organization)->select('id'));
+        }
+
+        if ($request->input('archived')) {
+            $query->whereIn('id', FundProvider::queryArchived($organization)->select('id'));
+        }
+
+        if ($request->input('pending')) {
+            $query->whereIn('id', FundProvider::queryPending($organization)->select('id'));
+        }
+
+        return FundProviderResource::queryCollection($query, $request);
     }
 
     /**
@@ -180,6 +186,6 @@ class FundProviderController extends Controller
 
         $organizationFund->delete();
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 }

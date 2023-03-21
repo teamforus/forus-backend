@@ -10,6 +10,7 @@ use App\Http\Resources\Sponsor\ImplementationPageResource;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\Organization;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -58,18 +59,23 @@ class ImplementationPagesController extends Controller
         $pageType = $request->input('page_type');
         $isInternalType = ImplementationPage::isInternalType($pageType);
 
-        /** @var ImplementationPage $page */
-        $page = $implementation->pages()->create(array_merge($request->only([
-            'content', 'content_alignment', 'external', 'external_url', 'page_type', 'state',
+        /** @var ImplementationPage $implementationPage */
+        $implementationPage = $implementation->pages()->create(array_merge($request->only([
+            'description', 'description_alignment', 'description_position',
+            'external', 'external_url', 'page_type', 'state',
         ]), $isInternalType ? [
             'external' => false,
             'external_url' => null,
         ] : []));
 
-        $page->appendMedia($data['media_uid'] ?? [], 'implementation_block_media');
-        $page->syncBlocks($request->input('blocks'));
+        $implementationPage->syncDescriptionMarkdownMedia('cms_media');
+        $implementationPage->syncBlocks($request->input('blocks'));
 
-        return new ImplementationPageResource($page);
+        if ($implementationPage->supportsFaq()) {
+            $implementationPage->syncFaqOptional($request->input('faq'));
+        }
+
+        return new ImplementationPageResource($implementationPage);
     }
 
     /**
@@ -120,7 +126,7 @@ class ImplementationPagesController extends Controller
      * @param Implementation $implementation
      * @param ImplementationPage $implementationPage
      * @return ImplementationPageResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function update(
         UpdateImplementationPageRequest $request,
@@ -135,15 +141,20 @@ class ImplementationPagesController extends Controller
         $isInternalType = ImplementationPage::isInternalType($implementationPage->page_type);
 
         $data = array_merge($request->only([
-            'state', 'content', 'content_alignment', 'external', 'external_url',
+            'state', 'description', 'description_position', 'description_alignment',
+            'external', 'external_url',
         ]), $isInternalType ? [
             'external' => false,
             'external_url' => null,
         ] : []);
 
         $implementationPage->update($data);
-        $implementationPage->appendMedia($request->input('media_uid'), 'cms_media');
+        $implementationPage->syncDescriptionMarkdownMedia('cms_media');
         $implementationPage->syncBlocks($request->input('blocks'));
+
+        if ($implementationPage->supportsFaq()) {
+            $implementationPage->syncFaqOptional($request->input('faq'));
+        }
 
         return new ImplementationPageResource($implementationPage);
     }

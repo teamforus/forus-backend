@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\Api\Media\CloneMediaRequest;
 use App\Http\Requests\Api\Media\StoreMediaRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\MediaResource;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -94,6 +96,29 @@ class MediaController extends Controller
         return new MediaResource($media);
     }
 
+    /**
+     * @param CloneMediaRequest $request
+     * @param Media $media
+     * @return MediaResource
+     * @throws AuthorizationException
+     */
+    public function clone(CloneMediaRequest $request, Media $media): MediaResource
+    {
+        $this->authorize('clone', $media);
+
+        try {
+            $syncPresets = $request->input('sync_presets');
+            $media = $this->mediaService->cloneMedia($media, $media->type, true, $syncPresets);
+
+            $media->update([
+                'identity_address' => $request->auth_address(),
+            ]);
+        } catch (\Throwable $e) {
+            logger()->error(sprintf("Media uploading failed: %s", $e->getMessage()));
+        }
+
+        return new MediaResource($media ?? null);
+    }
 
     /**
      * Remove the specified resource from storage.

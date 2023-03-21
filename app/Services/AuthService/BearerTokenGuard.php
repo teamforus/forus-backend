@@ -2,21 +2,18 @@
 namespace App\Services\AuthService;
 
 use Illuminate\Contracts\Auth\UserProvider;
-use Illuminate\Http\Request;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
 
 class BearerTokenGuard implements Guard
 {
-    protected Request $request;
     protected UserProvider $identityProvider;
     protected ?Authenticatable $user;
-    protected string $bearerToken;
+    protected ?string $userBearerToken;
 
-    public function __construct(UserProvider $identityProvider, Request $request)
+    public function __construct(UserProvider $identityProvider)
     {
         $this->user = null;
-        $this->request = $request;
         $this->identityProvider = $identityProvider;
     }
 
@@ -51,12 +48,16 @@ class BearerTokenGuard implements Guard
      */
     public function user(): ?Authenticatable
     {
-        if (!is_null($this->user)) {
+        $bearerToken = request()->bearerToken();
+
+        if (!is_null($this->user) && $this->userBearerToken == $bearerToken) {
             return $this->user;
         }
 
+        $this->userBearerToken = $bearerToken;
+
         return $this->user = $this->identityProvider->retrieveByCredentials([
-            'bearer_token' => $this->request->bearerToken()
+            'bearer_token' => $bearerToken,
         ]);
     }
 
@@ -67,7 +68,7 @@ class BearerTokenGuard implements Guard
     public function validate(array $credentials = []): bool
     {
         $user = $this->identityProvider->retrieveByCredentials([
-            'access_token' => $this->request->bearerToken(),
+            'access_token' => request()->bearerToken(),
         ]);
 
         if (!is_null($user)) {

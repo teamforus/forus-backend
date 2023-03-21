@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\ExportIdentiti
 use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\IndexIdentitiesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\SendIdentityNotificationRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
+use App\Http\Resources\Sponsor\IdentityBsnResource;
 use App\Http\Resources\Sponsor\IdentityResource;
 use App\Models\Fund;
 use App\Models\FundProvider;
@@ -38,12 +39,12 @@ class IdentitiesController extends Controller
         Fund $fund
     ): AnonymousResourceCollection|JsonResponse {
         $this->authorize('show', [$organization]);
-        $this->authorize('showIdentitiesOverview', [$fund, $organization]);
+        $this->authorize('viewIdentitiesSponsor', [$fund, $organization]);
 
         $isManager = $organization->identityCan($request->identity(), 'manage_vouchers');
-        $filters = array_filter(['target', 'has_email', 'order_by', 'order_dir', $isManager ? 'q' : null]);
+        $filters = ['target', 'has_email', 'order_by', 'order_dir', 'with_reservations', $isManager ? 'q' : null];
 
-        $search = new FundIdentitiesSearch($request->only($filters), $fund);
+        $search = new FundIdentitiesSearch($request->only(array_filter($filters)), $fund);
         $query = $isManager ? clone $search->query() : Identity::whereRaw('false');
 
         $counts = [
@@ -52,9 +53,33 @@ class IdentitiesController extends Controller
             'without_email' => $fund->activeIdentityQuery(false, false)->count(),
         ];
 
-        return IdentityResource::queryCollection($query)->additional([
+        $collection = $organization->bsn_enabled
+            ? IdentityBsnResource::queryCollection($query)
+            : IdentityResource::queryCollection($query);
+
+        return $collection->additional([
             'meta' => compact('counts'),
         ]);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return IdentityBsnResource|IdentityResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function show(
+        Organization $organization,
+        Fund $fund,
+        Identity $identity
+    ): IdentityBsnResource|IdentityResource {
+        $this->authorize('show', [$organization]);
+        $this->authorize('showIdentitySponsor', [$fund, $organization, $identity]);
+
+        return $organization->bsn_enabled
+            ? IdentityBsnResource::create($identity)
+            : IdentityResource::create($identity);
     }
 
     /**
@@ -93,9 +118,8 @@ class IdentitiesController extends Controller
         $this->authorize('showIdentities', [$fund, $organization]);
 
         $fields = $request->input('fields', FundIdentitiesExport::getExportFields());
-        $search = new FundIdentitiesSearch($request->only([
-            'target', 'has_email', 'q', 'order_by', 'order_dir',
-        ]), $fund);
+        $filters = ['target', 'has_email', 'order_by', 'order_dir', 'with_reservations', 'q'];
+        $search = new FundIdentitiesSearch($request->only($filters), $fund);
 
         $exportType = $request->input('export_type', 'csv');
         $exportData = new FundIdentitiesExport($search->get(), $fields);
@@ -123,6 +147,7 @@ class IdentitiesController extends Controller
         $this->authorize('sendIdentityNotifications', [$fund, $organization]);
 
         $isManager = $organization->identityCan($request->identity(), 'manage_vouchers');
+        $filters = ['target', 'has_email', 'order_by', 'order_dir', 'with_reservations', $isManager ? 'q' : null];
 
         if ($request->input('target') === 'self') {
             $identities = $request->identity()->id;
@@ -141,8 +166,7 @@ class IdentitiesController extends Controller
             })->get();
             $identities = $declinedProviders->pluck("organization.identity.id")->toArray();
         } else {
-            $filters = ['target', 'has_email', 'order_by', 'order_dir', $isManager ? 'q' : null];
-            $search = new FundIdentitiesSearch(array_filter($request->only($filters)), $fund);
+            $search = new FundIdentitiesSearch($request->only(array_filter($filters)), $fund);
             $identities = $search->query()->pluck('id')->toArray();
         }
 

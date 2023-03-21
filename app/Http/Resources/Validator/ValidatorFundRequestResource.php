@@ -30,12 +30,13 @@ class ValidatorFundRequestResource extends BaseJsonResource
      * @var string[]
      */
     public const LOAD = [
-        'records.files',
-        'records.record_type',
+        'records.files.preview.presets',
+        'records.record_type.translations',
         'records.employee.organization',
         'records.employee.roles.translations',
         'records.employee.roles.permissions',
-        'records.fund_request_clarifications',
+        'records.fund_request_clarifications.files.preview.presets',
+        'records.fund_request_clarifications.fund_request_record.record_type.translations',
         'identity.primary_email',
         'fund.criteria.fund_criterion_validators.external_validator',
         'fund.tags',
@@ -62,7 +63,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
 
         return array_merge($fundRequest->only([
             'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
-            'contact_information',
+            'contact_information', 'state_locale',
         ]), [
             'bsn' => $bsn_enabled ? $fundRequest->identity->bsn : null,
             'fund' => $this->fundDetails($fundRequest),
@@ -86,7 +87,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         FundRequest $fundRequest,
         Organization $organization
     ): Relation|Builder {
-        $recordsQuery = $fundRequest->records_pending()->whereDoesntHave('employee');
+        $recordsQuery = $fundRequest->records_pending()->whereNull('employee_id');
         $employeesQuery = $organization->employees();
         $isSponsorOrganization = $organization->id === $fundRequest->fund->organization_id;
 
@@ -178,10 +179,10 @@ class ValidatorFundRequestResource extends BaseJsonResource
             'value' => $is_assignable || $is_assigned ? $record->value : null,
         ]);
 
-        $filesAndClarifications = $is_assigned ? [
+        $filesAndClarifications = [
             'files' => FileResource::collection($record->files),
             'clarifications' => FundRequestClarificationResource::collection($record->fund_request_clarifications),
-        ] : [];
+        ];
 
         return array_merge($baseFields, $filesAndClarifications, [
             'employee' => new EmployeeResource($record->employee),

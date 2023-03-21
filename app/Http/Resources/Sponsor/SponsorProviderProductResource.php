@@ -10,23 +10,22 @@ use App\Models\FundProvider;
 use App\Models\FundProviderChatMessage;
 use App\Models\FundProviderProduct;
 use App\Models\Product;
-use App\Scopes\Builders\TrashedQuery;
+use App\Scopes\Builders\FundProviderProductQuery;
 
 /**
- * Class SponsorVoucherResource
  * @property Product $resource
- * @package App\Http\Resources\Sponsor
  */
 class SponsorProviderProductResource extends BaseJsonResource
 {
     public const LOAD = [
         'photo.presets',
-        'vouchers_reserved',
+        'product_reservations_pending',
         'product_category.translations',
         'organization.logo.presets',
         'organization.business_type.translations',
         'sponsor_organization.logo.presets',
         'sponsor_organization.business_type.translations',
+        'product_exclusions',
     ];
 
     /**
@@ -41,12 +40,6 @@ class SponsorProviderProductResource extends BaseJsonResource
         $fundProvider = $request->route('fund_provider');
         $product = $this->resource;
 
-        $oldDeals = $fundProvider ? TrashedQuery::withTrashed(
-            $fundProvider->fund_provider_products()->getQuery()
-        )->orderByDesc('created_at')->where([
-            'product_id' => $product->id
-        ])->withCount('voucher_transactions')->get() : null;
-
         return array_merge($product->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',
             'organization_id', 'price_type', 'price_type_discount', 'sponsor', 'sponsor_organization_id',
@@ -57,8 +50,8 @@ class SponsorProviderProductResource extends BaseJsonResource
             'sponsor_organization' => new OrganizationBasicResource($this->resource->sponsor_organization),
             'total_amount' => $product->total_amount,
             'unlimited_stock' => $product->unlimited_stock,
-            'reserved_amount' => $product->vouchers_reserved->count(),
-            'sold_amount' => $product->countSold(),
+            'reserved_amount' => $product->countReservedCached($fundProvider?->fund),
+            'sold_amount' => $product->countSold($fundProvider?->fund),
             'stock_amount' => $product->stock_amount,
             'price' => currency_format($product->price),
             'price_locale' => $product->price_locale,
@@ -72,24 +65,74 @@ class SponsorProviderProductResource extends BaseJsonResource
             'deleted' => !is_null($product->deleted_at),
             'photo' => new MediaResource($product->photo),
             'product_category' => new ProductCategoryResource($product->product_category),
-            'has_chats' => $product->fund_provider_chats()->exists(),
-            'unseen_messages' => FundProviderChatMessage::whereIn(
-                'fund_provider_chat_id', $product->fund_provider_chats()->pluck('id')
-            )->where('provider_seen', '=', false)->count(),
-            'is_available' => !$fundProvider || $product->product_exclusions()->where([
-                'fund_provider_id' => $fundProvider->id,
-            ])->doesntExist(),
-        ], $fundProvider && $fundProvider->fund->isTypeSubsidy() ? [
-            'deals_history' => $oldDeals->map(static function(FundProviderProduct $fundProviderProduct) {
-                return array_merge($fundProviderProduct->only(array_merge([
-                    'id', 'amount', 'limit_total', 'limit_total_unlimited', 'limit_per_identity',
-                    'voucher_transactions_count',
-                ])), [
-                    'active' => !$fundProviderProduct->trashed(),
-                    'expire_at' => $fundProviderProduct->expire_at ? $fundProviderProduct->expire_at->format('Y-m-d') : null,
-                    'expire_at_locale' => format_date_locale($fundProviderProduct->expire_at ?? null),
-                ]);
-            })
-        ] : []);
+            'unseen_messages' => $this->hasUnseenMessages($product),
+            'is_available' => $this->isAvailable($product, $fundProvider) ,
+            'deals_history' => $fundProvider ? $this->getDealsHistory($product, $fundProvider) : null,
+        ], $this->productReservationFieldSettings($product));
+    }
+
+    /**
+     * @param Product $product
+     * @return bool
+     */
+    protected function hasUnseenMessages(Product $product): bool
+    {
+        return FundProviderChatMessage::whereIn(
+            'fund_provider_chat_id', $product->fund_provider_chats()->pluck('id')
+        )->where('provider_seen', '=', false)->count();
+    }
+
+    /**
+     * @param Product $product
+     * @param FundProvider|null $fundProvider
+     * @return bool
+     */
+    protected function isAvailable(Product $product, ?FundProvider $fundProvider = null): bool
+    {
+        return !$fundProvider || $product->product_exclusions
+            ->where('fund_provider_id', $fundProvider->id)
+            ->isEmpty();
+    }
+
+    /**
+     * @param Product $product
+     * @param FundProvider|null $fundProvider
+     * @return array
+     */
+    protected function getDealsHistory(Product $product, ?FundProvider $fundProvider = null): array
+    {
+        $dealsHistoryQuery = $fundProvider->fund_provider_products()
+            ->where('product_id', $product->id)
+            ->withCount([
+                'voucher_transactions',
+                'product_reservations_pending',
+            ])
+            ->withTrashed()
+            ->latest();
+
+        if (!$fundProvider->fund->isTypeSubsidy()) {
+            FundProviderProductQuery::whereConfigured($dealsHistoryQuery);
+        }
+
+        return $dealsHistoryQuery->get()->map(fn (FundProviderProduct $product) => array_merge($product->only([
+            'id', 'amount', 'limit_total', 'limit_total_unlimited', 'limit_per_identity',
+            'voucher_transactions_count', 'product_reservations_pending_count', 'active', 'product_id',
+        ]), [
+            'expire_at' => $product->expire_at?->format('Y-m-d'),
+            'expire_at_locale' => format_date_locale($product->expire_at),
+        ]))->toArray();
+    }
+
+    /**
+     * @param Product $product
+     * @return array
+     */
+    private function productReservationFieldSettings(Product $product): array
+    {
+        return [
+            'reservation_phone' => $product->reservation_phone,
+            'reservation_address' => $product->reservation_address,
+            'reservation_birth_date' => $product->reservation_birth_date,
+        ];
     }
 }

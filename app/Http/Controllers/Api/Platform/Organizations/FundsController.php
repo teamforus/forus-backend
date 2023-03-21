@@ -5,31 +5,29 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Events\Funds\FundCreatedEvent;
 use App\Events\Funds\FundUpdatedEvent;
 use App\Exports\FundsExport;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\ShowFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundCriteriaRequest;
-use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundFaqRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundBackofficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
-use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
 use App\Models\Organization;
-use App\Http\Controllers\Controller;
 use App\Scopes\Builders\FundQuery;
 use App\Statistics\Funds\FinancialStatistic;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-/**
- * Class FundsController
- * @package App\Http\Controllers\Api\Platform\Organizations
- */
 class FundsController extends Controller
 {
     /**
@@ -57,7 +55,7 @@ class FundsController extends Controller
 
         return FundResource::queryCollection(FundQuery::sortByState($query, [
             'active', 'waiting', 'paused', 'closed',
-        ]), $request);
+        ]), $request, $request->only('stats'));
     }
 
     /**
@@ -94,9 +92,9 @@ class FundsController extends Controller
         ]));
 
         $fund->attachMediaByUid($request->input('media_uid'));
-        $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
+        $fund->syncDescriptionMarkdownMedia('cms_media');
         $fund->syncTagsOptional($request->input('tag_ids'));
-        $fund->syncFaq($request->input('faq'));
+        $fund->syncFaqOptional($request->input('faq'));
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
             $fund->syncCriteria($request->input('criteria'));
@@ -125,38 +123,26 @@ class FundsController extends Controller
     ): JsonResponse {
         $this->authorize('show', $organization);
 
-        return response()->json([], $request->isAuthenticated() ? 200 : 403);
-    }
-
-    /**
-     * @param StoreFundFaqRequest $request
-     * @param Organization $organization
-     * @return JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @noinspection PhpUnused
-     */
-    public function storeFaqValidate(
-        StoreFundFaqRequest $request,
-        Organization $organization
-    ): JsonResponse {
-        $this->authorize('show', $organization);
-
-        return response()->json([], $request->isAuthenticated() ? 200 : 403);
+        return new JsonResponse([], $request->isAuthenticated() ? 200 : 403);
     }
 
     /**
      * Display the specified resource.
      *
+     * @param ShowFundRequest $request
      * @param Organization $organization
      * @param Fund $fund
      * @return FundResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
-    public function show(Organization $organization, Fund $fund): FundResource
-    {
+    public function show(
+        ShowFundRequest $request,
+        Organization $organization,
+        Fund $fund
+    ): FundResource {
         $this->authorize('show', [$fund, $organization]);
 
-        return new FundResource($fund);
+        return FundResource::create($fund, $request->only('stats'));
     }
 
     /**
@@ -174,40 +160,48 @@ class FundsController extends Controller
         Fund $fund
     ): FundResource {
         $this->authorize('show', $organization);
-        $this->authorize('update', [$fund, $organization]);
 
-        $fund->updateModel(array_merge($request->only([
-            'name', 'description', 'description_short', 'notification_amount',
-            'default_validator_employee_id', 'auto_requests_validation', 'faq_title',
-            'request_btn_text', 'external_link_text', 'external_link_url',
-        ])));
+        $manageFund = Gate::allows('update', [$fund, $organization]);
+        $manageFundTexts = Gate::allows('updateTexts', [$fund, $organization]);
 
-        if (!$fund->default_validator_employee_id) {
-            $fund->updateModelValue('auto_requests_validation', false);
+        $fund->update($request->only(array_merge($manageFundTexts || $manageFund ? [
+            'name', 'description', 'description_short', 'request_btn_text',
+            'external_link_text', 'external_link_url', 'faq_title',
+        ] : [], $manageFund ? [
+            'notification_amount', 'default_validator_employee_id',
+            'auto_requests_validation', 'request_btn_text',
+        ] : [])));
+
+        if ($manageFund) {
+            if (!$fund->default_validator_employee_id) {
+                $fund->updateModelValue('auto_requests_validation', false);
+            }
+
+            $fund->updateFundsConfig($request->only(array_merge($fund->isWaiting() ? [
+                'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+            ] : [], [
+                'email_required', 'contact_info_enabled', 'contact_info_required',
+                'contact_info_message_custom', 'contact_info_message_text',
+            ])));
         }
 
-        $fund->updateFundsConfig($request->only(array_merge($fund->isWaiting() ? [
-            'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
-        ] : [], [
-            'email_required', 'contact_info_enabled', 'contact_info_required',
-            'contact_info_message_custom', 'contact_info_message_text',
-        ])));
-
-        $fund->attachMediaByUid($request->input('media_uid'));
-        $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
-        $fund->syncFaqOptional($request->input('faq'));
-        $fund->syncTagsOptional($request->input('tag_ids'));
-
-        FundUpdatedEvent::dispatch($fund);
+        if ($manageFund || $manageFundTexts) {
+            $fund->attachMediaByUid($request->input('media_uid'));
+            $fund->syncDescriptionMarkdownMedia('cms_media');
+            $fund->syncTagsOptional($request->input('tag_ids'));
+            $fund->syncFaqOptional($request->input('faq'));
+        }
 
         if (config('forus.features.dashboard.organizations.funds.criteria') && $request->has('criteria')) {
-            $fund->syncCriteria($request->input('criteria'));
+            $fund->syncCriteria($request->input('criteria'), !$manageFund);
         }
 
-        if (config('forus.features.dashboard.organizations.funds.formula_products') &&
+        if ($manageFund && config('forus.features.dashboard.organizations.funds.formula_products') &&
             $request->has('formula_products')) {
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
+
+        FundUpdatedEvent::dispatch($fund);
 
         return new FundResource($fund);
     }
@@ -252,7 +246,7 @@ class FundsController extends Controller
     ): JsonResponse{
         $this->authorize('show', $organization);
 
-        return response()->json([], $request->isAuthenticated() && $fund->exists ? 200 : 403);
+        return new JsonResponse([], $request->isAuthenticated() && $fund->exists ? 200 : 403);
     }
 
     /**
@@ -302,7 +296,7 @@ class FundsController extends Controller
 
         $log = $fund->getBackofficeApi(true)->checkStatus();
 
-        return response()->json($log->only([
+        return new JsonResponse($log->only([
             'state', 'response_code'
         ]), $request->isAuthenticated() ? 200 : 403);
     }
@@ -327,10 +321,10 @@ class FundsController extends Controller
             'type' => Fund::TYPE_BUDGET,
         ])->where('state', '=', Fund::STATE_ACTIVE);
 
-        return $request->isAuthenticated() ? response()->json([
+        return $request->isAuthenticated() ? new JsonResponse([
             'funds' => Fund::getFundTotals($fundsQuery->get()),
             'budget_funds' => Fund::getFundTotals($activeFundsQuery->get()),
-        ]) : response()->json([], 403);
+        ]) : new JsonResponse([], 403);
     }
 
     /**
@@ -386,7 +380,7 @@ class FundsController extends Controller
             'type', 'type_value', 'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids'
         ]));
 
-        return response()->json($data);
+        return new JsonResponse($data);
     }
 
     /**
@@ -421,7 +415,7 @@ class FundsController extends Controller
         $fund->fund_formula_products()->delete();
         $fund->delete();
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 
     /**

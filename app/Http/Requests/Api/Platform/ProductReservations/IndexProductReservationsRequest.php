@@ -5,10 +5,6 @@ namespace App\Http\Requests\Api\Platform\ProductReservations;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\ProductReservation;
 
-/**
- * Class IndexProductReservationsRequest
- * @package App\Http\Requests\Api\Platform\ProductReservations
- */
 class IndexProductReservationsRequest extends BaseFormRequest
 {
     /**
@@ -35,6 +31,7 @@ class IndexProductReservationsRequest extends BaseFormRequest
             'state' => 'nullable|in:' . join(',', ProductReservation::STATES),
             'fund_id' => 'nullable|exists:funds,id',
             'per_page' => 'nullable|numeric|max:100',
+            'archived' => 'nullable|boolean',
             'product_id' => 'nullable|exists:products,id',
             'organization_id' => 'nullable|exists:organizations,id',
         ];

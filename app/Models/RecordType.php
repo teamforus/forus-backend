@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use App\Models\Traits\RecordTranslationTrait;
+use App\Models\Traits\Translations\RecordTranslationsTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 
 /**
  * App\Models\RecordType
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Collection;
  * @property string $key
  * @property string $type
  * @property bool $system
+ * @property int $vouchers
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\RecordTypeTranslation|null $translation
@@ -37,12 +39,13 @@ use Illuminate\Database\Eloquent\Collection;
  * @method static Builder|RecordType whereTranslationLike(string $translationField, $value, ?string $locale = null)
  * @method static Builder|RecordType whereType($value)
  * @method static Builder|RecordType whereUpdatedAt($value)
+ * @method static Builder|RecordType whereVouchers($value)
  * @method static Builder|RecordType withTranslation()
  * @mixin \Eloquent
  */
 class RecordType extends BaseModel
 {
-    use Translatable, RecordTranslationTrait;
+    use Translatable, RecordTranslationsTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -50,7 +53,7 @@ class RecordType extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'key', 'type', 'system',
+        'key', 'type', 'system', 'vouchers',
     ];
 
     protected $perPage = 100;
@@ -59,6 +62,7 @@ class RecordType extends BaseModel
      * The attributes that are translatable.
      *
      * @var array
+     * @noinspection PhpUnused
      */
     public array $translatedAttributes = [
         'name',
@@ -70,22 +74,31 @@ class RecordType extends BaseModel
 
     /**
      * @param bool $withSystem
+     * @param array $filters
      * @return RecordType|Builder
      */
-    public static function searchQuery(bool $withSystem = true): RecordType|Builder
+    public static function searchQuery(bool $withSystem = true, array $filters = []): RecordType|Builder
     {
-        return static::where(fn(Builder $builder) => $builder->where($withSystem ? [] : [
+        /** @var RecordType $query */
+        $query = static::where(fn(Builder $builder) => $builder->where($withSystem ? [] : [
             'system' => false,
-        ]));
+        ]))->with('translations');
+
+        if (Arr::get($filters, 'vouchers', false)) {
+            $query->where('vouchers', true);
+        }
+
+        return $query;
     }
 
     /**
      * @param bool $withSystem
-     * @return Collection|RecordType[]
+     * @param array $filters
+     * @return Collection|RecordType
      */
-    public static function search(bool $withSystem = true): Collection|array
+    public static function search(bool $withSystem = true, array $filters = []): Collection|array
     {
-        return static::searchQuery($withSystem)->get();
+        return static::searchQuery($withSystem, $filters)->get();
     }
 
     /**

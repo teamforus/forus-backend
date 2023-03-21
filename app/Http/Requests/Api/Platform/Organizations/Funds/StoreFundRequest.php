@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Rules\MediaUidRule;
@@ -10,11 +9,9 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 /**
- * Class StoreFundRequest
  * @property Organization|null $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
-class StoreFundRequest extends BaseFormRequest
+class StoreFundRequest extends BaseFundRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -33,29 +30,19 @@ class StoreFundRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $formulaProductsEditable = config('forus.features.dashboard.organizations.funds.formula_products');
         $availableEmployees = $this->organization->employeesOfRoleQuery('validation')->pluck('id');
         $startAfter = now()->addDays(5)->format('Y-m-d');
-        $criteriaRules = $this->criteriaRule();
-        $funConfigsRules = $this->funConfigsRules();
 
         return array_merge([
             'type'                          => ['required', Rule::in(Fund::TYPES)],
             'name'                          => 'required|between:2,200',
             'media_uid'                     => ['nullable', new MediaUidRule('fund_logo')],
             'description'                   => 'nullable|string|max:15000',
-            'description_short'             => 'nullable|string|max:280',
-            'description_media_uid'         => 'nullable|array',
-            'description_media_uid.*'       => $this->mediaRule(),
+            'description_short'             => 'nullable|string|max:500',
             'start_date'                    => 'required|date_format:Y-m-d|after:' . $startAfter,
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
             'notification_amount'           => 'nullable|numeric',
             'faq_title'                     => 'nullable|string|max:200',
-            'faq'                           => 'present|array',
-            'faq.*'                         => 'required|array',
-            'faq.*.id'                      => 'nullable|in:',
-            'faq.*.title'                   => 'required|string|max:200',
-            'faq.*.description'             => 'required|string|max:5000',
             'tag_ids'                       => 'nullable|array',
             'tag_ids.*'                     => 'required|exists:tags,id',
             'allow_fund_requests'           => 'required|boolean',
@@ -64,78 +51,13 @@ class StoreFundRequest extends BaseFormRequest
             'request_btn_text'              => 'nullable|string|max:50',
             'external_link_text'            => 'nullable|string|max:50',
             'external_link_url'             => 'nullable|string|max:200',
-        ], $funConfigsRules, [
-            'auto_requests_validation' => 'nullable|boolean',
+            'auto_requests_validation'      => 'nullable|boolean',
             'default_validator_employee_id' => 'nullable|in:' . $availableEmployees->join(','),
-        ], $criteriaRules, $formulaProductsEditable ? [
-            'formula_products'              => 'nullable|array',
-            'formula_products.*'            => [
-                'required',
-                Rule::exists('products', 'id')->where('unlimited_stock', true)
-            ],
-        ] : []);
-    }
-
-    /**
-     * @return string[]
-     */
-    protected function funConfigsRules(): array
-    {
-        return [
-            'allow_fund_requests' => 'nullable|boolean',
-            'allow_prevalidations' => 'nullable|boolean',
-            'allow_direct_requests' => 'nullable|boolean',
-            'email_required' => 'nullable|boolean',
-            'contact_info_enabled' => 'nullable|boolean',
-            'contact_info_required' => 'nullable|boolean',
-            'contact_info_message_custom' => 'nullable|boolean',
-            'contact_info_message_text' => 'nullable|string|max:8000',
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    private function criteriaRule(): array
-    {
-        $organization = $this->organization;
-        $criteriaEditable = config('forus.features.dashboard.organizations.funds.criteria');
-        $validators = $organization->organization_validators()->pluck('id');
-
-        return $criteriaEditable ? [
-            'criteria'                      => 'present|array',
-            'criteria.*'                    => 'required|array',
-            'criteria.*.id'                 => ['nullable', Rule::in([])],
-            'criteria.*.operator'           => 'required|in:=,<,>',
-            'criteria.*.record_type_key'    => 'required|exists:record_types,key',
-            'criteria.*.value'              => 'required|string|between:1,20',
-            'criteria.*.show_attachment'    => 'nullable|boolean',
-            'criteria.*.title'              => 'nullable|string|max:100',
-            'criteria.*.description'        => 'nullable|string|max:4000',
-            'criteria.*.validators'         => 'nullable|array',
-            'criteria.*.validators.*'       => Rule::in($validators->toArray())
-        ] : [];
-    }
-
-    /**
-     * @return array
-     */
-    private function mediaRule(): array {
-        return [
-            'required',
-            'string',
-            'exists:media,uid',
-            new MediaUidRule('cms_media')
-        ];
-    }
-
-    /**
-     * @return string[]
-     */
-    public function attributes(): array
-    {
-        return [
-            'criteria.*.value' => 'Waarde'
-        ];
+        ], array_merge(
+            $this->faqRules([]),
+            $this->criteriaRule(),
+            $this->funConfigsRules(),
+            $this->fundFormulaProductsRule(),
+        ));
     }
 }

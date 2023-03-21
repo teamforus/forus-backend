@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\Platform\Vouchers\Transactions;
 
+use App\Exceptions\AuthorizationJsonException;
+use App\Helpers\Locker;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Product;
@@ -10,34 +12,54 @@ use App\Models\VoucherToken;
 use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\UnauthorizedException;
+use Psr\SimpleCache\InvalidArgumentException;
 
 /**
- * Class StoreVoucherTransactionRequest
  * @property VoucherToken $voucher_address_or_physical_code
- * @package App\Http\Requests\Api\Platform\Vouchers\Transactions
  */
 class StoreVoucherTransactionRequest extends BaseFormRequest
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->maxAttempts = 1;
+        $this->decayMinutes = Config::get('forus.transactions.hard_limit') / 60;
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
+     * @throws AuthorizationException
+     * @throws InvalidArgumentException|AuthorizationJsonException
      */
     public function authorize(): bool
     {
-        $voucher = $this->voucher_address_or_physical_code->voucher;
+        $this->throttleWithKey('to_many_attempts', $this, 'make_transaction', null, 403);
 
-        if ($voucher->fund->isTypeBudget() && $voucher->isBudgetType() && $this->has('product_id')) {
-            return Gate::allows('useAsProviderWithProducts', [
-                $voucher,
-                $this->input('product_id'),
-            ]);
+        $voucher = $this->voucher_address_or_physical_code->voucher;
+        $locker = new Locker("store_transactions.$voucher->id");
+
+        if (!$locker->waitForUnlockAndLock()) {
+            abort(429, 'To many requests, please try again later.');
         }
 
-        return Gate::allows('useAsProvider', $voucher);
+        if ($this->has('product_id') && $this->has('amount')) {
+            abort(422, 'Je kan alleen `product_id` of `amount` indienen maar niet beide tegelijkertijd.');
+        }
+
+        $authorized = $this->has('product_id') ?
+            Gate::allows('useAsProviderWithProducts', [$voucher, $this->input('product_id')]) :
+            Gate::allows('useAsProvider', $voucher);
+
+        Gate::authorize('makeTransactionThrottle', $voucher);
+
+        return $authorized;
     }
 
     /**

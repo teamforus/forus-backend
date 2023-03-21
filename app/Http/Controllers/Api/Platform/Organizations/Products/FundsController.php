@@ -42,15 +42,8 @@ class FundsController extends Controller
             ]);
         }
 
-        $data = $query->paginate(10);
-
-        foreach($data as $dataItem) {
-            $dataItem['approved'] = FundQuery::whereProductsAreApprovedFilter(
-                Fund::query()->whereId($dataItem->id),
-                $product
-            )->exists();
-        }
-
-        return ProductFundResource::collection($data);
+        return ProductFundResource::queryCollection($query, 10, [
+            'product' => $product,
+        ]);
     }
 }

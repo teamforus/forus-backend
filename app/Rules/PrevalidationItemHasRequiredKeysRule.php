@@ -9,7 +9,7 @@ class PrevalidationItemHasRequiredKeysRule extends BaseRule
     /**
      * @var ?Fund null
      */
-    private $fund;
+    private ?Fund $fund;
 
     /**
      * PrevalidationItemHasRequiredKeysRule constructor.
@@ -29,16 +29,23 @@ class PrevalidationItemHasRequiredKeysRule extends BaseRule
      */
     public function passes($attribute, $value): bool
     {
-        $required_keys = $this->fund->requiredPrevalidationKeys()->toArray();
-
-        if (!($this->fund && is_array($value))) {
+        if (!$this->fund || !is_array($value)) {
             return $this->reject(trans('validation.required'));
         }
 
-        if (count(array_diff($required_keys, array_keys($value))) !== 0) {
+        if (count(array_diff($this->requiredKeys($this->fund), array_keys($value))) !== 0) {
             return $this->reject(trans('validation.in'));
         }
 
         return true;
+    }
+
+    /**
+     * @param Fund|null $fund
+     * @return array
+     */
+    protected function requiredKeys(?Fund $fund): array
+    {
+        return $fund?->requiredPrevalidationKeys()->toArray() ?: [];
     }
 }

@@ -9,9 +9,10 @@ use App\Media\ImplementationBlockMediaConfig;
 use App\Media\ImplementationMailLogoMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
+use App\Media\ReimbursementFilePreviewMediaConfig;
 use App\Models\BankConnection;
+use App\Models\Faq;
 use App\Models\Fund;
-use App\Models\FundFaq;
 use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
@@ -24,6 +25,8 @@ use App\Models\NotificationTemplate;
 use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
 use App\Models\ProductReservation;
+use App\Models\Reimbursement;
+use App\Models\VoucherRecord;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use App\Observers\FundProviderObserver;
@@ -40,6 +43,7 @@ use App\Services\MediaService\MediaService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -47,8 +51,8 @@ class AppServiceProvider extends ServiceProvider
      * @var array|string[]
      */
     public static array $morphMap = [
+        'faq'                           => Faq::class,
         'fund'                          => Fund::class,
-        'fund_faq'                      => FundFaq::class,
         'office'                        => Office::class,
         'voucher'                       => Voucher::class,
         'product'                       => Product::class,
@@ -56,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
         'employees'                     => Employee::class,
         'fund_request'                  => FundRequest::class,
         'organization'                  => Organization::class,
+        'reimbursement'                 => Reimbursement::class,
         'identity_email'                => IdentityEmail::class,
         'mail_template'                 => NotificationTemplate::class,
         'fund_provider'                 => FundProvider::class,
@@ -69,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
         'physical_card_request'         => PhysicalCardRequest::class,
         'fund_request_record'           => FundRequestRecord::class,
         'fund_request_clarification'    => FundRequestClarification::class,
+        'voucher_record'                => VoucherRecord::class,
         'voucher_transaction'           => VoucherTransaction::class,
         'voucher_transaction_bulk'      => VoucherTransactionBulk::class,
     ];
@@ -90,9 +96,13 @@ class AppServiceProvider extends ServiceProvider
             new ProductPhotoMediaConfig(),
             new OrganizationLogoMediaConfig(),
             new ImplementationBannerMediaConfig(),
+            new ReimbursementFilePreviewMediaConfig(),
             new ImplementationMailLogoMediaConfig(),
             new ImplementationBlockMediaConfig(),
         ]);
+
+        StringHelper::setDecimalSeparator('.');
+        StringHelper::setThousandsSeparator(',');
 
         FundProvider::observe(FundProviderObserver::class);
     }

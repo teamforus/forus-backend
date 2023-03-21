@@ -9,4 +9,8 @@ return [
         'attempts' => env('ACTIVATION_CODE_ATTEMPTS', 3),
         'decay' => env('ACTIVATION_CODE_DECAY', 180),
     ],
+    'identity_destroy' => [
+        'attempts' => env('DELETE_IDENTITY_THROTTLE_ATTEMPTS', 10),
+        'decay' => env('DELETE_IDENTITY_THROTTLE_DECAY', 10),
+    ],
 ];

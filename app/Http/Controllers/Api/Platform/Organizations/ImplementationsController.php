@@ -79,6 +79,8 @@ class ImplementationsController extends Controller
         $implementation->updateModel($request->only([
             'title', 'description', 'description_alignment', 'informal_communication',
             'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+            'show_home_map', 'show_home_products', 'show_providers_map',
+            'show_provider_map', 'show_office_map', 'show_voucher_map', 'show_product_map',
         ]));
 
         $implementation->addWebshopAnnouncement(
@@ -87,7 +89,7 @@ class ImplementationsController extends Controller
         );
 
         $implementation->attachMediaByUid($request->input('banner_media_uid'));
-        $implementation->appendMedia($request->input('media_uid', []), 'cms_media');
+        $implementation->syncDescriptionMarkdownMedia('cms_media');
 
         return new ImplementationPrivateResource($implementation);
     }

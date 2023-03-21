@@ -10,6 +10,8 @@ use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 
 
 /**
@@ -26,9 +28,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $price_discount
  * @property string $code
  * @property string $price_type
- * @property string $state
+ * @property string|null $state
  * @property string|null $first_name
  * @property string|null $last_name
+ * @property string|null $phone
+ * @property string|null $address
+ * @property string|null $birth_date
  * @property string|null $user_note
  * @property string|null $note
  * @property \Illuminate\Support\Carbon|null $accepted_at
@@ -52,7 +57,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Query\Builder|ProductReservation onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation query()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAcceptedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereBirthDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCanceledAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCreatedAt($value)
@@ -64,6 +71,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereLastName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePhone($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePriceDiscount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePriceType($value)
@@ -85,12 +93,14 @@ class ProductReservation extends BaseModel
     public const EVENT_CREATED = 'created';
     public const EVENT_REJECTED = 'rejected';
     public const EVENT_ACCEPTED = 'accepted';
-    public const EVENT_CANCELED = 'canceled';
+    public const EVENT_CANCELED_BY_CLIENT = 'canceled_by_client';
+    public const EVENT_CANCELED_BY_PROVIDER = 'canceled';
 
     public const STATE_PENDING = 'pending';
     public const STATE_ACCEPTED = 'accepted';
     public const STATE_REJECTED = 'rejected';
-    public const STATE_CANCELED = 'canceled';
+    public const STATE_CANCELED_BY_CLIENT = 'canceled_by_client';
+    public const STATE_CANCELED_BY_PROVIDER = 'canceled';
 
     /**
      * The events of the product reservation.
@@ -99,7 +109,8 @@ class ProductReservation extends BaseModel
         self::EVENT_CREATED,
         self::EVENT_REJECTED,
         self::EVENT_ACCEPTED,
-        self::EVENT_CANCELED,
+        self::EVENT_CANCELED_BY_CLIENT,
+        self::EVENT_CANCELED_BY_PROVIDER,
     ];
 
     /**
@@ -109,7 +120,16 @@ class ProductReservation extends BaseModel
         self::STATE_PENDING,
         self::STATE_ACCEPTED,
         self::STATE_REJECTED,
-        self::STATE_CANCELED,
+        self::STATE_CANCELED_BY_CLIENT,
+        self::STATE_CANCELED_BY_PROVIDER,
+    ];
+
+    /**
+     * The states of a canceled product reservation.
+     */
+    public const STATES_CANCELED = [
+        self::STATE_CANCELED_BY_CLIENT,
+        self::STATE_CANCELED_BY_PROVIDER,
     ];
 
     /**
@@ -118,13 +138,18 @@ class ProductReservation extends BaseModel
     const TRANSACTION_DELAY = 14;
 
     /**
+     * @var int
+     */
+    protected $perPage = 15;
+
+    /**
      * @var string[]
      */
     protected $fillable = [
         'product_id', 'voucher_id', 'voucher_transaction_id', 'fund_provider_product_id',
         'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
-        'first_name', 'last_name', 'user_note',
+        'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date',
     ];
 
     /**
@@ -217,12 +242,43 @@ class ProductReservation extends BaseModel
     }
 
     /**
+     * @return bool
+     */
+    public function isCanceled(): bool
+    {
+        return in_array($this->state, self::STATES_CANCELED);
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function isCanceledByClient(): bool
+    {
+        return $this->state == self::STATE_CANCELED_BY_CLIENT;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function isCanceledByProvider(): bool
+    {
+        return $this->state == self::STATE_CANCELED_BY_PROVIDER;
+    }
+
+    /**
      * @param Employee|null $employee
      * @return $this
+     * @throws \Throwable
      */
     public function acceptProvider(?Employee $employee = null): self
     {
-        return $this->setAccepted($this->makeTransaction($employee));
+        DB::transaction(function() use ($employee) {
+            return $this->setAccepted($this->makeTransaction($employee));
+        });
+
+        return $this;
     }
 
     /**
@@ -241,7 +297,8 @@ class ProductReservation extends BaseModel
             'amount' => $this->amount,
             'product_id' => $this->product_id,
             'transfer_at' => $transfer_at,
-            'employee_id' => $employee ? $employee->id : null,
+            'employee_id' => $employee?->id,
+            'target' => VoucherTransaction::TARGET_PROVIDER,
             'organization_id' => $this->product->organization_id,
             'fund_provider_product_id' => $this->fund_provider_product_id ?? null,
         ]));
@@ -271,31 +328,33 @@ class ProductReservation extends BaseModel
     /**
      * @param Employee|null $employee
      * @return $this
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function rejectOrCancelProvider(?Employee $employee = null): self
     {
-        $isAccepted = $this->isAccepted();
+        DB::transaction(function() use ($employee) {
+            $isRefund = $this->isAccepted();
 
-        $this->updateModel($isAccepted ? [
-            'state' => self::STATE_CANCELED,
-            'canceled_at' => now(),
-            'employee_id' => $employee ? $employee->id : null,
-        ] : [
-            'state' => self::STATE_REJECTED,
-            'rejected_at' => now(),
-            'employee_id' => $employee ? $employee->id : null,
-        ]);
+            $this->update($isRefund ? [
+                'state' => self::STATE_CANCELED_BY_PROVIDER,
+                'canceled_at' => now(),
+                'employee_id' => $employee?->id,
+            ] : [
+                'state' => self::STATE_REJECTED,
+                'rejected_at' => now(),
+                'employee_id' => $employee?->id,
+            ]);
 
-        if ($this->voucher_transaction && $this->voucher_transaction->isCancelable()) {
-            $this->voucher_transaction->cancelPending();
-        }
+            if ($this->voucher_transaction && $this->voucher_transaction->isCancelable()) {
+                $this->voucher_transaction->cancelPending();
+            }
 
-        if ($isAccepted) {
-            ProductReservationCanceled::dispatch($this);
-        } else {
-            ProductReservationRejected::dispatch($this);
-        }
+            if ($isRefund) {
+                Event::dispatch(new ProductReservationCanceled($this));
+            } else {
+                Event::dispatch(new ProductReservationRejected($this));
+            }
+        });
 
         return $this;
     }
@@ -337,21 +396,31 @@ class ProductReservation extends BaseModel
 
     /**
      * @return bool|null
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function cancelByClient(): ?bool
     {
-        if ($this->product_voucher) {
-            $this->product_voucher->delete();
-        }
+        DB::transaction(function() {
+            if ($this->product_voucher) {
+                $this->product_voucher->delete();
+            }
 
-        return $this->delete();
+            $this->update([
+                'state' => self::STATE_CANCELED_BY_CLIENT,
+                'canceled_at' => now(),
+            ]);
+
+            Event::dispatch(new ProductReservationCanceled($this));
+        });
+
+        return true;
     }
 
     /**
      * @param string|null $identity_address
      * @param string|null $note
      * @return VoucherTransaction
+     * @throws \Throwable
      */
     public function acceptByApp(?string $identity_address, ?string $note = null): VoucherTransaction
     {

@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Sponsor;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\FaqResource;
 use App\Http\Resources\ImplementationBlockResource;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
@@ -12,6 +13,10 @@ use App\Models\ImplementationPage;
  */
 class ImplementationPageResource extends BaseJsonResource
 {
+    public const LOAD = [
+        'faq',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -23,12 +28,13 @@ class ImplementationPageResource extends BaseJsonResource
         $page = $this->resource;
 
         return array_merge($page->only([
-            'id', 'page_type', 'content', 'content_alignment', 'content_html',
-            'state', 'external', 'external_url', 'blocks', 'implementation_id',
+            'id', 'page_type', 'state', 'external', 'external_url', 'blocks', 'implementation_id',
+            'description', 'description_alignment', 'description_position', 'description_html',
         ]), [
             'blocks' => ImplementationBlockResource::collection($page->blocks),
             'url_webshop' => $this->webshopUrl($page),
             'implementation' => $this->getImplementationData($page->implementation),
+            'faq' => FaqResource::collection($page->faq),
         ]);
     }
 

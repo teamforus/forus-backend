@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Office;
 use App\Models\Organization;
 use Illuminate\Console\Command;
 
@@ -28,33 +29,21 @@ class CheckOrganizationOfficePostcodesCommand extends Command
                             {--organization_id= : organization id to process.}';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         $organization_id = $this->getOption('organization_id');
 
         try {
-            $organizations = $organization_id ? [Organization::find($organization_id)] : Organization::all();
+            $organizations = $organization_id ? [Organization::find($organization_id)] : Organization::get();
 
             foreach ($organizations as $organization) {
-                foreach ($organization->offices as $office) {
-                    $office->updateGeoData();
-                }
+                $organization->offices->each(fn (Office $office) => $office->updateGeoData());
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable) {}
     }
 
     /**
@@ -62,7 +51,7 @@ class CheckOrganizationOfficePostcodesCommand extends Command
      * @param null $default
      * @return array|string|null
      */
-    protected function getOption(string $argument, $default = null)
+    protected function getOption(string $argument, $default = null): array|string|null
     {
         return $this->hasOption($argument) ? $this->option($argument) : $default;
     }
