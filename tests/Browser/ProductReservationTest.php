@@ -61,6 +61,7 @@ class ProductReservationTest extends DuskTestCase
             $this->assertGreaterThan(1, $implementation->funds->count());
 
             // Make reservations on all funds
+            $this->createProductForReservation($implementation->organization);
             $funds->each(fn (Fund $fund) => $this->makeReservation($browser, $fund, $identity));
 
             // Logout user
