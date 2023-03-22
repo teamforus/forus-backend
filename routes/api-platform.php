@@ -898,4 +898,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource('banks', "Api\Platform\BanksController")->only([
         'index', 'show',
     ]);
+
+    $router->post('format', 'Api\Platform\FormatController@format');
 });
