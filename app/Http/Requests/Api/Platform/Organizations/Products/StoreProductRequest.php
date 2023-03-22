@@ -2,17 +2,10 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
-use App\Http\Requests\BaseFormRequest;
-use App\Models\Organization;
 use App\Models\Product;
 use App\Rules\MediaUidRule;
 
-/**
- * Class StoreProductRequest
- * @property Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Products
- */
-class StoreProductRequest extends BaseFormRequest
+class StoreProductRequest extends BaseProductRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -34,7 +27,7 @@ class StoreProductRequest extends BaseFormRequest
         $unlimited_stock = $this->input('unlimited_stock', false);
         $price_type = $this->input('price_type');
 
-        return [
+        return array_merge([
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,2500',
             'price'                 => 'required_if:price_type,regular|numeric|min:.2',
@@ -53,9 +46,9 @@ class StoreProductRequest extends BaseFormRequest
 
             'expire_at'             => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
-            'reservation_enabled'   => 'nullable|boolean',
-            'reservation_policy'    => 'nullable|in:' . join(',', Product::RESERVATION_POLICIES),
-        ];
+        ], array_merge(
+            $this->reservationRules(),
+        ));
     }
 
     /**

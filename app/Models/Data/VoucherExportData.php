@@ -59,7 +59,7 @@ class VoucherExportData
 
         $bsnData = $sponsor->bsn_enabled ? [
             'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
-            'identity_bsn' =>  $assigned ? $this->voucher->identity?->bsn : null
+            'identity_bsn' =>  $assigned ? $this->voucher->identity?->record_bsn?->value : null
         ]: [];
 
         $export_data = array_merge($this->onlyData ? [] : [
@@ -79,7 +79,7 @@ class VoucherExportData
             'client_uid' => $this->voucher->client_uid ?? null,
             'note' => $this->voucher->note,
             'source' => $this->voucher->employee_id ? 'employee': 'user',
-            'amount' => $this->voucher->amount_total,
+            'amount' => $this->voucher->amount_total_cached,
             'fund_name' => $this->voucher->fund->name,
             'created_at' => format_date_locale($this->voucher->created_at),
             'expire_at' => format_date_locale($this->voucher->expire_at),

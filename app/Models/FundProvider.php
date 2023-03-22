@@ -344,6 +344,7 @@ class FundProvider extends BaseModel
     ): Builder {
         $allow_products = $request->input('allow_products');
         $allow_budget = $request->input('allow_budget');
+        $has_products = $request->input('has_products');
 
         $fundsQuery = $organization->funds()->where('archived', false);
         $query = $query ?: self::query();
@@ -384,6 +385,20 @@ class FundProvider extends BaseModel
             $query->whereHas('fund', function(Builder $builder) {
                 $builder->where('type', Fund::TYPE_BUDGET);
             })->where('allow_budget', (bool) $allow_budget);
+        }
+
+        if ($has_products) {
+            $query->whereHas('organization.products', function (Builder $builder) use ($fundsQuery) {
+                ProductQuery::whereNotExpired($builder);
+                ProductQuery::whereFundNotExcluded($builder, $fundsQuery->pluck('id')->toArray());
+            });
+        }
+
+        if (!$has_products && $has_products !== null) {
+            $query->whereDoesntHave('organization.products', function (Builder $builder) use ($fundsQuery) {
+                ProductQuery::whereNotExpired($builder);
+                ProductQuery::whereFundNotExcluded($builder, $fundsQuery->pluck('id')->toArray());
+            });
         }
 
         if ($allow_products !== null) {

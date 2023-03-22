@@ -37,7 +37,7 @@ class StoreReimbursementRequest extends BaseFormRequest
     {
         return [
             'title' => 'required|string|max:200',
-            'description' => 'required|string|min:5|max:2000',
+            'description' => 'nullable|string|min:5|max:2000',
             'amount' => $this->amountRule($this->identity()),
             'email' => 'nullable|string|max:200',
             'iban' => ['required', 'string', new IbanRule()],

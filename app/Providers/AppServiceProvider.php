@@ -43,6 +43,7 @@ use App\Services\MediaService\MediaService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -99,6 +100,9 @@ class AppServiceProvider extends ServiceProvider
             new ImplementationMailLogoMediaConfig(),
             new ImplementationBlockMediaConfig(),
         ]);
+
+        StringHelper::setDecimalSeparator('.');
+        StringHelper::setThousandsSeparator(',');
 
         FundProvider::observe(FundProviderObserver::class);
     }

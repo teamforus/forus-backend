@@ -7,6 +7,7 @@ use App\Rules\Base\BtwRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\Base\KvkRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\Rule;
 
 /**
@@ -34,7 +35,7 @@ class UpdateOrganizationRequest extends FormRequest
     public function rules(): array
     {
         $kvk = $this->input('kvk');
-        $kvkDebug = env("KVK_API_DEBUG", false);
+        $kvkDebug = Config::get('forus.kvk-api.debug', false);
         $kvkGeneric = $kvk === Organization::GENERIC_KVK;
 
         $kvkUniqueRule = $this->organization ? Rule::unique('organizations', 'kvk')->ignore(
