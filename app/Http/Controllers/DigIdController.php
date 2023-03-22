@@ -13,12 +13,13 @@ class DigIdController extends Controller
     /**
      * @param StartDigIdRequest $request
      * @return array
+     * @throws \Throwable
      */
     public function start(StartDigIdRequest $request): array
     {
         $digidSession = DigIdSession::createSession($request)->startAuthSession();
 
-        if ($digidSession->state !== DigIdSession::STATE_PENDING_AUTH) {
+        if (!$digidSession->isPending()) {
             abort(503, 'Unable to handle the request at the moment.', [
                 'Error-Code' => strtolower('digid_' . $digidSession->digid_error_code),
             ]);
@@ -46,19 +47,7 @@ class DigIdController extends Controller
      */
     public function resolve(ResolveDigIdRequest $request, DigIdSession $session): RedirectResponse
     {
-        // check if session secret is match records
-        if ($request->get('session_secret') !== $session->session_secret) {
-            return redirect(url_extend_get_params($session->session_final_url, [
-                'digid_error' => "unknown_error",
-            ]));
-        }
-
-        // request BSN from digid and store in session
-        $session->requestBsn(
-            $request->get('rid', ''),
-            $request->get('a-select-server', ''),
-            $request->get('aselect_credentials', '')
-        );
+        $session->resolveResponse($request);
 
         // check if digid request worked
         if (!$session->isAuthorized()) {

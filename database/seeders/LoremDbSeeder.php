@@ -89,6 +89,10 @@ class LoremDbSeeder extends Seeder
         'Nijmegen', 'Stadjerspas',
     ];
 
+    private array $implementationsWithSamlDigid = [
+        'Zuidhorn', 'Nijmegen',
+    ];
+
     private array $fundsWithCriteriaEditableAfterLaunch = [
         'Zuidhorn', 'Nijmegen',
     ];
@@ -667,10 +671,8 @@ class LoremDbSeeder extends Seeder
         ?Organization $organization = null,
     ): Implementation|Model {
         $informalCommunication = array_map("str_slug", $this->implementationsWithInformalCommunication);
-        $requiredDigId = array_map("str_slug", $this->implementationsWithRequiredDigId);
-        $digidSignup = array_map("str_slug", $this->implementationsWithDigidSignup);
 
-        return Implementation::forceCreate([
+        return Implementation::forceCreate(array_merge([
             'key'   => $key,
             'name'  => $name,
             'organization_id' => $organization?->id,
@@ -696,15 +698,34 @@ class LoremDbSeeder extends Seeder
                 compact('key')
             ),
 
-            'informal_communication'    => in_array($key, $informalCommunication, true),
-            'digid_enabled'             => config('forus.seeders.lorem_db_seeder.digid_enabled'),
+            'informal_communication' => in_array($key, $informalCommunication, true),
+            'productboard_api_key' => Config::get('forus.seeders.lorem_db_seeder.productboard_api_key'),
+        ], array_merge(
+            $this->makeImplementationSamlConfig($key),
+        )));
+    }
+
+    /**
+     * @param string $key
+     * @return array
+     */
+    protected function makeImplementationSamlConfig(string $key): array
+    {
+        $samlConnection = array_map("str_slug", $this->implementationsWithSamlDigid);
+        $requiredDigId = array_map("str_slug", $this->implementationsWithRequiredDigId);
+        $digidSignup = array_map("str_slug", $this->implementationsWithDigidSignup);
+        $useSaml = in_array($key, $samlConnection);
+
+        return array_merge([
+            'digid_enabled'             => Config::get('forus.seeders.lorem_db_seeder.digid_enabled'),
             'digid_required'            => in_array($key, $requiredDigId, true),
-            'digid_app_id'              => config('forus.seeders.lorem_db_seeder.digid_app_id'),
-            'digid_shared_secret'       => config('forus.seeders.lorem_db_seeder.digid_shared_secret'),
-            'digid_a_select_server'     => config('forus.seeders.lorem_db_seeder.digid_a_select_server'),
             'digid_sign_up_allowed'     => in_array($key, $digidSignup, true),
-            'digid_trusted_cert'        => config('forus.seeders.lorem_db_seeder.digid_trusted_cert'),
-            'productboard_api_key'      => config('forus.seeders.lorem_db_seeder.productboard_api_key'),
+            'digid_connection_type'     => $useSaml ? 'saml' : 'cgi',
+        ], $useSaml ? [] : [
+            'digid_app_id'              => Config::get('forus.seeders.lorem_db_seeder.digid_app_id'),
+            'digid_shared_secret'       => Config::get('forus.seeders.lorem_db_seeder.digid_shared_secret'),
+            'digid_a_select_server'     => Config::get('forus.seeders.lorem_db_seeder.digid_a_select_server'),
+            'digid_trusted_cert'        => Config::get('forus.seeders.lorem_db_seeder.digid_trusted_cert'),
         ]);
     }
 
