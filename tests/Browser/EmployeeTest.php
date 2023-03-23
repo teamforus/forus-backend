@@ -12,12 +12,13 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Facebook\WebDriver\Exception\TimeOutException;
+use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestIdentities;
 
 class EmployeeTest extends DuskTestCase
 {
-    use AssertsSentEmails, MakesTestIdentities;
+    use AssertsSentEmails, MakesTestIdentities, HasFrontendActions;
 
     /**
      * @return void
@@ -39,19 +40,9 @@ class EmployeeTest extends DuskTestCase
             $browser->visit($implementation->urlSponsorDashboard());
 
             // Authorize identity
-            $proxy = $this->makeIdentityProxy($implementation->organization->identity);
-            $browser->script("localStorage.setItem('active_account', '$proxy->access_token')");
-            $browser->refresh();
-
-            $browser->waitFor('@fundsTitle', 10);
-
-            $browser->waitFor('@identityEmail');
-            $browser->assertSeeIn('@identityEmail', $implementation->organization->identity->email);
-            $browser->waitFor('@headerOrganizationSwitcher');
-            $browser->press('@headerOrganizationSwitcher');
-            $browser->waitFor("@headerOrganizationItem$implementation->organization_id");
-            $browser->press("@headerOrganizationItem$implementation->organization_id");
-            $browser->pause(5000);
+            $this->loginIdentity($browser, $implementation->organization->identity);
+            $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $implementation->organization->identity);
+            $this->selectDashboardOrganization($browser, $implementation->organization);
 
             // Go to employees list and add a new employee of initial role
             $this->goToEmployeesPage($browser);
@@ -233,21 +224,5 @@ class EmployeeTest extends DuskTestCase
         foreach ($role->permissions as $permission) {
             $this->assertTrue($organization->identityCan($employee->identity, $permission->key));
         }
-    }
-
-    /**
-     * @param Browser $browser
-     * @return void
-     * @throws TimeOutException
-     */
-    private function logout(Browser $browser): void
-    {
-        $browser->refresh();
-
-        $browser->waitFor('@userProfile');
-        $browser->element('@userProfile')->click();
-
-        $browser->waitFor('@btnUserLogout');
-        $browser->element('@btnUserLogout')->click();
     }
 }

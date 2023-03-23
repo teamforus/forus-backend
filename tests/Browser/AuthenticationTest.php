@@ -9,12 +9,13 @@ use App\Models\Implementation;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestIdentities;
 
 class AuthenticationTest extends DuskTestCase
 {
-    use AssertsSentEmails, MakesTestIdentities;
+    use AssertsSentEmails, MakesTestIdentities, HasFrontendActions;
 
     /**
      * A Dusk test example.
@@ -66,15 +67,10 @@ class AuthenticationTest extends DuskTestCase
             // Get and follow the auth link from the email then check if the user is authenticated
             $browser->visit($this->findFirstEmailRestoreLink($identity->email, $startTime));
             $browser->pause(500);
-
-            $browser->waitFor('@identityEmail');
-            $browser->assertSeeIn('@identityEmail', $identity->email);
+            $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
 
             // Logout identity
-            $browser->waitFor('@userProfile');
-            $browser->press('@userProfile');
-            $browser->waitFor('@btnUserLogout');
-            $browser->press('@btnUserLogout');
+            $this->logout($browser);
         });
     }
 
@@ -129,10 +125,7 @@ class AuthenticationTest extends DuskTestCase
             $browser->pause(1000);
 
             // Logout identity
-            $browser->waitFor('@userProfile');
-            $browser->press('@userProfile');
-            $browser->waitFor('@btnUserLogout');
-            $browser->press('@btnUserLogout');
+            $this->logout($browser);
         });
     }
 }

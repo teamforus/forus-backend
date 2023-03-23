@@ -31,6 +31,9 @@ use Illuminate\Support\Facades\Event;
  * @property string|null $state
  * @property string|null $first_name
  * @property string|null $last_name
+ * @property string|null $phone
+ * @property string|null $address
+ * @property string|null $birth_date
  * @property string|null $user_note
  * @property string|null $note
  * @property \Illuminate\Support\Carbon|null $accepted_at
@@ -54,7 +57,9 @@ use Illuminate\Support\Facades\Event;
  * @method static \Illuminate\Database\Query\Builder|ProductReservation onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation query()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAcceptedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereBirthDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCanceledAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCreatedAt($value)
@@ -66,6 +71,7 @@ use Illuminate\Support\Facades\Event;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereLastName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePhone($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePriceDiscount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePriceType($value)
@@ -143,7 +149,7 @@ class ProductReservation extends BaseModel
         'product_id', 'voucher_id', 'voucher_transaction_id', 'fund_provider_product_id',
         'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
-        'first_name', 'last_name', 'user_note',
+        'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date',
     ];
 
     /**

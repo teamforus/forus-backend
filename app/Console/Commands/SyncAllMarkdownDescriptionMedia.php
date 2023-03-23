@@ -41,6 +41,7 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
      * Execute the console command.
      *
      * @return int
+     * @throws \Throwable
      */
     public function handle(): int
     {
@@ -79,8 +80,9 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
     }
 
     /**
-     * @param 
+     * @param
      * @return void
+     * @throws \Throwable
      */
     public function syncAll(): void
     {
@@ -92,6 +94,7 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
 
     /**
      * @return Collection
+     * @throws \Throwable
      */
     public function syncFunds(): Collection
     {
@@ -100,14 +103,16 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
 
     /**
      * @return Collection
+     * @throws \Throwable
      */
     public function syncFaq(): Collection
     {
         return $this->syncModels(Faq::get(), 'cms_media', 'FundFaq');
     }
 
-    /** 
+    /**
      * @return Collection
+     * @throws \Throwable
      */
     public function syncImplementations(): Collection
     {
@@ -116,6 +121,7 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
 
     /**
      * @return Collection
+     * @throws \Throwable
      */
     public function syncImplementationPages(): Collection
     {
@@ -127,6 +133,7 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
      * @param string $mediaType
      * @param string $model
      * @return Collection
+     * @throws \Throwable
      */
     public function syncModels(Collection $models, string $mediaType, string $model): Collection
     {
@@ -164,8 +171,11 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
         $mediaSynced = $model->medias->where('type', $mediaType);
         $mediaSyncedIds = $mediaSynced->pluck('id');
 
-        $mediaToSync = $model->getDescriptionMarkdownMediaValidQuery($mediaType)->get();
-        $mediaToSyncIds = $mediaToSync->pluck('id');
+        $mediaToSync = $model->getDescriptionMarkdownMediaPresetsValidQuery($mediaType)->get();
+        $mediaToSyncIds = $mediaToSync->pluck('media_id');
+
+        $mediaToClone = $model->getDescriptionMarkdownMediaPresetsInValidQuery($mediaType)->get();
+        $mediaToCloneIds = $mediaToClone->pluck('media_id');
 
         $this->printText("#$model->id: ");
 
@@ -183,7 +193,19 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
             $this->printText(sprintf("    - should: %s", $mediaToSyncIds));
         }
 
-        if ($mediaSyncedIds->diff($mediaToSyncIds)->isNotEmpty() || $mediaToSyncIds->diff($mediaSyncedIds)->isNotEmpty()) {
+        if ($this->detailed) {
+            $this->printHeader($this->green("Should clone '" . $mediaToCloneIds . "':\n"));
+            $this->printModels($mediaToClone, 'id', 'uid');
+        } else {
+            $this->printText(sprintf("    - should clone: %s", $mediaToCloneIds));
+        }
+
+        $hasMediaToSync =
+            $mediaToCloneIds->isNotEmpty() ||
+            $mediaSyncedIds->diff($mediaToSyncIds)->isNotEmpty() ||
+            $mediaToSyncIds->diff($mediaSyncedIds)->isNotEmpty();
+
+        if ($hasMediaToSync) {
             $this->printText($this->yellow('    - not in sync!'));
         }
     }

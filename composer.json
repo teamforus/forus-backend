@@ -16,6 +16,7 @@
         "ext-openssl": "*",
         "ext-simplexml": "*",
         "ext-zip": "*",
+        "ext-soap": "*",
         "astrotomic/laravel-translatable": "^11.9.1",
         "aws/aws-sdk-php": "3.191.2",
         "azuyalabs/yasumi": "^2.5",
@@ -40,8 +41,10 @@
         "laravel/ui": "^3.0",
         "league/flysystem-aws-s3-v3": "^3.0",
         "maatwebsite/excel": "^3.1",
+        "onelogin/php-saml": "^3.6",
         "predis/predis": "^1.1",
         "ralouphie/getallheaders": "2.0.5",
+        "simplesamlphp/saml2": "^4.6.3",
         "simplesoftwareio/simple-qrcode": "^2.0",
         "twilio/sdk": "^6.8.0",
         "whichbrowser/parser": "^2.0.42",
@@ -61,6 +64,7 @@
         ],
         "psr-4": {
             "App\\": "app/",
+            "SimpleSAML\\": "app/Services/SAML2Service/SimpleSAML",
             "Database\\Seeders\\": "database/seeders"
         }
     },

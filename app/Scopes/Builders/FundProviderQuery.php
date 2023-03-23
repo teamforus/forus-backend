@@ -124,4 +124,18 @@ class FundProviderQuery extends BaseQuery
             $builder->whereIn('fund_id', (array) $fund_id);
         }), 'usage')->orderBy('usage', 'DESC');
     }
+
+    /**
+     * @param Builder $builder
+     * @param array|int $fund_id
+     * @return Builder
+     */
+    public static function whereDeclinedForFundsFilter(Builder $builder, array|int $fund_id): Builder
+    {
+        $providersApproved = FundProviderQuery::whereApprovedForFundsFilter(FundProvider::query(), $fund_id);
+
+        return $builder
+            ->where("fund_id", $fund_id)
+            ->whereNotIn("id", $providersApproved->select("id"));
+    }
 }

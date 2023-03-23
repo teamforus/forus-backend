@@ -1,0 +1,26 @@
+{
+    "baseurl": null,
+    "sp": {
+        "entityId": "https:\/\/example.com",
+        "assertionConsumerService": {
+            "url": "https:\/\/example.com\/api\/v1\/platform\/digid\/:uid\/resolve",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"
+        },
+        "privateKey": "",
+        "x509cert": ""
+    },
+    "idp": {
+        "entityId": "https:\/\/was-preprod1.digid.nl\/saml\/idp\/metadata",
+        "singleSignOnService": {
+            "url": "https:\/\/preprod1.digid.nl\/saml\/idp\/request_authentication"
+        },
+        "singleLogoutService": {
+            "url": "https:\/\/preprod1.digid.nl\/saml\/idp\/request_logout"
+        },
+        "artifactResolutionService": {
+            "url": "https:\/\/was-preprod1.digid.nl\/saml\/idp\/resolve_artifact"
+        },
+        "certData": "",
+        "x509cert": ""
+    }
+}
