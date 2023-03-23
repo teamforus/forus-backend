@@ -263,9 +263,11 @@ class NotificationService
     protected function addGlobalVarsToMailable(Mailable $mailable, string $email): Mailable
     {
         $unsubscribeLink = $this->notificationRepo->makeUnsubLink($email);
+        $clientType = request()->header('Client-Type', 'sponsor');
+
         $notificationPreferencesLink = sprintf(
             '%s/%s',
-            rtrim(Implementation::active()['url_sponsor'], '/'),
+            rtrim(Implementation::active()['url_'.$clientType], '/'),
             'preferences/notifications');
 
         $mailable->with(array_merge(compact('email', 'unsubscribeLink', 'notificationPreferencesLink'), [
