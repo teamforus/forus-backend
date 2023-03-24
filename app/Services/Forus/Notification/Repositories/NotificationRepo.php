@@ -10,19 +10,19 @@ use App\Mail\Digest\DigestSponsorMail;
 use App\Mail\Digest\DigestValidatorMail;
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\FundExpireSoonMail;
-use App\Mail\Funds\FundRequests\FundRequestAssignedMail;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\User\EmailActivationMail;
+use App\Mail\User\FundRequestAssignedBySupervisorMail;
 use App\Mail\Vouchers\PaymentSuccessBudgetMail;
 use App\Mail\Vouchers\ProductBoughtProviderMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
 use App\Models\SystemNotification;
-use App\Notifications\BaseNotification;
 use App\Notifications\Identities\Employee\IdentityAddedEmployeeNotification;
+use App\Notifications\Identities\Employee\IdentityAssignedToFundRequestBySupervisorNotification;
 use App\Notifications\Identities\Employee\IdentityChangedEmployeeRolesNotification;
 use App\Notifications\Identities\Employee\IdentityRemovedEmployeeNotification;
 use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedBudgetNotification;
@@ -95,6 +95,7 @@ class NotificationRepo implements INotificationRepo
         IdentityAddedEmployeeNotification::class,
         IdentityChangedEmployeeRolesNotification::class,
         IdentityRemovedEmployeeNotification::class,
+        IdentityAssignedToFundRequestBySupervisorNotification::class,
 
         // fund providers
         FundProvidersApprovedBudgetNotification::class,
@@ -188,7 +189,7 @@ class NotificationRepo implements INotificationRepo
         'funds.fund_expires' => FundExpireSoonMail::class,
         'funds.balance_warning' => FundBalanceWarningMail::class,
         'funds.product_reserved' => ProductBoughtProviderMail::class,
-        'funds.validator_assigned' => FundRequestAssignedMail::class,
+        'funds_requests.assigned_by_supervisor' => FundRequestAssignedBySupervisorMail::class,
 
         // Authorization emails
         'auth.user_login' => UserLoginMail::class,

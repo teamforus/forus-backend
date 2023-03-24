@@ -1,20 +1,20 @@
 <?php
 
-namespace App\Mail\Funds\FundRequests;
+namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
 
-class FundRequestAssignedMail extends ImplementationMail
+class FundRequestAssignedBySupervisorMail extends ImplementationMail
 {
-    protected string $subjectKey = 'mails/system_mails.fund_request_assigned.title';
+    protected string $notificationTemplateKey = 'notifications_identities.assigned_to_fund_request_by_supervisor';
 
     /**
      * @return Mailable
      */
     public function build(): Mailable
     {
-        return $this->buildSystemMail('fund_request_assigned');
+        return $this->buildNotificationTemplatedMail();
     }
 
     /**

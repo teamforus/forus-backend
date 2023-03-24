@@ -31,7 +31,7 @@ return [
     'identity_destroy_request' => [
         'title' => 'Verzoek tot verwijdering van account'
     ],
-    'fund_request_assigned' => [
+    'fund_request_assigned_by_supervisor' => [
         'title' => 'A fund request has been assigned'
     ],
 ];
