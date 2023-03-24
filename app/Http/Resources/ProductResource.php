@@ -128,7 +128,7 @@ class ProductResource extends BaseJsonResource
             $fundProviderProduct = $product->getFundProviderProduct($fund);
 
             return array_merge($data, $productData, [
-                'limit_per_identity' => $fundProviderProduct->limit_per_identity,
+                'limit_per_identity' => $fundProviderProduct?->limit_per_identity,
             ], $fund->isTypeSubsidy() ? [
                 'price' => $fundProviderProduct->user_price,
                 'price_locale' => $fundProviderProduct->user_price_locale,
