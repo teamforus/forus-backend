@@ -3,7 +3,9 @@
 namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Employee;
 use App\Models\FundRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Class IndexFundRequestsRequest
@@ -31,7 +33,10 @@ class IndexFundRequestsRequest extends BaseFormRequest
         return [
             'per_page'      => 'numeric|between:1,100',
             'state'         => 'nullable|in:' . implode(',', FundRequest::STATES),
-            'employee_id'   => 'nullable|exists:employees,id',
+            'employee_id'   => [
+                'nullable',
+                Rule::in(array_merge(Employee::pluck('id')->toArray(), ['null'])),
+            ],
             'from'          => 'nullable|date:Y-m-d',
             'to'            => 'nullable|date:Y-m-d',
             'order_by'      => 'nullable|in:id,fund_name,created_at,note,state,requester_email,assignee_email',

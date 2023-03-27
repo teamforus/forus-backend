@@ -51,11 +51,15 @@ class FundRequestSearch extends BaseSearch
         }
 
         if ($employee_id = $this->getFilter('employee_id')) {
-            $employee = Employee::find($employee_id);
+            if ($employee_id == 'null') {
+                $builder->whereDoesntHave('records.employee');
+            } else {
+                $employee = Employee::find($employee_id);
 
-            $builder->whereHas('records', static function(Builder $builder) use ($employee) {
-                FundRequestRecordQuery::whereEmployeeIsAssignedValidator($builder, $employee);
-            });
+                $builder->whereHas('records', static function(Builder $builder) use ($employee) {
+                    FundRequestRecordQuery::whereEmployeeIsAssignedValidator($builder, $employee);
+                });
+            }
         }
 
         return $this->sort($builder);
