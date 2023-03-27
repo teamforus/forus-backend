@@ -16,7 +16,7 @@ trait HasFaq
      */
     public function faq(): MorphMany
     {
-        return $this->morphMany(Faq::class, 'faq');
+        return $this->morphMany(Faq::class, 'faq')->orderBy('order');
     }
 
     /**
@@ -37,8 +37,10 @@ trait HasFaq
         // remove faq not listed in the array
         $this->faq()->whereNotIn('id', array_filter(array_pluck($faq, 'id')))->delete();
 
-        foreach ($faq as $question) {
-            $this->syncQuestion($question);
+        foreach ($faq as $index => $question) {
+            $this->syncQuestion(array_merge($question, [
+                'order' => $index
+            ]));
         }
 
         return $this;
@@ -53,7 +55,7 @@ trait HasFaq
     protected function syncQuestion(array $question): Faq|Model
     {
         $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
-        $faq->updateModel(array_only($question, ['title', 'description']));
+        $faq->updateModel(array_only($question, ['title', 'description', 'order']));
         $faq->syncDescriptionMarkdownMedia('cms_media');
 
         return $faq;
