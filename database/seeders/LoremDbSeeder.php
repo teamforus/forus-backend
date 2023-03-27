@@ -963,7 +963,7 @@ class LoremDbSeeder extends Seeder
         } while(Product::query()->where('name', $name)->count() > 0);
 
         $price = random_int(1, 20);
-        $unlimited_stock = random_int(1, 10) < 3;
+        $unlimited_stock = $fields['unlimited_stock'] ?? random_int(1, 10) < 3;
         $total_amount = $unlimited_stock ? 0 : random_int(1, 10) * 10;
         $sold_out = false;
         $expire_at = Carbon::now()->addDays(random_int(20, 60));
