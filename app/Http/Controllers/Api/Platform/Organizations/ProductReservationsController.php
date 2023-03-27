@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Exports\ProductReservationsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\IndexProductReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationBatchRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\AcceptProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RejectProductReservationRequest;
+use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\ProductReservationResource;
 use App\Models\Organization;
 use App\Models\Product;
@@ -18,6 +20,7 @@ use App\Scopes\Builders\VoucherQuery;
 use App\Searches\ProductReservationsSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProductReservationsController extends Controller
 {
@@ -196,5 +199,47 @@ class ProductReservationsController extends Controller
         ));
 
         return new ProductReservationResource($productReservation);
+    }
+
+    /**
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function getExportFields(
+        Organization $organization
+    ): AnonymousResourceCollection {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnyProvider', [ProductReservation::class, $organization]);
+
+        return ExportFieldArrResource::collection(ProductReservationsExport::getExportFields());
+    }
+
+    /**
+     * @param IndexProductReservationsRequest $request
+     * @param Organization $organization
+     * @return BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
+    public function export(
+        IndexProductReservationsRequest $request,
+        Organization $organization
+    ): BinaryFileResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnyProvider', [ProductReservation::class, $organization]);
+
+        $search = new ProductReservationsSearch($request->only([
+            'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id',
+        ]), ProductReservationQuery::whereProviderFilter(ProductReservation::query(), $organization->id));
+
+        $exportType = $request->input('data_format', 'xls');
+        $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
+        $fields = $request->input('fields', ProductReservationsExport::getExportFields());
+        $exportData = new ProductReservationsExport($search->get(), $fields);
+
+        return resolve('excel')->download($exportData, $fileName);
     }
 }

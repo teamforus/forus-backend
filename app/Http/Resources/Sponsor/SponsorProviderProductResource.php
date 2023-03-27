@@ -68,7 +68,7 @@ class SponsorProviderProductResource extends BaseJsonResource
             'unseen_messages' => $this->hasUnseenMessages($product),
             'is_available' => $this->isAvailable($product, $fundProvider) ,
             'deals_history' => $fundProvider ? $this->getDealsHistory($product, $fundProvider) : null,
-        ]);
+        ], $this->productReservationFieldSettings($product));
     }
 
     /**
@@ -121,5 +121,18 @@ class SponsorProviderProductResource extends BaseJsonResource
             'expire_at' => $product->expire_at?->format('Y-m-d'),
             'expire_at_locale' => format_date_locale($product->expire_at),
         ]))->toArray();
+    }
+
+    /**
+     * @param Product $product
+     * @return array
+     */
+    private function productReservationFieldSettings(Product $product): array
+    {
+        return [
+            'reservation_phone' => $product->reservation_phone,
+            'reservation_address' => $product->reservation_address,
+            'reservation_birth_date' => $product->reservation_birth_date,
+        ];
     }
 }

@@ -85,7 +85,7 @@ class WebshopGenericSearch
      */
     protected function queryProducts(array $options): Builder
     {
-        return Product::search($options)->withoutTrashed();
+        return Product::search($options)->where('show_on_webshop', true)->withoutTrashed();
     }
 
     /**
