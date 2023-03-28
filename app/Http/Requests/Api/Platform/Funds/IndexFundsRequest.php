@@ -37,6 +37,9 @@ class IndexFundsRequest extends FormRequest
             'order_by' => 'nullable|in:created_at',
             'order_by_dir' => 'nullable|in:asc,desc',
             'with_external' => 'nullable|bool',
+            'has_products' => 'nullable|bool',
+            'has_subsidies' => 'nullable|bool',
+            'has_providers' => 'nullable|bool',
         ];
     }
 }
