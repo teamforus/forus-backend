@@ -24,6 +24,7 @@ class OrganizationResource extends JsonResource
         'permissions',
         'employees.roles.permissions',
         'bank_connection_active',
+        'offices',
     ];
 
     /**
@@ -34,6 +35,7 @@ class OrganizationResource extends JsonResource
     {
         $load = [
             'tags',
+            'offices',
             'bank_connection_active',
         ];
 
@@ -72,7 +74,8 @@ class OrganizationResource extends JsonResource
         return array_filter(array_merge($organization->only([
             'id', 'identity_address', 'name', 'kvk', 'business_type_id',
             'email_public', 'phone_public', 'website_public',
-            'description', 'description_html',
+            'description', 'description_html', 'reservation_phone',
+            'reservation_address', 'reservation_birth_date'
         ]), $privateData, $ownerData, $employeeOnlyData, [
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),
@@ -80,6 +83,7 @@ class OrganizationResource extends JsonResource
             'funds' => $fundsDep ? $organization->funds->map(fn (Fund $fund) => $fund->only('id', 'name')) : '_null_',
             'funds_count' => $fundsCountDep ? $organization->funds_count : '_null_',
             'permissions' => is_array($permissionsData) ? $permissionsData : '_null_',
+            'offices_count' => $organization->offices->count(),
         ]), static function($item) {
             return $item !== '_null_';
         });

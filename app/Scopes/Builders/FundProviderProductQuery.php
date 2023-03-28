@@ -75,7 +75,7 @@ class FundProviderProductQuery
         return $builder->whereHas('product', function(Builder $builder) use ($voucher) {
             $query = ProductSubQuery::appendReservationStats([
                 'voucher_id' => $voucher->id,
-            ], Product::query());
+            ], (clone $builder));
 
             $query->where(function(Builder $builder) use ($voucher) {
                 $builder->where('limit_available', '>', 0);

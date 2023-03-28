@@ -25,7 +25,9 @@ class ImplementationPageResource extends BaseJsonResource
     {
         $page = $this->resource;
 
-        return array_merge($page->only('page_type', 'external', 'description_alignment'), [
+        return array_merge($page->only(
+            'page_type', 'external', 'description_position', 'description_alignment'
+        ), [
             'description_html' => $page->external ? '' : $page->description_html,
             'external_url' => $page->external ? $page->external_url : '',
             'blocks' => ImplementationBlockResource::collection($page->blocks),

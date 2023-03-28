@@ -26,6 +26,7 @@ use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
+use App\Models\VoucherRecord;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use App\Observers\FundProviderObserver;
@@ -42,6 +43,7 @@ use App\Services\MediaService\MediaService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -72,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
         'physical_card_request'         => PhysicalCardRequest::class,
         'fund_request_record'           => FundRequestRecord::class,
         'fund_request_clarification'    => FundRequestClarification::class,
+        'voucher_record'                => VoucherRecord::class,
         'voucher_transaction'           => VoucherTransaction::class,
         'voucher_transaction_bulk'      => VoucherTransactionBulk::class,
     ];
@@ -97,6 +100,9 @@ class AppServiceProvider extends ServiceProvider
             new ImplementationMailLogoMediaConfig(),
             new ImplementationBlockMediaConfig(),
         ]);
+
+        StringHelper::setDecimalSeparator('.');
+        StringHelper::setThousandsSeparator(',');
 
         FundProvider::observe(FundProviderObserver::class);
     }

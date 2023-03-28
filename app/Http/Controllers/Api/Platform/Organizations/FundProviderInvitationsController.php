@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Http\Requests\Api\Platform\Organizations\FundProviderInvitations\IndexFundProviderInvitationRequest;
 use App\Http\Requests\Api\Platform\Organizations\FundProviderInvitations\UpdateFundProviderInvitationRequest;
+use App\Models\FundProvider;
 use App\Models\FundProviderInvitation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
-
 use App\Http\Resources\FundProviderInvitationResource;
+use App\Scopes\Builders\FundQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundProviderInvitationsController extends Controller
@@ -28,11 +30,21 @@ class FundProviderInvitationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [FundProviderInvitation::class, $organization]);
 
-        return FundProviderInvitationResource::collection(
-            $organization->fund_provider_invitations()->paginate(
-                $request->input('per_page', 10)
-            )
-        );
+        $builder = $organization->fund_provider_invitations();
+
+        if ($request->has('q') && $q = $request->string('q')) {
+            $builder->whereHas('fund', fn (Builder $b) => FundQuery::whereQueryFilter($b, $q));
+        }
+
+        if ($request->has('expired') && $request->boolean('expired')) {
+            $builder->whereIn('id', FundProvider::queryInvitationsArchived($organization)->select('id'));
+        }
+
+        if ($request->has('expired') && !$request->boolean('expired')) {
+            $builder->whereIn('id', FundProvider::queryInvitationsActive($organization)->select('id'));
+        }
+
+        return FundProviderInvitationResource::queryCollection($builder, $request);
     }
 
     /**
@@ -50,7 +62,7 @@ class FundProviderInvitationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showProvider', [$fundProviderInvitation, $organization]);
 
-        return new FundProviderInvitationResource($fundProviderInvitation);
+        return FundProviderInvitationResource::create($fundProviderInvitation);
     }
 
     /**
@@ -70,6 +82,6 @@ class FundProviderInvitationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('acceptProvider', [$fundProviderInvitation, $organization]);
 
-        return new FundProviderInvitationResource($fundProviderInvitation->accept());
+        return FundProviderInvitationResource::create($fundProviderInvitation->accept());
     }
 }

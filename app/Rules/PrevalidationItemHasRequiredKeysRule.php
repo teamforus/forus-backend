@@ -29,7 +29,7 @@ class PrevalidationItemHasRequiredKeysRule extends BaseRule
      */
     public function passes($attribute, $value): bool
     {
-        if ($this->fund || !is_array($value)) {
+        if (!$this->fund || !is_array($value)) {
             return $this->reject(trans('validation.required'));
         }
 
