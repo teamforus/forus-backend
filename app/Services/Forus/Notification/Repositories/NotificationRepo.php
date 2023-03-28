@@ -20,7 +20,6 @@ use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
 use App\Models\SystemNotification;
-use App\Notifications\BaseNotification;
 use App\Notifications\Identities\Employee\IdentityAddedEmployeeNotification;
 use App\Notifications\Identities\Employee\IdentityChangedEmployeeRolesNotification;
 use App\Notifications\Identities\Employee\IdentityRemovedEmployeeNotification;
