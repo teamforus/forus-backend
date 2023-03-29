@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use App\Models\Tag;
 use App\Scopes\Builders\FundProviderQuery;
+use App\Searches\FundSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
@@ -37,9 +38,9 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
-        $query = Fund::search($request->only([
+        $query = (new FundSearch($request->only([
             'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
-        ]), FundProvider::queryAvailableFunds($organization))->latest();
+        ]), FundProvider::queryAvailableFunds($organization)))->query()->latest();
 
         $meta = [
             'organizations' => Organization::whereHas('funds', function(Builder $builder) use ($query) {
