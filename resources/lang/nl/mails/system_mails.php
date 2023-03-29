@@ -32,6 +32,6 @@ return [
         'title' => 'Verzoek tot verwijdering van account'
     ],
     'fund_request_assigned_by_supervisor' => [
-        'title' => 'A fund request has been assigned'
+        'title' => 'Er is een aanvraag aan u toegewezen'
     ],
 ];

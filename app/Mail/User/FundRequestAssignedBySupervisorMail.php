@@ -24,7 +24,7 @@ class FundRequestAssignedBySupervisorMail extends ImplementationMail
     protected function getMailExtraData(array $data): array
     {
         return [
-            'button' => $this->makeButton($data['button_link'], 'View request'),
+            'button' => $this->makeButton($data['button_link'], 'Bekijk aanvraag'),
         ];
     }
 }

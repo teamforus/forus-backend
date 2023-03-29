@@ -1,9 +1,9 @@
-# Fund request for :fund_name
+# Aanvraag voor :fund_name beoordelen
 
 :email_logo
 
 Beste gebruiker,
 
-A request for :fund_name has been assigned to you at :supervisor_assigned_at_locale by :supervisor_employee_email
+Een aanvraag voor :fund_name is aan u toegewezen op :supervisor_assigned_at_locale door :supervisor_employee_email. De aanvraag kunt u nu beoordelen.
 
 :button

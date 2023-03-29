@@ -34,7 +34,7 @@
     },
     "notifications_identities.assigned_to_fund_request_by_supervisor": {
         "mail": {
-            "title": "You have been assigned to fund request",
+            "title": "Er is een aanvraag aan u toegewezen",
             "template": "notifications_identities/assigned_to_fund_request_by_supervisor.md"
         },
         "push": {},
