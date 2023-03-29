@@ -21,6 +21,7 @@ use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Scopes\Builders\FundQuery;
+use App\Searches\FundSearch;
 use App\Statistics\Funds\FinancialStatistic;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
@@ -44,10 +45,10 @@ class FundsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAny', [Fund::class, $organization]);
 
-        $query = Fund::search($request->only([
+        $query = (new FundSearch($request->only([
             'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by',
             'order_by_dir', 'with_archived', 'with_external', 'configured',
-        ]), $organization->funds()->getQuery());
+        ]), $organization->funds()->getQuery()))->query();
 
         if (!$request->isAuthenticated()) {
             $query->where('public', true);

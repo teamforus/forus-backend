@@ -221,7 +221,8 @@ class VoucherResource extends BaseJsonResource
         $reservable_count = $product['limit_available'] ?? null;
         $reservable_count = is_numeric($reservable_count) ? intval($reservable_count) : null;
         $reservable_expire_at = $expire_at?->format('Y-m-d');
-        $reservable_enabled = $product->reservationsEnabled($voucher->fund);
+        $allow_reservations = $voucher->fund->fund_config->allow_reservations;
+        $reservable_enabled = $allow_reservations && $product->reservationsEnabled($voucher->fund);
         $reservable = $reservable_count === null;
 
         if ($voucher->isBudgetType() && $reservable_count !== null) {
@@ -259,7 +260,9 @@ class VoucherResource extends BaseJsonResource
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
-        ], $fund->fund_config->only('allow_reimbursements'));
+        ], $fund->fund_config->only([
+            'allow_reimbursements', 'allow_reservations',
+        ]));
     }
 
     /**

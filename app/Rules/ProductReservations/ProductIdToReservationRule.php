@@ -66,6 +66,10 @@ class ProductIdToReservationRule extends BaseRule
             return $this->rejectTrans('invalid_product_price_type');
         }
 
+        if (!$voucher->fund->fund_config->allow_reservations) {
+            return $this->rejectTrans('reservation_not_allowed_by_fund');
+        }
+
         if ($voucher->fund->isTypeBudget() && ($product->price > $voucher->amount_available)) {
             return $this->rejectTrans('not_enough_voucher_funds');
         }
