@@ -3,13 +3,14 @@
 namespace Tests;
 
 use App\Models\Implementation;
+use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Tests\Traits\MakesTestIdentities;
 
 abstract class TestCase extends BaseTestCase
 {
-    use CreatesApplication, DoesTesting, MakesTestIdentities;
+    use CreatesApplication, DoesTesting, MakesTestIdentities, AssertsSentEmails;
 
     /**
      * @var string[]
