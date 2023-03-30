@@ -16,7 +16,7 @@ class IbanRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        return Iban::isValid(preg_replace('/\s+/', '', $value));
+        return (preg_replace('/\s+/', '', $value) == $value) && Iban::isValid($value);
     }
 
     /**
