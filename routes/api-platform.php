@@ -482,6 +482,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             "Api\Platform\Organizations\FundRequestsController@person"
         );
 
+        $router->get('organizations/{organization}/fund-requests/{fund_request}/notes', "Api\Platform\Organizations\FundRequestsController@notes");
+        $router->post('organizations/{organization}/fund-requests/{fund_request}/notes', "Api\Platform\Organizations\FundRequestsController@storeNote");
+        $router->delete('organizations/{organization}/fund-requests/{fund_request}/notes/{note}', "Api\Platform\Organizations\FundRequestsController@destroyNote");
+
         $router->resource(
             'organizations/{organization}/fund-requests',
             "Api\Platform\Organizations\FundRequestsController", [

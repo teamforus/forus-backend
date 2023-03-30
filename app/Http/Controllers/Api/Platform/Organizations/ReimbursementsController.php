@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Reimbursements\ApproveReimbursementsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Reimbursements\DeclineReimbursementsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Reimbursements\IndexReimbursementsRequest;
-use App\Http\Requests\Api\Platform\Organizations\Reimbursements\StoreReimbursementNoteRequest;
+use App\Http\Requests\Api\Platform\Organizations\StoreNoteRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\NoteResource;
 use App\Http\Resources\Sponsor\SponsorReimbursementResource;
@@ -167,14 +167,15 @@ class ReimbursementsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param StoreReimbursementNoteRequest $request
+     * @param StoreNoteRequest $request
      * @param Organization $organization
      * @param Reimbursement $reimbursement
      * @return NoteResource
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function storeNote(
-        StoreReimbursementNoteRequest $request,
+        StoreNoteRequest $request,
         Organization $organization,
         Reimbursement $reimbursement
     ): NoteResource {
@@ -194,6 +195,7 @@ class ReimbursementsController extends Controller
      * @param Note $note
      * @return JsonResponse
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function destroyNote(
         Organization $organization,

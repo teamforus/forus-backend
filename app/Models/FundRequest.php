@@ -7,6 +7,7 @@ use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequestRecords\FundRequestRecordAssigned;
 use App\Events\FundRequestRecords\FundRequestRecordResigned;
 use App\Events\FundRequests\FundRequestResolved;
+use App\Models\Traits\HasNotes;
 use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Searches\FundRequestSearch;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -68,7 +69,7 @@ use Illuminate\Http\Request;
  */
 class FundRequest extends BaseModel
 {
-    use HasLogs;
+    use HasLogs, HasNotes;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_APPROVED = 'approved';

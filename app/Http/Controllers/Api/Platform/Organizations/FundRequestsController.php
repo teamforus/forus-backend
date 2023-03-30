@@ -5,10 +5,15 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Http\Requests\Api\Platform\Funds\Requests\AssignEmployeeFundRequestRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DisregardFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\FundRequestPersonRequest;
+use App\Http\Requests\Api\Platform\Organizations\StoreNoteRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Arr\FundRequestPersonArrResource;
+use App\Http\Resources\NoteResource;
 use App\Models\Employee;
+use App\Models\Note;
 use App\Searches\FundRequestSearch;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
@@ -298,5 +303,70 @@ class FundRequestsController extends Controller
         }
 
         return new FundRequestPersonArrResource($person);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return AnonymousResourceCollection
+     * @throws AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function notes(
+        BaseFormRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest
+    ): AnonymousResourceCollection {
+        $this->authorize('viewAnyNoteAsValidator', [$fundRequest, $organization]);
+
+        return NoteResource::queryCollection($fundRequest->notes(), $request);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param StoreNoteRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return NoteResource
+     * @throws AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function storeNote(
+        StoreNoteRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest
+    ): NoteResource {
+        $this->authorize('storeNoteAsValidator', [$fundRequest, $organization]);
+
+        return NoteResource::create($fundRequest->addNote(
+            $request->input('description'),
+            $request->employee($organization),
+        ));
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @param Note $note
+     * @return JsonResponse
+     * @throws AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function destroyNote(
+        Organization $organization,
+        FundRequest $fundRequest,
+        Note $note,
+    ): JsonResponse {
+        $this->authorize('destroyNoteAsValidator', [$fundRequest, $organization, $note]);
+
+        $note->delete();
+
+        return new JsonResponse();
     }
 }

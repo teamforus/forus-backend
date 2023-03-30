@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Reimbursements;
+namespace App\Http\Requests\Api\Platform\Organizations;
 
 use App\Http\Requests\BaseFormRequest;
 
-class StoreReimbursementNoteRequest extends BaseFormRequest
+class StoreNoteRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -19,7 +19,7 @@ class StoreReimbursementNoteRequest extends BaseFormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, mixed>
+     * @return array
      */
     public function rules(): array
     {
