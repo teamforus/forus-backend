@@ -261,7 +261,7 @@ class VoucherResource extends BaseJsonResource
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
         ], $fund->fund_config->only([
-            'allow_reimbursements', 'allow_reservations',
+            'allow_reimbursements', 'allow_reservations', 'key',
         ]));
     }
 
