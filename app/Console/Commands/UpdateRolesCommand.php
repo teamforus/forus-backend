@@ -2,11 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Employee;
 use App\Models\Role;
 use Database\Seeders\PermissionsTableSeeder;
 use Database\Seeders\RolePermissionsTableSeeder;
 use Database\Seeders\RolesTableSeeder;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 
 class UpdateRolesCommand extends Command
 {
@@ -32,12 +34,12 @@ class UpdateRolesCommand extends Command
         $seeder = new RolesTableSeeder();
 
         $invalidEmptyRoles = Role::query()
-            ->whereDoesntHave('employees')
+            ->whereDoesntHave('employees', fn (Employee|Builder $b) => $b->withTrashed())
             ->whereNotIn('key', array_keys($seeder->getRoles()))
             ->pluck('key');
 
         $invalidUsedRoles = Role::query()
-            ->whereHas('employees')
+            ->whereHas('employees', fn (Employee|Builder $b) => $b->withTrashed())
             ->whereNotIn('key', array_keys($seeder->getRoles()))
             ->pluck('key');
 
