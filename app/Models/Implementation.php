@@ -89,6 +89,8 @@ use Illuminate\Support\Facades\Gate;
  * @property-read Media|null $email_logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
  * @property-read int|null $fund_configs_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationSocialMedia[] $social_medias
+ * @property-read int|null $social_medias_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
@@ -424,6 +426,14 @@ class Implementation extends BaseModel
     public function fund_configs(): HasMany
     {
         return $this->hasMany(FundConfig::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function social_medias(): HasMany
+    {
+        return $this->hasMany(ImplementationSocialMedia::class);
     }
 
     /**

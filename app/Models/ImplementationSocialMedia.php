@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+/**
+ * App\Models\ImplementationSocialMedia
+ *
+ * @property int $id
+ * @property int $implementation_id
+ * @property string $type
+ * @property string $link
+ * @property string $title
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia query()
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereLink($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
+class ImplementationSocialMedia extends Model
+{
+    /**
+     * @var string[]
+     */
+    protected $fillable = [
+        'implementation_id', 'type', 'link', 'title'
+    ];
+}

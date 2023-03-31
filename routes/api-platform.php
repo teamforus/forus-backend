@@ -331,6 +331,13 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     ])->only('index', 'store', 'show', 'update', 'destroy');
 
     $router->resource(
+        'organizations/{organization}/implementations/{implementation}/social-medias',
+        "Api\Platform\Organizations\Implementations\ImplementationSocialMediaController"
+    )->parameters([
+        'social-medias' => 'implementation_social_media',
+    ])->only('index', 'store', 'show', 'update', 'destroy');
+
+    $router->resource(
         'organizations/{organization}/implementations/{implementation}/system-notifications',
         "Api\Platform\Organizations\Implementations\SystemNotificationsController"
     )->only('index', 'show', 'update');

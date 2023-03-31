@@ -13,6 +13,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Implementation;
+use App\Models\ImplementationSocialMedia;
 use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Product;
@@ -190,6 +191,10 @@ class RouteServiceProvider extends ServiceProvider
 
         $router->bind('voucher_transaction_bulks', static function ($value) {
             return VoucherTransactionBulk::findOrFail($value);
+        });
+
+        $router->bind('implementation_social_media', static function ($value) {
+            return ImplementationSocialMedia::findOrFail($value);
         });
     }
 
