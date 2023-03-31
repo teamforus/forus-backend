@@ -58,13 +58,13 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
         }
 
         // product existence
-        if (!$product) {
-            return $this->reject("Aanbod niet gevonden.");
+        if (!$voucher) {
+            return $this->reject("Tegoed niet gevonden.");
         }
 
         // product existence
-        if (!$voucher) {
-            return $this->reject("Tegoed niet gevonden.");
+        if (!$product) {
+            return $this->reject("Aanbod niet gevonden.");
         }
 
         // validate voucher and provider organization
@@ -119,6 +119,11 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
         // The provider didn't enabled budget products reservation
         if ($voucher->fund->isTypeBudget() && !$product['reservations_budget_enabled']) {
             return 'U mag geen reserveringen plaatsen voor budget fondsen.';
+        }
+
+        // The fund doesn't allow reservations
+        if (!$voucher->fund->fund_config->allow_reservations) {
+            return 'The fund is not allowing reservations';
         }
 
         // product belongs to another organization

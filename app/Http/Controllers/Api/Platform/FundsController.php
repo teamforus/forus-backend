@@ -15,6 +15,7 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
+use App\Searches\FundSearch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -36,10 +37,11 @@ class FundsController extends Controller
             Fund::STATE_ACTIVE,
         ] : Fund::STATE_ACTIVE;
 
-        $query = Fund::search($request->only([
+        $query = (new FundSearch($request->only([
             'tag', 'tag_id', 'organization_id', 'fund_id', 'q', 'implementation_id',
-            'order_by', 'order_by_dir', 'with_external',
-        ]), Implementation::queryFundsByState($state));
+            'with_external', 'has_products', 'has_subsidies', 'has_providers',
+            'order_by', 'order_by_dir',
+        ]), Implementation::queryFundsByState($state)))->query();
 
         $organizations = Organization::whereIn('id', (clone $query)->select('organization_id'))->get();
         $organizations = $organizations->map(fn(Organization $item) => $item->only('id', 'name'));

@@ -4,24 +4,25 @@ namespace App\Listeners;
 
 use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
 use App\Events\FundRequestRecords\FundRequestRecordApproved;
-use App\Events\FundRequests\FundRequestAssigned;
-use App\Events\FundRequests\FundRequestResigned;
-use App\Events\FundRequestRecords\FundRequestRecordDeclined;
-use App\Events\FundRequests\FundRequestCreated;
 use App\Events\FundRequestRecords\FundRequestRecordAssigned;
+use App\Events\FundRequestRecords\FundRequestRecordDeclined;
 use App\Events\FundRequestRecords\FundRequestRecordResigned;
+use App\Events\FundRequests\FundRequestAssigned;
+use App\Events\FundRequests\FundRequestCreated;
+use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
+use App\Notifications\Identities\Employee\IdentityAssignedToFundRequestBySupervisorNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRequestedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
-use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRequestedNotification;
+use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Gate;
@@ -121,16 +122,18 @@ class FundRequestSubscriber
      */
     public function onFundRequestAssigned(FundRequestAssigned $event): void
     {
+        $employee = $event->getEmployee();
         $fundRequest = $event->getFundRequest();
         $supervisorEmployee = $event->getSupervisorEmployee();
+        $eventModels = $this->getFundRequestLogModels($fundRequest, compact('employee'));
 
-        $eventModels = $this->getFundRequestLogModels($fundRequest, [
-            'employee' => $event->getEmployee(),
-        ]);
+        $rawMeta = $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [];
+        $eventLog = $employee->log($employee::EVENT_FUND_REQUEST_ASSIGNED, $eventModels, $rawMeta);
+        $fundRequest->log($fundRequest::EVENT_ASSIGNED, $eventModels, $rawMeta);
 
-        $fundRequest->log($fundRequest::EVENT_ASSIGNED, $eventModels, array_merge(
-            $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [],
-        ));
+        if ($supervisorEmployee) {
+            IdentityAssignedToFundRequestBySupervisorNotification::send($eventLog);
+        }
     }
 
     /**
@@ -261,10 +264,10 @@ class FundRequestSubscriber
     }
 
     /**
-     * @param Employee|null $supervisor
+     * @param Employee $supervisor
      * @return array
      */
-    private function getSupervisorFields(?Employee $supervisor): array
+    private function getSupervisorFields(Employee $supervisor): array
     {
         return [
             'supervisor_employee_id' => $supervisor->id,

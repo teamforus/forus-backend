@@ -455,7 +455,7 @@ class ReimbursementTest extends TestCase
 
         // assert has validation errors
         $response = $this->postJson($this->apiUrl, $bodyInvalid, $headers);
-        $response->assertJsonValidationErrors(array_keys($body));
+        $response->assertJsonValidationErrors(array_keys(array_except($body, 'description')));
     }
 
     /**

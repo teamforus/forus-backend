@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Voucher;
 use App\Rules\BaseRule;
 use App\Scopes\Builders\ProductSubQuery;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProviderProductReservationBatchRule extends BaseRule
 {
@@ -65,10 +66,16 @@ class ProviderProductReservationBatchRule extends BaseRule
     public function inflateReservationsData(array $reservations = []): array
     {
         $data = collect($reservations)->map(function($reservation) {
-            $voucher = Voucher::findByPhysicalCard($reservation['number']);
-            $voucher_id = $voucher?->id;
+            $voucher = Voucher::findByPhysicalCardQuery($reservation['number']);
 
-            return array_merge(compact('voucher', 'voucher_id'), $reservation);
+            $voucher = $voucher->whereHas('fund', function (Builder $builder) {
+                $builder->whereRelation('fund_config', 'allow_reservations', true);
+            })->first();
+
+            return array_merge([
+                'voucher' => $voucher,
+                'voucher_id' => $voucher?->id,
+            ], $reservation);
         });
 
         $groupedData = $data->filter(function($row) {
