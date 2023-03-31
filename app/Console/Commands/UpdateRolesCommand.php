@@ -31,12 +31,26 @@ class UpdateRolesCommand extends Command
     {
         $seeder = new RolesTableSeeder();
 
-        $invalidRoles = Role::whereHas('employees')
+        $invalidEmptyRoles = Role::query()
+            ->whereDoesntHave('employees')
             ->whereNotIn('key', array_keys($seeder->getRoles()))
-            ->exists();
+            ->pluck('key');
 
-        if ($invalidRoles) {
-            $this->warn('There are employees with roles attached, not existing in seeder file');
+        $invalidUsedRoles = Role::query()
+            ->whereHas('employees')
+            ->whereNotIn('key', array_keys($seeder->getRoles()))
+            ->pluck('key');
+
+        if ($invalidEmptyRoles->isNotEmpty() || $invalidUsedRoles->isNotEmpty()) {
+            $this->warn(implode("\n", array_filter([
+                'The system currently uses roles that are not in the seed file.',
+                'Please delete or update the following roles manually and try again: ',
+                $invalidEmptyRoles->isNotEmpty() ?
+                    ' - Roles without employees: ' . $invalidEmptyRoles->join(', ') . '.' : null,
+                $invalidUsedRoles->isNotEmpty() ?
+                    ' - Roles with employees: ' . $invalidUsedRoles->join(', ') . '.' : null,
+            ])));
+
             return;
         }
 
