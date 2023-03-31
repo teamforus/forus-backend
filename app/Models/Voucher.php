@@ -1008,7 +1008,7 @@ class Voucher extends BaseModel
             'fund_provider_product_id'  => $fundProviderProduct?->id,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
         ], array_only($extraData, [
-            'first_name', 'last_name', 'user_note', 'note',
+            'first_name', 'last_name', 'user_note', 'note', 'phone', 'address', 'birth_date'
         ]), $product->only('price', 'price_type', 'price_discount')));
 
         $reservation->makeVoucher();
@@ -1175,19 +1175,31 @@ class Voucher extends BaseModel
     /**
      * @param string $number
      * @param string|null $identity_address
-     * @return Voucher|null
+     * @return Builder|Voucher
      */
-    public static function findByPhysicalCard(
+    public static function findByPhysicalCardQuery(
         string $number,
         ?string $identity_address = null
-    ): ?Voucher {
+    ): Builder|Voucher {
         return self::whereHas('fund.fund_config', static function (Builder $builder) {
             $builder->where('allow_physical_cards', '=', true);
         })->whereHas('physical_cards', static function (Builder $builder) use ($number) {
             $builder->where('code', '=', $number);
         })->where(static function(Builder $builder) use ($identity_address) {
             $identity_address && $builder->where('identity_address', '=', $identity_address);
-        })->first();
+        });
+    }
+
+    /**
+     * @param string $number
+     * @param string|null $identity_address
+     * @return Voucher|null
+     */
+    public static function findByPhysicalCard(
+        string $number,
+        ?string $identity_address = null
+    ): ?Voucher {
+        return static::findByPhysicalCardQuery($number, $identity_address)->first();
     }
 
     /**

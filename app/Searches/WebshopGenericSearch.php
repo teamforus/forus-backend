@@ -4,7 +4,6 @@
 namespace App\Searches;
 
 
-use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
@@ -85,7 +84,7 @@ class WebshopGenericSearch
      */
     protected function queryProducts(array $options): Builder
     {
-        return Product::search($options)->withoutTrashed();
+        return Product::search($options)->where('show_on_webshop', true)->withoutTrashed();
     }
 
     /**
@@ -103,7 +102,7 @@ class WebshopGenericSearch
      */
     protected function queryFunds(array $options): Builder
     {
-        return Fund::search($options, Implementation::activeFundsQuery());
+        return (new FundSearch($options, Implementation::activeFundsQuery()))->query();
     }
 
     /**

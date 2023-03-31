@@ -7,6 +7,7 @@ use App\Console\Commands\BankUpdateContextSessionsCommand;
 use App\Console\Commands\BankVoucherTransactionBulksBuildCommand;
 use App\Console\Commands\BankVoucherTransactionBulksUpdateStateCommand;
 use App\Console\Commands\BankVoucherTransactionProcessZeroAmountCommand;
+use App\Console\Commands\BankConnections\BankConnectionsInspectCommand;
 use App\Console\Commands\CalculateFundUsersCommand;
 use App\Console\Commands\CheckFundStateCommand;
 use App\Console\Commands\CheckProductExpirationCommand;
@@ -93,6 +94,9 @@ class Kernel extends ConsoleKernel
         MigratePhysicalCardsCommand::class,
         UpdateSessionsExpirationCommand::class,
         SendBackofficeLogsCommand::class,
+
+        // bank connections
+        BankConnectionsInspectCommand::class,
 
         // seeders
         UpdateProductCategoriesCommand::class,

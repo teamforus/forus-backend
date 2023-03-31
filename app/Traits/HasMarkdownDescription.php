@@ -2,8 +2,8 @@
 
 namespace App\Traits;
 
-use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\Models\Media;
+use App\Services\MediaService\Models\MediaPreset;
 use App\Services\MediaService\Traits\HasMedia;
 use DOMDocument;
 use DOMElement;
@@ -22,7 +22,8 @@ use Eloquent;
  * @mixin Eloquent
  * @mixin HasMedia
  */
-trait HasMarkdownDescription {
+trait HasMarkdownDescription
+{
     /**
      * @return string
      * @noinspection PhpUnused
@@ -104,12 +105,20 @@ trait HasMarkdownDescription {
     }
 
     /**
+     * @return Builder|MediaPreset
+     */
+    protected function getDescriptionMarkdownMediaPresetsQuery(): Builder|MediaPreset
+    {
+        return MediaPreset::query()->whereIn('path', $this->getDescriptionMarkdownMediaPaths());
+    }
+
+    /**
      * @return Builder|Media
      */
-    protected function getDescriptionMarkdownMediaQuery(): Builder|Media
+    public function getDescriptionMarkdownMediaQuery(): Builder|Media
     {
         return Media::whereRelation('presets', function(Builder|MediaPreset $builder) {
-            $builder->whereIn('path', $this->getDescriptionMarkdownMediaPaths());
+            $builder->whereIn('id', $this->getDescriptionMarkdownMediaPresetsQuery()->select('id'));
         });
     }
 
@@ -117,27 +126,60 @@ trait HasMarkdownDescription {
      * @param string $mediaType
      * @return Builder|Media
      */
-    public function getDescriptionMarkdownMediaValidQuery(string $mediaType): Builder|Media
-    {
-        return $this->getDescriptionMarkdownMediaQuery()
-            ->where('type', $mediaType)
-            ->where(function (Builder $builder) {
+    public function getDescriptionMarkdownMediaPresetsValidQuery(
+        string $mediaType
+    ): Builder|MediaPreset {
+        $presets = $this->getDescriptionMarkdownMediaPresetsQuery();
+
+        return $presets->whereHas('media', function (Builder|Media $builder) use ($mediaType) {
+            $builder->where('type', $mediaType);
+            $builder->where(function (Builder $builder) {
                 $builder->whereNull('mediable_id');
                 $builder->orWhereHasMorph('mediable', $this->getMorphClass(), function(Builder $builder) {
-                    $builder->where('mediable_id', $this->id);
+                    $builder->where('mediable_id', $this->getKey());
                 });
             });
+        });
+    }
+
+    /**
+     * @param string $mediaType
+     * @return Builder|Media
+     */
+    public function getDescriptionMarkdownMediaPresetsInValidQuery(
+        string $mediaType,
+    ): Builder|MediaPreset {
+        $presets = $this->getDescriptionMarkdownMediaPresetsQuery();
+        $validPresets = $this->getDescriptionMarkdownMediaPresetsValidQuery($mediaType);
+
+        return (clone $presets)->whereNotIn('id', (clone $validPresets->select('id')));
     }
 
     /**
      * @param string $mediaType
      * @return bool
+     * @throws \Throwable
      */
     public function syncDescriptionMarkdownMedia(string $mediaType): bool
     {
-        return $this->syncMedia(
-            $this->getDescriptionMarkdownMediaValidQuery($mediaType)->pluck('uid')->toArray(),
-            $mediaType
-        );
+        $presetsInvalid = $this->getDescriptionMarkdownMediaPresetsInValidQuery($mediaType)->get();
+
+        $description = $presetsInvalid->reduce(function ($description, MediaPreset $preset) use ($mediaType) {
+            $newMedia = resolve('media')->cloneMedia($preset->media, $mediaType);
+            $newMedia->update(['identity_address' => auth()->id()]);
+            $newPreset = $newMedia->findPreset($preset->key);
+            $imageUrl = $newPreset ?: $newMedia->presets()->where('key', '!=', 'original')->first();
+
+            return str_replace($preset->urlPublic(), $imageUrl->urlPublic(), $description);
+        }, $this->description);
+
+        if ($presetsInvalid->count() > 0) {
+            $this->update(compact('description'));
+        }
+
+        $presetsToSyncQuery = $this->getDescriptionMarkdownMediaPresetsValidQuery($mediaType);
+        $mediaToSync = Media::whereIn('id', $presetsToSyncQuery->select('media_id'));
+
+        return $this->syncMedia($mediaToSync->pluck('uid')->toArray(), $mediaType);
     }
 }

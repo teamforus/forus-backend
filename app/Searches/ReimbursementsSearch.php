@@ -3,9 +3,6 @@
 
 namespace App\Searches;
 
-
-use App\Models\Identity;
-use App\Models\IdentityEmail;
 use App\Models\Reimbursement;
 use App\Scopes\Builders\ReimbursementQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -109,12 +106,8 @@ class ReimbursementsSearch extends BaseSearch
         if ($this->hasFilter('q') && $this->getFilter('q')) {
             return $builder->whereHas('voucher.identity', function(Builder $builder) {
                 $q = $this->getFilter('q');
-
-                $addresses = IdentityEmail::searchByEmail($q)->pluck('identity_address');
-                $bsnIdentities = Identity::searchByBsn($q)?->pluck('address');
-
-                $builder->whereIn('address', $addresses ?: []);
-                $builder->orWhereIn('address', $bsnIdentities ?: []);
+                $builder->whereRelation('primary_email', 'email', 'LIKE', "%$q%");
+                $builder->orWhereRelation('record_bsn', 'value', 'LIKE', "%$q%");
             });
         }
 

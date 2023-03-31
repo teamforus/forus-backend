@@ -47,6 +47,8 @@ class Employee extends BaseModel
     public const EVENT_UPDATED = 'updated';
     public const EVENT_DELETED = 'deleted';
 
+    public const EVENT_FUND_REQUEST_ASSIGNED = 'fund_request_assigned';
+
     protected $fillable = [
         'identity_address', 'organization_id'
     ];

@@ -3,28 +3,30 @@
 namespace Tests\Browser;
 
 use App\Mail\User\IdentityEmailVerificationMail;
+use App\Models\Employee;
 use App\Models\Identity;
 use App\Models\IdentityEmail;
-use App\Models\IdentityProxy;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Role;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Carbon\Carbon;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestIdentities;
 
 class IdentityEmailTest extends DuskTestCase
 {
-    use AssertsSentEmails, MakesTestIdentities;
+    use AssertsSentEmails, MakesTestIdentities, HasFrontendActions;
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testIdentityEmailWebshopExample(): void
+    public function testIdentityEmailsPageOnWebshop(): void
     {
         Cache::clear();
 
@@ -39,13 +41,13 @@ class IdentityEmailTest extends DuskTestCase
      * @return void
      * @throws \Throwable
      */
-    public function testIdentityEmailSponsorDashboardExample(): void
+    public function testIdentityEmailsPageOnSponsorDashboard(): void
     {
         Cache::clear();
 
         $this->makeIdentityEmailTests(
             Implementation::general(),
-            Organization::whereHas('funds')->first()->identity,
+            $this->makeOrganizationIdentity(Organization::whereHas('funds')->first())->identity,
             'sponsor'
         );
     }
@@ -54,13 +56,13 @@ class IdentityEmailTest extends DuskTestCase
      * @return void
      * @throws \Throwable
      */
-    public function testIdentityEmailProviderDashboardExample(): void
+    public function testIdentityEmailsPageOnProviderDashboard(): void
     {
         Cache::clear();
 
         $this->makeIdentityEmailTests(
             Implementation::general(),
-            Organization::whereHas('products')->first()->identity,
+            $this->makeOrganizationIdentity(Organization::whereHas('products')->first())->identity,
             'provider'
         );
     }
@@ -69,15 +71,27 @@ class IdentityEmailTest extends DuskTestCase
      * @return void
      * @throws \Throwable
      */
-    public function testIdentityEmailValidatorDashboardExample(): void
+    public function testIdentityEmailsPageOnValidatorDashboard(): void
     {
         Cache::clear();
 
         $this->makeIdentityEmailTests(
             Implementation::general(),
-            Organization::whereHas('funds')->first()->identity,
+            $this->makeOrganizationIdentity(Organization::whereHas('funds')->first())->identity,
             'validator'
         );
+    }
+
+    /**
+     * @param Organization $organization
+     * @return Employee
+     */
+    private function makeOrganizationIdentity(Organization $organization): Employee
+    {
+        $identity = $this->makeIdentity();
+        $identity->addEmail($this->makeUniqueEmail(), true, true, true);
+
+        return $organization->addEmployee($identity, Role::pluck('id')->toArray());
     }
 
     /**
@@ -93,19 +107,17 @@ class IdentityEmailTest extends DuskTestCase
         string $frontend
     ): void {
         $this->browse(function (Browser $browser) use ($implementation, $identity, $frontend) {
-            $proxy = $this->makeIdentityProxy($identity, true, 'email_code');
-
             // Visit the url and wait for the page to load
             $browser->visit($implementation->urlFrontend($frontend));
 
             // Authorize identity
-            $this->applyIdentityProxy($browser, $proxy);
-            $browser->pause(2000);
+            $this->loginIdentity($browser, $identity);
+            $this->assertIdentityAuthenticatedFrontend($browser, $identity, $frontend);
 
-            $this->goToIdentityEmailPage($browser, $identity);
+            $this->goToIdentityEmailPage($browser, $identity, $frontend);
             $browser->pause(3000);
 
-            $email = $this->addNewEmail($browser, $proxy->identity);
+            $email = $this->addNewEmail($browser, $identity);
 
             // Check if email exists in database
             /** @var IdentityEmail $identityEmail */
@@ -119,7 +131,7 @@ class IdentityEmailTest extends DuskTestCase
             $browser->visit($this->findFirstEmailVerificationLink($identityEmail->email, $startTime));
             $browser->pause(2000);
 
-            $this->goToIdentityEmailPage($browser, $identity);
+            $this->goToIdentityEmailPage($browser, $identity, $frontend);
             $browser->pause(3000);
 
             $this->setEmailAsPrimary($browser, $identityEmail);
@@ -131,10 +143,11 @@ class IdentityEmailTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Identity $identity
+     * @param string $frontend
      * @return void
-     * @throws TimeOutException
+     * @throws TimeoutException
      */
-    private function goToIdentityEmailPage(Browser $browser, Identity $identity): void
+    private function goToIdentityEmailPage(Browser $browser, Identity $identity, string $frontend): void
     {
         $browser->pause(2000);
 
@@ -142,12 +155,10 @@ class IdentityEmailTest extends DuskTestCase
             $browser->element('@identityEmailConfirmedButton')->click();
         }
 
-        $browser->waitFor('@identityEmail');
-        $browser->assertSeeIn('@identityEmail', $identity->email);
+        $this->assertIdentityAuthenticatedFrontend($browser, $identity, $frontend);
 
-        $browser->waitFor('@identityEmail');
+        $browser->waitFor('@userProfile');
         $browser->element('@userProfile')->click();
-
         $browser->waitFor('@btnUserEmails');
         $browser->element('@btnUserEmails')->click();
     }
@@ -160,6 +171,7 @@ class IdentityEmailTest extends DuskTestCase
      */
     private function deleteEmail(Browser $browser, Identity $identity): void
     {
+        /** @var IdentityEmail $notPrimaryEmail */
         $notPrimaryEmail = $identity->emails()->where('primary', false)->first();
 
         $browser->within('#email_' . $notPrimaryEmail->id, function(Browser $browser) {
@@ -254,28 +266,5 @@ class IdentityEmailTest extends DuskTestCase
         $this->assertEmailVerificationLinkSent($email, $startTime);
 
         return $email;
-    }
-
-    /**
-     * @param Browser $browser
-     * @param IdentityProxy $proxy
-     * @return void
-     */
-    protected function applyIdentityProxy(Browser $browser, IdentityProxy $proxy): void
-    {
-        $browser->script("localStorage.setItem('active_account', '$proxy->access_token')");
-        $browser->refresh();
-    }
-
-    /**
-     * @param Browser $browser
-     * @return void
-     * @throws TimeOutException
-     */
-    private function logout(Browser $browser): void
-    {
-        $browser->element('@userProfile')->click();
-        $browser->waitFor('@btnUserLogout');
-        $browser->element('@btnUserLogout')->click();
     }
 }

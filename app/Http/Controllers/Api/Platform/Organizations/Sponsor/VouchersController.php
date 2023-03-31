@@ -24,6 +24,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\Identity;
+use App\Scopes\Builders\VoucherSubQuery;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -430,9 +431,13 @@ class VouchersController extends Controller
         $qrFormat = $request->get('qr_format');
         $dataFormat = $request->get('data_format', 'csv');
 
-        $vouchers = Voucher::searchSponsorQuery($request, $organization, $fund)->with([
+        $query = Voucher::searchSponsorQuery($request, $organization, $fund);
+        $query = VoucherSubQuery::appendFirstUseFields($query);
+
+        $vouchers = $query->with([
             'transactions', 'voucher_relation', 'product', 'fund',
-            'token_without_confirmation', 'identity.primary_email', 'product_vouchers'
+            'token_without_confirmation', 'identity.primary_email', 'identity.record_bsn',
+            'product_vouchers', 'top_up_transactions',
         ])->get();
 
         $exportData = Voucher::exportData($vouchers, $fields, $dataFormat, $qrFormat);

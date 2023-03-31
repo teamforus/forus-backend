@@ -38,7 +38,7 @@ class BankProcessFundTopUpsCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return void
      * @throws Throwable
      */
     public function handle(): void
@@ -50,7 +50,7 @@ class BankProcessFundTopUpsCommand extends Command
     /**
      * @return void
      */
-    public function processBankConnectionBalance()
+    public function processBankConnectionBalance(): void
     {
         $organizations = Organization::whereHas('funds', function(Builder $builder) {
             $balanceProvider = Fund::BALANCE_PROVIDER_BANK_CONNECTION;
@@ -90,6 +90,7 @@ class BankProcessFundTopUpsCommand extends Command
         $payments = $bankConnection->fetchPayments();
 
         if (!$payments) {
+            $this->info("Could not fetch top-ups for \"$fund->name\" fund.");
             return;
         }
 
@@ -110,7 +111,7 @@ class BankProcessFundTopUpsCommand extends Command
         FundTopUp $topUp,
         BankConnection $connection
     ): void {
-        if (strpos(strtolower($payment->getDescription()), strtolower($topUp->code)) === FALSE) {
+        if (!str_contains(strtolower($payment->getDescription()), strtolower($topUp->code))) {
             return;
         }
 

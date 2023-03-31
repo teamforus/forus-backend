@@ -11,12 +11,15 @@ use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Sponsor\IdentityBsnResource;
 use App\Http\Resources\Sponsor\IdentityResource;
 use App\Models\Fund;
+use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Notifications\Identities\Fund\IdentityRequesterSponsorCustomNotification;
+use App\Scopes\Builders\FundProviderQuery;
 use App\Searches\Sponsor\FundIdentitiesSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Database\Eloquent\Builder;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class IdentitiesController extends Controller
@@ -148,6 +151,20 @@ class IdentitiesController extends Controller
 
         if ($request->input('target') === 'self') {
             $identities = $request->identity()->id;
+        } elseif ($request->input('target') === 'providers_all') {
+            $providers = FundProvider::whereFundId($fund->id)->get();
+            $providers->load("organization.identity");
+            $identities = $providers->pluck('organization.identity.id')->toArray();
+        } elseif ($request->input('target') === 'providers_approved') {
+            $providers = FundProvider::with("organization.identity")->where(function (Builder $builder) use ($fund) {
+                FundProviderQuery::whereApprovedForFundsFilter($builder, $fund->id);
+            })->get();
+            $identities = $providers->pluck("organization.identity.id")->toArray();
+        } elseif ($request->input('target') === 'providers_rejected') {
+            $declinedProviders = FundProvider::with("organization.identity")->where(function (Builder $builder) use ($fund) {
+                FundProviderQuery::whereDeclinedForFundsFilter($builder, $fund->id);
+            })->get();
+            $identities = $declinedProviders->pluck("organization.identity.id")->toArray();
         } else {
             $search = new FundIdentitiesSearch($request->only(array_filter($filters)), $fund);
             $identities = $search->query()->pluck('id')->toArray();

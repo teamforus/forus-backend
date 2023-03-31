@@ -116,7 +116,7 @@ class ProvidersController extends Controller
             'product_category_ids', 'provider_ids', 'postcodes', 'fund_ids'
         ]), [
             'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
-            'date_to' => $from ? Carbon::parse($to)->endOfDay() : null,
+            'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,
         ]))->with(ProviderFinancialResource::$load);
 
         return ProviderFinancialResource::collection($providers->paginate(
@@ -148,7 +148,7 @@ class ProvidersController extends Controller
             'product_category_ids', 'provider_ids', 'postcodes', 'fund_ids'
         ]), [
             'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
-            'date_to' => $from ? Carbon::parse($to)->endOfDay() : null,
+            'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,
         ]))->with(ProviderFinancialResource::$load)->get();
 
         $type = $request->input('export_format', 'xls');
