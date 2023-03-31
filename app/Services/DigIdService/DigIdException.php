@@ -7,7 +7,7 @@ use Exception;
 
 class DigIdException extends Exception
 {
-    protected mixed $digIdErrorCode;
+    protected mixed $digIdErrorCode = null;
 
     /**
      * @return mixed
@@ -26,13 +26,5 @@ class DigIdException extends Exception
         $this->digIdErrorCode = $errorCode;
 
         return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function __toString()
-    {
-        return parent::__toString();
     }
 }

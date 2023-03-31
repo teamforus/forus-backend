@@ -15,11 +15,11 @@ use Illuminate\Support\Facades\Lang;
 class ProductQuery
 {
     /**
-     * @param Builder $query
+     * @param Builder|Product $query
      * @param array|int $fund_id
-     * @return Builder
+     * @return Builder|Product
      */
-    public static function approvedForFundsFilter(Builder $query, array|int $fund_id): Builder
+    public static function approvedForFundsFilter(Builder|Product $query, array|int $fund_id): Builder|Product
     {
         return $query->where(static function(Builder $builder) use ($fund_id) {
             self::whereFundNotExcluded($builder, $fund_id);
@@ -32,16 +32,12 @@ class ProductQuery
                 });
 
                 $builder->orWhereHas('organization.fund_providers', static function(Builder $builder) use ($fund_id) {
+                    $builder->whereIn('fund_id', (array) $fund_id);
                     $builder->where('state', FundProvider::STATE_ACCEPTED);
                     FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id);
 
-                    $builder->where([
-                        'allow_products' => TRUE,
-                    ])->whereIn('fund_id', (array) $fund_id);
-
-                    $builder->whereHas('fund', function(Builder $builder) {
-                        $builder->where('type', '=', Fund::TYPE_BUDGET);
-                    });
+                    $builder->whereRelation('fund', 'type', Fund::TYPE_BUDGET);
+                    $builder->where('allow_products', true);
                 });
             });
         });
@@ -302,6 +298,10 @@ class ProductQuery
 
         if ($checkReservationFlags) {
             self::whereReservationEnabled($builder, $voucher->fund->isTypeSubsidy() ? 'subsidy' : 'budget');
+
+            if (!$voucher->fund->fund_config->allow_reservations) {
+                $builder->whereIn('id', []);
+            }
         }
 
         return $builder;

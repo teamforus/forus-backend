@@ -2,16 +2,13 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Product;
 use App\Rules\MediaUidRule;
 
 /**
- * Class UpdateProductRequest
  * @property Product $product
- * @package App\Http\Requests\Api\Platform\Organizations\Products
  */
-class UpdateProductRequest extends BaseFormRequest
+class UpdateProductRequest extends BaseProductRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -34,7 +31,7 @@ class UpdateProductRequest extends BaseFormRequest
         $price_type = $this->input('price_type');
         $minAmount = $product->countReserved() + $product->countSold();
 
-        return [
+        return array_merge([
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,2500',
             'price'                 => 'required_if:price_type,regular|numeric|min:.2',
@@ -52,9 +49,9 @@ class UpdateProductRequest extends BaseFormRequest
             'expire_at'             => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
             'media_uid'             => ['nullable', new MediaUidRule('product_photo')],
-            'reservation_enabled'   => 'nullable|boolean',
-            'reservation_policy'    => 'nullable|in:' . join(',', Product::RESERVATION_POLICIES),
-        ];
+        ], array_merge([
+            static::reservationRules(),
+        ]));
     }
 
     /**

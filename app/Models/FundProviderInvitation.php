@@ -97,7 +97,7 @@ class FundProviderInvitation extends BaseModel
      * @param Fund $fundTo
      * @return Builder|Collection
      */
-    public static function inviteFromFundToFund(Fund $fundFrom, Fund $fundTo): Collection
+    public static function inviteFromFundToFund(Fund $fundFrom, Fund $fundTo): Builder|Collection
     {
         $alreadyProviders = $fundTo->provider_organizations_approved->pluck('id');
         $alreadyInvited = $fundFrom->provider_invitations()->where([
@@ -131,6 +131,7 @@ class FundProviderInvitation extends BaseModel
      * Invitation is expired
      *
      * @return bool
+     * @noinspection PhpUnused
      */
     public function getExpiredAttribute(): bool
     {
@@ -143,6 +144,7 @@ class FundProviderInvitation extends BaseModel
      * Date when invitation will expire
      *
      * @return \Carbon\Carbon
+     * @noinspection PhpUnused
      */
     public function getExpireAtAttribute(): Carbon
     {
@@ -161,5 +163,29 @@ class FundProviderInvitation extends BaseModel
         return $this->updateModel([
             'state' => self::STATE_ACCEPTED,
         ]);
+    }
+
+    /**
+     * @return bool
+     */
+    public function canBeAccepted(): bool
+    {
+        return !$this->fund->isClosed() && $this->isPending() && !$this->isExpired();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        return $this->state == self::STATE_PENDING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExpired(): bool
+    {
+        return $this->expired;
     }
 }

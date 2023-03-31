@@ -40,7 +40,10 @@ class PermissionsTableSeeder extends Seeder
     public function run(): void
     {
         foreach ($this->permissions as $key => $name) {
-            Permission::create(compact('name', 'key'));
+            Permission::updateOrCreate(
+                compact('key'),
+                compact('name')
+            );
         }
     }
 }

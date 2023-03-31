@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Events\ProductReservations\ProductReservationCreated;
 use App\Events\Reimbursements\ReimbursementCreated;
 use App\Events\Reimbursements\ReimbursementSubmitted;
+use App\Events\VoucherRecords\VoucherRecordCreated;
 use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
@@ -124,6 +125,8 @@ use ZipArchive;
  * @property-read int|null $top_up_transactions_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $transactions
  * @property-read int|null $transactions_count
+ * @property-read Collection|\App\Models\VoucherRecord[] $voucher_records
+ * @property-read int|null $voucher_records_count
  * @property-read \App\Models\VoucherRelation|null $voucher_relation
  * @method static Builder|Voucher newModelQuery()
  * @method static Builder|Voucher newQuery()
@@ -438,6 +441,15 @@ class Voucher extends BaseModel
         return $this->hasMany(self::class, 'parent_id')->where(function(Builder $builder) {
             VoucherQuery::whereIsProductVoucher($builder);
         });
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function voucher_records(): HasMany
+    {
+        return $this->hasMany(VoucherRecord::class);
     }
 
     /**
@@ -996,7 +1008,7 @@ class Voucher extends BaseModel
             'fund_provider_product_id'  => $fundProviderProduct?->id,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
         ], array_only($extraData, [
-            'first_name', 'last_name', 'user_note', 'note',
+            'first_name', 'last_name', 'user_note', 'note', 'phone', 'address', 'birth_date'
         ]), $product->only('price', 'price_type', 'price_discount')));
 
         $reservation->makeVoucher();
@@ -1163,19 +1175,31 @@ class Voucher extends BaseModel
     /**
      * @param string $number
      * @param string|null $identity_address
-     * @return Voucher|null
+     * @return Builder|Voucher
      */
-    public static function findByPhysicalCard(
+    public static function findByPhysicalCardQuery(
         string $number,
         ?string $identity_address = null
-    ): ?Voucher {
+    ): Builder|Voucher {
         return self::whereHas('fund.fund_config', static function (Builder $builder) {
             $builder->where('allow_physical_cards', '=', true);
         })->whereHas('physical_cards', static function (Builder $builder) use ($number) {
             $builder->where('code', '=', $number);
         })->where(static function(Builder $builder) use ($identity_address) {
             $identity_address && $builder->where('identity_address', '=', $identity_address);
-        })->first();
+        });
+    }
+
+    /**
+     * @param string $number
+     * @param string|null $identity_address
+     * @return Voucher|null
+     */
+    public static function findByPhysicalCard(
+        string $number,
+        ?string $identity_address = null
+    ): ?Voucher {
+        return static::findByPhysicalCardQuery($number, $identity_address)->first();
     }
 
     /**
@@ -1520,5 +1544,35 @@ class Voucher extends BaseModel
     public function hasTransactionsWithin(?int $seconds): ?bool
     {
         return $seconds ? $this->transactionsWithinQuery($seconds)?->exists() : null;
+    }
+
+    /**
+     * @param array $records
+     * @return Collection
+     */
+    public function appendRecords(array $records): Collection
+    {
+         return new Collection(array_map(function ($key) use ($records) {
+             $this->appendRecord($key, $records[$key]);
+         }, array_keys($records)));
+    }
+
+    /**
+     * @param string $key
+     * @param string $value
+     * @param string $note
+     * @return VoucherRecord
+     */
+    public function appendRecord(string $key, string $value, string $note = ''): VoucherRecord
+    {
+        $record = $this->voucher_records()->create([
+            'record_type_id' => RecordType::findByKey($key)->id,
+            'value' => $value,
+            'note' => $note,
+        ]);
+
+        VoucherRecordCreated::dispatch($record);
+
+        return $record;
     }
 }

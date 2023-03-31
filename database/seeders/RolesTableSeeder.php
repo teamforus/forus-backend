@@ -66,12 +66,20 @@ class RolesTableSeeder extends Seeder
      */
     public function run(bool $withTranslations = true): void
     {
-        foreach ($this->roles as $key => $translations) {
+        foreach ($this->getRoles() as $key => $translations) {
             $role = Role::firstOrCreate(compact('key'));
 
             foreach ($withTranslations ? $translations : [] as $locale => $name) {
-                $role->translation()->firstOrCreate(compact('locale'), compact('name'));
+                $role->translations()->updateOrCreate(compact('locale'), compact('name'));
             }
         }
+    }
+
+    /**
+     * @return array|\string[][]
+     */
+    public function getRoles(): array
+    {
+        return $this->roles;
     }
 }

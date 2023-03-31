@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 use App\Events\Funds\FundVouchersExportedEvent;
 use App\Events\Vouchers\VoucherLimitUpdated;
 use App\Exports\VoucherExport;
+use App\Helpers\Arr;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivationCodeVoucherRequest;
@@ -23,11 +24,11 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\Identity;
+use App\Scopes\Builders\VoucherSubQuery;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Arr;
 
 /**
  * Class VouchersController
@@ -52,9 +53,9 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        return SponsorVoucherResource::collection(Voucher::searchSponsorQuery(
+        return SponsorVoucherResource::queryCollection(Voucher::searchSponsorQuery(
             $request, $organization, $organization->findFund($request->get('fund_id'))
-        )->paginate($request->input('per_page', 25)));
+        ), $request);
     }
 
     /**
@@ -119,7 +120,7 @@ class VouchersController extends Controller
             }
         }
 
-        return new SponsorVoucherResource($mainVoucher);
+        return SponsorVoucherResource::create($mainVoucher);
     }
 
     /**
@@ -148,6 +149,7 @@ class VouchersController extends Controller
         Organization $organization
     ): AnonymousResourceCollection {
         $fund = Fund::find($request->post('fund_id'));
+        $allowVoucherRecords = $fund?->fund_config?->allow_voucher_records;
         $employee = $request->employee($organization);
 
         $this->authorize('show', $organization);
@@ -155,10 +157,11 @@ class VouchersController extends Controller
 
         return SponsorVoucherResource::collection(collect(
             $request->post('vouchers')
-        )->map(function($voucher) use ($fund, $organization, $request, $employee) {
+        )->map(function($voucher) use ($fund, $organization, $request, $employee, $allowVoucherRecords) {
             $note       = $voucher['note'] ?? null;
             $email      = $voucher['email'] ?? false;
             $amount     = $fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0;
+            $records    = isset($voucher['records']) && is_array($voucher['records']) ? $voucher['records'] : [];
             $identity   = $email ? Identity::findOrMake($email)->address : null;
             $expire_at  = $voucher['expire_at'] ?? false;
             $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
@@ -179,6 +182,7 @@ class VouchersController extends Controller
 
             /** @var Voucher[] $vouchers */
             $vouchers = array_merge([$mainVoucher], $productVouchers ?? []);
+            $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
 
             foreach ($vouchers as $voucherModel) {
                 if ($organization->bsn_enabled && ($bsn = ($voucher['bsn'] ?? false))) {
@@ -238,7 +242,7 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucher, $organization]);
 
-        return new SponsorVoucherResource($voucher);
+        return SponsorVoucherResource::create($voucher);
     }
 
     /**
@@ -266,7 +270,7 @@ class VouchersController extends Controller
             $voucher->setBsnRelation($bsn)->assignByBsnIfExists();
         }
 
-        return new SponsorVoucherResource($voucher);
+        return SponsorVoucherResource::create($voucher);
     }
 
     /**
@@ -295,7 +299,7 @@ class VouchersController extends Controller
             }
         }
 
-        return new SponsorVoucherResource($voucher);
+        return SponsorVoucherResource::create($voucher);
     }
 
     /**
@@ -319,7 +323,7 @@ class VouchersController extends Controller
             $organization->findEmployee($request->auth_address())
         );
 
-        return new SponsorVoucherResource($voucher);
+        return SponsorVoucherResource::create($voucher);
     }
 
     /**
@@ -344,7 +348,7 @@ class VouchersController extends Controller
             $organization->findEmployee($request->auth_address())
         );
 
-        return new SponsorVoucherResource($voucher);
+        return SponsorVoucherResource::create($voucher);
     }
 
     /**
@@ -365,7 +369,7 @@ class VouchersController extends Controller
 
         $voucher->makeActivationCode($request->input('client_uid'));
 
-        return new SponsorVoucherResource($voucher);
+        return SponsorVoucherResource::create($voucher);
     }
 
     /**
@@ -387,7 +391,7 @@ class VouchersController extends Controller
 
         $voucher->sendToEmail($request->post('email'));
 
-        return new SponsorVoucherResource($voucher);
+        return SponsorVoucherResource::create($voucher);
     }
 
     /**
@@ -427,9 +431,13 @@ class VouchersController extends Controller
         $qrFormat = $request->get('qr_format');
         $dataFormat = $request->get('data_format', 'csv');
 
-        $vouchers = Voucher::searchSponsorQuery($request, $organization, $fund)->with([
+        $query = Voucher::searchSponsorQuery($request, $organization, $fund);
+        $query = VoucherSubQuery::appendFirstUseFields($query);
+
+        $vouchers = $query->with([
             'transactions', 'voucher_relation', 'product', 'fund',
-            'token_without_confirmation', 'identity.primary_email', 'product_vouchers'
+            'token_without_confirmation', 'identity.primary_email', 'identity.record_bsn',
+            'product_vouchers', 'top_up_transactions',
         ])->get();
 
         $exportData = Voucher::exportData($vouchers, $fields, $dataFormat, $qrFormat);

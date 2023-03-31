@@ -24,10 +24,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
+ * @property bool $allow_reservations
  * @property bool $allow_reimbursements
  * @property bool $allow_direct_payments
  * @property bool $allow_generator_direct_payments
  * @property bool $allow_voucher_top_ups
+ * @property bool $allow_voucher_records
  * @property bool $employee_can_see_product_vouchers
  * @property string $vouchers_type
  * @property bool $is_configured
@@ -76,6 +78,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowReimbursements($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowReservations($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherRecords($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherTopUps($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
@@ -163,7 +167,7 @@ class FundConfig extends BaseModel
         'iconnect_target_binding', 'iconnect_api_oin', 'iconnect_base_url',
         'iconnect_env', 'iconnect_key', 'iconnect_key_pass',
         'iconnect_cert', 'iconnect_cert_pass', 'iconnect_cert_trust',
-        'allow_direct_payments', 'allow_voucher_top_ups',
+        'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
         'limit_voucher_top_up_amount', 'limit_voucher_total_amount', 'allow_generator_direct_payments',
     ];
 
@@ -183,12 +187,14 @@ class FundConfig extends BaseModel
         'allow_blocking_vouchers' => 'boolean',
         'allow_direct_payments' => 'boolean',
         'allow_voucher_top_ups' => 'boolean',
+        'allow_voucher_records' => 'boolean',
         'backoffice_check_partner' => 'boolean',
         'employee_can_see_product_vouchers' => 'boolean',
         'email_required' => 'boolean',
         'contact_info_enabled' => 'boolean',
         'contact_info_required' => 'boolean',
         'contact_info_message_custom' => 'boolean',
+        'allow_reservations' => 'boolean',
         'allow_reimbursements' => 'boolean',
         'limit_generator_amount' => 'string',
         'limit_voucher_top_up_amount' => 'string',

@@ -6,12 +6,14 @@ use App\Events\FundProviders\FundProviderStateUpdated;
 use App\Events\Products\ProductApproved;
 use App\Events\Products\ProductRevoked;
 use App\Scopes\Builders\FundProviderQuery;
+use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,19 +34,21 @@ use Carbon\Carbon;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
- * @property-read Collection|\App\Models\FundProviderChat[] $fund_provider_chats
+ * @property-read Collection<int, \App\Models\FundProviderChat> $fund_provider_chats
  * @property-read int|null $fund_provider_chats_count
- * @property-read Collection|\App\Models\FundProviderProduct[] $fund_provider_products
+ * @property-read Collection<int, \App\Models\FundProviderProduct> $fund_provider_products
  * @property-read int|null $fund_provider_products_count
- * @property-read Collection|\App\Models\FundProviderProduct[] $fund_provider_products_with_trashed
+ * @property-read Collection<int, \App\Models\FundProviderProduct> $fund_provider_products_with_trashed
  * @property-read int|null $fund_provider_products_with_trashed_count
+ * @property-read Collection<int, \App\Models\FundProviderUnsubscribe> $fund_unsubscribes
+ * @property-read int|null $fund_unsubscribes_count
  * @property-read string $state_locale
- * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read Collection<int, \App\Services\EventLogService\Models\EventLog> $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Organization $organization
- * @property-read Collection|\App\Models\FundProviderProductExclusion[] $product_exclusions
+ * @property-read Collection<int, \App\Models\FundProviderProductExclusion> $product_exclusions
  * @property-read int|null $product_exclusions_count
- * @property-read Collection|\App\Models\Product[] $products
+ * @property-read Collection<int, \App\Models\Product> $products
  * @property-read int|null $products_count
  * @method static Builder|FundProvider newModelQuery()
  * @method static Builder|FundProvider newQuery()
@@ -124,6 +128,110 @@ class FundProvider extends BaseModel
     }
 
     /**
+     * @param Organization $organization
+     * @return array
+     */
+    public static function makeTotalsMeta(Organization $organization): array
+    {
+        return [
+            'active' => static::queryActive($organization)->count(),
+            'pending' => static::queryPending($organization)->count(),
+            'archived' => static::queryArchived($organization)->count(),
+            'available' => static::queryAvailableFunds($organization)->count(),
+            'invitations' => static::queryInvitationsActive($organization)->count(),
+            'unsubscriptions' => static::queryUnsubscriptions($organization)->count(),
+            'invitations_archived' => static::queryInvitationsArchived($organization)->count(),
+        ];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return Builder|Relation
+     */
+    public static function queryPending(Organization $organization): Builder|Relation
+    {
+        return $organization
+            ->fund_providers()
+            ->whereNotIn('id', self::queryActive($organization)->select('id'))
+            ->whereNotIn('id', self::queryArchived($organization)->select('id'));
+    }
+
+    /**
+     * @param Organization $organization
+     * @return Builder|Relation
+     */
+    public static function queryArchived(Organization $organization): Builder|Relation
+    {
+        return $organization
+            ->fund_providers()
+            ->whereHas('fund', fn (Builder $q) => FundQuery::whereExpired($q));
+    }
+
+    /**
+     * @param Organization $organization
+     * @return Builder|Relation|FundProvider
+     */
+    public static function queryActive(Organization $organization): Builder|Relation|FundProvider
+    {
+        return $organization->fund_providers()
+            ->where('state', FundProvider::STATE_ACCEPTED)
+            ->whereNotIn('id', static::queryArchived($organization)->select('id'));
+    }
+
+    /**
+     * @param Organization $organization
+     * @return Builder
+     */
+    public static function queryAvailableFunds(Organization $organization): Builder
+    {
+        $query = Implementation::queryFundsByState(Fund::STATE_ACTIVE, Fund::STATE_PAUSED);
+        $query->where('type', '!=', Fund::TYPE_EXTERNAL);
+        $query->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'));
+
+        FundQuery::whereIsInternal($query);
+        FundQuery::whereIsConfiguredByForus($query);
+
+        return $query;
+    }
+
+    /**
+     * @param Organization $organization
+     * @return Builder|Relation
+     */
+    public static function queryInvitationsActive(Organization $organization): Builder|Relation
+    {
+        $expireTime = now()->subMinutes(FundProviderInvitation::VALIDITY_IN_MINUTES);
+        $query = $organization->fund_provider_invitations();
+
+        return $query
+            ->where('created_at', '>', $expireTime)
+            ->where('state', '=', FundProviderInvitation::STATE_PENDING)
+            ->whereRelation('fund', 'archived', false);
+    }
+
+    /**
+     * @param Organization $organization
+     * @return Builder|Relation
+     */
+    public static function queryInvitationsArchived(Organization $organization): Builder|Relation
+    {
+        return $organization
+            ->fund_provider_invitations()
+            ->whereNotIn('id', self::queryInvitationsActive($organization)->select('id'));
+    }
+
+    /**
+     * @param Organization $organization
+     * @return Builder|Relation
+     */
+    public static function queryUnsubscriptions(Organization $organization): Builder|Relation
+    {
+        return FundProviderUnsubscribe::whereHas('fund_provider', fn (Builder $q) => $q->where([
+            'organization_id' => $organization->id,
+        ]));
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
@@ -180,6 +288,26 @@ class FundProvider extends BaseModel
     }
 
     /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_unsubscribes() : HasMany
+    {
+        return $this->hasMany(FundProviderUnsubscribe::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_unsubscribes_active() : HasMany
+    {
+        return $this->hasMany(FundProviderUnsubscribe::class)->where([
+            'canceled' => false,
+        ]);
+    }
+
+    /**
      * @return bool
      */
     public function isPending(): bool
@@ -216,6 +344,7 @@ class FundProvider extends BaseModel
     ): Builder {
         $allow_products = $request->input('allow_products');
         $allow_budget = $request->input('allow_budget');
+        $has_products = $request->input('has_products');
 
         $fundsQuery = $organization->funds()->where('archived', false);
         $query = $query ?: self::query();
@@ -256,6 +385,20 @@ class FundProvider extends BaseModel
             $query->whereHas('fund', function(Builder $builder) {
                 $builder->where('type', Fund::TYPE_BUDGET);
             })->where('allow_budget', (bool) $allow_budget);
+        }
+
+        if ($has_products) {
+            $query->whereHas('organization.products', function (Builder $builder) use ($fundsQuery) {
+                ProductQuery::whereNotExpired($builder);
+                ProductQuery::whereFundNotExcluded($builder, $fundsQuery->pluck('id')->toArray());
+            });
+        }
+
+        if (!$has_products && $has_products !== null) {
+            $query->whereDoesntHave('organization.products', function (Builder $builder) use ($fundsQuery) {
+                ProductQuery::whereNotExpired($builder);
+                ProductQuery::whereFundNotExcluded($builder, $fundsQuery->pluck('id')->toArray());
+            });
         }
 
         if ($allow_products !== null) {
@@ -303,7 +446,8 @@ class FundProvider extends BaseModel
      * @param Builder $builder
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    private static function exportTransform(Builder $builder) {
+    private static function exportTransform(Builder $builder): mixed
+    {
         $transKey = "export.providers";
 
         return $builder->with([
@@ -368,7 +512,7 @@ class FundProvider extends BaseModel
         Request $request,
         Organization $organization,
         ?Builder $builder = null
-    ) {
+    ): mixed {
         return self::exportTransform(self::search($request, $organization, $builder));
     }
 
@@ -596,5 +740,17 @@ class FundProvider extends BaseModel
         FundProviderStateUpdated::dispatch($this, compact([
             'originalState', 'approvedBefore', 'approvedAfter',
         ]));
+    }
+
+    /**
+     * @return bool
+     */
+    public function canUnsubscribe(): bool
+    {
+        return
+            $this->isAccepted() &&
+            $this->fund_unsubscribes->where(fn (
+                FundProviderUnsubscribe $unsubscribe
+            ) => $unsubscribe->isPending() && !$unsubscribe->canceled)->isEmpty();
     }
 }

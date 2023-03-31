@@ -7,6 +7,7 @@ use App\Console\Commands\BankUpdateContextSessionsCommand;
 use App\Console\Commands\BankVoucherTransactionBulksBuildCommand;
 use App\Console\Commands\BankVoucherTransactionBulksUpdateStateCommand;
 use App\Console\Commands\BankVoucherTransactionProcessZeroAmountCommand;
+use App\Console\Commands\BankConnections\BankConnectionsInspectCommand;
 use App\Console\Commands\CalculateFundUsersCommand;
 use App\Console\Commands\CheckFundStateCommand;
 use App\Console\Commands\CheckProductExpirationCommand;
@@ -24,6 +25,8 @@ use App\Console\Commands\Digests\SendValidatorDigestCommand;
 use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
+use App\Console\Commands\UpdateProductCategoriesCommand;
+use App\Console\Commands\UpdateRolesCommand;
 use App\Console\Commands\UpdateSystemNotificationsCommand;
 use App\Services\Forus\Session\Commands\UpdateSessionsExpirationCommand;
 use App\Services\BackofficeApiService\Commands\SendBackofficeLogsCommand;
@@ -91,6 +94,13 @@ class Kernel extends ConsoleKernel
         MigratePhysicalCardsCommand::class,
         UpdateSessionsExpirationCommand::class,
         SendBackofficeLogsCommand::class,
+
+        // bank connections
+        BankConnectionsInspectCommand::class,
+
+        // seeders
+        UpdateProductCategoriesCommand::class,
+        UpdateRolesCommand::class,
     ];
 
     /**

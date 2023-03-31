@@ -9,7 +9,12 @@ use App\Http\Resources\MediaResource;
 use App\Models\Traits\ValidatesValues;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
-use App\Services\DigIdService\Repositories\DigIdRepo;
+use App\Services\DigIdService\Models\DigIdSession;
+use App\Services\DigIdService\Repositories\DigIdCgiRepo;
+use App\Services\DigIdService\Repositories\DigIdSamlRepo;
+use App\Services\DigIdService\DigIdException;
+use App\Scopes\Builders\VoucherQuery;
+use App\Services\DigIdService\Repositories\Interfaces\DigIdRepo;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
@@ -29,6 +34,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * App\Models\Implementation
@@ -67,6 +73,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property bool $digid_enabled
  * @property bool $digid_required
  * @property bool $digid_sign_up_allowed
+ * @property string $digid_connection_type
+ * @property array|null $digid_saml_context
  * @property string $digid_env
  * @property string|null $digid_app_id
  * @property string|null $digid_shared_secret
@@ -106,10 +114,12 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereDescriptionAlignment($value)
  * @method static Builder|Implementation whereDigidASelectServer($value)
  * @method static Builder|Implementation whereDigidAppId($value)
+ * @method static Builder|Implementation whereDigidConnectionType($value)
  * @method static Builder|Implementation whereDigidEnabled($value)
  * @method static Builder|Implementation whereDigidEnv($value)
  * @method static Builder|Implementation whereDigidForusApiUrl($value)
  * @method static Builder|Implementation whereDigidRequired($value)
+ * @method static Builder|Implementation whereDigidSamlContext($value)
  * @method static Builder|Implementation whereDigidSharedSecret($value)
  * @method static Builder|Implementation whereDigidSignUpAllowed($value)
  * @method static Builder|Implementation whereDigidTrustedCert($value)
@@ -214,6 +224,7 @@ class Implementation extends BaseModel
         'show_providers_map' => 'boolean',
         'show_provider_map' => 'boolean',
         'show_office_map' => 'boolean',
+        'digid_saml_context' => 'json',
         'show_voucher_map' => 'boolean',
         'show_product_map' => 'boolean',
     ];
@@ -483,25 +494,40 @@ class Implementation extends BaseModel
      */
     public function digidEnabled(): bool
     {
-        $digidConfigured =
+        if ($this->digid_connection_type == DigIdSession::CONNECTION_TYPE_SAML) {
+            return $this->digid_enabled && !empty($this->getDigidSamlContext());
+        }
+
+        return
+            $this->digid_enabled &&
             !empty($this->digid_app_id) &&
             !empty($this->digid_shared_secret) &&
             !empty($this->digid_a_select_server);
-
-        return $this->digid_enabled && $digidConfigured;
     }
 
     /**
-     * @return DigIdRepo
-     * @throws \App\Services\DigIdService\DigIdException
+     * @return DigIdRepo|null
+     * @throws DigIdException
      */
-    public function getDigid(): DigIdRepo
+    public function getDigid(): ?DigIdRepo
     {
-        return (new DigIdRepo($this->digid_env))
-            ->setAppId($this->digid_app_id)
-            ->setSharedSecret($this->digid_shared_secret)
-            ->setASelectServer($this->digid_a_select_server)
-            ->setTrustedCertificate($this->digid_trusted_cert);
+        return match ($this->digid_connection_type) {
+            DigIdSession::CONNECTION_TYPE_SAML => (new DigIdSamlRepo($this->getDigidSamlContext())),
+            DigIdSession::CONNECTION_TYPE_CGI => (new DigIdCgiRepo($this->digid_env))
+                ->setAppId($this->digid_app_id)
+                ->setSharedSecret($this->digid_shared_secret)
+                ->setASelectServer($this->digid_a_select_server)
+                ->setTrustedCertificate($this->digid_trusted_cert),
+            default => null,
+        };
+    }
+
+    /**
+     * @return array|null
+     */
+    protected function getDigidSamlContext(): ?array
+    {
+        return $this->digid_saml_context ?: Implementation::general()->digid_saml_context;
     }
 
     /**
@@ -834,5 +860,28 @@ class Implementation extends BaseModel
     public function getProductboardApiKey(): ?string
     {
         return $this->productboard_api_key ?: Implementation::general()->productboard_api_key;
+    }
+
+    /**
+     * @param Identity $identity
+     * @return array|Voucher[]
+     */
+    public function makeVouchersInApplicableFunds(Identity $identity): array
+    {
+        $funds = FundQuery::whereIsInternalConfiguredAndActive($this->funds())
+            ->whereNotIn('funds.id', VoucherQuery::whereNotExpired($identity->vouchers()->select('fund_id')))
+            ->get();
+
+        return $funds->reduce(function(array $vouchers, Fund $fund) use ($identity) {
+            if (Gate::forUser($identity)->denies('apply', [$fund, 'apply'])) {
+                return $vouchers;
+            }
+
+            if ($voucher = $fund->makeVoucher($identity->address)) {
+                $vouchers[] = $voucher;
+            }
+
+            return array_merge($vouchers, $fund->makeFundFormulaProductVouchers($identity->address));
+        }, []);
     }
 }

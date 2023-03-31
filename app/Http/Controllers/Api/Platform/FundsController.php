@@ -15,6 +15,7 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
+use App\Searches\FundSearch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -36,10 +37,11 @@ class FundsController extends Controller
             Fund::STATE_ACTIVE,
         ] : Fund::STATE_ACTIVE;
 
-        $query = Fund::search($request->only([
+        $query = (new FundSearch($request->only([
             'tag', 'tag_id', 'organization_id', 'fund_id', 'q', 'implementation_id',
-            'order_by', 'order_by_dir', 'with_external',
-        ]), Implementation::queryFundsByState($state));
+            'with_external', 'has_products', 'has_subsidies', 'has_providers',
+            'order_by', 'order_by_dir',
+        ]), Implementation::queryFundsByState($state)))->query();
 
         $organizations = Organization::whereIn('id', (clone $query)->select('organization_id'))->get();
         $organizations = $organizations->map(fn(Organization $item) => $item->only('id', 'name'));
@@ -74,28 +76,29 @@ class FundsController extends Controller
     /**
      * @param RedeemFundsRequest $request
      * @return \Illuminate\Http\JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
     public function redeem(RedeemFundsRequest $request): JsonResponse
     {
+        $vouchers = [];
+        $prevalidation = $request->getPrevalidation();
         $vouchersAvailable = $request->getAvailableVouchers();
 
-        if ($prevalidation = $request->getPrevalidation()) {
-            $this->authorize('redeem', $prevalidation);
+        if ($prevalidation && Gate::allows('redeem', $prevalidation)) {
             $prevalidation->assignToIdentity($request->identity());
+            $vouchers = $request->implementation()->makeVouchersInApplicableFunds($request->identity());
         }
 
         // check permissions of all voucher before assigning
         foreach ($vouchersAvailable as $voucher) {
             if (Gate::allows('redeem', $voucher)) {
-                $voucher->assignToIdentity($request->identity());
+                $vouchers[] = $voucher->assignToIdentity($request->identity());
             }
         }
 
         return new JsonResponse([
             'prevalidation' => $prevalidation ? PrevalidationResource::create($prevalidation) : null,
-            'vouchers' => VoucherResource::collection($vouchersAvailable),
+            'vouchers' => VoucherResource::collection($vouchers),
         ]);
     }
 
@@ -126,20 +129,26 @@ class FundsController extends Controller
      *
      * @param CheckFundRequest $request
      * @param Fund $fund
-     * @return array
+     * @return JsonResponse
      * @throws AuthorizationException
      */
-    public function check(CheckFundRequest $request, Fund $fund): array
+    public function check(CheckFundRequest $request, Fund $fund): JsonResponse
     {
         $this->authorize('check', $fund);
 
         $vouchers = Voucher::assignAvailableToIdentityByBsn($request->identity());
         $prevalidations = Prevalidation::assignAvailableToIdentityByBsn($request->identity());
+        $prevalidation_vouchers = $prevalidations > 0 ? VoucherResource::collection(
+            $request->implementation()->makeVouchersInApplicableFunds($request->identity())
+        ) : [];
+
         $hasBackoffice = $fund->fund_config && $fund->organization->backoffice_available;
 
         $backofficeResponse = $fund->checkBackofficeIfAvailable($request->identity());
         $backoffice = $hasBackoffice ? $fund->backofficeResponseToData($backofficeResponse) : null;
 
-        return compact('backoffice', 'vouchers', 'prevalidations');
+        return new JsonResponse(compact(
+            'backoffice', 'vouchers', 'prevalidations', 'prevalidation_vouchers'
+        ));
     }
 }

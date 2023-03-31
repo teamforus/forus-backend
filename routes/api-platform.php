@@ -174,6 +174,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->patch('roles', "Api\Platform\OrganizationsController@updateRoles");
         $router->patch('update-business', "Api\Platform\OrganizationsController@updateBusinessType");
         $router->patch('accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
+        $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFieldSettings");
     });
 
     $router->resource('organizations', "Api\Platform\OrganizationsController")
@@ -505,6 +506,20 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'providers' => 'organization_fund'
     ])->only('index');
 
+    $router->resource(
+        'organizations/{organization}/provider/fund-unsubscribes',
+        "Api\Platform\Organizations\Provider\FundUnsubscribeController"
+    )->parameters([
+        'unsubscribe' => 'fund-unsubscribe'
+    ])->only('index', 'store', 'update');
+
+    $router->resource(
+        'organizations/{organization}/sponsor/fund-unsubscribes',
+        "Api\Platform\Organizations\Sponsor\FundUnsubscribeController"
+    )->parameters([
+        'unsubscribe' => 'fund-unsubscribe'
+    ])->only('index');
+
     $router->get(
         'organizations/{organization}/funds/{fund}/providers/{organization_fund}/finances',
         "Api\Platform\Organizations\Funds\FundProviderController@finances");
@@ -560,6 +575,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->only('index', 'show', 'store', 'update', 'destroy');
 
     // Product reservations
+    $router->get(
+        'organizations/{organization}/product-reservations/export-fields',
+        "Api\Platform\Organizations\ProductReservationsController@getExportFields"
+    );
+
+    $router->get(
+        'organizations/{organization}/product-reservations/export',
+        "Api\Platform\Organizations\ProductReservationsController@export"
+    );
+
     $router->post(
         'organizations/{organization}/product-reservations/batch',
         "Api\Platform\Organizations\ProductReservationsController@storeBatch"
@@ -791,6 +816,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\Sponsor\VouchersController"
     )->only('index', 'show', 'store', 'update');
 
+    $router->resource(
+        'organizations/{organization}/sponsor/vouchers/{voucher}/voucher-records',
+        "Api\Platform\Organizations\Sponsor\Vouchers\VoucherRecordsController",
+    )->only('index', 'show', 'store', 'update', 'destroy');
+
     $router->get('organizations/{organization}/sponsor/providers/finances',"Api\Platform\Organizations\Sponsor\ProvidersController@finances");
     $router->get('organizations/{organization}/sponsor/providers/finances-export',"Api\Platform\Organizations\Sponsor\ProvidersController@exportFinances");
 
@@ -868,4 +898,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource('banks', "Api\Platform\BanksController")->only([
         'index', 'show',
     ]);
+
+    $router->post('format', 'Api\Platform\FormatController@format');
 });

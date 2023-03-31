@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Models\Traits\HasRedirectTarget;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -123,17 +122,5 @@ class IdentityEmail extends Model
         }
 
         return $this;
-    }
-
-    /**
-     * Search identity addresses by email substring
-     * @param string $search
-     * @return Collection
-     */
-    public static function searchByEmail(string $search): Collection
-    {
-        return IdentityEmail::where('email', 'LIKE', "%$search%")
-            ->where('primary', true)
-            ->get();
     }
 }

@@ -66,6 +66,7 @@ class RolePermissionsTableSeeder extends Seeder
      */
     public function run(): void
     {
+        RolePermission::truncate();
         $roles = Role::pluck('id','key');
         $permissions = Permission::pluck('id','key');
       

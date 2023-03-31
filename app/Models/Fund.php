@@ -42,7 +42,9 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 
 /**
  * App\Models\Fund
@@ -72,37 +74,39 @@ use Illuminate\Support\Facades\DB;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
- * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
+ * @property-read Collection<int, \App\Models\FundBackofficeLog> $backoffice_logs
  * @property-read int|null $backoffice_logs_count
- * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
+ * @property-read Collection<int, \App\Models\Voucher> $budget_vouchers
  * @property-read int|null $budget_vouchers_count
- * @property-read Collection|\App\Models\FundCriterion[] $criteria
+ * @property-read Collection<int, \App\Models\FundCriterion> $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
- * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
+ * @property-read Collection<int, \App\Services\EventLogService\Models\Digest> $digests
  * @property-read int|null $digests_count
- * @property-read Collection|\App\Models\Employee[] $employees
+ * @property-read Collection<int, \App\Models\Employee> $employees
  * @property-read int|null $employees_count
- * @property-read Collection|\App\Models\Employee[] $employees_validator_managers
+ * @property-read Collection<int, \App\Models\Employee> $employees_validator_managers
  * @property-read int|null $employees_validator_managers_count
- * @property-read Collection|\App\Models\Employee[] $employees_validators
+ * @property-read Collection<int, \App\Models\Employee> $employees_validators
  * @property-read int|null $employees_validators_count
- * @property-read Collection|\App\Models\Faq[] $faq
+ * @property-read Collection<int, \App\Models\Faq> $faq
  * @property-read int|null $faq_count
- * @property-read Collection|\App\Models\Product[] $formula_products
+ * @property-read Collection<int, \App\Models\Product> $formula_products
  * @property-read int|null $formula_products_count
  * @property-read \App\Models\FundConfig|null $fund_config
- * @property-read Collection|\App\Models\FundConfigRecord[] $fund_config_records
+ * @property-read Collection<int, \App\Models\FundConfigRecord> $fund_config_records
  * @property-read int|null $fund_config_records_count
- * @property-read Collection|\App\Models\FundFormulaProduct[] $fund_formula_products
+ * @property-read Collection<int, \App\Models\FundFormulaProduct> $fund_formula_products
  * @property-read int|null $fund_formula_products_count
- * @property-read Collection|\App\Models\FundFormula[] $fund_formulas
+ * @property-read Collection<int, \App\Models\FundFormula> $fund_formulas
  * @property-read int|null $fund_formulas_count
- * @property-read Collection|\App\Models\FundLimitMultiplier[] $fund_limit_multipliers
+ * @property-read Collection<int, \App\Models\FundLimitMultiplier> $fund_limit_multipliers
  * @property-read int|null $fund_limit_multipliers_count
- * @property-read Collection|\App\Models\FundRequestRecord[] $fund_request_records
+ * @property-read Collection<int, \App\Models\FundProvider> $fund_providers
+ * @property-read int|null $fund_providers_count
+ * @property-read Collection<int, \App\Models\FundRequestRecord> $fund_request_records
  * @property-read int|null $fund_request_records_count
- * @property-read Collection|\App\Models\FundRequest[] $fund_requests
+ * @property-read Collection<int, \App\Models\FundRequest> $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read float $budget_left
  * @property-read float $budget_reserved
@@ -114,38 +118,38 @@ use Illuminate\Support\Facades\DB;
  * @property-read bool $is_external
  * @property-read string $type_locale
  * @property-read Media|null $logo
- * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read Collection<int, \App\Services\EventLogService\Models\EventLog> $logs
  * @property-read int|null $logs_count
- * @property-read Collection|Media[] $medias
+ * @property-read Collection<int, Media> $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
- * @property-read Collection|\App\Models\Voucher[] $product_vouchers
+ * @property-read Collection<int, \App\Models\Voucher> $product_vouchers
  * @property-read int|null $product_vouchers_count
- * @property-read Collection|\App\Models\Product[] $products
+ * @property-read Collection<int, \App\Models\Product> $products
  * @property-read int|null $products_count
- * @property-read Collection|\App\Models\FundProviderInvitation[] $provider_invitations
+ * @property-read Collection<int, \App\Models\FundProviderInvitation> $provider_invitations
  * @property-read int|null $provider_invitations_count
- * @property-read Collection|\App\Models\Organization[] $provider_organizations
+ * @property-read Collection<int, \App\Models\Organization> $provider_organizations
  * @property-read int|null $provider_organizations_count
- * @property-read Collection|\App\Models\Organization[] $provider_organizations_approved
+ * @property-read Collection<int, \App\Models\Organization> $provider_organizations_approved
  * @property-read int|null $provider_organizations_approved_count
- * @property-read Collection|\App\Models\FundProvider[] $providers
+ * @property-read Collection<int, \App\Models\FundProvider> $providers
  * @property-read int|null $providers_count
- * @property-read Collection|\App\Models\FundProvider[] $providers_allowed_products
+ * @property-read Collection<int, \App\Models\FundProvider> $providers_allowed_products
  * @property-read int|null $providers_allowed_products_count
- * @property-read Collection|\App\Models\Tag[] $tags
+ * @property-read Collection<int, \App\Models\Tag> $tags
  * @property-read int|null $tags_count
- * @property-read Collection|\App\Models\Tag[] $tags_provider
+ * @property-read Collection<int, \App\Models\Tag> $tags_provider
  * @property-read int|null $tags_provider_count
- * @property-read Collection|\App\Models\Tag[] $tags_webshop
+ * @property-read Collection<int, \App\Models\Tag> $tags_webshop
  * @property-read int|null $tags_webshop_count
- * @property-read Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
+ * @property-read Collection<int, \App\Models\FundTopUpTransaction> $top_up_transactions
  * @property-read int|null $top_up_transactions_count
- * @property-read Collection|\App\Models\FundTopUp[] $top_ups
+ * @property-read Collection<int, \App\Models\FundTopUp> $top_ups
  * @property-read int|null $top_ups_count
- * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read Collection<int, \App\Models\VoucherTransaction> $voucher_transactions
  * @property-read int|null $voucher_transactions_count
- * @property-read Collection|\App\Models\Voucher[] $vouchers
+ * @property-read Collection<int, \App\Models\Voucher> $vouchers
  * @property-read int|null $vouchers_count
  * @method static Builder|Fund newModelQuery()
  * @method static Builder|Fund newQuery()
@@ -592,6 +596,15 @@ class Fund extends BaseModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_providers(): HasMany
+    {
+        return $this->hasMany(FundProvider::class);
+    }
+
+    /**
      * @return bool
      */
     public function isExternal(): bool
@@ -990,61 +1003,6 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param array $options
-     * @param Builder|null $query
-     * @return Builder
-     */
-    public static function search(array $options, Builder $query = null): Builder
-    {
-        $query = $query ?: self::query();
-
-        if (!array_get($options, 'with_archived', false)) {
-            $query->where('archived', false);
-        }
-
-        if (!array_get($options, 'with_external', false)) {
-            $query->where('type', '!=', self::TYPE_EXTERNAL);
-        }
-
-        if (array_get($options, 'configured', false)) {
-            FundQuery::whereIsConfiguredByForus($query);
-        }
-
-        if ($tag = array_get($options, 'tag')) {
-            $query->whereHas('tags_provider', static function(Builder $query) use ($tag) {
-                $query->where('key', $tag);
-            });
-        }
-
-        if ($tag_id = array_get($options, 'tag_id')) {
-            $query->whereHas('tags_webshop', static function(Builder $query) use ($tag_id) {
-                $query->where('tags.id', $tag_id);
-            });
-        }
-
-        if ($organization_id = array_get($options, 'organization_id')) {
-            $query->where('organization_id', $organization_id);
-        }
-
-        if ($fund_id = array_get($options, 'fund_id')) {
-            $query->where('id', $fund_id);
-        }
-
-        if ($q = array_get($options, 'q')) {
-            $query = FundQuery::whereQueryFilter($query, $q);
-        }
-
-        if ($implementation_id = array_get($options, 'implementation_id')) {
-            $query = FundQuery::whereImplementationIdFilter($query, $implementation_id);
-        }
-
-        return $query->orderBy(
-            array_get($options, 'order_by', 'created_at'),
-            array_get($options, 'order_by_dir', 'asc')
-        );
-    }
-
-    /**
      * @return mixed|null
      */
     public function amountFixedByFormula(): mixed
@@ -1190,36 +1148,39 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string|null $identity_address
+     * @param string|null $identityAddress
      * @param array $extraFields
      * @param Carbon|null $expireAt
-     * @return array|Voucher[]
+     * @return Voucher[]
      */
     public function makeFundFormulaProductVouchers(
-        string $identity_address = null,
+        string $identityAddress = null,
         array $extraFields = [],
         Carbon $expireAt = null
     ): array {
         $vouchers = [];
         $fundEndDate = $this->end_date;
 
-        if ($this->fund_formula_products->count() > 0) {
-            foreach ($this->fund_formula_products as $fund_formula_product) {
-                $productExpireDate = $fund_formula_product->product->expire_at;
-                $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
-                $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
+        if (!$identityAddress) {
+            return [];
+        }
 
-                $voucher = $this->makeProductVoucher(
-                    $identity_address,
-                    $extraFields,
-                    $fund_formula_product->product->id,
-                    $voucherExpireAt,
-                    $fund_formula_product->price
-                );
+        foreach ($this->fund_formula_products as $formulaProduct) {
+            $productExpireDate = $formulaProduct->product->expire_at;
+            $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
+            $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
+            $multiplier = $formulaProduct->getIdentityMultiplier($identityAddress);
 
-                $vouchers[] = $voucher;
+            $vouchers = array_map(fn () => $this->makeProductVoucher(
+                $identityAddress,
+                $extraFields,
+                $formulaProduct->product->id,
+                $voucherExpireAt,
+                $formulaProduct->price
+            ), array_fill(0, $multiplier, null));
 
-                VoucherAssigned::broadcast($voucher);
+            foreach ($vouchers as $voucher) {
+                Event::dispatch(new VoucherAssigned($voucher));
             }
         }
 
@@ -1480,30 +1441,17 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param array $productIds
+     * @param array $items
      * @return $this
      */
-    public function updateFormulaProducts(array $productIds): self
+    public function updateFormulaProducts(array $items): self
     {
-        /** @var Collection|Product[] $products */
-        $products = Product::whereIn('id', $productIds)->get();
+        $products = array_map(fn (array $item) => $this->fund_formula_products()->updateOrCreate([
+            'product_id' => Arr::get($item, 'product_id'),
+            'record_type_key_multiplier' => Arr::get($item, 'record_type_key_multiplier'),
+        ])->id, $items);
 
-        $this->fund_formula_products()->whereNotIn(
-            'product_id',
-            $products->pluck('id')
-        )->delete();
-
-        foreach ($products as $product) {
-            $where = [
-                'product_id' => $product->id
-            ];
-
-            if (!$this->fund_formula_products()->where($where)->exists()) {
-                $this->fund_formula_products()->create($where)->update([
-                    'price' => $product->price
-                ]);
-            }
-        }
+        $this->fund_formula_products()->whereNotIn('id', $products)->delete();
 
         return $this;
     }
