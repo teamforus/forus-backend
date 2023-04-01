@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedInteger('implementation_id');
             $table->enum('type', ['facebook', 'twitter', 'youtube']);
             $table->string('link', 100);
-            $table->string('title', 100);
+            $table->string('title', 100)->nullable();
             $table->timestamps();
             $table->unique(['implementation_id', 'type']);
 

@@ -28,6 +28,7 @@ class ImplementationSocialMediaController extends Controller
     ): AnonymousResourceCollection
     {
         $this->authorize('show', $organization);
+        $this->authorize('view', [$implementation, $organization]);
         $this->authorize('updateCMS', [$implementation, $organization]);
 
         return ImplementationSocialMediaResource::collection($implementation->social_medias);
@@ -49,9 +50,12 @@ class ImplementationSocialMediaController extends Controller
     ): ImplementationSocialMediaResource
     {
         $this->authorize('show', $organization);
+        $this->authorize('view', [$implementation, $organization]);
         $this->authorize('updateCMS', [$implementation, $organization]);
 
-        $socialMedia = $implementation->social_medias()->create($request->only('type', 'link', 'title'));
+        $socialMedia = $implementation->social_medias()->create(
+            $request->only('type', 'link', 'title')
+        );
 
         return new ImplementationSocialMediaResource($socialMedia);
     }
@@ -72,6 +76,7 @@ class ImplementationSocialMediaController extends Controller
     ): ImplementationSocialMediaResource
     {
         $this->authorize('show', $organization);
+        $this->authorize('view', [$implementation, $organization]);
         $this->authorize('updateCMS', [$implementation, $organization]);
 
         return new ImplementationSocialMediaResource($socialMedia);
@@ -95,11 +100,10 @@ class ImplementationSocialMediaController extends Controller
     ): ImplementationSocialMediaResource
     {
         $this->authorize('show', $organization);
+        $this->authorize('view', [$implementation, $organization]);
         $this->authorize('updateCMS', [$implementation, $organization]);
 
-        $data = $request->only('type', 'link', 'title');
-
-        $socialMedia->update($data);
+        $socialMedia->update($request->only('type', 'link', 'title'));
 
         return new ImplementationSocialMediaResource($socialMedia);
     }
@@ -120,9 +124,9 @@ class ImplementationSocialMediaController extends Controller
     ): JsonResponse
     {
         $this->authorize('show', $organization);
+        $this->authorize('view', [$implementation, $organization]);
         $this->authorize('updateCMS', [$implementation, $organization]);
 
-        logger()->info('socialMedia: '. print_r($socialMedia->toArray(), true));
         $socialMedia->delete();
 
         return new JsonResponse();
