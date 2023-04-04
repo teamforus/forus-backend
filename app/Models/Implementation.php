@@ -70,6 +70,7 @@ use Illuminate\Support\Facades\Gate;
  * @property bool $show_office_map
  * @property bool $show_voucher_map
  * @property bool $show_product_map
+ * @property bool $allow_per_fund_notification_templates
  * @property bool $digid_enabled
  * @property bool $digid_required
  * @property bool $digid_sign_up_allowed
@@ -83,18 +84,18 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $digid_trusted_cert
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Announcement> $announcements_webshop
  * @property-read int|null $announcements_webshop_count
  * @property-read Media|null $banner
  * @property-read Media|null $email_logo
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FundConfig> $fund_configs
  * @property-read int|null $fund_configs_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Fund> $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\NotificationTemplate[] $mail_templates
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\NotificationTemplate> $mail_templates
  * @property-read int|null $mail_templates_count
- * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Media> $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\ImplementationPage|null $page_accessibility
@@ -102,13 +103,14 @@ use Illuminate\Support\Facades\Gate;
  * @property-read \App\Models\ImplementationPage|null $page_privacy
  * @property-read \App\Models\ImplementationPage|null $page_provider
  * @property-read \App\Models\ImplementationPage|null $page_terms_and_conditions
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ImplementationPage> $pages
  * @property-read int|null $pages_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages_public
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ImplementationPage> $pages_public
  * @property-read int|null $pages_public_count
  * @method static Builder|Implementation newModelQuery()
  * @method static Builder|Implementation newQuery()
  * @method static Builder|Implementation query()
+ * @method static Builder|Implementation whereAllowPerFundNotificationTemplates($value)
  * @method static Builder|Implementation whereCreatedAt($value)
  * @method static Builder|Implementation whereDescription($value)
  * @method static Builder|Implementation whereDescriptionAlignment($value)
@@ -227,6 +229,7 @@ class Implementation extends BaseModel
         'digid_saml_context' => 'json',
         'show_voucher_map' => 'boolean',
         'show_product_map' => 'boolean',
+        'allow_per_fund_notification_templates' => 'boolean',
     ];
 
     /**

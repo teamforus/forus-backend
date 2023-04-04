@@ -12,6 +12,7 @@ npm-debug.log
 yarn-error.log
 .env
 .env.tmp
+.env.testing
 .env.dusk.local
 /app/Http/Controllers/TestController.php
 .phpstorm.meta.php

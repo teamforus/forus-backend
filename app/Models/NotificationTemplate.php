@@ -13,10 +13,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $formal
  * @property int $system_notification_id
  * @property int $implementation_id
+ * @property int|null $fund_id
  * @property string $title
  * @property string $content
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Fund|null $fund
  * @property-read \App\Models\Implementation $implementation
  * @property-read \App\Models\Implementation $system_notification
  * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate newModelQuery()
@@ -25,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereContent($value)
  * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereFormal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereSystemNotificationId($value)
@@ -36,8 +39,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class NotificationTemplate extends Model
 {
     protected $fillable = [
-        'key', 'type', 'formal', 'title', 'content', 'implementation_id',
+        'key', 'type', 'formal', 'title', 'content', 'implementation_id', 'fund_id',
     ];
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function fund(): BelongsTo
+    {
+        return $this->belongsTo(Fund::class);
+    }
 
     /**
      * @return BelongsTo
