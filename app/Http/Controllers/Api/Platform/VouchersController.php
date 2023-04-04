@@ -28,12 +28,12 @@ class VouchersController extends Controller
 
         $query = Voucher::query()
             ->where('identity_address', $request->auth_address())
-            ->whereDoesntHave('product_reservation')
-            ->orderByDesc('created_at');
+            ->whereDoesntHave('product_reservation');
 
         $search = new VouchersSearch($request->only([
             'type', 'state', 'archived', 'allow_reimbursements',
             'implementation_id', 'implementation_key', 'product_id',
+            'order_by', 'order_dir',
         ]), $query);
 
         if ($request->isMeApp()) {

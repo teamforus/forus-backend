@@ -24,6 +24,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
 
     public ?EmailFrom $emailFrom = null;
     public ?string $implementationKey;
+    public ?int $fundId = null;
     public bool $informalCommunication = false;
     public string $communicationType;
 
@@ -292,6 +293,14 @@ class ImplementationMail extends Mailable implements ShouldQueue
     /**
      * @return string|null
      */
+    protected function fundId(): ?string
+    {
+        return $this->fundId ?: ($this->mailData['fund_id'] ?? null);
+    }
+
+    /**
+     * @return string|null
+     */
     protected function implementationKey(): ?string
     {
         return $this->implementationKey ?: $this->mailData['implementation_key'];
@@ -349,7 +358,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
      */
     protected function implementationNotificationTemplate(string $key): ?NotificationTemplate
     {
-        return SystemNotification::findTemplate($key, 'mail', $this->implementationKey());
+        return SystemNotification::findTemplate($key, 'mail', $this->implementationKey(), $this->fundId());
     }
 
     /**

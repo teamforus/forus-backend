@@ -31,6 +31,7 @@ class ImplementationPrivateResource extends BaseJsonResource
             'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
             'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
             'show_office_map', 'show_voucher_map', 'show_product_map',
+            'allow_per_fund_notification_templates',
         ]), [
             'communication_type' => $implementation->informal_communication ? 'informal' : 'formal',
             'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),

@@ -365,7 +365,8 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         $template = SystemNotification::findTemplate(
             static::getKey(),
             'push',
-            $this->implementation->key ?? Implementation::KEY_GENERAL
+            $this->implementation->key ?? Implementation::KEY_GENERAL,
+            $this->eventLog?->data['fund_id'] ?? null,
         );
 
         $this->getNotificationService()->sendPushNotification(
