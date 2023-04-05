@@ -86,20 +86,27 @@ class SystemNotificationsController extends Controller
         ], $request->only('enable_all', 'enable_mail', 'enable_push', 'enable_database'));
 
         foreach ($request->input('templates', []) as $template) {
-            $systemNotification->templates()->updateOrCreate([
+            $systemNotification->templates()->updateOrCreate(array_merge([
                 'implementation_id' => $implementation->id,
+                'fund_id' => null,
                 'type' => $template['type'],
-            ], Arr::only($template, [
-                'formal', 'title', 'content',
+                'formal' => $template['formal'],
+            ], $implementation->allow_per_fund_notification_templates ? [
+                'fund_id' => $template['fund_id'] ?? null,
+            ] : []), Arr::only($template, [
+                'title', 'content',
             ]));
         }
 
         foreach ($request->input('templates_remove', []) as $template) {
-            $systemNotification->templates()->where([
+            $systemNotification->templates()->where(array_merge([
                 'implementation_id' => $implementation->id,
+                'fund_id' => null,
                 'type' => $template['type'],
                 'formal' => $template['formal'],
-            ])->delete();
+            ], $implementation->allow_per_fund_notification_templates ? [
+                'fund_id' => $template['fund_id'] ?? null,
+            ] : []))->delete();
         }
 
         return SystemNotificationResource::create($systemNotification);
