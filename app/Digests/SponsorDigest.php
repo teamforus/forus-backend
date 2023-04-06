@@ -6,12 +6,17 @@ use App\Mail\Digest\BaseDigestMail;
 use App\Mail\Digest\DigestSponsorMail;
 use App\Mail\MailBodyBuilder;
 use App\Models\Fund;
+use App\Models\FundProvider;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Product;
+use App\Scopes\Builders\FundProviderQuery;
+use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 
 /**
  * Class SponsorDigest
@@ -31,14 +36,14 @@ class SponsorDigest extends BaseOrganizationDigest
      * When at least one provider applied to one of your funds,
      * send info about lack of activity on your other funds
      */
-    protected $notifyAboutLackOfActivity;
+    protected bool $notifyNoProviderActivity;
 
     /**
      * SponsorDigest constructor.
      */
     public function __construct()
     {
-        $this->notifyAboutLackOfActivity = env('DIGEST_NOTIFY_NO_PROVIDER_REQUESTS', false);
+        $this->notifyNoProviderActivity = Config::get('forus.digest.sponsor.notify_no_provider_activity', false);
     }
 
     /**
@@ -57,16 +62,18 @@ class SponsorDigest extends BaseOrganizationDigest
 
         [$emailBodyApplications, $total_applications] = $this->getApplicationsEmailBody($organization);
         [$emailBodyProductsAdded, $total_products_added] = $this->getProductsAddedEmailBody($organization);
+        [$emailBodyProductsPending, $total_products_pending] = $this->getProductsPendingEmailBody($organization);
         [$emailBodyProvidersReply, $total_messages] = $this->getProvidersReplyEmailBody($organization);
 
-        if (($total_applications + $total_products_added + $total_messages) === 0) {
+        if (($total_applications + $total_products_added + $total_products_pending + $total_messages) === 0) {
             return;
         }
 
         $emailBody = $emailBody->merge(
             $emailBodyApplications,
             $emailBodyProductsAdded,
-            $emailBodyProvidersReply
+            $emailBodyProductsPending,
+            $emailBodyProvidersReply,
         );
 
         $emailBody->button_primary(
@@ -81,16 +88,15 @@ class SponsorDigest extends BaseOrganizationDigest
      * @param Organization $organization
      * @return array
      */
-    private function getApplicationsEmailBody(
-        Organization $organization
-    ): array {
+    private function getApplicationsEmailBody(Organization $organization): array
+    {
         $applyEvents = [];
         $emailBody = new MailBodyBuilder();
 
         foreach ($organization->funds as $fund) {
             $query = EventLog::eventsOfTypeQuery(Fund::class, $fund->id);
             $query->where('event', Fund::EVENT_PROVIDER_APPLIED);
-            $query->where('created_at', '>=', $this->getOrganizationDigestTime($organization));
+            $query->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
 
             $applyEvents[] = [$fund, $query->count(), $query->pluck('data')];
         }
@@ -112,7 +118,7 @@ class SponsorDigest extends BaseOrganizationDigest
                         'providers_count' => $countEvents,
                         'providers_list' => $eventLogs->pluck('provider_name')->implode("\n- "),
                     ]));
-                } else if ($this->notifyAboutLackOfActivity) {
+                } else if ($this->notifyNoProviderActivity) {
                     $emailBody->h3(trans('digests/sponsor.providers_header_empty', [
                         'fund_name' => $fund->name,
                     ]), ['margin_less'])->text(trans('digests/sponsor.providers_empty'));
@@ -127,16 +133,15 @@ class SponsorDigest extends BaseOrganizationDigest
      * @param Organization $organization
      * @return array
      */
-    private function getProductsAddedEmailBody(
-        Organization $organization
-    ): array {
+    private function getProductsAddedEmailBody(Organization $organization): array
+    {
         $events = [];
         $emailBody = new MailBodyBuilder();
 
         foreach ($organization->funds as $fund) {
             $query = EventLog::eventsOfTypeQuery(Fund::class, $fund->id);
             $query->where('event', Fund::EVENT_PRODUCT_ADDED);
-            $query->where('created_at', '>=', $this->getOrganizationDigestTime($organization));
+            $query->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
 
             $events[] = [$fund, $query->count(), $query->get()];
         }
@@ -184,16 +189,76 @@ class SponsorDigest extends BaseOrganizationDigest
      * @param Organization $organization
      * @return array
      */
-    private function getProvidersReplyEmailBody(
-        Organization $organization
-    ): array {
+    private function getProductsPendingEmailBody(Organization $organization): array
+    {
+        $emailBody = new MailBodyBuilder();
+
+        $events = $organization->funds->map(function(Fund $fund) use ($organization) {
+            $providerQuery = FundProviderQuery::whereApprovedForFundsFilter(
+                FundProvider::query(), $fund->id,
+            )->select('organization_id');
+
+            $productsQuery = Product::query()->whereIn('organization_id', $providerQuery);
+            $productsQuery = ProductQuery::notApprovedForFundsFilter($productsQuery, $fund->id);
+            $productsQuery = ProductQuery::inStockAndActiveFilter($productsQuery);
+
+            $query = EventLog::eventsOfTypeQuery(Product::class, $productsQuery);
+            $query->where('event', Product::EVENT_CREATED);
+            $query->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
+
+            return [$fund, $query->count(), $query->get()];
+        });
+
+        if ($events->sum(1) > 0) {
+            $emailBody->separator();
+
+            /** @var Fund $fund */
+            /** @var int $countEvents */
+            /** @var EventLog[]|Collection $eventLogs */
+            foreach ($events as [$fund, $countEvents, $eventLogs]) {
+                $emailBody->h3(trans('digests/sponsor.products_pending.header', [
+                    'fund_name' => $fund->name,
+                ]), ['margin_less']);
+
+                $emailBody->text(trans_choice('digests/sponsor.products_pending.details', $countEvents, [
+                    'fund_name' => $fund->name,
+                    'products_count' => $countEvents,
+                ]));
+
+                $eventLogsByProvider = $eventLogs->pluck('data')->groupBy('provider_id');
+
+                /** @var array $event_item */
+                foreach ($eventLogsByProvider as $event_items) {
+                    $emailBody->h5(trans_choice(
+                        'digests/sponsor.products_pending.provider',
+                        count($event_items), [
+                        'provider_name' => $event_items[0]['provider_name'],
+                        'products_count' => count($event_items)
+                    ]), ['margin_less']);
+
+                    $emailBody->text("- " . implode("\n- ", array_map(static function ($data) {
+                        return trans('digests/sponsor.products_pending.item', $data);
+                    }, $event_items->toArray())));
+                }
+            }
+        }
+
+        return [$emailBody, $events->sum(1)];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return array
+     */
+    private function getProvidersReplyEmailBody(Organization $organization): array
+    {
         $events = [];
         $emailBody = new MailBodyBuilder();
 
         foreach ($organization->funds as $fund) {
             $query = EventLog::eventsOfTypeQuery(Fund::class, $fund->id);
             $query->where('event', Fund::EVENT_PROVIDER_REPLIED);
-            $query->where('created_at', '>=', $this->getOrganizationDigestTime($organization));
+            $query->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
             $events[] = [$fund, $query->count(), $query->get()];
         }
 

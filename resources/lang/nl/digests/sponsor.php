@@ -32,6 +32,20 @@ return [
         'item' => ':product_name :product_price_locale',
     ],
 
+    // new pending products requests
+    'products_pending' => [
+        'header' => 'New pending products for :fund_name webshop.',
+        'details' => implode('|', [
+            ":products_count product is pending to be added to :fund_name.",
+            ":products_count products are pending to be added to :fund_name.",
+        ]),
+        'provider' => implode('|', [
+            ':provider_name (:products_count aanbieding)',
+            ':provider_name (:products_count aanbiedingen)'
+        ]),
+        'item' => ':product_name :product_price_locale',
+    ],
+
     // new provider feedback
     'feedback_header' => implode('|', [
         "U heeft :count_messages nieuw bericht ontvangen voor :fund_name",

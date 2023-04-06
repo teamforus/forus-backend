@@ -10,6 +10,7 @@ use App\Models\Implementation;
 use App\Models\Product;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Lang;
 
 class ProductQuery
@@ -41,6 +42,18 @@ class ProductQuery
                 });
             });
         });
+    }
+
+    /**
+     * @param Builder|Relation|Product $query
+     * @param array|int $fund_id
+     * @return Builder|Relation|Product
+     */
+    public static function notApprovedForFundsFilter(
+        Builder|Relation|Product $query,
+        array|int $fund_id
+    ): Builder|Relation|Product {
+        return $query->whereNotIn('id', self::approvedForFundsFilter(clone $query, $fund_id)->select('id'));
     }
 
     /**

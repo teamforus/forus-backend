@@ -10,7 +10,9 @@ use App\Services\EventLogService\Models\EventLog;
 use App\Models\Identity;
 use App\Services\Forus\Notification\NotificationService;
 use Carbon\Carbon;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
@@ -89,7 +91,7 @@ class RequesterDigest
         Fund $fund,
         string $targetEvent,
         array $otherEvents
-    ) {
+    ): mixed {
         $query = EventLog::eventsOfTypeQuery(Fund::class, $fund->id);
 
         $logsApprovedBudget = $query->whereIn('event', $otherEvents)->where(
@@ -108,17 +110,15 @@ class RequesterDigest
     }
 
     /**
-     * @param Collection|Fund[] $funds
+     * @param EloquentCollection|Fund[] $funds
      * @return MailBodyBuilder[]
      */
-    public function buildFundProvidersMailBody($funds): array
+    public function buildFundProvidersMailBody(EloquentCollection|Arrayable $funds): array
     {
-        $self = $this;
-
-        return $funds->reduce(static function($array, Fund $fund) use ($self) {
-            $events = $self->getEvents($fund, Fund::EVENT_PROVIDER_APPROVED_BUDGET, [
+        return $funds->reduce(function($array, Fund $fund) {
+            $events = $this->getEvents($fund, Fund::EVENT_PROVIDER_APPROVED_BUDGET, [
                 Fund::EVENT_PROVIDER_APPROVED_BUDGET,
-                Fund::EVENT_PROVIDER_REVOKED_BUDGET
+                Fund::EVENT_PROVIDER_REVOKED_BUDGET,
             ]);
 
             if ($events->count() > 0) {
@@ -141,19 +141,17 @@ class RequesterDigest
     }
 
     /**
-     * @param Collection|Fund[] $funds
+     * @param EloquentCollection|Fund[] $funds
      * @return MailBodyBuilder[]
      */
-    private function buildFundProductsMailBody($funds): array
+    private function buildFundProductsMailBody(EloquentCollection|Arrayable $funds): array
     {
-        $self = $this;
-
-        return $funds->reduce(static function($array, Fund $fund) use ($self) {
-            $events = $self->getEvents($fund, Fund::EVENT_PRODUCT_APPROVED, [
+        return $funds->reduce(function($array, Fund $fund) {
+            $events = $this->getEvents($fund, Fund::EVENT_PRODUCT_APPROVED, [
                 Fund::EVENT_PRODUCT_APPROVED,
-                Fund::EVENT_PRODUCT_REVOKED
-            ])->merge($self->getEvents($fund, Fund::EVENT_PRODUCT_ADDED, [
-                Fund::EVENT_PRODUCT_ADDED
+                Fund::EVENT_PRODUCT_REVOKED,
+            ])->merge($this->getEvents($fund, Fund::EVENT_PRODUCT_ADDED, [
+                Fund::EVENT_PRODUCT_ADDED,
             ]));
 
             if ($events->count() > 0) {
