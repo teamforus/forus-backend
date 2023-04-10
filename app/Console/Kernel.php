@@ -85,9 +85,11 @@ class Kernel extends ConsoleKernel
         BankVoucherTransactionBulksBuildCommand::class,
         BankVoucherTransactionBulksUpdateStateCommand::class,
         BankVoucherTransactionProcessZeroAmountCommand::class,
+        BankConnectionExpirationNotifyCommand::class,
+
+        // system notifications and notification templates commands
         UpdateNotificationTemplatesCommand::class,
         UpdateSystemNotificationsCommand::class,
-        BankConnectionExpirationNotifyCommand::class,
 
         // physical cards
         MigratePhysicalCardsCommand::class,

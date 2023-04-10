@@ -601,9 +601,7 @@ class Implementation extends BaseModel
         if (is_array($config)) {
             $implementation = self::active() ?? abort(403);
             $banner = $implementation->banner;
-
             $request = BaseFormRequest::createFromGlobals();
-            $announcements = (new AnnouncementSearch($request, []))->query()->get();
             $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
 
             $config = array_merge($config, [
@@ -611,7 +609,10 @@ class Implementation extends BaseModel
                 'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
                 'has_reimbursements' => $implementation->hasReimbursements(),
-                'announcements' => AnnouncementResource::collection($announcements)->toArray($request),
+                'announcements' => AnnouncementResource::collection((new AnnouncementSearch([
+                    'client_type' => $request->client_type(),
+                    'implementation_id' => $implementation->id,
+                ]))->query()->get())->toArray($request),
                 'digid' => $implementation->digidEnabled(),
                 'digid_sign_up_allowed' => $implementation->digid_sign_up_allowed,
                 'digid_mandatory' => $implementation->digid_required ?? true,

@@ -6,6 +6,7 @@ use App\Http\Requests\BNG\RedirectBNGBankConnectionRequest;
 use App\Http\Requests\BNG\RedirectBNGVoucherTransactionBulkRequest;
 use App\Models\BankConnection;
 use App\Models\VoucherTransactionBulk;
+use App\Services\BNGService\BNGService;
 use App\Services\BNGService\Data\AuthData;
 use Illuminate\Http\RedirectResponse;
 use Throwable;
@@ -22,6 +23,7 @@ class BNGController extends Controller
         BankConnection $connection
     ): RedirectResponse {
         $code = $request->get('code');
+        /** @var BNGService $bngService */
         $bngService = resolve('bng_service');
 
         if (!$code) {
@@ -30,12 +32,15 @@ class BNGController extends Controller
 
         try {
             $response = $bngService->exchangeAuthCode($code, new AuthData('', $connection->auth_params));
-            $access_token = $response->getAccessToken();
-            $connection->update(compact('code', 'access_token'));
+
+            $connection->update([
+                'code' => $code,
+                'access_token' => $response->getAccessToken(),
+                'expire_at' => now()->addSeconds($response->getExpiresIn()),
+            ]);
 
             $connection->setMonetaryAccounts($connection->fetchConnectionMonetaryAccounts());
             $connection->setActive();
-            $connection->setExpirationDate();
             $connection->updateFundBalances();
         } catch (Throwable $e) {
             $error_message = $e->getMessage();
@@ -60,6 +65,7 @@ class BNGController extends Controller
         VoucherTransactionBulk $bulk
     ): RedirectResponse {
         $code = $request->get('code');
+        /** @var BNGService $bngService */
         $bngService = resolve('bng_service');
 
         if (!$code) {

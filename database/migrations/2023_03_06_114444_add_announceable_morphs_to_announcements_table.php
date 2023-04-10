@@ -14,7 +14,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('announcements', function (Blueprint $table) {
-            $table->nullableMorphs('announcementable');
+            $table->string('key', 200)->nullable()->after('type');
+            $table->string("announceable_type")->nullable()->after('implementation_id');
+            $table->unsignedBigInteger("announceable_id")->nullable()->after('announceable_type');
+            $table->boolean('dismissible')->default(true)->after('announceable_id');
+
+            $table->index(["announceable_type", "announceable_id"]);
         });
     }
 
@@ -26,7 +31,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('announcements', function (Blueprint $table) {
-            $table->dropMorphs('announcementable');
+            $table->dropColumn('key');
+            $table->dropMorphs('announceable');
+            $table->dropColumn('dismissible');
         });
     }
 };

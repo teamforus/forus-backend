@@ -6,9 +6,9 @@ use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
 
 
-class BankConnectionExpirationMail extends ImplementationMail
+class BankConnectionExpiringMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = "notifications_bank_connections.expiration";
+    protected string $notificationTemplateKey = "notifications_bank_connections.expiring";
 
     /**
      * @return Mailable

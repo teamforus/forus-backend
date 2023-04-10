@@ -13,38 +13,42 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property int $id
  * @property string $type
+ * @property string|null $key
+ * @property bool $dismissible
  * @property string $title
  * @property string|null $description
  * @property \Illuminate\Support\Carbon|null $expire_at
  * @property string|null $scope
  * @property bool $active
  * @property int|null $implementation_id
+ * @property string|null $announceable_type
+ * @property int|null $announceable_id
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $announcementable_type
- * @property int|null $announcementable_id
- * @property-read Model|\Eloquent $announcementable
+ * @property-read Model|\Eloquent $announceable
  * @property-read string $description_html
  * @method static Builder|Announcement newModelQuery()
  * @method static Builder|Announcement newQuery()
- * @method static \Illuminate\Database\Query\Builder|Announcement onlyTrashed()
+ * @method static Builder|Announcement onlyTrashed()
  * @method static Builder|Announcement query()
  * @method static Builder|Announcement whereActive($value)
- * @method static Builder|Announcement whereAnnouncementableId($value)
- * @method static Builder|Announcement whereAnnouncementableType($value)
+ * @method static Builder|Announcement whereAnnounceableId($value)
+ * @method static Builder|Announcement whereAnnounceableType($value)
  * @method static Builder|Announcement whereCreatedAt($value)
  * @method static Builder|Announcement whereDeletedAt($value)
  * @method static Builder|Announcement whereDescription($value)
+ * @method static Builder|Announcement whereDismissible($value)
  * @method static Builder|Announcement whereExpireAt($value)
  * @method static Builder|Announcement whereId($value)
  * @method static Builder|Announcement whereImplementationId($value)
+ * @method static Builder|Announcement whereKey($value)
  * @method static Builder|Announcement whereScope($value)
  * @method static Builder|Announcement whereTitle($value)
  * @method static Builder|Announcement whereType($value)
  * @method static Builder|Announcement whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|Announcement withTrashed()
- * @method static \Illuminate\Database\Query\Builder|Announcement withoutTrashed()
+ * @method static Builder|Announcement withTrashed()
+ * @method static Builder|Announcement withoutTrashed()
  * @mixin \Eloquent
  */
 class Announcement extends Model
@@ -55,8 +59,8 @@ class Announcement extends Model
      * @var string[]
      */
     protected $fillable = [
-        'type', 'title', 'description', 'expire_at', 'scope', 'active', 'implementation_id',
-        'announcementable_type', 'announcementable_id',
+        'key', 'type', 'title', 'description', 'expire_at', 'scope', 'active', 'implementation_id',
+        'announceable_type', 'announceable_id', 'dismissible',
     ];
 
     /**
@@ -64,6 +68,7 @@ class Announcement extends Model
      */
     protected $casts = [
         'active' => 'boolean',
+        'dismissible' => 'boolean',
     ];
 
     /**
@@ -77,7 +82,7 @@ class Announcement extends Model
      * @return MorphTo
      * @noinspection PhpUnused
      */
-    public function announcementable(): MorphTo
+    public function announceable(): MorphTo
     {
         return $this->morphTo();
     }

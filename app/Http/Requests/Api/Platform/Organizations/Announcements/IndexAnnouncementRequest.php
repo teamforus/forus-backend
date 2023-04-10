@@ -13,7 +13,7 @@ class IndexAnnouncementRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->isAuthenticated();
     }
 
     /**

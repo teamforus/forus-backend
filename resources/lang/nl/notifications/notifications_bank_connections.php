@@ -1,11 +1,8 @@
 <?php
 
 return [
-    'day' => 'dagen',
-    'month' => 'month',
-
     'announcement' => [
-        'title' => 'Bank is about expire',
-        'description' => 'Bank is about expire',
+        'title' => 'Bank connection is about to expire',
+        'description' => 'Your organization\'s banking connection is about to expire. Please renew before :expire_at_locale.',
     ]
 ];

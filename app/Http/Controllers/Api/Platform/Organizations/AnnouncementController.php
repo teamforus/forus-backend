@@ -27,8 +27,13 @@ class AnnouncementController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAny', [Announcement::class, $organization]);
 
-        $search = new AnnouncementSearch($request, [], $organization);
+        $search = new AnnouncementSearch([
+            'client_type' => $request->client_type(),
+            'organization_id' => $organization->id,
+            'identity_address' => $request->auth_address(),
+            'implementation_id' => $request->implementation()->id,
+        ]);
 
-        return AnnouncementResource::collection($search->query()->get());
+        return AnnouncementResource::queryCollection($search->query());
     }
 }

@@ -181,12 +181,10 @@
             "content": "De actieve IBAN voor de :bank_name integratie van :organization_name is veranderd naar :bank_connection_account_monetary_account_iban."
         }
     },
-    "notifications_bank_connections.expiration": {
+    "notifications_bank_connections.expiring": {
         "mail": {
-            "title": "Verloop van Bank Connectie op Forus Platform :sponsor_name",
-            "title_informal": "Verloop van Bank Connectie op Forus Platform :sponsor_name",
-            "template": "notifications_bank_connections/expiration.md",
-            "template_informal": "notifications_bank_connections/expiration_informal.md"
+            "title": "Verloop van Bank Connectie op Forus Platform :organization_name",
+            "template": "notifications_bank_connections/expiring.md"
         },
         "push": {},
         "database": {

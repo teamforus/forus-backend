@@ -8,7 +8,7 @@ use App\Services\BNGService\Exceptions\ApiException;
 use App\Services\BNGService\Responses\AccountsValue;
 use App\Services\BNGService\Responses\Balances;
 use App\Services\BNGService\Responses\BulkPaymentValue;
-use App\Services\BNGService\Responses\BulkPaymentTokenValue;
+use App\Services\BNGService\Responses\AccessTokenResponseValue;
 use App\Services\BNGService\Responses\Consent\AccountConsentValue;
 use App\Services\BNGService\Responses\Consent\BulkPaymentConsentValue;
 use App\Services\BNGService\Responses\Entries\BulkPayment;
@@ -102,10 +102,10 @@ class BNGService
     /**
      * @param string $code
      * @param AuthData $data
-     * @return BulkPaymentTokenValue
+     * @return AccessTokenResponseValue
      * @throws ApiException
      */
-    public function exchangeAuthCode(string $code, AuthData $data): BulkPaymentTokenValue
+    public function exchangeAuthCode(string $code, AuthData $data): AccessTokenResponseValue
     {
         $auth_params = $data->getParams();
 
@@ -119,7 +119,7 @@ class BNGService
             'code_verifier' => $auth_params['code_challenge'],
         ]));
 
-        return new BulkPaymentTokenValue(new ResponseData($res));
+        return new AccessTokenResponseValue(new ResponseData($res));
     }
 
     /**

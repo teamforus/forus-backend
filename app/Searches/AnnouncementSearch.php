@@ -4,19 +4,14 @@
 namespace App\Searches;
 
 
-use App\Http\Requests\BaseFormRequest;
 use App\Models\BankConnection;
-use App\Models\Employee;
-use App\Models\Organization;
+use App\Models\Implementation;
 use App\Models\Announcement;
+use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Database\Eloquent\Builder;
 
 class AnnouncementSearch extends BaseSearch
 {
-    protected BaseFormRequest $request;
-    protected ?Employee $employee;
-    protected ?Organization $organization;
-
     /**
      * @var array|string[]
      */
@@ -27,20 +22,12 @@ class AnnouncementSearch extends BaseSearch
     ];
 
     /**
-     * @param BaseFormRequest $request
      * @param array $filters
-     * @param Organization|null $organization
+     * @param Builder|Announcement|null $builder
      */
-    public function __construct(
-        BaseFormRequest $request,
-        array $filters,
-        ?Organization $organization = null
-    ) {
-        parent::__construct($filters, Announcement::query());
-
-        $this->request = $request;
-        $this->organization = $organization;
-        $this->employee = $organization && $request->isAuthenticated() ? $request->employee($organization) : null;
+    public function __construct(array $filters, Builder|Announcement $builder = null)
+    {
+        parent::__construct($filters, $builder ?: Announcement::query());
     }
 
     /**
@@ -48,20 +35,21 @@ class AnnouncementSearch extends BaseSearch
      */
     public function query(): ?Builder
     {
+        /** @var Builder|Announcement $builder */
         $builder = parent::query();
 
-        $clientType = $this->request->client_type();
-        $implementation = $this->request->implementation();
+        $clientType = $this->getFilter('client_type');
+        $isWebshop = $clientType === Implementation::FRONTEND_WEBSHOP;
 
-        if ($clientType !== $implementation::FRONTEND_WEBSHOP) {
+        if ($clientType !== Implementation::FRONTEND_WEBSHOP) {
             $clientType = [$clientType, 'dashboards'];
         }
 
         $builder
-            ->where(function(Builder $builder) use ($clientType, $implementation) {
-                if ($clientType === $implementation::FRONTEND_WEBSHOP) {
+            ->where(function(Builder $builder) use ($isWebshop) {
+                if ($isWebshop) {
                     $builder->whereNull('implementation_id');
-                    $builder->orWhere('implementation_id', $implementation->id);
+                    $builder->orWhere('implementation_id', $this->getFilter('implementation_id'));
                 }
             })
             ->where('active', true)
@@ -71,35 +59,34 @@ class AnnouncementSearch extends BaseSearch
                 $builder->orWhere('expire_at', '>=', now()->startOfDay());
             });
 
-        $builder->where(function (Builder $builder) {
-            $builder->whereDoesntHave('announcementable');
+        if (!$this->hasFilter('identity_address') || !$this->hasFilter('organization_id')) {
+            $builder->where(function (Builder $builder) {
+                $builder->whereNull('announceable_id');
+                $builder->whereNull('announceable_type');
+            });
+        } else {
             $this->whereBankConnection($builder);
-        });
+        }
 
-        return $builder->orderByDesc('created_at');
+        return $builder->orderBy('created_at');
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Announcement $builder
+     * @return Builder|Announcement
      */
-    protected function whereBankConnection(Builder $builder): Builder
+    protected function whereBankConnection(Builder|Announcement $builder): Builder|Announcement
     {
-        if (!$this->employee || !$this->organization) {
-            return $builder;
-        }
+        return $builder->whereHasMorph('announceable', BankConnection::class, function (Builder $builder) {
+            $builder->whereHas('organization', function (Builder $builder) {
+                return OrganizationQuery::whereHasPermissions(
+                    $builder->where('id', $this->getFilter('organization_id')),
+                    $this->getFilter('identity_address'),
+                    $this->entityPermissionsMap['bank_connection'],
+                );
+            });
 
-        $ids = $this->organization->identityCan(
-            $this->employee->identity, $this->entityPermissionsMap['bank_connection']
-        ) ? [$this->organization->id] : [];
-
-        return $builder->orWhereHasMorph(
-            'announcementable',
-            BankConnection::class,
-            function (Builder $builder) use ($ids) {
-                $builder->whereIn('organization_id', $ids)
-                    ->where('state', BankConnection::STATE_ACTIVE);
-            }
-        );
+            $builder->where('state', BankConnection::STATE_ACTIVE);
+        });
     }
 }

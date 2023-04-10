@@ -46,20 +46,22 @@ use Throwable;
  * @property string $access_token
  * @property string $code
  * @property array $context
- * @property \Illuminate\Support\Carbon|null $session_expire_at
+ * @property \Illuminate\Support\Carbon|null $expire_at
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Announcement> $announcements
+ * @property-read int|null $announcements_count
  * @property-read Bank $bank
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BankConnectionAccount[] $bank_connection_accounts
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\BankConnectionAccount> $bank_connection_accounts
  * @property-read int|null $bank_connection_accounts_count
  * @property-read \App\Models\BankConnectionAccount|null $bank_connection_default_account
  * @property-read string|null $iban
  * @property-read \App\Models\Implementation $implementation
- * @property-read \Illuminate\Database\Eloquent\Collection|EventLog[] $logs
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, EventLog> $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Organization $organization
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\VoucherTransactionBulk> $voucher_transaction_bulks
  * @property-read int|null $voucher_transaction_bulks_count
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection newQuery()
@@ -73,11 +75,11 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereConsentId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereContext($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereExpireAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereRedirectToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereSessionExpireAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereUpdatedAt($value)
  * @mixin \Eloquent
@@ -93,7 +95,7 @@ class BankConnection extends BaseModel
     public const EVENT_ACTIVATED = 'activated';
     public const EVENT_DISABLED_INVALID = 'disabled_invalid';
     public const EVENT_MONETARY_ACCOUNT_CHANGED = 'monetary_account_changed';
-    public const EVENT_EXPIRATION = 'expiration';
+    public const EVENT_EXPIRING = 'expiring';
     public const EVENT_ERROR = 'error';
 
     public const EVENTS = [
@@ -132,7 +134,7 @@ class BankConnection extends BaseModel
      */
     protected $fillable = [
         'bank_id', 'organization_id', 'implementation_id', 'redirect_token', 'access_token',
-        'code', 'state', 'context', 'session_expire_at', 'bank_connection_account_id',
+        'code', 'state', 'context', 'expire_at', 'bank_connection_account_id',
         'auth_url', 'auth_params', 'consent_id',
     ];
 
@@ -156,7 +158,7 @@ class BankConnection extends BaseModel
      * @var string[]
      */
     protected $dates = [
-        'session_expire_at',
+        'expire_at',
     ];
 
     /**
@@ -347,7 +349,7 @@ class BankConnection extends BaseModel
     {
         return tap($this)->update([
             'context' => json_decode($apiContext->toJson()),
-            'session_expire_at' => $apiContext->getSessionContext()->getExpiryTime(),
+            'expire_at' => $apiContext->getSessionContext()->getExpiryTime(),
         ]);
     }
 
@@ -394,25 +396,6 @@ class BankConnection extends BaseModel
         BankConnectionActivated::dispatch($this->updateModel([
             'state' => static::STATE_ACTIVE,
         ]));
-
-        return $this;
-    }
-
-    /**
-     * @return BankConnection
-     */
-    public function setExpirationDate(): self
-    {
-        if ($this->bank->isBNG()) {
-            $expireAt = now()->add(
-                config('forus.bng.expire_time.unit'),
-                config('forus.bng.expire_time.value')
-            );
-
-            $this->update([
-                'session_expire_at' => $expireAt,
-            ]);
-        }
 
         return $this;
     }

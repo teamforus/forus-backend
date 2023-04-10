@@ -2,14 +2,13 @@
 
 namespace App\Console\Commands;
 
-use App\Events\BankConnections\BankConnectionExpiration;
+use App\Events\BankConnections\BankConnectionExpiring;
 use App\Models\BankConnection;
 use App\Services\BankService\Models\Bank;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 
 class BankConnectionExpirationNotifyCommand extends Command
 {
@@ -43,13 +42,16 @@ class BankConnectionExpirationNotifyCommand extends Command
      */
     private function makeNotifications(): void
     {
-        $expireAt = now()->add(
-            config('forus.bng.notify.expire_time.notification.unit'),
-            config('forus.bng.notify.expire_time.notification.value')
-        );
+        $connections = $this->getExpiringBankConnectionsQuery(now()->add(
+            Config::get('forus.bng.notify.expire_time.notification.unit'),
+            Config::get('forus.bng.notify.expire_time.notification.value'),
+        ))->whereDoesntHave('logs', fn (Builder $b) => $b->where([
+            'event' => BankConnection::EVENT_EXPIRING,
+        ]))->get();
 
-        $this->getBankConnections($expireAt)
-            ->each(fn(BankConnection $connection) => BankConnectionExpiration::dispatch($connection));
+        $connections->each(function (BankConnection $connection) {
+            BankConnectionExpiring::dispatch($connection);
+        });
     }
 
     /**
@@ -57,35 +59,38 @@ class BankConnectionExpirationNotifyCommand extends Command
      */
     private function makeAnnouncements(): void
     {
-        $expireAt = now()->add(
-            config('forus.bng.notify.expire_time.announcement.unit'),
-            config('forus.bng.notify.expire_time.announcement.value')
-        );
+        $connections = $this->getExpiringBankConnectionsQuery(now()->add(
+            Config::get('forus.bng.notify.expire_time.announcement.unit'),
+            Config::get('forus.bng.notify.expire_time.announcement.value'),
+        ))->whereDoesntHave('announcements', fn (Builder $b) => $b->where([
+            'key' => 'bank_connection.expiring',
+        ]))->get();
 
-        $bankConnections = $this->getBankConnections($expireAt);
-
-        foreach ($bankConnections as $bankConnection) {
-            $bankConnection->announcements()->create([
-                'type' => 'danger',
-                'title' => trans('notifications/notifications_bank_connections.announcement.title'),
-                'description' => trans('notifications/notifications_bank_connections.announcement.description'),
-                'scope' => 'sponsor',
-                'active' => true,
-            ]);
-        }
+        $connections->each(fn (BankConnection $connection) => $connection->announcements()->updateOrCreate([
+            'key' => 'bank_connection.expiring',
+        ], [
+            'type' => 'danger',
+            'dismissible' => false,
+            'scope' => 'sponsor',
+            'active' => true,
+            'title' => trans('notifications/notifications_bank_connections.announcement.title', [
+                'expire_at_locale' => format_date_locale($connection->expire_at),
+            ]),
+            'description' => trans('notifications/notifications_bank_connections.announcement.description', [
+                'expire_at_locale' => format_date_locale($connection->expire_at),
+            ]),
+        ]));
     }
 
     /**
      * @param Carbon $expireAt
-     * @return array|EloquentCollection|Collection|BankConnection[]
+     * @return Builder|BankConnection
      */
-    private function getBankConnections(Carbon $expireAt): array|EloquentCollection|Collection
+    private function getExpiringBankConnectionsQuery(Carbon $expireAt): Builder|BankConnection
     {
-        return BankConnection::whereHas('bank', function(Builder $builder) {
-            $builder->where('key', Bank::BANK_BNG);
-        })
+        return BankConnection::query()
+            ->whereRelation('bank', 'key', Bank::BANK_BNG)
             ->whereState(BankConnection::STATE_ACTIVE)
-            ->whereDate('session_expire_at', $expireAt)
-            ->get();
+            ->whereDate('expire_at', '<=', $expireAt->startOfDay());
     }
 }

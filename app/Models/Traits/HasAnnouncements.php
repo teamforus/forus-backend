@@ -15,6 +15,6 @@ trait HasAnnouncements
      */
     public function announcements(): MorphMany
     {
-        return $this->morphMany(Announcement::class, 'announcementable');
+        return $this->morphMany(Announcement::class, 'announceable');
     }
 }
