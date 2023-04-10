@@ -174,6 +174,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->patch('roles', "Api\Platform\OrganizationsController@updateRoles");
         $router->patch('update-business', "Api\Platform\OrganizationsController@updateBusinessType");
         $router->patch('accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
+        $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFieldSettings");
     });
 
     $router->resource('organizations', "Api\Platform\OrganizationsController")
@@ -574,6 +575,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->only('index', 'show', 'store', 'update', 'destroy');
 
     // Product reservations
+    $router->get(
+        'organizations/{organization}/product-reservations/export-fields',
+        "Api\Platform\Organizations\ProductReservationsController@getExportFields"
+    );
+
+    $router->get(
+        'organizations/{organization}/product-reservations/export',
+        "Api\Platform\Organizations\ProductReservationsController@export"
+    );
+
     $router->post(
         'organizations/{organization}/product-reservations/batch',
         "Api\Platform\Organizations\ProductReservationsController@storeBatch"
@@ -897,4 +908,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource('banks', "Api\Platform\BanksController")->only([
         'index', 'show',
     ]);
+
+    $router->post('format', 'Api\Platform\FormatController@format');
 });

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -66,12 +67,14 @@ class SystemNotification extends Model
      * @param string $key
      * @param string $type
      * @param string|null $implementation_key
+     * @param int|null $fund_id
      * @return NotificationTemplate|null
      */
     public static function findTemplate(
         string $key,
         string $type,
-        ?string $implementation_key = null
+        ?string $implementation_key = null,
+        ?int $fund_id = null
     ): ?NotificationTemplate {
         $systemNotification = SystemNotification::where(compact('key'))->first();
         $generalImplementation = Implementation::general();
@@ -80,7 +83,7 @@ class SystemNotification extends Model
         /** @var NotificationTemplate $generalTemplate */
         $generalTemplate = $systemNotification->templates()->where([
             'implementation_id' => $generalImplementation->id,
-            'formal' => !$generalImplementation->informal_communication,
+            'formal' => !$currentImplementation->informal_communication,
             'type' => $type,
         ])->first();
 
@@ -89,7 +92,13 @@ class SystemNotification extends Model
             'implementation_id' => $currentImplementation->id,
             'formal' => !$currentImplementation->informal_communication,
             'type' => $type,
-        ])->first() : null;
+        ])->where(function(Builder $builder) use ($fund_id, $currentImplementation, $key, $type) {
+            $builder->whereNull('fund_id');
+
+            if ($currentImplementation->allow_per_fund_notification_templates) {
+                $builder->orWhere('fund_id', $fund_id);
+            }
+        })->orderByDesc('fund_id')->first() : null;
 
         return $template ?: $generalTemplate;
     }

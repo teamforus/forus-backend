@@ -35,6 +35,7 @@ class OrganizationResource extends JsonResource
     {
         $load = [
             'tags',
+            'offices',
             'bank_connection_active',
         ];
 
@@ -73,7 +74,8 @@ class OrganizationResource extends JsonResource
         return array_filter(array_merge($organization->only([
             'id', 'identity_address', 'name', 'kvk', 'business_type_id',
             'email_public', 'phone_public', 'website_public',
-            'description', 'description_html',
+            'description', 'description_html', 'reservation_phone',
+            'reservation_address', 'reservation_birth_date'
         ]), $privateData, $ownerData, $employeeOnlyData, [
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),

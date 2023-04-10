@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
+ * @property bool $allow_reservations
  * @property bool $allow_reimbursements
  * @property bool $allow_direct_payments
  * @property bool $allow_generator_direct_payments
@@ -77,6 +78,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowReimbursements($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowReservations($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherRecords($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherTopUps($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
@@ -192,6 +194,7 @@ class FundConfig extends BaseModel
         'contact_info_enabled' => 'boolean',
         'contact_info_required' => 'boolean',
         'contact_info_message_custom' => 'boolean',
+        'allow_reservations' => 'boolean',
         'allow_reimbursements' => 'boolean',
         'limit_generator_amount' => 'string',
         'limit_voucher_top_up_amount' => 'string',

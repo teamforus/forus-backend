@@ -53,7 +53,8 @@ class ProductReservationResource extends BaseJsonResource
         }
 
         return array_merge($reservation->only([
-            'id', 'state', 'state_locale', 'amount', 'code', 'first_name', 'last_name', 'user_note',
+            'id', 'state', 'state_locale', 'amount', 'code',
+            'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date',
         ]), [
             'price' => $price,
             'price_locale' => $price_locale,
@@ -64,8 +65,13 @@ class ProductReservationResource extends BaseJsonResource
                 'organization' => $reservation->product->organization->only('id', 'name'),
                 'photo' => new MediaResource($reservation->product->photo),
             ]),
-            'fund' => $voucher->fund->only('id', 'name'),
+            'fund' => array_merge($voucher->fund->only([
+                'id', 'name',
+            ]), [
+                'organization' => $voucher->fund->organization->only('id', 'name'),
+            ]),
             'voucher_transaction' => $transaction?->only('id', 'address'),
+            'birth_date_locale' => format_date_locale($reservation->birth_date),
         ], $this->getReservationDates($reservation), $identityData);
     }
 

@@ -11,10 +11,10 @@ use Illuminate\Database\Query\Builder as QBuilder;
 class VoucherSubQuery
 {
     /**
-     * @param Builder|Relation $builder
-     * @return Builder
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function appendFirstUseFields(Builder|Relation $builder): Builder
+    public static function appendFirstUseFields(Builder|Relation|Voucher $builder): Builder|Relation|Voucher
     {
         $builder = $builder->addSelect([
             'vouchers.*',
