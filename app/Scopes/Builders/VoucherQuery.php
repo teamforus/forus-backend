@@ -7,8 +7,6 @@ use App\Models\Fund;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
-use App\Models\Identity;
-use App\Models\IdentityEmail;
 use App\Models\VoucherTransaction;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -181,31 +179,28 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder $builder
-     * @param string $query
-     * @return Builder
+     * @param Builder|Voucher $builder
+     * @param string $q
+     * @return Builder|Voucher
      */
-    public static function whereSearchSponsorQuery(Builder $builder, string $query): Builder
+    public static function whereSearchSponsorQuery(Builder|Voucher $builder, string $q): Builder|Voucher
     {
-        return $builder->where(static function (Builder $builder) use ($query) {
-            $builder->where('note', 'LIKE', "%$query%");
-            $builder->orWhere('activation_code', 'LIKE', "%$query%");
-            $builder->orWhere('client_uid', 'LIKE', "%$query%");
+        return $builder->where(static function (Builder|Voucher $builder) use ($q) {
+            $builder->where('note', 'LIKE', "%$q%");
+            $builder->orWhere('activation_code', 'LIKE', "%$q%");
+            $builder->orWhere('client_uid', 'LIKE', "%$q%");
 
-            if ($addresses = IdentityEmail::searchByEmail($query)->pluck('identity_address')) {
-                $builder->orWhereIn('identity_address', $addresses);
-            }
-
-            if ($bsn_identities = Identity::searchByBsn($query)?->pluck('address')) {
-                $builder->orWhereIn('identity_address', $bsn_identities->toArray());
-            }
-
-            $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($query) {
-                return $builder->where('bsn', 'LIKE', "%$query%");
+            $builder->orWhereHas('identity', function (Builder $builder) use ($q) {
+                $builder->whereRelation('primary_email', 'email', 'LIKE', "%$q%");
+                $builder->orWhereRelation('record_bsn', 'value', 'LIKE', "%$q%");
             });
 
-            $builder->orWhereHas('physical_cards', function (Builder $builder) use ($query) {
-                return $builder->where('code', 'LIKE', "%$query%");
+            $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($q) {
+                $builder->where('bsn', 'LIKE', "%$q%");
+            });
+
+            $builder->orWhereHas('physical_cards', function (Builder $builder) use ($q) {
+                $builder->where('code', 'LIKE', "%$q%");
             });
         });
     }

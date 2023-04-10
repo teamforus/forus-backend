@@ -9,6 +9,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
+use App\Searches\FundSearch;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundsController extends Controller
@@ -31,9 +32,9 @@ class FundsController extends Controller
         $this->authorize('showFunds', [$product, $organization]);
 
         /** @var Fund[] $data */
-        $query = FundQuery::whereHasProviderFilter(Fund::search($request->only([
+        $query = FundQuery::whereHasProviderFilter((new FundSearch($request->only([
             'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
-        ]), Fund::query()), $organization->id);
+        ]), Fund::query()))->query(), $organization->id);
 
         if ($product->sponsor_organization) {
             $query->where([

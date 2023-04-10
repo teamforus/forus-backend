@@ -37,6 +37,7 @@ use Illuminate\Notifications\Notifiable;
  * @property-read \App\Models\IdentityEmail|null $primary_email
  * @property-read Collection|\App\Models\IdentityProxy[] $proxies
  * @property-read int|null $proxies_count
+ * @property-read \App\Models\Record|null $record_bsn
  * @property-read Collection|\App\Models\RecordCategory[] $record_categories
  * @property-read int|null $record_categories_count
  * @property-read Collection|\App\Models\Record[] $records
@@ -184,6 +185,19 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function record_bsn(): HasOne
+    {
+        return $this
+            ->hasOne(Record::class, 'identity_address', 'address')
+            ->whereRelation('record_type', 'key', 'bsn')
+            ->latest('created_at')
+            ->latest();
+    }
+
+    /**
      * @return HasMany
      */
     public function record_categories(): HasMany
@@ -223,22 +237,6 @@ class Identity extends Model implements Authenticatable
             $builder->where('value', $bsn);
             $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
         })->first();
-    }
-
-    /**
-     * @param string|null $q
-     * @return Collection|array|null
-     */
-    public static function searchByBsn(?string $q): Collection|array|null
-    {
-        if (empty($q)) {
-            return null;
-        }
-
-        return static::whereHas('records', function(Builder $builder) use ($q) {
-            $builder->where('value', 'LIKE', "%$q%");
-            $builder->where('record_type_id', RecordType::search()->pluck('id', 'key')['bsn']);
-        })->get();
     }
 
     /**

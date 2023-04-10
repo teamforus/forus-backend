@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationAcceptReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBusinessTypeRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
+use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationReservationSettingsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRolesRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\OrganizationResource;
@@ -34,9 +35,12 @@ class OrganizationsController extends Controller
     {
         $this->authorize('viewAny', Organization::class);
 
-        return OrganizationResource::collection(Organization::searchQuery($request)->with(
-            OrganizationResource::load($request)
-        )->orderBy('name')->paginate($request->input('per_page', 10)));
+        $organizations = Organization::searchQuery($request)
+            ->with(OrganizationResource::load($request))
+            ->orderBy('name')
+            ->paginate($request->input('per_page', 10));
+
+        return OrganizationResource::collection($organizations);
     }
 
     /**
@@ -185,6 +189,26 @@ class OrganizationsController extends Controller
 
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'reservations_auto_accept'
+        ])));
+
+        return new OrganizationResource($organization);
+    }
+
+    /**
+     * @param UpdateOrganizationReservationSettingsRequest $request
+     * @param Organization $organization
+     * @return OrganizationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function updateReservationFieldSettings(
+        UpdateOrganizationReservationSettingsRequest $request,
+        Organization $organization
+    ): OrganizationResource {
+        $this->authorize('update', $organization);
+
+        OrganizationUpdated::dispatch($organization->updateModel($request->only([
+            'reservation_phone', 'reservation_address', 'reservation_birth_date',
         ])));
 
         return new OrganizationResource($organization);

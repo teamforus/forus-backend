@@ -17,6 +17,7 @@ use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use App\Traits\HasMarkdownDescription;
 use App\Statistics\Funds\FinancialStatisticQueries;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -66,6 +67,9 @@ use Illuminate\Database\Query\Builder;
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
  * @property int $show_provider_transactions
+ * @property string $reservation_phone
+ * @property string $reservation_address
+ * @property string $reservation_birth_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -158,6 +162,9 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization wherePhonePublic($value)
  * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
  * @method static EloquentBuilder|Organization whereProviderThrottlingValue($value)
+ * @method static EloquentBuilder|Organization whereReservationAddress($value)
+ * @method static EloquentBuilder|Organization whereReservationPhone($value)
+ * @method static EloquentBuilder|Organization whereReservationRequesterBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
  * @method static EloquentBuilder|Organization whereReservationsBudgetEnabled($value)
  * @method static EloquentBuilder|Organization whereReservationsSubsidyEnabled($value)
@@ -190,6 +197,7 @@ class Organization extends BaseModel
         'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
+        'reservation_phone', 'reservation_address', 'reservation_birth_date',
     ];
 
     /**
@@ -814,7 +822,10 @@ class Organization extends BaseModel
     ): EloquentBuilder {
         $postcodes = array_get($options, 'postcodes');
         $providerIds = array_get($options, 'provider_ids');
+
+        /** @var Carbon|null $dateFrom */
         $dateFrom = array_get($options, 'date_from');
+        /** @var Carbon|null $dateTo */
         $dateTo = array_get($options, 'date_to');
 
         $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $sponsor);
@@ -831,7 +842,8 @@ class Organization extends BaseModel
 
         if ($dateFrom && $dateTo) {
             $query->whereHas('voucher_transactions', function(EloquentBuilder $builder) use ($dateFrom, $dateTo) {
-                $builder->whereBetween('created_at', [$dateFrom, $dateTo]);
+                $builder->where('created_at', '>=', $dateFrom->clone()->startOfDay());
+                $builder->where('created_at', '<=', $dateTo->clone()->endOfDay());
             });
         }
 

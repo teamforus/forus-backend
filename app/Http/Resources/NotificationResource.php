@@ -48,7 +48,8 @@ class NotificationResource extends BaseJsonResource
             return SystemNotification::findTemplate(
                 $this->resource->data['key'],
                 'database',
-                $event->data['implementation_key'] ?? Implementation::KEY_GENERAL
+                $event->data['implementation_key'] ?? Implementation::KEY_GENERAL,
+                $event->data['fund_id'] ?? null,
             );
         } catch (Throwable $e) {
             if ($logger = logger()) {

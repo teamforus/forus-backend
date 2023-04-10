@@ -3,13 +3,17 @@
 namespace App\Services\DigIdService\Repositories;
 
 use App\Services\DigIdService\DigIdException;
-use App\Services\DigIdService\Repositories\Interfaces\IDigIdRepo;
+use App\Services\DigIdService\Objects\DigidAuthRequestData;
+use App\Services\DigIdService\Objects\DigidAuthResolveData;
+use App\Services\DigIdService\Repositories\Interfaces\DigIdRepo;
 use App\Services\DigIdService\TmpFile;
 use GuzzleHttp\Client;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 
-class DigIdRepo implements IDigIdRepo
+class DigIdCgiRepo extends DigIdRepo
 {
     public const DIGID_SUCCESS                     = '0000';
     public const DIGID_UNAVAILABLE                 = '0001';
@@ -185,17 +189,23 @@ class DigIdRepo implements IDigIdRepo
     }
 
     /**
-     * @param string $app_url
-     * @param array $extraParams
-     * @return array
+     * @param string $redirectUrl
+     * @param string $sessionSecret
+     * @return DigidAuthRequestData
      * @throws DigIdException
      */
-    public function makeAuthRequest($app_url = "", array $extraParams = []): array
-    {
+    public function makeAuthRequest(
+        string $redirectUrl,
+        string $sessionSecret
+    ): DigidAuthRequestData {
+        $redirectUrl = url_extend_get_params($redirectUrl, [
+            'session_secret' => $sessionSecret,
+        ]);
+
         $request = $this->makeRequestUrl($this->makeAuthorizedRequest(array_merge([
             "request"           => "authenticate",
-            "app_url"           => $app_url,
-        ], $extraParams)));
+            "app_url"           => $redirectUrl,
+        ])));
 
         $response = $this->makeCall($request);
         $result = $this->parseResponseBody($response->getBody());
@@ -209,30 +219,47 @@ class DigIdRepo implements IDigIdRepo
             throw $this->makeException("Digid invalid auth request, response body.", $result_code);
         }
 
-        return $result;
+        $authRedirectParams = Arr::only($result, ['rid', 'a-select-server']);
+        $authRedirectUrl = url_extend_get_params($result['as_url'], $authRedirectParams);
+
+        return (new DigidAuthRequestData)
+            ->setMeta($result)
+            ->setRequestId($result['rid'])
+            ->setAuthResolveUrl($redirectUrl)
+            ->setAuthRedirectUrl($authRedirectUrl);
     }
 
     /**
-     * @param string $rid
-     * @param string $aselect_server
-     * @param string $aselect_credentials
-     * @return array
+     * @param Request $request
+     * @param string $requestId
+     * @param string $sessionSecret
+     * @return DigidAuthResolveData
      * @throws DigIdException
      */
-    public function getBsnFromResponse(
-        string $rid,
-        string $aselect_server,
-        string $aselect_credentials
-    ): array {
-        $request = $this->makeRequestUrl($this->makeAuthorizedRequest([
+    public function resolveResponse(
+        Request $request,
+        string $requestId,
+        string $sessionSecret,
+    ): DigidAuthResolveData {
+        $resolveParams = [
             'request'               => 'verify_credentials',
-            'rid'                   => $rid,
-            'a-select-server'       => $aselect_server,
-            'aselect_credentials'   => $aselect_credentials,
-        ]));
+            'rid'                   => $request->get('rid', ''),
+            'a-select-server'       => $request->get('a-select-server', ''),
+            'aselect_credentials'   => $request->get('aselect_credentials', ''),
+        ];
 
+        if ($sessionSecret !== $request->get('session_secret')) {
+            throw $this->makeException("DigiD: invalid response.", 'unknown_error');
+        }
+
+        if ($resolveParams['rid'] !== $requestId) {
+            throw $this->makeException("DigiD: invalid response.", 'unknown_error');
+        }
+
+        $request = $this->makeRequestUrl($this->makeAuthorizedRequest($resolveParams));
         $response = $this->makeCall($request);
         $result = $this->parseResponseBody($response->getBody());
+        $result = array_merge($result, compact('resolveParams'));
 
         if ($response->getStatusCode() !== 200) {
             throw $this->makeException("DigiD: invalid response.");
@@ -249,7 +276,7 @@ class DigIdRepo implements IDigIdRepo
         }
 
         if ($result_code == self::DIGID_SUCCESS) {
-            return $result;
+            return new DigidAuthResolveData($result['uid'], $result);
         }
 
         throw $this->makeException("Digid API error code received.", $result_code);
@@ -309,24 +336,8 @@ class DigIdRepo implements IDigIdRepo
     }
 
     /**
-     * @param string $message
-     * @param string|null $digidCode
-     * @return DigIdException
-     */
-    private function makeException(string $message, string $digidCode = null): DigIdException
-    {
-        $exception = new DigIdException($message);
-
-        if ($digidCode) {
-            return $exception->setDigIdCode($digidCode);
-        }
-
-        return $exception;
-    }
-
-    /**
      * @param string|null $app_id
-     * @return DigIdRepo
+     * @return DigIdCgiRepo
      */
     public function setAppId(?string $app_id): self
     {
@@ -346,7 +357,7 @@ class DigIdRepo implements IDigIdRepo
 
     /**
      * @param string|null $shared_secret
-     * @return DigIdRepo
+     * @return DigIdCgiRepo
      */
     public function setSharedSecret(?string $shared_secret): self
     {
@@ -356,11 +367,21 @@ class DigIdRepo implements IDigIdRepo
 
     /**
      * @param string|null $trusted_certificate
-     * @return DigIdRepo
+     * @return DigIdCgiRepo
      */
     public function setTrustedCertificate(?string $trusted_certificate): self
     {
         $this->trusted_certificate = $trusted_certificate;
         return $this;
+    }
+
+    /**
+     * @param Request $request
+     * @param string $session_secret
+     * @return bool
+     */
+    public function validateResolveResponse(Request $request, string $session_secret): bool
+    {
+        return $request->get('session_secret') !== $session_secret;
     }
 }

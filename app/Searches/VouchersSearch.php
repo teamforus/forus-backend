@@ -4,6 +4,7 @@
 namespace App\Searches;
 
 
+use App\Models\Product;
 use App\Models\Voucher;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -61,6 +62,26 @@ class VouchersSearch extends BaseSearch
                 VoucherQuery::whereNotExpiredAndActive($builder);
         }
 
-        return $builder;
+        return $this->sort($builder);
+    }
+
+    /**
+     * @param Builder|Voucher $builder
+     * @return Builder|Voucher
+     */
+    protected function sort(Builder|Voucher $builder): Builder|Voucher
+    {
+        $orderBy = $this->getFilter('order_by', 'created_at');
+        $orderDir = $this->getFilter('order_dir', 'desc');
+
+        if ($orderBy == 'voucher_type') {
+            $builder->addSelect([
+                'voucher_type' => Product::query()
+                    ->whereColumn('id', 'vouchers.product_id')
+                    ->selectRaw('if(count(*) > 0, "product", "regular")'),
+            ]);
+        }
+
+        return $builder->orderBy($orderBy, $orderDir)->latest('created_at');
     }
 }

@@ -15,6 +15,7 @@ use App\Services\BNGService\Responses\Entries\BulkPayment;
 use App\Services\BNGService\Responses\Entries\Payment;
 use App\Services\BNGService\Responses\PaymentValue;
 use App\Services\BNGService\Responses\TransactionsValue;
+use App\Services\BNGService\Responses\TransactionValue;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -181,6 +182,40 @@ class BNGService
         ]);
 
         return new TransactionsValue(new ResponseData($res));
+    }
+
+    /**
+     * @param string $accountId
+     * @param string $consentId
+     * @param string $accessToken
+     * @param string $transactionId
+     * @return ?TransactionValue
+     * @throws ApiException
+     */
+    public function getTransaction(
+        string $accountId,
+        string $consentId,
+        string $accessToken,
+        string $transactionId,
+    ): ?TransactionValue {
+        $url = $this->getEndpoint('accounts', [$accountId, 'transactions', $transactionId]);
+
+        $res = $this->requestJson('get', $url, null, [
+            "Authorization" => sprintf("Bearer %s", $accessToken),
+            "Consent-ID" => $consentId,
+        ]);
+
+        if ($res->getStatusCode() == 200) {
+            $data = $res->getBody()->getContents();
+
+            return new TransactionValue(new ResponseData(
+                is_string($data) ? json_decode($data, true)['transactionDetails'] ?? null : $data,
+                $res->getStatusCode(),
+                $res->getHeaders()
+            ));
+        }
+
+        return null;
     }
 
     /**
