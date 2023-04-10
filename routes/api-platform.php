@@ -744,13 +744,13 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     );
 
     $router->get(
-        'organizations/{organization}/sponsor/transaction-bulks/{voucher_transaction_bulks}/export-bulk-to-bng',
-        "Api\Platform\Organizations\Sponsor\TransactionBulksController@exportBulkToBNG"
+        'organizations/{organization}/sponsor/transaction-bulks/{voucher_transaction_bulks}/export-sepa',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController@exportSEPA"
     );
 
     $router->patch(
-        'organizations/{organization}/sponsor/transaction-bulks/{voucher_transaction_bulks}/set-accepted-manually',
-        "Api\Platform\Organizations\Sponsor\TransactionBulksController@setAcceptedManually"
+        'organizations/{organization}/sponsor/transaction-bulks/{voucher_transaction_bulks}/set-accepted',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController@setAccepted"
     );
 
     $router->resource(

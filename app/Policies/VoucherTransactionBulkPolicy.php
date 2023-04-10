@@ -122,6 +122,10 @@ class VoucherTransactionBulkPolicy
             return $this->deny("Only draft bulks can be approved manually.");
         }
 
+        if (!$organization->allow_manual_bulk_processing) {
+            return $this->deny("Manual bulk processing is not allowed.");
+        }
+
         return $hasPermission && $voucherTransactionBulk->bank_connection->bank->isBNG();
     }
 
@@ -145,6 +149,10 @@ class VoucherTransactionBulkPolicy
 
         if (!$voucherTransactionBulk->isDraft()) {
             return $this->deny("Only draft bulks can be exported.");
+        }
+
+        if (!$organization->allow_manual_bulk_processing) {
+            return $this->deny("SEPA export is not allowed.");
         }
 
         return $hasPermission && $voucherTransactionBulk->bank_connection->bank->isBNG();

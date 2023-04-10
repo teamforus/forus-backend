@@ -13,7 +13,6 @@ use App\Services\BNGService\BNGService;
 use App\Services\BNGService\Data\PaymentInfoData;
 use App\Services\BNGService\Exceptions\ApiException;
 use App\Services\BNGService\Responses\BulkPaymentValue;
-use App\Services\BNGService\Responses\Consent\BulkPaymentConsentValue;
 use App\Services\BNGService\Responses\Entries\Account;
 use App\Services\BNGService\Responses\Entries\Amount as AmountBNG;
 use App\Services\BNGService\Responses\Entries\BulkPayment;
@@ -104,9 +103,9 @@ class VoucherTransactionBulk extends BaseModel
     public const EVENT_CREATED = 'created';
     public const EVENT_SUBMITTED = 'submitted';
     public const EVENT_ACCEPTED = 'accepted';
+    public const EVENT_ACCEPTED_MANUALLY = 'accepted_manually';
     public const EVENT_REJECTED = 'rejected';
     public const EVENT_ERROR = 'error';
-    public const EVENT_MANUALLY_ACCEPTED = 'manually_accepted';
     public const EVENT_EXPORTED = 'exported';
 
     public const EVENTS = [
@@ -141,7 +140,7 @@ class VoucherTransactionBulk extends BaseModel
     ];
 
     protected $casts = [
-        'auth_params'       => 'array',
+        'auth_params' => 'array',
         'accepted_manually' => 'boolean',
     ];
 
@@ -313,17 +312,19 @@ class VoucherTransactionBulk extends BaseModel
     }
 
     /**
-     * @return VoucherTransactionBulk
+     * @param Employee|null $employee
+     * @return self
      * @throws Throwable
      */
-    public function setAcceptedBNG(): self
+    public function setAcceptedBNG(?Employee $employee = null): self
     {
-        DB::transaction(function() {
+        DB::transaction(function() use ($employee) {
             $this->update([
                 'state' => static::STATE_ACCEPTED,
             ]);
 
-            $this->log(static::STATE_ACCEPTED, $this->getLogModels());
+            $event = $employee ? static::EVENT_ACCEPTED_MANUALLY : static::EVENT_ACCEPTED;
+            $this->log($event, $this->getLogModels($employee));
 
             foreach ($this->voucher_transactions as $transaction) {
                 $transaction->forceFill([
@@ -408,21 +409,23 @@ class VoucherTransactionBulk extends BaseModel
         ?Implementation $implementation = null
     ): self {
         try {
+            /** @var BNGService $bngService */
             $implementation = $implementation ?: Implementation::general();
+            $bngService = resolve('bng_service');
 
-            DB::transaction(function() use ($employee, $implementation) {
+            DB::transaction(function() use ($employee, $implementation, $bngService) {
                 $requestedExecutionDate = PaymentBNG::getNextBusinessDay()->format('Y-m-d');
 
                 $bulkPayment = $this->createBulkPaymentToBNG($requestedExecutionDate);
-                $bulkPaymentConsentValue = $this->submitBulkPaymentToBNG($bulkPayment);
+                $response = $bngService->bulkPayment($bulkPayment);
 
                 $this->updateModel([
                     'state' => self::STATE_PENDING,
-                    'payment_id' => $bulkPaymentConsentValue->getPaymentId(),
-                    'auth_url' => $bulkPaymentConsentValue->getAuthData()->getUrl(),
+                    'payment_id' => $response->getPaymentId(),
+                    'auth_url' => $response->getAuthData()->getUrl(),
                     'sepa_xml' => $bulkPayment->toXml(),
                     'redirect_token' => $bulkPayment->getRedirectToken(),
-                    'auth_params' => $bulkPaymentConsentValue->getAuthData()->getParams(),
+                    'auth_params' => $response->getAuthData()->getParams(),
                     'execution_date' => $requestedExecutionDate,
                     'implementation_id' => $implementation->id,
                 ])->log(self::EVENT_SUBMITTED, $this->getLogModels($employee));
@@ -485,18 +488,6 @@ class VoucherTransactionBulk extends BaseModel
     }
 
     /**
-     * @param BulkPayment $bulkPayment
-     * @return BulkPaymentConsentValue
-     */
-    private function submitBulkPaymentToBNG(
-        BulkPayment $bulkPayment
-    ): BulkPaymentConsentValue {
-        $bngService = resolve('bng_service');
-
-        return $bngService->bulkPayment($bulkPayment);
-    }
-
-    /**
      * @return string
      */
     public function getBulkPaymentToBNGXML(): string {
@@ -518,33 +509,14 @@ class VoucherTransactionBulk extends BaseModel
     }
 
     /**
+     * @param Employee $employee
      * @return $this
      */
-    public function setManuallyAccepted(): self
-    {
-        $this->updateModel([
-            'accepted_manually' => true
-        ])->log(self::EVENT_MANUALLY_ACCEPTED, $this->getLogModels(), [
-            'manually_accepted'             => true,
-            'manually_accepted_at'          => now()->format('Y-m-d'),
-            'manually_accepted_at_locale'   => format_date_locale(now()),
-        ]);
-
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
-    public function setExported(): self
+    public function setExported(Employee $employee): self
     {
         $this->updateModel([
             'is_exported' => true
-        ])->log(self::EVENT_EXPORTED, $this->getLogModels(), [
-            'is_exported'           => true,
-            'exported_at'           => now()->format('Y-m-d'),
-            'exported_at_locale'    => format_date_locale(now()),
-        ]);
+        ])->log(self::EVENT_EXPORTED, $this->getLogModels($employee));
 
         return $this;
     }
