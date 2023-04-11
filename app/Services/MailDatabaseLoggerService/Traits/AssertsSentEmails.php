@@ -65,7 +65,7 @@ trait AssertsSentEmails
         ?Carbon $after = null
     ): void {
         static::assertNotFalse(
-            $this->getEmailQuery($email, $after)->where(compact('mailable'))->exists(),
+            $this->getEmailOfTypeQuery($email, $mailable, $after)->exists(),
             "No '$mailable' mailable sent."
         );
     }
@@ -170,6 +170,48 @@ trait AssertsSentEmails
         }
 
         return $linksArray;
+    }
+
+    /**
+     * @param string $email
+     * @param string $mailable
+     * @param Carbon|null $after
+     * @return Builder
+     */
+    protected function getEmailOfTypeQuery(
+        string $email,
+        string $mailable,
+        ?Carbon $after = null
+    ): Builder {
+        return $this->getEmailQuery($email, $after)->where(compact('mailable'));
+    }
+
+    /**
+     * @param string $email
+     * @param string $mailable
+     * @param Carbon|null $after
+     * @return Builder|Collection|EmailLog[]
+     */
+    protected function getEmailOfType(
+        string $email,
+        string $mailable,
+        ?Carbon $after = null
+    ): Builder|Collection|EmailLog {
+        return $this->getEmailQuery($email, $after)->where(compact('mailable'))->get();
+    }
+
+    /**
+     * @param mixed $email
+     * @param string $subject
+     * @param Carbon|null $after
+     * @return Builder
+     */
+    protected function getFirstEmailsBySubjectQuery(
+        mixed $email,
+        string $subject,
+        ?Carbon $after
+    ): Builder {
+        return $this->getEmailQuery($email, $after)->where(compact('subject'));
     }
 
     /**
