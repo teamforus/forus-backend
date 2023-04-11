@@ -2,27 +2,28 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Exports\FundRequestsExport;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Funds\Requests\AssignEmployeeFundRequestRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DisregardFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\FundRequestPersonRequest;
-use App\Http\Requests\Api\Platform\Organizations\StoreNoteRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestNoteRequest;
 use App\Http\Requests\BaseFormRequest;
+use App\Http\Requests\BaseIndexFormRequest;
 use App\Http\Resources\Arr\FundRequestPersonArrResource;
 use App\Http\Resources\NoteResource;
+use App\Http\Resources\Validator\ValidatorFundRequestResource;
 use App\Models\Employee;
+use App\Models\FundRequest;
 use App\Models\Note;
+use App\Models\Organization;
 use App\Searches\FundRequestSearch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
-use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
-use App\Http\Resources\Validator\ValidatorFundRequestResource;
-use App\Http\Controllers\Controller;
-use App\Exports\FundRequestsExport;
-use App\Models\Organization;
-use App\Models\FundRequest;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FundRequestsController extends Controller
 {
@@ -308,7 +309,7 @@ class FundRequestsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param BaseFormRequest $request
+     * @param BaseIndexFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @return AnonymousResourceCollection
@@ -316,19 +317,21 @@ class FundRequestsController extends Controller
      * @noinspection PhpUnused
      */
     public function notes(
-        BaseFormRequest $request,
+        BaseIndexFormRequest $request,
         Organization $organization,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyNoteAsValidator', [$fundRequest, $organization]);
 
-        return NoteResource::queryCollection($fundRequest->notes(), $request);
+        return NoteResource::queryCollection($fundRequest->notes()->whereRelation('employee', [
+            'organization_id' => $organization->id,
+        ]), $request);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param StoreNoteRequest $request
+     * @param StoreFundRequestNoteRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @return NoteResource
@@ -336,9 +339,9 @@ class FundRequestsController extends Controller
      * @noinspection PhpUnused
      */
     public function storeNote(
-        StoreNoteRequest $request,
+        StoreFundRequestNoteRequest $request,
         Organization $organization,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
     ): NoteResource {
         $this->authorize('storeNoteAsValidator', [$fundRequest, $organization]);
 

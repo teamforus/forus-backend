@@ -567,7 +567,7 @@ class FundRequestPolicy
         );
 
         // need to have at least one record assigned to you
-        if ((clone $recordsAssigned)->doesntExist()) {
+        if ($recordsAssigned->doesntExist()) {
             return $this->deny('no_records_assigned');
         }
 
