@@ -2,7 +2,7 @@
 
 namespace App\Rules;
 
-class SystemNotificationTemplateTitle extends BaseRule
+class SystemNotificationTemplateTitleRule extends BaseRule
 {
     protected $error;
 
