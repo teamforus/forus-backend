@@ -30,6 +30,7 @@ class FundRequestSearch extends BaseSearch
      */
     public function query(): ?Builder
     {
+        /** @var FundRequest|Builder $builder */
         $builder = parent::query();
 
         FundRequestQuery::whereEmployeeIsValidatorOrSupervisor($builder, $this->employee);
@@ -51,15 +52,19 @@ class FundRequestSearch extends BaseSearch
         }
 
         if ($employee_id = $this->getFilter('employee_id')) {
-            if ($employee_id == 'null') {
-                $builder->whereDoesntHave('records.employee');
-            } else {
-                $employee = Employee::find($employee_id);
+            $employee = Employee::find($employee_id);
 
-                $builder->whereHas('records', static function(Builder $builder) use ($employee) {
-                    FundRequestRecordQuery::whereEmployeeIsAssignedValidator($builder, $employee);
-                });
-            }
+            $builder->whereHas('records', static function(Builder $builder) use ($employee) {
+                FundRequestRecordQuery::whereEmployeeIsAssignedValidator($builder, $employee);
+            });
+        }
+
+        if ($this->hasFilter('assigned') && $this->getFilter('assigned')) {
+            $builder->whereHas('records.employee');
+        }
+
+        if ($this->hasFilter('assigned') && !$this->getFilter('assigned')) {
+            $builder->whereDoesntHave('records.employee');
         }
 
         return $this->sort($builder);
