@@ -68,6 +68,7 @@ class ImplementationPage extends BaseModel
     const TYPE_TERMS_AND_CONDITIONS = 'terms_and_conditions';
     const TYPE_FOOTER_OPENING_TIMES = 'footer_opening_times';
     const TYPE_FOOTER_CONTACT_DETAILS = 'footer_contact_details';
+    const TYPE_FOOTER_APP_INFO = 'footer_app_info';
 
     const STATE_DRAFT = 'draft';
     const STATE_PUBLIC = 'public';
@@ -153,6 +154,12 @@ class ImplementationPage extends BaseModel
         'blocks' => false,
         'faq' => false,
         'description_position_configurable' => false,
+    ], [
+        'key' => self::TYPE_FOOTER_APP_INFO,
+        'type' => 'element',
+        'blocks' => false,
+        'faq' => false,
+        'description_position_configurable' => true,
     ]];
 
     /**
