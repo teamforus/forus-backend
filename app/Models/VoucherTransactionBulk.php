@@ -321,6 +321,7 @@ class VoucherTransactionBulk extends BaseModel
         DB::transaction(function() use ($employee) {
             $this->update([
                 'state' => static::STATE_ACCEPTED,
+                'accepted_manually' => true,
             ]);
 
             $event = $employee ? static::EVENT_ACCEPTED_MANUALLY : static::EVENT_ACCEPTED;
