@@ -298,6 +298,10 @@ class ProductQuery
 
         if ($checkReservationFlags) {
             self::whereReservationEnabled($builder, $voucher->fund->isTypeSubsidy() ? 'subsidy' : 'budget');
+
+            if (!$voucher->fund->fund_config->allow_reservations) {
+                $builder->whereIn('id', []);
+            }
         }
 
         return $builder;

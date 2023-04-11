@@ -85,6 +85,10 @@ class LoremDbSeeder extends Seeder
         'Stadjerspas', 'Nijmegen',
     ];
 
+    private array $implementationsWithFundLevelCustomTemplates = [
+        'Nijmegen',
+    ];
+
     private array $implementationsWithRequiredDigId = [
         'Nijmegen', 'Stadjerspas',
     ];
@@ -671,6 +675,7 @@ class LoremDbSeeder extends Seeder
         ?Organization $organization = null,
     ): Implementation|Model {
         $informalCommunication = array_map("str_slug", $this->implementationsWithInformalCommunication);
+        $allowPerFundTemplates = array_map("str_slug", $this->implementationsWithFundLevelCustomTemplates);
 
         return Implementation::forceCreate(array_merge([
             'key'   => $key,
@@ -699,6 +704,7 @@ class LoremDbSeeder extends Seeder
             ),
 
             'informal_communication' => in_array($key, $informalCommunication, true),
+            'allow_per_fund_notification_templates' => in_array($key, $allowPerFundTemplates, true),
             'productboard_api_key' => Config::get('forus.seeders.lorem_db_seeder.productboard_api_key'),
         ], array_merge(
             $this->makeImplementationSamlConfig($key),
