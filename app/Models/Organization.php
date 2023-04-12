@@ -48,6 +48,7 @@ use Illuminate\Database\Query\Builder;
  * @property string $btw
  * @property string|null $website
  * @property bool $website_public
+ * @property string $low_balance_email
  * @property int|null $business_type_id
  * @property bool $is_sponsor
  * @property bool $is_provider
@@ -158,6 +159,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereIsSponsor($value)
  * @method static EloquentBuilder|Organization whereIsValidator($value)
  * @method static EloquentBuilder|Organization whereKvk($value)
+ * @method static EloquentBuilder|Organization whereLowBalanceEmail($value)
  * @method static EloquentBuilder|Organization whereManageProviderProducts($value)
  * @method static EloquentBuilder|Organization whereName($value)
  * @method static EloquentBuilder|Organization wherePhone($value)
@@ -165,6 +167,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
  * @method static EloquentBuilder|Organization whereProviderThrottlingValue($value)
  * @method static EloquentBuilder|Organization whereReservationAddress($value)
+ * @method static EloquentBuilder|Organization whereReservationBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationPhone($value)
  * @method static EloquentBuilder|Organization whereReservationRequesterBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
