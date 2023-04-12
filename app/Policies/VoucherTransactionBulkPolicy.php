@@ -119,11 +119,11 @@ class VoucherTransactionBulkPolicy
             $voucherTransactionBulk->is_exported;
 
         if (!$voucherTransactionBulk->isDraft()) {
-            return $this->deny("Only draft bulks can be approved manually.");
+            return $this->deny("Alleen concept bulk lijsten kunnen handmatig worden geaccepteerd.");
         }
 
         if (!$organization->allow_manual_bulk_processing) {
-            return $this->deny("Manual bulk processing is not allowed.");
+            return $this->deny("Handmatig accepteren is niet mogelijk.");
         }
 
         return $hasPermission && $voucherTransactionBulk->bank_connection->bank->isBNG();
@@ -148,11 +148,11 @@ class VoucherTransactionBulkPolicy
             $organization->identityCan($identity, 'manage_transaction_bulks');
 
         if (!$voucherTransactionBulk->isDraft()) {
-            return $this->deny("Only draft bulks can be exported.");
+            return $this->deny("Alleen concept bulk lijsten kunnen worden geëxporteerd.");
         }
 
         if (!$organization->allow_manual_bulk_processing) {
-            return $this->deny("SEPA export is not allowed.");
+            return $this->deny("Het exporteren van het SEPA bestand is niet mogelijk.");
         }
 
         return $hasPermission && $voucherTransactionBulk->bank_connection->bank->isBNG();
