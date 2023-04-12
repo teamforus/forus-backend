@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\Implementation;
-use App\Models\NotificationTemplate;
 use App\Models\SystemNotification;
 use App\Models\SystemNotificationConfig;
 use App\Notifications\BaseNotification;
@@ -58,7 +57,6 @@ class SystemNotificationResource extends BaseJsonResource
     /**
      * @param Collection $templates
      * @param Implementation $implementation
-     * @param bool $formalCommunication
      * @return Collection
      */
     public function getTemplates(
@@ -68,6 +66,10 @@ class SystemNotificationResource extends BaseJsonResource
     ): Collection {
         $templates = $templates->where('implementation_id', $implementation->id);
         $templates = $templates->where('formal', $formalCommunication);
+
+        if ($implementation->isGeneral() || !$implementation->allow_per_fund_notification_templates) {
+            $templates->whereNull('fund_id');
+        }
 
         return $templates->values();
     }

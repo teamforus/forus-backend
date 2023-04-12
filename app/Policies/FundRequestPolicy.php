@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
+use App\Models\Note;
 use App\Models\Organization;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundRequestQuery;
@@ -511,5 +512,96 @@ class FundRequestPolicy
     protected function deny(mixed $message, ?int $code = null): Response
     {
         return Response::deny(trans('policies/fund_requests.' . $message), $code);
+    }
+
+    /**
+     * Determine whether the user can view reimbursement notes.
+     *
+     * @param Identity $identity
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function viewAnyNoteAsValidator(
+        Identity $identity,
+        FundRequest $fundRequest,
+        Organization $organization
+    ): Response|bool {
+        if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
+            return $this->deny('invalid_endpoint');
+        }
+
+        if (!$organization->identityCan($identity, 'validate_records')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Determine whether the user can store fund request note.
+     *
+     * @param Identity $identity
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function storeNoteAsValidator(
+        Identity $identity,
+        FundRequest $fundRequest,
+        Organization $organization
+    ): Response|bool {
+        if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
+            return $this->deny('invalid_endpoint');
+        }
+
+        if (!$organization->identityCan($identity, 'validate_records')) {
+            return false;
+        }
+
+        $recordsAssigned = FundRequestRecordQuery::whereEmployeeIsAssignedValidator(
+            $fundRequest->records(),
+            $organization->findEmployee($identity->address)
+        );
+
+        // need to have at least one record assigned to you
+        if ($recordsAssigned->doesntExist()) {
+            return $this->deny('no_records_assigned');
+        }
+
+        return true;
+    }
+
+    /**
+     * Determine whether the user can delete reimbursement note.
+     *
+     * @param Identity $identity
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @param Note $note
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function destroyNoteAsValidator(
+        Identity $identity,
+        FundRequest $fundRequest,
+        Organization $organization,
+        Note $note
+    ): Response|bool {
+        if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
+            return $this->deny('invalid_endpoint');
+        }
+
+        if (!$organization->identityCan($identity, 'validate_records')) {
+            return false;
+        }
+
+        if ($note->employee?->identity_address !== $identity->address) {
+            return $this->deny('not_author');
+        }
+
+        return true;
     }
 }

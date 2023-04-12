@@ -11,6 +11,7 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.added_employee" => ["database", "mail", "push"],
         "notifications_identities.changed_employee_roles" => ["database"],
         "notifications_identities.removed_employee" => ["database", "push"],
+        "notifications_identities.assigned_to_fund_request_by_supervisor" => ["mail"],
 
         "notifications_fund_providers.approved_budget" => ["database", "mail", "push"],
         "notifications_fund_providers.approved_products" => [], // TODO can database notifications be removed
@@ -94,6 +95,7 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_bank_connections.activated" => ["database"],
         "notifications_bank_connections.disabled_invalid" => ["database"],
         "notifications_bank_connections.monetary_account_changed" => ["database"],
+        "notifications_bank_connections.expiring" => ["database", "mail"],
 
         "notifications_physical_card_requests.physical_card_request_created" => [], // TODO can database notifications be removed
     ];

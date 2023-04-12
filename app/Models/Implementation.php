@@ -9,6 +9,7 @@ use App\Http\Resources\MediaResource;
 use App\Models\Traits\ValidatesValues;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
+use App\Searches\AnnouncementSearch;
 use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\DigIdService\Repositories\DigIdCgiRepo;
 use App\Services\DigIdService\Repositories\DigIdSamlRepo;
@@ -70,6 +71,7 @@ use Illuminate\Support\Facades\Gate;
  * @property bool $show_office_map
  * @property bool $show_voucher_map
  * @property bool $show_product_map
+ * @property bool $allow_per_fund_notification_templates
  * @property bool $digid_enabled
  * @property bool $digid_required
  * @property bool $digid_sign_up_allowed
@@ -83,18 +85,18 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $digid_trusted_cert
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Announcement> $announcements_webshop
  * @property-read int|null $announcements_webshop_count
  * @property-read Media|null $banner
  * @property-read Media|null $email_logo
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FundConfig> $fund_configs
  * @property-read int|null $fund_configs_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Fund> $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\NotificationTemplate[] $mail_templates
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\NotificationTemplate> $mail_templates
  * @property-read int|null $mail_templates_count
- * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Media> $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\ImplementationPage|null $page_accessibility
@@ -102,13 +104,14 @@ use Illuminate\Support\Facades\Gate;
  * @property-read \App\Models\ImplementationPage|null $page_privacy
  * @property-read \App\Models\ImplementationPage|null $page_provider
  * @property-read \App\Models\ImplementationPage|null $page_terms_and_conditions
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ImplementationPage> $pages
  * @property-read int|null $pages_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages_public
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ImplementationPage> $pages_public
  * @property-read int|null $pages_public_count
  * @method static Builder|Implementation newModelQuery()
  * @method static Builder|Implementation newQuery()
  * @method static Builder|Implementation query()
+ * @method static Builder|Implementation whereAllowPerFundNotificationTemplates($value)
  * @method static Builder|Implementation whereCreatedAt($value)
  * @method static Builder|Implementation whereDescription($value)
  * @method static Builder|Implementation whereDescriptionAlignment($value)
@@ -227,6 +230,7 @@ class Implementation extends BaseModel
         'digid_saml_context' => 'json',
         'show_voucher_map' => 'boolean',
         'show_product_map' => 'boolean',
+        'allow_per_fund_notification_templates' => 'boolean',
     ];
 
     /**
@@ -626,9 +630,7 @@ class Implementation extends BaseModel
         if (is_array($config)) {
             $implementation = self::active() ?? abort(403);
             $banner = $implementation->banner;
-
             $request = BaseFormRequest::createFromGlobals();
-            $announcements = Announcement::search($request)->get();
             $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
 
             $config = array_merge($config, [
@@ -636,7 +638,10 @@ class Implementation extends BaseModel
                 'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
                 'has_reimbursements' => $implementation->hasReimbursements(),
-                'announcements' => AnnouncementResource::collection($announcements)->toArray($request),
+                'announcements' => AnnouncementResource::collection((new AnnouncementSearch([
+                    'client_type' => $request->client_type(),
+                    'implementation_id' => $implementation->id,
+                ]))->query()->get())->toArray($request),
                 'digid' => $implementation->digidEnabled(),
                 'digid_sign_up_allowed' => $implementation->digid_sign_up_allowed,
                 'digid_mandatory' => $implementation->digid_required ?? true,
