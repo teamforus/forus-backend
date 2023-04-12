@@ -293,8 +293,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'demo/transactions',
-        "Api\Platform\Vouchers\DemoTransactionController", [
-    ])->parameters([
+        "Api\Platform\Vouchers\DemoTransactionController",
+    )->parameters([
         'transactions' => 'demo_token',
     ])->only('store', 'show', 'update');
 
@@ -402,8 +402,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations.funds.provider-invitations',
-        "Api\Platform\Organizations\Funds\FundProviderInvitationsController", [
-    ])->parameters([
+        "Api\Platform\Organizations\Funds\FundProviderInvitationsController",
+    )->parameters([
         'provider-invitations' => 'fund_provider_invitations',
     ])->only('index', 'show', 'store');
 
@@ -481,6 +481,13 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             'organizations/{organization}/fund-requests/{fund_request}/person',
             "Api\Platform\Organizations\FundRequestsController@person"
         );
+
+        // Fund requests notes
+        $router->group(['prefix' => 'organizations/{organization}/fund-requests/{fund_request}'], function() use ($router) {
+            $router->get('notes', "Api\Platform\Organizations\FundRequestsController@notes");
+            $router->post('notes', "Api\Platform\Organizations\FundRequestsController@storeNote");
+            $router->delete('notes/{note}', "Api\Platform\Organizations\FundRequestsController@destroyNote");
+        });
 
         $router->resource(
             'organizations/{organization}/fund-requests',
