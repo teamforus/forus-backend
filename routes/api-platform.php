@@ -872,6 +872,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'Api\Platform\Organizations\EventLogsController@index'
     );
 
+    $router->get(
+        'organizations/{organization}/announcements',
+        "Api\Platform\Organizations\AnnouncementController@index"
+    );
+
     $router->get('prevalidations/export','Api\Platform\PrevalidationController@export');
     $router->post('prevalidations/collection','Api\Platform\PrevalidationController@storeCollection');
     $router->post('prevalidations/collection/hash', 'Api\Platform\PrevalidationController@collectionHash');

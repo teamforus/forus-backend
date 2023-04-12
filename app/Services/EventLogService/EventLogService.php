@@ -352,13 +352,12 @@ class EventLogService implements IEventLogService
      */
     protected function bankConnectionMeta(BankConnection $bankConnection): array
     {
-        $expire_at = $bankConnection->session_expire_at;
-
         return $this->keyPrepend([
             'id' => $bankConnection->id,
             'state' => $bankConnection->state,
             'bank_id' => $bankConnection->bank_id,
-            'session_expire_at' => $expire_at?->format('Y-m-d H:i:s'),
+            'expire_at' => $bankConnection->expire_at?->format('Y-m-d'),
+            'expire_at_locale' => format_date_locale($bankConnection->expire_at),
             'implementation_id' => $bankConnection->implementation_id,
         ], 'bank_connection_');
     }
