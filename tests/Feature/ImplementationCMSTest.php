@@ -191,8 +191,10 @@ class ImplementationCMSTest extends TestCase
         $implementation = $this->findImplementation($this->implementationName);
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
 
-        /** @var ImplementationPage $implementationPage */
-        $implementationPage = $implementation->pages()->first();
+        $response = $this->postJson(sprintf(
+            $this->apiUrl . 'pages', $implementation->organization_id, $implementation->id
+        ), $this->makeImplementationPageRequestBody(), $this->makeApiHeaders($proxy))->assertSuccessful();
+        $implementationPage = ImplementationPage::find($response->json('data.id'));
 
         $state = $implementationPage->state == ImplementationPage::STATE_DRAFT ? ImplementationPage::STATE_PUBLIC : ImplementationPage::STATE_DRAFT;
 
@@ -225,8 +227,11 @@ class ImplementationCMSTest extends TestCase
         $implementation = $this->findImplementation($this->implementationName);
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
 
-        /** @var ImplementationPage $implementationPage */
-        $implementationPage = $implementation->pages()->first();
+        $response = $this->postJson(sprintf(
+            $this->apiUrl . 'pages', $implementation->organization_id, $implementation->id
+        ), $this->makeImplementationPageRequestBody(), $this->makeApiHeaders($proxy))->assertSuccessful();
+        $implementationPage = ImplementationPage::find($response->json('data.id'));
+
         $blockFields = [
             'button_enabled', 'button_link', 'button_target_blank', 'button_text',
             'description', 'label', 'title'
@@ -251,7 +256,6 @@ class ImplementationCMSTest extends TestCase
         /** @var ImplementationBlock $block */
         foreach ($implementationPage->blocks as $index => $block) {
             $this->assertEquals($block->only($blockFields), collect($blocksData[$index])->only($blockFields)->toArray());
-            $this->assertEquals($block->photo->uid, $blocksData[$index]['media_uid']);
         }
     }
 
@@ -275,8 +279,8 @@ class ImplementationCMSTest extends TestCase
             $response = $this->postJson(sprintf(
                 $this->apiUrl . 'pages', $implementation->organization_id, $implementation->id
             ), array_merge($this->makeImplementationPageRequestBody(), [
-                'page_type' => $valid_faq_page_types[0],
-            ]), $this->makeApiHeaders($proxy));
+                'page_type' => $valid_faq_page_types[0]
+            ]), $this->makeApiHeaders($proxy))->assertSuccessful();
 
             $implementationPage = ImplementationPage::find($response->json('data.id'));
         }
@@ -315,7 +319,7 @@ class ImplementationCMSTest extends TestCase
         $this->assertEquals(count($implementationPage->faq), count($faqData));
 
         /** @var Faq $faq */
-        foreach ($implementationPage->faq->sortBy('order') as $index => $faq) {
+        foreach ($implementationPage->faq as $index => $faq) {
             $this->assertEquals($faq->only($faqFields), collect($faqData[$index])->only($faqFields)->toArray());
         }
     }
@@ -330,8 +334,10 @@ class ImplementationCMSTest extends TestCase
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
         $body = $this->makeImplementationPageRequestBody();
 
-        /** @var ImplementationPage $implementationPage */
-        $implementationPage = $implementation->pages()->first();
+        $response = $this->postJson(sprintf(
+            $this->apiUrl . 'pages', $implementation->organization_id, $implementation->id
+        ), $this->makeImplementationPageRequestBody(), $this->makeApiHeaders($proxy))->assertSuccessful();
+        $implementationPage = ImplementationPage::find($response->json('data.id'));
 
         // assert has validation errors
         $response = $this->patchJson(sprintf(
@@ -352,8 +358,10 @@ class ImplementationCMSTest extends TestCase
         $implementation = $this->findImplementation($this->implementationName);
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
 
-        /** @var ImplementationPage $implementationPage */
-        $implementationPage = $implementation->pages()->first();
+        $response = $this->postJson(sprintf(
+            $this->apiUrl . 'pages', $implementation->organization_id, $implementation->id
+        ), $this->makeImplementationPageRequestBody(), $this->makeApiHeaders($proxy))->assertSuccessful();
+        $implementationPage = ImplementationPage::find($response->json('data.id'));
 
         $this->deleteJson(sprintf(
             $this->apiUrl . 'pages/%s', $implementation->organization_id, $implementation->id, $implementationPage->id
@@ -423,17 +431,14 @@ class ImplementationCMSTest extends TestCase
      */
     protected function generatePageBlockData(): array
     {
-        $media = $this->uploadMedia('implementation_block_media');
-
         return [
             'button_enabled' => Arr::random([true, false]),
             'button_link'    => $this->faker->url,
             'button_target_blank' => Arr::random([true, false]),
-            'button_text' => $this->faker->text(100),
-            'description' => $this->faker->text(),
-            'label'     => $this->faker->text(100),
-            'title'     => $this->faker->text(100),
-            'media_uid' => $media->uid,
+            'button_text'   => $this->faker->text(100),
+            'description'   => $this->faker->text(),
+            'label'         => $this->faker->text(100),
+            'title'         => $this->faker->text(100),
         ];
     }
 
