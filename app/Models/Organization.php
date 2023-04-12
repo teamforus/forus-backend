@@ -62,6 +62,7 @@ use Illuminate\Database\Query\Builder;
  * @property bool $allow_batch_reservations
  * @property bool $allow_custom_fund_notifications
  * @property bool $allow_budget_fund_limits
+ * @property bool $allow_manual_bulk_processing
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
@@ -74,7 +75,7 @@ use Illuminate\Database\Query\Builder;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
- * @property-read Collection|\App\Models\BankConnection[] $bank_connections
+ * @property-read Collection<int, \App\Models\BankConnection> $bank_connections
  * @property-read int|null $bank_connections_count
  * @property-read \App\Models\BusinessType|null $business_type
  * @property-read Collection<int, \App\Services\EventLogService\Models\Digest> $digests
@@ -139,6 +140,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
+ * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
  * @method static EloquentBuilder|Organization whereBankCronTime($value)
  * @method static EloquentBuilder|Organization whereBsnEnabled($value)
@@ -223,6 +225,7 @@ class Organization extends BaseModel
         'allow_batch_reservations'              => 'boolean',
         'allow_custom_fund_notifications'       => 'boolean',
         'allow_budget_fund_limits'              => 'boolean',
+        'allow_manual_bulk_processing'          => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
     ];
