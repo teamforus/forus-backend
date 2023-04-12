@@ -256,6 +256,11 @@ class ImplementationCMSTest extends TestCase
         /** @var ImplementationBlock $block */
         foreach ($implementationPage->blocks as $index => $block) {
             $this->assertEquals($block->only($blockFields), collect($blocksData[$index])->only($blockFields)->toArray());
+
+            // if there's an image check if it was sync-ed
+            if (isset($blocksData[$index]['media_uid'])) {
+                $this->assertEquals($block->photo->uid, $blocksData[$index]['media_uid']);
+            }
         }
     }
 
@@ -431,6 +436,8 @@ class ImplementationCMSTest extends TestCase
      */
     protected function generatePageBlockData(): array
     {
+        $media = $this->uploadMedia('implementation_block_media');
+
         return [
             'button_enabled' => Arr::random([true, false]),
             'button_link'    => $this->faker->url,
@@ -439,6 +446,7 @@ class ImplementationCMSTest extends TestCase
             'description'   => $this->faker->text(),
             'label'         => $this->faker->text(100),
             'title'         => $this->faker->text(100),
+            'media_uid'     => $media->uid,
         ];
     }
 
