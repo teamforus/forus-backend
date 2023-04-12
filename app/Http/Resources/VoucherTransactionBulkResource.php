@@ -26,7 +26,9 @@ class VoucherTransactionBulkResource extends BaseJsonResource
         $transactionBulk = $this->resource;
         $executionDate = $this->resource->execution_date;
 
-        return array_merge($transactionBulk->only('id', 'state', 'state_locale', 'payment_id'), [
+        return array_merge($transactionBulk->only(
+            'id', 'state', 'state_locale', 'payment_id', 'accepted_manually', 'is_exported'
+        ), [
             'auth_url' => $this->getAuthUrl($transactionBulk),
             'bank' => new BankResource($transactionBulk->bank_connection->bank),
             'execution_date' => $executionDate?->format('Y-m-d'),

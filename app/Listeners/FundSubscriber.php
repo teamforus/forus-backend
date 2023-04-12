@@ -19,6 +19,7 @@ use App\Events\Funds\FundUnArchivedEvent;
 use App\Events\Funds\FundUpdatedEvent;
 use App\Events\Funds\FundVouchersExportedEvent;
 use App\Mail\Forus\ForusFundCreatedMail;
+use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\ProviderInvitationMail;
 use App\Models\Fund;
 use App\Models\FundProvider;
@@ -247,14 +248,23 @@ class FundSubscriber
     public function onFundBalanceLow(FundBalanceLowEvent $event): void {
         $fund = $event->getFund();
 
-        BalanceLowNotification::send($fund->log($fund::EVENT_BALANCE_LOW, $this->getFundLogModels($fund), [
+        $eventLog = $fund->log($fund::EVENT_BALANCE_LOW, $this->getFundLogModels($fund), [
             'fund_budget_left' => currency_format($fund->budget_left),
             'fund_budget_left_locale' => currency_format_locale($fund->budget_left),
             'fund_notification_amount' => currency_format($fund->notification_amount),
             'fund_notification_amount_locale' => currency_format_locale($fund->notification_amount),
             'fund_transaction_costs' => currency_format($fund->getTransactionCosts()),
             'fund_transaction_costs_locale' => currency_format_locale($fund->getTransactionCosts()),
-        ]));
+        ]);
+
+        BalanceLowNotification::send($eventLog);
+
+        if ($fund->organization->low_balance_email) {
+            resolve('forus.services.notification')->sendSystemMail(
+                $fund->organization->low_balance_email,
+                new FundBalanceWarningMail($eventLog->data, $fund->getEmailFrom()),
+            );
+        }
     }
 
     /**

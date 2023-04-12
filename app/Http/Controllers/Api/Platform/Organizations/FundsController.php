@@ -65,7 +65,7 @@ class FundsController extends Controller
      * @param StoreFundRequest $request
      * @param Organization $organization
      * @return FundResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Throwable
      */
     public function store(StoreFundRequest $request, Organization $organization): FundResource
     {
@@ -153,7 +153,7 @@ class FundsController extends Controller
      * @param Organization $organization
      * @param Fund $fund
      * @return FundResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Throwable
      */
     public function update(
         UpdateFundRequest $request,
