@@ -2,7 +2,7 @@
 
 return [
     'announcement' => [
-        'title' => 'Bank connection is about to expire',
-        'description' => 'Your organization\'s banking connection is about to expire. Please renew before :expire_at_locale.',
+        'title' => 'De bankverbinding verloopt binnenkort',
+        'description' => 'De bankverbinding van uw organisatie verloopt binnenkort. Breng voor :expire_at_locale de verbinding opnieuw tot stand.',
     ]
 ];
