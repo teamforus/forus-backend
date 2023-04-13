@@ -6,6 +6,7 @@ use App\Exports\VoucherTransactionBulksExport;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\IndexTransactionBulksRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\StoreTransactionBulksRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\UpdateTransactionBulksRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\VoucherTransactionBulkResource;
 use App\Models\Organization;
@@ -119,6 +120,47 @@ class TransactionBulksController extends Controller
         }
 
         return VoucherTransactionBulkResource::create($transactionBulk);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @param VoucherTransactionBulk $transactionBulk
+     * @return VoucherTransactionBulkResource
+     * @throws Throwable
+     * @noinspection PhpUnused
+     */
+    public function setAccepted(
+        BaseFormRequest $request,
+        Organization $organization,
+        VoucherTransactionBulk $transactionBulk
+    ): VoucherTransactionBulkResource {
+        $this->authorize('show', $organization);
+        $this->authorize('setAcceptedManually', [$transactionBulk, $organization]);
+
+        $transactionBulk->setAcceptedBNG($request->employee($organization));
+
+        return VoucherTransactionBulkResource::create($transactionBulk);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @param VoucherTransactionBulk $transactionBulk
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function exportSEPA(
+        BaseFormRequest $request,
+        Organization $organization,
+        VoucherTransactionBulk $transactionBulk
+    ): string {
+        $this->authorize('show', $organization);
+        $this->authorize('exportBulkToBNG', [$transactionBulk, $organization]);
+
+        $transactionBulk->setExported($request->employee($organization));
+
+        return $transactionBulk->getBulkPaymentToBNGXML();
     }
 
     /**

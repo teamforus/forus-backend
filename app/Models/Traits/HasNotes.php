@@ -12,9 +12,9 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 trait HasNotes
 {
     /**
-     * @return MorphMany
+     * @return MorphMany|Note
      */
-    public function notes(): MorphMany
+    public function notes(): MorphMany|Note
     {
         return $this->morphMany(Note::class, 'notable');
     }
