@@ -37,8 +37,8 @@ jobs:
           labels: 'automated'
 
       - name: Merge pull request
-        uses: peter-evans/merge-pull-request@v2.5.2
+        uses: peter-evans/merge-pull-request
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           merge-method: merge
-        if: contains(github.ref, 'auto/master_to_develop_update')
+        if: contains(github.ref, 'refs/heads/auto/master_to_develop_update')
