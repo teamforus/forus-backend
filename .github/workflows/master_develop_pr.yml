@@ -16,10 +16,11 @@ jobs:
           
       - name: Check if there are changes between master and develop
         run: |
-          if git diff --quiet origin/master origin/develop; then
-            echo "No changes to merge"
-            exit 1
-          fi
+           git branch -a 
+#          if git diff --quiet origin/master origin/develop; then
+#            echo "No changes to merge"
+#            exit 1
+#          fi
 
 #       - name: Create new branch
 #         run: |
