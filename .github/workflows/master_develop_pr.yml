@@ -14,25 +14,17 @@ jobs:
         with:
           ref: master
           
-      - name: Check if there are changes between master and develop
+      - name: Create new branch
         run: |
-           git branch -a 
-#          if git diff --quiet origin/master origin/develop; then
-#            echo "No changes to merge"
-#            exit 1
-#          fi
+          git checkout -b auto/master_to_develop_update
+          git push origin auto/master_to_develop_update
 
-#       - name: Create new branch
-#         run: |
-#           git checkout -b new-branch
-#           git push origin new-branch
-
-#       - name: Create pull request
-#         uses: peter-evans/create-pull-request@v3
-#         with:
-#           title: 'Merge changes from master'
-#           body: 'This pull request contains changes from the master branch.'
-#           branch: 'auto/master_to_develop_update'
-#           base: 'develop'
-#           delete-branch: true
-#           labels: 'automated'
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          title: 'Merge changes from master'
+          body: 'This pull request contains changes from the master branch.'
+          branch: 'auto/master_to_develop_update'
+          base: 'develop'
+          delete-branch: true
+          labels: 'automated'
