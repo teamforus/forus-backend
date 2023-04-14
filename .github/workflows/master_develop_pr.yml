@@ -6,12 +6,14 @@ on:
       - 'master'
 
 jobs:
-  create_pull_request:
+  create_pr:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout master branch
         uses: actions/checkout@v2
-
+        with:
+          ref: master
+          
       - name: Check if there are changes between master and develop
         run: |
           if git diff --quiet master develop; then
@@ -19,12 +21,24 @@ jobs:
             exit 1
           fi
 
-      - name: Create Pull Request from master to develop
+      - name: Create new branch
+        run: |
+          git checkout -b new-branch
+          git push origin new-branch
+
+      - name: Create pull request
         uses: peter-evans/create-pull-request@v3
         with:
-          base: 'develop'
           title: 'Merge changes from master'
           body: 'This pull request contains changes from the master branch.'
           branch: 'auto/master_to_develop_update'
-          commit-message: 'Merge changes from master'
-          token: ${{ secrets.ALEKSEI_PAT_TOKEN }})
+          base: 'develop'
+          delete-branch: true
+          labels: 'automated'
+
+      - name: Merge pull request
+        uses: peter-evans/merge-pull-request@v2.5.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          merge-method: merge
+        if: contains(github.ref, 'auto/master_to_develop_update')
