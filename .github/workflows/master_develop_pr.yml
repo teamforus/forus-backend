@@ -26,5 +26,5 @@ jobs:
           body: 'This pull request contains changes from the master branch.'
           branch: 'auto/master_to_develop_update'
           base: 'develop'
-          delete-branch: true
+          #delete-branch: true
           labels: 'automated'
