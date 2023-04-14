@@ -2,7 +2,7 @@ component_depth: 1
 languages:
 - php
 exclude:
-- /app/Services/Forus/Session/Services/Data/AgentData.php
+- /app/Services/Forus/Session/Services/Data/AgontData.php
 - /resources/lang/.*
 - /config/.*
 - /bootstrap/.*
