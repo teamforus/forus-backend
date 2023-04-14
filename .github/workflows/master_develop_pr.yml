@@ -35,10 +35,3 @@ jobs:
           base: 'develop'
           delete-branch: true
           labels: 'automated'
-
-      - name: Merge pull request
-        uses: peter-evans/merge-pull-request
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          merge-method: merge
-        if: contains(github.ref, 'refs/heads/auto/master_to_develop_update')
