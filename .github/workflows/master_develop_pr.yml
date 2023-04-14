@@ -22,12 +22,17 @@ jobs:
           git checkout -b auto/master_to_develop_update origin/master
           git push origin auto/master_to_develop_update
 
-      - name: Create pull request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          title: 'Merge changes from master'
-          body: 'This pull request contains changes from the master branch.'
-          branch: 'auto/master_to_develop_update'
-          base: 'develop'
-          delete-branch: true
-          labels: 'automated'
+      - name: create pull request
+        run: gh pr create -B develop -H auto/master_to_develop_update --title 'Merge auto/master_to_develop_update into develop' --body 'Created by Github action'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#       - name: Create pull request
+#         uses: peter-evans/create-pull-request@v5
+#         with:
+#           title: 'Merge changes from master'
+#           body: 'This pull request contains changes from the master branch.'
+#           branch: 'auto/master_to_develop_update'
+#           base: 'develop'
+#           delete-branch: true
+#           labels: 'automated'
