@@ -128,6 +128,8 @@ return [
 
     'log_level' => env('APP_LOG_LEVEL', 'debug'),
 
+    'memory_limit' => env('MEMORY_LIMIT'),
+
     /*
     |--------------------------------------------------------------------------
     | Autoloaded Service Providers
