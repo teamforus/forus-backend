@@ -81,24 +81,45 @@ Now you should be able to use the backend to create organizations, funds and pro
 
 ### Seed test data
 ___
-On the previous step we prepared a clean project without any organizations, funds or products. Now you can go ahead and create a user account, register sponsors and providers, then create funds and products and so on. 
+On the previous step we prepared a clean project without any organizations, funds or products. Now you can go ahead and create a user account, register sponsors and providers, then create funds and products and so on.  
 
-Or you can use the next command to generate test data.
-But first please adjust the `DB_SEED_BASE_EMAIL` value from the `.env` file to set the owner of generated organizations, later you can use this emails to login into the webshop and dashboards.
+Or you can use the next command to generate test data. 
 
-Example:
-```
-DB_SEED_BASE_EMAIL=your-email@example.com
-```
-
-Then run the command:
+But first you need to configure the data you will generate.  
+Please run the following command to create a custom config file.
 ```bash
-docker-compose exec app php artisan db:seed --class LoremDbSeeder
+cp ./config/forus/test_data/configs/custom.example.php ./config/forus/test_data/configs/custom.php
 ```
 
-You can find other variables starting with `DB_SEED_*` in the `.env` file, which can be adjusted to change the seeder behavior.
+Now you need to adjust the config file you just created.
+```bash
+nano ./config/forus/test_data/configs/custom.example.php
+```
 
-Also, there could be other variables not present in the `.env` file. To see all available `LoremDbSeeder` variables, please check `config/forus/seeders/lorem_db_seeder.php` file.
+The file from the example only has ```primary_email``` key which represents the default email used to create all test organizations.  
+
+Please set this email to an email address you have access to, you will use it to log in into the dashboards and webshops.  
+Example:
+```php
+<?php
+
+return [
+    'primary_email' => 'your-email@example.com',
+];
+```
+
+Please note there are more variables that can be changed.  
+To see the full list, please read the default config file and copy all the keys you want to overwrite to your ```custom.php``` file.  
+
+Run the following command to read the default config file:  
+```bash
+nano ./config/forus/test_data/configs/default.php
+```
+
+To seed the test data after you finished editing your config file run:
+```bash
+docker-compose exec app php artisan test-data:seed
+```
 
 ## Update composer dependencies
 ___
@@ -163,7 +184,7 @@ docker exec -it forus-backend bash -c "php artisan db:seed"
 
 To generate test data, please run:
 ```bash
-docker exec -it forus-backend bash -c "php artisan db:seed --class LoremDbSeeder"
+docker exec -it forus-backend bash -c "php artisan test-data:seed"
 ```
 
 To reset the database run:  
