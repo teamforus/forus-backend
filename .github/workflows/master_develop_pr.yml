@@ -17,6 +17,7 @@ jobs:
       - name: Create new branch
         run: |
           git checkout -b auto/master_to_develop_update master
+          git pull
           git push origin auto/master_to_develop_update
 
       - name: Create pull request
