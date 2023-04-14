@@ -14,7 +14,7 @@ use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
-use Database\Seeders\LoremDbSeeder;
+use App\Services\Forus\TestData\TestData;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Testing\TestResponse;
@@ -523,14 +523,14 @@ class ProductStockTest extends TestCase
     protected function resetProperties(): void
     {
         $this->products = [];
-        $this->identities = [];
         $this->vouchers = [];
+        $this->identities = [];
     }
 
     /**
      * @throws \Throwable
      */
-    protected function processProductStocksTestCase(array $testCase)
+    protected function processProductStocksTestCase(array $testCase): void
     {
         $providerIdentity = $this->makeIdentity($this->makeUniqueEmail('provider_'));
         $provider = $this->makeProvider($providerIdentity, $testCase['products']);
@@ -949,7 +949,7 @@ class ProductStockTest extends TestCase
 
         $url = sprintf($this->urls['products'] . '?organization_id=%s', $organization->id);
 
-        $response = $this->get($url, $headers);
+        $response = $this->getJson($url, $headers);
         $response->assertSuccessful();
 
         return $response;
@@ -975,7 +975,7 @@ class ProductStockTest extends TestCase
             $provider->id
         );
 
-        $response = $this->get($url, $headers);
+        $response = $this->getJson($url, $headers);
         $response->assertSuccessful();
 
         return $response;
@@ -999,7 +999,7 @@ class ProductStockTest extends TestCase
 
         $url = sprintf($this->urls['provider'] . '/vouchers/%s', $voucherToken);
 
-        $response = $this->get($url, $headers);
+        $response = $this->getJson($url, $headers);
         $response->assertSuccessful();
 
         $organizationExists = array_first(
@@ -1024,15 +1024,15 @@ class ProductStockTest extends TestCase
         Identity $identity,
         array $params = []
     ): Organization {
-        $seeder = new LoremDbSeeder();
+        $testData = new TestData();
 
-        $countOffices = $seeder->config('provider_offices_count');
-        $organization = $seeder->makeOrganizations(
+        $countOffices = $testData->config('provider_offices_count');
+        $organization = $testData->makeOrganizations(
             "Provider", $identity->address, 1, [], $countOffices
         )[0];
 
         foreach ($params as $param) {
-            $product = $seeder->makeProducts($organization, 1, [
+            $product = $testData->makeProducts($organization, 1, [
                 'total_amount' => $param['stock'],
                 'unlimited_stock' => false,
             ])[0];
