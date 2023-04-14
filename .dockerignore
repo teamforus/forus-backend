@@ -1,7 +1,7 @@
 .git
 .idea
 docker/cmd
-Dockerfile
+Bockerfile
 .DS_Store
 .gitignore
 readme.md
