@@ -28,6 +28,6 @@ jobs:
           title: 'Merge changes from master'
           body: 'This pull request contains changes from the master branch.'
           branch: 'auto/master_to_develop_update'
-          base: 'master'
+          base: 'develop'
           delete-branch: true
           labels: 'automated'
