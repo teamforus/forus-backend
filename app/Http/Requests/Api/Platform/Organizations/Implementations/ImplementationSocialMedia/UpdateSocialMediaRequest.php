@@ -28,12 +28,16 @@ class UpdateSocialMediaRequest extends BaseFormRequest
     {
         /** @var ImplementationSocialMedia $social_media */
         $social_media = $this->route('implementation_social_media');
+        /** @var Implementation $implementation */
+        $implementation = $this->route('implementation');
 
         return [
             'type'  => [
                 'required',
                 'in:' . implode(',', ImplementationSocialMedia::TYPES),
-                Rule::unique('implementation_social_media','type')->ignore($social_media->id),
+                Rule::unique('implementation_social_media','type')->where(function ($query) use ($implementation) {
+                    $query->where('implementation_id', $implementation->id);
+                })->ignore($social_media->id),
             ],
             'link'  => 'required|string|min:5|max:100',
             'title' => 'nullable|string|max:100',
