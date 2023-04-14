@@ -5,7 +5,7 @@ Bockerfile
 .DS_Store
 .gitignore
 readme.md
-readme-docker.md
+reafdme-docker.md
 .env
 vendor
 docker-compose.yml
