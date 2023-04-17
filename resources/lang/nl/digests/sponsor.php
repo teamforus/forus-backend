@@ -34,10 +34,10 @@ return [
 
     // new pending products requests
     'products_pending' => [
-        'header' => 'New pending products for :fund_name webshop.',
+        'header' => 'Nieuw aanbod beschikbaar voor :fund_name webshop.',
         'details' => implode('|', [
-            ":products_count product is pending to be added to :fund_name.",
-            ":products_count products are pending to be added to :fund_name.",
+            "Er staat :products_count aanbod in de wacht om te beoordelen.",
+            "Er staan :products_count aanbiedingen in de wacht om te beoordelen.",
         ]),
         'provider' => implode('|', [
             ':provider_name (:products_count aanbieding)',
