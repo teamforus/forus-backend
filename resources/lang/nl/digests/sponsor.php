@@ -7,7 +7,7 @@ return [
     'greetings' => 'Beste :organization_name,',
     'dashboard_button' => 'GA NAAR DE BEHEEROMGEVING',
 
-    // new provider requests
+    // new provider applications
     "providers" => [
         'title' => 'Pending provider applications',
         'header' => 'Nieuwe aanmeldingen voor :fund_name',
@@ -17,8 +17,8 @@ return [
         ]),
     ],
 
-    // new products requests
-    'products' => [
+    // product approved by allow_products from fund_providers
+    'products_auto' => [
         'title' => "Products approved automatically",
         'header' => 'Nieuwe aanbiedingen voor :fund_name webshop.',
         'details' => implode('|', [
@@ -32,7 +32,22 @@ return [
         'item' => ':product_name :product_price_locale',
     ],
 
-    // new pending products requests
+    // manually approved products (has active fund_provider_products)
+    'products_manual' => [
+        'title' => "Products approved manually",
+        'header' => 'Nieuwe aanbiedingen voor :fund_name webshop.',
+        'details' => implode('|', [
+            ":products_count aanbieding is toegevoegd aan :fund_name.",
+            ":products_count aanbiedingen zijn toegevoegd aan :fund_name.",
+        ]),
+        'provider' => implode('|', [
+            ':provider_name (:products_count aanbieding)',
+            ':provider_name (:products_count aanbiedingen)'
+        ]),
+        'item' => ':product_name :product_price_locale',
+    ],
+
+    // products create but not approved
     'products_pending' => [
         'title' => "Products pending review",
         'header' => 'Nieuw aanbod beschikbaar voor :fund_name webshop.',
@@ -47,7 +62,7 @@ return [
         'item' => ':product_name :product_price_locale',
     ],
 
-    // new provider feedback
+    // new messages from providers
     "feedback" => [
         'title' => "Provider replies",
         'header' => implode('|', [

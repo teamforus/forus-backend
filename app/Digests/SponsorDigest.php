@@ -7,6 +7,7 @@ use App\Mail\Digest\DigestSponsorMail;
 use App\Mail\MailBodyBuilder;
 use App\Models\Fund;
 use App\Models\FundProvider;
+use App\Models\FundProviderProduct;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Product;
@@ -14,8 +15,9 @@ use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Class SponsorDigest
@@ -48,7 +50,8 @@ class SponsorDigest extends BaseOrganizationDigest
         $groups = collect([
             $this->getApplicationsEmailBody($organization),
             $this->getProductsPendingEmailBody($organization),
-            $this->getProductsAddedEmailBody($organization),
+            $this->getProductsApprovedEmailBody($organization, false),
+            $this->getProductsApprovedEmailBody($organization, true),
             $this->getProvidersReplyEmailBody($organization),
         ])->filter();
 
@@ -117,70 +120,70 @@ class SponsorDigest extends BaseOrganizationDigest
 
     /**
      * @param Organization $organization
+     * @param bool $manuallyApproved
      * @return MailBodyBuilder|null
      */
-    private function getProductsAddedEmailBody(Organization $organization): ?MailBodyBuilder
-    {
+    private function getProductsApprovedEmailBody(
+        Organization $organization,
+        bool $manuallyApproved,
+    ): ?MailBodyBuilder {
         $emailBody = new MailBodyBuilder();
+        $transKey = $manuallyApproved ? 'digests/sponsor.products_manual' : 'digests/sponsor.products_auto';
 
-        $events = $organization->funds->map(function(Fund $fund) use ($organization) {
-            $providerQuery = FundProviderQuery::whereApprovedForFundsFilter(
-                FundProvider::query(), $fund->id,
-            )->select('organization_id');
+        $productGroups = $organization->funds->map(function(Fund $fund) use ($organization, $manuallyApproved) {
+            $providerQuery = FundProviderQuery::whereApprovedForFundsFilter(FundProvider::query(), $fund->id);
 
-            $productsQuery = Product::query()->whereIn('organization_id', $providerQuery);
-            $productsQuery = ProductQuery::approvedForFundsFilter($productsQuery, $fund->id);
-            $productsQuery = ProductQuery::inStockAndActiveFilter($productsQuery);
+            $query = Product::query()
+                ->whereIn('organization_id', $providerQuery->select('organization_id'))
+                ->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization))
+                ->where(fn (Builder $builder) => ProductQuery::approvedForFundsFilter($builder, $fund->id))
+                ->where(fn (Builder $builder) => ProductQuery::inStockAndActiveFilter($builder));
 
-            $query = EventLog::eventsOfTypeQuery(Product::class, $productsQuery);
-            $query->where('event', Product::EVENT_CREATED);
-            $query->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
+            $query->whereHas('fund_provider_products', function (Builder|FundProviderProduct $builder) use ($fund) {
+                $builder->whereRelation('fund_provider', 'fund_id', $fund->id);
+            }, $manuallyApproved ? '>' : '=', 0);
 
             return [$fund, $query->count(), $query->get()];
         });
 
-        if ($events->sum(1) > 0) {
-            $emailBody->separator();
-            $emailBody->h2(trans('digests/sponsor.products.title'));
-
-            /** @var Fund $fund */
-            /** @var int $countEvents */
-            /** @var EventLog[]|Collection $eventLogs */
-            foreach ($events as [$fund, $countEvents, $eventLogs]) {
-                if ($countEvents < 1) {
-                    continue;
-                }
-
-                $emailBody->h3(trans('digests/sponsor.products.header', [
-                    'fund_name' => $fund->name,
-                ]), ['margin_less']);
-
-                $emailBody->text(trans_choice('digests/sponsor.products.details', $countEvents, [
-                    'fund_name' => $fund->name,
-                    'products_count' => $countEvents,
-                ]));
-
-                $eventLogsByProvider = $eventLogs->pluck('data')->groupBy('provider_id');
-
-                /** @var array $event_item */
-                foreach ($eventLogsByProvider as $event_items) {
-                    $emailBody->h5(trans_choice(
-                        'digests/sponsor.products.provider',
-                        count($event_items), [
-                        'provider_name' => $event_items[0]['provider_name'],
-                        'products_count' => count($event_items)
-                    ]), ['margin_less']);
-
-                    $emailBody->text("- " . implode("\n- ", array_map(static function ($data) {
-                        return trans('digests/sponsor.products.item', $data);
-                    }, $event_items->toArray())));
-                }
-            }
-
-            return $emailBody;
+        if ($productGroups->sum(1) < 1) {
+            return null;
         }
 
-        return null;
+        $emailBody->separator();
+        $emailBody->h2(trans("$transKey.title"));
+
+        /** @var Fund $fund */
+        /** @var int $countEvents */
+        /** @var Collection|Product[] $products */
+        foreach ($productGroups as [$fund, $countEvents, $products]) {
+            if ($countEvents < 1) {
+                continue;
+            }
+
+            $transData = [
+                'fund_name' => $fund->name,
+                'products_count' => $countEvents,
+            ];
+
+            $emailBody->h3(trans("$transKey.header", $transData), ['margin_less']);
+            $emailBody->text(trans_choice("$transKey.details", $countEvents, $transData));
+
+            /** @var Collection|Product[] $groupProduct */
+            foreach ($products->groupBy('organization_id') as $groupProduct) {
+                $emailBody->h5(trans_choice("$transKey.provider", $groupProduct->count(), array_merge($transData, [
+                    'provider_name' => $groupProduct[0]->organization->name,
+                    'products_count' => $groupProduct->count(),
+                ])), ['margin_less']);
+
+                $emailBody->text("- " . $groupProduct->map(fn (Product $product) => trans("$transKey.item", array_merge([
+                    'product_name' => $product->name,
+                    'product_price_locale' => $product->price_locale,
+                ])))->implode("\n- "));
+            }
+        }
+
+        return $emailBody;
     }
 
     /**
