@@ -100,7 +100,7 @@ class VoucherTransactionBulkPolicy
     }
 
     /**
-     * Determine whether the user can build a new voucher transaction bulk.
+     * Determine whether the user can manually accept bulk transaction
      *
      * @param Identity $identity
      * @param VoucherTransactionBulk $voucherTransactionBulk
@@ -115,13 +115,47 @@ class VoucherTransactionBulkPolicy
     ): Response|bool {
         $hasPermission =
             $this->checkIntegrity($voucherTransactionBulk, $organization) &&
-            $organization->identityCan($identity, 'manage_transaction_bulks');
+            $organization->identityCan($identity, 'manage_transaction_bulks') &&
+            $voucherTransactionBulk->is_exported;
 
-        if (!$voucherTransactionBulk->isPending()) {
-            return $this->deny("Only pending bulks can be approved manually.");
+        if (!$voucherTransactionBulk->isDraft()) {
+            return $this->deny("Alleen concept bulk lijsten kunnen handmatig worden geaccepteerd.");
         }
 
-        return $hasPermission;
+        if (!$organization->allow_manual_bulk_processing) {
+            return $this->deny("Handmatig accepteren is niet mogelijk.");
+        }
+
+        return $hasPermission && $voucherTransactionBulk->bank_connection->bank->isBNG();
+    }
+
+    /**
+     * Determine whether the user can manually accept bulk transaction
+     *
+     * @param Identity $identity
+     * @param VoucherTransactionBulk $voucherTransactionBulk
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function exportBulkToBNG(
+        Identity $identity,
+        VoucherTransactionBulk $voucherTransactionBulk,
+        Organization $organization
+    ): Response|bool {
+        $hasPermission =
+            $this->checkIntegrity($voucherTransactionBulk, $organization) &&
+            $organization->identityCan($identity, 'manage_transaction_bulks');
+
+        if (!$voucherTransactionBulk->isDraft()) {
+            return $this->deny("Alleen concept bulk lijsten kunnen worden geëxporteerd.");
+        }
+
+        if (!$organization->allow_manual_bulk_processing) {
+            return $this->deny("Het exporteren van het SEPA bestand is niet mogelijk.");
+        }
+
+        return $hasPermission && $voucherTransactionBulk->bank_connection->bank->isBNG();
     }
 
     /**

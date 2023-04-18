@@ -20,7 +20,7 @@ class SmsNotificationServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->app->singleton('forus.services.sms_notification', function () {
             return new SmsService();

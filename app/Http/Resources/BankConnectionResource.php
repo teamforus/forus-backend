@@ -31,6 +31,9 @@ class BankConnectionResource extends BaseJsonResource
             'state_locale' => trans( "bank-connections.states." . $this->resource->state),
         ], $this->resource->isPending() && $this->resource->auth_url ? [
             'auth_url' => $this->resource->auth_url,
-        ] : [], $this->timestamps($this->resource, 'created_at', 'updated_at'));
+        ] : [], array_merge(
+            $this->makeTimestamps($this->resource->only(['created_at', 'updated_at'])),
+            $this->makeTimestamps($this->resource->only(['expire_at']), true),
+        ));
     }
 }

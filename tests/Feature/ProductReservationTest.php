@@ -257,11 +257,10 @@ class ProductReservationTest extends TestCase
         $headers = $this->makeApiHeaders($proxy);
 
         $reservation = $this->makeReservation($identity, $voucher, $product);
-
         $reservationUrl = "$this->apiUrl/$reservation->id";
 
         // check show method
-        $response = $this->get($reservationUrl, $headers);
+        $response = $this->getJson($reservationUrl, $headers);
 
         $response->assertSuccessful();
         $response->assertJsonStructure(['data' => $this->resourceStructure]);

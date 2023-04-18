@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\BankConnectionExpirationNotifyCommand;
 use App\Console\Commands\BankProcessFundTopUpsCommand;
 use App\Console\Commands\BankUpdateContextSessionsCommand;
 use App\Console\Commands\BankVoucherTransactionBulksBuildCommand;
@@ -86,6 +87,9 @@ class Kernel extends ConsoleKernel
         BankVoucherTransactionBulksBuildCommand::class,
         BankVoucherTransactionBulksUpdateStateCommand::class,
         BankVoucherTransactionProcessZeroAmountCommand::class,
+        BankConnectionExpirationNotifyCommand::class,
+
+        // system notifications and notification templates commands
         UpdateNotificationTemplatesCommand::class,
         UpdateSystemNotificationsCommand::class,
 
@@ -195,6 +199,14 @@ class Kernel extends ConsoleKernel
          */
         $schedule->command('bank:bulks-update')
             ->hourly()
+            ->withoutOverlapping()
+            ->onOneServer();
+
+        /**
+         * BankConnectionExpirationNotifyCommand:
+         */
+        $schedule->command('bank:notify-connection-expiration')
+            ->dailyAt('09:00')
             ->withoutOverlapping()
             ->onOneServer();
     }

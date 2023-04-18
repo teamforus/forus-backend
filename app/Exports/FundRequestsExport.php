@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Employee;
 use App\Models\FundRequest;
@@ -17,10 +18,10 @@ class FundRequestsExport implements FromCollection, WithHeadings
     /**
      * FundRequestsExport constructor.
      *
-     * @param BaseFormRequest $request
+     * @param IndexFundRequestsRequest $request
      * @param Employee $employee
      */
-    public function __construct(BaseFormRequest $request, Employee $employee)
+    public function __construct(IndexFundRequestsRequest $request, Employee $employee)
     {
         $this->data = FundRequest::exportSponsor($request, $employee);
     }

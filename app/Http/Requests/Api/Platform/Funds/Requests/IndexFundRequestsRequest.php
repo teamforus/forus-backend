@@ -32,11 +32,12 @@ class IndexFundRequestsRequest extends BaseFormRequest
             'per_page'      => 'numeric|between:1,100',
             'state'         => 'nullable|in:' . implode(',', FundRequest::STATES),
             'employee_id'   => 'nullable|exists:employees,id',
+            'assigned'      => 'nullable|boolean',
             'from'          => 'nullable|date:Y-m-d',
             'to'            => 'nullable|date:Y-m-d',
             'order_by'      => 'nullable|in:id,fund_name,created_at,note,state,requester_email,assignee_email',
             'order_dir'     => 'nullable|in:asc,desc',
-            'export_format' => 'nullable|in:csv,xls'
+            'export_format' => 'nullable|in:csv,xls',
         ];
     }
 }
