@@ -69,8 +69,8 @@ return [
 
     // products create but not approved
     'products_pending' => [
-        'title' => "Products pending review",
-        'header' => 'Nieuw aanbod beschikbaar voor :fund_name webshop.',
+        'title' => "Geplaatst aanbiedingen die uw aandacht vereisen.",
+        'header' => ':fund_name',
         'details' => implode('|', [
             "Er staat :products_count aanbod in de wacht om te beoordelen.",
             "Er staan :products_count aanbiedingen in de wacht om te beoordelen.",
