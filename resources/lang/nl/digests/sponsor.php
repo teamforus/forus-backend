@@ -39,8 +39,8 @@ return [
 
     // product approved by allow_products from fund_providers
     'products_auto' => [
-        'title' => "Products approved automatically",
-        'header' => 'Nieuwe aanbiedingen voor :fund_name webshop.',
+        'title' => "Goedgkeurd aanbod",
+        'header' => 'Er zijn nieuwe aanbiedngen toegvoegd aan de webshop.',
         'details' => implode('|', [
             ":products_count aanbieding is toegevoegd aan :fund_name.",
             ":products_count aanbiedingen zijn toegevoegd aan :fund_name.",
