@@ -19,11 +19,11 @@ return [
 
     // new provider approved applications
     "providers_approved" => [
-        'title' => 'Approved provider applications',
-        'header' => 'Nieuwe aanmeldingen voor :fund_name',
+        'title' => 'Aanbieders die zijn goedgekeurd',
+        'header' => ':fund_name',
         'details' => implode('|', [
-            ":providers_count aanbieder heeft zich aangemeld en wacht op goedkeuring.\n- :providers_list",
-            ":providers_count aanbieders hebben zich aangemeld en wachten op goedkeuring.\n- :providers_list"
+            ":providers_count aanbieder is goedgekeurd.\n- :providers_list",
+            ":providers_count aanbieders zijn goedgekeurd.\n- :providers_list"
         ]),
     ],
 
