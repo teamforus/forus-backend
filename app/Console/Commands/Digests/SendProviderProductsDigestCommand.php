@@ -16,7 +16,7 @@ class SendProviderProductsDigestCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'forus.digest.provider_products:send';
+    protected $signature = 'forus.digest:provider_products';
 
     /**
      * The console command description.
@@ -32,6 +32,6 @@ class SendProviderProductsDigestCommand extends Command
      */
     public function handle(): void
     {
-        ProviderProductsDigest::dispatchNow();
+        ProviderProductsDigest::dispatchSync();
     }
 }

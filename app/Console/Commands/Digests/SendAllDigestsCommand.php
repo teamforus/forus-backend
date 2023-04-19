@@ -20,7 +20,7 @@ class SendAllDigestsCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'forus.digest.all:send';
+    protected $signature = 'forus.digest:all';
 
     /**
      * The console command description.
@@ -36,10 +36,10 @@ class SendAllDigestsCommand extends Command
      */
     public function handle(): void
     {
-        ProviderFundsDigest::dispatchNow();
-        ProviderProductsDigest::dispatchNow();
-        RequesterDigest::dispatchNow();
-        SponsorDigest::dispatchNow();
-        ValidatorDigest::dispatchNow();
+        ProviderFundsDigest::dispatchSync();
+        ProviderProductsDigest::dispatchSync();
+        RequesterDigest::dispatchSync();
+        SponsorDigest::dispatchSync();
+        ValidatorDigest::dispatchSync();
     }
 }

@@ -80,13 +80,12 @@ class ValidatorDigest extends BaseOrganizationDigest
      */
     public function getOrganizationFundRequestEvents(Organization $organization): Collection
     {
-        $digestDateTime = $this->getOrganizationDigestTime($organization);
+        $digestDateTime = $this->getLastOrganizationDigestTime($organization);
 
         return $organization->funds()->where([
             'state' => Fund::STATE_ACTIVE,
         ])->get()->map(static function(Fund $fund) use ($digestDateTime) {
-            $fundRequests = $fund->fund_requests()->pluck('id')->toArray();
-            $query = EventLog::eventsOfTypeQuery(FundRequest::class, $fundRequests);
+            $query = EventLog::eventsOfTypeQuery(FundRequest::class, $fund->fund_requests());
             $query->where('event', FundRequest::EVENT_CREATED);
             $query->where('created_at', '>=', $digestDateTime);
 

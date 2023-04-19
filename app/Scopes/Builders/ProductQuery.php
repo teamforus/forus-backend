@@ -11,6 +11,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Lang;
 
 class ProductQuery
@@ -45,12 +46,25 @@ class ProductQuery
     }
 
     /**
-     * @param Builder|Product $builder
-     * @param $fund_id
-     * @return Builder|Product
+     * @param Builder|Relation|Product $query
+     * @param array|int $fund_id
+     * @return Builder|Relation|Product
      */
-    public static function whereFundNotExcluded(Builder|Product $builder, $fund_id): Builder|Product
-    {
+    public static function notApprovedForFundsFilter(
+        Builder|Relation|Product $query,
+        array|int $fund_id
+    ): Builder|Relation|Product {
+        return $query->whereNotIn('id', self::approvedForFundsFilter(clone $query, $fund_id)->select('id'));
+    }
+
+    /**
+     * @param Builder|Relation|Product $builder
+     * @param $fund_id
+     * @return Builder|Relation|Product
+     */
+    public static function whereFundNotExcluded(
+        Builder|Relation|Product $builder, $fund_id
+    ): Builder|Relation|Product {
         $builder->where(function(Builder $builder) use ($fund_id) {
             $builder->whereNull('sponsor_organization_id');
             $builder->orWhereHas('sponsor_organization', function(Builder|Organization $builder) use ($fund_id) {

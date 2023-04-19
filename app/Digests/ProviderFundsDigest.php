@@ -74,12 +74,12 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         Organization $organization,
         string $targetEvent,
         array $otherEvents
-    ) {
+    ): mixed {
         $logsApprovedBudget = EventLog::eventsOfTypeQuery(
             FundProvider::class,
-            $organization->fund_providers()->pluck('id')->toArray()
+            $organization->fund_providers(),
         )->whereIn('event', $otherEvents)->where(
-            'created_at', '>=', $this->getOrganizationDigestTime($organization)
+            'created_at', '>=', $this->getLastOrganizationDigestTime($organization)
         )->get()->groupBy('loggable_id');
 
         return $logsApprovedBudget->filter(static function(
@@ -255,9 +255,9 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         $mailBody = new MailBodyBuilder();
         $query = EventLog::eventsOfTypeQuery(
             Product::class,
-            $organization->products()->pluck('id')->toArray()
+            $organization->products(),
         )->where('event', Product::EVENT_APPROVED);
-        $query->where('created_at', '>=', $this->getOrganizationDigestTime($organization));
+        $query->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
 
         $logsProductsApproved = $query->get()->pluck('data');
 
@@ -285,9 +285,9 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
         $query = EventLog::eventsOfTypeQuery(
             FundProvider::class,
-            $organization->fund_providers()->pluck('id')->toArray()
+            $organization->fund_providers(),
         )->where('event', FundProvider::EVENT_SPONSOR_MESSAGE);
-        $query->where('created_at', '>=', $this->getOrganizationDigestTime($organization));
+        $query->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
 
         $logsProductsFeedback = $query->get()->pluck('data');
         $logsProductsFeedback = $logsProductsFeedback->groupBy('product_id');

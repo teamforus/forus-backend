@@ -89,9 +89,9 @@ class ProviderProductsDigest extends BaseOrganizationDigest
     public function getOrganizationProductReservedEvents(Organization $organization): Collection {
         $query = EventLog::eventsOfTypeQuery(
             Product::class,
-            $organization->products()->pluck('id')->toArray()
+            $organization->products(),
         )->where('event', Product::EVENT_RESERVED);
-        $query->where('created_at', '>=', $this->getOrganizationDigestTime($organization));
+        $query->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
 
         return $query->get()->pluck('data');
     }

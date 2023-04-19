@@ -16,7 +16,7 @@ class SendProviderFundsDigestCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'forus.digest.provider_funds:send';
+    protected $signature = 'forus.digest:provider_funds';
 
     /**
      * The console command description.
@@ -32,6 +32,6 @@ class SendProviderFundsDigestCommand extends Command
      */
     public function handle(): void
     {
-        ProviderFundsDigest::dispatchNow();
+        ProviderFundsDigest::dispatchSync();
     }
 }

@@ -11,18 +11,18 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 class FundProviderQuery extends BaseQuery
 {
     /**
-     * @param Builder|Relation $query
+     * @param Builder|Relation|FundProvider $query
      * @param $fund_id
      * @param null $type
      * @param null $product_id
-     * @return Builder|Relation
+     * @return Builder|Relation|FundProvider
      */
     public static function whereApprovedForFundsFilter(
-        Builder|Relation $query,
+        Builder|Relation|FundProvider $query,
         $fund_id,
         $type = null,
         $product_id = null
-    ): Builder|Relation {
+    ): Builder|Relation|FundProvider {
         return $query->where(static function(Builder $builder) use ($fund_id, $type, $product_id) {
             $builder->where('state', FundProvider::STATE_ACCEPTED);
             $builder->whereIn('fund_id', self::isQueryable($fund_id) ? $fund_id : (array) $fund_id);
@@ -114,7 +114,7 @@ class FundProviderQuery extends BaseQuery
      * @param array|string|int $fund_id
      * @return Builder|\Illuminate\Database\Query\Builder
      */
-    public static function sortByRevenue(Builder $query, $fund_id) {
+    public static function sortByRevenue(Builder $query, mixed $fund_id) {
         return $query->select('fund_providers.*')->selectSub(VoucherTransaction::selectRaw(
             'sum(`voucher_transactions`.`amount`)'
         )->whereColumn(
