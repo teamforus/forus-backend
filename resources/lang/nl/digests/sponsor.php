@@ -9,7 +9,7 @@ return [
 
     // new provider pending applications
     "providers_pending" => [
-        'title' => 'Aanmeldingen van aanbieders die uw aandacht vereisen',
+        'title' => 'Aanmeldingen van aanbieders die uw aandacht vereisen.',
         'header' => ':fund_name',
         'details' => implode('|', [
             ":providers_count aanbieder heeft zich aangemeld en wacht op goedkeuring.\n- :providers_list",
@@ -29,11 +29,11 @@ return [
 
     // new provider unsubscription requests
     "providers_unsubscriptions" => [
-        'title' => 'Provider unsubscription requests',
-        'header' => 'New provider unsubscription request for :fund_name',
+        'title' => 'Afmeldingen van aanbieders die uw aandacht vereisen.',
+        'header' => ':fund_name',
         'details' => implode('|', [
-            ":providers_count provider requested to be removed from the fund. \n- :providers_list",
-            ":providers_count providers requested to be removed from the fund.\n- :providers_list"
+            ":providers_count provider heeft verzocht om hun deelname te beëindigen.\n- :providers_list",
+            ":providers_count providers hebben verzocht om hun deelname te beëindigen.\n- :providers_list"
         ]),
     ],
 
