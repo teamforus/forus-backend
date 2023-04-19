@@ -1,0 +1,38 @@
+name: Create Pull-Request with changes of master branch to develop branch
+
+on:
+  push:
+    branches:
+      - 'master'
+  workflow_dispatch:
+
+
+jobs:
+  create_pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master branch
+        uses: actions/checkout@v3
+        with:
+          ref: master
+
+      - name: Get current date
+        id: get-date
+        run: echo "value=$(date +%Y-%m-%d_%H-%M-%S)">> $GITHUB_OUTPUT
+
+      - name: Create new branch
+        run: |
+          git pull
+          git checkout -b "auto/master_to_develop_update-${{steps.get-date.outputs.value}}" origin/master
+          git push --set-upstream origin "auto/master_to_develop_update-${{steps.get-date.outputs.value}}"
+
+      - name: Create pull request
+        run: >
+          gh pr create
+          --base develop
+          --head "auto/master_to_develop_update-${{steps.get-date.outputs.value}}"
+          --title "[auto] PR master into develop"
+          --body "Created by Github action after a change in master branch that doesn't exist in develop branch"
+          --assignee lexlog,RobinMeles,GerbenBosschieter --reviewer lexlog,RobinMeles,GerbenBosschieter
+        env:
+          GH_TOKEN: ${{ github.token }}
