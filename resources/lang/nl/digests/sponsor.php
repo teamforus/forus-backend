@@ -9,8 +9,8 @@ return [
 
     // new provider pending applications
     "providers_pending" => [
-        'title' => 'Pending provider applications',
-        'header' => 'Nieuwe aanmeldingen voor :fund_name',
+        'title' => 'Aanmeldingen van aanbieders die uw aandacht vereisen',
+        'header' => ':fund_name',
         'details' => implode('|', [
             ":providers_count aanbieder heeft zich aangemeld en wacht op goedkeuring.\n- :providers_list",
             ":providers_count aanbieders hebben zich aangemeld en wachten op goedkeuring.\n- :providers_list"
