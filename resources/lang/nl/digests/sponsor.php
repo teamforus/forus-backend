@@ -40,7 +40,7 @@ return [
     // product approved by allow_products from fund_providers
     'products_auto' => [
         'title' => "Goedgkeurd aanbod",
-        'header' => 'Er zijn nieuwe aanbiedngen toegvoegd aan de webshop.',
+        'header' => 'Er zijn nieuwe aanbiedingen toegvoegd aan de webshop.',
         'details' => implode('|', [
             ":products_count aanbieding is toegevoegd aan :fund_name.",
             ":products_count aanbiedingen zijn toegevoegd aan :fund_name.",
@@ -54,8 +54,8 @@ return [
 
     // manually approved products (has active fund_provider_products)
     'products_manual' => [
-        'title' => "Products approved manually",
-        'header' => 'Nieuwe aanbiedingen voor :fund_name webshop.',
+        'title' => "Goedgkeurd aanbod",
+        'header' => 'Er zijn nieuwe aanbiedingen toegvoegd aan de webshop.',
         'details' => implode('|', [
             ":products_count aanbieding is toegevoegd aan :fund_name.",
             ":products_count aanbiedingen zijn toegevoegd aan :fund_name.",
