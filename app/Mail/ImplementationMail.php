@@ -35,6 +35,8 @@ class ImplementationMail extends Mailable implements ShouldQueue
     protected string $subjectKey = "";
     protected string $viewKey = "";
 
+    protected ?string $preferencesLink = null;
+
     /**
      * @var array|false|null
      */
@@ -48,6 +50,22 @@ class ImplementationMail extends Mailable implements ShouldQueue
     {
         $this->setMailFrom($emailFrom ?: Implementation::general()->getEmailFrom());
         $this->mailData = $this->escapeData($data);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPreferencesLink(): ?string
+    {
+        return $this->preferencesLink ?: null;
+    }
+
+    /**
+     * @param string|null $preferencesLink
+     */
+    public function setPreferencesLink(?string $preferencesLink): void
+    {
+        $this->preferencesLink = $preferencesLink;
     }
 
     /**

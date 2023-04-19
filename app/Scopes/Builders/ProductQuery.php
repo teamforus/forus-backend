@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
 use App\Models\Implementation;
+use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
@@ -57,37 +58,28 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $builder
+     * @param Builder|Relation|Product $builder
      * @param $fund_id
-     * @return Builder
+     * @return Builder|Relation|Product
      */
-    public static function whereFundNotExcluded(Builder $builder, $fund_id): Builder
-    {
+    public static function whereFundNotExcluded(
+        Builder|Relation|Product $builder, $fund_id
+    ): Builder|Relation|Product {
         $builder->where(function(Builder $builder) use ($fund_id) {
             $builder->whereNull('sponsor_organization_id');
-            $builder->orWhereHas('sponsor_organization', function(Builder $builder) use ($fund_id) {
-                $builder->whereHas('funds', function(Builder $builder) use ($fund_id) {
+            $builder->orWhereHas('sponsor_organization', function(Builder|Organization $builder) use ($fund_id) {
+                $builder->whereHas('funds', function (Builder|Fund $builder) use ($fund_id) {
                     $builder->whereIn('id', (array) $fund_id);
                 });
             });
         });
 
-        $builder->where(function(Builder $builder) use ($fund_id) {
-            foreach ((array) $fund_id as $fundId) {
-                $builder->orWhere(function (Builder $builder) use ($fundId) {
-                    $builder->whereHas('organization', static function (Builder $builder) use ($fundId) {
-                        $builder->whereHas('fund_providers', static function (Builder $builder) use ($fundId) {
-                            $builder->where('fund_id', $fundId);
-                        });
-                    });
-
-                    $builder->whereDoesntHave('product_exclusions', static function (Builder $builder) use ($fundId) {
-                        $builder->whereHas('fund_provider', static function (Builder $builder) use ($fundId) {
-                            $builder->where('fund_id', $fundId);
-                        });
-                    });
+        $builder->where(function(Builder|Product $builder) use ($fund_id) {
+            $builder->orWhereDoesntHave('product_exclusions', function (Builder $builder) use ($fund_id) {
+                $builder->whereHas('fund_provider', function (Builder|FundProvider $builder) use ($fund_id) {
+                    $builder->whereIn('fund_id', (array) $fund_id);
                 });
-            }
+            });
         });
 
         return $builder;
