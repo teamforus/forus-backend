@@ -7,13 +7,33 @@ return [
     'greetings' => 'Beste :organization_name,',
     'dashboard_button' => 'GA NAAR DE BEHEEROMGEVING',
 
-    // new provider applications
-    "providers" => [
+    // new provider pending applications
+    "providers_pending" => [
         'title' => 'Pending provider applications',
         'header' => 'Nieuwe aanmeldingen voor :fund_name',
         'details' => implode('|', [
             ":providers_count aanbieder heeft zich aangemeld en wacht op goedkeuring.\n- :providers_list",
             ":providers_count aanbieders hebben zich aangemeld en wachten op goedkeuring.\n- :providers_list"
+        ]),
+    ],
+
+    // new provider approved applications
+    "providers_approved" => [
+        'title' => 'Approved provider applications',
+        'header' => 'Nieuwe aanmeldingen voor :fund_name',
+        'details' => implode('|', [
+            ":providers_count aanbieder heeft zich aangemeld en wacht op goedkeuring.\n- :providers_list",
+            ":providers_count aanbieders hebben zich aangemeld en wachten op goedkeuring.\n- :providers_list"
+        ]),
+    ],
+
+    // new provider unsubscription requests
+    "providers_unsubscriptions" => [
+        'title' => 'Provider unsubscription requests',
+        'header' => 'New provider unsubscription request for :fund_name',
+        'details' => implode('|', [
+            ":providers_count provider requested to be removed from the fund. \n- :providers_list",
+            ":providers_count providers requested to be removed from the fund.\n- :providers_list"
         ]),
     ],
 

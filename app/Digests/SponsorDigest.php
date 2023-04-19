@@ -18,6 +18,7 @@ use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * Class SponsorDigest
@@ -48,7 +49,9 @@ class SponsorDigest extends BaseOrganizationDigest
         ]), ["margin_less"]);
 
         $groups = collect([
-            $this->getApplicationsEmailBody($organization),
+            $this->getApplicationsEmailBody($organization, false),
+            $this->getApplicationsEmailBody($organization, true),
+            $this->getProductsUnsubscriptionsEmailBody($organization),
             $this->getProductsPendingEmailBody($organization),
             $this->getProductsApprovedEmailBody($organization, false),
             $this->getProductsApprovedEmailBody($organization, true),
@@ -72,50 +75,108 @@ class SponsorDigest extends BaseOrganizationDigest
 
     /**
      * @param Organization $organization
+     * @param bool $approved
      * @return MailBodyBuilder|null
      */
-    private function getApplicationsEmailBody(Organization $organization): ?MailBodyBuilder
-    {
-        $applyEvents = [];
+    private function getApplicationsEmailBody(
+        Organization $organization,
+        bool $approved
+    ): ?MailBodyBuilder {
         $emailBody = new MailBodyBuilder();
+        $transKey = $approved ? 'digests/sponsor.providers_approved' : 'digests/sponsor.providers_pending';
 
-        foreach ($organization->funds as $fund) {
-            $query = EventLog::eventsOfTypeQuery(Fund::class, $fund->id);
-            $query->where('event', Fund::EVENT_PROVIDER_APPLIED);
-            $query->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
+        $fundProvidersList = $organization->funds->map(function(Fund $fund) use ($organization, $approved) {
+            $query = FundProvider::query()
+                ->where('fund_id', $fund->id)
+                ->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization))
+                ->with('organization');
 
-            $applyEvents[] = [$fund, $query->count(), $query->pluck('data')];
-        }
-
-        $total_applications = array_sum(array_pluck($applyEvents, '1'));
-
-        if ($total_applications > 0) {
-            $emailBody->separator();
-            $emailBody->h2(trans('digests/sponsor.providers.title'));
-
-            /** @var Fund $fund */
-            /** @var int $countEvents */
-            /** @var array[]|Collection $eventLogs */
-            foreach ($applyEvents as [$fund, $countEvents, $eventLogs]) {
-                if ($countEvents < 1) {
-                    continue;
-                }
-
-                $emailBody->h3(trans('digests/sponsor.providers.header', [
-                    'fund_name' => $fund->name,
-                ]), ['margin_less']);
-
-                $emailBody->text(trans_choice('digests/sponsor.providers.details', $countEvents, [
-                    'fund_name' => $fund->name,
-                    'providers_count' => $countEvents,
-                    'providers_list' => $eventLogs->pluck('provider_name')->implode("\n- "),
-                ]));
+            if ($approved) {
+                FundProviderQuery::whereApprovedForFundsFilter($query, $fund->id);
+            } else {
+                FundProviderQuery::whereDeclinedForFundsFilter($query, $fund->id);
             }
 
-            return $emailBody;
+            return [$fund, $query->count(), $query->get()];
+        });
+
+        if ($fundProvidersList->sum(1) < 1) {
+            return null;
         }
 
-        return null;
+        $emailBody->separator();
+        $emailBody->h2(trans("$transKey.title"));
+
+        /** @var Fund $fund */
+        /** @var int $count */
+        /** @var Collection|FundProvider $fundProviders */
+        foreach ($fundProvidersList as [$fund, $count, $fundProviders]) {
+            if ($count < 1) {
+                continue;
+            }
+
+            $emailBody->h3(trans("$transKey.header", [
+                'fund_name' => $fund->name,
+            ]), ['margin_less']);
+
+            $emailBody->text(trans_choice("$transKey.details", $count, [
+                'fund_name' => $fund->name,
+                'providers_count' => $count,
+                'providers_list' => $fundProviders->pluck('organization.name')->implode("\n- "),
+            ]));
+        }
+
+        return $emailBody;
+    }
+
+    /**
+     * @param Organization $organization
+     * @return MailBodyBuilder|null
+     */
+    private function getProductsUnsubscriptionsEmailBody(Organization $organization): ?MailBodyBuilder
+    {
+        $emailBody = new MailBodyBuilder();
+
+        $fundProvidersList = $organization->funds->map(function(Fund $fund) use ($organization) {
+            $query = FundProvider::query()
+                ->where('fund_id', $fund->id)
+                ->where(fn (Builder $builder) => FundProviderQuery::whereApprovedForFundsFilter($builder, $fund->id))
+                ->with('organization');
+
+            $query->whereHas('fund_unsubscribes_active', function(Builder $builder) use ($organization) {
+                $builder->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
+            });
+
+            return [$fund, $query->count(), $query->get()];
+        });
+
+        if ($fundProvidersList->sum(1) < 1) {
+            return null;
+        }
+
+        $emailBody->separator();
+        $emailBody->h2(trans("digests/sponsor.providers_unsubscriptions.title"));
+
+        /** @var Fund $fund */
+        /** @var int $count */
+        /** @var Collection|FundProvider $fundProviders */
+        foreach ($fundProvidersList as [$fund, $count, $fundProviders]) {
+            if ($count < 1) {
+                continue;
+            }
+
+            $emailBody->h3(trans("digests/sponsor.providers_unsubscriptions.header", [
+                'fund_name' => $fund->name,
+            ]), ['margin_less']);
+
+            $emailBody->text(trans_choice("digests/sponsor.providers_unsubscriptions.details", $count, [
+                'fund_name' => $fund->name,
+                'providers_count' => $count,
+                'providers_list' => $fundProviders->pluck('organization.name')->implode("\n- "),
+            ]));
+        }
+
+        return $emailBody;
     }
 
     /**
@@ -127,17 +188,17 @@ class SponsorDigest extends BaseOrganizationDigest
         Organization $organization,
         bool $manuallyApproved,
     ): ?MailBodyBuilder {
-        $emailBody = new MailBodyBuilder();
         $transKey = $manuallyApproved ? 'digests/sponsor.products_manual' : 'digests/sponsor.products_auto';
 
-        $productGroups = $organization->funds->map(function(Fund $fund) use ($organization, $manuallyApproved) {
+        $productsList = $organization->funds->map(function(Fund $fund) use ($organization, $manuallyApproved) {
             $providerQuery = FundProviderQuery::whereApprovedForFundsFilter(FundProvider::query(), $fund->id);
 
             $query = Product::query()
                 ->whereIn('organization_id', $providerQuery->select('organization_id'))
                 ->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization))
                 ->where(fn (Builder $builder) => ProductQuery::approvedForFundsFilter($builder, $fund->id))
-                ->where(fn (Builder $builder) => ProductQuery::inStockAndActiveFilter($builder));
+                ->where(fn (Builder $builder) => ProductQuery::inStockAndActiveFilter($builder))
+                ->with('organization');
 
             $query->whereHas('fund_provider_products', function (Builder|FundProviderProduct $builder) use ($fund) {
                 $builder->whereRelation('fund_provider', 'fund_id', $fund->id);
@@ -146,44 +207,11 @@ class SponsorDigest extends BaseOrganizationDigest
             return [$fund, $query->count(), $query->get()];
         });
 
-        if ($productGroups->sum(1) < 1) {
+        if ($productsList->sum(1) < 1) {
             return null;
         }
 
-        $emailBody->separator();
-        $emailBody->h2(trans("$transKey.title"));
-
-        /** @var Fund $fund */
-        /** @var int $countEvents */
-        /** @var Collection|Product[] $products */
-        foreach ($productGroups as [$fund, $countEvents, $products]) {
-            if ($countEvents < 1) {
-                continue;
-            }
-
-            $transData = [
-                'fund_name' => $fund->name,
-                'products_count' => $countEvents,
-            ];
-
-            $emailBody->h3(trans("$transKey.header", $transData), ['margin_less']);
-            $emailBody->text(trans_choice("$transKey.details", $countEvents, $transData));
-
-            /** @var Collection|Product[] $groupProduct */
-            foreach ($products->groupBy('organization_id') as $groupProduct) {
-                $emailBody->h5(trans_choice("$transKey.provider", $groupProduct->count(), array_merge($transData, [
-                    'provider_name' => $groupProduct[0]->organization->name,
-                    'products_count' => $groupProduct->count(),
-                ])), ['margin_less']);
-
-                $emailBody->text("- " . $groupProduct->map(fn (Product $product) => trans("$transKey.item", array_merge([
-                    'product_name' => $product->name,
-                    'product_price_locale' => $product->price_locale,
-                ])))->implode("\n- "));
-            }
-        }
-
-        return $emailBody;
+        return $this->buildProductsList($productsList, $transKey);
     }
 
     /**
@@ -192,66 +220,76 @@ class SponsorDigest extends BaseOrganizationDigest
      */
     private function getProductsPendingEmailBody(Organization $organization): ?MailBodyBuilder
     {
-        $emailBody = new MailBodyBuilder();
+        $transKey = 'digests/sponsor.products_pending';
 
-        $events = $organization->funds->map(function(Fund $fund) use ($organization) {
+        $productsList = $organization->funds->map(function(Fund $fund) use ($organization) {
             $providerQuery = FundProviderQuery::whereApprovedForFundsFilter(
                 FundProvider::query(), $fund->id,
             )->select('organization_id');
 
-            $productsQuery = Product::query()->whereIn('organization_id', $providerQuery);
-            $productsQuery = ProductQuery::notApprovedForFundsFilter($productsQuery, $fund->id);
-            $productsQuery = ProductQuery::inStockAndActiveFilter($productsQuery);
-
-            $query = EventLog::eventsOfTypeQuery(Product::class, $productsQuery);
-            $query->where('event', Product::EVENT_CREATED);
-            $query->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
+            $query = Product::query()
+                ->whereIn('organization_id', $providerQuery)
+                ->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization))
+                ->where(fn (Builder $builder) => ProductQuery::inStockAndActiveFilter($builder))
+                ->where(fn (Builder $builder) => ProductQuery::notApprovedForFundsFilter($builder, $fund->id))
+                ->with('organization');
 
             return [$fund, $query->count(), $query->get()];
         });
 
-        if ($events->sum(1) > 0) {
-            $emailBody->separator();
-            $emailBody->h2(trans('digests/sponsor.products_pending.title'));
-
-            /** @var Fund $fund */
-            /** @var int $countEvents */
-            /** @var EventLog[]|Collection $eventLogs */
-            foreach ($events as [$fund, $countEvents, $eventLogs]) {
-                if ($countEvents < 1) {
-                    continue;
-                }
-
-                $emailBody->h3(trans('digests/sponsor.products_pending.header', [
-                    'fund_name' => $fund->name,
-                ]), ['margin_less']);
-
-                $emailBody->text(trans_choice('digests/sponsor.products_pending.details', $countEvents, [
-                    'fund_name' => $fund->name,
-                    'products_count' => $countEvents,
-                ]));
-
-                $eventLogsByProvider = $eventLogs->pluck('data')->groupBy('provider_id');
-
-                /** @var array $event_item */
-                foreach ($eventLogsByProvider as $event_items) {
-                    $emailBody->h5(trans_choice(
-                        'digests/sponsor.products_pending.provider',
-                        count($event_items), [
-                        'provider_name' => $event_items[0]['provider_name'],
-                        'products_count' => count($event_items)
-                    ]), ['margin_less']);
-
-                    $emailBody->text("- " . implode("\n- ", array_map(static function ($data) {
-                        return trans('digests/sponsor.products_pending.item', $data);
-                    }, $event_items->toArray())));
-                }
-            }
-
-            return $emailBody;
+        if ($productsList->sum(1) < 1) {
+            return null;
         }
 
-        return null;
+        return $this->buildProductsList($productsList, $transKey);
+    }
+
+    /**
+     * @param SupportCollection $productsList
+     * @param string $transKey
+     * @return MailBodyBuilder
+     */
+    private function buildProductsList(
+        SupportCollection $productsList,
+        string $transKey
+    ): MailBodyBuilder {
+        $emailBody = new MailBodyBuilder();
+        $emailBody->separator();
+        $emailBody->h2(trans("$transKey.title"));
+
+        /** @var Fund $fund */
+        /** @var int $count */
+        /** @var Collection|Product[] $products */
+        foreach ($productsList as [$fund, $count, $products]) {
+            if ($count < 1) {
+                continue;
+            }
+
+            $transData = [
+                'fund_name' => $fund->name,
+                'products_count' => $count,
+            ];
+
+            $emailBody->h3(trans("$transKey.header", $transData), ['margin_less']);
+            $emailBody->text(trans_choice("$transKey.details", $count, $transData));
+
+            /** @var Collection|Product[] $groupProduct */
+            foreach ($products->groupBy('organization_id') as $groupProduct) {
+                $emailBody->h5(trans_choice("$transKey.provider", $groupProduct->count(), array_merge($transData, [
+                    'provider_name' => $groupProduct[0]->organization->name,
+                    'products_count' => $groupProduct->count(),
+                ])), ['margin_less']);
+
+                $emailBody->text("- " . $groupProduct->map(function (Product $product) use ($transKey) {
+                    return trans("$transKey.item", array_merge([
+                        'product_name' => $product->name,
+                        'product_price_locale' => $product->price_locale,
+                    ]));
+                })->implode("\n- "));
+            }
+        }
+
+        return $emailBody;
     }
 
     /**
