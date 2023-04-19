@@ -69,7 +69,7 @@ return [
 
     // products create but not approved
     'products_pending' => [
-        'title' => "Geplaatst aanbiedingen die uw aandacht vereisen.",
+        'title' => "Geplaatste aanbiedingen die uw aandacht vereisen.",
         'header' => ':fund_name',
         'details' => implode('|', [
             "Er staat :products_count aanbieding geplaatst die wacht op goedkeuring.",
