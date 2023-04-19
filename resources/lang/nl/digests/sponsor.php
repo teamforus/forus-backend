@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'subject' => 'Update: Nieuwe aanmeldingen voor uw fondsen',
-    'title' => 'Nieuwe aanmeldingen voor uw fondsen',
+    'subject' => 'Update: Blijf op de hoogte van uw aanbieders',
+    'title' => 'Laatste ontwikkelingen omtrent uw aanbieders en aanbod',
 
     'greetings' => 'Beste :organization_name,',
     'dashboard_button' => 'GA NAAR DE BEHEEROMGEVING',
