@@ -72,8 +72,8 @@ return [
         'title' => "Geplaatst aanbiedingen die uw aandacht vereisen.",
         'header' => ':fund_name',
         'details' => implode('|', [
-            "Er staat :products_count aanbod in de wacht om te beoordelen.",
-            "Er staan :products_count aanbiedingen in de wacht om te beoordelen.",
+            "Er staat :products_count aanbieding geplaatst die wacht op goedkeuring.",
+            "Er staan :products_count aanbiedingen geplaatst die wachten op goedkeuring.",
         ]),
         'provider' => implode('|', [
             ':provider_name (:products_count aanbieding)',
@@ -84,12 +84,12 @@ return [
 
     // new messages from providers
     "feedback" => [
-        'title' => "Provider replies",
+        'title' => "Uw heeft nieuwe berichten van aanbieders.",
         'header' => implode('|', [
             "U heeft :count_messages nieuw bericht ontvangen voor :fund_name",
             "U heeft :count_messages nieuwe berichten ontvangen voor :fund_name",
         ]),
-        'item_header' => 'Nieuwe berichten van :provider_name',
+        'item_header' => ':provider_name',
         'item' => implode('|', [
             '- :provider_name heeft :count_messages nieuw bericht gestuurd op :product_name.',
             '- :provider_name heeft :count_messages nieuwe berichten gestuurd op :product_name.',
