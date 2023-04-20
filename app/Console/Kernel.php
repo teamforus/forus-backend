@@ -12,6 +12,7 @@ use App\Console\Commands\BankConnections\BankConnectionsInspectCommand;
 use App\Console\Commands\CalculateFundUsersCommand;
 use App\Console\Commands\CheckFundStateCommand;
 use App\Console\Commands\CheckProductExpirationCommand;
+use App\Console\Commands\Digests\SendProviderReservationsDigestCommand;
 use App\Console\Commands\ExportPhysicalCardsRequestsCommand;
 use App\Console\Commands\MediaCleanupCommand;
 use App\Console\Commands\MediaRegenerateCommand;
@@ -228,22 +229,22 @@ class Kernel extends ConsoleKernel
         /**
          * Digests
          */
-        $schedule->command('forus.digest.validator:send')
+        $schedule->command(SendValidatorDigestCommand::class)
             ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
 
-        $schedule->command('forus.digest.provider_funds:send')
+        $schedule->command(SendProviderFundsDigestCommand::class)
             ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
 
-        $schedule->command('forus.digest.provider_products:send')
+        $schedule->command(SendProviderProductsDigestCommand::class)
             ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
 
-        $schedule->command('forus.digest.provider_reservations:send')
+        $schedule->command(SendProviderReservationsDigestCommand::class)
             ->weeklyOn(1, "18:00")->withoutOverlapping()->onOneServer();
 
-        $schedule->command('forus.digest.sponsor:send')
+        $schedule->command(SendSponsorDigestCommand::class)
             ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
 
-        // $schedule->command('forus.digest.requester:send')
+        // $schedule->command(SendRequesterDigestCommand::class)
         //     ->monthlyOn(1, "18:00")->withoutOverlapping()->onOneServer();
     }
 

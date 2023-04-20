@@ -889,4 +889,23 @@ class Implementation extends BaseModel
             return array_merge($vouchers, $fund->makeFundFormulaProductVouchers($identity->address));
         }, []);
     }
+
+    /**
+     * @param string|null $frontend
+     * @return string|null
+     */
+    public function makePreferencesLink(?string $frontend): ?string
+    {
+        $uri = '/preferences/notifications';
+
+        if (!in_array($frontend, static::FRONTEND_KEYS)) {
+            return null;
+        }
+
+        if ($frontend == self::FRONTEND_WEBSHOP) {
+            return !$this->isGeneral() ? $this->urlWebshop($uri) : null;
+        }
+
+        return Implementation::general()->urlFrontend($frontend, $uri);
+    }
 }

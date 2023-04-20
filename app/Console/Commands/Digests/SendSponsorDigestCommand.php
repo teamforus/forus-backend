@@ -16,7 +16,7 @@ class SendSponsorDigestCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'forus.digest.sponsor:send';
+    protected $signature = 'forus.digest:sponsor';
 
     /**
      * The console command description.
@@ -32,6 +32,6 @@ class SendSponsorDigestCommand extends Command
      */
     public function handle(): void
     {
-        SponsorDigest::dispatchNow();
+        SponsorDigest::dispatchSync();
     }
 }

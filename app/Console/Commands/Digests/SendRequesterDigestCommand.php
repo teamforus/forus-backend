@@ -16,7 +16,7 @@ class SendRequesterDigestCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'forus.digest.requester:send';
+    protected $signature = 'forus.digest:requester';
 
     /**
      * The console command description.
@@ -32,6 +32,6 @@ class SendRequesterDigestCommand extends Command
      */
     public function handle(): void
     {
-        RequesterDigest::dispatchNow();
+        RequesterDigest::dispatchSync();
     }
 }

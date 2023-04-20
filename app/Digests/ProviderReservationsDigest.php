@@ -78,9 +78,9 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
         })->whereNull('employee_id');
 
         // logs for selected period
-        $logsApprovedReservations = EventLog::eventsOfTypeQuery2(ProductReservation::class, $reservationQuery)
+        $logsApprovedReservations = EventLog::eventsOfTypeQuery(ProductReservation::class, $reservationQuery)
             ->whereIn('event', $otherEvents)
-            ->where('created_at', '>=', $this->getOrganizationDigestTime($organization))
+            ->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization))
             ->get()
             ->groupBy('loggable_id');
 

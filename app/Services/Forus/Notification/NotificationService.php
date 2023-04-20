@@ -4,10 +4,10 @@ namespace App\Services\Forus\Notification;
 
 use App\Mail\Auth\UserLoginMail;
 use App\Mail\Digest\BaseDigestMail;
+use App\Mail\ImplementationMail;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\User\IdentityEmailVerificationMail;
 use App\Models\Identity;
-use App\Models\Implementation;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Notification\Models\NotificationToken;
 use Illuminate\Contracts\Mail\Mailer;
@@ -262,21 +262,30 @@ class NotificationService
      */
     protected function addGlobalVarsToMailable(Mailable $mailable, string $email): Mailable
     {
-        $unsubscribeLink = $this->notificationRepo->makeUnsubLink($email);
-        $notificationPreferencesLink = sprintf(
-            '%s/%s',
-            rtrim(Implementation::active()['url_sponsor'], '/'),
-            'preferences/notifications');
-
-        $mailable->with(array_merge(compact('email', 'unsubscribeLink', 'notificationPreferencesLink'), [
+        $mailable->with(array_merge([
+            'email' => $email,
             'mailable' => get_class($mailable),
-        ]));
+            'unsubscribeLink' => $this->notificationRepo->makeUnsubLink($email),
+        ], $mailable instanceof ImplementationMail && $this->isUnsubscribable($mailable) ? [
+            'notificationPreferencesLink' => $mailable->getPreferencesLink(),
+        ] : []));
 
         if (method_exists($mailable, 'onQueue')) {
             $mailable->onQueue(config('forus.notifications.email_queue_name'));
         }
 
         return $mailable;
+    }
+
+    /**
+     * Check if email can be unsubscribed
+     *
+     * @param Mailable $mailable
+     * @return bool
+     */
+    protected function isUnsubscribable(Mailable $mailable): bool
+    {
+        return $this->notificationRepo->isMailUnsubscribable(get_class($mailable));
     }
 
     /**
@@ -298,7 +307,7 @@ class NotificationService
     }
 
     /**
-     * Check if Push notification can be subscribed
+     * Check if Push notification can be unsubscribed
      *
      * @param string $key
      * @return bool

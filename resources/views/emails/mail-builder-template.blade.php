@@ -54,8 +54,10 @@ foreach (array_keys($emailBody) as $key) {
             <div class="email-footer" style="{{ $styles['email_footer'] }}">
                 @isset($email)
                     Deze e-mail is verstuurd naar {{ $email }}. Is deze mail niet aan u gericht? Klik dan <a href="{{ $unsubscribeLink }}">hier</a>.
-                    Is deze mail wel aan u gericht maar wilt u zich afmelden voor dit soort berichten?
-                    U kunt dit aangeven in uw <a href="{{ $notificationPreferencesLink }}">e-mailvoorkeuren</a>.
+                    @if (isset($notificationPreferencesLink) && $notificationPreferencesLink)
+                        Is deze mail wel aan u gericht maar wilt u zich afmelden voor dit soort berichten?
+                        U kunt dit aangeven in uw <a href="{{ $notificationPreferencesLink }}">e-mailvoorkeuren</a>.
+                    @endif
                 @endisset
             </div>
         @endif
