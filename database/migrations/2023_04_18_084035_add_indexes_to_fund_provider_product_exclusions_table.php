@@ -26,7 +26,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('fund_provider_product_exclusions', function (Blueprint $table) {
+            $table->dropForeign('fund_provider_product_exclusions_product_id_foreign');
             $table->dropIndex('table_product_id_fund_provider_id_index');
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
         });
     }
 };

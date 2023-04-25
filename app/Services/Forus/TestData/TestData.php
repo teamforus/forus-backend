@@ -139,6 +139,16 @@ class TestData
     }
 
     /**
+     * @return void
+     */
+    public function makeSponsorRecordTypes(): void
+    {
+        foreach ($this->config('record_types', []) as $recordType) {
+            RecordType::firstOrCreate(Arr::only($recordType, 'key'), $recordType);
+        }
+    }
+
+    /**
      * @param string $identityAddress
      * @param int|null $count
      * @throws \Throwable
@@ -265,16 +275,8 @@ class TestData
                 'state' => 'used'
             ]);
 
-            if ($this->config('no_vouchers')) {
-                continue;
-            }
-
             $voucher = $prevalidation->fund->makeVoucher($identity->address);
             $prevalidation->fund->makeFundFormulaProductVouchers($identity->address);
-
-            if ($this->config('no_product_vouchers')) {
-                continue;
-            }
 
             /** @var Product $product */
             $productsQuery = ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $prevalidation->fund->id);
@@ -325,7 +327,7 @@ class TestData
         int $offices_count = 0
     ): array {
         $out = [];
-        $nth= 1;
+        $nth = 1;
 
         $fields = array_merge($fields, [
             'is_validator' => $prefix === 'Validator',
@@ -358,7 +360,7 @@ class TestData
         array $fields = [],
         int $offices_count = 0
     ): Organization {
-        $organization = Organization::forceCreate(array_only(array_merge([
+        $data = array_merge([
             'kvk' => Organization::GENERIC_KVK,
             'iban' => $this->config('default_organization_iban') ?: $this->faker->iban('NL'),
             'phone' => '123456789',
@@ -367,25 +369,21 @@ class TestData
             'phone_public' => true,
             'email_public' => true,
             'business_type_id' => BusinessType::pluck('id')->random(),
-            'manage_provider_products' => $this->config("organizations.$name.manage_provider_products", false),
-            'backoffice_available' => $this->config("organizations.$name.backoffice_available", false),
-            'allow_custom_fund_notifications' => $this->config("organizations.$name.allow_custom_fund_notifications", false),
-            'allow_budget_fund_limits' => $this->config("organizations.$name.allow_budget_fund_limits", false),
-            'allow_manual_bulk_processing' => $this->config("organizations.$name.allow_manual_bulk_processing", false),
             'reservations_budget_enabled' => true,
             'reservations_subsidy_enabled' => true,
-        ], $fields, compact('name', 'identity_address')), [
-            'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
-            'email_public', 'phone_public', 'website_public',
-            'identity_address', 'business_type_id', 'manage_provider_products',
-            'backoffice_available', 'bsn_enabled', 'is_sponsor', 'is_provider', 'is_validator',
-            'allow_custom_fund_notifications', 'reservations_budget_enabled',
-            'reservations_subsidy_enabled', 'allow_budget_fund_limits', 'allow_manual_bulk_processing',
+        ], $fields, $this->config("organizations.$name.data", []));
+
+        $organization = Organization::forceCreate(array_merge($data, [
+            'name' => $name,
+            'identity_address' => $identity_address,
         ]));
 
         OrganizationCreated::dispatch($organization);
 
-        $this->makeOffices($organization, $offices_count);
+        $this->makeOffices(
+            $organization,
+            $this->config("organizations.$name.offices_count", $offices_count),
+        );
 
         return $organization;
     }
@@ -397,11 +395,8 @@ class TestData
      * @return void
      * @throws \Throwable
      */
-    public function makeOffices(
-        Organization $organization,
-        int $count = 1,
-        array $fields = []
-    ): void {
+    public function makeOffices(Organization $organization, int $count = 1, array $fields = []): void
+    {
         while ($count-- > 0) {
             $this->makeOffice($organization, $fields);
         }
@@ -451,29 +446,26 @@ class TestData
     /**
      * @param Organization $organization
      * @param string $name
-     * @param array $config
      * @return Fund
      */
-    public function makeFund(Organization $organization, string $name, array $config = []): Fund
+    public function makeFund(Organization $organization, string $name): Fund
     {
-        $active = Arr::get($config, 'active', true);
-        $fields = Arr::get($config, 'fields', []);
-
         /** @var \App\Models\Employee$validator $validator */
+        $config = $this->config("funds.$name.data", []);
         $validator = $organization->employeesOfRoleQuery('validation')->firstOrFail();
         $autoValidation = Arr::get($config, 'auto_requests_validation', false);
 
         $fund = $organization->createFund(array_merge([
             'name'                          => $name,
-            'criteria_editable_after_start' => Arr::get($config, 'criteria_editable_after_start', false),
             'start_date'                    => Carbon::now()->format('Y-m-d'),
             'end_date'                      => Carbon::now()->addDays(60)->format('Y-m-d'),
-            'state'                         => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING,
+            'state'                         => Fund::STATE_ACTIVE,
             'notification_amount'           => 10000,
             'auto_requests_validation'      => $autoValidation,
             'default_validator_employee_id' => $autoValidation ? $validator->id : null,
-            'type'                          => Arr::get($config, 'type', Fund::TYPE_BUDGET),
-        ], $fields));
+            'criteria_editable_after_start' => false,
+            'type'                          => Fund::TYPE_BUDGET,
+        ], $config));
 
         $topUp = $fund->getOrCreateTopUp();
         $transaction = $topUp->transactions()->forceCreate([
@@ -486,7 +478,7 @@ class TestData
         FundBalanceLowEvent::dispatch($fund);
         FundBalanceSuppliedEvent::dispatch($fund, $transaction);
 
-        if ($active) {
+        if ($fund->isActive()) {
             FundStartedEvent::dispatch($fund);
             FundEndedEvent::dispatch($fund);
             FundStartedEvent::dispatch($fund);
@@ -506,120 +498,108 @@ class TestData
     ): Implementation|Model {
         $key = str_slug($name);
 
+        $urlData = $this->makeImplementationUrlData($key);
+        $samlData = $this->makeImplementationSamlData();
+        $configData = $this->config("implementations.$name.data", []);
+
         return Implementation::forceCreate(array_merge([
             'key' => $key,
             'name' => $name,
             'organization_id' => $organization?->id,
-
-            'url_webshop' => str_var_replace(
-                $this->config('url_webshop'),
-                compact('key')
-            ),
-            'url_sponsor' => str_var_replace(
-                $this->config('url_sponsor'),
-                compact('key')
-            ),
-            'url_provider' => str_var_replace(
-                $this->config('url_provider'),
-                compact('key')
-            ),
-            'url_validator' => str_var_replace(
-                $this->config('url_validator'),
-                compact('key')
-            ),
-            'url_app' => str_var_replace(
-                $this->config('url_app'),
-                compact('key')
-            ),
-
-            'informal_communication' => $this->config(
-                "implementations.$name.informal_communication", false
-            ),
-            'allow_per_fund_notification_templates' => $this->config(
-                "implementations.$name.allow_per_fund_notification_templates", false
-            ),
+            'informal_communication' => false,
+            'allow_per_fund_notification_templates' => false,
             'productboard_api_key' => $this->config('productboard_api_key'),
-        ], $this->makeImplementationSamlConfig($name)));
+        ], $urlData, $samlData, $configData));
     }
 
     /**
-     * @param string $name
+     * @param string $key
      * @return array
      */
-    protected function makeImplementationSamlConfig(string $name): array
+    protected function makeImplementationUrlData(string $key): array
     {
-        $samlConnection = collect($this->config('implementations'))
-            ->where('name', $name)
-            ->get('digid_saml', false);
+        return [
+            'url_webshop' => str_var_replace($this->config('url_webshop'), compact('key')),
+            'url_sponsor' => str_var_replace($this->config('url_sponsor'), compact('key')),
+            'url_provider' => str_var_replace($this->config('url_provider'), compact('key')),
+            'url_validator' => str_var_replace($this->config('url_validator'), compact('key')),
+            'url_app' => str_var_replace($this->config('url_app'), compact('key')),
+        ];
+    }
 
-        $digidSignup = collect($this->config('implementations'))
-            ->where('name', $name)
-            ->get('digid_signup', false);
-
-        return array_merge([
-            'digid_enabled'             => $this->config('digid_enabled'),
-            'digid_required'            => true,
-            'digid_sign_up_allowed'     => $digidSignup,
-            'digid_connection_type'     => $samlConnection ? 'saml' : 'cgi',
-        ], $samlConnection ? [] : [
-            'digid_app_id'              => $this->config('digid_app_id'),
-            'digid_shared_secret'       => $this->config('digid_shared_secret'),
-            'digid_a_select_server'     => $this->config('digid_a_select_server'),
-            'digid_trusted_cert'        => $this->config('digid_trusted_cert'),
-        ]);
+    /**
+     * @return array
+     */
+    protected function makeImplementationSamlData(): array
+    {
+        return [
+            'digid_enabled' => $this->config('digid_enabled'),
+            'digid_required' => true,
+            'digid_sign_up_allowed' => true,
+            'digid_app_id' => $this->config('digid_app_id'),
+            'digid_shared_secret' => $this->config('digid_shared_secret'),
+            'digid_a_select_server' => $this->config('digid_a_select_server'),
+            'digid_trusted_cert' => $this->config('digid_trusted_cert'),
+            'digid_connection_type' => 'cgi',
+        ];
     }
 
     /**
      * @param Fund $fund
-     * @param Implementation $implementation
-     * @param string $key
-     * @param array $fields
      * @return FundConfig
      */
-    public function fundConfigure(
-        Fund $fund,
-        Implementation $implementation,
-        string $key,
-        array $fields = []
-    ): FundConfig {
-        $hashBsn = $this->config("funds.$fund->name.hash_bsn", false);
-        $emailRequired = $this->config("funds.$fund->name.email_optional", false);
+    public function makeFundConfig(Fund $fund): FundConfig
+    {
+        $implementationName = $this->config("funds.$fund->name.implementation");
+        $implementation = Implementation::where('name', $implementationName)->first();
+        $implementation = $implementation ?: $this->makeImplementation($implementationName, $fund->organization);
 
-        $organizationName = $fund->organization->name;
-        $backofficeConnection = $this->config("organizations.$organizationName.backoffice_available", false);
-        $backofficeConfig = $backofficeConnection ? $this->getBackofficeConfigs() : [];
+        $config = $this->config("funds.$fund->name.data_config", []);
+        $hashBsn = Arr::get($config, "hash_bsn", false);
+        $emailRequired = Arr::get($config, "email_required", true);
 
-        /** @var FundConfig $fundConfig */
-        $fundConfig = $fund->fund_config()->forceCreate(array_merge([
+        $backofficeConfig = $fund->organization->backoffice_available ? $this->getBackofficeConfigs() : [];
+        $iConnectConfig = $this->getIConnectConfigs();
+
+        $defaultData = [
             'fund_id'                   => $fund->id,
             'implementation_id'         => $implementation->id,
-            'key'                       => $key,
+            'key'                       => str_slug($fund->name . '_' . date('Y')),
             'bunq_sandbox'              => true,
             'csv_primary_key'           => 'uid',
             'is_configured'             => true,
-            'allow_physical_cards'      => $this->config("funds.$fund->name.allow_physical_cards", false),
-            'allow_reimbursements'      => $this->config("funds.$fund->name.allow_reimbursements", false),
-            'allow_direct_payments'     => $this->config("funds.$fund->name.allow_direct_payments", false),
-            'allow_generator_direct_payments' => $this->config("funds.$fund->name.allow_generator_direct_payments", false),
-            'allow_voucher_top_ups'     => $this->config("funds.$fund->name.allow_voucher_top_ups", false),
-            'allow_voucher_records'     => $this->config("funds.$fund->name.allow_voucher_records", false),
+            'allow_physical_cards'      => false,
+            'allow_reimbursements'      => false,
+            'allow_direct_payments'     => false,
+            'allow_generator_direct_payments' => false,
+            'allow_voucher_top_ups'     => false,
+            'allow_voucher_records'     => false,
             'email_required'            => $emailRequired,
             'contact_info_enabled'      => $emailRequired,
             'contact_info_required'     => $emailRequired,
             'hash_bsn'                  => $hashBsn,
             'hash_bsn_salt'             => $hashBsn ? $fund->name : null,
             'bunq_key'                  => $this->config('bunq_key'),
-            'iconnect_api_oin'          => $this->config('iconnect_oin'),
-            'iconnect_base_url'         => $this->config('iconnect_url'),
-            'iconnect_target_binding'   => $this->config('iconnect_binding'),
-            'iconnect_cert'             => $this->config('iconnect_cert'),
-            'iconnect_cert_pass'        => $this->config('iconnect_cert_pass'),
-            'iconnect_key'              => $this->config('iconnect_key'),
-            'iconnect_key_pass'         => $this->config('iconnect_key_pass'),
-            'iconnect_cert_trust'       => $this->config('iconnect_cert_trust'),
-        ], array_only($fields, [
-            'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox', 'csv_primary_key', 'is_configured',
-        ]), $backofficeConfig));
+        ];
+
+        /** @var FundConfig $fundConfig */
+        $data = array_merge($defaultData, $iConnectConfig, $backofficeConfig, $config);
+        $fundConfig = $fund->fund_config()->forceCreate($data);
+
+        $this->makeFundCriteriaAndFormula($fund);
+
+        return $fundConfig;
+    }
+
+    /**
+     * @param Fund $fund
+     * @return void
+     */
+    public function makeFundCriteriaAndFormula(Fund $fund): void
+    {
+        $configFormula = $this->config("funds.$fund->name.data_formula");
+        $configCriteria = $this->config("funds.$fund->name.data_criteria");
+        $configLimitMultiplier = $this->config("funds.$fund->name.data_limit_multiplier");
 
         $eligibility_key = sprintf("%s_eligible", $fund->load('fund_config')->fund_config->key);
         $criteria = [];
@@ -627,39 +607,35 @@ class TestData
         if (!$fund->isAutoValidatingRequests()) {
             $criteria = array_merge($criteria, $this->config('funds_criteria'));
         } else {
-            $recordType = RecordType::firstOrCreate([
-                'key' => $eligibility_key,
-                'type' => 'string',
-            ], [
-                'name' => "$fund->name eligible",
-                'system' => true,
-            ]);
-
             $criteria[] = [
-                'record_type_key' => $recordType->key,
+                'record_type_key' => RecordType::firstOrCreate([
+                    'key' => $eligibility_key,
+                    'type' => 'string',
+                ], [
+                    'name' => "$fund->name eligible",
+                    'system' => true,
+                ])->key,
                 'operator' => '=',
                 'value' => 'Ja',
                 'show_attachment' => false,
             ];
         }
 
-        $fund->criteria()->createMany($criteria);
+        $limitMultiplier = !$configLimitMultiplier && $fund->isTypeSubsidy() ? [[
+            'record_type_key' => 'children_nth',
+            'multiplier' => 1,
+            'fund_id' => $fund->id,
+        ]] : ($configLimitMultiplier ?: []);
 
-        $fund->fund_formulas()->forceCreate([
+        $fundFormula = $configFormula ?: [[
             'type' => 'fixed',
             'amount' => $fund->isTypeBudget() ? $this->config('voucher_amount'): 0,
             'fund_id' => $fund->id,
-        ]);
+        ]];
 
-        if ($fund->isTypeSubsidy()) {
-            $fund->fund_limit_multipliers()->forceCreate([
-                'record_type_key' => 'children_nth',
-                'multiplier' => 1,
-                'fund_id' => $fund->id,
-            ]);
-        }
-
-        return $fundConfig;
+        $fund->criteria()->createMany($configCriteria ?: $criteria);
+        $fund->fund_formulas()->createMany($fundFormula);
+        $fund->fund_limit_multipliers()->createMany($limitMultiplier);
     }
 
     /**
@@ -680,6 +656,22 @@ class TestData
         ], $this->configOnly([
             'backoffice_fallback', 'backoffice_client_cert', 'backoffice_client_cert_key',
         ])): [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getIConnectConfigs(): array {
+        return [
+            'iconnect_api_oin' => $this->config('iconnect_oin'),
+            'iconnect_base_url' => $this->config('iconnect_url'),
+            'iconnect_target_binding' => $this->config('iconnect_binding'),
+            'iconnect_cert' => $this->config('iconnect_cert'),
+            'iconnect_cert_pass' => $this->config('iconnect_cert_pass'),
+            'iconnect_key' => $this->config('iconnect_key'),
+            'iconnect_key_pass' => $this->config('iconnect_key_pass'),
+            'iconnect_cert_trust' => $this->config('iconnect_cert_trust'),
+        ];
     }
 
     /**
@@ -936,10 +928,27 @@ class TestData
      */
     public function getConfigData(): array
     {
-        return array_replace_recursive(
-            Config::get('forus.test_data.configs.default'),
-            Config::get("forus.test_data.configs." . $this->getConfigKey(), []),
-        );
+        $default = $this->getConfigGroup('default');
+        $custom = $this->getConfigGroup($this->getConfigKey());
+
+        if (Arr::get($custom, 'overwrite', false)) {
+            return array_merge($default, $custom);
+        }
+
+        return array_replace_recursive($default, $custom);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getConfigGroup(string $key): array
+    {
+        return array_filter(array_merge(Config::get("forus.test_data.configs.$key.config"), [
+            'funds' => Config::get("forus.test_data.configs.$key.funds"),
+            'record_types' => Config::get("forus.test_data.configs.$key.record_types"),
+            'organizations' => Config::get("forus.test_data.configs.$key.organizations"),
+            'implementations' => Config::get("forus.test_data.configs.$key.implementations"),
+        ]), fn ($item) => !is_null($item));
     }
 
     /**
@@ -1030,9 +1039,9 @@ class TestData
 
         $fundTag = collect(['Tag I', 'Tag II', 'Tag III'])->random();
 
-        foreach ($funds as $fundName => $fundItem) {
-            $fund = $this->makeFund($sponsor, $fundName, $fundItem);
-            $fundConfig = $this->makeFundConfig($fund);
+        foreach (array_keys($funds) as $fundName) {
+            $fund = $this->makeFund($sponsor, $fundName);
+            $this->makeFundConfig($fund);
 
             $fund->tags()->save(Tag::firstOrCreate([
                 'key' => Str::slug($fundTag),
@@ -1044,30 +1053,21 @@ class TestData
             if ($fund->fund_config->allow_prevalidations) {
                 $validator = $fund->organization->identity;
 
-                $this->makePrevalidations($validator, $fund, $this->generatePrevalidationData($fund, 10, [
-                    $fundConfig->key . '_eligible' => 'Ja',
-                ]));
+                $records = $fund->criteria->reduce(function (array $list, FundCriterion $criterion) {
+                    return array_merge($list, [
+                        $criterion->record_type_key => match($criterion->operator) {
+                            '=' => intval($criterion->value),
+                            '>' => intval($criterion->value) + 1,
+                            '<' => intval($criterion->value) - 1,
+                        }
+                    ]);
+                }, []);
+
+                $this->makePrevalidations($validator, $fund, $this->generatePrevalidationData($fund, 10, $records));
             }
         }
 
         (new ImplementationsNotificationBrandingSeeder)->run();
-    }
-
-    /**
-     * @param Fund $fund
-     * @return FundConfig
-     * @throws \Throwable
-     */
-    private function makeFundConfig(Fund $fund): FundConfig
-    {
-        $fundKey = str_slug($fund->name . '_' . date('Y'));
-        $fundKey = $this->config("funds.$fund->name.key", $fundKey);
-        $implementationName = $this->config("funds.$fund->name.implementation");
-
-        $implementation = Implementation::where('name', $implementationName)->first();
-        $implementation = $implementation ?: $this->makeImplementation($implementationName, $fund->organization);
-
-        return $this->fundConfigure($fund, $implementation, $fundKey);
     }
 
     /**

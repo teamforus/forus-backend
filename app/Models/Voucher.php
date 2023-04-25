@@ -1318,7 +1318,7 @@ class Voucher extends BaseModel
      */
     public function needsTransactionReview(): bool
     {
-        return $this->hasTransactionsWithin(Config::get('forus.transactions.soft_limit'));
+        return (bool) $this->hasTransactionsWithin(Config::get('forus.transactions.soft_limit'));
     }
 
     /**

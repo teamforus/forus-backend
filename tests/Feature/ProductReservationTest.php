@@ -60,7 +60,12 @@ class ProductReservationTest extends TestCase
     /**
      * @var string
      */
-    protected string $organizationName = 'Stadjerspas';
+    protected string $organizationSubsidyName = 'Nijmegen';
+
+    /**
+     * @var string
+     */
+    protected string $organizationBudgetName = 'Nijmegen';
 
     /**
      * @return void
@@ -69,7 +74,7 @@ class ProductReservationTest extends TestCase
     public function testReservationWithBudgetVoucher(): void
     {
         /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationName)->first();
+        $organization = Organization::where('name', $this->organizationBudgetName)->first();
         $this->assertNotNull($organization);
 
         $identity = $organization->identity;
@@ -86,7 +91,7 @@ class ProductReservationTest extends TestCase
     public function testReservationWithSubsidyVoucher(): void
     {
         /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationName)->first();
+        $organization = Organization::where('name', $this->organizationSubsidyName)->first();
         $this->assertNotNull($organization);
 
         $identity = $organization->identity;
@@ -103,7 +108,7 @@ class ProductReservationTest extends TestCase
     public function testReservationWithBudgetVoucherAsGuest(): void
     {
         /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationName)->first();
+        $organization = Organization::where('name', $this->organizationBudgetName)->first();
         $this->assertNotNull($organization);
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
@@ -125,7 +130,7 @@ class ProductReservationTest extends TestCase
     public function testReservationWithSubsidyVoucherAsGuest(): void
     {
         /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationName)->first();
+        $organization = Organization::where('name', $this->organizationSubsidyName)->first();
         $this->assertNotNull($organization);
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
@@ -147,7 +152,7 @@ class ProductReservationTest extends TestCase
     public function testReservationWithInvalidVoucher(): void
     {
         /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationName)->first();
+        $organization = Organization::where('name', $this->organizationSubsidyName)->first();
         $this->assertNotNull($organization);
 
         $identity = $organization->identity;
@@ -181,7 +186,7 @@ class ProductReservationTest extends TestCase
     public function testReservationWithInvalidProduct(): void
     {
         /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationName)->first();
+        $organization = Organization::where('name', $this->organizationSubsidyName)->first();
         $this->assertNotNull($organization);
 
         $identity = $organization->identity;
@@ -215,7 +220,7 @@ class ProductReservationTest extends TestCase
     public function testReservationProviderWithBudgetVoucher(): void
     {
         /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationName)->first();
+        $organization = Organization::where('name', $this->organizationSubsidyName)->first();
         $this->assertNotNull($organization);
 
         $identity = $organization->identity;
@@ -232,7 +237,7 @@ class ProductReservationTest extends TestCase
     public function testReservationProviderWithSubsidyVoucher(): void
     {
         /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationName)->first();
+        $organization = Organization::where('name', $this->organizationSubsidyName)->first();
         $this->assertNotNull($organization);
 
         $identity = $organization->identity;
