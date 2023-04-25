@@ -88,12 +88,12 @@ Or you can use the next command to generate test data.
 But first you need to configure the data you will generate.  
 Please run the following command to create a custom config file.
 ```bash
-cp ./config/forus/test_data/configs/custom.example.php ./config/forus/test_data/configs/custom.php
+cp -R ./config/forus/test_data/configs/custom.example ./config/forus/test_data/custom
 ```
 
 Now you need to adjust the config file you just created.
 ```bash
-nano ./config/forus/test_data/configs/custom.example.php
+nano ./config/forus/test_data/configs/custom/config.php
 ```
 
 The file from the example only has ```primary_email``` key which represents the default email used to create all test organizations.  
@@ -113,9 +113,17 @@ To see the full list, please read the default config file and copy all the keys 
 
 Run the following command to read the default config file:  
 ```bash
-nano ./config/forus/test_data/configs/default.php
+nano ./config/forus/test_data/configs/default/config.php
 ```
-
+Also, you can edit funds.php file to adjust created fund details:
+```bash
+nano ./config/forus/test_data/configs/custom/funds.php
+```
+Add new keys to the array to add new funds or use existing keys to adjust the funds from the default funds.php file.  
+See the list of all the default funds:   
+```bash
+nano ./config/forus/test_data/configs/default/funds.php
+```
 To seed the test data after you finished editing your config file run:
 ```bash
 docker-compose exec app php artisan test-data:seed
