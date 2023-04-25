@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Helpers\Arr;
 use App\Models\Faq;
+use App\Models\Implementation;
 use App\Models\ImplementationBlock;
 use App\Models\ImplementationPage;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
@@ -11,7 +12,9 @@ use App\Services\MediaService\Models\Media;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
+use Throwable;
 
 class ImplementationCMSTest extends TestCase
 {
@@ -20,130 +23,67 @@ class ImplementationCMSTest extends TestCase
     /**
      * @var string
      */
-    protected string $apiUrl = '/api/v1/platform/organizations/%s/implementations/%s/';
+    protected string $apiUrl = '/api/v1/platform/organizations/%s/implementations/%s';
 
     /**
      * @var string
      */
     protected string $apiMediaUrl = '/api/v1/medias';
 
-    protected string $implementationName = 'nijmegen';
+    /**
+     * @var string
+     */
+    protected string $implementationKey = 'nijmegen';
 
     /**
      * @var array
      */
     protected array $pageResourceStructure = [
-        'id',
-        'page_type',
-        'external',
-        'external_url',
-        'state',
-        'blocks',
-        'description',
-        'description_alignment',
-        'description_position',
-        'description_html',
-        'implementation_id',
-        'url_webshop',
-        'implementation' => [
-            'id',
-            'name',
-            'url_webshop',
-            'organization_id'
+        'data' => [
+            'id', 'page_type', 'external', 'external_url', 'state', 'blocks', 'description',
+            'description_alignment', 'description_position', 'description_html',
+            'implementation_id', 'url_webshop',
         ],
-        'blocks' => [
-            '*' => [
-                'id',
-                'label',
-                'title',
-                'description',
-                'description_html',
-                'button_text',
-                'button_link',
-                'button_target_blank',
-                'button_enabled',
-                'media' => [
-                    'identity_address',
-                    'original_name',
-                    'dominant_color',
-                    'sizes' => [],
-                    'is_dark',
-                    'type',
-                    'ext',
-                    'uid',
-                ],
-            ],
+        'data.implementation' => [
+            'id', 'name', 'url_webshop', 'organization_id',
         ],
-        'faq'  => [
-            '*' => [
-                'id',
-                'title',
-                'description',
-                'description_html'
-            ],
+        'data.blocks.*' => [
+            'id', 'label', 'title', 'description', 'description_html',
+            'button_text', 'button_link', 'button_target_blank', 'button_enabled',
         ],
+        'data.faq.*'  => [
+            'id', 'title', 'description', 'description_html',
+        ],
+        'data.blocks.*.media' => [
+            'identity_address', 'original_name', 'dominant_color', 'is_dark', 'type', 'ext', 'uid',
+        ],
+        'data.blocks.*.media.sizes' => [],
     ];
 
     /**
      * @var array
      */
     protected array $cmsResourceStructure = [
-        'id',
-        'key',
-        'name',
-        'url_webshop',
-        'title',
-        'organization_id',
-        'description',
-        'description_alignment',
-        'description_html',
-        'informal_communication',
-        'overlay_enabled',
-        'overlay_type',
-        'overlay_opacity',
-        'header_text_color',
-        'show_home_map',
-        'show_home_products',
-        'show_providers_map',
-        'show_provider_map',
-        'show_office_map',
-        'show_voucher_map',
-        'show_product_map',
-        'allow_per_fund_notification_templates',
-        'communication_type',
-        'overlay_opacity',
-        'announcement' => [
-            'id',
-            'type',
-            'title',
-            'description',
-            'description_html',
-            'scope',
-            'active',
-            'expire_at',
+        'data' => [
+            'id', 'key', 'name', 'url_webshop', 'title', 'organization_id',
+            'description', 'description_alignment', 'description_html', 'informal_communication',
+            'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+            'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
+            'show_office_map', 'show_voucher_map', 'show_product_map',
+            'allow_per_fund_notification_templates', 'communication_type', 'overlay_opacity',
         ],
-        'pages' => [
-            '*' => [
-                'blocks' => [],
-                'description_alignment',
-                'description_html',
-                'description_position',
-                'external',
-                'external_url',
-                'faq',
-                'page_type',
-            ],
+        'data.announcement' => [
+            'id', 'type', 'title', 'description', 'description_html', 'scope',
+            'active', 'expire_at',
         ],
-        'page_types' => [
-            '*' => [
-                'blocks',
-                'description_position_configurable',
-                'faq',
-                'key',
-                'type',
-                'webshop_url',
-            ],
-        ]
+        'data.page_types.*' => [
+            'blocks', 'description_position_configurable', 'faq', 'key', 'type', 'webshop_url',
+        ],
+        'data.pages.*' => [
+            'description_alignment', 'description_html', 'description_position', 'external',
+            'external_url', 'faq', 'page_type',
+        ],
+        'data.pages.*.blocks' => [],
     ];
 
     /**
@@ -152,13 +92,12 @@ class ImplementationCMSTest extends TestCase
      */
     public function testStoreImplementationPage(): void
     {
-        $implementation = $this->findImplementation($this->implementationName);
+        $implementation = $this->getImplementation();
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
+        $pageBody = $this->makePageData();
+        $response = $this->postJson($this->getUrlPages($implementation), $pageBody, $this->makeApiHeaders($proxy));
 
-        $response = $this->postJson(sprintf(
-            $this->apiUrl . 'pages', $implementation->organization_id, $implementation->id
-        ), $this->makeImplementationPageRequestBody(), $this->makeApiHeaders($proxy));
-
+        $this->assertImplementationPageSaved($response->json('data.id'), $pageBody);
         $response->assertSuccessful();
     }
 
@@ -168,16 +107,18 @@ class ImplementationCMSTest extends TestCase
      */
     public function testStoreInvalidImplementationPage(): void
     {
-        $implementation = $this->findImplementation($this->implementationName);
+        $implementation = $this->getImplementation();
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
-        $body = $this->makeImplementationPageRequestBody();
+        $pageData = $this->makePageData();
 
         // assert has validation errors
-        $response = $this->postJson(sprintf(
-            $this->apiUrl . 'pages', $implementation->organization_id, $implementation->id
-        ), array_fill_keys(array_keys($body), null), $this->makeApiHeaders($proxy));
+        $response = $this->postJson(
+            $this->getUrlPages($implementation),
+            array_fill_keys(array_keys($pageData), null),
+            $this->makeApiHeaders($proxy),
+        );
 
-        $response->assertJsonValidationErrors(array_keys(array_except($body, [
+        $response->assertJsonValidationErrors(array_keys(array_except($pageData, [
             'state', 'description', 'description_position', 'description_alignment', 'blocks', 'external_url'
         ])));
     }
@@ -188,34 +129,41 @@ class ImplementationCMSTest extends TestCase
      */
     public function testUpdateImplementationPage(): void
     {
-        $implementation = $this->findImplementation($this->implementationName);
+        $implementation = $this->getImplementation();
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
+        $pageBody = $this->makePageData();
 
-        $response = $this->postJson(sprintf(
-            $this->apiUrl . 'pages', $implementation->organization_id, $implementation->id
-        ), $this->makeImplementationPageRequestBody(), $this->makeApiHeaders($proxy))->assertSuccessful();
+        $response = $this->postJson(
+            $this->getUrlPages($implementation),
+            $pageBody,
+            $this->makeApiHeaders($proxy)
+        )->assertSuccessful();
+
         $implementationPage = ImplementationPage::find($response->json('data.id'));
+        $urlPage = $this->getUrlPages($implementation, $implementationPage);
 
-        $state = $implementationPage->state == ImplementationPage::STATE_DRAFT ? ImplementationPage::STATE_PUBLIC : ImplementationPage::STATE_DRAFT;
+        $this->assertImplementationPageSaved($implementationPage->id, $pageBody);
+
+        $state = $implementationPage->state == ImplementationPage::STATE_DRAFT ?
+            ImplementationPage::STATE_PUBLIC :
+            ImplementationPage::STATE_DRAFT;
+
+        $updateBody = [
+            'state' => $state,
+            'external' => $implementationPage->external,
+            'external_url' => $implementationPage->external_url,
+        ];
 
         // Check page status update
-        $response = $this->patchJson(sprintf(
-            $this->apiUrl . 'pages/%s', $implementation->organization_id, $implementation->id, $implementationPage->id
-        ), [
-            'state'     => $state,
-            'external'  => $implementationPage->external
-        ], $this->makeApiHeaders($proxy));
-        $response->assertSuccessful();
+        $this->patchJson($urlPage, $updateBody, $this->makeApiHeaders($proxy))->assertSuccessful();
+        $this->assertImplementationPageSaved($implementationPage->id, $updateBody);
 
-        $implementationPage->refresh();
-        $this->assertEquals($implementationPage->state, $state);
-
-        $response = $this->patchJson(sprintf(
-            $this->apiUrl . 'pages/%s', $implementation->organization_id, $implementation->id, $implementationPage->id
-        ), $this->makeImplementationPageRequestBody(), $this->makeApiHeaders($proxy));
+        $pageBody = $this->makePageData(['page_type' => $implementationPage->page_type]);
+        $response = $this->patchJson($urlPage, $pageBody, $this->makeApiHeaders($proxy));
 
         $response->assertSuccessful();
-        $response->assertJsonStructure(['data' => $this->pageResourceStructure]);
+        $response->assertJsonStructure(Arr::undot($this->pageResourceStructure));
+        $this->assertImplementationPageSaved($implementationPage->id, $pageBody);
     }
 
     /**
@@ -224,44 +172,28 @@ class ImplementationCMSTest extends TestCase
      */
     public function testSyncImplementationPageBlocks(): void
     {
-        $implementation = $this->findImplementation($this->implementationName);
+        $implementation = $this->getImplementation();
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
 
-        $response = $this->postJson(sprintf(
-            $this->apiUrl . 'pages', $implementation->organization_id, $implementation->id
-        ), $this->makeImplementationPageRequestBody(), $this->makeApiHeaders($proxy))->assertSuccessful();
-        $implementationPage = ImplementationPage::find($response->json('data.id'));
+        $response = $this->postJson(
+            $this->getUrlPages($implementation),
+            $this->makePageData(),
+            $this->makeApiHeaders($proxy),
+        )->assertSuccessful();
 
-        $blockFields = [
-            'button_enabled', 'button_link', 'button_target_blank', 'button_text',
-            'description', 'label', 'title'
+        $implementationPage = ImplementationPage::find($response->json('data.id'));
+        $implementationPageUrl = $this->getUrlPages($implementation, $implementationPage);
+        $implementationPageBlocks = $implementationPage->blocks()->select($this->blockKeys())->get();
+        $blocksData = $implementationPageBlocks->push($this->makePageBlockData())->toArray();
+
+        $pageBody = [
+            'blocks' => $blocksData,
+            'external' => $implementationPage->external,
+            'external_url' => $implementationPage->external_url,
         ];
 
-        // Check if page blocks data is sync-ed correctly
-        $blocksData = $implementationPage->blocks()->select($blockFields)->get()->toArray();
-
-        // Add an extra block to the existing blocks
-        $blocksData[] = $this->generatePageBlockData();
-
-        $this->patchJson(sprintf(
-            $this->apiUrl . 'pages/%s', $implementation->organization_id, $implementation->id, $implementationPage->id
-        ), [
-            'external'  => $implementationPage->external,
-            'blocks'    => $blocksData,
-        ], $this->makeApiHeaders($proxy));
-
-        $implementationPage->refresh();
-        $this->assertEquals(count($implementationPage->blocks), count($blocksData));
-
-        /** @var ImplementationBlock $block */
-        foreach ($implementationPage->blocks as $index => $block) {
-            $this->assertEquals($block->only($blockFields), collect($blocksData[$index])->only($blockFields)->toArray());
-
-            // if there's an image check if it was sync-ed
-            if (isset($blocksData[$index]['media_uid'])) {
-                $this->assertEquals($block->photo->uid, $blocksData[$index]['media_uid']);
-            }
-        }
+        $this->patchJson($implementationPageUrl, $pageBody, $this->makeApiHeaders($proxy));
+        $this->assertImplementationPageSaved($implementationPage->id, $pageBody);
     }
 
     /**
@@ -270,63 +202,38 @@ class ImplementationCMSTest extends TestCase
      */
     public function testSyncImplementationPageFaq(): void
     {
-        $implementation = $this->findImplementation($this->implementationName);
+        $implementation = $this->getImplementation();
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
 
-        $valid_faq_page_types = collect(ImplementationPage::PAGE_TYPES)->filter(function ($page) {
-            return $page['faq'];
-        })->pluck('key')->toArray();
-        $faq_pages = $implementation->pages()->whereIn('page_type', $valid_faq_page_types);
+        $pageType = Arr::where(ImplementationPage::PAGE_TYPES, fn ($type) => $type['faq']);
+        $pageBody = $this->makePageData(['page_type' => array_values($pageType)[0]['key']]);
+        $response = $this->postJson($this->getUrlPages($implementation), $pageBody, $this->makeApiHeaders($proxy));
 
-        if ($faq_pages->count()) {
-            $implementationPage = $faq_pages->first();
-        } else {
-            $response = $this->postJson(sprintf(
-                $this->apiUrl . 'pages', $implementation->organization_id, $implementation->id
-            ), array_merge($this->makeImplementationPageRequestBody(), [
-                'page_type' => $valid_faq_page_types[0]
-            ]), $this->makeApiHeaders($proxy))->assertSuccessful();
+        $response->assertSuccessful();
+        $this->assertImplementationPageSaved($response->json('data.id'), $pageBody);
 
-            $implementationPage = ImplementationPage::find($response->json('data.id'));
-        }
+        $implementationPage = ImplementationPage::find($response->json('data.id'));
+        $implementationPageUrl = $this->getUrlPages($implementation, $implementationPage);
 
-        $faqFields = [ 'title', 'description' ];
-        $faqData = $this->generatePageFaqData(3);
+        $updateBody = [
+            'faq' => array_map(fn () => $this->makeFAQData(), range(1, 3)),
+            'external' => $implementationPage->external,
+            'external_url' => $implementationPage->external_url,
+        ];
 
-        $this->patchJson(sprintf(
-            $this->apiUrl . 'pages/%s', $implementation->organization_id, $implementation->id, $implementationPage->id
-        ), [
-            'external'  => $implementationPage->external,
-            'faq'       => $faqData,
-        ], $this->makeApiHeaders($proxy));
+        $response = $this->patchJson($implementationPageUrl, $updateBody, $this->makeApiHeaders($proxy));
 
-        $implementationPage->refresh();
-        $this->assertEquals(count($implementationPage->faq), count($faqData));
-
-        /** @var Faq $faq */
-        foreach ($implementationPage->faq as $index => $faq) {
-            $this->assertEquals($faq->only($faqFields), collect($faqData[$index])->only($faqFields)->toArray());
-            $this->assertEquals($faq->medias()->pluck('uid')->toArray(), $faqData[$index]['description_media_uid']);
-        }
+        $response->assertSuccessful();
+        $this->assertImplementationPageSaved($response->json('data.id'), $updateBody);
 
         // Verify if reordering FAQ works
-        $faqData = $implementationPage->faq()->select(['id', 'title', 'description'])->get()->toArray();
-        shuffle($faqData);
+        $updateBody['faq'] = $implementationPage->faq()->select(['id', 'title', 'description'])->get();
+        $updateBody['faq'] = $updateBody['faq']->shuffle()->toArray();
 
-        $this->patchJson(sprintf(
-            $this->apiUrl . 'pages/%s', $implementation->organization_id, $implementation->id, $implementationPage->id
-        ), [
-            'external'  => $implementationPage->external,
-            'faq'       => $faqData,
-        ], $this->makeApiHeaders($proxy));
+        $response = $this->patchJson($implementationPageUrl, $updateBody, $this->makeApiHeaders($proxy));
 
-        $implementationPage->refresh();
-        $this->assertEquals(count($implementationPage->faq), count($faqData));
-
-        /** @var Faq $faq */
-        foreach ($implementationPage->faq as $index => $faq) {
-            $this->assertEquals($faq->only($faqFields), collect($faqData[$index])->only($faqFields)->toArray());
-        }
+        $response->assertSuccessful();
+        $this->assertImplementationPageSaved($response->json('data.id'), $updateBody);
     }
 
     /**
@@ -335,22 +242,23 @@ class ImplementationCMSTest extends TestCase
      */
     public function testUpdateInvalidImplementationPage(): void
     {
-        $implementation = $this->findImplementation($this->implementationName);
+        $implementation = $this->getImplementation();
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
-        $body = $this->makeImplementationPageRequestBody();
+        $pageBody = $this->makePageData();
+        $bodyEmpty = array_fill_keys(array_keys($pageBody), null);
+        $response = $this->postJson($this->getUrlPages($implementation), $pageBody, $this->makeApiHeaders($proxy));
 
-        $response = $this->postJson(sprintf(
-            $this->apiUrl . 'pages', $implementation->organization_id, $implementation->id
-        ), $this->makeImplementationPageRequestBody(), $this->makeApiHeaders($proxy))->assertSuccessful();
+        $response->assertSuccessful();
+        $this->assertImplementationPageSaved($response->json('data.id'), $pageBody);
+
         $implementationPage = ImplementationPage::find($response->json('data.id'));
+        $implementationPageUrl = $this->getUrlPages($implementation, $implementationPage);
 
-        // assert has validation errors
-        $response = $this->patchJson(sprintf(
-            $this->apiUrl . 'pages/%s', $implementation->organization_id, $implementation->id, $implementationPage->id
-        ), array_fill_keys(array_keys($body), null), $this->makeApiHeaders($proxy));
+        $response = $this->patchJson($implementationPageUrl, $bodyEmpty, $this->makeApiHeaders($proxy));
 
-        $response->assertJsonValidationErrors(array_keys(array_except($body, [
-            'state', 'description', 'description_position', 'description_alignment', 'blocks', 'external_url', 'page_type',
+        $response->assertJsonValidationErrors(array_keys(array_except($pageBody, [
+            'state', 'description', 'description_position', 'description_alignment', 'blocks',
+            'external_url', 'page_type',
         ])));
     }
 
@@ -360,21 +268,22 @@ class ImplementationCMSTest extends TestCase
      */
     public function testDeleteImplementationPage(): void
     {
-        $implementation = $this->findImplementation($this->implementationName);
+        $implementation = $this->getImplementation();
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
+        $proxyHeaders = $this->makeApiHeaders($proxy);
 
-        $response = $this->postJson(sprintf(
-            $this->apiUrl . 'pages', $implementation->organization_id, $implementation->id
-        ), $this->makeImplementationPageRequestBody(), $this->makeApiHeaders($proxy))->assertSuccessful();
+        $pageBody = $this->makePageData();
+        $response = $this->postJson($this->getUrlPages($implementation), $pageBody, $proxyHeaders);
+
+        $response->assertSuccessful();
+        $this->assertImplementationPageSaved($response->json('data.id'), $pageBody);
+
         $implementationPage = ImplementationPage::find($response->json('data.id'));
+        $implementationPageUrl = $this->getUrlPages($implementation, $implementationPage);
 
-        $this->deleteJson(sprintf(
-            $this->apiUrl . 'pages/%s', $implementation->organization_id, $implementation->id, $implementationPage->id
-        ))->assertUnauthorized();
-
-        $this->deleteJson(sprintf(
-            $this->apiUrl . 'pages/%s', $implementation->organization_id, $implementation->id, $implementationPage->id
-        ), [], $this->makeApiHeaders($proxy))->assertSuccessful();
+        $this->deleteJson($implementationPageUrl)->assertUnauthorized();
+        $this->deleteJson($implementationPageUrl, [], $proxyHeaders)->assertSuccessful();
+        $this->assertNull(ImplementationPage::find($response->json('data.id')));
     }
 
     /**
@@ -383,26 +292,15 @@ class ImplementationCMSTest extends TestCase
      */
     public function testUpdateImplementationCMS(): void
     {
-        $implementation = $this->findImplementation($this->implementationName);
+        $implementation = $this->getImplementation();
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
+        $pageBody = $this->makeCMSData();
 
-        $cmsData = $this->makeCMSData();
-
-        $response = $this->patchJson(sprintf(
-            $this->apiUrl . 'cms/', $implementation->organization_id, $implementation->id
-        ), $cmsData, $this->makeApiHeaders($proxy));
+        $response = $this->patchJson($this->getUrlCMS($implementation), $pageBody, $this->makeApiHeaders($proxy));
         $response->assertSuccessful();
-        $response->assertJsonStructure(['data' => $this->cmsResourceStructure]);
+        $response->assertJsonStructure(Arr::undot($this->cmsResourceStructure));
 
-        $implementation->refresh();
-
-        $this->assertEquals($implementation->show_home_map, $cmsData['show_home_map']);
-        $this->assertEquals($implementation->show_home_products, $cmsData['show_home_products']);
-        $this->assertEquals($implementation->show_office_map, $cmsData['show_office_map']);
-        $this->assertEquals($implementation->show_product_map, $cmsData['show_product_map']);
-        $this->assertEquals($implementation->show_provider_map, $cmsData['show_provider_map']);
-        $this->assertEquals($implementation->show_providers_map, $cmsData['show_providers_map']);
-        $this->assertEquals($implementation->show_voucher_map, $cmsData['show_voucher_map']);
+        $this->assertImplementationCMSSaved($response->json('data.id'), $pageBody);
     }
 
     /**
@@ -410,7 +308,7 @@ class ImplementationCMSTest extends TestCase
      * @return Media
      * @throws \Exception
      */
-    protected function uploadMedia(string $mediaType): Media
+    protected function makeMedia(string $mediaType): Media
     {
         $fileName = 'media.jpg';
         $file = UploadedFile::fake()->image($fileName);
@@ -422,7 +320,7 @@ class ImplementationCMSTest extends TestCase
      * @param Media $media
      * @return string
      */
-    protected function generateMarkdownDescription(Media $media): string {
+    protected function makeMarkdownDescription(Media $media): string {
         return implode("  \n", [
             '# '.$this->faker->text(50),
             '![]('. $media->urlPublic('public') .')',
@@ -434,19 +332,17 @@ class ImplementationCMSTest extends TestCase
      * @return array
      * @throws \Exception
      */
-    protected function generatePageBlockData(): array
+    protected function makePageBlockData(): array
     {
-        $media = $this->uploadMedia('implementation_block_media');
-
         return [
-            'button_enabled' => Arr::random([true, false]),
-            'button_link'    => $this->faker->url,
-            'button_target_blank' => Arr::random([true, false]),
-            'button_text'   => $this->faker->text(100),
-            'description'   => $this->faker->text(),
-            'label'         => $this->faker->text(100),
-            'title'         => $this->faker->text(100),
-            'media_uid'     => $media->uid,
+            'button_enabled' => (bool) rand(0, 1),
+            'button_link' => $this->faker->url,
+            'button_target_blank' => (bool) rand(0, 1),
+            'button_text' => $this->faker->text(100),
+            'description' => $this->faker->text(),
+            'label' => $this->faker->text(100),
+            'title' => $this->faker->text(100),
+            'media_uid' => $this->makeMedia('implementation_block_media')->uid,
         ];
     }
 
@@ -454,45 +350,26 @@ class ImplementationCMSTest extends TestCase
      * @return array
      * @throws \Exception
      */
-    protected function generatePageFaqSingle(): array
+    protected function makeFAQData(): array
     {
-        $media = $this->uploadMedia('cms_media');
-
         return [
-            'title'                 => $this->faker->text(100),
-            'description'           => $this->generateMarkdownDescription($media),
-            'description_media_uid' => [ $media->uid ],
+            'title' => $this->faker->text(100),
+            'description' => $this->makeMarkdownDescription($this->makeMedia('cms_media')),
         ];
     }
 
     /**
-     * @param $nrBlocks
-     * @return array
-     * @throws \Exception
-     */
-    protected function generatePageFaqData($nrBlocks): array
-    {
-        $data = [];
-
-        for ($i = 0; $i < $nrBlocks; ++$i) {
-            $data[] = $this->generatePageFaqSingle();
-        }
-
-        return $data;
-    }
-
-    /**
      * @return array
      */
-    protected function generateSingleAnnouncement(): array
+    protected function makeAnnouncementData(): array
     {
         return [
-            'type'         => Arr::random(['warning,danger,success,primary,default']),
-            'title'        => $this->faker->text(2000),
-            'description'  => $this->faker->text(8000),
-            'expire_at'    => now()->addDays(10)->format('Y-m-d'),
-            'active'       => Arr::random([true, false]),
-            'replace'      => Arr::random([true, false]),
+            'type' => Arr::random(['warning', 'danger', 'success', 'primary', 'default']),
+            'title' => $this->faker->text(2000),
+            'description' => $this->faker->text(8000),
+            'expire_at' => now()->addDays(10)->format('Y-m-d'),
+            'replace' => (bool) rand(0, 1),
+            'active' => (bool) rand(0, 1),
         ];
     }
 
@@ -502,62 +379,177 @@ class ImplementationCMSTest extends TestCase
      */
     protected function makeCMSData(): array
     {
-        $announcements = [];
-        for ($i = 0; $i < 3; ++$i) {
-            $announcements[] = $this->generateSingleAnnouncement();
-        }
-
         return [
-            'title'         => $this->faker->text(50),
-            'description'   => $this->faker->text(4000),
+            'title' => $this->faker->text(50),
+            'description' => $this->faker->text(4000),
             'description_alignment' => Arr::random(['left', 'center', 'right']),
-            'informal_communication' => Arr::random([true, false]),
-            'overlay_enabled'   => Arr::random([true, false]),
-            'overlay_type'      => Arr::random(['color', 'dots', 'lines', 'points', 'circles']),
-            'overlay_opacity'   => $this->faker->numberBetween(0, 100),
+            'informal_communication' => (bool) rand(0, 1),
+            'overlay_enabled' => (bool) rand(0, 1),
+            'overlay_type' => Arr::random(['color', 'dots', 'lines', 'points', 'circles']),
+            'overlay_opacity' => $this->faker->numberBetween(0, 100),
             'header_text_color' => Arr::random(['bright', 'dark', 'auto']),
-            'show_home_map'     => Arr::random([true, false]),
-            'show_office_map'   => Arr::random([true, false]),
-            'show_home_products' => Arr::random([true, false]),
-            'show_providers_map' => Arr::random([true, false]),
-            'show_provider_map' => Arr::random([true, false]),
-            'show_voucher_map'  => Arr::random([true, false]),
-            'show_product_map'  => Arr::random([true, false]),
-            'announcement'      => $announcements,
+            'show_home_map' => (bool) rand(0, 1),
+            'show_office_map' => (bool) rand(0, 1),
+            'show_home_products' => (bool) rand(0, 1),
+            'show_providers_map' => (bool) rand(0, 1),
+            'show_provider_map' => (bool) rand(0, 1),
+            'show_voucher_map' => (bool) rand(0, 1),
+            'show_product_map' => (bool) rand(0, 1),
+            'announcement' => $this->makeAnnouncementData(),
         ];
     }
 
     /**
-     * @return string[]
-     * @throws \Throwable
+     * @param array $replace
+     * @return array
+     * @throws \Exception
      */
-    protected function makeImplementationPageRequestBody(): array
+    protected function makePageData(array $replace = []): array
     {
-        $implementation = $this->findImplementation($this->implementationName);
+        $implementation = $this->getImplementation();
+        $pageTypes = Arr::pluck(ImplementationPage::PAGE_TYPES, 'key');
+        $pageTypes = array_diff($pageTypes, $implementation->pages()->pluck('page_type')->toArray());
+        $external = (bool) rand(0, 1);
 
-        $existingPageTypes  = $implementation->pages()->pluck('page_type')->toArray();
-        $validPageTypeKeys  = array_diff(
-            collect(ImplementationPage::PAGE_TYPES)->pluck('key')->toArray(), $existingPageTypes
+        return array_merge([
+            'state'=> ImplementationPage::STATE_DRAFT,
+            'blocks' => array_map(fn () => $this->makePageBlockData(), range(0, rand(1, 5))),
+            'external' => $external,
+            'page_type'=> Arr::random($pageTypes),
+            'description' => $this->makeMarkdownDescription($this->makeMedia('cms_media')),
+            'external_url' => $external ? $this->faker->url : null,
+            'description_position' => Arr::random(ImplementationPage::DESCRIPTION_POSITIONS),
+            'description_alignment' => Arr::random(['left', 'center', 'right']),
+        ], $replace);
+    }
+
+    /**
+     * @return Implementation
+     */
+    protected function getImplementation(): Implementation
+    {
+        $implementation = $this->findImplementation($this->implementationKey);
+        $this->assertNotNull($implementation);
+
+        return $implementation;
+    }
+
+    /**
+     * @return array
+     * @throws Throwable
+     */
+    protected function blockKeys(): array
+    {
+        return array_keys(Arr::except($this->makePageBlockData(), 'media_uid'));
+    }
+
+    /**
+     * @return array
+     * @throws Throwable
+     */
+    protected function announcementKeys(): array
+    {
+        return array_keys($this->makeAnnouncementData());
+    }
+
+    /**
+     * @return array
+     * @throws Throwable
+     */
+    protected function faqKeys(): array
+    {
+        return array_keys($this->makeFAQData());
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param ImplementationPage|null $implementationPage
+     * @return string
+     */
+    protected function getUrlPages(
+        Implementation $implementation,
+        ?ImplementationPage $implementationPage = null
+    ): string {
+        return sprintf(
+            $this->apiUrl . ($implementationPage ? "/pages/%s" : '/pages'),
+            $implementation->organization_id,
+            $implementation->id,
+            $implementationPage?->id,
         );
+    }
 
-        $blocks = [];
-        $nrBlocks = rand(1, 5);
+    /**
+     * @param Implementation $implementation
+     * @return string
+     */
+    protected function getUrlCMS(Implementation $implementation): string
+    {
+        return sprintf($this->apiUrl . '/cms', $implementation->organization_id, $implementation->id);
+    }
 
-        for ($i = 0; $i < $nrBlocks; ++$i) {
-            $blocks[] = $this->generatePageBlockData();
+    /**
+     * @param int $id
+     * @param array $body
+     * @return void
+     * @throws Throwable
+     */
+    private function assertImplementationPageSaved(int $id, array $body): void
+    {
+        $page = ImplementationPage::find($id);
+        $faqKeys = $this->faqKeys();
+        $blockKeys = $this->blockKeys();
+
+        $body['external'] = !$page::isInternalType($page->page_type) && $body['external'];
+        $body['external_url'] = $body['external'] ? $body['external_url'] : null;
+
+        foreach (Arr::except($body, ['faq', 'blocks']) as $key => $value) {
+            $this->assertEquals($value, $page[$key]);
         }
 
-        $descriptionMedia = $this->uploadMedia('cms_media');
+        if (isset($body['blocks'])) {
+            $this->assertEquals($page->blocks->count(), count($body['blocks']));
 
-        return [
-            'state'                 => ImplementationPage::STATE_DRAFT,
-            'page_type'             => Arr::random($validPageTypeKeys),
-            'description'           => $this->generateMarkdownDescription($descriptionMedia),
-            'description_position'  => Arr::random(ImplementationPage::DESCRIPTION_POSITIONS),
-            'description_alignment' => Arr::random(['left', 'center', 'right']),
-            'external'              => Arr::random([true, false]),
-            'external_url'          => $this->faker->url,
-            'blocks'                => $blocks,
-        ];
+            /** @var ImplementationBlock $block */
+            foreach ($page->blocks as $index => $block) {
+                $this->assertEquals($block->only($blockKeys), Arr::only($body['blocks'][$index], $blockKeys));
+
+                // if there's an image check if it was sync-ed
+                if (isset($body['blocks'][$index]['media_uid'])) {
+                    $this->assertEquals($block->photo->uid, $body['blocks'][$index]['media_uid']);
+                }
+            }
+        }
+
+        if (isset($body['faq'])) {
+            $this->assertEquals(count($body['faq']), $page->faq->count());
+
+            /** @var Faq $faq */
+            foreach ($page->faq as $index => $faq) {
+                $this->assertEquals($faq->only($faqKeys), Arr::only($body['faq'][$index], $faqKeys));
+                $this->assertEquals(1, $faq->medias()->count());
+            }
+        }
+    }
+
+    /**
+     * @param int $id
+     * @param array $body
+     * @return void
+     * @throws Throwable
+     */
+    private function assertImplementationCMSSaved(int $id, array $body): void
+    {
+        $implementation = Implementation::find($id);
+        $announcementData = Arr::except(Arr::get($body, 'announcement'), 'replace');
+
+        foreach (Arr::except($body, ['announcement']) as $key => $value) {
+            $this->assertEquals($value, $implementation[$key]);
+        }
+
+        if ($announcementData) {
+            $this->assertEquals(array_merge($announcementData, [
+                'expire_at' => Carbon::parse($announcementData['expire_at']),
+            ]), $implementation->announcements_webshop[0]->only(array_keys($announcementData)));
+        }
     }
 }
