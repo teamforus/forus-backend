@@ -66,6 +66,7 @@ class ImplementationsController extends Controller
      * @param Implementation $implementation
      * @return ImplementationPrivateResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Throwable
      * @noinspection PhpUnused
      */
     public function updateCMS(
