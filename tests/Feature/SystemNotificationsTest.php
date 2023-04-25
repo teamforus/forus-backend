@@ -117,10 +117,11 @@ class SystemNotificationsTest extends TestCase
         string $channel,
     ): void {
         // Test default email template
-        $funds = $this->getFunds($implementation);
+        $funds = $this->getFunds($implementation)->take(2);
         $response = $this->fetchCustomTemplate($implementation, $notification);
         $this->assertSystemNotificationTemplates($response, 3, 0);
         $templateDefault = collect($response->json('data.templates_default'))->where('type', $channel)->first();
+        $this->assertEquals(2, $funds->count(), 'Expected to find 2 funds while found ' . $funds->count() . '.');
 
         // Assert default email template is being used on implementation level
         foreach ($funds as $fund) {
@@ -383,7 +384,7 @@ class SystemNotificationsTest extends TestCase
         }
 
         if ($channel == 'database') {
-            $this->assertDatabaseNotfication($fund, $subject);
+            $this->assertDatabaseNotification($fund, $subject);
         }
     }
 
@@ -392,10 +393,8 @@ class SystemNotificationsTest extends TestCase
      * @param string $subject
      * @return void
      */
-    private function assertMailNotification(
-        Fund $fund,
-        string $subject = '',
-    ): void {
+    private function assertMailNotification(Fund $fund, string $subject = ''): void
+    {
         $now = now();
         $voucher = $this->makeVoucher($fund);
 
@@ -410,10 +409,8 @@ class SystemNotificationsTest extends TestCase
      * @param string $subject
      * @return void
      */
-    private function assertDatabaseNotfication(
-        Fund $fund,
-        string $subject = '',
-    ): void {
+    private function assertDatabaseNotification(Fund $fund, string $subject = ''): void
+    {
         $now = now();
         $voucher = $this->makeVoucher($fund);
         $notificationIds = Notification::where('created_at', '>=', $now)->pluck('id');
