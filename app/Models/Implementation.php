@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\ImplementationPageResource;
-use App\Http\Resources\ImplementationSocialMediaResource;
 use App\Http\Resources\MediaResource;
 use App\Models\Traits\ValidatesValues;
 use App\Scopes\Builders\FundQuery;
@@ -673,7 +672,9 @@ class Implementation extends BaseModel
                 // 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
                 'pages' => Arr::keyBy($pages, 'page_type'),
                 'has_productboard_integration' => !empty(resolve('productboard')),
-                'social_medias' => ImplementationSocialMediaResource::collection($implementation->social_medias),
+                'social_medias' => $implementation->social_medias->map(fn (ImplementationSocialMedia $media) => $media->only([
+                    'url', 'type', 'title',
+                ])),
             ], $implementation->only(
                 'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
                 'show_office_map', 'show_voucher_map', 'show_product_map',

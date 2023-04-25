@@ -334,7 +334,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations/{organization}/implementations/{implementation}/social-medias',
         "Api\Platform\Organizations\Implementations\ImplementationSocialMediaController"
     )->parameters([
-        'social-medias' => 'implementation_social_media',
+        'social-media' => 'implementation_social_media',
     ])->only('index', 'store', 'show', 'update', 'destroy');
 
     $router->resource(

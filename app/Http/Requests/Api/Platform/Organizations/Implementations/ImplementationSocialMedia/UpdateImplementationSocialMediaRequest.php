@@ -5,9 +5,16 @@ namespace App\Http\Requests\Api\Platform\Organizations\Implementations\Implement
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Implementation;
 use App\Models\ImplementationSocialMedia;
+use App\Models\Organization;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Validation\Rule;
 
-class UpdateSocialMediaRequest extends BaseFormRequest
+/**
+ * @property Organization $organization
+ * @property Implementation $implementation
+ * @property ImplementationSocialMedia $social_media
+ */
+class UpdateImplementationSocialMediaRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,21 +33,16 @@ class UpdateSocialMediaRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        /** @var ImplementationSocialMedia $social_media */
-        $social_media = $this->route('implementation_social_media');
-        /** @var Implementation $implementation */
-        $implementation = $this->route('implementation');
-
         return [
             'type'  => [
                 'required',
                 'in:' . implode(',', ImplementationSocialMedia::TYPES),
-                Rule::unique('implementation_social_media','type')->where(function ($query) use ($implementation) {
-                    $query->where('implementation_id', $implementation->id);
-                })->ignore($social_media->id),
+                Rule::unique('implementation_social_media','type')->where(fn (Builder $q) => $q->where([
+                    'implementation_id' => $this->implementation->id,
+                ]))->ignore($this->social_media->id),
             ],
-            'link'  => 'required|string|min:5|max:100',
-            'title' => 'nullable|string|max:100',
+            'url' => 'required|string|url|min:5|max:200',
+            'title' => 'nullable|string|max:200',
         ];
     }
 }

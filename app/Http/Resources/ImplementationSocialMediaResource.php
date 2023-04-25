@@ -2,9 +2,12 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Http\Resources\Json\JsonResource;
+use App\Models\ImplementationSocialMedia;
 
-class ImplementationSocialMediaResource extends JsonResource
+/**
+ * @property-read ImplementationSocialMedia $resource
+ */
+class ImplementationSocialMediaResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
@@ -14,6 +17,8 @@ class ImplementationSocialMediaResource extends JsonResource
      */
     public function toArray($request): array
     {
-        return parent::toArray($request);
+        return array_merge($this->resource->only([
+            'id', 'url', 'type', 'type_locale', 'title',
+        ]));
     }
 }

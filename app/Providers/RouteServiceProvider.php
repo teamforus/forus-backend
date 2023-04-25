@@ -192,10 +192,6 @@ class RouteServiceProvider extends ServiceProvider
         $router->bind('voucher_transaction_bulks', static function ($value) {
             return VoucherTransactionBulk::findOrFail($value);
         });
-
-        $router->bind('implementation_social_media', static function ($value) {
-            return ImplementationSocialMedia::findOrFail($value);
-        });
     }
 
     /**

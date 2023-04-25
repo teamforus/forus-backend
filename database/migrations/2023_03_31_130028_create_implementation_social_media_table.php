@@ -16,9 +16,9 @@ return new class extends Migration
         Schema::create('implementation_social_media', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('implementation_id');
-            $table->enum('type', ['facebook', 'twitter', 'youtube']);
-            $table->string('link', 100);
-            $table->string('title', 100)->nullable();
+            $table->string('type', 100);
+            $table->string('url', 200);
+            $table->string('title', 200)->nullable();
             $table->timestamps();
             $table->unique(['implementation_id', 'type']);
 
