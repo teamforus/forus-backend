@@ -74,8 +74,12 @@ trait MakesProductReservations
         )->get();
 
         foreach ($fund_providers as $fund_provider) {
+            // $product->fund_provider_products()->delete();
             $product->fund_provider_products()->create([
-                'fund_provider_id' => $fund_provider->id
+                'fund_provider_id' => $fund_provider->id,
+                'amount' => $fund_provider->fund->isTypeSubsidy() ? $product->price / 2 : null,
+                'limit_total' => $product->unlimited_stock ? 1000 : $product->stock_amount,
+                'limit_per_identity' => $product->unlimited_stock ? 25 : ceil(max($product->stock_amount / 10, 1)),
             ]);
         }
 

@@ -59,9 +59,12 @@ class ProductIdInStockRule extends BaseRule
             return $this->reject(trans('validation.in'));
         }
 
-        // check validity
-        return ProductQuery::approvedForFundsAndActiveFilter(
-            Product::query(), $this->fund->id
-        )->where('id', $product->id)->exists();
+        if (ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $this->fund->id)->where([
+            'id' => $product->id,
+        ])->doesntExist()) {
+            return $this->reject(trans('validation.product_not_approved'));
+        }
+
+        return true;
     }
 }
