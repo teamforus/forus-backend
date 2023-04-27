@@ -3,13 +3,15 @@
 namespace Tests\Feature;
 
 use App\Models\Fund;
-use Tests\Configs\VoucherBatchTestConfig;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Cache;
+use Tests\TestCases\VoucherBatchTestCases;
 use Tests\TestCase;
 use Tests\Traits\VoucherTestTrait;
 
 class VoucherBatchTest extends TestCase
 {
-    use VoucherTestTrait;
+    use VoucherTestTrait, DatabaseTransactions;
 
     /**
      * @var string
@@ -20,23 +22,78 @@ class VoucherBatchTest extends TestCase
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherBatch(): void
+    public function testVoucherBatchCase1(): void
     {
-        foreach (VoucherBatchTestConfig::$featureTestCases as $testCase) {
-            \DB::beginTransaction();
-            $this->processProductStocksTestCase($testCase);
-            $this->resetProperties();
-            \DB::rollBack();
-        }
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase1);
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testVoucherBatchCase2(): void
+    {
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase2);
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testVoucherBatchCase3(): void
+    {
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase3);
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testVoucherBatchCase4(): void
+    {
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase4);
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testVoucherBatchCase5(): void
+    {
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase5);
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testVoucherBatchCase6(): void
+    {
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase6);
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testVoucherBatchCase7(): void
+    {
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase7);
     }
 
     /**
      * @throws \Throwable
      */
-    protected function processProductStocksTestCase(array $testCase)
+    protected function processVoucherBatchTestCase(array $testCase): void
     {
+        Cache::clear();
+
         $fund = $this->findFund($testCase['fund_id']);
-        $this->makeProviderAndProducts($fund, $testCase);
+
+        $fund->fund_config->forceFill($testCase['fund_config'] ?? [])->save();
+        $fund->organization->forceFill($testCase['organization'] ?? [])->save();
+
+        $this->makeProviderAndProducts($fund);
         $this->makeVouchers($fund, $testCase);
     }
 
@@ -48,72 +105,51 @@ class VoucherBatchTest extends TestCase
      */
     protected function makeVouchers(Fund $fund, array $testCase): void
     {
-        // configure fund
-        $fund->fund_config()->update(array_only($testCase, [
-            'allow_direct_payments', 'allow_generator_direct_payments',
-        ]));
-
-        // configure organization for bsn
-        $fund->organization->update(['bsn_enabled' => $testCase['bsn_enabled']]);
-
         // create vouchers
         foreach ($testCase['asserts'] as $assert) {
-            $type = $testCase['type'];
-            $count = $assert['vouchers_count'] ?? $testCase['vouchers_count'];
-            $range = range(0, $count - 1);
-
-            $vouchers = array_reduce($range, function (array $arr, $index) use ($type, $assert, $fund) {
-                $arr[] = array_except(
-                    $this->getVoucherFields($fund, $type, $assert, $index, $arr),
-                    $assert['except_fields'] ?? []
-                );
-
-                return $arr;
-            }, []);
-
-            $this->storeVouchers($fund, $vouchers, $type, $assert);
-
-            sleep(1);
+            $this->storeVouchers($fund, $assert);
         }
     }
 
     /**
      * @param Fund $fund
-     * @param array $vouchers
-     * @param string $type
      * @param array $assert
      * @return void
+     * @throws \Throwable
      */
-    protected function storeVouchers(
-        Fund $fund,
-        array $vouchers,
-        string $type,
-        array $assert
-    ): void {
-        $assertCreated = $assert['assert_creation'] === 'success';
-        $errors = $assert['validation_errors'] ?? [];
-
-        $organization = $fund->organization;
+    protected function storeVouchers(Fund $fund, array $assert): void
+    {
         $startDate = now();
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
-        $data = compact('vouchers');
-        $data['fund_id'] = $fund->id;
+        $headers = $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity));
 
-        // validate
-        $validateResponse = $this->post(
-            sprintf($this->apiUrl, $organization->id) . '/validate', $data, $headers
-        );
-        $uploadResponse = $this->post(sprintf($this->apiUrl, $organization->id), $data, $headers);
+        $data = [
+            'fund_id' => $fund->id,
+            'vouchers' => $this->makeVoucherData($fund, $assert),
+        ];
 
-        if ($assertCreated) {
+        $validateResponse = $this->postJson($this->getApiUrl($fund, '/validate'), $data, $headers);
+        $uploadResponse = $this->postJson($this->getApiUrl($fund), $data, $headers);
+
+        if ($assert['assert_created']) {
             $validateResponse->assertSuccessful();
             $uploadResponse->assertSuccessful();
 
-            $vouchersBuilder = $this->getVouchersBuilder($fund, $startDate, $type);
-            $this->checkVouchers($vouchersBuilder, $startDate, $vouchers, $assert);
+            $vouchersBuilder = $this->getVouchersBuilder($fund, $startDate, $assert['type'] ?? 'budget');
+            $this->assertVouchersCreated($vouchersBuilder, $startDate, $data['vouchers'], $assert);
+            $vouchersBuilder->delete();
         } else {
-            $validateResponse->assertJsonValidationErrors($errors);
-            $uploadResponse->assertJsonValidationErrors($errors);
+            $validateResponse->assertJsonValidationErrors($assert['assert_errors'] ?? []);
+            $uploadResponse->assertJsonValidationErrors($assert['assert_errors'] ?? []);
         }
+    }
+
+    /**
+     * @param Fund $fund
+     * @param string $append
+     * @return string
+     */
+    protected function getApiUrl(Fund $fund, string $append = ''): string
+    {
+        return sprintf($this->apiUrl, $fund->organization->id) . $append;
     }
 }

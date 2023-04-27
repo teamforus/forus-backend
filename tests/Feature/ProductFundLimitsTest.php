@@ -371,14 +371,11 @@ class ProductFundLimitsTest extends TestCase
     protected function setConfigs(): array
     {
         $initialValue = [
-            'mail.disable' => Config::get('mail.disable'),
             'forus.transactions.soft_limit' => Config::get('forus.transactions.soft_limit'),
             'forus.transactions.hard_limit' => Config::get('forus.transactions.hard_limit'),
         ];
 
         Cache::clear();
-
-        Config::set('mail.disable', true);
         Config::set('forus.transactions.soft_limit', 0);
         Config::set('forus.transactions.hard_limit', 0);
 
