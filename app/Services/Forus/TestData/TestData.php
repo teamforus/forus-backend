@@ -45,6 +45,7 @@ use Kalnoy\Nestedset\Collection as NestedsetCollection;
 class TestData
 {
     private mixed $tokenGenerator;
+
     private array|NestedsetCollection $productCategories;
 
     public int $emailNth = 0;
@@ -55,11 +56,10 @@ class TestData
 
     public function __construct()
     {
+        $this->faker = Factory::create(Config::get('app.locale'));
         $this->configKey = Config::get('forus.test_data.test_data.config_key');
         $this->tokenGenerator = resolve('token_generator');
         $this->productCategories = ProductCategory::all();
-
-        $this->faker = Factory::create(Config::get('app.locale'));
     }
 
     /**
@@ -742,10 +742,10 @@ class TestData
             } while (collect($out)->pluck($csv_primary_key)->search($primaryKeyValue) !== false);
 
             $bsn_value = $env_lorem_bsn && ($count === $bsn_prevalidation_index) ?
-                $env_lorem_bsn : $this->randomFakeBsn();
+                $env_lorem_bsn : self::randomFakeBsn();
 
             $bsn_value_partner = $env_lorem_bsn && ($count === $bsn_prevalidation_partner_index) ?
-                $env_lorem_bsn : $this->randomFakeBsn();
+                $env_lorem_bsn : self::randomFakeBsn();
 
             $out[] = array_merge($records, [
                 $csv_primary_key => $primaryKeyValue,
@@ -847,7 +847,7 @@ class TestData
      * @return int
      * @throws \Throwable
      */
-    private function randomFakeBsn(): int
+    public static function randomFakeBsn(): int
     {
         static $randomBsn = [];
 
