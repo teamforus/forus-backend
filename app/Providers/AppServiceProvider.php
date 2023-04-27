@@ -41,6 +41,7 @@ use App\Models\ProductCategory;
 use App\Models\Voucher;
 use App\Services\MediaService\MediaService;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -109,6 +110,11 @@ class AppServiceProvider extends ServiceProvider
 
         if (Config::get('app.memory_limit')) {
             ini_set('memory_limit', Config::get('app.memory_limit'));
+        }
+
+        if (App::runningUnitTests()) {
+            Config::set('mail.default', 'array');
+            Config::set('queue.default', 'sync');
         }
     }
 

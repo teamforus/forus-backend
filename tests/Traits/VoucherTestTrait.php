@@ -2,9 +2,6 @@
 
 namespace Tests\Traits;
 
-use App\Events\FundProviders\FundProviderApprovedBudget;
-use App\Events\FundProviders\FundProviderApprovedProducts;
-use App\Events\Funds\FundProviderApplied;
 use App\Mail\Vouchers\VoucherAssignedBudgetMail;
 use App\Mail\Vouchers\VoucherAssignedProductMail;
 use App\Mail\Vouchers\VoucherAssignedSubsidyMail;
@@ -22,6 +19,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 
 trait VoucherTestTrait
 {
@@ -40,7 +38,7 @@ trait VoucherTestTrait
     /**
      * @var Product[]
      */
-    protected array $products = [];
+    protected array $approvedProducts = [];
 
     /**
      * @var Identity[]
@@ -50,22 +48,12 @@ trait VoucherTestTrait
     /**
      * @var Product[]
      */
-    protected array $notAssignedProducts = [];
+    protected array $unapprovedProducts = [];
 
     /**
      * @var Product[]
      */
     protected array $emptyStockProducts = [];
-
-    /**
-     * @return void
-     */
-    protected function resetProperties(): void
-    {
-        $this->products = [];
-        $this->notAssignedProducts = [];
-        $this->identities = [];
-    }
 
     /**
      * @param Fund $fund
@@ -74,9 +62,9 @@ trait VoucherTestTrait
     protected function makeFundFormulaProducts(Fund $fund): void
     {
         if (!$fund->fund_formula_products->count()) {
-            array_map(function ($value) use ($fund) {
+            array_map(function () use ($fund) {
                 /** @var Product $product */
-                $product = array_random($this->products);
+                $product = array_random($this->approvedProducts);
                 $fund->fund_formula_products()->updateOrCreate([
                     'product_id' => $product->id,
                 ], [
@@ -91,59 +79,54 @@ trait VoucherTestTrait
 
     /**
      * @param Fund $fund
-     * @param string $type
      * @param array $assert
-     * @param int $index
-     * @param array $vouchers
      * @return array
      * @throws \Throwable
      */
-    protected function getVoucherFields(
-        Fund $fund,
-        string $type,
-        array $assert,
-        int $index,
-        array $vouchers
-    ): array {
-        $params = [];
-        $makeTransaction = $assert['with_transaction'] ?? false;
-        $amount = null;
-        $productId = null;
-        $sameAssignBy = $assert['same_assign_by'] ?? 0;
-        $activationCode = $assert['activation_code'] ?? 0;
+    protected function makeVoucherData(Fund $fund, array $assert): array
+    {
+        $range = range(0, Arr::get($assert, 'vouchers_count', 10) - 1);
 
-        if ($sameAssignBy > $index && count($vouchers)) {
-            $params[$assert['assign_by']] = $vouchers[$index - 1][$assert['assign_by']];
-        } else {
-            $params = $this->assignByFields($assert, $index);
-        }
+        return array_reduce($range, function (array $vouchers, $index) use ($fund, $assert) {
+            $params = [];
+            $amount = rand(1, $fund->getMaxAmountPerVoucher());
+            $voucherType = $assert['type'] ?? 'budget';
+            $sameAssignBy = $assert['same_assign_by'] ?? 0;
+            $activationCode = $assert['activation_code'] ?? 0;
+            $directPayment = Arr::get($assert, 'direct_payment') ? $this->makeDirectPaymentData() : [];
+            $exceedVoucherAmountLimit = $assert['exceed_voucher_amount_limit'] ?? false;
 
-        if ($type === 'budget') {
-            $amount = ($assert['amount_over_limit'] ?? false)
-                ? $fund->getMaxAmountPerVoucher() + 10
-                : rand(1, $fund->getMaxAmountPerVoucher());
+            if ($sameAssignBy > $index && count($vouchers)) {
+                $params[$assert['assign_by']] = $vouchers[$index - 1][$assert['assign_by']];
+            } else {
+                $params = $this->assignByFields($assert, $index);
+            }
 
-        } elseif ($type === 'product') {
-            $productId = match ($assert['product'] ?? 'assigned') {
-                'assigned' => array_random($this->products)->id,
-                'not_assigned' => array_random($this->notAssignedProducts)->id,
-                'empty_stock' => array_random($this->emptyStockProducts)->id,
-                default => null,
-            };
-        }
+            if ($voucherType === 'budget') {
+                $amount = $exceedVoucherAmountLimit ? $fund->getMaxAmountPerVoucher() + 10 : $amount;
+            } elseif ($voucherType === 'product') {
+                $productId = match ($assert['product'] ?? 'approved') {
+                    'approved' => array_random($this->approvedProducts)->id,
+                    'unapproved' => array_random($this->unapprovedProducts)->id,
+                    'empty_stock' => array_random($this->emptyStockProducts)->id,
+                    default => null,
+                };
+            }
 
-        return array_merge($params, [
-            'activate' => $assert['activate'] ?? true,
-            'activation_code' => $activationCode > $index,
-            'limit_multiplier' => $type === 'budget' ? rand(1, 3) : 1,
-            'expire_at' => now()->addDays(30)->format('Y-m-d'),
-            'note' => $this->faker()->sentence(),
-        ], $this->recordsFields(),
-            $amount ? ['amount' => $amount] : [],
-            $productId ? ['product_id' => $productId] : [],
-            $makeTransaction ? $this->getTransactionFields() : [],
-            $assert['replacement'] ?? [],
-        );
+            $item = array_merge($params, [
+                'activate' => $assert['activate'] ?? true,
+                'activation_code' => $activationCode > $index,
+                'limit_multiplier' => $voucherType === 'budget' ? rand(1, 3) : 1,
+                'expire_at' => now()->addDays(30)->format('Y-m-d'),
+                'note' => $this->faker()->sentence(),
+                'amount' => $amount ?? null,
+                'product_id' => $productId ?? null,
+            ], $directPayment, $this->recordsFields(), $assert['replacement'] ?? []);
+
+            return array_merge($vouchers, [
+                Arr::except($item, $assert['except_fields'] ?? []),
+            ]);
+        }, []);
     }
 
     /**
@@ -197,7 +180,7 @@ trait VoucherTestTrait
     /**
      * @return array
      */
-    protected function getTransactionFields(): array
+    protected function makeDirectPaymentData(): array
     {
         return [
             'direct_payment_iban' => $this->faker()->iban('NL'),
@@ -206,19 +189,20 @@ trait VoucherTestTrait
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|Voucher $query
      * @param Carbon $startDate
      * @param array $vouchers
      * @param array $assert
      * @return void
      */
-    protected function checkVouchers(
-        Builder $query,
+    protected function assertVouchersCreated(
+        Builder|Voucher $query,
         Carbon $startDate,
         array $vouchers,
         array $assert
     ): void {
         $sortedVouchers = [];
+        $assertActive = $assert['assert_active'] ?? null;
         $sameAssignBy = $assert['same_assign_by'] ?? 0;
         $assertExistingIdentity = $assert['existing_identity'] ?? false;
         $createdVouchers = $query->get();
@@ -231,10 +215,9 @@ trait VoucherTestTrait
             $sortedVouchers[] = $voucher;
 
             // check activation and transaction
-            $this->checkActivation($voucher, $voucherArr['activate']);
-            $this->checkTransactions(
-                $voucher, $voucherArr, $assert['with_transaction'] ?? false
-            );
+            if ($voucherArr['activate'] || $assertActive !== null) {
+                $this->assertActivation($voucher, $voucherArr['activate'] || $assertActive);
+            }
 
             // check identity assign
             if ($assertExistingIdentity) {
@@ -250,11 +233,12 @@ trait VoucherTestTrait
                 };
             }
 
-            $this->checkFieldsEquals($voucher, $voucherArr);
-            $this->checkActivationCode($voucher, $voucherArr);
+            $this->assertDirectPayment($voucher, $voucherArr, $assert['direct_payment'] ?? false);
+            $this->assertFieldsEquals($voucher, $voucherArr);
+            $this->assertActivationCode($voucher, $voucherArr);
 
             if ($assert['assign_by'] === 'email') {
-                $this->checkFundFormulaProducts($voucher, $startDate);
+                $this->assertFundFormulaProducts($voucher, $startDate);
             }
         }
 
@@ -273,12 +257,13 @@ trait VoucherTestTrait
      */
     protected function checkSameAssignBy(array $vouchers, $assert): void
     {
+        $type = $assert['assign_by'];
         $sameAssignBy = $assert['same_assign_by'];
         $activationCode = $assert['activation_code'] ?? 0;
-        $type = $assert['assign_by'];
 
         $baseAssignBy = $this->getVoucherAssignedByValue($vouchers[0], $type);
         $baseActivationCode = $vouchers[0]->activation_code;
+
         foreach ($vouchers as $index => $voucher) {
             $assignBy = $this->getVoucherAssignedByValue($voucher, $type);
 
@@ -299,7 +284,7 @@ trait VoucherTestTrait
      * @param array $voucherArr
      * @return void
      */
-    protected function checkActivationCode(Voucher $voucher, array $voucherArr): void
+    protected function assertActivationCode(Voucher $voucher, array $voucherArr): void
     {
         $voucherArr['activation_code']
             ? $this->assertNotNull($voucher->activation_code)
@@ -311,7 +296,7 @@ trait VoucherTestTrait
      * @param Carbon $startDate
      * @return void
      */
-    protected function checkFundFormulaProducts(Voucher $voucher, Carbon $startDate): void
+    protected function assertFundFormulaProducts(Voucher $voucher, Carbon $startDate): void
     {
         if ($voucher->isBudgetType() && $voucher->identity) {
             foreach ($voucher->fund->fund_formula_products as $formulaProduct) {
@@ -338,9 +323,9 @@ trait VoucherTestTrait
     protected function getVoucherAssignedByValue(Voucher $voucher, string $type): ?string
     {
         return match($type) {
-            'client_uid' => $voucher->client_uid,
             'bsn' => $voucher->identity?->bsn ?? ($voucher->voucher_relation->bsn ?? null),
             'email' => $voucher->identity?->email,
+            'client_uid' => $voucher->client_uid,
         };
     }
 
@@ -375,7 +360,6 @@ trait VoucherTestTrait
         $this->assertNotNull($voucher->voucher_relation);
         $this->assertEquals($voucherArr['bsn'], $voucher->voucher_relation->bsn);
 
-        \Cache::flush();
         $identity = $this->makeIdentity(null, ['bsn' => $voucher->voucher_relation->bsn]);
 
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($identity));
@@ -388,7 +372,7 @@ trait VoucherTestTrait
         $this->assertNotNull($voucher->identity);
         $this->assertEquals($identity->address, $voucher->identity->address);
 
-        $this->checkActivation($voucher, true);
+        $this->assertActivation($voucher, true);
     }
 
     /**
@@ -443,16 +427,12 @@ trait VoucherTestTrait
 
     /**
      * @param Voucher $voucher
-     * @param bool $assertActive
+     * @param bool $active
      * @return void
      */
-    protected function checkActivation(
-        Voucher $voucher,
-        bool $assertActive
-    ): void {
-        $this->assertEquals(
-            $voucher->state, $assertActive ? Voucher::STATE_ACTIVE : Voucher::STATE_PENDING
-        );
+    protected function assertActivation(Voucher $voucher, bool $active): void
+    {
+        $this->assertTrue($active ? $voucher->isActivated() : !$voucher->isActivated());
     }
 
     /**
@@ -461,7 +441,7 @@ trait VoucherTestTrait
      * @param bool $assertTransaction
      * @return void
      */
-    protected function checkTransactions(
+    protected function assertDirectPayment(
         Voucher $voucher,
         array $voucherArr,
         bool $assertTransaction
@@ -490,7 +470,7 @@ trait VoucherTestTrait
      * @param array $voucherArr
      * @return void
      */
-    protected function checkFieldsEquals(
+    protected function assertFieldsEquals(
         Voucher $voucher,
         array $voucherArr
     ): void {
@@ -547,87 +527,63 @@ trait VoucherTestTrait
 
     /**
      * @param Fund $fund
-     * @param array $testCase
      * @return void
      * @throws \Throwable
      */
-    protected function makeProviderAndProducts(Fund $fund, array $testCase): void
+    protected function makeProviderAndProducts(Fund $fund): void
     {
-        // make products and assign to fund
-        $providerIdentity = $this->makeIdentity($this->makeUniqueEmail('provider_'));
-        $this->products = $this->makeProducts($providerIdentity, $fund);
+        $this->approvedProducts = $this->makeProducts($fund);
+        $this->emptyStockProducts = $this->makeProducts($fund, 0, 'global');
+        $this->unapprovedProducts = $this->makeProducts();
 
-        // make products with stock 0 and assign to fund
-        $providerIdentity = $this->makeIdentity($this->makeUniqueEmail('provider_'));
-        $this->emptyStockProducts = $this->makeProducts(
-            $providerIdentity, $fund, 0, 'all'
-        );
-
-        // make not assigned for fund products
-        $providerIdentity = $this->makeIdentity($this->makeUniqueEmail('provider_'));
-        $this->notAssignedProducts = $this->makeProducts($providerIdentity);
-
-        if ($testCase['type'] === 'budget') {
+        if ($fund->isTypeBudget()) {
             $this->makeFundFormulaProducts($fund);
         }
     }
 
     /**
-     * @param Identity $identity
      * @param Fund|null $fund
      * @param int $stock
-     * @param string $enableProducts
+     * @param string $allowProducts
      * @return array
      * @throws \Throwable
      */
     protected function makeProducts(
-        Identity $identity,
         ?Fund $fund = null,
         int $stock = 50,
-        string $enableProducts = 'by_limits'
+        string $allowProducts = 'individual',
     ): array {
         $testData = new TestData();
+        $identity = $this->makeIdentity($this->makeUniqueEmail('provider_'));
+        $provider = $testData->makeOrganizations("Provider", $identity->address)[0];
 
-        $organization = $testData->makeOrganizations("Provider", $identity->address)[0];
-        $products = $testData->makeProducts($organization, 10, [
+        $products = $testData->makeProducts($provider, 5, [
+            'sold_out' => $stock === 0,
             'total_amount' => $stock,
             'unlimited_stock' => false,
-            'sold_out' => $stock === 0
         ]);
+
         $this->assertNotEmpty($products, 'Products not created');
 
         if ($fund) {
             /** @var FundProvider $fundProvider */
             $fundProvider = $fund->providers()->firstOrCreate([
-                'organization_id' => $organization->id,
-                'allow_budget' => $fund->isTypeBudget(),
-                'allow_products' => $enableProducts === 'all',
                 'state' => FundProvider::STATE_ACCEPTED,
+                'allow_budget' => $fund->isTypeBudget(),
+                'allow_products' => $allowProducts == 'global',
+                'organization_id' => $provider->id,
             ]);
 
-            FundProviderApplied::dispatch($fund, $fundProvider);
-
-            if ($fundProvider->allow_budget) {
-                FundProviderApprovedBudget::dispatch($fundProvider);
-            }
-
-            if ($fundProvider->allow_products) {
-                FundProviderApprovedProducts::dispatch($fundProvider);
-            }
-
-            if ($enableProducts === 'by_limits') {
-                $productsParams['enable_products'] = [];
-
-                /** @var Product $product */
-                foreach ($products as $product) {
-                    $productsParams['enable_products'][] = array_merge([
+            if ($allowProducts === 'individual') {
+                $this->updateProducts($fund, $fundProvider, [
+                    'enable_products' => array_map(fn (Product $product) => array_merge([
                         'id' => $product->id,
-                        'limit_per_identity' => 1,
                         'limit_total' => rand(1, $stock),
-                    ], $fund->isTypeSubsidy() ? ['amount' => $product->price] : []);
-                }
-
-                $this->updateProducts($fund, $fundProvider, $productsParams);
+                        'limit_per_identity' => 1,
+                    ], $fund->isTypeSubsidy() ? [
+                        'amount' => $product->price,
+                    ] : []), $products),
+                ]);
             }
         }
 
@@ -647,6 +603,7 @@ trait VoucherTestTrait
     ): void {
         $proxy = $this->makeIdentityProxy($fund->organization->identity);
         $headers = $this->makeApiHeaders($proxy);
+
         $url = sprintf(
             $this->apiOrganizationUrl . '/funds/%s/providers/%s',
             $fund->organization->id,
@@ -659,10 +616,10 @@ trait VoucherTestTrait
     }
 
     /**
-     * @param $fundId
+     * @param int $fundId
      * @return Fund
      */
-    protected function findFund($fundId): Fund
+    protected function findFund(int $fundId): Fund
     {
         /** @var Fund $fund */
         $fund = FundQuery::whereActiveFilter(Fund::where('id', $fundId))->first();
@@ -677,16 +634,6 @@ trait VoucherTestTrait
      */
     protected function randomFakeBsn(): int
     {
-        static $randomBsn = [];
-
-        do {
-            try {
-                $bsn = random_int(100000000, 900000000);
-            } catch (\Throwable) {
-                $bsn = false;
-            }
-        } while ($bsn && in_array($bsn, $randomBsn, true));
-
-        return $randomBsn[] = $bsn;
+        return TestData::randomFakeBsn();
     }
 }

@@ -126,6 +126,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
     private function amountRule(Fund $fund): array|string
     {
         return $fund->isTypeBudget() ? [
+            'nullable',
             'required_without:vouchers.*.product_id',
             'numeric',
             'between:.1,' . currency_format($fund->getMaxAmountPerVoucher()),
@@ -141,8 +142,11 @@ class StoreBatchVoucherRequest extends BaseFormRequest
         $vouchers = $this->input('vouchers');
 
         $rule = $fund->isTypeBudget() ? [
+            'nullable',
             'required_without:vouchers.*.amount',
-        ] : [];
+        ] : [
+            'nullable',
+        ];
 
         return array_merge($rule, [
             'exists:products,id',
