@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Support\Arr;
 
 /**
@@ -78,39 +80,22 @@ class EventLog extends Model
     }
 
     /**
-     * todo: migrate all eventsOfTypeQuery to eventsOfTypeQuery2
-     * @param string $loggable_class
-     * @param array|int $loggable_key
-     * @return Builder
-     */
-    public static function eventsOfTypeQuery(
-        string $loggable_class,
-        array|int $loggable_key
-    ): Builder {
-        $query = self::query();
-
-        $query->whereHasMorph('loggable', $loggable_class);
-        $query->where(static function(Builder $builder) use ($loggable_key) {
-            $builder->whereIn('loggable_id', (array) $loggable_key);
-        });
-
-        return $query;
-    }
-
-    /**
      * @param string $loggableType
-     * @param Builder $loggableQuery
-     * @return Builder
+     * @param Builder|Relation|int|array $loggable
+     * @return Builder|EventLog
      */
-    public static function eventsOfTypeQuery2(
-        string $loggableType,
-        Builder $loggableQuery
-    ): Builder {
+    public static function eventsOfTypeQuery(string $loggableType, mixed $loggable): Builder|EventLog
+    {
         $query = self::query();
 
-        $query->whereHasMorph('loggable', $loggableType);
-        $query->where(static function(Builder $builder) use ($loggableQuery) {
-            $builder->whereIn('loggable_id', $loggableQuery->select('id'));
+        $query->whereHasMorph('loggable', $loggableType, function (Builder $builder) use ($loggable) {
+            if ($loggable instanceof Builder ||
+                $loggable instanceof QBuilder ||
+                $loggable instanceof Relation) {
+                $builder->whereIn('id', (clone $loggable)->select('id'));
+            } else {
+                $builder->whereIn('id', (array) $loggable);
+            }
         });
 
         return $query;

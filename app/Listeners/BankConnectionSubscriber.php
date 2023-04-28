@@ -6,6 +6,7 @@ use App\Events\BankConnections\BankConnectionActivated;
 use App\Events\BankConnections\BankConnectionCreated;
 use App\Events\BankConnections\BankConnectionDisabled;
 use App\Events\BankConnections\BankConnectionDisabledInvalid;
+use App\Events\BankConnections\BankConnectionExpiring;
 use App\Events\BankConnections\BankConnectionMonetaryAccountChanged;
 use App\Events\BankConnections\BankConnectionRejected;
 use App\Events\BankConnections\BankConnectionReplaced;
@@ -14,6 +15,7 @@ use App\Models\BankConnection;
 use App\Models\Employee;
 use App\Notifications\Organizations\BankConnections\BankConnectionActivatedNotification;
 use App\Notifications\Organizations\BankConnections\BankConnectionDisabledInvalidNotification;
+use App\Notifications\Organizations\BankConnections\BankConnectionExpiringNotification;
 use App\Notifications\Organizations\BankConnections\BankConnectionMonetaryAccountChangedNotification;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Events\Dispatcher;
@@ -124,6 +126,17 @@ class BankConnectionSubscriber
     }
 
     /**
+     * @param BankConnectionExpiring $event
+     * @noinspection PhpUnused
+     */
+    public function onBankConnectionExpiring(BankConnectionExpiring $event): void
+    {
+        $eventLog = $this->makeEvent($event, $event->getBankConnection()::EVENT_EXPIRING);
+
+        BankConnectionExpiringNotification::send($eventLog);
+    }
+
+    /**
      * The events dispatcher
      *
      * @param Dispatcher $events
@@ -140,5 +153,6 @@ class BankConnectionSubscriber
         $events->listen(BankConnectionReplaced::class, "$class@onBankConnectionReplaced");
         $events->listen(BankConnectionDisabledInvalid::class, "$class@onBankConnectionDisabledInvalid");
         $events->listen(BankConnectionMonetaryAccountChanged::class, "$class@onBankConnectionMonetaryAccountChanged");
+        $events->listen(BankConnectionExpiring::class, "$class@onBankConnectionExpiring");
     }
 }

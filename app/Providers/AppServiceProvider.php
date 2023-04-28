@@ -41,6 +41,7 @@ use App\Models\ProductCategory;
 use App\Models\Voucher;
 use App\Services\MediaService\MediaService;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
@@ -105,6 +106,10 @@ class AppServiceProvider extends ServiceProvider
         StringHelper::setThousandsSeparator(',');
 
         FundProvider::observe(FundProviderObserver::class);
+
+        if (Config::get('app.memory_limit')) {
+            ini_set('memory_limit', Config::get('app.memory_limit'));
+        }
     }
 
     /**

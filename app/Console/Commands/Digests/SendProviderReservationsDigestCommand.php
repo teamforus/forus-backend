@@ -16,7 +16,7 @@ class SendProviderReservationsDigestCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'forus.digest.provider_reservations:send';
+    protected $signature = 'forus.digest:provider_reservations';
 
     /**
      * The console command description.
@@ -32,6 +32,6 @@ class SendProviderReservationsDigestCommand extends Command
      */
     public function handle(): void
     {
-        ProviderReservationsDigest::dispatchNow();
+        ProviderReservationsDigest::dispatchSync();
     }
 }

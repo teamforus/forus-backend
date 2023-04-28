@@ -45,7 +45,7 @@ class ImplementationPagesController extends Controller
      * @param Organization $organization
      * @param Implementation $implementation
      * @return ImplementationPageResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Throwable
      */
     public function store(
         StoreImplementationPageRequest $request,
@@ -126,7 +126,7 @@ class ImplementationPagesController extends Controller
      * @param Implementation $implementation
      * @param ImplementationPage $implementationPage
      * @return ImplementationPageResource
-     * @throws AuthorizationException
+     * @throws AuthorizationException|\Throwable
      */
     public function update(
         UpdateImplementationPageRequest $request,

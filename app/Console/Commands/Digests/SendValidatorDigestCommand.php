@@ -16,7 +16,7 @@ class SendValidatorDigestCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'forus.digest.validator:send';
+    protected $signature = 'forus.digest:validator';
 
     /**
      * The console command description.
@@ -32,6 +32,6 @@ class SendValidatorDigestCommand extends Command
      */
     public function handle(): void
     {
-        ValidatorDigest::dispatchNow();
+        ValidatorDigest::dispatchSync();
     }
 }

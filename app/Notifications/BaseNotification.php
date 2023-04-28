@@ -13,6 +13,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notification;
+use App\Mail\ImplementationMail;
 
 abstract class BaseNotification extends Notification implements ShouldQueue
 {
@@ -306,6 +307,10 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      */
     public function sendMailNotification(string $email, Mailable $mailable): bool
     {
+        if ($mailable instanceof ImplementationMail) {
+            $mailable->setPreferencesLink($this->implementation?->makePreferencesLink(static::$scope));
+        }
+
         return $this->getNotificationService()->sendMailNotification($email, $mailable);
     }
 
@@ -365,7 +370,8 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         $template = SystemNotification::findTemplate(
             static::getKey(),
             'push',
-            $this->implementation->key ?? Implementation::KEY_GENERAL
+            $this->implementation->key ?? Implementation::KEY_GENERAL,
+            $this->eventLog?->data['fund_id'] ?? null,
         );
 
         $this->getNotificationService()->sendPushNotification(

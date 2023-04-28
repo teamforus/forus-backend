@@ -8,6 +8,8 @@ namespace App\Mail\Digest;
  */
 class DigestProviderFundsMail extends BaseDigestMail
 {
+    protected ?string $preferencesLinkDashboard = 'provider';
+
     public function __construct($viewData = [])
     {
         parent::__construct($viewData);

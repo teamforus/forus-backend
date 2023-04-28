@@ -26,5 +26,6 @@
         <env name="QUEUE_DRIVER" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="TEST_DATA_CONFIG" value="default"/>
     </php>
 </phpunit>

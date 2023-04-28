@@ -7,6 +7,8 @@ use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequestRecords\FundRequestRecordAssigned;
 use App\Events\FundRequestRecords\FundRequestRecordResigned;
 use App\Events\FundRequests\FundRequestResolved;
+use App\Models\Traits\HasNotes;
+use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
 use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Searches\FundRequestSearch;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -15,7 +17,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Http\Request;
 
 /**
  * App\Models\FundRequest
@@ -68,7 +69,7 @@ use Illuminate\Http\Request;
  */
 class FundRequest extends BaseModel
 {
-    use HasLogs;
+    use HasLogs, HasNotes;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_APPROVED = 'approved';
@@ -532,14 +533,14 @@ class FundRequest extends BaseModel
 
     /**
      * Export fund requests
-     * @param Request $request
+     * @param IndexFundRequestsRequest $request
      * @param Employee $employee
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    public static function exportSponsor(Request $request, Employee $employee): mixed
+    public static function exportSponsor(IndexFundRequestsRequest $request, Employee $employee): mixed
     {
         $search = (new FundRequestSearch($request->only([
-            'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir',
+            'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir', 'assigned',
         ])))->setEmployee($employee);
 
         return self::exportTransform($search->query());

@@ -5,8 +5,8 @@ namespace App\Digests;
 use App\Mail\Digest\BaseDigestMail;
 use App\Mail\MailBodyBuilder;
 use App\Models\Organization;
-use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\Forus\Notification\NotificationService;
+use Carbon\Carbon;
 
 /**
  * Class BaseOrganizationDigest
@@ -34,18 +34,18 @@ abstract class BaseOrganizationDigest
     /**
      * @param Organization $organization
      * @param NotificationService $notificationService
-     * @return mixed
+     * @return void
      */
     abstract protected function handleOrganizationDigest(
         Organization $organization,
         NotificationService $notificationService
-    );
+    ): void;
 
     /**
-     * @param Organization|HasDigests $organization
-     * @return \Carbon\Carbon|\Illuminate\Support\Carbon
+     * @param Organization $organization
+     * @return Carbon
      */
-    public function getOrganizationDigestTime(Organization $organization)
+    public function getLastOrganizationDigestTime(Organization $organization): Carbon
     {
         return $organization->lastDigestOfType($this->digestKey)->created_at ?? now()->subDay();
     }
