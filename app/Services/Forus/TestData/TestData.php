@@ -87,15 +87,17 @@ class TestData
      */
     public function makeIdentity(?string $email = null, bool $print = false): ?Identity
     {
+        $emailPattern = $this->config('fund_request_email_pattern');
+        $emailSlug = Str::kebab(substr($this->faker->text(rand(15, 30)), 0, -1));
+
         $email = $email ?: strtolower(sprintf(
-            $this->config('fund_request_email_pattern'),
-            $this->integerToRoman($this->emailNth++)
+            $emailPattern, $emailSlug . '-' . $this->integerToRoman($this->emailNth++),
         ));
 
         $identity = Identity::make($email, [
             'primary_email' => $email,
-            'given_name' => 'John',
-            'family_name' => 'Doe'
+            'given_name' => $this->faker->firstName,
+            'family_name' => $this->faker->lastName,
         ]);
 
         $identity->primary_email->setVerified();
@@ -326,24 +328,17 @@ class TestData
         array $fields = [],
         int $offices_count = 0
     ): array {
-        $out = [];
-        $nth = 1;
-
         $fields = array_merge($fields, [
             'is_validator' => $prefix === 'Validator',
             'is_provider' => $prefix === 'Provider',
         ]);
 
-        while ($count-- > 0) {
-            $out[] = $this->makeOrganization(
-                sprintf('%s #%s: %s', $prefix, $nth++, $this->makeRandomName(20, 40)),
-                $identity_address,
-                $fields,
-                $offices_count
-            );
-        }
-
-        return $out;
+        return array_map(fn ($nth) => $this->makeOrganization(
+            sprintf('%s #%s: %s', $prefix, $nth, $this->makeName(5, 90 - strlen($prefix))),
+            $identity_address,
+            $fields,
+            $offices_count,
+        ), range(1, $count));
     }
 
     /**
@@ -364,7 +359,10 @@ class TestData
             'kvk' => Organization::GENERIC_KVK,
             'iban' => $this->config('default_organization_iban') ?: $this->faker->iban('NL'),
             'phone' => '123456789',
-            'email' => $this->config('primary_email'),
+            'email' => sprintf(
+                $this->config('organization_email_pattern'),
+                Str::kebab(substr($this->faker->text(random_int(15, 30)), 0, -1)),
+            ),
             'bsn_enabled' => true,
             'phone_public' => true,
             'email_public' => true,
@@ -455,11 +453,12 @@ class TestData
         $validator = $organization->employeesOfRoleQuery('validation')->firstOrFail();
         $autoValidation = Arr::get($config, 'auto_requests_validation', false);
 
-        $fund = $organization->createFund(array_merge([
+        $fund = $organization->funds()->create(array_merge([
             'name'                          => $name,
             'start_date'                    => Carbon::now()->format('Y-m-d'),
             'end_date'                      => Carbon::now()->addDays(60)->format('Y-m-d'),
             'state'                         => Fund::STATE_ACTIVE,
+            'description'                   => $this->faker->text(rand(600, 6500)),
             'notification_amount'           => 10000,
             'auto_requests_validation'      => $autoValidation,
             'default_validator_employee_id' => $autoValidation ? $validator->id : null,
@@ -762,24 +761,15 @@ class TestData
     }
 
     /**
-     * @param Organization $organization
+     * @param Organization $provider
      * @param int $count
-     * @param array $fields
+     * @param array $data
      * @return array
      * @throws \Throwable
      */
-    public function makeProducts(
-        Organization $organization,
-        int $count = 10,
-        array $fields = []
-    ): array {
-        $out = [];
-
-        while ($count-- > 0) {
-            $out[] = $this->makeProduct($organization, $fields);
-        }
-
-        return $out;
+    public function makeProducts(Organization $provider, int $count = 10, array $data = []): array
+    {
+        return array_map(fn () => $this->makeProduct($provider, $data), range(1, $count));
     }
 
     /**
@@ -788,12 +778,10 @@ class TestData
      * @return Product
      * @throws \Throwable
      */
-    public function makeProduct(
-        Organization $organization,
-        array $fields = []
-    ): Product {
+    public function makeProduct(Organization $organization, array $fields = []): Product
+    {
         do {
-            $name = '#' . random_int(100000, 999999) . " " . $this->makeRandomName();
+            $name = '#' . random_int(100000, 999999) . " " . $this->makeName(10, 140);
         } while(Product::query()->where('name', $name)->count() > 0);
 
         $price = random_int(1, 20);
@@ -838,9 +826,9 @@ class TestData
      * @return string
      * @throws \Exception
      */
-    protected function makeRandomName(int $minLength = 75, int $maxLength = 150): string
+    protected function makeName(int $minLength = 75, int $maxLength = 150): string
     {
-        return $this->faker->text(random_int(10, random_int(0, 3) >= 3 ? $maxLength : $minLength));
+        return $this->faker->text(random_int($minLength, $maxLength));
     }
 
     /**
