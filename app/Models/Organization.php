@@ -769,16 +769,6 @@ class Organization extends BaseModel
     }
 
     /**
-     * @param $attributes
-     * @return Fund|\Illuminate\Database\Eloquent\Model
-     */
-    public function createFund($attributes) {
-        return Fund::create(array_merge([
-            'organization_id' => $this->id,
-        ], $attributes));
-    }
-
-    /**
      * @param Organization $validatorOrganization
      */
     public function detachExternalValidator(
