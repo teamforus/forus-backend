@@ -20,7 +20,7 @@ class RolesTableSeeder extends Seeder
             'en' => 'Validator',
             'nl' => 'Beoordelaar',
         ],
-        'supervisor_validation' => [
+        'supervisor_validator' => [
             'en' => 'Supervisor validator',
             'nl' => 'Manager beoordelaars',
         ],
