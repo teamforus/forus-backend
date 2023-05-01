@@ -34,44 +34,97 @@ class StoreVoucherRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        /** @var Fund $fund */
-        $fund = $this->organization->funds()->find($this->input('fund_id'));
+        $fund = $this->getFund();
         $bsn_enabled = $this->organization->bsn_enabled;
 
-        $funds = $this->organization->funds()->where(function(Builder $builder) {
-            FundQuery::whereIsInternal($builder);
-            FundQuery::whereIsConfiguredByForus($builder);
-        });
-
         return [
-            'fund_id'   => [
-                'required',
-                Rule::exists('funds', 'id')->whereIn('id', $funds->pluck('id')->toArray())
-            ],
-            'email'     => 'nullable|required_if:assign_by_type,email|email:strict',
-            'bsn'       => $bsn_enabled ? 'nullable|required_if:assign_by_type,bsn|digits:9' : 'nullable|in:',
-            'note'      => 'nullable|string|max:280',
-            'amount'    => [
-                $fund && $fund->isTypeBudget() ? 'required_without:product_id' : 'nullable',
-                'numeric',
-                'between:.1,' . ($fund ? currency_format($fund->getMaxAmountPerVoucher()) : .1),
-            ],
-            'expire_at' => [
-                'nullable',
-                'date_format:Y-m-d',
-                'after:' . ($fund?->start_date->format('Y-m-d')),
-                'before_or_equal:' . ($fund?->end_date->format('Y-m-d')),
-            ],
-            'product_id' => [
-                $fund && $fund->isTypeBudget() ? 'required_without:amount' : 'nullable',
-                'exists:products,id',
-                $fund ? new ProductIdInStockRule($fund) : Rule::in([]),
-            ],
+            'fund_id'               => $this->fundIdRule(),
+            'email'                 => 'nullable|required_if:assign_by_type,email|email:strict',
+            'bsn'                   => $this->bsnRule($bsn_enabled),
+            'note'                  => 'nullable|string|max:280',
+            'amount'                => $this->amountRule($fund),
+            'expire_at'             => $this->expireAtRule($fund),
+            'product_id'            => $this->productIdRule($fund),
             'activate'              => 'boolean',
             'activation_code'       => 'boolean',
             'client_uid'            => 'nullable|string|max:20',
             'assign_by_type'        => 'required|in:' . $this->availableAssignTypes($bsn_enabled),
             'limit_multiplier'      => 'nullable|numeric|min:1|max:1000',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    private function fundIdRule(): array
+    {
+        $fundIds = $this->organization->funds()->where(function(Builder $builder) {
+            FundQuery::whereIsInternal($builder);
+            FundQuery::whereIsConfiguredByForus($builder);
+        })->pluck('id')->toArray();
+
+        return [
+            'required',
+            Rule::exists('funds', 'id')->whereIn('id', $fundIds)
+        ];
+    }
+
+    /**
+     * @param Fund $fund
+     * @return string|string[]
+     */
+    private function amountRule(Fund $fund): array|string
+    {
+        return $fund->isTypeBudget() ? [
+            'nullable',
+            'required_without:product_id',
+            'numeric',
+            'between:.1,' . currency_format($fund->getMaxAmountPerVoucher()),
+        ] : 'nullable';
+    }
+
+    /**
+     * @param Fund $fund
+     * @return string[]
+     */
+    private function productIdRule(Fund $fund): array
+    {
+        $rule = $fund->isTypeBudget() ? [
+            'nullable', 'required_without:amount',
+        ] : [
+            'nullable',
+        ];
+
+        return array_merge($rule, [
+            'exists:products,id',
+            new ProductIdInStockRule($fund)
+        ]);
+    }
+
+    /**
+     * @param Fund $fund
+     * @return string[]
+     */
+    private function expireAtRule(Fund $fund): array
+    {
+        return [
+            'nullable',
+            'date_format:Y-m-d',
+            'after:' . $fund->start_date->format('Y-m-d'),
+            'before_or_equal:' . $fund->end_date->format('Y-m-d'),
+        ];
+    }
+
+    /**
+     * @param bool $bsn_enabled
+     * @return string[]
+     */
+    private function bsnRule(bool $bsn_enabled): array
+    {
+        return $bsn_enabled ? [
+            'nullable', 'required_if:assign_by_type,bsn', 'digits:9',
+        ] : [
+            'nullable', 'in:'
         ];
     }
 
@@ -84,6 +137,17 @@ class StoreVoucherRequest extends BaseFormRequest
         return implode(",", array_filter([
             'email', 'activation_code', $bsn_enabled ? 'bsn' : null,
         ]));
+    }
+
+    /**
+     * @return Fund
+     */
+    private function getFund(): Fund
+    {
+        /** @var Fund $fund */
+        $fund = $this->organization->funds()->findOrFail($this->input('fund_id'));
+
+        return $fund;
     }
 
     /**
