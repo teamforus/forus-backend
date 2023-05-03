@@ -2,13 +2,13 @@
 
 return [
     'Zuidhorn' => [
-        'implementation' => 'Zuidhorn',
-        'organization' => 'Zuidhorn',
-        'data' => [
+        'implementation_name' => 'Zuidhorn',
+        'organization_name' => 'Zuidhorn',
+        'fund' => [
             'type' => 'budget',
             'criteria_editable_after_start' => true,
         ],
-        'data_config' => [
+        'fund_config' => [
             'key' => 'zuidhorn',
             'allow_reimbursements' => true,
             'allow_voucher_top_ups' => true,
@@ -16,14 +16,14 @@ return [
         ],
     ],
     'Nijmegen' => [
-        'implementation' => 'Nijmegen',
-        'organization' => 'Nijmegen',
-        'data' => [
+        'implementation_name' => 'Nijmegen',
+        'organization_name' => 'Nijmegen',
+        'fund' => [
             'type' => 'budget',
             'auto_requests_validation' => true,
             'criteria_editable_after_start' => true,
         ],
-        'data_config' => [
+        'fund_config' => [
             'key' => 'meedoen',
             'allow_reimbursements' => true,
             'allow_physical_cards' => true,
@@ -34,30 +34,30 @@ return [
         ],
     ],
     'Nijmegen II' => [
-        'implementation' => 'Nijmegen',
-        'organization' => 'Nijmegen',
-        'data' => [
+        'implementation_name' => 'Nijmegen',
+        'organization_name' => 'Nijmegen',
+        'fund' => [
             'type' => 'budget',
         ],
     ],
     'Nijmegen III' => [
-        'implementation' => 'Nijmegen',
-        'organization' => 'Nijmegen',
-        'data' => [
+        'implementation_name' => 'Nijmegen',
+        'organization_name' => 'Nijmegen',
+        'fund' => [
             'type' => 'subsidies',
         ],
     ],
     'Westerkwartier' => [
-        'implementation' => 'Westerkwartier',
-        'organization' => 'Westerkwartier',
-        'data' => [
+        'implementation_name' => 'Westerkwartier',
+        'organization_name' => 'Westerkwartier',
+        'fund' => [
             'type' => 'budget',
         ],
     ],
     'Stadjerspas: Jeugd' => [
-        'implementation' => 'Stadjerspas',
-        'organization' => 'Gemeente Groningen',
-        'data' => [
+        'implementation_name' => 'Stadjerspas',
+        'organization_name' => 'Gemeente Groningen',
+        'fund' => [
             'description_text' => "",
             'description_short' => "Stadjerspas voor volwassenen.",
             'request_btn_text' => "Aanvragen",
@@ -75,7 +75,7 @@ return [
             'default_validator_employee_id' => null,
             'auto_requests_validation' => false,
         ],
-        'data_config' => [
+        'fund_config' => [
             'key' => "stadjerspas",
             'record_validity_days' => null,
             'hash_bsn' => true,
@@ -110,7 +110,7 @@ return [
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false
         ],
-        "data_criteria" => [
+        "fund_criteria" => [
             [
                 'record_type_key' => "stadjerspas_eligible",
                 'operator' => "=",
@@ -150,19 +150,19 @@ return [
                 ])
             ]
         ],
-        'data_formula' => [
+        'fund_formula' => [
             [
                 'type' => "fixed",
                 'amount' => "0.00",
                 'record_type_key' => null,
             ],
         ],
-        'data_limit_multiplier' => null,
+        'fund_limit_multiplier' => null,
     ],
     'Stadjerspas' => [
-        'implementation' => 'Stadjerspas',
-        'organization' => 'Gemeente Groningen',
-        'data' => [
+        'implementation_name' => 'Stadjerspas',
+        'organization_name' => 'Gemeente Groningen',
+        'fund' => [
             'name' => "Stadjerspas",
             'description_text' => "",
             'description_short' => "Stadjerspas voor volwassenen.",
@@ -181,7 +181,7 @@ return [
             'default_validator_employee_id' => null,
             'auto_requests_validation' => false,
         ],
-        'data_config' => [
+        'fund_config' => [
             'key' => "stadjerspas",
             'record_validity_days' => null,
             'hash_bsn' => true,
@@ -217,7 +217,7 @@ return [
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false,
         ],
-        "data_criteria" => [
+        "fund_criteria" => [
             [
                 'record_type_key' => "income_level",
                 'operator' => "=",
@@ -257,61 +257,61 @@ return [
                 ]),
             ]
         ],
-        'data_formula' => [
+        'fund_formula' => [
             [
                 'type' => "fixed",
                 'amount' => "0.00",
                 'record_type_key' => null,
             ],
         ],
-        'data_limit_multiplier' => null,
+        'fund_limit_multiplier' => null,
     ],
     'Berkelland' => [
-        'implementation' => 'Berkelland',
-        'organization' => 'Berkelland',
-        'data' => [
+        'implementation_name' => 'Berkelland',
+        'organization_name' => 'Berkelland',
+        'fund' => [
             'type' => 'budget',
         ],
     ],
     'Kerstpakket' => [
-        'implementation' => 'Kerstpakket',
-        'organization' => 'Kerstpakket',
-        'data' => [
+        'implementation_name' => 'Kerstpakket',
+        'organization_name' => 'Kerstpakket',
+        'fund' => [
             'type' => 'budget',
         ],
     ],
     'Noordoostpolder' => [
-        'implementation' => 'Noordoostpolder',
-        'organization' => 'Noordoostpolder',
-        'data' => [
+        'implementation_name' => 'Noordoostpolder',
+        'organization_name' => 'Noordoostpolder',
+        'fund' => [
             'type' => 'budget',
         ],
     ],
     'Oostgelre' => [
-        'implementation' => 'Oostgelre',
-        'organization' => 'Oostgelre',
-        'data' => [
+        'implementation_name' => 'Oostgelre',
+        'organization_name' => 'Oostgelre',
+        'fund' => [
             'type' => 'budget',
         ],
     ],
     'Winterswijk' => [
-        'implementation' => 'Winterswijk',
-        'organization' => 'Winterswijk',
-        'data' => [
+        'implementation_name' => 'Winterswijk',
+        'organization_name' => 'Winterswijk',
+        'fund' => [
             'type' => 'budget',
         ],
     ],
     'Potjeswijzer' => [
-        'implementation' => 'Potjeswijzer',
-        'organization' => 'Potjeswijzer',
-        'data' => [
+        'implementation_name' => 'Potjeswijzer',
+        'organization_name' => 'Potjeswijzer',
+        'fund' => [
             'type' => 'budget',
         ],
     ],
     'Doetegoed' => [
-        'implementation' => 'Doetegoed',
-        'organization' => 'Doetegoed',
-        'data' => [
+        'implementation_name' => 'Doetegoed',
+        'organization_name' => 'Doetegoed',
+        'fund' => [
             'type' => 'budget',
         ],
     ],

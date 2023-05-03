@@ -3,13 +3,13 @@
 return [
     'Zuidhorn' => [
         'offices_count' => 0,
-        'data' => [
+        'organization' => [
             'allow_custom_fund_notifications' => true,
         ]
     ],
     'Nijmegen' => [
         'offices_count' => 0,
-        'data' => [
+        'organization' => [
             'backoffice_available' => true,
             'allow_budget_fund_limits' => true,
             'allow_manual_bulk_processing' => true,
@@ -18,7 +18,7 @@ return [
     ],
     'Gemeente Groningen' => [
         'offices_count' => 0,
-        'data' => [
+        'organization' => [
             'website_public' => true,
             'business_type_id' => 585,
             'is_sponsor' => true,

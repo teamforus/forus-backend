@@ -2,14 +2,14 @@
 
 return [
     'Zuidhorn' => [
-        'data' => [
+        'implementation' => [
             'digid_connection_type' => 'cgi',
             'digid_sign_up_allowed' => true,
             'informal_communication' => true,
         ],
     ],
     'Nijmegen' => [
-        'data' => [
+        'implementation' => [
             'digid_connection_type' => 'saml',
             'digid_sign_up_allowed' => true,
             'informal_communication' => true,
@@ -17,7 +17,7 @@ return [
         ],
     ],
     'Stadjerspas' => [
-        'data' => [
+        'implementation' => [
             'key' => "groningen",
             'title' => "Doe jij al mee met de Stadjerspas?",
             'description' => "Welkom op de website van de Stadjerspas. U kan hier de regeling aanvragen en het aanbod bekijken.",
