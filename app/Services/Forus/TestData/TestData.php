@@ -125,7 +125,7 @@ class TestData
      */
     public function makeSponsors(string $identity_address): array
     {
-        $organizations = array_unique(Arr::pluck($this->config('funds'), 'organization'));
+        $organizations = array_unique(Arr::pluck($this->config('funds'), 'organization_name'));
 
         $organizations = array_map(function($implementation) use ($identity_address) {
             return $this->makeOrganization($implementation, $identity_address, [
@@ -369,7 +369,7 @@ class TestData
             'business_type_id' => BusinessType::pluck('id')->random(),
             'reservations_budget_enabled' => true,
             'reservations_subsidy_enabled' => true,
-        ], $fields, $this->config("organizations.$name.data", []));
+        ], $fields, $this->config("organizations.$name.organization", []));
 
         $organization = Organization::forceCreate(array_merge($data, [
             'name' => $name,
@@ -449,10 +449,11 @@ class TestData
     public function makeFund(Organization $organization, string $name): Fund
     {
         /** @var \App\Models\Employee$validator $validator */
-        $config = $this->config("funds.$name.data", []);
+        $config = $this->config("funds.$name.fund", []);
         $validator = $organization->employeesOfRoleQuery('validation')->firstOrFail();
         $autoValidation = Arr::get($config, 'auto_requests_validation', false);
 
+        /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge([
             'name'                          => $name,
             'start_date'                    => Carbon::now()->format('Y-m-d'),
@@ -499,7 +500,7 @@ class TestData
 
         $urlData = $this->makeImplementationUrlData($key);
         $samlData = $this->makeImplementationSamlData();
-        $configData = $this->config("implementations.$name.data", []);
+        $configData = $this->config("implementations.$name.implementation", []);
 
         return Implementation::forceCreate(array_merge([
             'key' => $key,
@@ -549,11 +550,11 @@ class TestData
      */
     public function makeFundConfig(Fund $fund): FundConfig
     {
-        $implementationName = $this->config("funds.$fund->name.implementation");
+        $implementationName = $this->config("funds.$fund->name.implementation_name");
         $implementation = Implementation::where('name', $implementationName)->first();
         $implementation = $implementation ?: $this->makeImplementation($implementationName, $fund->organization);
 
-        $config = $this->config("funds.$fund->name.data_config", []);
+        $config = $this->config("funds.$fund->name.fund_config", []);
         $hashBsn = Arr::get($config, "hash_bsn", false);
         $emailRequired = Arr::get($config, "email_required", true);
 
@@ -596,9 +597,9 @@ class TestData
      */
     public function makeFundCriteriaAndFormula(Fund $fund): void
     {
-        $configFormula = $this->config("funds.$fund->name.data_formula");
-        $configCriteria = $this->config("funds.$fund->name.data_criteria");
-        $configLimitMultiplier = $this->config("funds.$fund->name.data_limit_multiplier");
+        $configFormula = $this->config("funds.$fund->name.fund_formula");
+        $configCriteria = $this->config("funds.$fund->name.fund_criteria");
+        $configLimitMultiplier = $this->config("funds.$fund->name.fund_limit_multiplier");
 
         $eligibility_key = sprintf("%s_eligible", $fund->load('fund_config')->fund_config->key);
         $criteria = [];
@@ -931,7 +932,7 @@ class TestData
      */
     public function getConfigGroup(string $key): array
     {
-        return array_filter(array_merge(Config::get("forus.test_data.configs.$key.config"), [
+        return array_filter(array_merge(Config::get("forus.test_data.configs.$key.config", []), [
             'funds' => Config::get("forus.test_data.configs.$key.funds"),
             'record_types' => Config::get("forus.test_data.configs.$key.record_types"),
             'organizations' => Config::get("forus.test_data.configs.$key.organizations"),
@@ -1022,7 +1023,7 @@ class TestData
     private function makeSponsorFunds(Organization $sponsor): void
     {
         $funds = Arr::where($this->config('funds'), function ($fund) use ($sponsor) {
-            return $fund['organization'] == $sponsor->name;
+            return $fund['organization_name'] == $sponsor->name;
         });
 
         $fundTag = collect(['Tag I', 'Tag II', 'Tag III'])->random();
