@@ -25,7 +25,7 @@ class VoucherBatchTest extends DuskTestCase
     /**
      * @var string
      */
-    protected string $organizationName = 'Stadjerspas';
+    protected string $organizationName = 'Nijmegen';
 
     /**
      * @var string
