@@ -1,8 +1,11 @@
-name: Run autotests
+name: Run browser tests
 
 on:
-  push:
-    branches: '**'
+  schedule:
+    - cron: '00 3 * * *'
+  pull_request:
+    branches:
+      - release/*
   workflow_dispatch:
     inputs:
       frontend_branch:
@@ -53,14 +56,6 @@ jobs:
       - name: Generate test data
         working-directory: forus-backend
         run: docker-compose exec -T app php artisan test-data:seed
-
-      - name: --- RUN UNIT TESTS ----
-        working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "./vendor/bin/phpunit --debug --verbose --testdox tests/Unit/."
-
-      - name: --- RUN FEATURE TESTS ----
-        working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "./vendor/bin/phpunit --debug --verbose --testdox tests/Feature/."
 
       - name: "Set frontend branch value for manual and auto runs"
         run: |
