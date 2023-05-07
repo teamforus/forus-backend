@@ -254,7 +254,7 @@ class ProductReservationTest extends TestCase
     public function testReservationArchiving(): void
     {
         /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationName)->first();
+        $organization = Organization::where('name', $this->organizationBudgetName)->first();
         $this->assertNotNull($organization);
 
         $identity = $organization->identity;
