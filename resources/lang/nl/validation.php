@@ -196,6 +196,8 @@ return [
             'De reservering (#:code) kan niet gescant worden, de status van deze reservering is ":state".',
             'Ga naar de beheeromgeving om de reservering te beoordelen.'
         ]),
+        'too_many_canceled_reservations_for_product' => 'There are too many canceled reservations',
+        'too_many_reservation_requests_for_product' => 'There are too many reservation requests for this product',
     ],
     'employees' => [
         'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',

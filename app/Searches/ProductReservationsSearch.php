@@ -3,7 +3,7 @@
 
 namespace App\Searches;
 
-
+use App\Models\Implementation;
 use App\Models\ProductReservation;
 use App\Scopes\Builders\ProductReservationQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,6 +26,9 @@ class ProductReservationsSearch extends BaseSearch
     public function query(): ?Builder
     {
         $builder = parent::query();
+
+        $clientType = $this->getFilter('client_type');
+        $isWebshop = $clientType === Implementation::FRONTEND_WEBSHOP;
 
         if ($this->hasFilter('q') && $this->getFilter('q')) {
             $builder = ProductReservationQuery::whereQueryFilter($builder, $this->getFilter('q'));
@@ -60,11 +63,11 @@ class ProductReservationsSearch extends BaseSearch
         }
 
         if ($this->hasFilter('archived') && $this->getFilter('archived')) {
-            ProductReservationQuery::whereArchived($builder);
+            ($isWebshop) ? ProductReservationQuery::whereArchived($builder) : $builder->where('archived', true);
         }
 
         if ($this->hasFilter('archived') && !$this->getFilter('archived')) {
-            ProductReservationQuery::whereNotArchived($builder);
+            ($isWebshop) ? ProductReservationQuery::whereNotArchived($builder) : $builder->where('archived', false);
         }
 
         return $builder;

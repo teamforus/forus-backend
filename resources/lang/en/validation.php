@@ -209,6 +209,8 @@ return [
             'The reservation (#:code) is not pending, the current state is ":state".',
             'Please go to the dashboard to review and accept the reservation.'
         ]),
+        'too_many_canceled_reservations_for_product' => 'There are too many canceled reservations',
+        'too_many_reservation_requests_for_product' => 'There are too many reservation requests for this product',
     ],
     'attributes' => [
         'pin_code' => "Pin code",

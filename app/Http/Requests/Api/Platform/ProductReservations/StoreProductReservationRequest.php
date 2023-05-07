@@ -8,6 +8,7 @@ use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Rules\ProductReservations\ProductIdToReservationRule;
 use App\Rules\Vouchers\IdentityVoucherAddressRule;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -20,9 +21,14 @@ class StoreProductReservationRequest extends BaseFormRequest
      * Determine if the user is authorized to make this request.
      *
      * @return bool
+     * @throws \App\Exceptions\AuthorizationJsonException
      */
     public function authorize(): bool
     {
+        $this->maxAttempts = Config::get('forus.throttles.product_reservation_store.attempts', 30);
+        $this->decayMinutes = Config::get('forus.throttles.product_reservation_store.decay', 10);
+        $this->throttleWithKey('to_many_attempts', $this, 'user_reservation_store');
+
         return $this->isAuthenticated() && Gate::allows('create', ProductReservation::class);
     }
 

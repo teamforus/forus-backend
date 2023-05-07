@@ -248,6 +248,23 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testReservationArchiving(): void
+    {
+        /** @var Organization $organization */
+        $organization = Organization::where('name', $this->organizationName)->first();
+        $this->assertNotNull($organization);
+
+        $identity = $organization->identity;
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $product = $this->findProductForReservation($voucher);
+
+        $this->checkReservationArchiving($identity, $voucher, $product);
+    }
+
+    /**
      * @param Identity $identity
      * @param Voucher $voucher
      * @param Product $product
@@ -277,6 +294,44 @@ class ProductReservationTest extends TestCase
 
         $reservation = ProductReservation::find($reservation->id);
         $this->assertTrue($reservation->isCanceledByClient());
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Voucher $voucher
+     * @param Product $product
+     * @return void
+     * @throws \Throwable
+     */
+    private function checkReservationArchiving(
+        Identity $identity,
+        Voucher $voucher,
+        Product $product
+    ): void {
+        $proxy = $this->makeIdentityProxy($identity);
+        $headers = $this->makeApiHeaders($proxy);
+
+        $reservation = $this->makeReservation($identity, $voucher, $product);
+        $reservationUrl = "/api/v1/platform/organizations/$product->organization_id/product-reservations/$reservation->id";
+
+        // Check product reservation archiving
+        $this->post("$reservationUrl/archive", [], $headers)->assertForbidden();
+
+        $reservation = ProductReservation::find($reservation->id);
+        $reservation->acceptProvider();
+        $reservation->rejectOrCancelProvider();
+
+        $response = $this->post("$reservationUrl/archive", [], $headers)->assertSuccessful();
+        $response->assertJsonStructure(['data' => $this->resourceStructure]);
+
+        $this->assertTrue($reservation->refresh()->isArchived());
+
+        // Check product reservation un-archiving
+        $response = $this->post("$reservationUrl/unarchive", [], $headers)->assertSuccessful();
+        $response->assertJsonStructure(['data' => $this->resourceStructure]);
+
+        $reservation = ProductReservation::find($reservation->id);
+        $this->assertFalse($reservation->isArchived());
     }
 
     /**

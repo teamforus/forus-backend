@@ -3,6 +3,7 @@
 namespace App\Rules\ProductReservations;
 
 use App\Models\Product;
+use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Rules\BaseRule;
 use App\Scopes\Builders\ProductQuery;
@@ -82,6 +83,19 @@ class ProductIdToReservationRule extends BaseRule
         // validate voucher limit
         if (!$this->hasStock($voucher, $product['limit_available'] ?? null)) {
             return $this->reject(trans('validation.product_reservation.no_identity_stock'));
+        }
+
+        if ($product->product_reservations()->whereIn(
+            'state', [ProductReservation::STATE_ACCEPTED, ProductReservation::STATE_PENDING]
+        )->where('voucher_id', $voucher->id)->count() >= 100) {
+            return $this->reject(trans('validation.product_reservation.too_many_reservation_requests_for_product'));
+        }
+
+        if ($product->product_reservations()->where([
+            'voucher_id' => $voucher->id,
+            'state' => ProductReservation::STATE_CANCELED_BY_CLIENT,
+        ])->where('canceled_at', '>=', now()->subHour())->count() >= 10) {
+            return $this->reject(trans('validation.product_reservation.too_many_canceled_reservations_for_product'));
         }
 
         // check validity
