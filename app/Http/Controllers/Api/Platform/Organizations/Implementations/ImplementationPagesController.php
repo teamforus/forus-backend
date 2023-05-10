@@ -61,11 +61,13 @@ class ImplementationPagesController extends Controller
 
         /** @var ImplementationPage $implementationPage */
         $implementationPage = $implementation->pages()->create(array_merge($request->only([
-            'description', 'description_alignment', 'description_position',
+            'description', 'description_alignment',
             'external', 'external_url', 'page_type', 'state',
         ]), $isInternalType ? [
             'external' => false,
             'external_url' => null,
+        ] : [], !$request->input('external') ? [
+            'description_position' => $request->input('description_position'),
         ] : []));
 
         $implementationPage->syncDescriptionMarkdownMedia('cms_media');
@@ -141,11 +143,13 @@ class ImplementationPagesController extends Controller
         $isInternalType = ImplementationPage::isInternalType($implementationPage->page_type);
 
         $data = array_merge($request->only([
-            'state', 'description', 'description_position', 'description_alignment',
+            'state', 'description', 'description_alignment',
             'external', 'external_url',
         ]), $isInternalType ? [
             'external' => false,
             'external_url' => null,
+        ] : [], !$request->input('external') ? [
+            'description_position' => $request->input('description_position'),
         ] : []);
 
         $implementationPage->update($data);
