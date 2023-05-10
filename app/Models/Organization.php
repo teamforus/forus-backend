@@ -322,16 +322,10 @@ class Organization extends BaseModel
             $query->whereDoesntHave('products');
         }
 
-        if ($orderBy = $request->get('order_by')) {
-            $column = match($orderBy) {
-                'sponsor' => 'is_sponsor',
-                default => $orderBy,
-            };
-
-            $query->orderBy($column, $request->get('order_dir', 'desc'));
-        }
-
-        return $query;
+        return $query->orderBy(
+            $request->get('order_by', 'created_at'),
+            $request->get('order_by_dir', 'asc'),
+        )->latest();
     }
 
     /**
