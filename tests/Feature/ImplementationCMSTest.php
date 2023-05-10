@@ -418,7 +418,7 @@ class ImplementationCMSTest extends TestCase
             'page_type'=> Arr::random($pageTypes),
             'description' => $this->makeMarkdownDescription($this->makeMedia('cms_media')),
             'external_url' => $external ? $this->faker->url : null,
-            'description_position' => Arr::random(ImplementationPage::DESCRIPTION_POSITIONS),
+            'description_position' => !$external ? Arr::random(ImplementationPage::DESCRIPTION_POSITIONS) : ImplementationPage::DESCRIPTION_POSITION_REPLACE,
             'description_alignment' => Arr::random(['left', 'center', 'right']),
         ], $replace);
     }
