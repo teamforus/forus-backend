@@ -31,8 +31,7 @@ class IndexOrganizationRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return [
-            'per_page'          => 'nullable|numeric|between:1,500',
+        return array_merge([
             'role'              => 'nullable|string|exists:roles,key',
             'dependency'        => [
                 'nullable',
@@ -46,8 +45,8 @@ class IndexOrganizationRequest extends BaseFormRequest
             'has_products'      => 'nullable|boolean',
             'has_reservations'  => 'nullable|boolean',
             'fund_type'         => 'nullable|in:' . implode(',', Fund::TYPES),
-            'order_by'          => 'nullable|in:created_at,sponsor',
-            'order_by_dir'      => 'nullable|in:asc,desc',
-        ];
+        ], $this->sortableResourceRules(500, [
+            'created_at', 'is_sponsor', 'is_provider', 'is_validator',
+        ]));
     }
 }
