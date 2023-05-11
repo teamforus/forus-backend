@@ -6,6 +6,7 @@ namespace App\Scopes\Builders;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
+use App\Models\FundProviderProductExclusion;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Product;
@@ -74,13 +75,11 @@ class ProductQuery
             });
         });
 
-        $builder->where(function(Builder|Product $builder) use ($fund_id) {
-            $builder->orWhereDoesntHave('product_exclusions', function (Builder $builder) use ($fund_id) {
-                $builder->whereHas('fund_provider', function (Builder|FundProvider $builder) use ($fund_id) {
-                    $builder->whereIn('fund_id', (array) $fund_id);
-                });
+        $builder->whereHas('product_exclusions', function (Builder|FundProviderProductExclusion $builder) use ($fund_id) {
+            $builder->whereHas('fund_provider', function (Builder|FundProvider $builder) use ($fund_id) {
+                $builder->whereIn('fund_id', (array) $fund_id);
             });
-        });
+        }, '<', count((array) $fund_id));
 
         return $builder;
     }
