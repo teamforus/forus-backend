@@ -22,7 +22,7 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
     /**
      * @param false $deleteExisting
      */
-    public static function seedProducts($deleteExisting = false): void
+    public static function seedProducts(bool $deleteExisting = false): void
     {
         if ($deleteExisting) {
             Schema::disableForeignKeyConstraints();

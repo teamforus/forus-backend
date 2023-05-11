@@ -322,7 +322,10 @@ class Organization extends BaseModel
             $query->whereDoesntHave('products');
         }
 
-        return $query;
+        return $query->orderBy(
+            $request->get('order_by', 'created_at'),
+            $request->get('order_by_dir', 'asc'),
+        )->latest();
     }
 
     /**
