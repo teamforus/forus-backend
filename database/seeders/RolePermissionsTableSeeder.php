@@ -29,7 +29,7 @@ class RolePermissionsTableSeeder extends Seeder
         "validation" => [
             "validate_records", "view_funds", "view_person_bsn_data",
         ],
-        "supervisor_validation" => [
+        "supervisor_validator" => [
             "manage_validators", "view_funds",
         ],
         "policy_officer" => [
