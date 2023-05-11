@@ -12,21 +12,21 @@ class RolesTableSeeder extends Seeder
             'en' => 'Admin',
             'nl' => 'Beheerder',
         ],
-        'finance_manager' => [
+        'finance' => [
             'en' => 'Finance manager',
-            'nl' => 'Financieel manager',
+            'nl' => 'Financieel medewerker',
         ],
         'validation' => [
             'en' => 'Validator',
-            'nl' => 'Validator',
+            'nl' => 'Beoordelaar',
         ],
-        'supervisor_validation' => [
+        'supervisor_validator' => [
             'en' => 'Supervisor validator',
-            'nl' => 'Supervisor validator',
+            'nl' => 'Manager beoordelaars',
         ],
         'policy_officer' => [
             'en' => 'Manager',
-            'nl' => 'Manager',
+            'nl' => 'Manager aanbieders',
         ],
         'operation_officer' => [
             'en' => 'Kassa',
@@ -38,16 +38,24 @@ class RolesTableSeeder extends Seeder
         ],
         'implementation_cms_manager' => [
             'en' => 'Implementation CMS manager',
-            'nl' => 'Implementatie CMS manager',
+            'nl' => 'CMS manager',
         ],
         'implementation_communication_manager' => [
             'en' => 'Implementatie communicatiemanager',
-            'nl' => 'Implementatie communicatiemanager',
+            'nl' => 'Communicatie',
         ],
         'finance_reader' => [
             'en' => 'Finance reader',
-            'nl' => 'Financieel analist',
+            'nl' => 'Financieel raadpleger',
         ],
+        'bank_manager' => [
+            'en' => 'Bank manager',
+            'nl' => 'Financieel beheerder',
+        ],
+        'voucher_officer' => [
+            'en' => 'Voucher admin',
+            'nl' => 'Voucher beheerder',
+        ]
     ];
 
     /**
@@ -58,12 +66,20 @@ class RolesTableSeeder extends Seeder
      */
     public function run(bool $withTranslations = true): void
     {
-        foreach ($this->roles as $key => $translations) {
+        foreach ($this->getRoles() as $key => $translations) {
             $role = Role::firstOrCreate(compact('key'));
 
             foreach ($withTranslations ? $translations : [] as $locale => $name) {
-                $role->translation()->firstOrCreate(compact('locale'), compact('name'));
+                $role->translations()->updateOrCreate(compact('locale'), compact('name'));
             }
         }
+    }
+
+    /**
+     * @return array|\string[][]
+     */
+    public function getRoles(): array
+    {
+        return $this->roles;
     }
 }

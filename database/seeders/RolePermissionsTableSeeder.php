@@ -20,16 +20,16 @@ class RolePermissionsTableSeeder extends Seeder
             "manage_implementation", "manage_implementation_cms",
             "manage_bank_connections", "manage_transaction_bulks",
             "manage_reimbursements", "manage_implementation_notifications",
-            "view_funds", "view_person_bsn_data", "make_direct_payments", 'manage_fund_texts',
+            "view_funds", "view_person_bsn_data", 'manage_fund_texts', "manage_validators", "make_direct_payments",
         ],
-        "finance_manager" => [
-            "view_finances", "manage_vouchers", "manage_bank_connections",
-            'manage_reimbursements',
+        "finance" => [
+            "view_finances", "manage_vouchers",
+            "manage_reimbursements", "manage_organization", "manage_funds", "manage_transaction_bulks", "make_direct_payments", "manage_bank_connections",
         ],
         "validation" => [
-            "validate_records", "view_funds", "view_person_bsn_data"
+            "validate_records", "view_funds", "view_person_bsn_data",
         ],
-        "supervisor_validation" => [
+        "supervisor_validator" => [
             "manage_validators", "view_funds",
         ],
         "policy_officer" => [
@@ -39,6 +39,9 @@ class RolePermissionsTableSeeder extends Seeder
         "operation_officer" => [
             "scan_vouchers",
         ],
+        "voucher_officer" => [
+            "manage_funds", "manage_vouchers", "view_person_bsn_data", "make_direct_payments", "manage_reimbursements", "manage_employees", "view_finances",
+        ],
         "implementation_manager" => [
             "view_funds", "manage_implementation", "manage_implementation_cms",
         ],
@@ -46,7 +49,10 @@ class RolePermissionsTableSeeder extends Seeder
             "view_funds", "manage_implementation_cms",
         ],
         "implementation_communication_manager" => [
-            "view_funds", "manage_implementation_cms", "manage_implementation_notifications"
+            "view_funds", "manage_implementation_cms", "manage_implementation_notifications", "manage_fund_texts",
+        ],
+        "bank_manager" => [
+            "manage_bank_connections", "manage_transaction_bulks", "view_funds", "view_finances",
         ],
         "finance_reader" => [
             "view_finances",
@@ -60,6 +66,7 @@ class RolePermissionsTableSeeder extends Seeder
      */
     public function run(): void
     {
+        RolePermission::truncate();
         $roles = Role::pluck('id','key');
         $permissions = Permission::pluck('id','key');
       
