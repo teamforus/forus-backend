@@ -6,10 +6,10 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Identity;
 use App\Models\Permission;
 use App\Models\Role;
-use Gate;
 use App\Models\Fund;
 use App\Models\Organization;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * @property Organization $resource
@@ -19,12 +19,12 @@ class OrganizationResource extends JsonResource
     public const DEPENDENCIES = [
         'logo',
         'funds',
+        'offices',
+        'permissions',
         'funds_count',
         'business_type',
-        'permissions',
-        'employees.roles.permissions',
         'bank_connection_active',
-        'offices',
+        'employees.roles.permissions',
     ];
 
     /**
@@ -36,7 +36,9 @@ class OrganizationResource extends JsonResource
         $load = [
             'tags',
             'offices',
+            'business_type',
             'bank_connection_active',
+            'employees.roles.permissions',
         ];
 
         self::isRequested('logo', $request) && array_push($load, 'logo');

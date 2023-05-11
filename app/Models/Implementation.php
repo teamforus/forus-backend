@@ -108,6 +108,8 @@ use Illuminate\Support\Facades\Gate;
  * @property-read int|null $pages_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ImplementationPage> $pages_public
  * @property-read int|null $pages_public_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ImplementationSocialMedia> $social_medias
+ * @property-read int|null $social_medias_count
  * @method static Builder|Implementation newModelQuery()
  * @method static Builder|Implementation newQuery()
  * @method static Builder|Implementation query()
@@ -431,6 +433,14 @@ class Implementation extends BaseModel
     }
 
     /**
+     * @return HasMany
+     */
+    public function social_medias(): HasMany
+    {
+        return $this->hasMany(ImplementationSocialMedia::class);
+    }
+
+    /**
      * @return Builder
      */
     public static function activeFundsQuery(): Builder
@@ -667,6 +677,9 @@ class Implementation extends BaseModel
                 // 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
                 'pages' => Arr::keyBy($pages, 'page_type'),
                 'has_productboard_integration' => !empty(resolve('productboard')),
+                'social_medias' => $implementation->social_medias->map(fn (ImplementationSocialMedia $media) => $media->only([
+                    'url', 'type', 'title',
+                ])),
             ], $implementation->only(
                 'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
                 'show_office_map', 'show_voucher_map', 'show_product_map',
