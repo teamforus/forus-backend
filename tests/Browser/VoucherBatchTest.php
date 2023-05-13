@@ -139,6 +139,7 @@ class VoucherBatchTest extends DuskTestCase
             'email' => $voucher->identity?->email,
         };
 
+        $browser->pause(500);
         $browser->waitFor('@searchVoucher');
         $browser->type('@searchVoucher', $search);
 
