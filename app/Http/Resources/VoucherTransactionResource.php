@@ -20,7 +20,7 @@ class VoucherTransactionResource extends BaseJsonResource
         $transaction = $this->resource;
 
         return array_merge($transaction->only([
-            'id', 'organization_id', 'product_id', 'address', 'state', 'payment_id', 'target',
+            'id', 'organization_id', 'product_id', 'address', 'state', 'state_locale', 'payment_id', 'target',
         ]), [
             'cancelable' => $transaction->isCancelable(),
             'transaction_in' => $transaction->daysBeforeTransaction(),
