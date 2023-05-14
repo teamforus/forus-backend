@@ -6,6 +6,7 @@ use App\Events\FundRequestRecords\FundRequestRecordApproved;
 use App\Events\FundRequestRecords\FundRequestRecordDeclined;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Traits\HasFiles;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -24,13 +25,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Employee|null $employee
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\FileService\Models\File[] $files
+ * @property-read Collection|\App\Services\FileService\Models\File[] $files
  * @property-read int|null $files_count
  * @property-read \App\Models\FundCriterion|null $fund_criterion
  * @property-read \App\Models\FundRequest $fund_request
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestClarification[] $fund_request_clarifications
+ * @property-read Collection|\App\Models\FundRequestClarification[] $fund_request_clarifications
  * @property-read int|null $fund_request_clarifications_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\RecordType $record_type
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord newModelQuery()
@@ -62,6 +63,7 @@ class FundRequestRecord extends BaseModel
     public const EVENT_APPROVED = 'approved';
     public const EVENT_DECLINED = 'declined';
     public const EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
+    public const EVENT_UPDATED = 'updated';
 
     public const EVENTS = [
         self::EVENT_ASSIGNED,
@@ -204,6 +206,35 @@ class FundRequestRecord extends BaseModel
         }
 
         return $this->applyRecordAndValidation($this->record_type_key, $this->value);
+    }
+
+    /**
+     * @return Collection
+     */
+    public function historyLogs(): Collection
+    {
+        return $this->logs->sortByDesc('created_at')->where('event', self::EVENT_UPDATED);
+    }
+
+    /**
+     * @param string $value
+     * @param Employee $employee
+     * @return self
+     */
+    public function updateAsValidator(
+        string $value,
+        Employee $employee
+    ): self {
+        $fund_request_record_old_value = $this->value;
+
+        $this->update(compact('value'));
+
+        $this->log(self::EVENT_UPDATED, [
+            'fund_request_record' => $this,
+            'employee'            => $employee,
+        ], compact('fund_request_record_old_value'));
+
+        return $this;
     }
 
     /**

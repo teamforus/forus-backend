@@ -134,6 +134,7 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $voucher_transactions_count
  * @property-read Collection<int, \App\Models\Voucher> $vouchers
  * @property-read int|null $vouchers_count
+ * @property-read int $validator_records_edit_enabled
  * @method static EloquentBuilder|Organization newModelQuery()
  * @method static EloquentBuilder|Organization newQuery()
  * @method static EloquentBuilder|Organization query()
@@ -178,6 +179,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
  * @method static EloquentBuilder|Organization whereWebsite($value)
  * @method static EloquentBuilder|Organization whereWebsitePublic($value)
+ * @method static EloquentBuilder|Organization whereValidatorRecordsEditEnabled($value)
  * @mixin \Eloquent
  */
 class Organization extends BaseModel
@@ -228,6 +230,7 @@ class Organization extends BaseModel
         'allow_manual_bulk_processing'          => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
+        'validator_records_edit_enabled'        => 'boolean',
     ];
 
     /**

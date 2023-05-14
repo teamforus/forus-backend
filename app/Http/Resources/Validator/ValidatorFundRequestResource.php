@@ -16,6 +16,7 @@ use App\Models\Organization;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundRequestRecordQuery;
+use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
@@ -189,6 +190,24 @@ class ValidatorFundRequestResource extends BaseJsonResource
             'record_type' => $record->record_type->only('id', 'key', 'type', 'system', 'name'),
             'is_assigned' => $is_assigned,
             'is_assignable' => $is_assignable,
+            'history' => self::getHistory($record),
         ], static::staticTimestamps($record, 'created_at', 'updated_at'));
+    }
+
+    /**
+     * @param FundRequestRecord $record
+     * @return \Illuminate\Support\Collection
+     */
+    static function getHistory(FundRequestRecord $record): \Illuminate\Support\Collection
+    {
+        $logs = $record->historyLogs();
+
+        return $logs->map(function(EventLog $eventLog) use ($record) {
+            return array_merge($eventLog->only('id', 'event', 'data'), [
+                'event_locale' => $eventLog->eventDescriptionLocaleWebshop(),
+                'created_at' => $eventLog->created_at->format('Y-m-d'),
+                'created_time_locale' => format_datetime_locale($eventLog->created_at),
+            ]);
+        })->values();
     }
 }

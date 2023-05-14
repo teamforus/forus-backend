@@ -6,6 +6,7 @@ use App\Http\Requests\Api\Platform\Funds\Requests\Records\ApproveFundRequestReco
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\DeclineFundRequestRecordRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\IndexFundRequestRecordsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\StoreFundRequestRecordRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\Records\UpdateFundRequestRecordRequest;
 use App\Http\Resources\Validator\ValidatorFundRequestRecordResource;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
@@ -63,6 +64,29 @@ class FundRequestRecordsController extends Controller
         $fundRequestRecord->approve();
 
         return ValidatorFundRequestRecordResource::create($fundRequestRecord);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param UpdateFundRequestRecordRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @param FundRequestRecord $record
+     * @return ValidatorFundRequestRecordResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function update(
+        UpdateFundRequestRecordRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest,
+        FundRequestRecord $record,
+    ): ValidatorFundRequestRecordResource {
+        $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
+
+        $record->updateAsValidator($request->input('value'), $request->employee($organization));
+
+        return ValidatorFundRequestRecordResource::create($record);
     }
 
     /**

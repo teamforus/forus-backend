@@ -41,6 +41,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property-read \App\Models\Identity $identity
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
+ * @property-read Collection|\App\Models\Note[] $notes
+ * @property-read int|null $notes_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $records
  * @property-read int|null $records_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $records_approved
