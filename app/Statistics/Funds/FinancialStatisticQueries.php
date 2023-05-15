@@ -4,6 +4,7 @@
 namespace App\Statistics\Funds;
 
 use App\Models\BaseModel;
+use App\Models\BusinessType;
 use App\Models\Office;
 use App\Models\Organization;
 use App\Models\ProductCategory;
@@ -43,6 +44,32 @@ class FinancialStatisticQueries
 
                 $builder->orWhereHas('voucher.product.product_category', function(Builder $builder) {
                     $builder->whereColumn('categories.id', 'root_id');
+                });
+            })->selectRaw('count(*)'),
+        ])->orderByDesc('transactions');
+
+        return $this->collectionOnly($query->get(), [
+            'id', 'name', 'transactions'
+        ]);
+    }
+    /**
+     * @param Organization $sponsor
+     * @param array $options
+     * @return array
+     */
+    public function getFilterBusinessTypes(Organization $sponsor, array $options = []): array
+    {
+        /** @var Builder $query */
+        $query = BusinessType::whereNull('parent_id')->from('business_types');
+        $query = $query->with('translations')->select('id');
+
+        $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
+
+        $query->addSelect([
+            'transactions' => $transactionsQuery->where(function(Builder $builder) {
+                $builder->whereHas('provider.business_type', function(Builder $builder) {
+                    $builder->from('business_types', 'business_types2');
+                    $builder->whereColumn('business_types.id', 'business_types2.id');
                 });
             })->selectRaw('count(*)'),
         ])->orderByDesc('transactions');
@@ -146,6 +173,7 @@ class FinancialStatisticQueries
     ): Builder {
         $productCategoryIds = array_get($options, 'product_category_ids');
         $providerIds = array_get($options, 'provider_ids');
+        $businessTypeIds = array_get($options, 'business_type_ids');
         $postcodes = array_get($options, 'postcodes');
         $fundIds = array_get($options, 'fund_ids');
         $targets = array_get($options, 'targets', VoucherTransaction::TARGETS_OUTGOING);
@@ -175,6 +203,13 @@ class FinancialStatisticQueries
             $query->whereHas('provider', function(Builder $builder) use ($sponsor, $providerIds, $postcodes) {
                 $providerIds && $builder->whereIn('id', $providerIds);
                 $postcodes && OrganizationQuery::whereHasPostcodes($builder, $postcodes);
+            });
+        }
+
+        // Filter by business types
+        if ($businessTypeIds) {
+            $query->whereHas('provider.business_type', function(Builder $builder) use ($businessTypeIds) {
+                $builder->whereIn('business_types.id', $businessTypeIds);
             });
         }
 
