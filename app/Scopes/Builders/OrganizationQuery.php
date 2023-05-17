@@ -132,6 +132,18 @@ class OrganizationQuery
     }
 
     /**
+     * @param Builder $builder
+     * @param array $businessTypes
+     * @return Builder
+     */
+    public static function whereHasBusinessType(Builder $builder, array $businessTypes): Builder
+    {
+        return $builder->whereHas('business_type', function(Builder $builder) use ($businessTypes) {
+            $builder->whereIn('id', $businessTypes);
+        });
+    }
+
+    /**
      * @param Builder $query
      * @param Organization $sponsor
      * @param array $options fields: $order_by: name/application_date, $order_dir: asc/desc

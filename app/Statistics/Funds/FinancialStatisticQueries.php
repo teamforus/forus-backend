@@ -61,7 +61,7 @@ class FinancialStatisticQueries
     {
         /** @var Builder $query */
         $query = BusinessType::whereNull('parent_id')->from('business_types');
-        $query = $query->with('translations')->select('id');
+        $query = $query->whereHas('organizations')->with('translations')->select('id');
 
         $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
 
@@ -199,17 +199,11 @@ class FinancialStatisticQueries
         }
 
         // Filter by selected providers
-        if ($providerIds || $postcodes) {
-            $query->whereHas('provider', function(Builder $builder) use ($sponsor, $providerIds, $postcodes) {
+        if ($providerIds || $postcodes || $businessTypeIds) {
+            $query->whereHas('provider', function(Builder $builder) use ($sponsor, $providerIds, $postcodes, $businessTypeIds) {
                 $providerIds && $builder->whereIn('id', $providerIds);
                 $postcodes && OrganizationQuery::whereHasPostcodes($builder, $postcodes);
-            });
-        }
-
-        // Filter by business types
-        if ($businessTypeIds) {
-            $query->whereHas('provider.business_type', function(Builder $builder) use ($businessTypeIds) {
-                $builder->whereIn('business_types.id', $businessTypeIds);
+                $businessTypeIds && OrganizationQuery::whereHasBusinessType($builder, $businessTypeIds);
             });
         }
 
@@ -237,6 +231,7 @@ class FinancialStatisticQueries
         }
 
         $query->whereIn('target', is_array($targets) ? $targets : []);
+        logger()->info('query: '. print_r($query->toSql(), true));
 
         return $query;
     }

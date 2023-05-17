@@ -86,6 +86,7 @@ return [
 
     'finances'      => [
         'provider'            => 'Aanbieder',
+        'business_type'       => 'Organisatie type',
         'total_amount'        => 'Totaal uitgegeven bij',
         'highest_transaction' => 'Hoogste aankoopbedrag',
         'nr_transactions'     => 'Aantal transacties',
