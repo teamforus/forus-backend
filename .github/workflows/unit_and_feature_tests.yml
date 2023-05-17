@@ -1,6 +1,6 @@
 name: Run unit and feature tests
 
-on: [pull-request]
+on: [pull_request]
 
 jobs:
 

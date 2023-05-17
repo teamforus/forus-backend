@@ -6,6 +6,7 @@ on:
   pull_request:
     branches:
       - release/*
+      - master
   workflow_dispatch:
     inputs:
       frontend_branch:
@@ -20,7 +21,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout forus-backend repo develop branch, if it is scheduled build
+        if: github.event.schedule == '00 3 * * *'
+        uses: actions/checkout@v3
+        with:
+          path: forus-backend
+          ref: develop
+
       - name: Checkout forus-backend repo
+        if: github.event.schedule != '00 3 * * *'
         uses: actions/checkout@v3
         with:
           path: forus-backend
