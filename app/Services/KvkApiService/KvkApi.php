@@ -40,7 +40,7 @@ class KvkApi
      */
     public function getApiUrl(string $kvk_number): string
     {
-        return "{$this->api_url}api/v1/basisprofielen/$kvk_number/hoofdvestiging";
+        return "{$this->api_url}api/v1/basisprofielen/$kvk_number";
     }
 
     /**
