@@ -172,8 +172,8 @@ class FinancialStatisticQueries
         Builder $query = null
     ): Builder {
         $productCategoryIds = array_get($options, 'product_category_ids');
-        $providerIds = array_get($options, 'provider_ids');
         $businessTypeIds = array_get($options, 'business_type_ids');
+        $providerIds = array_get($options, 'provider_ids');
         $postcodes = array_get($options, 'postcodes');
         $fundIds = array_get($options, 'fund_ids');
         $targets = array_get($options, 'targets', VoucherTransaction::TARGETS_OUTGOING);
@@ -200,7 +200,9 @@ class FinancialStatisticQueries
 
         // Filter by selected providers
         if ($providerIds || $postcodes || $businessTypeIds) {
-            $query->whereHas('provider', function(Builder $builder) use ($sponsor, $providerIds, $postcodes, $businessTypeIds) {
+            $query->whereHas('provider', function(Builder $builder) use (
+                $sponsor, $providerIds, $postcodes, $businessTypeIds,
+            ) {
                 $providerIds && $builder->whereIn('id', $providerIds);
                 $postcodes && OrganizationQuery::whereHasPostcodes($builder, $postcodes);
                 $businessTypeIds && OrganizationQuery::whereHasBusinessType($builder, $businessTypeIds);
@@ -230,9 +232,6 @@ class FinancialStatisticQueries
             $query->whereInitiator(Arr::get($options, 'initiator'));
         }
 
-        $query->whereIn('target', is_array($targets) ? $targets : []);
-        logger()->info('query: '. print_r($query->toSql(), true));
-
-        return $query;
+        return $query->whereIn('target', is_array($targets) ? $targets : []);
     }
 }
