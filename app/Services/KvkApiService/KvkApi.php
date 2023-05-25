@@ -3,6 +3,7 @@
 namespace App\Services\KvkApiService;
 
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Class KvkApi
@@ -10,16 +11,16 @@ use GuzzleHttp\Client;
  */
 class KvkApi
 {
-    protected $api_url = "https://api.kvk.nl/";
-    protected $api_debug;
-    protected $api_key;
-    protected $api_cert_path;
+    protected string $api_url = "https://api.kvk.nl/";
+    protected bool $api_debug;
+    protected ?string $api_key;
+    protected string $api_cert_path;
 
     /** @var string $cache_prefix Cache key */
-    protected $cache_prefix = 'kvk_service:kvk-number:';
+    protected string $cache_prefix = 'kvk_service:kvk-number:';
 
     /** @var int $cache_time Cache time in minutes */
-    protected $cache_time = 10;
+    protected int $cache_time = 10;
 
     /**
      * KvkApi constructor.
@@ -36,21 +37,25 @@ class KvkApi
 
     /**
      * @param string $kvk_number
+     * @param bool $detailed
      * @return string
      */
-    public function getApiUrl(string $kvk_number): string
+    public function getApiUrl(string $kvk_number, bool $detailed): string
     {
-        return "{$this->api_url}api/v1/basisprofielen/$kvk_number/hoofdvestiging";
+        return $detailed
+            ? "{$this->api_url}api/v1/basisprofielen/$kvk_number/hoofdvestiging"
+            : "{$this->api_url}api/v1/basisprofielen/$kvk_number";
     }
 
     /**
      * @param string $kvk_number
+     * @param bool $detailed
      * @return bool|mixed
      */
-    public function kvkNumberData(string $kvk_number): ?object
+    public function kvkNumberData(string $kvk_number, bool $detailed = false): ?object
     {
         try {
-            $response = json_decode($this->makeApiCall($kvk_number), false);
+            $response = json_decode($this->makeApiCall($kvk_number, $detailed), false);
             return is_object($response) ? $response : null;
         } catch (\Throwable $e) {
             if ($logger = logger()) {
@@ -63,16 +68,16 @@ class KvkApi
 
     /**
      * @param string $kvk_number
+     * @param bool $detailed
      * @return string|null
-     * @throws \Exception
      */
-    private function makeApiCall(string $kvk_number): ?string
+    private function makeApiCall(string $kvk_number, bool $detailed): ?string
     {
-        $cacheKey = $this->cache_prefix . $kvk_number;
+        $cacheKey = $this->cache_prefix . $kvk_number . ($detailed ? '.detailed' : '');
         $cacheDuration = $this->cache_time * 60;
 
-        return cache()->remember($cacheKey, $cacheDuration, function() use ($kvk_number) {
-            return (new Client())->get($this->getApiUrl($kvk_number), [
+        return Cache::remember($cacheKey, $cacheDuration, function() use ($kvk_number, $detailed) {
+            return (new Client())->get($this->getApiUrl($kvk_number, $detailed), [
                 'verify' => $this->api_cert_path,
                 'headers' => [
                     'apikey' => $this->api_key
@@ -87,7 +92,7 @@ class KvkApi
      */
     public function getOffices(string $kvk_number): array
     {
-        $kvkData = $this->kvkNumberData($kvk_number);
+        $kvkData = $this->kvkNumberData($kvk_number, true);
         $addresses = $kvkData->adressen ?? [];
         $geocodeService = resolve('geocode_api');
 
