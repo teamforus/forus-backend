@@ -3,10 +3,12 @@
 namespace App\Http\Requests\Api\Platform\Funds\Requests\Records;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\FundRequestRecord;
 use App\Models\Organization;
 
 /**
  * @property-read Organization $organization
+ * @property-read FundRequestRecord $fund_request_record
  */
 class UpdateFundRequestRecordRequest extends BaseFormRequest
 {
@@ -27,9 +29,14 @@ class UpdateFundRequestRecordRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+        if ($this->fund_request_record->record_type->type == 'number') {
+            return [
+                'value' => 'required|numeric',
+            ];
+        }
+
         return [
-            'value' => 'required|string|between:1,20',
-            'record_type_key' => 'required|exists:record_types,key',
+            'value' => 'required|string|max:160',
         ];
     }
 }

@@ -14,7 +14,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
-            $table->boolean('validator_records_edit_enabled')->default(true)->after('bsn_enabled');
+            $table->boolean('allow_fund_request_record_edit')
+                ->default(false)
+                ->after('allow_manual_bulk_processing');
         });
     }
 
@@ -26,7 +28,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
-            $table->dropColumn('validator_records_edit_enabled');
+            $table->dropColumn('allow_fund_request_record_edit');
         });
     }
 };

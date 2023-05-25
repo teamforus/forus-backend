@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
 use App\Events\FundRequestRecords\FundRequestRecordApproved;
 use App\Events\FundRequestRecords\FundRequestRecordAssigned;
+use App\Events\FundRequestRecords\FundRequestRecordUpdated;
 use App\Events\FundRequestRecords\FundRequestRecordDeclined;
 use App\Events\FundRequestRecords\FundRequestRecordResigned;
 use App\Events\FundRequests\FundRequestAssigned;
@@ -213,6 +214,22 @@ class FundRequestSubscriber
     }
 
     /**
+     * @param FundRequestRecordUpdated $event
+     * @noinspection PhpUnused
+     */
+    public function onFundRequestRecordUpdated(FundRequestRecordUpdated $event): void
+    {
+        $fundRequestRecord = $event->getFundRequestRecord();
+        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord, [
+            'employee' => $event->getEmployee(),
+        ]);
+
+        $fundRequestRecord->log($fundRequestRecord::EVENT_UPDATED, $eventModels, [
+            'fund_request_record_previous_value' => $event->getPreviousValue(),
+        ]);
+    }
+
+    /**
      * @param FundRequestClarificationRequested $clarificationCreated
      * @noinspection PhpUnused
      */
@@ -296,6 +313,7 @@ class FundRequestSubscriber
         $events->listen(FundRequestRecordApproved::class, "$class@onFundRequestRecordApproved");
         $events->listen(FundRequestRecordAssigned::class, "$class@onFundRequestRecordAssigned");
         $events->listen(FundRequestRecordResigned::class, "$class@onFundRequestRecordResigned");
+        $events->listen(FundRequestRecordUpdated::class, "$class@onFundRequestRecordUpdated");
 
         $events->listen(FundRequestClarificationRequested::class, "$class@onFundRequestClarificationRequested");
     }

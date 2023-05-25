@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\FundRequestRecords\FundRequestRecordApproved;
 use App\Events\FundRequestRecords\FundRequestRecordDeclined;
+use App\Events\FundRequestRecords\FundRequestRecordUpdated;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Traits\HasFiles;
 use Illuminate\Database\Eloquent\Collection;
@@ -66,6 +67,7 @@ class FundRequestRecord extends BaseModel
     public const EVENT_UPDATED = 'updated';
 
     public const EVENTS = [
+        self::EVENT_UPDATED,
         self::EVENT_ASSIGNED,
         self::EVENT_RESIGNED,
         self::EVENT_APPROVED,
@@ -112,6 +114,7 @@ class FundRequestRecord extends BaseModel
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function fund_request_clarifications(): HasMany
     {
@@ -221,18 +224,12 @@ class FundRequestRecord extends BaseModel
      * @param Employee $employee
      * @return self
      */
-    public function updateAsValidator(
-        string $value,
-        Employee $employee
-    ): self {
-        $fund_request_record_old_value = $this->value;
-
+    public function updateAsValidator(string $value, Employee $employee): self
+    {
+        $previousValue = $this->value;
         $this->update(compact('value'));
 
-        $this->log(self::EVENT_UPDATED, [
-            'fund_request_record' => $this,
-            'employee'            => $employee,
-        ], compact('fund_request_record_old_value'));
+        FundRequestRecordUpdated::dispatch($this, $employee, null, $previousValue);
 
         return $this;
     }

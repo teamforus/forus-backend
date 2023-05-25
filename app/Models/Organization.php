@@ -48,7 +48,7 @@ use Illuminate\Database\Query\Builder;
  * @property string $btw
  * @property string|null $website
  * @property bool $website_public
- * @property string $low_balance_email
+ * @property string|null $low_balance_email
  * @property int|null $business_type_id
  * @property bool $is_sponsor
  * @property bool $is_provider
@@ -57,21 +57,22 @@ use Illuminate\Database\Query\Builder;
  * @property bool $reservations_budget_enabled
  * @property bool $reservations_subsidy_enabled
  * @property bool $reservations_auto_accept
+ * @property string $reservation_phone
+ * @property string $reservation_address
+ * @property string $reservation_birth_date
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
  * @property bool $allow_custom_fund_notifications
  * @property bool $allow_budget_fund_limits
  * @property bool $allow_manual_bulk_processing
+ * @property bool $allow_fund_request_record_edit
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
  * @property int $show_provider_transactions
- * @property string $reservation_phone
- * @property string $reservation_address
- * @property string $reservation_birth_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -134,13 +135,13 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $voucher_transactions_count
  * @property-read Collection<int, \App\Models\Voucher> $vouchers
  * @property-read int|null $vouchers_count
- * @property-read int $validator_records_edit_enabled
  * @method static EloquentBuilder|Organization newModelQuery()
  * @method static EloquentBuilder|Organization newQuery()
  * @method static EloquentBuilder|Organization query()
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
+ * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
  * @method static EloquentBuilder|Organization whereBankCronTime($value)
@@ -170,7 +171,6 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereReservationAddress($value)
  * @method static EloquentBuilder|Organization whereReservationBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationPhone($value)
- * @method static EloquentBuilder|Organization whereReservationRequesterBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
  * @method static EloquentBuilder|Organization whereReservationsBudgetEnabled($value)
  * @method static EloquentBuilder|Organization whereReservationsSubsidyEnabled($value)
@@ -179,7 +179,6 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
  * @method static EloquentBuilder|Organization whereWebsite($value)
  * @method static EloquentBuilder|Organization whereWebsitePublic($value)
- * @method static EloquentBuilder|Organization whereValidatorRecordsEditEnabled($value)
  * @mixin \Eloquent
  */
 class Organization extends BaseModel
@@ -228,9 +227,9 @@ class Organization extends BaseModel
         'allow_custom_fund_notifications'       => 'boolean',
         'allow_budget_fund_limits'              => 'boolean',
         'allow_manual_bulk_processing'          => 'boolean',
+        'allow_fund_request_record_edit'        => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
-        'validator_records_edit_enabled'        => 'boolean',
     ];
 
     /**

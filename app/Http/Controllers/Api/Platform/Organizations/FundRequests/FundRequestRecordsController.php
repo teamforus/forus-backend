@@ -83,6 +83,7 @@ class FundRequestRecordsController extends Controller
         FundRequestRecord $record,
     ): ValidatorFundRequestRecordResource {
         $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
+        $this->authorize('updateAsValidator', [$record, $fundRequest, $organization]);
 
         $record->updateAsValidator($request->input('value'), $request->employee($organization));
 

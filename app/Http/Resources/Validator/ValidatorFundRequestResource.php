@@ -19,11 +19,10 @@ use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Collection;
 
 /**
- * Class ValidatorFundRequestResource
  * @property FundRequest $resource
- * @package App\Http\Resources
  */
 class ValidatorFundRequestResource extends BaseJsonResource
 {
@@ -169,7 +168,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
     static function recordToArray(
         FundRequestRecord $record,
         Employee $employee,
-        bool $isRecordAssignable
+        bool $isRecordAssignable,
     ): array {
         $is_assigned = $record->employee_id === $employee->id;
         $is_assignable = $isRecordAssignable && !$is_assigned && !$record->employee && $record->isPending();
@@ -180,17 +179,17 @@ class ValidatorFundRequestResource extends BaseJsonResource
             'value' => $is_assignable || $is_assigned ? $record->value : null,
         ]);
 
-        $filesAndClarifications = [
+        $relations = [
             'files' => FileResource::collection($record->files),
+            'history' => $is_assignable || $is_assigned ? self::getHistory($record)->values() : [],
             'clarifications' => FundRequestClarificationResource::collection($record->fund_request_clarifications),
         ];
 
-        return array_merge($baseFields, $filesAndClarifications, [
+        return array_merge($baseFields, $relations, [
             'employee' => new EmployeeResource($record->employee),
             'record_type' => $record->record_type->only('id', 'key', 'type', 'system', 'name'),
             'is_assigned' => $is_assigned,
             'is_assignable' => $is_assignable,
-            'history' => self::getHistory($record),
         ], static::staticTimestamps($record, 'created_at', 'updated_at'));
     }
 
@@ -198,16 +197,12 @@ class ValidatorFundRequestResource extends BaseJsonResource
      * @param FundRequestRecord $record
      * @return \Illuminate\Support\Collection
      */
-    static function getHistory(FundRequestRecord $record): \Illuminate\Support\Collection
+    static function getHistory(FundRequestRecord $record): Collection
     {
-        $logs = $record->historyLogs();
-
-        return $logs->map(function(EventLog $eventLog) use ($record) {
-            return array_merge($eventLog->only('id', 'event', 'data'), [
-                'event_locale' => $eventLog->eventDescriptionLocaleWebshop(),
-                'created_at' => $eventLog->created_at->format('Y-m-d'),
-                'created_time_locale' => format_datetime_locale($eventLog->created_at),
-            ]);
-        })->values();
+        return $record->historyLogs()->map(fn (EventLog $eventLog) => array_merge([
+            'new_value' => $eventLog->data['fund_request_record_value'] ?? '',
+            'old_value' => $eventLog->data['fund_request_record_previous_value'] ?? '',
+            'employee_email' => $eventLog->data['employee_email'] ?? '',
+        ], self::makeTimestampsStatic($eventLog->only('created_at'))));
     }
 }
