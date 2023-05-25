@@ -78,7 +78,6 @@ class SponsorProviderResource extends BaseJsonResource
 
         return [
             'funds' => $funds,
-            'funds_active' => $funds->filter(fn (array $fund) => $fund['active'])->count(),
             'products_count' => $provider->providerProductsQuery($fundsIds)->count(),
         ];
     }
@@ -101,10 +100,8 @@ class SponsorProviderResource extends BaseJsonResource
             'id', 'name', 'organization_id',
         ]), [
             'fund_provider_id' => $provider->id,
-            'active' => FundProviderQuery::whereApprovedForFundsFilter(
-                $providerOrganization->fund_providers()->getQuery(),
-                $provider->fund_id
-            )->exists(),
+            'fund_provider_state' => $provider->state,
+            'fund_provider_state_locale' => $provider->state_locale,
         ]))->values();
     }
 }

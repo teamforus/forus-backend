@@ -85,7 +85,7 @@ class ImplementationPrivateResource extends BaseJsonResource
     ): array {
         $generalImplementation = $implementation::general();
 
-        if ($implementation->organization->identityCan($request->identity(), 'implementation_manager_cms')) {
+        if ($implementation->organization->identityCan($request->identity(), 'manage_implementation_cms')) {
             return [
                 'email_logo' => new MediaCompactResource($implementation->email_logo),
                 'email_logo_default' => new MediaCompactResource($generalImplementation->email_logo),
