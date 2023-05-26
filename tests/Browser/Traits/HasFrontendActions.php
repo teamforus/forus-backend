@@ -65,39 +65,24 @@ trait HasFrontendActions
      * @param Browser $browser
      * @param Identity $identity
      * @param string $frontend
-     * @param int $tries
-     * @return Browser
+     * @return void
      * @throws TimeoutException
      */
     protected function assertIdentityAuthenticatedFrontend(
         Browser $browser,
         Identity $identity,
         string $frontend,
-        int $tries = 3,
-    ): Browser {
-        try {
-            $browser->waitFor(match ($frontend) {
-                'webshop' => $identity->email ? '@identityEmail' : '@userVouchers',
-                'sponsor' => '@fundsTitle',
-                'provider' => '@providerOverview',
-                'validator' => '@fundRequestsPageContent',
-            }, 10);
-        } catch (TimeOutException $exception) {
-            $browser->refresh();
-            $tries--;
-
-            if ($tries >= 0) {
-                return $this->assertIdentityAuthenticatedFrontend($browser, $identity, $frontend, $tries);
-            }
-
-            throw $exception;
-        }
+    ): void {
+        $browser->waitFor(match ($frontend) {
+            'webshop' => $identity->email ? '@identityEmail' : '@userVouchers',
+            'sponsor' => '@fundsTitle',
+            'provider' => '@providerOverview',
+            'validator' => '@fundRequestsPageContent',
+        }, 10);
 
         if ($identity->email) {
             $browser->assertSeeIn('@identityEmail', $identity->email);
         }
-
-        return $browser;
     }
 
     /**

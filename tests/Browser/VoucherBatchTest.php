@@ -297,6 +297,7 @@ class VoucherBatchTest extends DuskTestCase
 
         $browser->waitFor('@btnUserLogout');
         $browser->element('@btnUserLogout')->click();
+        $browser->waitFor('.block-login-content');
     }
 
     /**
