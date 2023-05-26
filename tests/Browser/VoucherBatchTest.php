@@ -33,6 +33,18 @@ class VoucherBatchTest extends DuskTestCase
     protected string $csvPath = "public/vouchers_batch_test.csv";
 
     /**
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        foreach (static::$browsers as $browser) {
+            $browser->driver->manage()->deleteAllCookies();
+        }
+    }
+
+    /**
      * @throws \Throwable
      */
     public function testUploadBatchCase1(): void
@@ -92,11 +104,11 @@ class VoucherBatchTest extends DuskTestCase
 
             $browser->visit($implementation->urlSponsorDashboard());
             $browser->pause(100);
-            $browser->screenshot('visit_sponsor_dashboard');
+            $browser->screenshot('visit_sponsor_dashboard_' . Str::random(3));
 
             // Authorize identity
             $this->loginIdentity($browser, $organization->identity);
-            $browser->screenshot('login_visit_sponsor_dashboard');
+            $browser->screenshot('login_visit_sponsor_dashboard_' . Str::random(3));
             $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
             $this->selectDashboardOrganization($browser, $organization);
             $this->goToVouchersPage($browser);
@@ -124,6 +136,8 @@ class VoucherBatchTest extends DuskTestCase
             // Logout
             $this->logout($browser);
         });
+
+        $this->tearDown();
     }
 
     /**
