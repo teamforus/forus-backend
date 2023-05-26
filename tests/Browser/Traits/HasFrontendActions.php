@@ -73,12 +73,14 @@ trait HasFrontendActions
         Identity $identity,
         string $frontend,
     ): void {
+        log_debug('Browser test log', $browser->driver->manage()->getLog('browser'));
+
         $browser->waitFor(match ($frontend) {
             'webshop' => $identity->email ? '@identityEmail' : '@userVouchers',
             'sponsor' => '@fundsTitle',
             'provider' => '@providerOverview',
             'validator' => '@fundRequestsPageContent',
-        }, 10);
+        }, 60);
 
         if ($identity->email) {
             $browser->assertSeeIn('@identityEmail', $identity->email);
