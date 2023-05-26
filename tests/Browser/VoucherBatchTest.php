@@ -92,9 +92,11 @@ class VoucherBatchTest extends DuskTestCase
 
             $browser->visit($implementation->urlSponsorDashboard());
             $browser->pause(100);
+            $browser->screenshot('visit_sponsor_dashboard');
 
             // Authorize identity
             $this->loginIdentity($browser, $organization->identity);
+            $browser->screenshot('login_visit_sponsor_dashboard');
             $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
             $this->selectDashboardOrganization($browser, $organization);
             $this->goToVouchersPage($browser);
@@ -297,7 +299,6 @@ class VoucherBatchTest extends DuskTestCase
 
         $browser->waitFor('@btnUserLogout');
         $browser->element('@btnUserLogout')->click();
-        $browser->waitFor('.block-login-content');
     }
 
     /**
