@@ -14,8 +14,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_backoffice_logs', function (Blueprint $table) {
-            $table->string('request_id', 200)->nullable()->after('state');
-            $table->integer('voucher_id')->nullable()->after('bsn');
+            $table->unsignedInteger('voucher_id')->nullable()->change();
+            $table->index('state');
+
+            $table->foreign('voucher_id')->references('id')->on('vouchers')
+                ->onDelete('restrict');
         });
     }
 
@@ -27,7 +30,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('fund_backoffice_logs', function (Blueprint $table) {
-            $table->dropColumn('request_id', 'voucher_id');
+            $table->dropForeign('fund_backoffice_logs_voucher_id_foreign');
+            $table->dropIndex('fund_backoffice_logs_state_index');
         });
     }
 };
