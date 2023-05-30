@@ -26,11 +26,12 @@ use Throwable;
  * @property int|null $employee_id
  * @property string $code
  * @property string $title
- * @property string $description
+ * @property string|null $description
  * @property string $amount
  * @property string $reason
  * @property string $iban
  * @property string $iban_name
+ * @property string|null $provider_name
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $submitted_at
  * @property \Illuminate\Support\Carbon|null $resolved_at
@@ -71,6 +72,7 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereIban($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereIbanName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereProviderName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereReason($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereResolvedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereState($value)
@@ -119,7 +121,8 @@ class Reimbursement extends Model
      */
     protected $fillable = [
         'voucher_id', 'title', 'description', 'amount', 'iban', 'iban_name',
-        'state', 'code', 'employee_id', 'submitted_at', 'resolved_at', 'reason',
+        'state', 'code', 'employee_id', 'submitted_at', 'resolved_at',
+        'reason', 'provider_name',
     ];
 
     /**
