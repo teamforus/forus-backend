@@ -625,6 +625,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->post('decline', "Api\Platform\Organizations\ReimbursementsController@decline");
     });
 
+    $router->get(
+        'organizations/{organization}/reimbursements/export-fields',
+        "Api\Platform\Organizations\ReimbursementsController@getExportFields"
+    );
+
+    $router->get(
+        'organizations/{organization}/reimbursements/export',
+        "Api\Platform\Organizations\ReimbursementsController@export"
+    );
+
     $router->resource(
         'organizations.reimbursements',
         "Api\Platform\Organizations\ReimbursementsController"
