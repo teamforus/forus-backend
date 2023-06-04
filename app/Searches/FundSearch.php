@@ -45,7 +45,7 @@ class FundSearch extends BaseSearch
         if ($this->getFilter('tag') || $this->getFilter('tag_id')) {
             $builder->whereHas('tags_provider', function(Builder|Tag $builder) {
                 $builder->where('key', '=', $this->getFilter('tag'));
-                $builder->orWhere('id', '=', $this->getFilter('tag_id'));
+                $builder->orWhere('tags.id', '=', $this->getFilter('tag_id'));
             });
         }
 
