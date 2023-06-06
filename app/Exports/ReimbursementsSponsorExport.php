@@ -25,6 +25,7 @@ class ReimbursementsSponsorExport extends BaseFieldedExport
         'iban' => 'IBAN',
         'iban_name' => 'Tenaamstelling',
         'provider_name' => 'Aanbieder',
+        'category_name' => 'Categorie',
         'title' => 'Title',
         'description' => 'Explanation',
         'files_count' => 'Receipt/invoice count',

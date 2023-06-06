@@ -452,6 +452,8 @@ class Reimbursement extends Model
                 $reimbursement->voucher->identity->bsn : null,
             'iban' => $reimbursement->iban,
             'iban_name' => $reimbursement->iban_name,
+            'provider_name' => $reimbursement->provider_name,
+            'category_name' => $reimbursement->category_name,
             'title' => $reimbursement->title,
             'description' => $reimbursement->description,
             'files_count' => $reimbursement->files_count,
