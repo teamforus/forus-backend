@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\Reimbursements\ApproveReimburse
 use App\Http\Requests\Api\Platform\Organizations\Reimbursements\DeclineReimbursementsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Reimbursements\IndexReimbursementsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Reimbursements\StoreReimbursementNoteRequest;
+use App\Http\Requests\Api\Platform\Organizations\Reimbursements\UpdateReimbursementRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Requests\BaseIndexFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
@@ -63,6 +64,28 @@ class ReimbursementsController extends Controller
         Reimbursement $reimbursement
     ): SponsorReimbursementResource {
         $this->authorize('viewAsSponsor', [$reimbursement, $organization]);
+
+        return SponsorReimbursementResource::create($reimbursement);
+    }
+
+    /**
+     * Update the specified resource in storage
+     *
+     * @param UpdateReimbursementRequest $request
+     * @param Organization $organization
+     * @param Reimbursement $reimbursement
+     * @return SponsorReimbursementResource
+     * @throws AuthorizationException
+     */
+    public function update(
+        UpdateReimbursementRequest $request,
+        Organization $organization,
+        Reimbursement $reimbursement
+    ): SponsorReimbursementResource {
+        $this->authorize('viewAsSponsor', [$reimbursement, $organization]);
+        $this->authorize('updateAsSponsor', [$reimbursement, $organization]);
+
+        $reimbursement->update($request->only('provider_name', 'category_name'));
 
         return SponsorReimbursementResource::create($reimbursement);
     }

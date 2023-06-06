@@ -96,6 +96,36 @@ class ReimbursementPolicy
     }
 
     /**
+     * Determine whether the sponsor can update the model.
+     *
+     * @param Identity $identity
+     * @param Reimbursement $reimbursement
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function updateAsSponsor(
+        Identity $identity,
+        Reimbursement $reimbursement,
+        Organization $organization
+    ): Response|bool {
+        if (!$this->checkIntegrity($reimbursement, $organization)) {
+            return $this->deny('Ongeldig eindpunt');
+        }
+
+        if (!$organization->identityCan($identity, 'manage_reimbursements')) {
+            return false;
+        }
+
+        if (!$reimbursement->employee ||
+            $reimbursement->employee_id !== $organization->findEmployee($identity->address)?->id) {
+            return $this->deny('Niet toegewezen');
+        }
+
+        return true;
+    }
+
+    /**
      * Determine whether the user can update the model.
      *
      * @param Identity $identity
