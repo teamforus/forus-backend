@@ -77,7 +77,7 @@ class ProductResource extends BaseJsonResource
     protected function baseFields(Product $product): array {
         return array_merge($product->only([
             'id', 'name', 'description', 'description_html', 'product_category_id', 'sold_out',
-            'organization_id', 'reservation_enabled', 'reservation_policy',
+            'organization_id', 'reservation_enabled', 'reservation_policy', 'alternative_text',
         ]), [
             'photo' => new MediaResource($product->photo),
             'organization' => new OrganizationBasicResource($product->organization),
