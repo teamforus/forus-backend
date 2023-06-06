@@ -22,6 +22,7 @@ class SponsorReimbursementResource extends ReimbursementResource
             'identity_email' => $reimbursement->voucher->identity->email,
             'identity_bsn' => $bsn_enabled ? $reimbursement->voucher->identity->bsn : null,
             'provider_name' => $reimbursement->provider_name,
+            'category_name' => $reimbursement->category_name,
             'employee' => EmployeeResource::create($reimbursement->employee),
         ]);
     }

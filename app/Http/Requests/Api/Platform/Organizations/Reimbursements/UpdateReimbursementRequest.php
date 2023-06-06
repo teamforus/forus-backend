@@ -25,6 +25,7 @@ class UpdateReimbursementRequest extends FormRequest
     {
         return [
             'provider_name' => 'nullable|string|max:100',
+            'category_name' => 'nullable|string|max:100',
         ];
     }
 }
