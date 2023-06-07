@@ -1,5 +1,6 @@
 <?php
 
+use Database\Seeders\ReimbursementCategoriesTableSeeder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,9 +14,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('reimbursements', function (Blueprint $table) {
-            $table->string('provider_name', 200)->nullable()->after('iban_name');
+        Schema::create('reimbursement_categories', function (Blueprint $table) {
+            $table->id();
+            $table->string('name', 200);
+            $table->timestamps();
         });
+
+        (new ReimbursementCategoriesTableSeeder())->run();
     }
 
     /**
@@ -25,8 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('reimbursements', function (Blueprint $table) {
-            $table->dropColumn('provider_name');
-        });
+        Schema::dropIfExists('reimbursement_categories');
     }
 };

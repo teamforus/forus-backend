@@ -14,7 +14,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('reimbursements', function (Blueprint $table) {
-            $table->string('category_name', 100)->nullable()->after('provider_name');
+            $table->unsignedBigInteger('reimbursement_category_id')->nullable()->after('provider_name');
+
+            $table->foreign('reimbursement_category_id')
+                ->references('id')->on('reimbursement_categories')
+                ->onDelete('restrict');
         });
     }
 
@@ -26,7 +30,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('reimbursements', function (Blueprint $table) {
-            $table->string('category_name');
+            $table->dropForeign('reimbursements_reimbursement_category_id_foreign');
+            $table->dropColumn('reimbursement_category_id');
         });
     }
 };

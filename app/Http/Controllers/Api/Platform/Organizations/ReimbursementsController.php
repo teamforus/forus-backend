@@ -85,7 +85,9 @@ class ReimbursementsController extends Controller
         $this->authorize('viewAsSponsor', [$reimbursement, $organization]);
         $this->authorize('updateAsSponsor', [$reimbursement, $organization]);
 
-        $reimbursement->update($request->only('provider_name', 'category_name'));
+        $reimbursement->update($request->only([
+            'provider_name', 'reimbursement_category_id',
+        ]));
 
         return SponsorReimbursementResource::create($reimbursement);
     }

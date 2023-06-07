@@ -24,8 +24,8 @@ class UpdateReimbursementRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'provider_name' => 'nullable|string|max:100',
-            'category_name' => 'nullable|string|max:100',
+            'provider_name' => 'nullable|string|max:200',
+            'reimbursement_category_id' => 'nullable|exists:reimbursement_categories,id',
         ];
     }
 }

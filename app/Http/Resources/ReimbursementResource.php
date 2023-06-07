@@ -20,6 +20,7 @@ class ReimbursementResource extends BaseJsonResource
         'employee.organization',
         'employee.roles.translations',
         'employee.roles.permissions',
+        'reimbursement_category',
     ];
 
     /**

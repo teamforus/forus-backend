@@ -36,7 +36,7 @@ use Throwable;
  * @property string $iban
  * @property string $iban_name
  * @property string|null $provider_name
- * @property string|null $category_name
+ * @property int|null $reimbursement_category_id
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $submitted_at
  * @property \Illuminate\Support\Carbon|null $resolved_at
@@ -60,34 +60,35 @@ use Throwable;
  * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Note[] $notes
  * @property-read int|null $notes_count
+ * @property-read \App\Models\ReimbursementCategory|null $reimbursement_category
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
  * @property-read \App\Models\Voucher $voucher
  * @property-read \App\Models\VoucherTransaction|null $voucher_transaction
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement newQuery()
- * @method static \Illuminate\Database\Query\Builder|Reimbursement onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement query()
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereCategoryName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereEmployeeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereIban($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereIbanName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereProviderName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereReason($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereResolvedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereSubmittedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Reimbursement whereVoucherId($value)
- * @method static \Illuminate\Database\Query\Builder|Reimbursement withTrashed()
- * @method static \Illuminate\Database\Query\Builder|Reimbursement withoutTrashed()
+ * @method static Builder|Reimbursement newModelQuery()
+ * @method static Builder|Reimbursement newQuery()
+ * @method static Builder|Reimbursement onlyTrashed()
+ * @method static Builder|Reimbursement query()
+ * @method static Builder|Reimbursement whereAmount($value)
+ * @method static Builder|Reimbursement whereCode($value)
+ * @method static Builder|Reimbursement whereCreatedAt($value)
+ * @method static Builder|Reimbursement whereDeletedAt($value)
+ * @method static Builder|Reimbursement whereDescription($value)
+ * @method static Builder|Reimbursement whereEmployeeId($value)
+ * @method static Builder|Reimbursement whereIban($value)
+ * @method static Builder|Reimbursement whereIbanName($value)
+ * @method static Builder|Reimbursement whereId($value)
+ * @method static Builder|Reimbursement whereProviderName($value)
+ * @method static Builder|Reimbursement whereReason($value)
+ * @method static Builder|Reimbursement whereReimbursementCategoryId($value)
+ * @method static Builder|Reimbursement whereResolvedAt($value)
+ * @method static Builder|Reimbursement whereState($value)
+ * @method static Builder|Reimbursement whereSubmittedAt($value)
+ * @method static Builder|Reimbursement whereTitle($value)
+ * @method static Builder|Reimbursement whereUpdatedAt($value)
+ * @method static Builder|Reimbursement whereVoucherId($value)
+ * @method static Builder|Reimbursement withTrashed()
+ * @method static Builder|Reimbursement withoutTrashed()
  * @mixin \Eloquent
  */
 class Reimbursement extends Model
@@ -128,7 +129,7 @@ class Reimbursement extends Model
     protected $fillable = [
         'voucher_id', 'title', 'description', 'amount', 'iban', 'iban_name',
         'state', 'code', 'employee_id', 'submitted_at', 'resolved_at',
-        'reason', 'provider_name', 'category_name',
+        'reason', 'provider_name', 'reimbursement_category_id',
     ];
 
     /**
@@ -160,6 +161,15 @@ class Reimbursement extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function reimbursement_category(): BelongsTo
+    {
+        return $this->belongsTo(ReimbursementCategory::class);
     }
 
     /**
@@ -439,26 +449,37 @@ class Reimbursement extends Model
      */
     private static function exportTransform(Builder $builder, array $fields): SupportCollection
     {
-        $data = $builder->with('voucher.fund')->get();
+        $data = $builder->with([
+            'reimbursement_category',
+            'voucher.fund.organization',
+            'voucher.identity.record_bsn',
+            'voucher.identity.primary_email',
+            'employee.identity.primary_email',
+        ])->get();
 
         return $data->map(fn (Reimbursement $reimbursement) => array_only([
             'id' => $reimbursement->id,
-            'code'   => '#' . $reimbursement->code,
+            'code' => '#' . $reimbursement->code,
             'fund_name' => $reimbursement->voucher->fund->name,
             'amount' => currency_format($reimbursement->amount),
-            'employee' => $reimbursement->employee->identity->email,
+            'employee' => $reimbursement->employee?->identity?->email ?: '-',
             'email' => $reimbursement->voucher->identity->email,
             'bsn' => $reimbursement->voucher->fund->organization->bsn_enabled ?
-                $reimbursement->voucher->identity->bsn : null,
+                ($reimbursement->voucher->identity->record_bsn?->value ?: '-') :
+                '-',
             'iban' => $reimbursement->iban,
             'iban_name' => $reimbursement->iban_name,
-            'provider_name' => $reimbursement->provider_name,
-            'category_name' => $reimbursement->category_name,
+            'provider_name' => $reimbursement->provider_name ?: '-',
+            'category' => $reimbursement->reimbursement_category?->name ?: '-',
             'title' => $reimbursement->title,
             'description' => $reimbursement->description,
             'files_count' => $reimbursement->files_count,
-            'submitted_at' => format_datetime_locale($reimbursement->submitted_at),
-            'resolved_at' => format_datetime_locale($reimbursement->resolved_at),
+            'submitted_at' => $reimbursement->submitted_at ?
+                format_datetime_locale($reimbursement->submitted_at) :
+                '-',
+            'resolved_at' => $reimbursement->resolved_at ?
+                format_datetime_locale($reimbursement->resolved_at) :
+                '-',
             'lead_time' => $reimbursement->lead_time_locale,
             'expired' => $reimbursement->expired ? 'Ja' : 'Nee',
             'state' => $reimbursement->state_locale,

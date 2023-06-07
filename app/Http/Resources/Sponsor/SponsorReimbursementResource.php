@@ -3,7 +3,9 @@
 namespace App\Http\Resources\Sponsor;
 
 use App\Http\Resources\EmployeeResource;
+use App\Http\Resources\ReimbursementCategoryResource;
 use App\Http\Resources\ReimbursementResource;
+use App\Models\ReimbursementCategory;
 
 class SponsorReimbursementResource extends ReimbursementResource
 {
@@ -22,8 +24,8 @@ class SponsorReimbursementResource extends ReimbursementResource
             'identity_email' => $reimbursement->voucher->identity->email,
             'identity_bsn' => $bsn_enabled ? $reimbursement->voucher->identity->bsn : null,
             'provider_name' => $reimbursement->provider_name,
-            'category_name' => $reimbursement->category_name,
             'employee' => EmployeeResource::create($reimbursement->employee),
+            'reimbursement_category' => ReimbursementCategoryResource::create($reimbursement->reimbursement_category),
         ]);
     }
 }

@@ -25,6 +25,7 @@ $router->group([], static function() use ($router) {
     $router->resource('organizations', "Api\Platform\OrganizationsController")->only('index');
     $router->resource('business-types', "Api\Platform\BusinessTypeController")->only('index', 'show');
     $router->resource('product-categories', "Api\Platform\ProductCategoriesController")->only('index', 'show');
+    $router->resource('reimbursement-categories', "Api\Platform\ReimbursementCategoriesController")->only('index', 'show');
 
     if (config('forus.features.webshop.funds.fund_requests', FALSE)) {
         $router->resource(
