@@ -20,6 +20,6 @@ class FundFormulaResource extends JsonResource
      */
     public function toArray($request): array
     {
-        return $this->resource->only('type', 'amount', 'record_type_key');
+        return $this->resource->only('type', 'amount', 'amount_locale', 'record_type_key');
     }
 }

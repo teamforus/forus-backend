@@ -167,7 +167,7 @@ class VoucherResource extends BaseJsonResource
             $used = $voucher->transactions_count > 0;
             $amount = $voucher->amount;
             $productResource = array_merge($voucher->product->only([
-                'id', 'name', 'description', 'description_html', 'price',
+                'id', 'name', 'description', 'description_html', 'price', 'price_locale',
                 'total_amount', 'sold_amount', 'product_category_id',
                 'organization_id'
             ]), [
@@ -184,6 +184,7 @@ class VoucherResource extends BaseJsonResource
         return [
             'used' => $used,
             'amount' => currency_format($amount),
+            'amount_locale' => currency_format_locale($amount),
             'product' => $productResource,
         ];
     }

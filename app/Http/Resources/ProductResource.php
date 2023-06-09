@@ -44,11 +44,6 @@ class ProductResource extends BaseJsonResource
         return $simplified ? $this->baseFields($product) : array_merge($this->baseFields($product), [
             'total_amount' => $product->total_amount,
 
-            // new price fields
-            'price_type' => $product->price_type,
-            'price_discount' => $product->price_discount ? currency_format($product->price_discount) : null,
-            'price_discount_locale' => $product->price_discount_locale,
-
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->countReservedCached(),
             'sold_amount' => $product->countSold(),
@@ -60,13 +55,12 @@ class ProductResource extends BaseJsonResource
             'deleted_at_locale' => format_date_locale($product->deleted_at ?? null),
             'deleted' => $product->trashed(),
             'funds' => $product->trashed() ? [] : $this->getProductFunds($baseRequest, $product),
-            'price_min' => currency_format($this->getProductSubsidyPrice($product, 'max')),
-            'price_max' => currency_format($this->getProductSubsidyPrice($product, 'min')),
             'offices' => OfficeResource::collection($product->organization->offices),
             'product_category' => new ProductCategoryResource($product->product_category),
             'bookmarked' => $product->isBookmarkedBy($baseRequest->identity()),
         ], array_merge(
             $this->productReservationFieldSettings($product),
+            $this->priceFields($product)
         ));
     }
 
@@ -84,6 +78,28 @@ class ProductResource extends BaseJsonResource
             'price' => is_null($product->price) ? null : currency_format($product->price),
             'price_locale' => $product->price_locale,
         ]);
+    }
+
+    /**
+     * @param Product $product
+     * @return array
+     */
+    protected function priceFields(Product $product): array {
+        $price_min = $this->getProductSubsidyPrice($product, 'max');
+        $price_max = $this->getProductSubsidyPrice($product, 'min');
+        $lowest_price = min($product->price, $price_min);
+
+        return [
+            'price_type' => $product->price_type,
+            'price_discount' => $product->price_discount ? currency_format($product->price_discount) : null,
+            'price_discount_locale' => $product->price_discount_locale,
+            'price_min' => currency_format($price_min),
+            'price_min_locale' => currency_format_locale($price_min),
+            'price_max' => currency_format($price_max),
+            'price_max_locale' => currency_format_locale($price_max),
+            'lowest_price' => $product->price_type === 'regular' ? currency_format($lowest_price) : null,
+            'lowest_price_locale' => $product->price_type === 'regular' ? currency_format_locale($lowest_price) : null,
+        ];
     }
 
     /**

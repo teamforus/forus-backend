@@ -250,11 +250,11 @@ class FundSubscriber
 
         $eventLog = $fund->log($fund::EVENT_BALANCE_LOW, $this->getFundLogModels($fund), [
             'fund_budget_left' => currency_format($fund->budget_left),
-            'fund_budget_left_locale' => currency_format_locale($fund->budget_left),
+            'fund_budget_left_locale' => currency_format_locale($fund->budget_left, $fund->getImplementation()),
             'fund_notification_amount' => currency_format($fund->notification_amount),
-            'fund_notification_amount_locale' => currency_format_locale($fund->notification_amount),
+            'fund_notification_amount_locale' => currency_format_locale($fund->notification_amount, $fund->getImplementation()),
             'fund_transaction_costs' => currency_format($fund->getTransactionCosts()),
-            'fund_transaction_costs_locale' => currency_format_locale($fund->getTransactionCosts()),
+            'fund_transaction_costs_locale' => currency_format_locale($fund->getTransactionCosts(), $fund->getImplementation()),
         ]);
 
         BalanceLowNotification::send($eventLog);
@@ -279,7 +279,7 @@ class FundSubscriber
             'fund_top_up_transaction' => $transaction,
         ]), [
             'fund_top_up_amount' => currency_format($transaction->amount),
-            'fund_top_up_amount_locale' => currency_format_locale($transaction->amount)
+            'fund_top_up_amount_locale' => currency_format_locale($transaction->amount, $fund->getImplementation())
         ]);
 
         BalanceSuppliedNotification::send($eventLog);

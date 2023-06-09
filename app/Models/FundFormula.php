@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
+ * @property-read string|null $amount_locale
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormula newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormula newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormula query()
@@ -32,6 +33,15 @@ class FundFormula extends BaseModel
     protected $fillable = [
         'id', 'fund_id', 'type', 'amount', 'record_type_key'
     ];
+
+    /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getAmountLocaleAttribute(): ?string
+    {
+        return currency_format_locale($this->amount);
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

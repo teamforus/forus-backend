@@ -72,11 +72,13 @@ use Illuminate\Support\Facades\Gate;
  * @property bool $show_voucher_map
  * @property bool $show_product_map
  * @property bool $allow_per_fund_notification_templates
+ * @property string $currency_sign
+ * @property int $currency_round
  * @property bool $digid_enabled
- * @property bool $digid_required
- * @property bool $digid_sign_up_allowed
  * @property string $digid_connection_type
  * @property array|null $digid_saml_context
+ * @property bool $digid_required
+ * @property bool $digid_sign_up_allowed
  * @property string $digid_env
  * @property string|null $digid_app_id
  * @property string|null $digid_shared_secret
@@ -85,18 +87,18 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $digid_trusted_cert
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Announcement> $announcements_webshop
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
  * @property-read int|null $announcements_webshop_count
  * @property-read Media|null $banner
  * @property-read Media|null $email_logo
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FundConfig> $fund_configs
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
  * @property-read int|null $fund_configs_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Fund> $funds
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\NotificationTemplate> $mail_templates
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\NotificationTemplate[] $mail_templates
  * @property-read int|null $mail_templates_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Media> $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\ImplementationPage|null $page_accessibility
@@ -104,17 +106,19 @@ use Illuminate\Support\Facades\Gate;
  * @property-read \App\Models\ImplementationPage|null $page_privacy
  * @property-read \App\Models\ImplementationPage|null $page_provider
  * @property-read \App\Models\ImplementationPage|null $page_terms_and_conditions
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ImplementationPage> $pages
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages
  * @property-read int|null $pages_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ImplementationPage> $pages_public
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages_public
  * @property-read int|null $pages_public_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ImplementationSocialMedia> $social_medias
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationSocialMedia[] $social_medias
  * @property-read int|null $social_medias_count
  * @method static Builder|Implementation newModelQuery()
  * @method static Builder|Implementation newQuery()
  * @method static Builder|Implementation query()
  * @method static Builder|Implementation whereAllowPerFundNotificationTemplates($value)
  * @method static Builder|Implementation whereCreatedAt($value)
+ * @method static Builder|Implementation whereCurrencyRound($value)
+ * @method static Builder|Implementation whereCurrencySign($value)
  * @method static Builder|Implementation whereDescription($value)
  * @method static Builder|Implementation whereDescriptionAlignment($value)
  * @method static Builder|Implementation whereDigidASelectServer($value)
@@ -187,6 +191,12 @@ class Implementation extends BaseModel
         self::FRONTEND_VALIDATOR_DASHBOARD,
     ];
 
+    const CURRENCY_SIGN_COIN = '⛁';
+    const CURRENCY_SIGN_EUR = '€';
+
+    public const WITH_CURRENCY_COIN = ['doetegoed'];
+    public const WITH_CURRENCY_ROUND = ['doetegoed'];
+
     protected $perPage = 20;
     protected static ?Implementation $generalModel = null;
     protected static ?Implementation $activeModel = null;
@@ -202,6 +212,7 @@ class Implementation extends BaseModel
         'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
+        'currency_sign', 'currency_round',
     ];
 
     /**
