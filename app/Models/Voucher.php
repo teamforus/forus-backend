@@ -711,6 +711,19 @@ class Voucher extends BaseModel
             $query->where('amount', '<=', $request->input('amount_max'));
         }
 
+        if ($request->has('amount_available_min') || $request->has('amount_available_max')) {
+            $query = VoucherQuery::addBalanceFields($query);
+            $query = Voucher::query()->fromSub($query, 'vouchers');
+        }
+
+        if ($request->has('amount_available_min')) {
+            $query->where('balance', '>=', $request->input('amount_available_min'));
+        }
+
+        if ($request->has('amount_available_max')) {
+            $query->where('balance', '<=', $request->input('amount_available_max'));
+        }
+
         if ($request->has('from')) {
             $query->where('created_at', '>=', Carbon::parse(
                 $request->input('from'))->startOfDay()
