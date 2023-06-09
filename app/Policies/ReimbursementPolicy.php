@@ -8,21 +8,26 @@ use App\Models\Organization;
 use App\Models\Reimbursement;
 use App\Scopes\Builders\VoucherQuery;
 use App\Traits\Policies\DeniesWithMeta;
+use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
 class ReimbursementPolicy
 {
     use DeniesWithMeta;
+    use HandlesAuthorization;
 
     /**
-     * Determine whether the user can view any models.
-     *
      * @param Identity $identity
-     * @return bool
+     * @param bool $auth2FAConfirmed
+     * @return Response|bool
      */
-    public function viewAny(Identity $identity): bool
+    public function viewAny(Identity $identity, bool $auth2FAConfirmed = false): Response|bool
     {
-        return $identity->exists();
+        if (!$identity->exists()) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
@@ -40,13 +45,21 @@ class ReimbursementPolicy
     /**
      * Determine whether the user can view the model.
      *
-     * @param  \App\Models\Identity  $identity
-     * @param  \App\Models\Reimbursement  $reimbursement
-     * @return bool
+     * @param Identity $identity
+     * @param Reimbursement $reimbursement
+     * @param bool $auth2FAConfirmed
+     * @return Response|bool
      */
-    public function view(Identity $identity, Reimbursement $reimbursement): bool
-    {
-        return $reimbursement->voucher->identity_address === $identity->address;
+    public function view(
+        Identity $identity,
+        Reimbursement $reimbursement,
+        bool $auth2FAConfirmed = false,
+    ): Response|bool {
+        if ($reimbursement->voucher->identity_address !== $identity->address) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
@@ -69,15 +82,20 @@ class ReimbursementPolicy
      * Determine whether the user can create models.
      *
      * @param Identity $identity
+     * @param bool $auth2FAConfirmed
      * @return bool
      */
-    public function create(Identity $identity): bool
+    public function create(Identity $identity, bool $auth2FAConfirmed = false): bool
     {
         $vouchersQuery = $identity->vouchers()->whereRelation('fund.fund_config', [
             'allow_reimbursements' => true,
         ]);
 
-        return VoucherQuery::whereNotExpiredAndActive($vouchersQuery)->exists();
+        if (VoucherQuery::whereNotExpiredAndActive($vouchersQuery)->doesntExist()) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
@@ -85,14 +103,23 @@ class ReimbursementPolicy
      *
      * @param Identity $identity
      * @param Reimbursement $reimbursement
+     * @param bool $auth2FAConfirmed
      * @return bool
      */
-    public function update(Identity $identity, Reimbursement $reimbursement): bool
-    {
-        return
-            !$reimbursement->expired &&
-            $reimbursement->isDraft() &&
-            $reimbursement->voucher->identity_address === $identity->address;
+    public function update(
+        Identity $identity,
+        Reimbursement $reimbursement,
+        bool $auth2FAConfirmed = false,
+    ): bool {
+        if ($reimbursement->isExpired() || $reimbursement->isDraft()) {
+            return false;
+        }
+
+        if ($reimbursement->voucher->identity_address !== $identity->address) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
@@ -150,7 +177,7 @@ class ReimbursementPolicy
         Organization $organization
     ): Response|bool {
         if (!$this->checkIntegrity($reimbursement, $organization)) {
-            return $this->deny('invalid_endpoint');
+            return $this->denyWithMeta('invalid_endpoint');
         }
 
         if (!$organization->identityCan($identity, 'manage_reimbursements')) {
@@ -158,15 +185,15 @@ class ReimbursementPolicy
         }
 
         if (!$reimbursement->isPending()) {
-            return $this->deny('not_pending');
+            return $this->denyWithMeta('not_pending');
         }
 
         if ($reimbursement->employee) {
-            return $this->deny('already_assigned');
+            return $this->denyWithMeta('already_assigned');
         }
 
         if ($reimbursement->expired) {
-            return $this->deny('expired');
+            return $this->denyWithMeta('expired');
         }
 
         return true;
@@ -186,7 +213,7 @@ class ReimbursementPolicy
         Organization $organization
     ): Response|bool {
         if (!$this->checkIntegrity($reimbursement, $organization)) {
-            return $this->deny('invalid_endpoint');
+            return $this->denyWithMeta('invalid_endpoint');
         }
 
         if (!$organization->identityCan($identity, 'manage_reimbursements')) {
@@ -194,15 +221,15 @@ class ReimbursementPolicy
         }
 
         if (!$reimbursement->isPending()) {
-            return $this->deny('not_pending');
+            return $this->denyWithMeta('not_pending');
         }
 
         if ($reimbursement->employee_id !== $organization->findEmployee($identity->address)?->id) {
-            return $this->deny('not_assigned');
+            return $this->denyWithMeta('not_assigned');
         }
 
         if (!$reimbursement->employee) {
-            return $this->deny('not_assigned');
+            return $this->denyWithMeta('not_assigned');
         }
 
         return true;
@@ -222,7 +249,7 @@ class ReimbursementPolicy
         Organization $organization
     ): Response|bool {
         if (!$this->checkIntegrity($reimbursement, $organization)) {
-            return $this->deny('invalid_endpoint');
+            return $this->denyWithMeta('invalid_endpoint');
         }
 
         if (!$organization->identityCan($identity, 'manage_reimbursements')) {
@@ -247,7 +274,7 @@ class ReimbursementPolicy
     ): Response|bool {
 
         if (!$this->checkIntegrity($reimbursement, $organization)) {
-            return $this->deny('invalid_endpoint');
+            return $this->denyWithMeta('invalid_endpoint');
         }
 
         if (!$organization->identityCan($identity, 'manage_reimbursements')) {
@@ -255,7 +282,7 @@ class ReimbursementPolicy
         }
 
         if ($reimbursement->employee?->identity_address !== $identity->address) {
-            return $this->deny('not_assigned');
+            return $this->denyWithMeta('not_assigned');
         }
 
         return true;
@@ -277,7 +304,7 @@ class ReimbursementPolicy
         Note $note
     ): Response|bool {
         if (!$this->checkIntegrity($reimbursement, $organization)) {
-            return $this->deny('invalid_endpoint');
+            return $this->denyWithMeta('invalid_endpoint');
         }
 
         if (!$organization->identityCan($identity, 'manage_reimbursements')) {
@@ -285,7 +312,7 @@ class ReimbursementPolicy
         }
 
         if ($note->employee?->identity_address !== $identity->address) {
-            return $this->deny('not_author');
+            return $this->denyWithMeta('not_author');
         }
 
         return true;
@@ -296,15 +323,23 @@ class ReimbursementPolicy
      *
      * @param Identity $identity
      * @param Reimbursement $reimbursement
+     * @param bool $auth2FAConfirmed
      * @return Response|bool
      */
-    public function delete(Identity $identity, Reimbursement $reimbursement): Response|bool
-    {
+    public function delete(
+        Identity $identity,
+        Reimbursement $reimbursement,
+        bool $auth2FAConfirmed = false,
+    ): Response|bool {
         if (!$reimbursement->isDraft()) {
             return $this->deny('Only draft requests can be canceled.');
         }
 
-        return $reimbursement->voucher->identity_address === $identity->address;
+        if ($reimbursement->voucher->identity_address !== $identity->address) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
@@ -315,5 +350,19 @@ class ReimbursementPolicy
     private function checkIntegrity(Reimbursement $reimbursement, Organization $organization): bool
     {
         return $reimbursement->voucher->fund->organization_id === $organization->id;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param bool $auth2FAConfirmed
+     * @return Response|bool
+     */
+    protected function validate2FAFeatureRestriction(Identity $identity, bool $auth2FAConfirmed = false): Response|bool
+    {
+        if ($identity->isFeature2FARestricted('sessions') && !$auth2FAConfirmed) {
+            return $this->deny('Invalid 2FA state.');
+        }
+
+        return true;
     }
 }

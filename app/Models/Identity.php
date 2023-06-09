@@ -3,14 +3,23 @@
 namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Services\Forus\Auth2FAService\Data\Auth2FASecret;
+use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Config;
+use PhpParser\Node\Expr\BinaryOp\BooleanOr;
+use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
+use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;
+use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * App\Models\Identity
@@ -23,12 +32,21 @@ use Illuminate\Notifications\Notifiable;
  * @property string $address
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property bool $auth_2fa_remember_ip
+ * @property-read Collection|Auth2FAProvider[] $auth_2fa_providers_active
+ * @property-read int|null $auth_2fa_providers_active_count
  * @property-read Collection|\App\Models\IdentityEmail[] $emails
  * @property-read int|null $emails_count
  * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
+ * @property-read Collection|\App\Models\Fund[] $funds
+ * @property-read int|null $funds_count
  * @property-read string|null $bsn
  * @property-read string|null $email
+ * @property-read Collection|\App\Models\Identity2FA[] $identity_2fa
+ * @property-read int|null $identity_2fa_count
+ * @property-read Collection|\App\Models\Identity2FA[] $identity_2fa_active
+ * @property-read int|null $identity_2fa_active_count
  * @property-read \App\Models\IdentityEmail|null $initial_email
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\App\Models\Notification[] $notifications
  * @property-read int|null $notifications_count
@@ -48,6 +66,7 @@ use Illuminate\Notifications\Notifiable;
  * @method static Builder|Identity newQuery()
  * @method static Builder|Identity query()
  * @method static Builder|Identity whereAddress($value)
+ * @method static Builder|Identity whereAuth2faRememberIp($value)
  * @method static Builder|Identity whereCreatedAt($value)
  * @method static Builder|Identity whereId($value)
  * @method static Builder|Identity wherePassphrase($value)
@@ -81,17 +100,24 @@ class Identity extends Model implements Authenticatable
     /**
      * The attributes that are mass assignable.
      *
-     * @var array
+     * @var string[]
      */
     protected $fillable = [
-        'pin_code', 'address', 'passphrase', 'private_key', 'public_key'
+        'pin_code', 'address', 'passphrase', 'private_key', 'public_key', 'auth_2fa_remember_ip',
     ];
 
     /**
      * @var string[]
      */
     protected $hidden = [
-        'pin_code', 'passphrase', 'private_key', 'public_key'
+        'pin_code', 'passphrase', 'private_key', 'public_key', 'auth_2fa_remember_ip',
+    ];
+
+    /**
+     * @var string[]
+     */
+    protected $casts = [
+        'auth_2fa_remember_ip' => 'boolean',
     ];
 
     /**
@@ -101,6 +127,67 @@ class Identity extends Model implements Authenticatable
     public function emails(): HasMany
     {
         return $this->hasMany(IdentityEmail::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function identity_2fa(): HasMany
+    {
+        return $this->hasMany(Identity2FA::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function identity_2fa_active(): HasMany
+    {
+        return $this
+            ->hasMany(Identity2FA::class, 'identity_address', 'address')
+            ->where('state', Identity2FA::STATE_ACTIVE);
+    }
+
+    /**
+     * @return BelongsToMany
+     * @noinspection PhpUnused
+     */
+    private function auth_2fa_providers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Auth2FAProvider::class,
+            'identity_2fa',
+            'identity_address',
+            'auth_2fa_provider_id',
+            'address',
+        );
+    }
+
+    /**
+     * @return BelongsToMany
+     * @noinspection PhpUnused
+     */
+    public function auth_2fa_providers_active(): BelongsToMany
+    {
+        return $this->auth_2fa_providers()->where([
+            'identity_2fa.state' => Identity2FA::STATE_ACTIVE,
+        ])->whereNull('deleted_at');
+    }
+
+    /**
+     * @return BelongsToMany
+     * @noinspection PhpUnused
+     */
+    public function funds(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Fund::class,
+            'vouchers',
+            'identity_address',
+            'fund_id',
+            'address',
+        )->groupBy('id');
     }
 
     /**
@@ -488,31 +575,34 @@ class Identity extends Model implements Authenticatable
     /**
      * Authorize proxy identity by code
      * @param string $code
+     * @param string|null $ip
      * @return bool
      */
-    public function activateAuthorizationCodeProxy(string $code): bool
+    public function activateAuthorizationCodeProxy(string $code, ?string $ip = null): bool
     {
-        return (bool) static::exchangeToken('pin_code', $code, $this);
+        return (bool) static::exchangeToken('pin_code', $code, $this, $ip);
     }
 
     /**
      * Authorize proxy identity by token
      * @param string $token
+     * @param string|null $ip
      * @return bool
      */
-    public function activateAuthorizationTokenProxy(string $token): bool
+    public function activateAuthorizationTokenProxy(string $token, ?string $ip = null): bool
     {
-        return (bool) static::exchangeToken('qr_code', $token, $this);
+        return (bool) static::exchangeToken('qr_code', $token, $this, $ip);
     }
 
     /**
      * Authorize proxy identity by token
      * @param string $token
+     * @param string|null $ip
      * @return bool
      */
-    public function activateAuthorizationShortTokenProxy(string $token): bool
+    public function activateAuthorizationShortTokenProxy(string $token, ?string $ip = null): bool
     {
-        return (bool) static::exchangeToken('short_token', $token, $this);
+        return (bool) static::exchangeToken('short_token', $token, $this, $ip);
     }
 
     /**
@@ -521,12 +611,14 @@ class Identity extends Model implements Authenticatable
      * @param string $type
      * @param string $exchangeToken
      * @param Identity|null $identity
+     * @param string|null $ip
      * @return IdentityProxy
      */
     private static function exchangeToken(
         string $type,
         string $exchangeToken,
-        Identity $identity = null
+        Identity $identity = null,
+        ?string $ip = null,
     ): IdentityProxy {
         $proxy = IdentityProxy::findByExchangeToken($exchangeToken, $type);
 
@@ -552,6 +644,10 @@ class Identity extends Model implements Authenticatable
 
         $initialEmail = $proxy->identity->initial_email;
         $isEmailToken = in_array($type, ['email_code', 'confirmation_code']);
+
+        if ($ip) {
+            $proxy->inherit2FAState($ip, Config::get('forus.auth_2fa.remember_hours'));
+        }
 
         if ($isEmailToken && $initialEmail && !$initialEmail->verified) {
             $initialEmail->setVerified();
@@ -596,21 +692,23 @@ class Identity extends Model implements Authenticatable
     /**
      * Authorize proxy identity by email token
      * @param string $token
+     * @param string|null $ip
      * @return string
      */
-    public static function activateAuthorizationEmailProxy(string $token): string
+    public static function activateAuthorizationEmailProxy(string $token, ?string $ip = null): string
     {
-        return static::exchangeToken('email_code', $token)->access_token;
+        return static::exchangeToken('email_code', $token, null, $ip)->access_token;
     }
 
     /**
      * Authorize proxy identity by email token
      * @param string $token
+     * @param string|null $ip
      * @return string
      */
-    public static function exchangeEmailConfirmationToken(string $token): string
+    public static function exchangeEmailConfirmationToken(string $token, ?string $ip = null): string
     {
-        return static::exchangeToken('confirmation_code', $token)->access_token;
+        return static::exchangeToken('confirmation_code', $token, null, $ip)->access_token;
     }
 
     /**
@@ -731,5 +829,100 @@ class Identity extends Model implements Authenticatable
     public function __toString()
     {
         return $this->address ?: "";
+    }
+
+    /**
+     * @return bool
+     */
+    public function is2FARequired(): bool
+    {
+        // 2FA is configured by the identity
+        if ($this->is2FAConfigured()) {
+            return true;
+        }
+
+        // Identity is an employee of an organization where 2fa is required
+        if ($this->isEmployeeWhere2FAIsRequired()) {
+            return true;
+        }
+
+        // Identity has a voucher from a fund where 2fa is required
+        if ($this->hasVouchersFromFundsWhere2FAIsRequired()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEmployeeWhere2FAIsRequired(): bool
+    {
+        return $this->employees()->whereRelation(
+            'organization',
+            'auth_2fa_policy',
+            Organization::AUTH_2FA_POLICY_REQUIRED,
+        )->exists();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasVouchersFromFundsWhere2FAIsRequired(): bool
+    {
+        return $this->vouchers()->whereHas('fund', function(Builder $builder) {
+            $builder->whereRelation(
+                'fund_config',
+                'auth_2fa_policy',
+                FundConfig::AUTH_2FA_POLICY_REQUIRED
+            );
+        })->exists();
+    }
+
+    /**
+     * @param bool $fresh
+     * @return bool
+     */
+    public function is2FAConfigured(bool $fresh = false): bool
+    {
+        return $fresh ?
+            $this->identity_2fa_active()->exists() :
+            $this->identity_2fa_active->isNotEmpty();
+    }
+
+    /**
+     * @param string $company
+     * @param string $email
+     * @return Auth2FASecret
+     * @throws IncompatibleWithGoogleAuthenticatorException
+     * @throws InvalidCharactersException
+     * @throws SecretKeyTooShortException
+     */
+    public function make2FASecret(string $company, string $email): Auth2FASecret
+    {
+        return resolve('forus.services.auth2fa')->make2FASecret($company, $email);
+    }
+
+    /**
+     * @param string $feature
+     * @return SupportCollection
+     */
+    public function getRestricting2FAFunds(string $feature): SupportCollection
+    {
+        return $this->funds->filter(fn(Fund $fund) => $fund->fund_config?->{match($feature) {
+            'emails' => 'auth_2fa_restrict_emails',
+            'sessions' => 'auth_2fa_restrict_auth_sessions',
+            'reimbursements' => 'auth_2fa_restrict_reimbursements',
+        }} ?? false)->values();
+    }
+
+    /**
+     * @param string $feature
+     * @return bool
+     */
+    public function isFeature2FARestricted(string $feature): bool
+    {
+        return $this->getRestricting2FAFunds($feature)->isNotEmpty();
     }
 }

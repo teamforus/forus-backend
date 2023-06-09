@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Reimbursements\IndexReimbursementsRequest;
 use App\Http\Requests\Api\Platform\Reimbursements\StoreReimbursementRequest;
 use App\Http\Requests\Api\Platform\Reimbursements\UpdateReimbursementRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\ReimbursementResource;
 use App\Models\Reimbursement;
 use App\Searches\ReimbursementsSearch;
@@ -25,7 +26,10 @@ class ReimbursementsController extends Controller
      */
     public function index(IndexReimbursementsRequest $request): AnonymousResourceCollection
     {
-        $this->authorize('viewAny', Reimbursement::class);
+        $this->authorize('viewAny', [
+            Reimbursement::class,
+            $request->identityProxy2FAConfirmed(),
+        ]);
 
         $builder = Reimbursement::whereRelation('voucher', 'identity_address', $request->auth_address());
         $search = new ReimbursementsSearch($request->only('state', 'fund_id', 'archived'), $builder);
@@ -43,7 +47,10 @@ class ReimbursementsController extends Controller
      */
     public function store(StoreReimbursementRequest $request): ReimbursementResource
     {
-        $this->authorize('create', Reimbursement::class);
+        $this->authorize('create', [
+            Reimbursement::class,
+            $request->identityProxy2FAConfirmed(),
+        ]);
 
         $files = $request->input('files');
         $voucher = $request->identity()->vouchers()->find($request->input('voucher_id'));
@@ -61,13 +68,16 @@ class ReimbursementsController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param BaseFormRequest $request
      * @param Reimbursement $reimbursement
      * @return ReimbursementResource
-     * @throws AuthorizationException
      */
-    public function show(Reimbursement $reimbursement): ReimbursementResource
+    public function show(BaseFormRequest $request, Reimbursement $reimbursement): ReimbursementResource
     {
-        $this->authorize('view', $reimbursement);
+        $this->authorize('view', [
+            $reimbursement,
+            $request->identityProxy2FAConfirmed(),
+        ]);
 
         return ReimbursementResource::create($reimbursement);
     }
@@ -84,7 +94,10 @@ class ReimbursementsController extends Controller
         UpdateReimbursementRequest $request,
         Reimbursement $reimbursement
     ): ReimbursementResource {
-        $this->authorize('update', $reimbursement);
+        $this->authorize('update', [
+            $reimbursement,
+            $request->identityProxy2FAConfirmed(),
+        ]);
 
         $submit =
             $reimbursement->isDraft() &&
@@ -108,13 +121,16 @@ class ReimbursementsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
+     * @param BaseFormRequest $request
      * @param Reimbursement $reimbursement
      * @return JsonResponse
-     * @throws AuthorizationException
      */
-    public function destroy(Reimbursement $reimbursement): JsonResponse
+    public function destroy(BaseFormRequest $request, Reimbursement $reimbursement): JsonResponse
     {
-        $this->authorize('delete', $reimbursement);
+        $this->authorize('delete', [
+            $reimbursement,
+            $request->identityProxy2FAConfirmed(),
+        ]);
 
         $reimbursement->delete();
 

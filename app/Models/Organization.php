@@ -18,6 +18,7 @@ use App\Services\MediaService\Models\Media;
 use App\Traits\HasMarkdownDescription;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +37,8 @@ use Illuminate\Database\Query\Builder;
  *
  * @property int $id
  * @property string|null $identity_address
+ * @property string $auth_2fa_policy
+ * @property bool $auth_2fa_remember_ip
  * @property string $name
  * @property string|null $description
  * @property string|null $description_text
@@ -48,7 +51,7 @@ use Illuminate\Database\Query\Builder;
  * @property string $btw
  * @property string|null $website
  * @property bool $website_public
- * @property string $low_balance_email
+ * @property string|null $low_balance_email
  * @property int|null $business_type_id
  * @property bool $is_sponsor
  * @property bool $is_provider
@@ -57,90 +60,94 @@ use Illuminate\Database\Query\Builder;
  * @property bool $reservations_budget_enabled
  * @property bool $reservations_subsidy_enabled
  * @property bool $reservations_auto_accept
+ * @property string $reservation_phone
+ * @property string $reservation_address
+ * @property string $reservation_birth_date
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
  * @property bool $allow_custom_fund_notifications
  * @property bool $allow_budget_fund_limits
  * @property bool $allow_manual_bulk_processing
+ * @property bool $allow_2fa_restrictions
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
  * @property int $show_provider_transactions
- * @property string $reservation_phone
- * @property string $reservation_address
- * @property string $reservation_birth_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
- * @property-read Collection<int, \App\Models\BankConnection> $bank_connections
+ * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
  * @property-read \App\Models\BusinessType|null $business_type
- * @property-read Collection<int, \App\Services\EventLogService\Models\Digest> $digests
+ * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
  * @property-read int|null $digests_count
- * @property-read Collection<int, \App\Models\Employee> $employees
+ * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
- * @property-read Collection<int, \App\Models\Employee> $employees_with_trashed
+ * @property-read Collection|\App\Models\Employee[] $employees_with_trashed
  * @property-read int|null $employees_with_trashed_count
- * @property-read Collection<int, Organization> $external_validators
+ * @property-read Collection|Organization[] $external_validators
  * @property-read int|null $external_validators_count
- * @property-read Collection<int, \App\Models\FundProviderInvitation> $fund_provider_invitations
+ * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
- * @property-read Collection<int, \App\Models\FundProvider> $fund_providers
+ * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
- * @property-read Collection<int, \App\Models\FundRequest> $fund_requests
+ * @property-read Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
- * @property-read Collection<int, \App\Models\Fund> $funds
+ * @property-read Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
  * @property-read \App\Models\Identity|null $identity
- * @property-read Collection<int, \App\Models\Implementation> $implementations
+ * @property-read Collection|\App\Models\Implementation[] $implementations
  * @property-read int|null $implementations_count
  * @property-read Session|null $last_employee_session
  * @property-read Media|null $logo
- * @property-read Collection<int, \App\Services\EventLogService\Models\EventLog> $logs
+ * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read Collection<int, Media> $medias
+ * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
- * @property-read Collection<int, \App\Models\Office> $offices
+ * @property-read Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
- * @property-read Collection<int, \App\Models\OrganizationValidator> $organization_validators
+ * @property-read Collection|\App\Models\OrganizationValidator[] $organization_validators
  * @property-read int|null $organization_validators_count
- * @property-read Collection<int, \App\Models\Product> $products
+ * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
- * @property-read Collection<int, \App\Models\Product> $products_as_sponsor
+ * @property-read Collection|\App\Models\Product[] $products_as_sponsor
  * @property-read int|null $products_as_sponsor_count
- * @property-read Collection<int, \App\Models\Product> $products_provider
+ * @property-read Collection|\App\Models\Product[] $products_provider
  * @property-read int|null $products_provider_count
- * @property-read Collection<int, \App\Models\Product> $products_sponsor
+ * @property-read Collection|\App\Models\Product[] $products_sponsor
  * @property-read int|null $products_sponsor_count
- * @property-read Collection<int, \App\Models\Fund> $supplied_funds
+ * @property-read Collection|\App\Models\Fund[] $supplied_funds
  * @property-read int|null $supplied_funds_count
- * @property-read Collection<int, \App\Models\Fund> $supplied_funds_approved
+ * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved
  * @property-read int|null $supplied_funds_approved_count
- * @property-read Collection<int, \App\Models\Fund> $supplied_funds_approved_budget
+ * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved_budget
  * @property-read int|null $supplied_funds_approved_budget_count
- * @property-read Collection<int, \App\Models\Fund> $supplied_funds_approved_products
+ * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved_products
  * @property-read int|null $supplied_funds_approved_products_count
- * @property-read Collection<int, \App\Models\Tag> $tags
+ * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
- * @property-read Collection<int, \App\Models\OrganizationValidator> $validated_organizations
+ * @property-read Collection|\App\Models\OrganizationValidator[] $validated_organizations
  * @property-read int|null $validated_organizations_count
- * @property-read Collection<int, \App\Models\VoucherTransactionBulk> $voucher_transaction_bulks
+ * @property-read Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
  * @property-read int|null $voucher_transaction_bulks_count
- * @property-read Collection<int, \App\Models\VoucherTransaction> $voucher_transactions
+ * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
- * @property-read Collection<int, \App\Models\Voucher> $vouchers
+ * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
  * @method static EloquentBuilder|Organization newModelQuery()
  * @method static EloquentBuilder|Organization newQuery()
  * @method static EloquentBuilder|Organization query()
+ * @method static EloquentBuilder|Organization whereAllow2faRestrictions($value)
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
+ * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
  * @method static EloquentBuilder|Organization whereBankCronTime($value)
  * @method static EloquentBuilder|Organization whereBsnEnabled($value)
@@ -169,7 +176,6 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereReservationAddress($value)
  * @method static EloquentBuilder|Organization whereReservationBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationPhone($value)
- * @method static EloquentBuilder|Organization whereReservationRequesterBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
  * @method static EloquentBuilder|Organization whereReservationsBudgetEnabled($value)
  * @method static EloquentBuilder|Organization whereReservationsSubsidyEnabled($value)
@@ -190,6 +196,14 @@ class Organization extends BaseModel
     public const FUND_REQUEST_POLICY_AUTO_REQUESTED = 'apply_auto_requested';
     public const FUND_REQUEST_POLICY_AUTO_AVAILABLE = 'apply_auto_available';
 
+    public const AUTH_2FA_POLICY_OPTIONAL = 'optional';
+    public const AUTH_2FA_POLICY_REQUIRED = 'required';
+
+    public const AUTH_2FA_POLICIES = [
+        self::AUTH_2FA_POLICY_OPTIONAL,
+        self::AUTH_2FA_POLICY_REQUIRED,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -203,6 +217,7 @@ class Organization extends BaseModel
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
         'reservation_phone', 'reservation_address', 'reservation_birth_date',
+        'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
     ];
 
     /**
@@ -226,8 +241,10 @@ class Organization extends BaseModel
         'allow_custom_fund_notifications'       => 'boolean',
         'allow_budget_fund_limits'              => 'boolean',
         'allow_manual_bulk_processing'          => 'boolean',
+        'allow_2fa_restrictions'                => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
+        'auth_2fa_remember_ip'                  => 'boolean',
     ];
 
     /**
@@ -333,7 +350,7 @@ class Organization extends BaseModel
      * @return EloquentBuilder[]|Collection
      * @noinspection PhpUnused
      */
-    public static function search(BaseFormRequest $request)
+    public static function search(BaseFormRequest $request): Collection|Arrayable
     {
         return self::searchQuery($request)->get();
     }
@@ -621,7 +638,7 @@ class Organization extends BaseModel
      * @param string|array $role
      * @return EloquentBuilder|Relation
      */
-    public function employeesOfRoleQuery($role)
+    public function employeesOfRoleQuery(string|array $role): EloquentBuilder|Relation
     {
         return EmployeeQuery::whereHasRoleFilter($this->employees(), $role);
     }
@@ -630,7 +647,7 @@ class Organization extends BaseModel
      * @param string|array $permission
      * @return EloquentBuilder|Relation
      */
-    public function employeesWithPermissionsQuery($permission)
+    public function employeesWithPermissionsQuery(string|array $permission): EloquentBuilder|Relation
     {
         return EmployeeQuery::whereHasPermissionFilter($this->employees(), $permission);
     }
@@ -639,7 +656,7 @@ class Organization extends BaseModel
      * @param array|int $fund_id
      * @return EloquentBuilder
      */
-    public function providerProductsQuery($fund_id = []): EloquentBuilder
+    public function providerProductsQuery(mixed $fund_id = []): EloquentBuilder
     {
         $productsQuery = ProductQuery::whereNotExpired($this->products()->getQuery());
         $productsQuery = ProductQuery::whereFundNotExcludedOrHasHistory($productsQuery, $fund_id);
@@ -651,7 +668,7 @@ class Organization extends BaseModel
      * @param string|array $permission
      * @return Collection|Employee[]
      */
-    public function employeesWithPermissions($permission): Collection
+    public function employeesWithPermissions(string|array $permission): Collection|Arrayable
     {
         return $this->employeesWithPermissionsQuery($permission)->get();
     }
@@ -874,13 +891,13 @@ class Organization extends BaseModel
      * @param Bank $bank
      * @param Employee $employee
      * @param Implementation $implementation
-     * @return BankConnection|\Illuminate\Database\Eloquent\Model
+     * @return BankConnection|Model
      */
     public function makeBankConnection(
         Bank $bank,
         Employee $employee,
-        Implementation $implementation
-    ): BankConnection {
+        Implementation $implementation,
+    ): BankConnection|Model {
         return BankConnection::addConnection($bank, $employee, $this, $implementation);
     }
 

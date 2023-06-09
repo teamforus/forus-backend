@@ -70,10 +70,11 @@ return array(
         'app/Services/BunqService/Models',
         'app/Services/FileService/Models',
         'app/Services/MediaService/Models',
-        'app/Services/Forus/Identity/Models',
-        'app/Services/Forus/Notification/Models',
         'app/Services/Forus/Record/Models',
         'app/Services/Forus/Session/Models',
+        'app/Services/Forus/Identity/Models',
+        'app/Services/Forus/Notification/Models',
+        'app/Services/Forus/Auth2FAService/Models',
         'app/Services/DigIdService/Models',
         'app/Services/EventLogService/Models',
         'app/Services/MailDatabaseLoggerService/Models',
@@ -176,6 +177,8 @@ return array(
      |
      */
     'model_camel_case_properties' => false,
+
+    'use_generics_annotations' => false,
 
     /*
     |--------------------------------------------------------------------------

@@ -167,14 +167,17 @@ class IdentityController extends Controller
     /**
      * Exchange email confirmation token for access_token
      *
+     * @param BaseFormRequest $request
      * @param string $exchangeToken
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
-    public function emailConfirmationExchange(string $exchangeToken): JsonResponse
-    {
+    public function emailConfirmationExchange(
+        BaseFormRequest $request,
+        string $exchangeToken
+    ): JsonResponse {
         return new JsonResponse([
-            'access_token' => Identity::exchangeEmailConfirmationToken($exchangeToken)
+            'access_token' => Identity::exchangeEmailConfirmationToken($exchangeToken, $request->ip())
         ]);
     }
 
@@ -275,10 +278,10 @@ class IdentityController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
      */
-    public function emailTokenExchange(string $emailToken): JsonResponse
+    public function emailTokenExchange(BaseFormRequest $request, string $emailToken): JsonResponse
     {
         return new JsonResponse([
-            'access_token' => Identity::activateAuthorizationEmailProxy($emailToken)
+            'access_token' => Identity::activateAuthorizationEmailProxy($emailToken, $request->ip())
         ]);
     }
 
@@ -310,7 +313,7 @@ class IdentityController extends Controller
         $authCode = $request->post('auth_code') ?: '';
 
         return new JsonResponse([
-            'success' => $request->identity()->activateAuthorizationCodeProxy($authCode),
+            'success' => $request->identity()->activateAuthorizationCodeProxy($authCode, $request->ip()),
         ]);
     }
 
@@ -342,7 +345,7 @@ class IdentityController extends Controller
         $authCode = $request->post('auth_token') ?: '';
 
         return new JsonResponse([
-            'success' => $request->identity()->activateAuthorizationTokenProxy($authCode),
+            'success' => $request->identity()->activateAuthorizationTokenProxy($authCode, $request->ip()),
         ]);
     }
 
@@ -359,7 +362,7 @@ class IdentityController extends Controller
         $request->identity() or abort(403);
 
         $proxy = Identity::makeAuthorizationShortTokenProxy();
-        $request->identity()->activateAuthorizationShortTokenProxy($proxy->exchange_token);
+        $request->identity()->activateAuthorizationShortTokenProxy($proxy->exchange_token, $request->ip());
 
         return new JsonResponse([
             'exchange_token' => $proxy->exchange_token,
