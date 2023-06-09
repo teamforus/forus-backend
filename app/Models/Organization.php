@@ -838,6 +838,7 @@ class Organization extends BaseModel
     ): EloquentBuilder {
         $postcodes = array_get($options, 'postcodes');
         $providerIds = array_get($options, 'provider_ids');
+        $businessTypeIds = array_get($options, 'business_type_ids');
 
         /** @var Carbon|null $dateFrom */
         $dateFrom = array_get($options, 'date_from');
@@ -854,6 +855,10 @@ class Organization extends BaseModel
             $query->whereHas('offices', static function(EloquentBuilder $builder) use ($postcodes) {
                 $builder->whereIn('postcode_number', (array) $postcodes);
             });
+        }
+
+        if ($businessTypeIds) {
+            $query->whereIn('business_type_id', $businessTypeIds);
         }
 
         if ($dateFrom && $dateTo) {

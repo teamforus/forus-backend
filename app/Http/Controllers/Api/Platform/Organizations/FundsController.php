@@ -390,7 +390,8 @@ class FundsController extends Controller
         $data = $filters ? $financialStatistic->getFilters($organization, $request->only([
             'type', 'type_value',
         ])) : $financialStatistic->getStatistics($organization, $request->only([
-            'type', 'type_value', 'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids'
+            'type', 'type_value', 'fund_ids', 'postcodes', 'provider_ids',
+            'product_category_ids', 'business_type_ids',
         ]));
 
         return new JsonResponse($data);
