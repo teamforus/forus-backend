@@ -119,18 +119,15 @@ class Identity2FAController extends Controller
         $this->authorize('activate', $identity2FA);
 
         $code = $request->input('code');
-        $proxy = $request->identityProxy();
         $provider = Auth2FAProvider::where('key', $request->input('key'))->first();
 
         $identity2FA->activate($code, $provider);
         $identity2FA->deactivateCode($code);
 
-        if (!$proxy->identity_2fa_code && !$proxy->identity_2fa_uuid) {
-            $request->identityProxy()->forceFill([
-                'identity_2fa_code' => $code,
-                'identity_2fa_uuid' => $identity2FA->uuid,
-            ])->save();
-        }
+        $request->identityProxy()->forceFill([
+            'identity_2fa_code' => $code,
+            'identity_2fa_uuid' => $identity2FA->uuid,
+        ])->save();
 
         return new Identity2FAResource($identity2FA);
     }

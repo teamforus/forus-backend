@@ -31,8 +31,11 @@ class SessionPolicy
      * @param bool $auth2FAConfirmed
      * @return Response|bool
      */
-    public function show(Identity $identity, Session $session, bool $auth2FAConfirmed = false): Response|bool
-    {
+    public function show(
+        Identity $identity,
+        Session $session,
+        bool $auth2FAConfirmed = false,
+    ): Response|bool {
         if ($session->identity_address === $identity->address) {
             return false;
         }
@@ -46,8 +49,11 @@ class SessionPolicy
      * @param bool $auth2FAConfirmed
      * @return Response|bool
      */
-    public function terminate(Identity $identity, Session $session, bool $auth2FAConfirmed = false): Response|bool
-    {
+    public function terminate(
+        Identity $identity,
+        Session $session,
+        bool $auth2FAConfirmed = false
+    ): Response|bool {
         if ($session->identity_address === $identity->address) {
             return false;
         }
@@ -74,8 +80,10 @@ class SessionPolicy
      * @param bool $auth2FAConfirmed
      * @return Response|bool
      */
-    protected function validate2FAFeatureRestriction(Identity $identity, bool $auth2FAConfirmed = false): Response|bool
-    {
+    protected function validate2FAFeatureRestriction(
+        Identity $identity,
+        bool $auth2FAConfirmed = false,
+    ): Response|bool {
         if ($identity->isFeature2FARestricted('sessions') && !$auth2FAConfirmed) {
             return $this->deny('Invalid 2FA state.');
         }

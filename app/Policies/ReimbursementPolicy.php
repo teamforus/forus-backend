@@ -70,8 +70,11 @@ class ReimbursementPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function viewAsSponsor(Identity $identity, Reimbursement $reimbursement, Organization $organization): bool
-    {
+    public function viewAsSponsor(
+        Identity $identity,
+        Reimbursement $reimbursement,
+        Organization $organization,
+    ): bool {
         return
             !$reimbursement->isDraft() &&
             $organization->identityCan($identity, 'manage_reimbursements') &&
@@ -111,7 +114,7 @@ class ReimbursementPolicy
         Reimbursement $reimbursement,
         bool $auth2FAConfirmed = false,
     ): bool {
-        if ($reimbursement->isExpired() || $reimbursement->isDraft()) {
+        if ($reimbursement->isExpired() || !$reimbursement->isDraft()) {
             return false;
         }
 
