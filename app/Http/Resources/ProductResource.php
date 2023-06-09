@@ -59,8 +59,8 @@ class ProductResource extends BaseJsonResource
             'product_category' => new ProductCategoryResource($product->product_category),
             'bookmarked' => $product->isBookmarkedBy($baseRequest->identity()),
         ], array_merge(
+            $this->priceFields($product),
             $this->productReservationFieldSettings($product),
-            $this->priceFields($product)
         ));
     }
 

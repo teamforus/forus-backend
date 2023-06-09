@@ -191,12 +191,6 @@ class Implementation extends BaseModel
         self::FRONTEND_VALIDATOR_DASHBOARD,
     ];
 
-    const CURRENCY_SIGN_COIN = '⛁';
-    const CURRENCY_SIGN_EUR = '€';
-
-    public const WITH_CURRENCY_COIN = ['doetegoed'];
-    public const WITH_CURRENCY_ROUND = ['doetegoed'];
-
     protected $perPage = 20;
     protected static ?Implementation $generalModel = null;
     protected static ?Implementation $activeModel = null;
@@ -244,6 +238,7 @@ class Implementation extends BaseModel
         'show_voucher_map' => 'boolean',
         'show_product_map' => 'boolean',
         'allow_per_fund_notification_templates' => 'boolean',
+        'currency_round' => 'boolean',
     ];
 
     /**

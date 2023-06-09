@@ -40,13 +40,14 @@ class FundFormula extends BaseModel
      */
     public function getAmountLocaleAttribute(): ?string
     {
-        return currency_format_locale($this->amount);
+        return currency_format_locale($this->amount, $this->fund->getImplementation());
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund(): BelongsTo {
+    public function fund(): BelongsTo
+    {
         return $this->belongsTo(Fund::class);
     }
 }

@@ -34,7 +34,7 @@ class EmployeeTest extends DuskTestCase
         $this->assertNotNull($implementation->organization);
 
         $this->browse(function (Browser $browser) use ($implementation) {
-            $initialRole = Role::byKey('finance_manager');
+            $initialRole = Role::byKey('finance');
             $updatedRole = Role::byKey('validation');
 
             $browser->visit($implementation->urlSponsorDashboard());

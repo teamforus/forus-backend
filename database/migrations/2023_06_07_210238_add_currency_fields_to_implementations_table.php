@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Implementation;
 
 return new class extends Migration
 {
@@ -15,17 +14,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
-            $table->string('currency_sign', 10)->default(Implementation::CURRENCY_SIGN_EUR)->after('allow_per_fund_notification_templates');
+            $table->string('currency_sign', 10)->nullable()->after('informal_communication');
             $table->boolean('currency_round')->default(false)->after('currency_sign');
         });
-
-        Implementation::query()->whereIn('key', Implementation::WITH_CURRENCY_COIN)->update([
-            'currency_sign' => Implementation::CURRENCY_SIGN_COIN,
-        ]);
-
-        Implementation::query()->whereIn('key', Implementation::WITH_CURRENCY_ROUND)->update([
-            'currency_round' => true,
-        ]);
     }
 
     /**

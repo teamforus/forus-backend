@@ -25,7 +25,10 @@ class VoucherTransactionResource extends BaseJsonResource
             'cancelable' => $transaction->isCancelable(),
             'transaction_in' => $transaction->daysBeforeTransaction(),
             'amount' => currency_format($transaction->amount),
-            'amount_locale' => currency_format_locale($transaction->amount),
+            'amount_locale' => currency_format_locale(
+                $transaction->amount,
+                $transaction->voucher->fund->getImplementation(),
+            ),
             'timestamp' => $transaction->created_at->timestamp,
             'organization' => $transaction->provider ? array_merge($transaction->provider->only([
                 'id', 'name'
