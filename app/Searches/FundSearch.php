@@ -6,10 +6,12 @@ namespace App\Searches;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
+use App\Models\Organization;
 use App\Models\Tag;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QBuilder;
 
 class FundSearch extends BaseSearch
 {
@@ -77,7 +79,11 @@ class FundSearch extends BaseSearch
             $this->filterByApproval($builder, (bool) $this->getFilter('has_providers'));
         }
 
-        return $this->sort($builder);
+        return $this->order(
+            $builder,
+            $this->getFilter('order_by', 'created_at'),
+            $this->getFilter('order_dir', 'desc')
+        );
     }
 
     /**
@@ -111,13 +117,29 @@ class FundSearch extends BaseSearch
 
     /**
      * @param Builder $builder
+     * @param string|null $orderBy
+     * @param string|null $orderDir
      * @return Builder
      */
-    protected function sort(Builder $builder): Builder
+    public static function order(
+        Builder $builder,
+        ?string $orderBy = 'created_at',
+        ?string $orderDir = 'desc'
+    ): Builder {
+        $builder->addSelect([
+            'organization_name' => self::orderOrganizationNameQuery(),
+        ]);
+
+        $builder = Fund::query()->fromSub($builder, 'funds');
+
+        return $builder->orderBy($orderBy, $orderDir ?: 'desc');
+    }
+
+    /**
+     * @return Builder|QBuilder
+     */
+    protected static function orderOrganizationNameQuery(): Builder|QBuilder
     {
-        return $builder->orderBy(
-            $this->getFilter('order_by', 'created_at'),
-            $this->getFilter('order_by_dir', 'asc')
-        )->latest();
+        return Organization::whereColumn('id', 'organization_id')->select('name');
     }
 }
