@@ -11,7 +11,6 @@ use App\Models\Tag;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Query\Builder as QBuilder;
 
 class FundSearch extends BaseSearch
 {
@@ -79,11 +78,7 @@ class FundSearch extends BaseSearch
             $this->filterByApproval($builder, (bool) $this->getFilter('has_providers'));
         }
 
-        return $this->order(
-            $builder,
-            $this->getFilter('order_by', 'created_at'),
-            $this->getFilter('order_dir', 'desc')
-        );
+        return $this->order($builder);
     }
 
     /**
@@ -117,29 +112,24 @@ class FundSearch extends BaseSearch
 
     /**
      * @param Builder $builder
-     * @param string|null $orderBy
-     * @param string|null $orderDir
      * @return Builder
      */
-    public static function order(
-        Builder $builder,
-        ?string $orderBy = 'created_at',
-        ?string $orderDir = 'desc'
-    ): Builder {
-        $builder->addSelect([
-            'organization_name' => self::orderOrganizationNameQuery(),
-        ]);
-
-        $builder = Fund::query()->fromSub($builder, 'funds');
-
-        return $builder->orderBy($orderBy, $orderDir ?: 'desc');
-    }
-
-    /**
-     * @return Builder|QBuilder
-     */
-    protected static function orderOrganizationNameQuery(): Builder|QBuilder
+    protected function order(Builder $builder): Builder
     {
-        return Organization::whereColumn('id', 'organization_id')->select('name');
+        $orderBy = $this->getFilter('order_by', 'created_at');
+        $orderDir = $this->getFilter('order_dir', 'desc');
+
+        if ($orderBy == 'organization_name') {
+            $builder->addSelect([
+                'organization_name' => Organization::query()
+                    ->whereColumn('id', 'organization_id')
+                    ->select('name'),
+            ]);
+        }
+
+        return Fund::query()
+            ->fromSub($builder, 'funds')
+            ->orderBy($orderBy, $orderDir)
+            ->latest('created_at');
     }
 }
