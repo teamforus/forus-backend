@@ -126,11 +126,13 @@ class FundRequestRecord extends BaseModel
 
     /**
      * Change fund request record state
+     *
      * @param string $state
      * @param string|null $note
+     * @param bool $notifyRequester
      * @return FundRequestRecord
      */
-    private function setStateAndResolve(string $state, ?string $note = null): FundRequestRecord
+    private function setStateAndResolve(string $state, ?string $note = null, bool $notifyRequester = true): FundRequestRecord
     {
         $this->updateModel(compact('state', 'note'));
 
@@ -139,7 +141,7 @@ class FundRequestRecord extends BaseModel
         }
 
         if (static::STATE_DECLINED === $state) {
-            FundRequestRecordDeclined::dispatch($this);
+            FundRequestRecordDeclined::dispatch($this, null, null, $notifyRequester);
         }
 
         if ($this->fund_request->records_pending()->doesntExist()) {
@@ -161,13 +163,14 @@ class FundRequestRecord extends BaseModel
 
     /**
      * Decline fund request record
+     *
      * @param string|null $note
-     * @return $this
-     * @throws \Exception
+     * @param bool $notifyRequester
+     * @return self
      */
-    public function decline(?string $note = null): self
+    public function decline(?string $note = null, bool $notifyRequester = true): self
     {
-        return $this->setStateAndResolve(self::STATE_DECLINED, $note);
+        return $this->setStateAndResolve(self::STATE_DECLINED, $note, $notifyRequester);
     }
 
     /**

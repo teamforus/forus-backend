@@ -253,7 +253,7 @@ class FundRequest extends BaseModel
         $this->records_pending()->where([
             'employee_id' => $employee->id
         ])->each(static function(FundRequestRecord $record) use ($note) {
-            $record->decline($note);
+            $record->decline($note, false);
         });
 
         return $this;

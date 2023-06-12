@@ -173,13 +173,17 @@ class FundRequestSubscriber
     public function onFundRequestRecordDeclined(FundRequestRecordDeclined $requestRecordEvent): void
     {
         $fundRequestRecord = $requestRecordEvent->getFundRequestRecord();
+        $notifyRequester = $requestRecordEvent->getNotifyRequester();
+
         $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
 
         $event = $fundRequestRecord->log($fundRequestRecord::EVENT_DECLINED, $eventModels, [
             'rejection_note' => $fundRequestRecord->note,
         ]);
 
-        IdentityFundRequestRecordDeclinedNotification::send($event);
+        if ($notifyRequester) {
+            IdentityFundRequestRecordDeclinedNotification::send($event);
+        }
     }
 
     /**
