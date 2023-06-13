@@ -43,11 +43,12 @@ class FundSearch extends BaseSearch
             FundQuery::whereIsConfiguredByForus($builder);
         }
 
-        if ($this->getFilter('tag') || $this->getFilter('tag_id')) {
-            $builder->whereHas('tags_provider', function(Builder|Tag $builder) {
-                $builder->where('key', '=', $this->getFilter('tag'));
-                $builder->orWhere('id', '=', $this->getFilter('tag_id'));
-            });
+        if ($tag = $this->getFilter('tag')) {
+            $builder->whereHas('tags_provider', fn (Builder $q) => $q->where('key', $tag));
+        }
+
+        if ($tagId = $this->getFilter('tag_id')) {
+            $builder->whereHas('tags_webshop', fn (Builder $q) => $q->where('tags.id', $tagId));
         }
 
         if ($this->getFilter('organization_id')) {
