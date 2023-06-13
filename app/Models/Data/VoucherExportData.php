@@ -80,6 +80,7 @@ class VoucherExportData
             'note' => $this->voucher->note,
             'source' => $this->voucher->employee_id ? 'employee': 'user',
             'amount' => $this->voucher->amount_total_cached,
+            'amount_available' => $this->voucher->amount_available_cached,
             'fund_name' => $this->voucher->fund->name,
             'created_at' => format_date_locale($this->voucher->created_at),
             'expire_at' => format_date_locale($this->voucher->expire_at),

@@ -42,4 +42,10 @@ return [
             'show_product_map' => true,
         ]
     ],
+    'Doetegoed' => [
+        'implementation' => [
+            'currency_sign' => '⛁',
+            'currency_round' => true,
+        ]
+    ]
 ];
