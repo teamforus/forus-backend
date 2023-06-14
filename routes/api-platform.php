@@ -470,7 +470,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             "Api\Platform\Organizations\FundRequests\FundRequestRecordsController"
         )->parameters([
             'records' => 'fund_request_record',
-        ])->only( 'index', 'show', 'store');
+        ])->only( 'index', 'show', 'update', 'store');
 
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/clarifications',
