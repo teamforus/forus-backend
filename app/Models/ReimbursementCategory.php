@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * App\Models\ReimbursementCategory
  *
  * @property int $id
+ * @property int $organization_id
  * @property string $name
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory whereUpdatedAt($value)
  * @mixin \Eloquent
  */

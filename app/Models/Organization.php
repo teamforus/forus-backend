@@ -48,7 +48,7 @@ use Illuminate\Database\Query\Builder;
  * @property string $btw
  * @property string|null $website
  * @property bool $website_public
- * @property string $low_balance_email
+ * @property string|null $low_balance_email
  * @property int|null $business_type_id
  * @property bool $is_sponsor
  * @property bool $is_provider
@@ -63,76 +63,80 @@ use Illuminate\Database\Query\Builder;
  * @property bool $allow_custom_fund_notifications
  * @property bool $allow_budget_fund_limits
  * @property bool $allow_manual_bulk_processing
+ * @property int $allow_fund_request_record_edit
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
+ * @property int $validator_records_edit_enabled
  * @property string|null $bank_cron_time
  * @property int $show_provider_transactions
  * @property string $reservation_phone
  * @property string $reservation_address
- * @property string $reservation_birth_date
+ * @property string $reservation_requester_birth_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
- * @property-read Collection<int, \App\Models\BankConnection> $bank_connections
+ * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
  * @property-read \App\Models\BusinessType|null $business_type
- * @property-read Collection<int, \App\Services\EventLogService\Models\Digest> $digests
+ * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
  * @property-read int|null $digests_count
- * @property-read Collection<int, \App\Models\Employee> $employees
+ * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
- * @property-read Collection<int, \App\Models\Employee> $employees_with_trashed
+ * @property-read Collection|\App\Models\Employee[] $employees_with_trashed
  * @property-read int|null $employees_with_trashed_count
- * @property-read Collection<int, Organization> $external_validators
+ * @property-read Collection|Organization[] $external_validators
  * @property-read int|null $external_validators_count
- * @property-read Collection<int, \App\Models\FundProviderInvitation> $fund_provider_invitations
+ * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
- * @property-read Collection<int, \App\Models\FundProvider> $fund_providers
+ * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
- * @property-read Collection<int, \App\Models\FundRequest> $fund_requests
+ * @property-read Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
- * @property-read Collection<int, \App\Models\Fund> $funds
+ * @property-read Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
  * @property-read \App\Models\Identity|null $identity
- * @property-read Collection<int, \App\Models\Implementation> $implementations
+ * @property-read Collection|\App\Models\Implementation[] $implementations
  * @property-read int|null $implementations_count
  * @property-read Session|null $last_employee_session
  * @property-read Media|null $logo
- * @property-read Collection<int, \App\Services\EventLogService\Models\EventLog> $logs
+ * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read Collection<int, Media> $medias
+ * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
- * @property-read Collection<int, \App\Models\Office> $offices
+ * @property-read Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
- * @property-read Collection<int, \App\Models\OrganizationValidator> $organization_validators
+ * @property-read Collection|\App\Models\OrganizationValidator[] $organization_validators
  * @property-read int|null $organization_validators_count
- * @property-read Collection<int, \App\Models\Product> $products
+ * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
- * @property-read Collection<int, \App\Models\Product> $products_as_sponsor
+ * @property-read Collection|\App\Models\Product[] $products_as_sponsor
  * @property-read int|null $products_as_sponsor_count
- * @property-read Collection<int, \App\Models\Product> $products_provider
+ * @property-read Collection|\App\Models\Product[] $products_provider
  * @property-read int|null $products_provider_count
- * @property-read Collection<int, \App\Models\Product> $products_sponsor
+ * @property-read Collection|\App\Models\Product[] $products_sponsor
  * @property-read int|null $products_sponsor_count
- * @property-read Collection<int, \App\Models\Fund> $supplied_funds
+ * @property-read Collection|\App\Models\ReimbursementCategory[] $reimbursement_categories
+ * @property-read int|null $reimbursement_categories_count
+ * @property-read Collection|\App\Models\Fund[] $supplied_funds
  * @property-read int|null $supplied_funds_count
- * @property-read Collection<int, \App\Models\Fund> $supplied_funds_approved
+ * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved
  * @property-read int|null $supplied_funds_approved_count
- * @property-read Collection<int, \App\Models\Fund> $supplied_funds_approved_budget
+ * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved_budget
  * @property-read int|null $supplied_funds_approved_budget_count
- * @property-read Collection<int, \App\Models\Fund> $supplied_funds_approved_products
+ * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved_products
  * @property-read int|null $supplied_funds_approved_products_count
- * @property-read Collection<int, \App\Models\Tag> $tags
+ * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
- * @property-read Collection<int, \App\Models\OrganizationValidator> $validated_organizations
+ * @property-read Collection|\App\Models\OrganizationValidator[] $validated_organizations
  * @property-read int|null $validated_organizations_count
- * @property-read Collection<int, \App\Models\VoucherTransactionBulk> $voucher_transaction_bulks
+ * @property-read Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
  * @property-read int|null $voucher_transaction_bulks_count
- * @property-read Collection<int, \App\Models\VoucherTransaction> $voucher_transactions
+ * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
- * @property-read Collection<int, \App\Models\Voucher> $vouchers
+ * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
  * @method static EloquentBuilder|Organization newModelQuery()
  * @method static EloquentBuilder|Organization newQuery()
@@ -140,6 +144,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
+ * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
  * @method static EloquentBuilder|Organization whereBankCronTime($value)
@@ -167,7 +172,6 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
  * @method static EloquentBuilder|Organization whereProviderThrottlingValue($value)
  * @method static EloquentBuilder|Organization whereReservationAddress($value)
- * @method static EloquentBuilder|Organization whereReservationBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationPhone($value)
  * @method static EloquentBuilder|Organization whereReservationRequesterBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
@@ -176,6 +180,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereShowProviderTransactions($value)
  * @method static EloquentBuilder|Organization whereUpdatedAt($value)
  * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
+ * @method static EloquentBuilder|Organization whereValidatorRecordsEditEnabled($value)
  * @method static EloquentBuilder|Organization whereWebsite($value)
  * @method static EloquentBuilder|Organization whereWebsitePublic($value)
  * @mixin \Eloquent
@@ -249,6 +254,13 @@ class Organization extends BaseModel
         }
 
         return Fund::STATE_WAITING;
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function reimbursement_categories(): HasMany {
+        return $this->hasMany(ReimbursementCategory::class);
     }
 
     /**
