@@ -13,9 +13,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('fund_backoffice_logs', function (Blueprint $table) {
-            $table->string('request_id', 200)->nullable()->after('state');
-            $table->integer('voucher_id')->nullable()->after('bsn');
+        Schema::table('implementations', function (Blueprint $table) {
+            $table->string('currency_sign', 10)->nullable()->after('informal_communication');
+            $table->boolean('currency_round')->default(false)->after('currency_sign');
         });
     }
 
@@ -26,8 +26,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('fund_backoffice_logs', function (Blueprint $table) {
-            $table->dropColumn('request_id', 'voucher_id');
+        Schema::table('implementations', function (Blueprint $table) {
+            $table->dropColumn('currency_sign');
+            $table->dropColumn('currency_round');
         });
     }
 };

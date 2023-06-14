@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\RecordType;
+use App\Models\Implementation;
 use App\Services\Forus\Session\Services\Browser;
 use App\Services\Forus\Session\Services\Data\AgentData;
 use Carbon\Carbon;
@@ -9,6 +10,7 @@ use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Support\Str;
 use App\Services\TokenGeneratorService\TokenGenerator;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Http\Requests\BaseFormRequest;
 
 if (!function_exists('format_datetime_locale')) {
     /**
@@ -77,14 +79,22 @@ if (!function_exists('currency_format')) {
 if (!function_exists('currency_format_locale')) {
     /**
      * @param $number
-     * @param string $sign
+     * @param Implementation|null $implementation
      * @return string
      */
-    function currency_format_locale($number, string $sign = '€ '): string
+    function currency_format_locale($number, Implementation $implementation = null): string
     {
+        $implementation = $implementation ?: BaseFormRequest::createFrom(request())->implementation();
+        $currencySign = ($implementation?->currency_sign ?: '€') . ' ';
+        $currencyRound = $implementation?->currency_round;
+
+        if ($currencyRound) {
+            return $currencySign . currency_format(floor($number), 0, ',', '.');
+        }
+
         $isWhole = ($number - round($number)) === 0.0;
 
-        return $sign . currency_format($number, $isWhole ? 0 : 2, ',', '.') . ($isWhole ? ',-' : '');
+        return $currencySign . currency_format($number, $isWhole ? 0 : 2, ',', '.') . ($isWhole ? ',-' : '');
     }
 }
 

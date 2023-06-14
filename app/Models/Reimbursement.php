@@ -235,7 +235,7 @@ class Reimbursement extends Model
      */
     public function getAmountLocaleAttribute(): ?string
     {
-        return currency_format_locale($this->amount);
+        return currency_format_locale($this->amount, $this->voucher->fund->getImplementation());
     }
 
     /**

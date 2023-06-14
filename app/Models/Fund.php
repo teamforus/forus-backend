@@ -377,8 +377,7 @@ class Fund extends BaseModel
      */
     public function tags_webshop(): MorphToMany
     {
-        return $this->morphToMany(Tag::class, 'taggable')
-            ->where('scope', 'webshop');
+        return $this->morphToMany(Tag::class, 'taggable')->where('scope', 'webshop');
     }
 
     /**
@@ -387,8 +386,7 @@ class Fund extends BaseModel
      */
     public function tags_provider(): MorphToMany
     {
-        return $this->morphToMany(Tag::class, 'taggable')
-            ->where('scope', 'provider');
+        return $this->morphToMany(Tag::class, 'taggable')->where('scope', 'provider');
     }
 
     /**
