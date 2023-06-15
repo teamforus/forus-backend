@@ -34,6 +34,7 @@ class UpdateProductRequest extends BaseProductRequest
         return array_merge([
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,2500',
+            'alternative_text'      => 'nullable|between:2,500',
             'price'                 => 'required_if:price_type,regular|numeric|min:.2',
             'price_type'            => 'required|in:' . join(',', Product::PRICE_TYPES),
             'price_discount'        => [
