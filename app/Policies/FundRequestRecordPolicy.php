@@ -160,6 +160,27 @@ class FundRequestRecordPolicy
     }
 
     /**
+     * Determine whether the validator can resolve the fundRequest.
+     *
+     * @param Identity $identity
+     * @param FundRequestRecord $requestRecord
+     * @param FundRequest $request
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function updateAsValidator(
+        Identity $identity,
+        FundRequestRecord $requestRecord,
+        FundRequest $request,
+        Organization $organization
+    ): Response|bool {
+        $result = $this->resolveAsValidator($identity, $requestRecord, $request, $organization);
+
+        return $result === true ? $request->fund->organization->allow_fund_request_record_edit : $result;
+    }
+
+    /**
      * @param Fund $fund
      * @param FundRequest $request
      * @param FundRequestRecord|null $requestRecord

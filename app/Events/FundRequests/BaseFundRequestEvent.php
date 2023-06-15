@@ -6,7 +6,6 @@ use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 
@@ -69,15 +68,5 @@ abstract class BaseFundRequestEvent
     public function getSupervisorEmployee(): ?Employee
     {
         return $this->supervisorEmployee;
-    }
-
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return \Illuminate\Broadcasting\Channel
-     */
-    public function broadcastOn()
-    {
-        return new PrivateChannel('channel-name');
     }
 }

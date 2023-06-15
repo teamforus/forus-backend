@@ -30,6 +30,7 @@ class StoreProductRequest extends BaseProductRequest
         return array_merge([
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,2500',
+            'alternative_text'      => 'nullable|between:2,500',
             'price'                 => 'required_if:price_type,regular|numeric|min:.2',
             'media_uid'             => ['nullable', 'string', new MediaUidRule('product_photo')],
             'price_type'            => 'required|in:' . join(',', Product::PRICE_TYPES),

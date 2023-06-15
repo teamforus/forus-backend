@@ -162,6 +162,7 @@ class FundQuery
             $builder->where('name', 'LIKE', "%$q%");
             $builder->orWhere('description_text', 'LIKE', "%$q%");
             $builder->orWhere('description_short', 'LIKE', "%$q%");
+            $builder->orWhereRelation('organization', 'organizations.name', 'LIKE', "%$q%");
         });
     }
 
