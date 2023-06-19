@@ -9,6 +9,7 @@ use App\Models\FundRequestRecord;
 abstract class BaseFundRequestRecordEvent extends BaseFundRequestEvent
 {
     protected FundRequestRecord $fundRequestRecord;
+    protected bool $notifyRequester;
 
     /**
      * Create a new event instance.
@@ -16,14 +17,17 @@ abstract class BaseFundRequestRecordEvent extends BaseFundRequestEvent
      * @param FundRequestRecord $fundRequestRecord
      * @param Employee|null $employee
      * @param Employee|null $supervisorEmployee
+     * @param bool $notifyRequester
      */
     public function __construct(
         FundRequestRecord $fundRequestRecord,
         Employee $employee = null,
-        ?Employee $supervisorEmployee = null
+        ?Employee $supervisorEmployee = null,
+        bool $notifyRequester = true,
     ) {
         parent::__construct($fundRequestRecord->fund_request, $employee, $supervisorEmployee);
         $this->fundRequestRecord = $fundRequestRecord;
+        $this->notifyRequester = $notifyRequester;
     }
 
     /**
@@ -34,5 +38,15 @@ abstract class BaseFundRequestRecordEvent extends BaseFundRequestEvent
     public function getFundRequestRecord(): FundRequestRecord
     {
         return $this->fundRequestRecord;
+    }
+
+    /**
+     * Get notify requester setting
+     *
+     * @return bool
+     */
+    public function getNotifyRequester(): bool
+    {
+        return $this->notifyRequester;
     }
 }

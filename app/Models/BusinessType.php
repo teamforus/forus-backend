@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Translations\BusinessTypeTranslationTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -42,7 +43,7 @@ use Illuminate\Http\Request;
  */
 class BusinessType extends BaseModel
 {
-    use Translatable;
+    use Translatable, BusinessTypeTranslationTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -58,7 +59,7 @@ class BusinessType extends BaseModel
      *
      * @var array
      */
-    public $translatedAttributes = [
+    public array $translatedAttributes = [
         'name'
     ];
 

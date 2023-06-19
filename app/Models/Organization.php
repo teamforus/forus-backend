@@ -57,23 +57,22 @@ use Illuminate\Database\Query\Builder;
  * @property bool $reservations_budget_enabled
  * @property bool $reservations_subsidy_enabled
  * @property bool $reservations_auto_accept
+ * @property string $reservation_phone
+ * @property string $reservation_address
+ * @property string $reservation_birth_date
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
  * @property bool $allow_custom_fund_notifications
  * @property bool $allow_budget_fund_limits
  * @property bool $allow_manual_bulk_processing
- * @property int $allow_fund_request_record_edit
+ * @property bool $allow_fund_request_record_edit
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
- * @property int $validator_records_edit_enabled
  * @property string|null $bank_cron_time
  * @property int $show_provider_transactions
- * @property string $reservation_phone
- * @property string $reservation_address
- * @property string $reservation_requester_birth_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -172,15 +171,14 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
  * @method static EloquentBuilder|Organization whereProviderThrottlingValue($value)
  * @method static EloquentBuilder|Organization whereReservationAddress($value)
+ * @method static EloquentBuilder|Organization whereReservationBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationPhone($value)
- * @method static EloquentBuilder|Organization whereReservationRequesterBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
  * @method static EloquentBuilder|Organization whereReservationsBudgetEnabled($value)
  * @method static EloquentBuilder|Organization whereReservationsSubsidyEnabled($value)
  * @method static EloquentBuilder|Organization whereShowProviderTransactions($value)
  * @method static EloquentBuilder|Organization whereUpdatedAt($value)
  * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
- * @method static EloquentBuilder|Organization whereValidatorRecordsEditEnabled($value)
  * @method static EloquentBuilder|Organization whereWebsite($value)
  * @method static EloquentBuilder|Organization whereWebsitePublic($value)
  * @mixin \Eloquent
@@ -231,6 +229,7 @@ class Organization extends BaseModel
         'allow_custom_fund_notifications'       => 'boolean',
         'allow_budget_fund_limits'              => 'boolean',
         'allow_manual_bulk_processing'          => 'boolean',
+        'allow_fund_request_record_edit'        => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
     ];
@@ -833,6 +832,7 @@ class Organization extends BaseModel
     ): EloquentBuilder {
         $postcodes = array_get($options, 'postcodes');
         $providerIds = array_get($options, 'provider_ids');
+        $businessTypeIds = array_get($options, 'business_type_ids');
 
         /** @var Carbon|null $dateFrom */
         $dateFrom = array_get($options, 'date_from');
@@ -849,6 +849,10 @@ class Organization extends BaseModel
             $query->whereHas('offices', static function(EloquentBuilder $builder) use ($postcodes) {
                 $builder->whereIn('postcode_number', (array) $postcodes);
             });
+        }
+
+        if ($businessTypeIds) {
+            $query->whereIn('business_type_id', $businessTypeIds);
         }
 
         if ($dateFrom && $dateTo) {

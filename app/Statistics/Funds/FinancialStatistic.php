@@ -34,6 +34,7 @@ class FinancialStatistic
         return [
             'filters' => [
                 'product_categories' => $queries->getFilterProductCategories($sponsor, $options),
+                'business_types' => $queries->getFilterBusinessTypes($sponsor, $options),
                 'providers' => $queries->getFilterProviders($sponsor, $options),
                 'postcodes' => $queries->getFilterPostcodes($sponsor, $options),
                 'funds' => $queries->getFilterFunds($sponsor, $options),

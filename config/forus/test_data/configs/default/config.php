@@ -21,6 +21,7 @@ return [
     'voucher_transaction_max' => 50,
 
     'fund_requests_count' => 10,
+    'fund_requests_files_count' => 2,
     'fund_request_email_pattern' => '%s@example.com',
     'organization_email_pattern' => '%s@example.com',
 

@@ -24,6 +24,7 @@ class VoucherExport extends BaseFieldedExport
         'has_reservations' => 'Has reservations',
         'state' => 'Status',
         'amount' => 'Bedrag',
+        'amount_available' => 'Huidig bedrag',
         'in_use_date' => 'In gebruik datum',
         'activation_code' => 'Activatiecode',
         'fund_name' => 'Fondsnaam',
