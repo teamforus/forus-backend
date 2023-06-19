@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Models\ReimbursementCategory;
 use Illuminate\Http\Request;
 
@@ -10,6 +11,14 @@ use Illuminate\Http\Request;
  */
 class ReimbursementCategoryResource extends BaseJsonResource
 {
+    public const LOAD = [
+        'organization.logo.sizes',
+    ];
+
+    public const LOAD_COUNT = [
+        'reimbursements',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -18,8 +27,10 @@ class ReimbursementCategoryResource extends BaseJsonResource
      */
     public function toArray($request): array
     {
-        return $this->resource->only([
-            'id', 'name',
+        return array_merge($this->resource->only([
+            'id', 'name', 'reimbursements_count',
+        ]), [
+            'organization' => OrganizationTinyResource::create($this->resource->organization),
         ]);
     }
 }

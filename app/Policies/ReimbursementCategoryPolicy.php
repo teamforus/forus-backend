@@ -85,7 +85,9 @@ class ReimbursementCategoryPolicy
         ReimbursementCategory $reimbursementCategory,
         Organization $organization
     ): bool {
-        return $this->update($identity, $reimbursementCategory, $organization);
+        return
+            $reimbursementCategory->reimbursements()->doesntExist() &&
+            $this->update($identity, $reimbursementCategory, $organization);
     }
 
     /**

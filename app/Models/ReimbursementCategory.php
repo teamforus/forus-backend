@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -13,7 +14,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Reimbursement[] $reimbursements
+ * @property-read \App\Models\Organization $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Reimbursement> $reimbursements
  * @property-read int|null $reimbursements_count
  * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory newQuery()
@@ -41,5 +43,14 @@ class ReimbursementCategory extends Model
     public function reimbursements(): HasMany
     {
         return $this->hasMany(Reimbursement::class);
+    }
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
     }
 }

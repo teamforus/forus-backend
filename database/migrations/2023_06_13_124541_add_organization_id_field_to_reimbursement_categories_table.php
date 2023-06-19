@@ -21,7 +21,7 @@ return new class extends Migration
 
             $table->foreign('organization_id')
                 ->references('id')->on('organizations')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
     }
 
@@ -33,7 +33,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('reimbursement_categories', function (Blueprint $table) {
-            $table->dropForeign('reimbursements_reimbursement_organization_id_foreign');
+            $table->dropForeign('reimbursement_categories_organization_id_foreign');
             $table->dropColumn('organization_id');
         });
     }

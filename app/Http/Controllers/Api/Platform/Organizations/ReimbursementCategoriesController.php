@@ -61,9 +61,9 @@ class ReimbursementCategoriesController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('store', [ReimbursementCategory::class, $organization]);
 
-        $reimbursementCategory = $organization->reimbursement_categories()->create($request->only('name'));
-
-        return ReimbursementCategoryResource::create($reimbursementCategory);
+        return ReimbursementCategoryResource::create($organization->reimbursement_categories()->create(
+            $request->only('name'),
+        ));
     }
 
     /**

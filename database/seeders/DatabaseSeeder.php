@@ -22,6 +22,5 @@ class DatabaseSeeder extends Seeder
         $this->call(ImplementationsNotificationBrandingSeeder::class);
         $this->call(SystemNotificationsTableSeeder::class);
         $this->call(NotificationTemplatesTableSeeder::class);
-        $this->call(ReimbursementCategoriesTableSeeder::class);
     }
 }
