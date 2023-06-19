@@ -86,9 +86,9 @@ class ReimbursementPolicy
      *
      * @param Identity $identity
      * @param bool $auth2FAConfirmed
-     * @return bool
+     * @return Response|bool
      */
-    public function create(Identity $identity, bool $auth2FAConfirmed = false): bool
+    public function create(Identity $identity, bool $auth2FAConfirmed = false): Response|bool
     {
         $vouchersQuery = $identity->vouchers()->whereRelation('fund.fund_config', [
             'allow_reimbursements' => true,
@@ -107,13 +107,13 @@ class ReimbursementPolicy
      * @param Identity $identity
      * @param Reimbursement $reimbursement
      * @param bool $auth2FAConfirmed
-     * @return bool
+     * @return Response|bool
      */
     public function update(
         Identity $identity,
         Reimbursement $reimbursement,
         bool $auth2FAConfirmed = false,
-    ): bool {
+    ): Response|bool {
         if ($reimbursement->isExpired() || !$reimbursement->isDraft()) {
             return false;
         }
@@ -362,7 +362,7 @@ class ReimbursementPolicy
      */
     protected function validate2FAFeatureRestriction(Identity $identity, bool $auth2FAConfirmed = false): Response|bool
     {
-        if ($identity->isFeature2FARestricted('sessions') && !$auth2FAConfirmed) {
+        if ($identity->isFeature2FARestricted('reimbursements') && !$auth2FAConfirmed) {
             return $this->deny('Invalid 2FA state.');
         }
 
