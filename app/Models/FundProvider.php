@@ -448,11 +448,11 @@ class FundProvider extends BaseModel
      */
     private static function exportTransform(Builder $builder): mixed
     {
-        $transKey = "export.providers";
-
         return $builder->with([
-            'organization'
-        ])->get()->map(function(FundProvider $fundProvider) use ($transKey) {
+            'fund',
+            'organization.last_employee_session',
+        ])->get()->map(function(FundProvider $fundProvider) {
+            $transKey = "export.providers";
             $provider = $fundProvider->organization;
             $lastActivity = $fundProvider->getLastActivity();
 
@@ -461,12 +461,12 @@ class FundProvider extends BaseModel
             )->count();
             
             $sponsor_products_count = ProductQuery::whereNotExpired($provider->products_sponsor()->where([
-                'sponsor_organization_id' => $fundProvider->fund->organization_id
+                'sponsor_organization_id' => $fundProvider->fund->organization_id,
             ])->getQuery())->count();
 
             $active_products_count = ProductQuery::approvedForFundsAndActiveFilter(
                 $fundProvider->products()->getQuery(),
-                $fundProvider->fund_id
+                $fundProvider->fund_id,
             )->count();
 
             $hasIndividualProducts = $fundProvider->fund_provider_products()->whereHas('product')->exists();
