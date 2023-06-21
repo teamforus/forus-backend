@@ -137,6 +137,9 @@ class TestData
 
         foreach ($organizations as $organization) {
             $this->makeOffices($organization, 2);
+            $organization->reimbursement_categories()->createMany(array_map(fn($name) => compact('name'), [
+                'Sports (activity)', 'Sports (product)', 'Culture', 'Education',
+            ]));
         }
 
         return $organizations;
