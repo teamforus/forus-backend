@@ -5,6 +5,7 @@
 -->
 
 ## Developers checklist
+- [ ] **Autotests are passed locally**
 - [ ] **Migration rollback works** - if there is migration, check rollback
 - [ ] **Autotests for bugs are added** - if its complicated bug, unit/feature autotests are added
 
