@@ -202,10 +202,10 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $query
-     * @return Builder
+     * @param Builder|Relation $query
+     * @return Builder|Relation
      */
-    public static function whereNotExpired(Builder $query): Builder
+    public static function whereNotExpired(Builder|Relation $query): Builder|Relation
     {
         return $query->where(static function(Builder $builder) {
             $builder->whereNull('products.expire_at');
