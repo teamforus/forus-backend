@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 class ReimbursementCategoryResource extends BaseJsonResource
 {
     public const LOAD = [
-        'organization.logo.sizes',
+        'organization.logo.presets',
     ];
 
     public const LOAD_COUNT = [
