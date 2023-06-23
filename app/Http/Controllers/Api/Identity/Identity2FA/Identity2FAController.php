@@ -65,7 +65,10 @@ class Identity2FAController extends Controller
         $this->authorize('store', [Identity2FA::class, $request->input('type')]);
 
         $identity = $request->identity();
-        $auth2FASecret = $request->identity()->make2FASecret('Forus', $identity->email);
+        $company = $request->isDashboard() ? 'Forus' : $request->implementation()->name;
+        $holder = $identity->getCurrent2FAHolderName();
+
+        $auth2FASecret = $request->identity()->make2FASecret($company, $holder);
         $auth2FAProvider = Auth2FAProvider::where('type', $request->input('type'))->first();
 
         /** @var Identity2FA $identity2FA */
@@ -124,10 +127,12 @@ class Identity2FAController extends Controller
         $identity2FA->activate($code, $provider);
         $identity2FA->deactivateCode($code);
 
-        $request->identityProxy()->forceFill([
-            'identity_2fa_code' => $code,
-            'identity_2fa_uuid' => $identity2FA->uuid,
-        ])->save();
+        if (!$request->identityProxy()->is2FAConfirmed()) {
+            $request->identityProxy()->forceFill([
+                'identity_2fa_code' => $code,
+                'identity_2fa_uuid' => $identity2FA->uuid,
+            ])->save();
+        }
 
         return new Identity2FAResource($identity2FA);
     }

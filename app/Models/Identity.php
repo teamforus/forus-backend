@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Services\Forus\Auth2FAService\Auth2FAService;
 use App\Services\Forus\Auth2FAService\Data\Auth2FASecret;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Config;
-use PhpParser\Node\Expr\BinaryOp\BooleanOr;
+use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
 use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;
 use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
@@ -893,15 +894,15 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @param string $company
-     * @param string $email
+     * @param string $holder
      * @return Auth2FASecret
      * @throws IncompatibleWithGoogleAuthenticatorException
      * @throws InvalidCharactersException
      * @throws SecretKeyTooShortException
      */
-    public function make2FASecret(string $company, string $email): Auth2FASecret
+    public function make2FASecret(string $company, string $holder): Auth2FASecret
     {
-        return resolve('forus.services.auth2fa')->make2FASecret($company, $email);
+        return resolve(Auth2FAService::class)->make2FASecret($company, $holder);
     }
 
     /**
@@ -924,5 +925,13 @@ class Identity extends Model implements Authenticatable
     public function isFeature2FARestricted(string $feature): bool
     {
         return $this->getRestricting2FAFunds($feature)->isNotEmpty();
+    }
+
+    /**
+     * @return string
+     */
+    public function getCurrent2FAHolderName(): string
+    {
+        return $this->email ?: 'Gebruiker [' . Str::upper(substr($this->address, 2, 10)) . ']';
     }
 }

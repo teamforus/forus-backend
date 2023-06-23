@@ -41,18 +41,31 @@ class Identity2FAStateResource extends BaseJsonResource
             'restrictions' => $this->getRestrictions($is2FAConfirmed, $this->resource),
             'auth_2fa_remember_ip' => $this->resource->auth_2fa_remember_ip,
             'auth_2fa_remember_hours' => Config::get('forus.auth_2fa.remember_hours'),
-            'auth_2fa_forget_force' => $this->forceForget(),
+            'auth_2fa_forget_force' => [
+                'voucher' => $this->forceForgetVoucher(),
+                'organization' => $this->forceForgetOrganization(),
+            ],
         ];
     }
 
     /**
      * @return bool
      */
-    protected function forceForget(): bool
+    protected function forceForgetVoucher(): bool
     {
-        return
-            $this->resource->funds->where('fund_config.auth_2fa_remember_ip', false)->isNotEmpty() ||
-            $this->resource->funds->where('employee.organization.auth_2fa_remember_ip', false)->isNotEmpty();
+        return $this->resource->funds
+            ->where('fund_config.auth_2fa_remember_ip', false)
+            ->isNotEmpty();
+    }
+
+    /**
+     * @return bool
+     */
+    protected function forceForgetOrganization(): bool
+    {
+        return $this->resource->employees
+            ->where('organization.auth_2fa_remember_ip', false)
+            ->isNotEmpty();
     }
 
     /**

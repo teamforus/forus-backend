@@ -18,11 +18,11 @@ class Auth2FASecret
      * @throws InvalidCharactersException
      * @throws SecretKeyTooShortException
      */
-    public function __construct(string $company, string $email)
+    public function __construct(string $company, string $holder)
     {
         $google2fa = new Google2FA();
         $this->secretKey = $google2fa->generateSecretKey();
-        $this->secretUrl = $google2fa->getQRCodeUrl($company, $email, $this->secretKey);
+        $this->secretUrl = $google2fa->getQRCodeUrl($company, $holder, $this->secretKey);
     }
 
     /**

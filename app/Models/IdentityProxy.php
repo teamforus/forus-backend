@@ -23,14 +23,16 @@ use Illuminate\Support\Facades\DB;
  * @property string $state
  * @property string|null $identity_2fa_uuid
  * @property string|null $identity_2fa_code
- * @property \Illuminate\Support\Carbon|null $activated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property int|null $identity_2fa_parent_proxy_id
+ * @property Carbon|null $activated_at
+ * @property Carbon|null $deleted_at
  * @property int $expires_in
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read bool $exchange_time_expired
  * @property-read \App\Models\Identity|null $identity
  * @property-read \App\Models\Identity2FA|null $identity_2fa
+ * @property-read IdentityProxy|null $identity_2fa_parent_proxy
  * @property-read \Illuminate\Database\Eloquent\Collection|Session[] $sessions
  * @property-read int|null $sessions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Session[] $sessions_with_trashed
@@ -47,6 +49,7 @@ use Illuminate\Support\Facades\DB;
  * @method static Builder|IdentityProxy whereExpiresIn($value)
  * @method static Builder|IdentityProxy whereId($value)
  * @method static Builder|IdentityProxy whereIdentity2faCode($value)
+ * @method static Builder|IdentityProxy whereIdentity2faParentProxyId($value)
  * @method static Builder|IdentityProxy whereIdentity2faUuid($value)
  * @method static Builder|IdentityProxy whereIdentityAddress($value)
  * @method static Builder|IdentityProxy whereState($value)
