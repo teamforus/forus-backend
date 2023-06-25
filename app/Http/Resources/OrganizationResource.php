@@ -132,7 +132,7 @@ class OrganizationResource extends JsonResource
             'reservations_budget_enabled', 'reservations_subsidy_enabled',
             'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled',
             'allow_batch_reservations', 'allow_budget_fund_limits',
-            'allow_manual_bulk_processing', 'allow_fund_request_record_edit',
+            'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
         ])) : [];
     }
 

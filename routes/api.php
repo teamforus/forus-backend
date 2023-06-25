@@ -157,3 +157,6 @@ Route::group(['middleware' => ['api.auth']], static function()  {
 
 Route::get('/status', 'Api\StatusController@getStatus')->name('status');
 Route::post('/contact-form', 'ContactFormController@send');
+Route::get('/exporteren', 'Api\BIConnectionController@index')
+    ->middleware('bi_connection')
+    ->name('bi-connection');

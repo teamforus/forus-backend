@@ -1154,6 +1154,29 @@ class Voucher extends BaseModel
     }
 
     /**
+     * @param Collection|Voucher[] $vouchers
+     * @param array $fields
+     * @return array
+     */
+    public static function exportOnlyDataArray(Collection|Arrayable $vouchers, array $fields): array
+    {
+        $data = [];
+
+        foreach ($vouchers as $voucher) {
+            do {
+                $voucherData = new VoucherExportData($voucher, $fields, empty($qrFormat));
+            } while(in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
+
+            $data[] = [
+                'name' => $voucherData->getName(),
+                'values' => $voucherData->toArray(),
+            ];
+        }
+
+        return Arr::pluck($data, 'values');
+    }
+
+    /**
      * @return bool
      */
     public function isBudgetType(): bool

@@ -73,8 +73,11 @@ use Illuminate\Database\Query\Builder;
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
  * @property int $show_provider_transactions
+ * @property bool $allow_bi_connection
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Collection<int, \App\Models\BIConnection> $bIConnections
+ * @property-read int|null $b_i_connections_count
  * @property-read \App\Models\BankConnection|null $bank_connection_active
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
@@ -141,6 +144,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization newQuery()
  * @method static EloquentBuilder|Organization query()
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
+ * @method static EloquentBuilder|Organization whereAllowBiConnection($value)
  * @method static EloquentBuilder|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
@@ -205,7 +209,7 @@ class Organization extends BaseModel
         'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
-        'reservation_phone', 'reservation_address', 'reservation_birth_date',
+        'reservation_phone', 'reservation_address', 'reservation_birth_date', 'allow_bi_connection',
     ];
 
     /**
@@ -232,6 +236,7 @@ class Organization extends BaseModel
         'allow_fund_request_record_edit'        => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
+        'allow_bi_connection'                   => 'boolean',
     ];
 
     /**
@@ -626,6 +631,15 @@ class Organization extends BaseModel
             'id',
             'identity_address'
         )->latest('last_activity_at');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function bIConnections(): HasMany
+    {
+        return $this->hasMany(BIConnection::class);
     }
 
     /**

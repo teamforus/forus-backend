@@ -902,6 +902,18 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\AnnouncementController@index"
     );
 
+    $router->post(
+        'organizations/{organization}/bi-connections/recreate',
+        "Api\Platform\Organizations\BIConnectionController@recreate"
+    );
+
+    $router->resource(
+        'organizations/{organization}/bi-connections',
+        "Api\Platform\Organizations\BIConnectionController"
+    )
+        ->only(['index', 'show', 'store', 'update'])
+        ->parameter('bi-connections', 'connection');
+
     $router->get('prevalidations/export','Api\Platform\PrevalidationController@export');
     $router->post('prevalidations/collection','Api\Platform\PrevalidationController@storeCollection');
     $router->post('prevalidations/collection/hash', 'Api\Platform\PrevalidationController@collectionHash');

@@ -9,6 +9,10 @@ return [
         'attempts' => env('CONTACT_FORM_THROTTLE_ATTEMPTS', 10),
         'decay' => env('CONTACT_FORM_THROTTLE_DECAY', 10),
     ],
+    'bi_connection' => [
+        'attempts' => env('BI_CONNECTION_THROTTLE_ATTEMPTS', 10),
+        'decay' => env('BI_CONNECTION_THROTTLE_DECAY', 10),
+    ],
     'activation_code' => [
         'attempts' => env('ACTIVATION_CODE_ATTEMPTS', 3),
         'decay' => env('ACTIVATION_CODE_DECAY', 180),

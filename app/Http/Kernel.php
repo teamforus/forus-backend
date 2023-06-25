@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use App\Http\Middleware\ApiAuthMiddleware;
+use App\Http\Middleware\BIConnectionMiddleware;
 use App\Http\Middleware\ClientTypeMiddleware;
 use App\Http\Middleware\ClientVersionMiddleware;
 use App\Http\Middleware\DomainDigIdMiddleware;
@@ -85,5 +86,6 @@ class Kernel extends HttpKernel
         'locale' => LocaleMiddleware::class,
         'domain' => DomainMiddleware::class,
         'domain.digid' => DomainDigIdMiddleware::class,
+        'bi_connection' => BIConnectionMiddleware::class,
     ];
 }
