@@ -84,6 +84,7 @@ class ImplementationPrivateResource extends BaseJsonResource
         Implementation $implementation
     ): array {
         $generalImplementation = $implementation::general();
+        $email_signature_html = get_markdown_converter()->convert($implementation->email_signature ?: '')->getContent();
 
         if ($implementation->organization->identityCan($request->identity(), 'manage_implementation_cms')) {
             return [
@@ -92,6 +93,7 @@ class ImplementationPrivateResource extends BaseJsonResource
                 'email_color' => trim(strtoupper($implementation->email_color)),
                 'email_color_default' => trim(strtoupper($generalImplementation->email_color)),
                 'email_signature' => trim($implementation->email_signature ?: ''),
+                'email_signature_html' => $email_signature_html,
                 'email_signature_default' => trim($generalImplementation->email_signature ?: ''),
             ];
         }

@@ -7,10 +7,14 @@ use App\Services\Forus\Session\Services\Data\AgentData;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QBuilder;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use App\Services\TokenGeneratorService\TokenGenerator;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Http\Requests\BaseFormRequest;
+use League\CommonMark\Environment\Environment;
+use League\CommonMark\MarkdownConverter;
 
 if (!function_exists('format_datetime_locale')) {
     /**
@@ -334,5 +338,28 @@ if (!function_exists('query_to_sql')) {
         }, $builder->getBindings());
 
         return str_replace_array('?', $bindings, $builder->toSql());
+    }
+}
+
+if (!function_exists('get_markdown_converter_configs')) {
+
+    function get_markdown_converter_configs(): array
+    {
+        return Config::get('markdown');
+    }
+}
+
+if (!function_exists('get_markdown_converter')) {
+
+    function get_markdown_converter(): MarkdownConverter
+    {
+        $config = get_markdown_converter_configs();
+        $environment = new Environment(Arr::except($config, ['extensions', 'views']));
+
+        foreach ((array) Arr::get($config, 'extensions') as $extension) {
+            $environment->addExtension(resolve($extension));
+        }
+
+        return new MarkdownConverter($environment);
     }
 }
