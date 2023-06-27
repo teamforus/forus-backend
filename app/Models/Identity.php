@@ -577,11 +577,15 @@ class Identity extends Model implements Authenticatable
      * Authorize proxy identity by code
      * @param string $code
      * @param string|null $ip
+     * @param IdentityProxy|null $inherit2FA
      * @return bool
      */
-    public function activateAuthorizationCodeProxy(string $code, ?string $ip = null): bool
-    {
-        return (bool) static::exchangeToken('pin_code', $code, $this, $ip);
+    public function activateAuthorizationCodeProxy(
+        string $code,
+        ?string $ip = null,
+        ?IdentityProxy $inherit2FA = null
+    ): bool {
+        return (bool) static::exchangeToken('pin_code', $code, $this, $ip, $inherit2FA);
     }
 
     /**
@@ -613,6 +617,7 @@ class Identity extends Model implements Authenticatable
      * @param string $exchangeToken
      * @param Identity|null $identity
      * @param string|null $ip
+     * @param IdentityProxy|null $inherit2FA
      * @return IdentityProxy
      */
     private static function exchangeToken(
@@ -620,6 +625,7 @@ class Identity extends Model implements Authenticatable
         string $exchangeToken,
         Identity $identity = null,
         ?string $ip = null,
+        ?IdentityProxy $inherit2FA = null,
     ): IdentityProxy {
         $proxy = IdentityProxy::findByExchangeToken($exchangeToken, $type);
 
@@ -646,7 +652,9 @@ class Identity extends Model implements Authenticatable
         $initialEmail = $proxy->identity->initial_email;
         $isEmailToken = in_array($type, ['email_code', 'confirmation_code']);
 
-        if ($ip) {
+        if ($inherit2FA) {
+            $proxy->inherit2FAStateFrom($inherit2FA);
+        } else if ($ip) {
             $proxy->inherit2FAState($ip, Config::get('forus.auth_2fa.remember_hours'));
         }
 

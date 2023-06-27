@@ -292,13 +292,22 @@ class IdentityProxy extends Model
     public function inherit2FAState(string $ip, int $timeout): bool
     {
         if ($this->shouldInherit2FA() && $proxy = $this->find2FAInheritableProxy($ip, $timeout)) {
-            return $this->forceFill([
-                'identity_2fa_code' => $proxy->identity_2fa_code,
-                'identity_2fa_uuid' => $proxy->identity_2fa_uuid,
-                'identity_2fa_parent_proxy_id' => $proxy->id,
-            ])->save();
+            $this->inherit2FAStateFrom($proxy);
         }
 
         return false;
+    }
+
+    /**
+     * @param IdentityProxy $proxy
+     * @return bool
+     */
+    public function inherit2FAStateFrom(IdentityProxy $proxy): bool
+    {
+        return $this->forceFill([
+            'identity_2fa_code' => $proxy->identity_2fa_code,
+            'identity_2fa_uuid' => $proxy->identity_2fa_uuid,
+            'identity_2fa_parent_proxy_id' => $proxy->id,
+        ])->save();
     }
 }
