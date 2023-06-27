@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Funds\Requests\Records;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
+use App\Rules\FundRequests\Sponsor\FundRequestRecordValueSponsorRule;
 
 /**
  * @property-read Organization $organization
@@ -29,14 +30,15 @@ class UpdateFundRequestRecordRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        if ($this->fund_request_record->record_type->type == 'number') {
-            return [
-                'value' => 'required|numeric',
-            ];
-        }
-
         return [
-            'value' => 'required|string|max:160',
+            'value' => [
+                'required',
+                new FundRequestRecordValueSponsorRule(
+                    $this->fund_request_record->fund_request->fund,
+                    $this,
+                    $this->fund_request_record->fund_criterion,
+                ),
+            ],
         ];
     }
 }

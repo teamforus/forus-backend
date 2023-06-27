@@ -13,6 +13,7 @@ return [
             'backoffice_available' => true,
             'allow_budget_fund_limits' => true,
             'allow_manual_bulk_processing' => true,
+            'allow_fund_request_record_edit' => true,
             'allow_custom_fund_notifications' => true,
         ]
     ],
@@ -34,8 +35,9 @@ return [
             'manage_provider_products' => true,
             'backoffice_available' => false,
             'allow_batch_reservations' => true,
-            'allow_custom_fund_notifications' => true,
             'allow_budget_fund_limits' => false,
+            'allow_fund_request_record_edit' => true,
+            'allow_custom_fund_notifications' => true,
             'pre_approve_external_funds' => false,
             'provider_throttling_value' => 100,
             'fund_request_resolve_policy' => "apply_auto_available",
