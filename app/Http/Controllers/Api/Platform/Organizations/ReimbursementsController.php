@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Exports\ReimbursementsSponsorExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Reimbursements\ApproveReimbursementsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Reimbursements\DeclineReimbursementsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Reimbursements\IndexReimbursementsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Reimbursements\StoreReimbursementNoteRequest;
+use App\Http\Requests\Api\Platform\Organizations\Reimbursements\UpdateReimbursementRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Requests\BaseIndexFormRequest;
+use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\NoteResource;
 use App\Http\Resources\Sponsor\SponsorReimbursementResource;
 use App\Models\Note;
@@ -18,6 +21,7 @@ use App\Searches\ReimbursementsSearch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
 class ReimbursementsController extends Controller
@@ -60,6 +64,30 @@ class ReimbursementsController extends Controller
         Reimbursement $reimbursement
     ): SponsorReimbursementResource {
         $this->authorize('viewAsSponsor', [$reimbursement, $organization]);
+
+        return SponsorReimbursementResource::create($reimbursement);
+    }
+
+    /**
+     * Update the specified resource in storage
+     *
+     * @param UpdateReimbursementRequest $request
+     * @param Organization $organization
+     * @param Reimbursement $reimbursement
+     * @return SponsorReimbursementResource
+     * @throws AuthorizationException
+     */
+    public function update(
+        UpdateReimbursementRequest $request,
+        Organization $organization,
+        Reimbursement $reimbursement
+    ): SponsorReimbursementResource {
+        $this->authorize('viewAsSponsor', [$reimbursement, $organization]);
+        $this->authorize('updateAsSponsor', [$reimbursement, $organization]);
+
+        $reimbursement->update($request->only([
+            'provider_name', 'reimbursement_category_id',
+        ]));
 
         return SponsorReimbursementResource::create($reimbursement);
     }
@@ -208,5 +236,43 @@ class ReimbursementsController extends Controller
         $note->delete();
 
         return new JsonResponse();
+    }
+
+    /**
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
+     * @throws AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function getExportFields(
+        Organization $organization
+    ): AnonymousResourceCollection {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnyAsSponsor', [Reimbursement::class, $organization]);
+
+        return ExportFieldArrResource::collection(ReimbursementsSponsorExport::getExportFields());
+    }
+
+    /**
+     * @param IndexReimbursementsRequest $request
+     * @param Organization $organization
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @noinspection PhpUnused
+     */
+    public function export(
+        IndexReimbursementsRequest $request,
+        Organization $organization
+    ): BinaryFileResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnyAsSponsor', [Reimbursement::class, $organization]);
+
+        $fields = $request->input('fields', ReimbursementsSponsorExport::getExportFields());
+        $fileData = new ReimbursementsSponsorExport($request, $organization, $fields);
+        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
+
+        return resolve('excel')->download($fileData, $fileName);
     }
 }

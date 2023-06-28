@@ -69,6 +69,7 @@ use Illuminate\Database\Query\Builder;
  * @property bool $allow_custom_fund_notifications
  * @property bool $allow_budget_fund_limits
  * @property bool $allow_manual_bulk_processing
+ * @property bool $allow_fund_request_record_edit
  * @property bool $allow_2fa_restrictions
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
@@ -120,6 +121,8 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $products_provider_count
  * @property-read Collection|\App\Models\Product[] $products_sponsor
  * @property-read int|null $products_sponsor_count
+ * @property-read Collection|\App\Models\ReimbursementCategory[] $reimbursement_categories
+ * @property-read int|null $reimbursement_categories_count
  * @property-read Collection|\App\Models\Fund[] $supplied_funds
  * @property-read int|null $supplied_funds_count
  * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved
@@ -145,6 +148,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
+ * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
  * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
@@ -242,6 +246,7 @@ class Organization extends BaseModel
         'allow_budget_fund_limits'              => 'boolean',
         'allow_manual_bulk_processing'          => 'boolean',
         'allow_2fa_restrictions'                => 'boolean',
+        'allow_fund_request_record_edit'        => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
         'auth_2fa_remember_ip'                  => 'boolean',
@@ -266,6 +271,13 @@ class Organization extends BaseModel
         }
 
         return Fund::STATE_WAITING;
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function reimbursement_categories(): HasMany {
+        return $this->hasMany(ReimbursementCategory::class);
     }
 
     /**

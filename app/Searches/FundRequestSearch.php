@@ -67,14 +67,14 @@ class FundRequestSearch extends BaseSearch
             $builder->whereDoesntHave('records.employee');
         }
 
-        return $this->sort($builder);
+        return $this->order($builder);
     }
 
     /**
      * @param Builder $builder
      * @return Builder
      */
-    protected function sort(Builder $builder): Builder
+    protected function order(Builder $builder): Builder
     {
         $orderBy = $this->getFilter('order_by', 'created_at');
         $orderDir = $this->getFilter('order_dir', 'desc');

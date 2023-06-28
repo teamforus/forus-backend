@@ -102,4 +102,14 @@ class StoreReimbursementRequest extends BaseFormRequest
             'files.*' => trans('validation.attributes.file'),
         ];
     }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'files.required' => trans('validation.reimbursement.files.required'),
+        ];
+    }
 }
