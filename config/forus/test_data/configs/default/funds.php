@@ -39,12 +39,22 @@ return [
         'fund' => [
             'type' => 'budget',
         ],
+        'fund_config' => [
+            'auth_2fa_restrict_emails' => true,
+            'auth_2fa_restrict_auth_sessions' => true,
+            'auth_2fa_restrict_reimbursements' => true,
+        ],
     ],
     'Nijmegen III' => [
         'implementation_name' => 'Nijmegen',
         'organization_name' => 'Nijmegen',
         'fund' => [
             'type' => 'subsidies',
+        ],
+        'fund_config' => [
+            'auth_2fa_restrict_emails' => true,
+            'auth_2fa_restrict_auth_sessions' => true,
+            'auth_2fa_restrict_reimbursements' => true,
         ],
     ],
     'Westerkwartier' => [

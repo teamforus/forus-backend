@@ -2,6 +2,8 @@
 
 namespace App\Services\Forus\SmsNotification;
 
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Twilio\Rest\Client;
 
 /**
@@ -11,23 +13,28 @@ use Twilio\Rest\Client;
 class SmsService
 {
     /**
-     * @param string $message
+     * @param string $body
      * @param string $phoneNumber
      * @return bool
      */
-    public function sendSms(
-        string $message,
-        string $phoneNumber
-    ): bool {
-        try {
-            $client = new Client(
-                config('forus.twilio.sid'),
-                config('forus.twilio.token')
-            );
+    public function sendSms(string $body, string $phoneNumber): bool
+    {
+        if (Config::get('forus.twilio.debug', false)) {
+            Log::debug(json_encode(compact('body', 'phoneNumber'), 128));
+            return true;
+        }
 
-            $client->messages->create($phoneNumber, [
-                'from' => config('forus.twilio.from'),
-                'body' => $message,
+        $sid = Config::get('forus.twilio.sid');
+        $token = Config::get('forus.twilio.token');
+
+        if (!$sid || $token) {
+            return false;
+        }
+
+        try {
+            (new Client($sid, $token))->messages->create($phoneNumber, [
+                'from' => Config::get('forus.twilio.from'),
+                'body' => $body,
             ]);
 
             return true;

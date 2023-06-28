@@ -21,7 +21,7 @@ class SessionController extends Controller
      */
     public function index(IndexSessionsRequest $request): AnonymousResourceCollection
     {
-        $this->authorize('viewAny', Session::class);
+        $this->authorize('viewAny', [Session::class, $request->identityProxy2FAConfirmed()]);
 
         $query = Session::query()
             ->where('identity_address', $request->auth_address())
@@ -34,13 +34,13 @@ class SessionController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param BaseFormRequest $request
      * @param Session $session
      * @return SessionResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(Session $session): SessionResource
+    public function show(BaseFormRequest $request, Session $session): SessionResource
     {
-        $this->authorize('show', $session);
+        $this->authorize('show', [$session, $request->identityProxy2FAConfirmed()]);
 
         return new SessionResource($session);
     }
@@ -48,13 +48,14 @@ class SessionController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param BaseFormRequest $request
      * @param Session $session
      * @return JsonResponse
      * @throws \Throwable
      */
-    public function terminate(Session $session): JsonResponse
+    public function terminate(BaseFormRequest $request, Session $session): JsonResponse
     {
-        $this->authorize('terminate', $session);
+        $this->authorize('terminate', [$session, $request->identityProxy2FAConfirmed()]);
 
         $session->terminate(false);
 
@@ -64,17 +65,17 @@ class SessionController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param BaseFormRequest $formRequest
+     * @param BaseFormRequest $request
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Throwable
      * @noinspection PhpUnused
      */
-    public function terminateAll(BaseFormRequest $formRequest): JsonResponse
+    public function terminateAll(BaseFormRequest $request): JsonResponse
     {
-        $this->authorize('terminateAll', Session::class);
+        $this->authorize('terminateAll', [Session::class, $request->identityProxy2FAConfirmed()]);
 
-        foreach ($formRequest->identity()->proxies as $proxy) {
+        foreach ($request->identity()->proxies as $proxy) {
             $proxy->deactivateBySession(false);
         }
 
