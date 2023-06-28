@@ -265,7 +265,7 @@ class IdentityProxy extends Model
 
         return $this->identity->proxies()
             ->addSelect(['last_request' => $lastRequestQuery])
-            ->whereNotNull('identity_2fa_uuid')
+            ->whereHas('identity_2fa')
             ->whereNotNull('identity_2fa_code')
             ->orderBy('last_request', 'desc')
             ->withTrashed()
