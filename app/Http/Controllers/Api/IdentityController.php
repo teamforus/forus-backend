@@ -157,7 +157,7 @@ class IdentityController extends Controller
             );
 
             return view()->make('pages.auth.deep_link', array_merge([
-                'type' => 'email_confirmation'
+                'type' => 'email_confirmation',
             ], compact('redirectUrl', 'exchangeToken')));
         }
 
@@ -274,14 +274,34 @@ class IdentityController extends Controller
     /**
      * Exchange email sign in token for access_token
      *
+     * @param BaseFormRequest $request
      * @param string $emailToken
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function emailTokenExchange(BaseFormRequest $request, string $emailToken): JsonResponse
     {
         return new JsonResponse([
             'access_token' => Identity::activateAuthorizationEmailProxy($emailToken, $request->ip())
+        ]);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @return JsonResponse
+     */
+    public function store2FASharedToken(BaseFormRequest $request): JsonResponse
+    {
+        $proxy = $request->identity()->makeAuthorizationEmailProxy();
+        $proxy->inherit2FAStateFrom($request->identityProxy());
+
+        $uri = config('forus.front_ends.app-me_app') . "identity-restore?%s";
+        $request->identityProxy()->deactivateByLogout();
+
+        return new JsonResponse([
+            'redirect_url' => sprintf($uri, http_build_query([
+                'token' => $proxy->exchange_token,
+            ])),
         ]);
     }
 
@@ -310,10 +330,15 @@ class IdentityController extends Controller
      */
     public function proxyAuthorizeCode(IdentityAuthorizeCodeRequest $request): JsonResponse
     {
-        $authCode = $request->post('auth_code') ?: '';
+        $proxy = $request->identityProxy();
+        $share2FA = (bool) $request->post('share_2fa', false);
 
         return new JsonResponse([
-            'success' => $request->identity()->activateAuthorizationCodeProxy($authCode, $request->ip()),
+            'success' => $request->identity()->activateAuthorizationCodeProxy(
+                $request->post('auth_code') ?: '',
+                $request->ip(),
+                $share2FA && $proxy->is2FAConfirmed() ? $proxy : null,
+            ),
         ]);
     }
 

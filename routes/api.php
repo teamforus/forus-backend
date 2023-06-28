@@ -23,6 +23,7 @@ Route::group([], static function() {
             Route::post('/code', 'Api\IdentityController@proxyAuthorizationCode');
             Route::post('/token', 'Api\IdentityController@proxyAuthorizationToken');
             Route::post('/email', 'Api\IdentityController@proxyAuthorizationEmailToken');
+            Route::post('/shared-2fa', 'Api\IdentityController@store2FASharedToken');
 
             // short tokens
             Route::post('/short-token', 'Api\IdentityController@proxyAuthorizationShortToken');
