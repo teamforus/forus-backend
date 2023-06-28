@@ -25,12 +25,14 @@ trait DoesTesting
      * @param Identity $identity
      * @param bool $activate
      * @param string $tokenType
+     * @param string|null $ip
      * @return IdentityProxy
      */
     protected function makeIdentityProxy(
         Identity $identity,
         bool $activate = true,
         string $tokenType = 'confirmation_code',
+        ?string $ip = null
     ): IdentityProxy {
         $this->assertContains($tokenType, array_keys($identity::expirationTimes));
 
@@ -39,7 +41,7 @@ trait DoesTesting
                 $proxy = $identity->makeIdentityPoxy();
 
                 if ($activate) {
-                    Identity::exchangeEmailConfirmationToken($proxy->exchange_token);
+                    Identity::exchangeEmailConfirmationToken($proxy->exchange_token, $ip);
                 }
 
                 return $proxy;
@@ -48,7 +50,7 @@ trait DoesTesting
             $proxy = $identity->makeAuthorizationEmailProxy();
 
             if ($activate) {
-                Identity::activateAuthorizationEmailProxy($proxy->exchange_token);
+                Identity::activateAuthorizationEmailProxy($proxy->exchange_token, $ip);
             }
 
             return $proxy->refresh();
@@ -57,9 +59,9 @@ trait DoesTesting
         $proxy = Identity::makeProxy($tokenType);
 
         match($tokenType) {
-            'short_token' => $identity->activateAuthorizationShortTokenProxy($proxy->exchange_token),
-            'pin_code' => $identity->activateAuthorizationCodeProxy($proxy->exchange_token),
-            'qr_code' => $identity->activateAuthorizationTokenProxy($proxy->exchange_token),
+            'short_token' => $identity->activateAuthorizationShortTokenProxy($proxy->exchange_token, $ip),
+            'pin_code' => $identity->activateAuthorizationCodeProxy($proxy->exchange_token, $ip),
+            'qr_code' => $identity->activateAuthorizationTokenProxy($proxy->exchange_token, $ip),
         };
 
         return $proxy->refresh();
@@ -79,5 +81,21 @@ trait DoesTesting
         return array_merge([
             'Authorization' => $authProxy ? "Bearer $authProxy->access_token" : null,
         ], $headers);
+    }
+
+    /**
+     * @param callable $callable
+     * @param string $message
+     * @return mixed
+     */
+    protected function assertNoException(
+        callable $callable,
+        string $message = 'No exception assertion failed',
+    ): mixed {
+        try {
+            return $callable();
+        } catch (\Exception) {
+            self::fail($message);
+        }
     }
 }

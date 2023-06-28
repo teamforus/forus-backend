@@ -115,8 +115,14 @@ class OrganizationsController extends Controller
         $organization->update($request->only([
             'name', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
-            'business_type_id', 'description',
+            'business_type_id', 'description', 'auth_2fa_policy', 'auth_2fa_remember_ip',
         ]));
+
+        if ($organization->allow_2fa_restrictions) {
+            $organization->update($request->only([
+                'auth_2fa_policy', 'auth_2fa_remember_ip',
+            ]));
+        }
 
         if ($request->has('iban') && Gate::allows('updateIban', $organization)) {
             $organization->update([
@@ -236,6 +242,6 @@ class OrganizationsController extends Controller
             'identity_address' => $employee->identity_address
         ]);
 
-        return response()->json([]);
+        return new JsonResponse();
     }
 }

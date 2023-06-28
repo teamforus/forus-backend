@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Identity\Emails\IndexIdentityEmailRequest;
 use App\Http\Requests\Api\Identity\Emails\ResendIdentityEmailRequest;
 use App\Http\Requests\Api\Identity\Emails\StoreIdentityEmailRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\IdentityEmailResource;
 use App\Models\IdentityEmail;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +25,10 @@ class IdentityEmailsController extends Controller
      */
     public function index(IndexIdentityEmailRequest $request): AnonymousResourceCollection
     {
-        $this->authorize('viewAny', IdentityEmail::class);
+        $this->authorize('viewAny', [
+            IdentityEmail::class,
+            $request->identityProxy2FAConfirmed(),
+        ]);
 
         $query = $request->identity()->emails()->orderByDesc('primary')->orderBy('email');
 
@@ -40,7 +44,10 @@ class IdentityEmailsController extends Controller
      */
     public function store(StoreIdentityEmailRequest $request): IdentityEmailResource
     {
-        $this->authorize('create', IdentityEmail::class);
+        $this->authorize('create', [
+            IdentityEmail::class,
+            $request->identityProxy2FAConfirmed(),
+        ]);
 
         $identityEmail = $request->identity()->addEmail($request->input('email'));
         $identityEmail->redirect()->create([
@@ -55,13 +62,18 @@ class IdentityEmailsController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param BaseFormRequest $request
      * @param IdentityEmail $identityEmail
      * @return IdentityEmailResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(IdentityEmail $identityEmail): IdentityEmailResource
-    {
-        $this->authorize('view', $identityEmail);
+    public function show(
+        BaseFormRequest $request,
+        IdentityEmail $identityEmail,
+    ): IdentityEmailResource {
+        $this->authorize('view', [
+            $identityEmail,
+            $request->identityProxy2FAConfirmed(),
+        ]);
 
         return new IdentityEmailResource($identityEmail);
     }
@@ -74,39 +86,49 @@ class IdentityEmailsController extends Controller
      * @return IdentityEmailResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
-     * @noinspection PhpUnusedParameterInspection
      */
     public function resend(
         ResendIdentityEmailRequest $request,
         IdentityEmail $identityEmail
     ): IdentityEmailResource {
-        $this->authorize('resend', $identityEmail);
+        $this->authorize('resend', [
+            $identityEmail,
+            $request->identityProxy2FAConfirmed(),
+        ]);
 
         return new IdentityEmailResource($identityEmail->sendVerificationEmail());
     }
 
     /**
+     * @param BaseFormRequest $request
      * @param IdentityEmail $identityEmail
      * @return IdentityEmailResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function primary(IdentityEmail $identityEmail): IdentityEmailResource
-    {
-        $this->authorize('makePrimary', $identityEmail);
+    public function primary(
+        BaseFormRequest $request,
+        IdentityEmail $identityEmail,
+    ): IdentityEmailResource {
+        $this->authorize('makePrimary', [
+            $identityEmail,
+            $request->identityProxy2FAConfirmed(),
+        ]);
 
         return new IdentityEmailResource($identityEmail->setPrimary());
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
+     * @param BaseFormRequest $request
      * @param IdentityEmail $identityEmail
-     * @return \Illuminate\Http\JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * @return JsonResponse
      */
-    public function destroy(IdentityEmail $identityEmail): JsonResponse
-    {
-        $this->authorize('delete', $identityEmail);
+    public function destroy(
+        BaseFormRequest $request,
+        IdentityEmail $identityEmail,
+    ): JsonResponse {
+        $this->authorize('delete', [
+            $identityEmail,
+            $request->identityProxy2FAConfirmed(),
+        ]);
 
         $identityEmail->delete();
 
@@ -116,7 +138,6 @@ class IdentityEmailsController extends Controller
     /**
      * @param IdentityEmail $identityEmail
      * @return View|RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
     public function emailVerificationToken(IdentityEmail $identityEmail): View|RedirectResponse

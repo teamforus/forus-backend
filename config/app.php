@@ -221,6 +221,7 @@ return [
         App\Services\BNGService\BNGServiceProvider::class,
         App\Services\ProductboardApiService\ProductboardApiServiceProvider::class,
         App\Services\MailDatabaseLoggerService\MailDatabaseLoggerServiceProvider::class,
+        App\Services\Forus\Auth2FAService\Auth2FAServiceProvider::class,
     ],
 
     /*

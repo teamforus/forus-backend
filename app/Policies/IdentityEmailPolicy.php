@@ -15,12 +15,19 @@ class IdentityEmailPolicy
      * Determine whether the user can view any identity emails.
      *
      * @param Identity $identity
-     * @return bool
+     * @param bool $auth2FAConfirmed
+     * @return Response|bool
      * @noinspection PhpUnused
      */
-    public function viewAny(Identity $identity): bool
-    {
-        return $identity->exists;
+    public function viewAny(
+        Identity $identity,
+        bool $auth2FAConfirmed,
+    ): Response|bool {
+        if (!$identity->exists()) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
@@ -28,24 +35,39 @@ class IdentityEmailPolicy
      *
      * @param Identity $identity
      * @param IdentityEmail $identityEmail
-     * @return bool
+     * @param bool $auth2FAConfirmed
+     * @return Response|bool
      * @noinspection PhpUnused
      */
-    public function view(Identity $identity, IdentityEmail $identityEmail): bool
-    {
-        return $identityEmail->identity_address === $identity->address;
+    public function view(
+        Identity $identity,
+        IdentityEmail $identityEmail,
+        bool $auth2FAConfirmed = false,
+    ): Response|bool {
+        if ($identityEmail->identity_address !== $identity->address) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
      * Determine whether the user can create identity emails.
      *
      * @param Identity $identity
-     * @return bool
+     * @param bool $auth2FAConfirmed
+     * @return Response|bool
      * @noinspection PhpUnused
      */
-    public function create(Identity $identity): bool
-    {
-        return $identity->exists;
+    public function create(
+        Identity $identity,
+        bool $auth2FAConfirmed = false,
+    ): Response|bool {
+        if (!$identity->exists()) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
@@ -53,11 +75,15 @@ class IdentityEmailPolicy
      *
      * @param Identity $identity
      * @param IdentityEmail $identityEmail
+     * @param bool $auth2FAConfirmed
      * @return bool|Response
      * @noinspection PhpUnused
      */
-    public function makePrimary(Identity $identity, IdentityEmail $identityEmail): Response|bool
-    {
+    public function makePrimary(
+        Identity $identity,
+        IdentityEmail $identityEmail,
+        bool $auth2FAConfirmed = false,
+    ): Response|bool {
         if ($identityEmail->primary) {
             return $this->deny("Already primary");
         }
@@ -66,7 +92,11 @@ class IdentityEmailPolicy
             return $this->deny("Please verify email first.");
         }
 
-        return $identityEmail->identity_address === $identity->address;
+        if ($identityEmail->identity_address !== $identity->address) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
@@ -77,13 +107,15 @@ class IdentityEmailPolicy
      * @return Response|bool
      * @noinspection PhpUnused
      */
-    public function verifyToken(?Identity $identity, IdentityEmail $identityEmail): Response|bool
-    {
+    public function verifyToken(
+        ?Identity $identity,
+        IdentityEmail $identityEmail,
+    ): Response|bool {
         if ($identityEmail->verified) {
             return $this->deny("You already have verified your email.");
         }
 
-        return !$identity || $identity->exists;
+        return !$identity || $identity->exists();
     }
 
     /**
@@ -91,16 +123,24 @@ class IdentityEmailPolicy
      *
      * @param Identity $identity
      * @param IdentityEmail $identityEmail
+     * @param bool $auth2FAConfirmed
      * @return bool|Response
      * @noinspection PhpUnused
      */
-    public function resend(Identity $identity, IdentityEmail $identityEmail): Response|bool
-    {
+    public function resend(
+        Identity $identity,
+        IdentityEmail $identityEmail,
+        bool $auth2FAConfirmed = false
+    ): Response|bool {
         if ($identityEmail->verified) {
             return $this->deny("Email already verified.");
         }
 
-        return $identityEmail->identity_address === $identity->address;
+        if ($identityEmail->identity_address !== $identity->address) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
@@ -108,15 +148,37 @@ class IdentityEmailPolicy
      *
      * @param Identity $identity
      * @param IdentityEmail $identityEmail
+     * @param bool $auth2FAConfirmed
      * @return bool|Response
      * @noinspection PhpUnused
      */
-    public function delete(Identity $identity, IdentityEmail $identityEmail): Response|bool
-    {
+    public function delete(
+        Identity $identity,
+        IdentityEmail $identityEmail,
+        bool $auth2FAConfirmed = false
+    ): Response|bool {
         if ($identityEmail->primary) {
             return $this->deny("Can't delete primary email.");
         }
 
-        return $identityEmail->identity_address === $identity->address;
+        if ($identityEmail->identity_address !== $identity->address) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param bool $auth2FAConfirmed
+     * @return Response|bool
+     */
+    protected function validate2FAFeatureRestriction(Identity $identity, bool $auth2FAConfirmed = false): Response|bool
+    {
+        if ($identity->isFeature2FARestricted('emails') && !$auth2FAConfirmed) {
+            return $this->deny('Invalid 2FA state.');
+        }
+
+        return true;
     }
 }
