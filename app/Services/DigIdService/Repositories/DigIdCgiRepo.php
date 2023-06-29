@@ -2,6 +2,8 @@
 
 namespace App\Services\DigIdService\Repositories;
 
+use App\Http\Requests\BaseFormRequest;
+use App\Models\Implementation;
 use App\Services\DigIdService\DigIdException;
 use App\Services\DigIdService\Objects\DigidAuthRequestData;
 use App\Services\DigIdService\Objects\DigidAuthResolveData;
@@ -283,22 +285,41 @@ class DigIdCgiRepo extends DigIdRepo
     }
 
     /**
-     * @param string $request
+     * @param string $uri
      * @param string $method
      * @return ResponseInterface|null
      * @throws DigIdException
      */
-    protected function makeCall(string $request, string $method = 'get'): ?ResponseInterface
+    protected function makeCall(string $uri, string $method = 'get'): ?ResponseInterface
     {
+        $implementation = BaseFormRequest::createFrom(request())->implementation();
+        $generalImplementation = Implementation::general();
+
+        if ($implementation->digid_cgi_tls_cert && $implementation->digid_cgi_tls_key) {
+            $tlsCert = $implementation->digid_cgi_tls_cert;
+            $tlsKey = $implementation->digid_cgi_tls_key;
+        } else if ($generalImplementation->digid_cgi_tls_cert && $generalImplementation->digid_cgi_tls_key) {
+            $tlsCert = $generalImplementation->digid_cgi_tls_cert;
+            $tlsKey = $generalImplementation->digid_cgi_tls_key;
+        } else {
+            $tlsCert = null;
+            $tlsKey = null;
+        }
+
+        $tlsCert = $tlsCert ? new TmpFile($tlsCert) : null;
+        $tlsKey = $tlsKey ? new TmpFile($tlsKey) : null;
+
         $certificate = $this->makeTrustedCertificate();
-        $options = $this->makeRequestOptions($certificate);
+        $options = $this->makeRequestOptions($certificate, $tlsCert, $tlsKey);
 
         try {
-            $response = (new Client())->request($method, $request, $options);
+            $response = (new Client())->request($method, $uri, $options);
         } catch (Throwable) {
             throw $this->makeException("Digid API not responding.", self::DIGID_API_NOT_RESPONDING);
         } finally {
             $certificate && $certificate->close();
+            $tlsCert && $tlsCert->close();
+            $tlsKey && $tlsKey->close();
         }
 
         if (!isset($response)) {
@@ -310,17 +331,27 @@ class DigIdCgiRepo extends DigIdRepo
 
     /**
      * @param TmpFile|bool|null $cert
+     * @param TmpFile|null $clientTlsCert
+     * @param TmpFile|null $clientTlsKey
      * @return array
      */
-    private function makeRequestOptions(TmpFile|false|null $cert): array
-    {
-        if ($cert === null) {
-            return [];
+    private function makeRequestOptions(
+        TmpFile|false|null $cert,
+        ?TmpFile $clientTlsCert = null,
+        ?TmpFile $clientTlsKey = null,
+    ): array {
+        $options = [];
+
+        if ($cert !== null) {
+            $options['verify'] = $cert ? $cert->path() : false;
         }
 
-        return [
-            'verify' => $cert ? $cert->path() : false,
-        ];
+        if ($clientTlsCert && $clientTlsKey) {
+            $options['cert'] = $clientTlsCert->path();
+            $options['ssl_key'] = $clientTlsKey->path();
+        }
+
+        return $options;
     }
 
     /**
