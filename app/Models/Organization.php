@@ -18,6 +18,7 @@ use App\Services\MediaService\Models\Media;
 use App\Traits\HasMarkdownDescription;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +37,8 @@ use Illuminate\Database\Query\Builder;
  *
  * @property int $id
  * @property string|null $identity_address
+ * @property string $auth_2fa_policy
+ * @property bool $auth_2fa_remember_ip
  * @property string $name
  * @property string|null $description
  * @property string|null $description_text
@@ -67,6 +70,7 @@ use Illuminate\Database\Query\Builder;
  * @property bool $allow_budget_fund_limits
  * @property bool $allow_manual_bulk_processing
  * @property bool $allow_fund_request_record_edit
+ * @property bool $allow_2fa_restrictions
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
@@ -143,12 +147,15 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization newModelQuery()
  * @method static EloquentBuilder|Organization newQuery()
  * @method static EloquentBuilder|Organization query()
+ * @method static EloquentBuilder|Organization whereAllow2faRestrictions($value)
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder|Organization whereAllowBiConnection($value)
  * @method static EloquentBuilder|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
+ * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
  * @method static EloquentBuilder|Organization whereBankCronTime($value)
  * @method static EloquentBuilder|Organization whereBsnEnabled($value)
@@ -197,6 +204,14 @@ class Organization extends BaseModel
     public const FUND_REQUEST_POLICY_AUTO_REQUESTED = 'apply_auto_requested';
     public const FUND_REQUEST_POLICY_AUTO_AVAILABLE = 'apply_auto_available';
 
+    public const AUTH_2FA_POLICY_OPTIONAL = 'optional';
+    public const AUTH_2FA_POLICY_REQUIRED = 'required';
+
+    public const AUTH_2FA_POLICIES = [
+        self::AUTH_2FA_POLICY_OPTIONAL,
+        self::AUTH_2FA_POLICY_REQUIRED,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -210,6 +225,7 @@ class Organization extends BaseModel
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'allow_bi_connection',
+        'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
     ];
 
     /**
@@ -233,10 +249,12 @@ class Organization extends BaseModel
         'allow_custom_fund_notifications'       => 'boolean',
         'allow_budget_fund_limits'              => 'boolean',
         'allow_manual_bulk_processing'          => 'boolean',
+        'allow_2fa_restrictions'                => 'boolean',
         'allow_fund_request_record_edit'        => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
         'allow_bi_connection'                   => 'boolean',
+        'auth_2fa_remember_ip'                  => 'boolean',
     ];
 
     /**
@@ -349,7 +367,7 @@ class Organization extends BaseModel
      * @return EloquentBuilder[]|Collection
      * @noinspection PhpUnused
      */
-    public static function search(BaseFormRequest $request)
+    public static function search(BaseFormRequest $request): Collection|Arrayable
     {
         return self::searchQuery($request)->get();
     }
@@ -646,7 +664,7 @@ class Organization extends BaseModel
      * @param string|array $role
      * @return EloquentBuilder|Relation
      */
-    public function employeesOfRoleQuery($role)
+    public function employeesOfRoleQuery(string|array $role): EloquentBuilder|Relation
     {
         return EmployeeQuery::whereHasRoleFilter($this->employees(), $role);
     }
@@ -655,7 +673,7 @@ class Organization extends BaseModel
      * @param string|array $permission
      * @return EloquentBuilder|Relation
      */
-    public function employeesWithPermissionsQuery($permission)
+    public function employeesWithPermissionsQuery(string|array $permission): EloquentBuilder|Relation
     {
         return EmployeeQuery::whereHasPermissionFilter($this->employees(), $permission);
     }
@@ -664,7 +682,7 @@ class Organization extends BaseModel
      * @param array|int $fund_id
      * @return EloquentBuilder
      */
-    public function providerProductsQuery($fund_id = []): EloquentBuilder
+    public function providerProductsQuery(mixed $fund_id = []): EloquentBuilder
     {
         $productsQuery = ProductQuery::whereNotExpired($this->products()->getQuery());
         $productsQuery = ProductQuery::whereFundNotExcludedOrHasHistory($productsQuery, $fund_id);
@@ -676,7 +694,7 @@ class Organization extends BaseModel
      * @param string|array $permission
      * @return Collection|Employee[]
      */
-    public function employeesWithPermissions($permission): Collection
+    public function employeesWithPermissions(string|array $permission): Collection|Arrayable
     {
         return $this->employeesWithPermissionsQuery($permission)->get();
     }
@@ -904,13 +922,13 @@ class Organization extends BaseModel
      * @param Bank $bank
      * @param Employee $employee
      * @param Implementation $implementation
-     * @return BankConnection|\Illuminate\Database\Eloquent\Model
+     * @return BankConnection|Model
      */
     public function makeBankConnection(
         Bank $bank,
         Employee $employee,
-        Implementation $implementation
-    ): BankConnection {
+        Implementation $implementation,
+    ): BankConnection|Model {
         return BankConnection::addConnection($bank, $employee, $this, $implementation);
     }
 

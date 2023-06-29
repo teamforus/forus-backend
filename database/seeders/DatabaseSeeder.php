@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Services\Forus\Auth2FAService\Seeders\Auth2FAProvidersTableSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -22,5 +23,6 @@ class DatabaseSeeder extends Seeder
         $this->call(ImplementationsNotificationBrandingSeeder::class);
         $this->call(SystemNotificationsTableSeeder::class);
         $this->call(NotificationTemplatesTableSeeder::class);
+        $this->call(Auth2FAProvidersTableSeeder::class);
     }
 }

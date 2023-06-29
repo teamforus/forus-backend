@@ -15,6 +15,7 @@ class EmployeeResource extends BaseJsonResource
         'roles.translations',
         'roles.permissions',
         'identity.primary_email',
+        'identity.identity_2fa_active',
     ];
 
     /**
@@ -34,6 +35,7 @@ class EmployeeResource extends BaseJsonResource
             }, [])),
             'email' => $employee->identity?->email,
             'organization' => $employee->organization->only('id', 'name'),
+            'is_2fa_configured' => $employee->identity->is2FAConfigured(),
         ]);
     }
 }

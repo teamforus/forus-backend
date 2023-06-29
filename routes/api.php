@@ -23,6 +23,7 @@ Route::group([], static function() {
             Route::post('/code', 'Api\IdentityController@proxyAuthorizationCode');
             Route::post('/token', 'Api\IdentityController@proxyAuthorizationToken');
             Route::post('/email', 'Api\IdentityController@proxyAuthorizationEmailToken');
+            Route::post('/shared-2fa', 'Api\IdentityController@store2FASharedToken');
 
             // short tokens
             Route::post('/short-token', 'Api\IdentityController@proxyAuthorizationShortToken');
@@ -84,7 +85,7 @@ Route::group(['middleware' => ['api.auth']], static function()  {
          * Identity proxies
          */
         Route::group(['prefix' => '/proxy'], static function()  {
-            Route::delete('/', 'Api\IdentityController@proxyDestroy');
+            Route::delete('/', 'Api\IdentityController@proxyDestroy')->name('proxyDestroy');
 
             Route::group(['prefix' => '/authorize'], static function()  {
                 Route::post('/code', 'Api\IdentityController@proxyAuthorizeCode');
@@ -127,6 +128,19 @@ Route::group(['middleware' => ['api.auth']], static function()  {
             Route::get('/{recordUuid}', 'Api\Identity\RecordValidationController@show');
             Route::patch('/{recordUuid}/approve', 'Api\Identity\RecordValidationController@approve');
             Route::patch('/{recordUuid}/decline', 'Api\Identity\RecordValidationController@decline');
+        });
+
+        /**
+         * 2FA
+         */
+        Route::group(['prefix' => '/2fa'], static function() {
+            Route::get('/', 'Api\Identity\Identity2FA\Identity2FAController@state')->name('auth2FAState');
+            Route::post('/', 'Api\Identity\Identity2FA\Identity2FAController@store')->name('auth2FAStore');
+            Route::post('/update', 'Api\Identity\Identity2FA\Identity2FAController@update')->name('auth2FAUpdate');
+            Route::post('/{identity2fa}/resend', 'Api\Identity\Identity2FA\Identity2FAController@resend')->name('auth2FAResend');
+            Route::post('/{identity2fa}/activate', 'Api\Identity\Identity2FA\Identity2FAController@activate')->name('auth2FAActivate');
+            Route::post('/{identity2fa}/deactivate', 'Api\Identity\Identity2FA\Identity2FAController@deactivate')->name('auth2FADeactivate');
+            Route::post('/{identity2fa}/authenticate', 'Api\Identity\Identity2FA\Identity2FAController@authenticate')->name('auth2FAAuthenticate');
         });
 
         /**

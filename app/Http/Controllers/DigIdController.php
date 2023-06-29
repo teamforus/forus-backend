@@ -56,7 +56,7 @@ class DigIdController extends Controller
 
         // Authentication
         if ($session->session_request == 'auth') {
-            return $this->_resolveAuth($session);
+            return $this->_resolveAuth($session, $request);
         }
 
         // Fund request
@@ -70,10 +70,10 @@ class DigIdController extends Controller
 
     /**
      * @param DigIdSession $session
+     * @param ResolveDigIdRequest $request
      * @return RedirectResponse
-     * @throws \Exception
      */
-    private function _resolveAuth(DigIdSession $session): RedirectResponse
+    private function _resolveAuth(DigIdSession $session, ResolveDigIdRequest $request): RedirectResponse
     {
         $identity = $session->digidBsnIdentity();
 
@@ -86,7 +86,7 @@ class DigIdController extends Controller
         }
 
         $proxy = Identity::makeAuthorizationShortTokenProxy();
-        $identity->activateAuthorizationShortTokenProxy($proxy->exchange_token);
+        $identity->activateAuthorizationShortTokenProxy($proxy->exchange_token, $request->ip());
 
         $session->setIdentity($identity);
         $assignResult = $this->handleBsnAssign($session);
