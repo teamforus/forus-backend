@@ -26,6 +26,7 @@ use App\Statistics\Funds\FinancialStatistic;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -178,12 +179,23 @@ class FundsController extends Controller
                 $fund->updateModelValue('auto_requests_validation', false);
             }
 
-            $fund->updateFundsConfig($request->only(array_merge($fund->isWaiting() ? [
-                'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
-            ] : [], [
+            $fund->updateFundsConfig($request->only([
                 'email_required', 'contact_info_enabled', 'contact_info_required',
                 'contact_info_message_custom', 'contact_info_message_text',
-            ])));
+            ]));
+
+            if ($fund->isWaiting()) {
+                $fund->updateFundsConfig($request->only([
+                    'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+                ]));
+            }
+
+            if ($organization->allow_2fa_restrictions) {
+                $fund->updateFundsConfig($request->only([
+                    'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_emails',
+                    'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_reimbursements',
+                ]));
+            }
         }
 
         if ($manageFund || $manageFundTexts) {
@@ -193,11 +205,11 @@ class FundsController extends Controller
             $fund->syncFaqOptional($request->input('faq'));
         }
 
-        if (config('forus.features.dashboard.organizations.funds.criteria') && $request->has('criteria')) {
+        if (Config::get('forus.features.dashboard.organizations.funds.criteria') && $request->has('criteria')) {
             $fund->syncCriteria($request->input('criteria'), !$manageFund);
         }
 
-        if ($manageFund && config('forus.features.dashboard.organizations.funds.formula_products') &&
+        if ($manageFund && Config::get('forus.features.dashboard.organizations.funds.formula_products') &&
             $request->has('formula_products')) {
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
@@ -378,7 +390,8 @@ class FundsController extends Controller
         $data = $filters ? $financialStatistic->getFilters($organization, $request->only([
             'type', 'type_value',
         ])) : $financialStatistic->getStatistics($organization, $request->only([
-            'type', 'type_value', 'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids'
+            'type', 'type_value', 'fund_ids', 'postcodes', 'provider_ids',
+            'product_category_ids', 'business_type_ids',
         ]));
 
         return new JsonResponse($data);

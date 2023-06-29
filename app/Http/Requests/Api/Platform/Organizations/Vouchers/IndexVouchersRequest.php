@@ -62,6 +62,8 @@ class IndexVouchersRequest extends BaseFormRequest
             'fields'            => 'nullable|array',
             'fields.*'          => ['nullable', Rule::in($fields)],
             'identity_address'  => 'nullable|exists:identities,address',
+            'amount_available_min'  => 'nullable|numeric',
+            'amount_available_max'  => 'nullable|numeric',
         ];
     }
 

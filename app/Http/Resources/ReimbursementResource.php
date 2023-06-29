@@ -17,9 +17,11 @@ class ReimbursementResource extends BaseJsonResource
         'files.preview',
         'voucher.identity',
         'voucher.fund.organization',
+        'voucher.fund.fund_config.implementation',
         'employee.organization',
         'employee.roles.translations',
         'employee.roles.permissions',
+        'reimbursement_category',
     ];
 
     /**
