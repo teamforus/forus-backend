@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::table('organizations', function (Blueprint $table) {
             $table->index([
-                'auth_2fa_policy', 'auth_2fa_remember_ip',
+                'auth_2fa_remember_ip', 'auth_2fa_policy',
             ]);
         });
     }
@@ -28,7 +28,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
-            $table->dropIndex('organizations_auth_2fa_policy_auth_2fa_remember_ip_index');
+            $table->dropIndex('organizations_auth_2fa_remember_ip_auth_2fa_policy_index');
         });
     }
 };
