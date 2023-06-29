@@ -22,6 +22,10 @@ class ReimbursementResource extends BaseJsonResource
         'employee.roles.translations',
         'employee.roles.permissions',
         'reimbursement_category',
+        'voucher_transaction.product',
+        'voucher_transaction.provider.logo.presets',
+        'voucher_transaction.voucher.fund.fund_config.implementation',
+        'voucher_transaction.voucher.fund.logo.presets',
     ];
 
     /**
