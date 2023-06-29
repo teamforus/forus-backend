@@ -583,7 +583,7 @@ class Identity extends Model implements Authenticatable
     public function activateAuthorizationCodeProxy(
         string $code,
         ?string $ip = null,
-        ?IdentityProxy $inherit2FA = null
+        ?IdentityProxy $inherit2FA = null,
     ): bool {
         return (bool) static::exchangeToken('pin_code', $code, $this, $ip, $inherit2FA);
     }
@@ -592,11 +592,15 @@ class Identity extends Model implements Authenticatable
      * Authorize proxy identity by token
      * @param string $token
      * @param string|null $ip
+     * @param IdentityProxy|null $inherit2FA
      * @return bool
      */
-    public function activateAuthorizationTokenProxy(string $token, ?string $ip = null): bool
-    {
-        return (bool) static::exchangeToken('qr_code', $token, $this, $ip);
+    public function activateAuthorizationTokenProxy(
+        string $token,
+        ?string $ip = null,
+        ?IdentityProxy $inherit2FA = null,
+    ): bool {
+        return (bool) static::exchangeToken('qr_code', $token, $this, $ip, $inherit2FA);
     }
 
     /**

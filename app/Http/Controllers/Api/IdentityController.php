@@ -330,14 +330,11 @@ class IdentityController extends Controller
      */
     public function proxyAuthorizeCode(IdentityAuthorizeCodeRequest $request): JsonResponse
     {
-        $proxy = $request->identityProxy();
-        $share2FA = (bool) $request->post('share_2fa', false);
-
         return new JsonResponse([
             'success' => $request->identity()->activateAuthorizationCodeProxy(
                 $request->post('auth_code') ?: '',
                 $request->ip(),
-                $share2FA && $proxy->is2FAConfirmed() ? $proxy : null,
+                $request->identityProxy()->is2FAConfirmed() ? $request->identityProxy() : null,
             ),
         ]);
     }
@@ -370,7 +367,11 @@ class IdentityController extends Controller
         $authCode = $request->post('auth_token') ?: '';
 
         return new JsonResponse([
-            'success' => $request->identity()->activateAuthorizationTokenProxy($authCode, $request->ip()),
+            'success' => $request->identity()->activateAuthorizationTokenProxy(
+                $authCode,
+                $request->ip(),
+                $request->identityProxy()->is2FAConfirmed() ? $request->identityProxy() : null,
+            ),
         ]);
     }
 

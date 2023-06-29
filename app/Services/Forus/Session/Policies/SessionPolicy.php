@@ -84,7 +84,7 @@ class SessionPolicy
         Identity $identity,
         bool $auth2FAConfirmed = false,
     ): Response|bool {
-        if ($identity->isFeature2FARestricted('sessions') && !$auth2FAConfirmed) {
+        if ($identity->load('funds')->isFeature2FARestricted('sessions') && !$auth2FAConfirmed) {
             return $this->deny('Invalid 2FA state.');
         }
 
