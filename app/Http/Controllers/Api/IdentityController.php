@@ -157,7 +157,7 @@ class IdentityController extends Controller
             );
 
             return view()->make('pages.auth.deep_link', array_merge([
-                'type' => 'email_confirmation'
+                'type' => 'email_confirmation',
             ], compact('redirectUrl', 'exchangeToken')));
         }
 
@@ -167,14 +167,17 @@ class IdentityController extends Controller
     /**
      * Exchange email confirmation token for access_token
      *
+     * @param BaseFormRequest $request
      * @param string $exchangeToken
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
-    public function emailConfirmationExchange(string $exchangeToken): JsonResponse
-    {
+    public function emailConfirmationExchange(
+        BaseFormRequest $request,
+        string $exchangeToken
+    ): JsonResponse {
         return new JsonResponse([
-            'access_token' => Identity::exchangeEmailConfirmationToken($exchangeToken)
+            'access_token' => Identity::exchangeEmailConfirmationToken($exchangeToken, $request->ip())
         ]);
     }
 
@@ -271,14 +274,34 @@ class IdentityController extends Controller
     /**
      * Exchange email sign in token for access_token
      *
+     * @param BaseFormRequest $request
      * @param string $emailToken
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
-    public function emailTokenExchange(string $emailToken): JsonResponse
+    public function emailTokenExchange(BaseFormRequest $request, string $emailToken): JsonResponse
     {
         return new JsonResponse([
-            'access_token' => Identity::activateAuthorizationEmailProxy($emailToken)
+            'access_token' => Identity::activateAuthorizationEmailProxy($emailToken, $request->ip())
+        ]);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @return JsonResponse
+     */
+    public function store2FASharedToken(BaseFormRequest $request): JsonResponse
+    {
+        $proxy = $request->identity()->makeAuthorizationEmailProxy();
+        $proxy->inherit2FAStateFrom($request->identityProxy());
+
+        $uri = config('forus.front_ends.app-me_app') . "identity-restore?%s";
+        $request->identityProxy()->deactivateByLogout();
+
+        return new JsonResponse([
+            'redirect_url' => sprintf($uri, http_build_query([
+                'token' => $proxy->exchange_token,
+            ])),
         ]);
     }
 
@@ -307,10 +330,15 @@ class IdentityController extends Controller
      */
     public function proxyAuthorizeCode(IdentityAuthorizeCodeRequest $request): JsonResponse
     {
-        $authCode = $request->post('auth_code') ?: '';
+        $proxy = $request->identityProxy();
+        $share2FA = (bool) $request->post('share_2fa', false);
 
         return new JsonResponse([
-            'success' => $request->identity()->activateAuthorizationCodeProxy($authCode),
+            'success' => $request->identity()->activateAuthorizationCodeProxy(
+                $request->post('auth_code') ?: '',
+                $request->ip(),
+                $share2FA && $proxy->is2FAConfirmed() ? $proxy : null,
+            ),
         ]);
     }
 
@@ -342,7 +370,7 @@ class IdentityController extends Controller
         $authCode = $request->post('auth_token') ?: '';
 
         return new JsonResponse([
-            'success' => $request->identity()->activateAuthorizationTokenProxy($authCode),
+            'success' => $request->identity()->activateAuthorizationTokenProxy($authCode, $request->ip()),
         ]);
     }
 
@@ -359,7 +387,7 @@ class IdentityController extends Controller
         $request->identity() or abort(403);
 
         $proxy = Identity::makeAuthorizationShortTokenProxy();
-        $request->identity()->activateAuthorizationShortTokenProxy($proxy->exchange_token);
+        $request->identity()->activateAuthorizationShortTokenProxy($proxy->exchange_token, $request->ip());
 
         return new JsonResponse([
             'exchange_token' => $proxy->exchange_token,

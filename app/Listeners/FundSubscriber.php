@@ -58,6 +58,7 @@ class FundSubscriber
         return array_merge([
             'fund' => $fund,
             'sponsor' => $fund->organization,
+            'fund_config' => $fund->fund_config,
             'implementation' => $fund->getImplementation(),
         ], $extraModels);
     }
@@ -104,6 +105,8 @@ class FundSubscriber
         $fund->update([
             'description_text' => $fund->descriptionToText(),
         ]);
+
+        $fund->log($fund::EVENT_UPDATED, $this->getFundLogModels($fund));
     }
 
     /**

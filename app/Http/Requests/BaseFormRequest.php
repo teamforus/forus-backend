@@ -239,6 +239,14 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     /**
      * @return bool
      */
+    public function identityProxy2FAConfirmed(): bool
+    {
+        return $this->identityProxy()?->is2FAConfirmed();
+    }
+
+    /**
+     * @return bool
+     */
     public function isWebshop(): bool
     {
         return $this->client_type() == $this->implementation()::FRONTEND_WEBSHOP;

@@ -24,7 +24,8 @@ class IdentityAuthorizeCodeRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'auth_code' => 'required'
+            'auth_code' => 'required|string',
+            'share_2fa' => 'nullable|boolean',
         ];
     }
 }
