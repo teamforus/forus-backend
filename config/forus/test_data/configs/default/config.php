@@ -64,6 +64,9 @@ return [
     'backoffice_client_cert_key' => "",
     'backoffice_fallback' => true,
 
+    "digid_cgi_tls_key" => "",
+    "digid_cgi_tls_cert" => "",
+
     'iconnect_url' => "",
     'iconnect_oin' => "",
     'iconnect_binding' => "",

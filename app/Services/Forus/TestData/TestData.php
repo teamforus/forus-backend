@@ -505,6 +505,7 @@ class TestData
 
         $urlData = $this->makeImplementationUrlData($key);
         $samlData = $this->makeImplementationSamlData();
+        $cgiData = $this->makeImplementationCgiData();
         $configData = $this->config("implementations.$name.implementation", []);
 
         return Implementation::forceCreate(array_merge([
@@ -514,7 +515,7 @@ class TestData
             'informal_communication' => false,
             'allow_per_fund_notification_templates' => false,
             'productboard_api_key' => $this->config('productboard_api_key'),
-        ], $urlData, $samlData, $configData));
+        ], $urlData, $samlData, $cgiData, $configData));
     }
 
     /**
@@ -545,6 +546,19 @@ class TestData
             'digid_shared_secret' => $this->config('digid_shared_secret'),
             'digid_a_select_server' => $this->config('digid_a_select_server'),
             'digid_trusted_cert' => $this->config('digid_trusted_cert'),
+            'digid_connection_type' => 'cgi',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function makeImplementationCgiData(): array
+    {
+        return [
+            'digid_enabled' => $this->config('digid_enabled'),
+            "digid_cgi_tls_key" => $this->config('digid_cgi_tls_key'),
+            "digid_cgi_tls_cert" => $this->config('digid_cgi_tls_cert'),
             'digid_connection_type' => 'cgi',
         ];
     }
