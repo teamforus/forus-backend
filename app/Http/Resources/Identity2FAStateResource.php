@@ -106,11 +106,11 @@ class Identity2FAStateResource extends BaseJsonResource
         return [[
             'type' => 'authenticator',
             'title' => 'Authenticator app',
-            'subtitle' => 'Use an authenticator app',
+            'subtitle' => 'Gebruik een authenticator app',
         ], [
             'type' => 'phone',
-            'title' => 'SMS Verification',
-            'subtitle' => 'Use phone number for authentication',
+            'title' => 'SMS Verificatie',
+            'subtitle' => 'Gebruik je telefoonnummer als verificatie',
         ]];
     }
 }
