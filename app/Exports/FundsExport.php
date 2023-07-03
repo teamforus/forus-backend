@@ -14,10 +14,6 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-/**
- * Class FundsExport
- * @package App\Exports
- */
 class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting, WithEvents
 {
     use Exportable, RegistersEventListeners, FormatsExportedData;

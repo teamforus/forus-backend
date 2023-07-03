@@ -3,21 +3,24 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\IndexBIConnectionRequest;
-use App\Models\BIConnection;
+use App\Http\Requests\Api\ExportBIConnectionRequest;
+use App\Services\BIConnectionService\BIConnection;
+use App\Services\BIConnectionService\Responses\UnauthorizedResponse;
 use Illuminate\Http\JsonResponse;
 
 class BIConnectionController extends Controller
 {
     /**
-     * @param IndexBIConnectionRequest $request
+     * @param ExportBIConnectionRequest $request
      * @return JsonResponse
      * @throws \Exception
      */
-    public function index(IndexBIConnectionRequest $request): JsonResponse
+    public function index(ExportBIConnectionRequest $request): JsonResponse
     {
-        $connection = BIConnection::getConnectionFromRequest($request);
+        if ($connection = BIConnection::getBIConnectionFromRequest($request)) {
+            return new JsonResponse($connection->getDataArray());
+        }
 
-        return new JsonResponse($connection->getDataArray());
+        return new UnauthorizedResponse();
     }
 }

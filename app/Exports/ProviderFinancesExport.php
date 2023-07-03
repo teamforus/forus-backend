@@ -8,10 +8,6 @@ use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-/**
- * Class ProviderFinancesExport
- * @package App\Exports
- */
 class ProviderFinancesExport implements FromCollection, WithHeadings
 {
     protected $data;

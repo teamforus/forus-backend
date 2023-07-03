@@ -183,6 +183,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->patch('update-business', "Api\Platform\OrganizationsController@updateBusinessType");
         $router->patch('accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
         $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFieldSettings");
+        $router->patch('update-bi-connection', "Api\Platform\OrganizationsController@updateBIConnection");
     });
 
     $router->resource('organizations', "Api\Platform\OrganizationsController")
@@ -902,20 +903,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\AnnouncementController@index"
     );
 
-    $router->post(
-        'organizations/{organization}/bi-connections/recreate',
-        "Api\Platform\Organizations\BIConnectionController@recreate"
-    );
-
-    $router->resource(
-        'organizations/{organization}/bi-connections',
-        "Api\Platform\Organizations\BIConnectionController"
-    )
-        ->only(['index', 'show', 'store', 'update'])
-        ->parameter('bi-connections', 'connection');
-
-    $router->get('prevalidations/export','Api\Platform\PrevalidationController@export');
-    $router->post('prevalidations/collection','Api\Platform\PrevalidationController@storeCollection');
+    $router->get('prevalidations/export', 'Api\Platform\PrevalidationController@export');
+    $router->post('prevalidations/collection', 'Api\Platform\PrevalidationController@storeCollection');
     $router->post('prevalidations/collection/hash', 'Api\Platform\PrevalidationController@collectionHash');
 
     $router->resource('prevalidations', 'Api\Platform\PrevalidationController')
