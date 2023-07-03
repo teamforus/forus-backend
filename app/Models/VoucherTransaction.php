@@ -252,7 +252,7 @@ class VoucherTransaction extends BaseModel
      */
     public function notes_sponsor(): HasMany
     {
-        return $this->hasMany(VoucherTransactionNote::class)->where('group', 'sponsor');
+        return $this->hasMany(VoucherTransactionNote::class)->whereIn('group', ['sponsor', 'shared']);
     }
 
     /**
@@ -261,7 +261,7 @@ class VoucherTransaction extends BaseModel
      */
     public function notes_provider(): HasMany
     {
-        return $this->hasMany(VoucherTransactionNote::class)->where('group', 'provider');
+        return $this->hasMany(VoucherTransactionNote::class)->whereIn('group', ['provider', 'shared']);
     }
 
     /**

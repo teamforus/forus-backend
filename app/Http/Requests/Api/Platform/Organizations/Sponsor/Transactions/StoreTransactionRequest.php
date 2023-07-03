@@ -50,6 +50,7 @@ class StoreTransactionRequest extends BaseFormRequest
                 Rule::in($this->fundProviderIds($voucher)),
             ],
             'note' => 'nullable|string|max:255',
+            'note_shared' => 'nullable|boolean',
             'amount' => $this->amountRule($voucher),
         ], $this->targetRules($voucher));
     }

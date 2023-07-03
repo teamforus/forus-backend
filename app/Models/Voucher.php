@@ -1527,7 +1527,7 @@ class Voucher extends BaseModel
         ]));
 
         if ($note) {
-            $transaction->addNote('sponsor', $note);
+            $transaction->addNote('shared', $note);
         }
 
         Event::dispatch(new VoucherTransactionCreated($transaction, $note ? [

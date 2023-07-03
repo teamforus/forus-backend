@@ -37,7 +37,7 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
     public function toArray($request): array
     {
         $transaction = $this->resource;
-        $providerNotes = $transaction->notes->where('group', 'provider')->values();
+        $providerNotes = $transaction->notes_provider->values();
 
         return array_merge($transaction->only([
             "id", "organization_id", "product_id", "address",
