@@ -279,8 +279,14 @@ class IdentityProxy extends Model
     {
         return $this->identity()
             ->where('auth_2fa_remember_ip', false)
-            ->orWhereRelation('funds.fund_config', 'auth_2fa_remember_ip', false)
-            ->orWhereRelation('employees.organization', 'auth_2fa_remember_ip', false)
+            ->orWhereRelation('funds.fund_config', fn (Builder|FundConfig $q) => $q->where([
+                'auth_2fa_policy' => FundConfig::AUTH_2FA_POLICY_REQUIRED,
+                'auth_2fa_remember_ip' => false,
+            ]))
+            ->orWhereRelation('employees.organization', fn (Builder|Organization $q) => $q->where([
+                'auth_2fa_policy' => Organization::AUTH_2FA_POLICY_REQUIRED,
+                'auth_2fa_remember_ip' => false,
+            ]))
             ->doesntExist();
     }
 
