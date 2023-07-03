@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::table('funds', function (Blueprint $table) {
             $table->enum('description_position', ['replace', 'before', 'after'])
                 ->default('replace')
-                ->after('description_short');;
+                ->after('description_short');
         });
     }
 
