@@ -32,7 +32,7 @@ class FundIdentitiesExport extends BaseFieldedExport
      */
     public function __construct(EloquentCollection|array $identities, array $fields = [])
     {
-        $this->data = $identities;
+        $this->data = $identities->load('primary_email');
         $this->fields = $fields;
     }
 

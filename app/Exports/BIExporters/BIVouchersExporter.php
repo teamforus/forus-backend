@@ -25,7 +25,7 @@ class BIVouchersExporter extends BaseBIExporter
         $vouchers = $query->with([
             'transactions', 'voucher_relation', 'product', 'fund',
             'token_without_confirmation', 'identity.primary_email', 'identity.record_bsn',
-            'product_vouchers', 'top_up_transactions',
+            'product_vouchers', 'top_up_transactions', 'reimbursements_pending',
         ])->get();
 
         $array = Voucher::exportOnlyDataArray($vouchers, array_keys($fields));

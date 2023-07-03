@@ -21,10 +21,10 @@ class EmployeesExport extends BaseFieldedExport
 
     /**
      * FundsExport constructor.
-     * @param Builder|Relation $builder
+     * @param Builder|Relation|Employee $builder
      * @param bool $withRoles
      */
-    public function __construct(Builder|Relation $builder, bool $withRoles = true)
+    public function __construct(Builder|Relation|Employee $builder, bool $withRoles = true)
     {
         $this->roles = Role::get()->collect();
         $this->withRoles = $withRoles;

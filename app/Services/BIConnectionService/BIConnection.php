@@ -86,7 +86,7 @@ class BIConnection
      */
     public function getDataArray(): array
     {
-        $exporters = $this->getDataForSponsor();
+        $exporters = $this->getData();
 
         return array_reduce($exporters, fn($list, BaseBIExporter $exporter) => array_merge($list, [
             $exporter->getName() => $exporter->toArray(),
@@ -97,7 +97,7 @@ class BIConnection
      * @return array
      * @throws \Exception
      */
-    private function getDataForSponsor(): array
+    private function getData(): array
     {
         return [
             new BIVouchersExporter('Tegoeden', $this->organization),
