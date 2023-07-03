@@ -31,8 +31,8 @@ class ExportBIConnectionRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $this->maxAttempts = Config::get('forus.bi_connections.throttle.throttle_attempts', 2);
-        $this->decayMinutes = Config::get('forus.bi_connections.throttle.throttle_decay', 2);
+        $this->maxAttempts = Config::get('forus.bi_connections.throttle.throttle_attempts', 10);
+        $this->decayMinutes = Config::get('forus.bi_connections.throttle.throttle_decay', 10);
         $this->throttleWithKey('to_many_attempts', $this, 'bi_connection');
 
         return [];
