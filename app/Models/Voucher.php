@@ -1518,6 +1518,7 @@ class Voucher extends BaseModel
         $isTopUp = Arr::get($attributes, 'target') == VoucherTransaction::TARGET_TOP_UP;
         $state = $isTopUp ? VoucherTransaction::STATE_SUCCESS : VoucherTransaction::STATE_PENDING;
         $note = Arr::get($attributes, 'note');
+        $note_shared = Arr::get($attributes, 'note_shared', false);
 
         $transaction = $this->makeTransaction(array_merge(Arr::except($attributes, 'note'), [
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
@@ -1527,7 +1528,7 @@ class Voucher extends BaseModel
         ]));
 
         if ($note) {
-            $transaction->addNote('shared', $note);
+            $transaction->addNote('sponsor', $note, $note_shared);
         }
 
         Event::dispatch(new VoucherTransactionCreated($transaction, $note ? [

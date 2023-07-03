@@ -11,6 +11,7 @@ namespace App\Models;
  * @property string $message
  * @property int $pin_to_top
  * @property string $group
+ * @property int $shared
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote newModelQuery()
@@ -22,6 +23,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereMessage($value)
  * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote wherePinToTop($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereShared($value)
  * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereVoucherTransactionId($value)
  * @mixin \Eloquent
@@ -34,6 +36,13 @@ class VoucherTransactionNote extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'id', 'voucher_transaction_id', 'icon', 'message', 'pin_to_top', 'group'
+        'id', 'voucher_transaction_id', 'icon', 'message', 'pin_to_top', 'group', 'shared',
+    ];
+
+    /**
+     * @var string[]
+     */
+    protected $casts = [
+        'shared' => 'boolean',
     ];
 }

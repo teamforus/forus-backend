@@ -26,6 +26,7 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
         'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
         'product',
         'notes',
+        'notes_provider',
     ];
 
     /**
