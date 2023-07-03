@@ -22,6 +22,7 @@ class ReimbursementResource extends BaseJsonResource
         'employee.roles.translations',
         'employee.roles.permissions',
         'reimbursement_category',
+        'voucher_transaction',
     ];
 
     /**
@@ -48,6 +49,7 @@ class ReimbursementResource extends BaseJsonResource
             'submitted_at_locale' => $reimbursement->submitted_at_locale,
             'expire_at' => $reimbursement->expire_at?->format('Y-m-d'),
             'expire_at_locale' => $reimbursement->expire_at_locale,
+            'voucher_transaction' => new VoucherTransactionResource($reimbursement->voucher_transaction),
         ], $this->timestamps($reimbursement, 'created_at'));
     }
 
