@@ -118,7 +118,7 @@ class FundSearch extends BaseSearch
     protected function order(Builder $builder): Builder
     {
         $orderBy = $this->getFilter('order_by', 'created_at');
-        $orderDir = $this->getFilter('order_dir', 'desc');
+        $orderDir = $this->getFilter('order_dir', 'asc');
 
         if ($orderBy == 'organization_name') {
             $builder->addSelect([
