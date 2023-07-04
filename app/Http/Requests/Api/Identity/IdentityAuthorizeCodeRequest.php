@@ -25,7 +25,6 @@ class IdentityAuthorizeCodeRequest extends BaseFormRequest
     {
         return [
             'auth_code' => 'required|string',
-            'share_2fa' => 'nullable|boolean',
         ];
     }
 }

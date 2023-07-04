@@ -392,7 +392,7 @@ class ReimbursementPolicy
      */
     protected function validate2FAFeatureRestriction(Identity $identity, bool $auth2FAConfirmed = false): Response|bool
     {
-        if ($identity->isFeature2FARestricted('reimbursements') && !$auth2FAConfirmed) {
+        if ($identity->load('funds')->isFeature2FARestricted('reimbursements') && !$auth2FAConfirmed) {
             return $this->deny('Invalid 2FA state.');
         }
 
