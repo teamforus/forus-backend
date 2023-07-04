@@ -22,6 +22,10 @@ class ReimbursementResource extends BaseJsonResource
         'employee.roles.translations',
         'employee.roles.permissions',
         'reimbursement_category',
+        'voucher_transaction.product',
+        'voucher_transaction.provider.logo.presets',
+        'voucher_transaction.voucher.fund.fund_config.implementation',
+        'voucher_transaction.voucher.fund.logo.presets',
     ];
 
     /**
@@ -42,6 +46,7 @@ class ReimbursementResource extends BaseJsonResource
             'resolved' => $reimbursement->isResolved(),
             'fund' => $this->fundResource($reimbursement->voucher->fund, $request),
             'files' => FileResource::collection($reimbursement->files),
+            'voucher_transaction' => VoucherTransactionResource::create($reimbursement->voucher_transaction),
             'resolved_at' => $reimbursement->resolved_at?->format('Y-m-d'),
             'resolved_at_locale' => $reimbursement->resolved_at_locale,
             'submitted_at' => $reimbursement->submitted_at?->format('Y-m-d'),
