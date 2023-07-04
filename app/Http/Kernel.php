@@ -8,6 +8,7 @@ use App\Http\Middleware\ClientVersionMiddleware;
 use App\Http\Middleware\DomainDigIdMiddleware;
 use App\Http\Middleware\DomainMiddleware;
 use App\Http\Middleware\EncryptCookies;
+use App\Services\Forus\Auth2FAService\Middleware\Auth2FAMiddleware;
 use App\Services\Forus\Session\Middleware\ForusSessionMiddleware;
 use App\Http\Middleware\ImplementationKeyMiddleware;
 use App\Http\Middleware\ParseApiDependencyMiddleware;
@@ -16,7 +17,7 @@ use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\VerifyCsrfToken;
-use Fruitcake\Cors\HandleCors;
+use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -61,6 +62,11 @@ class Kernel extends HttpKernel
             'locale',
             'domain',
         ],
+
+        'api.auth' => [
+            ApiAuthMiddleware::class,
+            Auth2FAMiddleware::class,
+        ],
     ];
 
     /**
@@ -77,7 +83,6 @@ class Kernel extends HttpKernel
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
         'guest' => RedirectIfAuthenticated::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'api.auth' => ApiAuthMiddleware::class,
         'forus_session' => ForusSessionMiddleware::class,
         'implementation_key' => ImplementationKeyMiddleware::class,
         'client_key' => ClientTypeMiddleware::class,

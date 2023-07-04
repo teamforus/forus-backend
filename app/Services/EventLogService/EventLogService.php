@@ -6,6 +6,7 @@ use App\Models\BankConnection;
 use App\Models\BankConnectionAccount;
 use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\FundConfig;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
@@ -58,6 +59,7 @@ class EventLogService implements IEventLogService
     {
         $modelMeta = [
             'fund' => fn() => $this->fundMeta($model),
+            'fund_config' => fn() => $this->fundConfigMeta($model),
             'fund_request' => fn() => $this->fundRequestMeta($model),
             'fund_request_record' => fn() => $this->fundRequestRecordMeta($model),
             'fund_request_clarification' => fn() => $this->fundRequestClarificationMeta($model),
@@ -101,6 +103,25 @@ class EventLogService implements IEventLogService
             'end_date_locale' => format_date_locale($fund->end_date->clone()->addDay()),
             'end_date_minus1_locale' => format_date_locale($fund->end_date),
         ], 'fund_');
+    }
+
+    /**
+     * @param FundConfig $fundConfig
+     * @return array
+     */
+    protected function fundConfigMeta(FundConfig $fundConfig): array
+    {
+        return $this->keyPrepend([
+            'id' => $fundConfig->id,
+            'email_required' => $fundConfig->email_required,
+            'contact_info_enabled' => $fundConfig->contact_info_enabled,
+            'contact_info_required' => $fundConfig->contact_info_required,
+            'contact_info_message_custom' => $fundConfig->contact_info_message_custom,
+            'contact_info_message_text' => $fundConfig->contact_info_message_text,
+            'backoffice_enabled' => $fundConfig->backoffice_enabled,
+            'auth_2fa_policy' => $fundConfig->auth_2fa_policy,
+            'auth_2fa_remember_ip' => $fundConfig->auth_2fa_remember_ip,
+        ], 'fund_config_');
     }
 
     /**
