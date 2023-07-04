@@ -133,7 +133,7 @@ class BankProcessFundTopUpsCommand extends Command
      */
     protected function applyTopUp(BankPayment $payment, FundTopUp $topUp, BankConnection $connection): void
     {
-        if ($connection->bank->isBNG() && $this->shouldSkipBNG($payment, $topUp, $connection)) {
+        if ($connection->bank->isBNG() && $this->shouldSkipBNG($payment, $topUp)) {
             $topUp->transactions()->firstOrCreate([
                 'bank_transaction_id' => $payment->getId(),
                 'creditor_iban' => $payment->getCreditorAccount()->getIban(),
