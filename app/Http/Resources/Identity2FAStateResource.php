@@ -8,6 +8,7 @@ use App\Models\Identity;
 use App\Models\FundConfig;
 use App\Models\Organization;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Config;
 
 /**
@@ -57,7 +58,15 @@ class Identity2FAStateResource extends BaseJsonResource
     {
         return $this->resource->funds
             ->where('fund_config.auth_2fa_remember_ip', false)
-            ->where('fund_config.auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_REQUIRED)
+            ->where(function (Builder $query) {
+                $query->where('fund_config.auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_REQUIRED)
+                    ->orWhere(function (Builder $query) {
+                        $query->where('fund_config.auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_GLOBAL)
+                            ->whereHas('organization', function(Builder $builder) {
+                                $builder->where('auth_2fa_funds_policy', FundConfig::AUTH_2FA_POLICY_REQUIRED);
+                            });
+                    });
+            })
             ->isNotEmpty();
     }
 

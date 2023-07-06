@@ -37,8 +37,6 @@ use Illuminate\Database\Query\Builder;
  *
  * @property int $id
  * @property string|null $identity_address
- * @property string $auth_2fa_policy
- * @property bool $auth_2fa_remember_ip
  * @property string $name
  * @property string|null $description
  * @property string|null $description_text
@@ -69,13 +67,20 @@ use Illuminate\Database\Query\Builder;
  * @property bool $allow_custom_fund_notifications
  * @property bool $allow_budget_fund_limits
  * @property bool $allow_manual_bulk_processing
- * @property bool $allow_fund_request_record_edit
  * @property bool $allow_2fa_restrictions
+ * @property bool $allow_fund_request_record_edit
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
+ * @property string|null $auth_2fa_policy
+ * @property bool|null $auth_2fa_remember_ip
+ * @property string $auth_2fa_funds_policy
+ * @property int $auth_2fa_funds_remember_ip
+ * @property int $auth_2fa_funds_restrict_emails
+ * @property int $auth_2fa_funds_restrict_auth_sessions
+ * @property int $auth_2fa_funds_restrict_reimbursements
  * @property int $show_provider_transactions
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -150,6 +155,11 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictEmails($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictReimbursements($value)
  * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
@@ -203,9 +213,19 @@ class Organization extends BaseModel
     public const AUTH_2FA_POLICY_OPTIONAL = 'optional';
     public const AUTH_2FA_POLICY_REQUIRED = 'required';
 
+    public const AUTH_2FA_FUNDS_POLICY_OPTIONAL = 'optional';
+    public const AUTH_2FA_FUNDS_POLICY_REQUIRED = 'required';
+    public const AUTH_2FA_FUNDS_POLICY_RESTRICT = 'restrict_features';
+
     public const AUTH_2FA_POLICIES = [
         self::AUTH_2FA_POLICY_OPTIONAL,
         self::AUTH_2FA_POLICY_REQUIRED,
+    ];
+
+    public const AUTH_2FA_FUNDS_POLICIES = [
+        self::AUTH_2FA_FUNDS_POLICY_OPTIONAL,
+        self::AUTH_2FA_FUNDS_POLICY_REQUIRED,
+        self::AUTH_2FA_FUNDS_POLICY_RESTRICT,
     ];
 
     /**
@@ -222,6 +242,8 @@ class Organization extends BaseModel
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
         'reservation_phone', 'reservation_address', 'reservation_birth_date',
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
+        'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
+        'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements'
     ];
 
     /**
@@ -250,6 +272,9 @@ class Organization extends BaseModel
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
         'auth_2fa_remember_ip'                  => 'boolean',
+        'auth_2fa_funds_restrict_emails'        => 'boolean',
+        'auth_2fa_funds_restrict_auth_sessions' => 'boolean',
+        'auth_2fa_funds_restrict_reimbursements' => 'boolean',
     ];
 
     /**
