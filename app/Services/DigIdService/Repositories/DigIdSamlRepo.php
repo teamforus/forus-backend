@@ -2,13 +2,17 @@
 
 namespace App\Services\DigIdService\Repositories;
 
+use App\Services\DigIdService\DigIdException;
+use App\Services\DigIdService\Objects\ClientTls;
 use App\Services\DigIdService\Objects\DigidAuthRequestData;
 use App\Services\DigIdService\Objects\DigidAuthResolveData;
 use App\Services\DigIdService\Repositories\Interfaces\DigIdRepo;
+use App\Services\SAML2Service\Exceptions\Saml2Exception;
 use App\Services\SAML2Service\SamlAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
+use OneLogin\Saml2\Error;
 
 class DigIdSamlRepo extends DigIdRepo
 {
@@ -27,12 +31,16 @@ class DigIdSamlRepo extends DigIdRepo
     /**
      * @param string $redirectUrl
      * @param string $sessionSecret
+     * @param ClientTls|null $tlsCert
      * @return DigidAuthRequestData
-     * @throws \App\Services\SAML2Service\Exceptions\Saml2Exception
-     * @throws \OneLogin\Saml2\Error
+     * @throws Saml2Exception
+     * @throws Error
      */
-    public function makeAuthRequest(string $redirectUrl, string $sessionSecret): DigidAuthRequestData
-    {
+    public function makeAuthRequest(
+        string $redirectUrl,
+        string $sessionSecret,
+        ?ClientTls $tlsCert = null,
+    ): DigidAuthRequestData {
         $auth = SamlAuth::make($this->makeSamlConfig([
             'sp.assertionConsumerService.url' => $redirectUrl,
         ]));
@@ -49,15 +57,17 @@ class DigIdSamlRepo extends DigIdRepo
      * @param Request $request
      * @param string $requestId
      * @param string $sessionSecret
+     * @param ClientTls|null $tlsCert
      * @return DigidAuthResolveData
-     * @throws \App\Services\DigIdService\DigIdException
-     * @throws \App\Services\SAML2Service\Exceptions\Saml2Exception
+     * @throws DigIdException
+     * @throws Saml2Exception
      * @throws \Throwable
      */
     public function resolveResponse(
         Request $request,
         string $requestId,
-        string $sessionSecret
+        string $sessionSecret,
+        ?ClientTls $tlsCert = null,
     ): DigidAuthResolveData {
         $auth = SamlAuth::make($this->makeSamlConfig());
         $response = $auth->resolveArtifact($request->get('SAMLart'));

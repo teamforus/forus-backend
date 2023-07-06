@@ -2,9 +2,8 @@
 
 namespace App\Services\DigIdService\Repositories;
 
-use App\Http\Requests\BaseFormRequest;
-use App\Models\Implementation;
 use App\Services\DigIdService\DigIdException;
+use App\Services\DigIdService\Objects\ClientTls;
 use App\Services\DigIdService\Objects\DigidAuthRequestData;
 use App\Services\DigIdService\Objects\DigidAuthResolveData;
 use App\Services\DigIdService\Repositories\Interfaces\DigIdRepo;
@@ -193,12 +192,14 @@ class DigIdCgiRepo extends DigIdRepo
     /**
      * @param string $redirectUrl
      * @param string $sessionSecret
+     * @param ClientTls|null $tlsCert
      * @return DigidAuthRequestData
      * @throws DigIdException
      */
     public function makeAuthRequest(
         string $redirectUrl,
-        string $sessionSecret
+        string $sessionSecret,
+        ?ClientTls $tlsCert = null,
     ): DigidAuthRequestData {
         $redirectUrl = url_extend_get_params($redirectUrl, [
             'session_secret' => $sessionSecret,
@@ -209,7 +210,7 @@ class DigIdCgiRepo extends DigIdRepo
             "app_url"           => $redirectUrl,
         ])));
 
-        $response = $this->makeCall($request);
+        $response = $this->makeCall($request, 'get', $tlsCert);
         $result = $this->parseResponseBody($response->getBody());
         $result_code = $result['result_code'] ?? false;
 
@@ -235,6 +236,7 @@ class DigIdCgiRepo extends DigIdRepo
      * @param Request $request
      * @param string $requestId
      * @param string $sessionSecret
+     * @param ClientTls|null $tlsCert
      * @return DigidAuthResolveData
      * @throws DigIdException
      */
@@ -242,6 +244,7 @@ class DigIdCgiRepo extends DigIdRepo
         Request $request,
         string $requestId,
         string $sessionSecret,
+        ?ClientTls $tlsCert = null,
     ): DigidAuthResolveData {
         $resolveParams = [
             'request'               => 'verify_credentials',
@@ -259,7 +262,7 @@ class DigIdCgiRepo extends DigIdRepo
         }
 
         $request = $this->makeRequestUrl($this->makeAuthorizedRequest($resolveParams));
-        $response = $this->makeCall($request);
+        $response = $this->makeCall($request, 'get', $tlsCert);
         $result = $this->parseResponseBody($response->getBody());
         $result = array_merge($result, compact('resolveParams'));
 
@@ -287,27 +290,17 @@ class DigIdCgiRepo extends DigIdRepo
     /**
      * @param string $uri
      * @param string $method
+     * @param ClientTls|null $clientTls
      * @return ResponseInterface|null
      * @throws DigIdException
      */
-    protected function makeCall(string $uri, string $method = 'get'): ?ResponseInterface
-    {
-        $implementation = BaseFormRequest::createFrom(request())->implementation();
-        $generalImplementation = Implementation::general();
-
-        if ($implementation->digid_cgi_tls_cert && $implementation->digid_cgi_tls_key) {
-            $tlsCert = $implementation->digid_cgi_tls_cert;
-            $tlsKey = $implementation->digid_cgi_tls_key;
-        } else if ($generalImplementation->digid_cgi_tls_cert && $generalImplementation->digid_cgi_tls_key) {
-            $tlsCert = $generalImplementation->digid_cgi_tls_cert;
-            $tlsKey = $generalImplementation->digid_cgi_tls_key;
-        } else {
-            $tlsCert = null;
-            $tlsKey = null;
-        }
-
-        $tlsCert = $tlsCert ? new TmpFile($tlsCert) : null;
-        $tlsKey = $tlsKey ? new TmpFile($tlsKey) : null;
+    protected function makeCall(
+        string $uri,
+        string $method = 'get',
+        ?ClientTls $clientTls = null,
+    ): ?ResponseInterface {
+        $tlsCert = $clientTls ? new TmpFile($clientTls->getCert()) : null;
+        $tlsKey = $clientTls ? new TmpFile($clientTls->getKey()) : null;
 
         $certificate = $this->makeTrustedCertificate();
         $options = $this->makeRequestOptions($certificate, $tlsCert, $tlsKey);
