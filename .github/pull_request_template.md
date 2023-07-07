@@ -6,9 +6,11 @@
 
 ## Developers checklist
 - [ ] **Autotests are passed locally**
-- [ ] **Endpoint is fast on dump** - if there is new endpoint or changed query, endpoints that are using changed query - working fast on production dump, <2s 
 - [ ] **Migration rollback works** - if there is migration, check rollback
-- [ ] **Autotests for bugs are added** - if its complicated bug, unit/feature autotests are added
+- [ ] **Autotests are added**:
+   - bugfix - unit/feature test for this scenario if possible
+   - new small/medium feature - simple feature test for positive scenarios
 
 ## QA checklist
-- [ ] Translations are done
+- [ ] **Translations are done**
+- [ ] **Endpoint is fast on dump** - if there is new endpoint or changed query, endpoints that are using changed query - working fast on production dump, <2s 
