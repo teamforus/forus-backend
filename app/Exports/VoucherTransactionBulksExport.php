@@ -6,10 +6,6 @@ use App\Models\Organization;
 use App\Models\VoucherTransactionBulk;
 use Illuminate\Http\Request;
 
-/**
- * Class VoucherTransactionsSponsorExport
- * @package App\Exports
- */
 class VoucherTransactionBulksExport extends BaseFieldedExport
 {
     /**

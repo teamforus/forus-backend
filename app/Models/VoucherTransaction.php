@@ -386,7 +386,9 @@ class VoucherTransaction extends BaseModel
             VoucherTransactionsProviderExport::getExportFields()
         ), 'name', 'key');
 
-        $data = $builder->with('voucher.fund', 'provider')->get();
+        $data = $builder->with([
+            'voucher.fund', 'provider', 'product',
+        ])->get();
 
         $data = $data->map(fn (VoucherTransaction $transaction) => array_only([
             'id' => $transaction->id,
