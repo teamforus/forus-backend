@@ -85,6 +85,8 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $digid_a_select_server
  * @property string|null $digid_forus_api_url
  * @property string|null $digid_trusted_cert
+ * @property string|null $digid_cgi_tls_key
+ * @property string|null $digid_cgi_tls_cert
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
@@ -123,6 +125,8 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder|Implementation whereDescriptionAlignment($value)
  * @method static Builder|Implementation whereDigidASelectServer($value)
  * @method static Builder|Implementation whereDigidAppId($value)
+ * @method static Builder|Implementation whereDigidCgiTlsCert($value)
+ * @method static Builder|Implementation whereDigidCgiTlsKey($value)
  * @method static Builder|Implementation whereDigidConnectionType($value)
  * @method static Builder|Implementation whereDigidEnabled($value)
  * @method static Builder|Implementation whereDigidEnv($value)
@@ -206,7 +210,7 @@ class Implementation extends BaseModel
         'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
-        'currency_sign', 'currency_round',
+        'currency_sign', 'currency_round', 'digid_cgi_tls_key', 'digid_cgi_tls_cert',
     ];
 
     /**
