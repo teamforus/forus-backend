@@ -7,7 +7,6 @@ use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductCategoryResource;
 use App\Models\FundProvider;
-use App\Models\FundProviderChatMessage;
 use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Scopes\Builders\FundProviderProductQuery;
