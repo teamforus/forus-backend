@@ -65,21 +65,9 @@ class SponsorProviderProductResource extends BaseJsonResource
             'deleted' => !is_null($product->deleted_at),
             'photo' => new MediaResource($product->photo),
             'product_category' => new ProductCategoryResource($product->product_category),
-            'unseen_messages' => $this->hasUnseenMessages($product),
             'is_available' => $this->isAvailable($product, $fundProvider) ,
             'deals_history' => $fundProvider ? $this->getDealsHistory($product, $fundProvider) : null,
         ], $this->productReservationFieldSettings($product));
-    }
-
-    /**
-     * @param Product $product
-     * @return bool
-     */
-    protected function hasUnseenMessages(Product $product): bool
-    {
-        return FundProviderChatMessage::whereIn(
-            'fund_provider_chat_id', $product->fund_provider_chats()->pluck('id')
-        )->where('provider_seen', '=', false)->count();
     }
 
     /**
