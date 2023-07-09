@@ -50,11 +50,15 @@ class FundQuery
     /**
      * @param Builder $query
      * @param Product $product
+     * @param bool $providerNotExcluded
      * @return Builder
      * @noinspection PhpUnused
      */
-    public static function whereProductsAreApprovedFilter(Builder $query, Product $product): Builder
-    {
+    public static function whereProductsAreApprovedFilter(
+        Builder $query,
+        Product $product,
+        bool $providerNotExcluded = false
+    ): Builder {
         if ($product->sponsor_organization_id) {
             $query->where('organization_id', $product->sponsor_organization_id);
         }
@@ -63,13 +67,19 @@ class FundQuery
             $builder->where('product_id', $product->id);
         });
 
-        return $query->where(function(Builder $builder) use ($product) {
-            $builder->where(function(Builder $builder) use ($product) {
+        return $query->where(function(Builder $builder) use ($product, $providerNotExcluded) {
+            $builder->where(function(Builder $builder) use ($product, $providerNotExcluded) {
                 $builder->where('type', '=', Fund::TYPE_BUDGET);
 
-                $builder->whereHas('providers', static function(Builder $builder) use ($product) {
+                $builder->whereHas('providers', static function(
+                    Builder $builder
+                ) use ($product, $providerNotExcluded) {
                     $builder->where('state', FundProvider::STATE_ACCEPTED);
                     $builder->where('allow_products', '=', true);
+
+                    if ($providerNotExcluded) {
+                        $builder->where('excluded', false);
+                    }
 
                     $builder->whereHas('organization.products', static function(Builder $builder) use ($product) {
                         $builder->where('products.id', $product->id);
@@ -77,8 +87,14 @@ class FundQuery
                 });
             });
 
-            $builder->orWhereHas('providers', static function(Builder $builder) use ($product) {
+            $builder->orWhereHas('providers', static function(
+                Builder $builder
+            ) use ($product, $providerNotExcluded) {
                 $builder->where('state', FundProvider::STATE_ACCEPTED);
+
+                if ($providerNotExcluded) {
+                    $builder->where('excluded', false);
+                }
 
                 $builder->whereHas('fund_provider_products', static function(Builder $builder) use ($product) {
                     $builder->where('product_id', $product->id);
@@ -96,7 +112,7 @@ class FundQuery
         Builder $query,
         Product $product
     ): Builder {
-        return self::whereProductsAreApprovedFilter(self::whereActiveFilter($query), $product);
+        return self::whereProductsAreApprovedFilter(self::whereActiveFilter($query), $product, true);
     }
 
     /**

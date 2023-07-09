@@ -45,6 +45,7 @@ class FundsController extends Controller
 
         return ProductFundResource::queryCollection($query, 10, [
             'product' => $product,
+            'organization' => $organization,
         ]);
     }
 }

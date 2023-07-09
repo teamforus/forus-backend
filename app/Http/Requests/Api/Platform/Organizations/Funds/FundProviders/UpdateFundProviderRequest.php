@@ -51,6 +51,7 @@ class UpdateFundProviderRequest extends FormRequest
             'state' => 'nullable|string|in:' . implode(',', $states),
             'allow_budget' => 'nullable|boolean',
             'allow_products' => 'nullable|boolean',
+            'excluded' => 'nullable|boolean',
         ];
     }
 

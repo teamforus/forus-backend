@@ -31,6 +31,7 @@ use Carbon\Carbon;
  * @property bool $allow_budget
  * @property bool $allow_products
  * @property bool $allow_some_products
+ * @property bool $excluded
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -43,6 +44,8 @@ use Carbon\Carbon;
  * @property-read int|null $fund_provider_products_with_trashed_count
  * @property-read Collection<int, \App\Models\FundProviderUnsubscribe> $fund_unsubscribes
  * @property-read int|null $fund_unsubscribes_count
+ * @property-read Collection|\App\Models\FundProviderUnsubscribe[] $fund_unsubscribes_active
+ * @property-read int|null $fund_unsubscribes_active_count
  * @property-read string $state_locale
  * @property-read Collection<int, \App\Services\EventLogService\Models\EventLog> $logs
  * @property-read int|null $logs_count
@@ -58,6 +61,7 @@ use Carbon\Carbon;
  * @method static Builder|FundProvider whereAllowProducts($value)
  * @method static Builder|FundProvider whereAllowSomeProducts($value)
  * @method static Builder|FundProvider whereCreatedAt($value)
+ * @method static Builder|FundProvider whereExcluded($value)
  * @method static Builder|FundProvider whereFundId($value)
  * @method static Builder|FundProvider whereId($value)
  * @method static Builder|FundProvider whereOrganizationId($value)
@@ -98,7 +102,7 @@ class FundProvider extends BaseModel
      */
     protected $fillable = [
         'organization_id', 'fund_id', 'state',
-        'allow_products', 'allow_budget', 'allow_some_products',
+        'allow_products', 'allow_budget', 'allow_some_products', 'excluded',
     ];
 
     /**
@@ -108,6 +112,7 @@ class FundProvider extends BaseModel
         'allow_budget' => 'boolean',
         'allow_products' => 'boolean',
         'allow_some_products' => 'boolean',
+        'excluded' => 'boolean',
     ];
 
     /**

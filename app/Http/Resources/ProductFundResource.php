@@ -3,12 +3,15 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
+use App\Models\FundProvider;
+use App\Models\Organization;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 
 /**
  * @property Fund $resource
  * @property Product $product
+ * @property Organization $organization
  */
 class ProductFundResource extends BaseJsonResource
 {
@@ -32,6 +35,8 @@ class ProductFundResource extends BaseJsonResource
     public function toArray($request): array
     {
         $fund = $this->resource;
+        /** @var FundProvider|null $fundProvider */
+        $fundProvider = $this->organization->fund_providers->where('fund_id', $fund->id)->first();
 
         return array_merge($fund->only([
             'id', 'name', 'description', 'organization_id', 'state',
@@ -48,6 +53,7 @@ class ProductFundResource extends BaseJsonResource
                 Fund::query()->whereId($fund->id),
                 $this->product
             )->exists(),
+            'provider_excluded' => $fundProvider?->excluded,
         ]);
     }
 }

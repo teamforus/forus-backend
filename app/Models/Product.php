@@ -465,7 +465,7 @@ class Product extends BaseModel
         $query = ProductQuery::inStockAndActiveFilter($query);
 
         // only approved by at least one sponsor
-        return ProductQuery::approvedForFundsFilter($query, $activeFunds);
+        return ProductQuery::approvedForFundsFilter($query, $activeFunds, true);
     }
 
     /**
@@ -502,7 +502,7 @@ class Product extends BaseModel
         }
 
         if ($fund_id = Arr::get($options, 'fund_id')) {
-            $query = ProductQuery::approvedForFundsFilter($query, $fund_id);
+            $query = ProductQuery::approvedForFundsFilter($query, $fund_id, true);
         }
 
         if ($price_type = Arr::get($options, 'price_type')) {
