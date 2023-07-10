@@ -3,6 +3,7 @@
 return [
     'to_many_attempts' => [
         'title' => "Te veel pogingen!",
-        'message' => "Sorry, but you can make only one transaction per voucher within :available_in_sec seconds. \nPlease try in :available_in_sec seconds.",
+        'message' => "Sorry, u kunt maar 1 transactie per tegoed uitvoeren binnen :decay_seconds seconden. " .
+            "\nProbeer het opnieuw over :available_in_sec seconden.",
     ],
 ];
