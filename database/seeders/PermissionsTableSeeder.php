@@ -30,6 +30,7 @@ class PermissionsTableSeeder extends Seeder
         'view_funds'                => "See funds overview",
         'view_person_bsn_data'      => "See person information by BSN",
         'make_direct_payments'      => "Make direct payments",
+        'manage_bi_connection'      => "Manage BI connection",
     ];
 
     /**
