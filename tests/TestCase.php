@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Helpers\Arr;
 use App\Models\Implementation;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use App\Traits\DoesTesting;

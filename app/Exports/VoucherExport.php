@@ -4,10 +4,6 @@ namespace App\Exports;
 
 use Illuminate\Support\Collection;
 
-/**
- * Class VoucherExport
- * @package App\Exports
- */
 class VoucherExport extends BaseFieldedExport
 {
     protected Collection $data;

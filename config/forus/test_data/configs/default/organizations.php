@@ -4,6 +4,7 @@ return [
     'Zuidhorn' => [
         'offices_count' => 0,
         'organization' => [
+            'allow_bi_connection' => true,
             'allow_2fa_restrictions' => true,
             'allow_custom_fund_notifications' => true,
         ]
@@ -12,6 +13,7 @@ return [
         'offices_count' => 0,
         'organization' => [
             'backoffice_available' => true,
+            'allow_bi_connection' => true,
             'allow_2fa_restrictions' => true,
             'allow_budget_fund_limits' => true,
             'allow_manual_bulk_processing' => true,
@@ -36,6 +38,7 @@ return [
             'reservation_birth_date' => "no",
             'manage_provider_products' => true,
             'backoffice_available' => false,
+            'allow_bi_connection' => true,
             'allow_2fa_restrictions' => true,
             'allow_batch_reservations' => true,
             'allow_budget_fund_limits' => false,
