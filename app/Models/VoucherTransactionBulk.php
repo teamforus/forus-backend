@@ -696,7 +696,7 @@ class VoucherTransactionBulk extends BaseModel
     /**
      * @param array $array
      * @param Employee|null $employee
-     * @return \App\Services\EventLogService\Models\EventLog|mixed
+     * @return \App\Services\EventLogService\Models\EventLog
      */
     public function logError(array $array = [], ?Employee $employee = null): EventLog
     {
@@ -776,11 +776,16 @@ class VoucherTransactionBulk extends BaseModel
      * @param array $fields
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    private static function exportTransform(Builder $builder, array $fields)
+    private static function exportTransform(Builder $builder, array $fields): mixed
     {
         $fieldLabels = array_pluck(VoucherTransactionBulksExport::getExportFields(), 'name', 'key');
 
-        $data = $builder->get()->map(fn(VoucherTransactionBulk $transactionBulk) => array_only([
+        $data = $builder->with([
+            'voucher_transactions',
+            'bank_connection.bank',
+        ])->withCount([
+            'voucher_transactions',
+        ])->get()->map(fn(VoucherTransactionBulk $transactionBulk) => array_only([
             "id" => $transactionBulk->id,
             "quantity" => $transactionBulk->voucher_transactions_count,
             "amount" => currency_format($transactionBulk->voucher_transactions->sum('amount')),
@@ -802,7 +807,7 @@ class VoucherTransactionBulk extends BaseModel
      * @param array $fields
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    public static function export(Request $request, Organization $organization, array $fields)
+    public static function export(Request $request, Organization $organization, array $fields): mixed
     {
         return self::exportTransform(VoucherTransactionBulkQuery::order(
             self::search($request, $organization),

@@ -9,6 +9,7 @@ use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Services\DigIdService\DigIdException;
+use App\Services\DigIdService\Objects\ClientTls;
 use App\Services\DigIdService\Repositories\DigIdCgiRepo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -201,7 +202,11 @@ class DigIdSession extends Model
     {
         try {
             $digid = $this->implementation->getDigid();
-            $authRequest = $digid->makeAuthRequest($this->getResolveUrl(), $this->session_secret);
+            $authRequest = $digid->makeAuthRequest(
+                $this->getResolveUrl(),
+                $this->session_secret,
+                $this->getClientCert(),
+            );
         } catch (DigIdException $exception) {
             $this->setError($exception->getMessage(), $exception->getDigIdCode());
             return $this;
@@ -406,6 +411,7 @@ class DigIdSession extends Model
                 $request,
                 $this->digid_rid,
                 $this->session_secret,
+                $this->getClientCert(),
             );
         } catch (DigIdException $exception) {
             return $this->setError($exception->getMessage(), $exception->getDigIdCode());
@@ -417,5 +423,28 @@ class DigIdSession extends Model
             'digid_response_aselect_credentials'    => $result->getMeta('resolveParams.aselect_credentials'),
             'state'                                 => self::STATE_AUTHORIZED,
         ]);
+    }
+
+    /**
+     * @return ClientTls|null
+     */
+    protected function getClientCert(): ?ClientTls
+    {
+        $implementation = $this->implementation;
+        $generalImplementation = Implementation::general();
+
+        if ($implementation->digid_cgi_tls_cert && $implementation->digid_cgi_tls_key) {
+            return new ClientTls(
+                $implementation->digid_cgi_tls_key,
+                $implementation->digid_cgi_tls_cert,
+            );
+        } else if ($generalImplementation->digid_cgi_tls_cert && $generalImplementation->digid_cgi_tls_key) {
+            return new ClientTls(
+                $generalImplementation->digid_cgi_tls_key,
+                $generalImplementation->digid_cgi_tls_cert,
+            );
+        }
+
+        return null;
     }
 }

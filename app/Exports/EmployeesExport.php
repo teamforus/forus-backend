@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\Role;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
@@ -20,10 +21,10 @@ class EmployeesExport extends BaseFieldedExport
 
     /**
      * FundsExport constructor.
-     * @param Builder $builder
+     * @param Builder|Relation|Employee $builder
      * @param bool $withRoles
      */
-    public function __construct(Builder $builder, bool $withRoles = true)
+    public function __construct(Builder|Relation|Employee $builder, bool $withRoles = true)
     {
         $this->roles = Role::get()->collect();
         $this->withRoles = $withRoles;
@@ -60,8 +61,8 @@ class EmployeesExport extends BaseFieldedExport
             trans("export.employees.email") => $employee->identity->email,
             trans("export.employees.owner") => $employeeIsOwner ? 'ja' : 'nee',
         ], $employeeRoles, [
-            trans("export.employees.created_at") => $employee->created_at,
-            trans("export.employees.updated_at") => $employeeLastUpdate,
+            trans("export.employees.created_at") => $employee->created_at?->format('Y-m-d H:i:s'),
+            trans("export.employees.updated_at") => $employeeLastUpdate?->format('Y-m-d H:i:s'),
         ]);
     }
 

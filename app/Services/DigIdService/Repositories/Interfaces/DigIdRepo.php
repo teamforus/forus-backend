@@ -2,6 +2,7 @@
 namespace App\Services\DigIdService\Repositories\Interfaces;
 
 use App\Services\DigIdService\DigIdException;
+use App\Services\DigIdService\Objects\ClientTls;
 use App\Services\DigIdService\Objects\DigidAuthRequestData;
 use App\Services\DigIdService\Objects\DigidAuthResolveData;
 use Illuminate\Http\Request;
@@ -13,23 +14,27 @@ abstract class DigIdRepo
     /**
      * @param string $redirectUrl
      * @param string $sessionSecret
+     * @param ClientTls|null $tlsCert
      * @return DigidAuthRequestData
      */
     abstract public function makeAuthRequest(
         string $redirectUrl,
-        string $sessionSecret
+        string $sessionSecret,
+        ?ClientTls $tlsCert = null,
     ): DigidAuthRequestData;
 
     /**
      * @param Request $request
      * @param string $requestId
      * @param string $sessionSecret
+     * @param ClientTls|null $tlsCert
      * @return DigidAuthResolveData
      */
     abstract public function resolveResponse(
         Request $request,
         string $requestId,
         string $sessionSecret,
+        ?ClientTls $tlsCert = null,
     ): DigidAuthResolveData;
 
     /**
