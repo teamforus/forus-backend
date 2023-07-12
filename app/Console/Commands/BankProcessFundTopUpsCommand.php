@@ -171,7 +171,7 @@ class BankProcessFundTopUpsCommand extends Command
         $query = $topUp->fund->top_up_transactions()
             ->whereRelation('fund_top_up', 'code', $topUp->code)
             ->where('creditor_iban', $payment->getCreditorAccount()->getIban())
-            ->where('created_at', '>=', now()->subHours(48));
+            ->where('fund_top_up_transactions.created_at', '>=', now()->subHours(48));
 
         $topUpExists = (clone $query)->where('amount', $payment->getAmount())->exists();
         $doubleExists = (clone $query)->whereNull('amount')->exists();
