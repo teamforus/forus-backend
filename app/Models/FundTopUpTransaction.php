@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property float|null $amount
  * @property string|null $bank_transaction_id
  * @property int|null $bank_connection_account_id
+ * @property string|null $creditor_iban
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnectionAccount|null $bank_connection_account
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereBankConnectionAccountId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereBankTransactionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereCreditorIban($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereFundTopUpId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereUpdatedAt($value)
@@ -33,7 +35,7 @@ class FundTopUpTransaction extends BaseModel
     protected $perPage = 10;
 
     protected $fillable = [
-        'fund_top_up_id', 'bank_transaction_id', 'amount'
+        'fund_top_up_id', 'bank_transaction_id', 'creditor_iban', 'amount'
     ];
 
     /**
