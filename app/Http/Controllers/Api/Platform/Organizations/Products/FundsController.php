@@ -33,7 +33,8 @@ class FundsController extends Controller
 
         /** @var Fund[] $data */
         $query = FundQuery::whereHasProviderFilter((new FundSearch($request->only([
-            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
+            'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id',
+            'order_by', 'order_by_dir'
         ]), Fund::query()))->query(), $organization->id);
 
         if ($product->sponsor_organization) {
