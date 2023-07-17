@@ -11,9 +11,10 @@ return [
         ]),
         'product_item' => [
             'title' => ':product_name voor :product_price_locale',
-            'subtitle' => implode('|', [
-                '- :count_reservations nieuwe reserveringen.',
-                '- :count_reservations nieuwe reserveringen.',
+            'subtitle' => implode("\n", [
+                '- :count_total totaal reserveringen.',
+                '- :count_pending in afwachting reserveringen',
+                '- :count_accepted geaccepteerd reserveringen',
             ]),
         ],
     ],

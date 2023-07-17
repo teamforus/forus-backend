@@ -119,17 +119,22 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
             ));
 
             foreach ($grouped as $group) {
-                $count_group = count($group);
+                /** @var Collection $groups */
+                $groups = $group->groupBy('product_reservation_state');
+                $reservations_pending = $groups[ProductReservation::STATE_PENDING] ?? [];
+                $reservations_accepted = $groups[ProductReservation::STATE_ACCEPTED] ?? [];
 
                 $mailBody->h5(trans("digests/provider_reservations.reservations.product_item.title", [
                     'product_name' => $group[0]['product_name'] ?? '',
                     'product_price_locale' => $group[0]['product_price_locale'] ?? '',
                 ]), ['margin_less']);
 
-                $mailBody->text(trans_choice(
-                    "digests/provider_reservations.reservations.product_item.subtitle",
-                    $count_group,
-                    compact('count_reservations')
+                $mailBody->text(trans(
+                    "digests/provider_reservations.reservations.product_item.subtitle", [
+                        'count_total' => count($groups),
+                        'count_pending' => $reservations_pending ? count($reservations_pending) : 0,
+                        'count_accepted' => $reservations_accepted ? count($reservations_accepted) : 0,
+                    ]
                 ));
             }
         }
