@@ -125,7 +125,7 @@ class ProductExclusionsTest extends TestCase
     protected function getApprovedProducts(array|int $products, array|int $funds): array
     {
         $query = Product::query()->whereIn('id', (array) $products);
-        $query = ProductQuery::approvedForFundsAndActiveFilter($query, (array) $funds, true);
+        $query = ProductQuery::approvedForFundsAndActiveFilter($query, (array) $funds);
 
         return $query->pluck('id')->toArray();
     }

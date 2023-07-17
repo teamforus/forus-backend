@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
-use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
@@ -23,6 +22,7 @@ class ProductFundResource extends BaseJsonResource
         'organization.business_type.translations',
         'organization.bank_connection_active',
         'organization.tags',
+        'organization.offices',
         'fund_config.implementation.page_provider'
     ];
 
@@ -35,8 +35,7 @@ class ProductFundResource extends BaseJsonResource
     public function toArray($request): array
     {
         $fund = $this->resource;
-        /** @var FundProvider|null $fundProvider */
-        $fundProvider = $this->organization->fund_providers->where('fund_id', $fund->id)->first();
+        $fundProvider = $this->product->organization->fund_providers->where('fund_id', $fund->id)->first();
 
         return array_merge($fund->only([
             'id', 'name', 'description', 'organization_id', 'state',

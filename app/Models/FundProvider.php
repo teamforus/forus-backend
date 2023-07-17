@@ -109,10 +109,10 @@ class FundProvider extends BaseModel
      * @var array
      */
     protected $casts = [
+        'excluded' => 'boolean',
         'allow_budget' => 'boolean',
         'allow_products' => 'boolean',
         'allow_some_products' => 'boolean',
-        'excluded' => 'boolean',
     ];
 
     /**
