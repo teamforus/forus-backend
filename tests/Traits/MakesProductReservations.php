@@ -36,13 +36,9 @@ trait MakesProductReservations
         )->whereNull('product_id')->first();
 
         if (!$voucher) {
-            /** @var Fund $fund */
-            $fund = $funds->first();
-
-            $voucher = $fund->makeVoucher($organization->identity_address, [], 10000);
-            $voucher->update([
+            $voucher = $funds->first()->makeVoucher($organization->identity_address, [
                 'state' => Voucher::STATE_ACTIVE
-            ]);
+            ], 10000);
         }
 
         $this->assertNotNull($voucher, 'No suitable voucher found.');
@@ -50,6 +46,10 @@ trait MakesProductReservations
         return $voucher;
     }
 
+    /**
+     * @param Organization $organization
+     * @return Product
+     */
     private function createProductForReservation(Organization $organization): Product
     {
         $product = Product::query()->create([

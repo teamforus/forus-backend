@@ -54,7 +54,7 @@ class ProductReservationResource extends BaseJsonResource
 
         return array_merge($reservation->only([
             'id', 'state', 'state_locale', 'amount', 'code',
-            'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'archived',
+            'first_name', 'last_name', 'user_note', 'phone', 'address', 'archived',
         ]), [
             'price' => $price,
             'price_locale' => $price_locale,
@@ -72,27 +72,9 @@ class ProductReservationResource extends BaseJsonResource
                 'organization' => $voucher->fund->organization->only('id', 'name'),
             ]),
             'voucher_transaction' => $transaction?->only('id', 'address'),
-            'birth_date_locale' => format_date_locale($reservation->birth_date),
-        ], $this->getReservationDates($reservation), $identityData);
-    }
+        ], $this->makeTimestamps($reservation->only([
+            'created_at', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at', 'birth_date',
+        ]), true), $identityData);
 
-    /**
-     * @param ProductReservation $reservation
-     * @return array
-     */
-    protected function getReservationDates(ProductReservation $reservation): array
-    {
-        return [
-            'created_at' => $reservation->created_at?->format('Y-m-d H:i:s'),
-            'created_at_locale' => format_date_locale($reservation->created_at),
-            'accepted_at' => $reservation->accepted_at?->format('Y-m-d H:i:s'),
-            'accepted_at_locale' => format_date_locale($reservation->accepted_at),
-            'rejected_at' => $reservation->rejected_at?->format('Y-m-d H:i:s'),
-            'rejected_at_locale' => format_date_locale($reservation->rejected_at),
-            'canceled_at' => $reservation->canceled_at?->format('Y-m-d H:i:s'),
-            'canceled_at_locale' => format_date_locale($reservation->canceled_at),
-            'expire_at' => $reservation->expire_at->format('Y-m-d H:i:s'),
-            'expire_at_locale' => format_date_locale($reservation->expire_at),
-        ];
     }
 }

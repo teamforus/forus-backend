@@ -225,9 +225,14 @@ class ProductReservationPolicy
      * @return bool
      * @noinspection PhpUnused
      */
-    public function archive(Identity $identity, ProductReservation $productReservation, Organization $organization): bool
-    {
-        return $productReservation->isArchivable() && $this->updateProvider($identity, $productReservation, $organization);
+    public function archive(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization
+    ): bool {
+        return
+            $productReservation->isArchivable() &&
+            $this->updateProvider($identity, $productReservation, $organization);
     }
 
     /**
@@ -237,8 +242,13 @@ class ProductReservationPolicy
      * @return bool
      * @noinspection PhpUnused
      */
-    public function unarchive(Identity $identity, ProductReservation $productReservation, Organization $organization): bool
-    {
-        return $productReservation->archived && !$productReservation->isCanceledByClient() && $this->updateProvider($identity, $productReservation, $organization);
+    public function unarchive(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization
+    ): bool {
+        return
+            $productReservation->archived &&
+            $this->updateProvider($identity, $productReservation, $organization);
     }
 }

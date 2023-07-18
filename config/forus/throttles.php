@@ -17,8 +17,4 @@ return [
         'attempts' => env('DELETE_IDENTITY_THROTTLE_ATTEMPTS', 10),
         'decay' => env('DELETE_IDENTITY_THROTTLE_DECAY', 10),
     ],
-    'product_reservation_store' => [
-        'attempts' => env('STORE_RESERVATION_THROTTLE_ATTEMPTS', 30),
-        'decay' => env('STORE_RESERVATION_THROTTLE_DECAY', 10),
-    ],
 ];

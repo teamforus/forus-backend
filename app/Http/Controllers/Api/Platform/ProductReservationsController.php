@@ -35,7 +35,7 @@ class ProductReservationsController extends Controller
         $search = new ProductReservationsSearch(array_merge($request->only([
             'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
         ]), [
-            'client_type' => $request->client_type(),
+            'is_webshop' => true,
         ]), $builder);
 
         return ProductReservationResource::queryCollection(

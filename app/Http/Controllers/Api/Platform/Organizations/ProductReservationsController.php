@@ -50,10 +50,8 @@ class ProductReservationsController extends Controller
             });
         });
 
-        $search = new ProductReservationsSearch(array_merge($request->only([
+        $search = new ProductReservationsSearch($request->only([
             'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
-        ]), [
-            'client_type' => $request->client_type(),
         ]), ProductReservationQuery::whereProviderFilter($query, $organization->id));
 
         return ProductReservationResource::collection($search->query()->with(
@@ -234,10 +232,8 @@ class ProductReservationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [ProductReservation::class, $organization]);
 
-        $search = new ProductReservationsSearch(array_merge($request->only([
+        $search = new ProductReservationsSearch($request->only([
             'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
-        ]), [
-            'client_type' => $request->client_type(),
         ]), ProductReservationQuery::whereProviderFilter(ProductReservation::query(), $organization->id));
 
         $exportType = $request->input('data_format', 'xls');

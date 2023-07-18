@@ -209,8 +209,11 @@ return [
             'The reservation (#:code) is not pending, the current state is ":state".',
             'Please go to the dashboard to review and accept the reservation.'
         ]),
-        'too_many_canceled_reservations_for_product' => 'There are too many canceled reservations',
-        'too_many_reservation_requests_for_product' => 'There are too many reservation requests for this product',
+        'reservations_limit_reached' => 'Reservation limit reached, you can have up to :count pending reservations.',
+        'too_many_canceled_reservations_for_product' => implode(' ', [
+            'You have canceled :count reservations in the last hour.',
+            'New reservations will be available after one hour.',
+        ]),
     ],
     'attributes' => [
         'pin_code' => "Pin code",
