@@ -7,7 +7,6 @@ namespace App\Searches;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Organization;
-use App\Models\Tag;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -57,6 +56,10 @@ class FundSearch extends BaseSearch
 
         if ($this->getFilter('fund_id')) {
             $builder->where('id', $this->getFilter('fund_id'));
+        }
+
+        if (is_array($this->getFilter('fund_ids'))) {
+            $builder->whereIn('id', $this->getFilter('fund_ids'));
         }
 
         if ($this->getFilter('q')) {
