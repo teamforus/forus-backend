@@ -6,7 +6,7 @@ namespace App\Searches;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
-use App\Models\Tag;
+use App\Models\Organization;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -42,11 +42,12 @@ class FundSearch extends BaseSearch
             FundQuery::whereIsConfiguredByForus($builder);
         }
 
-        if ($this->getFilter('tag') || $this->getFilter('tag_id')) {
-            $builder->whereHas('tags_provider', function(Builder|Tag $builder) {
-                $builder->where('key', '=', $this->getFilter('tag'));
-                $builder->orWhere('id', '=', $this->getFilter('tag_id'));
-            });
+        if ($tag = $this->getFilter('tag')) {
+            $builder->whereHas('tags_provider', fn (Builder $q) => $q->where('key', $tag));
+        }
+
+        if ($tagId = $this->getFilter('tag_id')) {
+            $builder->whereHas('tags_webshop', fn (Builder $q) => $q->where('tags.id', $tagId));
         }
 
         if ($this->getFilter('organization_id')) {
@@ -55,6 +56,10 @@ class FundSearch extends BaseSearch
 
         if ($this->getFilter('fund_id')) {
             $builder->where('id', $this->getFilter('fund_id'));
+        }
+
+        if (is_array($this->getFilter('fund_ids'))) {
+            $builder->whereIn('id', $this->getFilter('fund_ids'));
         }
 
         if ($this->getFilter('q')) {
@@ -77,7 +82,7 @@ class FundSearch extends BaseSearch
             $this->filterByApproval($builder, (bool) $this->getFilter('has_providers'));
         }
 
-        return $this->sort($builder);
+        return $this->order($builder);
     }
 
     /**
@@ -113,11 +118,22 @@ class FundSearch extends BaseSearch
      * @param Builder $builder
      * @return Builder
      */
-    protected function sort(Builder $builder): Builder
+    protected function order(Builder $builder): Builder
     {
-        return $builder->orderBy(
-            $this->getFilter('order_by', 'created_at'),
-            $this->getFilter('order_by_dir', 'asc')
-        )->latest();
+        $orderBy = $this->getFilter('order_by', 'created_at');
+        $orderDir = $this->getFilter('order_dir', 'asc');
+
+        if ($orderBy == 'organization_name') {
+            $builder->addSelect([
+                'organization_name' => Organization::query()
+                    ->whereColumn('id', 'organization_id')
+                    ->select('name'),
+            ]);
+        }
+
+        return Fund::query()
+            ->fromSub($builder, 'funds')
+            ->orderBy($orderBy, $orderDir)
+            ->latest('created_at');
     }
 }

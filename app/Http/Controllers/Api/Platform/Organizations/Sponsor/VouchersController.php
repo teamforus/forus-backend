@@ -437,7 +437,7 @@ class VouchersController extends Controller
         $vouchers = $query->with([
             'transactions', 'voucher_relation', 'product', 'fund',
             'token_without_confirmation', 'identity.primary_email', 'identity.record_bsn',
-            'product_vouchers', 'top_up_transactions',
+            'product_vouchers', 'top_up_transactions', 'reimbursements_pending',
         ])->get();
 
         $exportData = Voucher::exportData($vouchers, $fields, $dataFormat, $qrFormat);

@@ -62,14 +62,14 @@ class VouchersSearch extends BaseSearch
                 VoucherQuery::whereNotExpiredAndActive($builder);
         }
 
-        return $this->sort($builder);
+        return $this->order($builder);
     }
 
     /**
      * @param Builder|Voucher $builder
      * @return Builder|Voucher
      */
-    protected function sort(Builder|Voucher $builder): Builder|Voucher
+    protected function order(Builder|Voucher $builder): Builder|Voucher
     {
         $orderBy = $this->getFilter('order_by', 'created_at');
         $orderDir = $this->getFilter('order_dir', 'desc');

@@ -260,5 +260,10 @@ return [
             'discount_fixed' => 'korting',
             'discount_percentage' => 'korting',
         ],
-    ]
+    ],
+    'reimbursement' => [
+        'files' => [
+            'required' => 'Om verder te gaan, moet er een bon, factuur of rekening worden toegevoegd. Dit veld is verplicht.',
+        ],
+    ],
 ];

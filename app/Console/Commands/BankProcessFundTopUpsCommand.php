@@ -133,8 +133,19 @@ class BankProcessFundTopUpsCommand extends Command
      */
     protected function applyTopUp(BankPayment $payment, FundTopUp $topUp, BankConnection $connection): void
     {
+        if ($connection->bank->isBNG() && $this->shouldSkipBNG($payment, $topUp)) {
+            $topUp->transactions()->firstOrCreate([
+                'bank_transaction_id' => $payment->getId(),
+                'creditor_iban' => $payment->getCreditorAccount()->getIban(),
+                'amount' => NULL
+            ]);
+
+            return;
+        }
+
         $transaction = $topUp->transactions()->firstOrCreate([
             'bank_transaction_id' => $payment->getId(),
+            'creditor_iban' => $payment->getCreditorAccount()->getIban(),
             'amount' => $payment->getAmount()
         ]);
 
@@ -148,5 +159,23 @@ class BankProcessFundTopUpsCommand extends Command
             $payment->getAmount(),
             $payment->getDescription()
         ));
+    }
+
+    /**
+     * @param BankPayment $payment
+     * @param FundTopUp $topUp
+     * @return bool
+     */
+    private function shouldSkipBNG(BankPayment $payment, FundTopUp $topUp): bool
+    {
+        $query = $topUp->fund->top_up_transactions()
+            ->whereRelation('fund_top_up', 'code', $topUp->code)
+            ->where('creditor_iban', $payment->getCreditorAccount()->getIban())
+            ->where('fund_top_up_transactions.created_at', '>=', now()->subHours(48));
+
+        $topUpExists = (clone $query)->where('amount', $payment->getAmount())->exists();
+        $doubleExists = (clone $query)->whereNull('amount')->exists();
+
+        return $topUpExists && !$doubleExists;
     }
 }

@@ -21,7 +21,7 @@ class AuthorizationJsonException extends \Exception
      */
     public function render(): JsonResponse
     {
-        return response()->json(array_merge(
+        return new JsonResponse(array_merge(
             json_decode($this->message, JSON_OBJECT_AS_ARRAY), config('app.debug', false) ? [
                 'file' => $this->getFile(),
                 'line' => $this->getLine(),

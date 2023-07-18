@@ -21,6 +21,7 @@ class ClientTypeMiddleware
         'emailSignUpRedirect',
         'emailSignInRedirect',
         'bankOauthRedirect',
+        'biConnection',
     ];
 
     /**
@@ -30,7 +31,7 @@ class ClientTypeMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): mixed
     {
         $exclude = in_array($request->route()->getName(), static::EXCEPT);
 
@@ -48,15 +49,17 @@ class ClientTypeMiddleware
     /**
      * @return array
      */
-    private function availableTypes(): array {
+    private function availableTypes(): array
+    {
         return array_filter(array_flatten(config('forus.clients')));
     }
 
     /**
      * @param Request $request
-     * @return array|string|null
+     * @return string|null
      */
-    private function activeType(Request $request) {
+    private function activeType(Request $request): ?string
+    {
         return $request->header('Client-Type', config('forus.clients.default'));
     }
 }

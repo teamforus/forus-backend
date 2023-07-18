@@ -12,7 +12,9 @@ use App\Models\FundProviderInvitation;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
+use App\Models\Identity2FA;
 use App\Models\Implementation;
+use App\Models\ImplementationSocialMedia;
 use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Product;
@@ -184,13 +186,10 @@ class RouteServiceProvider extends ServiceProvider
             })->firstOrFail();
         });
 
-        $router->bind('platform_config', static function ($value) {
-            return Implementation::platformConfig($value);
-        });
+        $router->bind('platform_config', fn ($value) => Implementation::platformConfig($value));
+        $router->bind('voucher_transaction_bulks', fn ($id) => VoucherTransactionBulk::findOrFail($id));
 
-        $router->bind('voucher_transaction_bulks', static function ($value) {
-            return VoucherTransactionBulk::findOrFail($value);
-        });
+        $router->bind('identity2fa', fn ($id) => Identity2FA::findOrFail($id));
     }
 
     /**

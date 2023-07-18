@@ -13,7 +13,7 @@ class SmsNotificationService extends Facade
     /**
      * @return string
      */
-    protected static function getFacadeAccessor()
+    protected static function getFacadeAccessor(): string
     {
         return 'forus.services.sms_notification';
     }

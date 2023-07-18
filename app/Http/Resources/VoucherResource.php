@@ -167,10 +167,11 @@ class VoucherResource extends BaseJsonResource
             $used = $voucher->transactions_count > 0;
             $amount = $voucher->amount;
             $productResource = array_merge($voucher->product->only([
-                'id', 'name', 'description', 'description_html', 'price',
+                'id', 'name', 'description', 'description_html', 'price', 'price_locale',
                 'total_amount', 'sold_amount', 'product_category_id',
                 'organization_id'
             ]), [
+                'price_locale' => $voucher->product->priceLocale($voucher->fund->getImplementation()),
                 'product_category' => $voucher->product->product_category,
                 'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : '',
                 'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
@@ -184,6 +185,7 @@ class VoucherResource extends BaseJsonResource
         return [
             'used' => $used,
             'amount' => currency_format($amount),
+            'amount_locale' => currency_format_locale($amount, $voucher->fund->getImplementation()),
             'product' => $productResource,
         ];
     }

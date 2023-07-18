@@ -39,6 +39,8 @@ class FinanceRequest extends BaseFormRequest
             'provider_ids.*'    => 'nullable|exists:organizations,id',
             'product_category_ids'   => 'nullable|array',
             'product_category_ids.*' => 'nullable|exists:product_categories,id',
+            'business_type_ids'   => 'nullable|array',
+            'business_type_ids.*' => 'nullable|exists:business_types,id',
         ];
     }
 }

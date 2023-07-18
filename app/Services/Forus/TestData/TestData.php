@@ -31,12 +31,14 @@ use App\Models\Tag;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
+use App\Services\FileService\Models\File;
 use Carbon\Carbon;
 use Database\Seeders\ImplementationsNotificationBrandingSeeder;
 use Faker\Factory;
 use Faker\Generator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
@@ -135,6 +137,9 @@ class TestData
 
         foreach ($organizations as $organization) {
             $this->makeOffices($organization, 2);
+            $organization->reimbursement_categories()->createMany(array_map(fn($name) => compact('name'), [
+                'Sports (activity)', 'Sports (product)', 'Culture', 'Education',
+            ]));
         }
 
         return $organizations;
@@ -500,6 +505,7 @@ class TestData
 
         $urlData = $this->makeImplementationUrlData($key);
         $samlData = $this->makeImplementationSamlData();
+        $cgiCertData = $this->makeImplementationCgiCertData();
         $configData = $this->config("implementations.$name.implementation", []);
 
         return Implementation::forceCreate(array_merge([
@@ -509,7 +515,7 @@ class TestData
             'informal_communication' => false,
             'allow_per_fund_notification_templates' => false,
             'productboard_api_key' => $this->config('productboard_api_key'),
-        ], $urlData, $samlData, $configData));
+        ], $urlData, $samlData, $cgiCertData, $configData));
     }
 
     /**
@@ -541,6 +547,17 @@ class TestData
             'digid_a_select_server' => $this->config('digid_a_select_server'),
             'digid_trusted_cert' => $this->config('digid_trusted_cert'),
             'digid_connection_type' => 'cgi',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function makeImplementationCgiCertData(): array
+    {
+        return [
+            "digid_cgi_tls_key" => $this->config('digid_cgi_tls_key'),
+            "digid_cgi_tls_cert" => $this->config('digid_cgi_tls_cert'),
         ];
     }
 
@@ -858,7 +875,10 @@ class TestData
      */
     public function makeFundRequests(): void
     {
-        $requesters = array_map(fn() => $this->makeIdentity(), range(1, $this->config('fund_requests_count')));
+        $fundRequestCount = $this->config('fund_requests_count');
+        $fundRequestFilesCount = $this->config('fund_requests_files_count');
+
+        $requesters = array_map(fn() => $this->makeIdentity(), range(1, $fundRequestCount));
 
         $funds = Fund::query()
             ->whereRelation('fund_config', 'allow_fund_requests', '=', true)
@@ -875,11 +895,26 @@ class TestData
                     },
                     'fund_criterion_id' => $criterion->id,
                     'record_type_key' => $criterion->record_type_key,
+                    'files' => array_map(
+                        fn() => $this->makeFundRequestFile()->uid,
+                        range(1, $fundRequestFilesCount),
+                    ),
                 ])->toArray();
 
                 $fund->makeFundRequest($requester, $records);
             }
         }
+    }
+
+    /**
+     * @return File
+     */
+    protected function makeFundRequestFile(): File
+    {
+        return resolve('file')->uploadSingle(
+            UploadedFile::fake()->image(Str::random() . '.jpg', 50, 50),
+            'fund_request_record_proof',
+        );
     }
 
     /**

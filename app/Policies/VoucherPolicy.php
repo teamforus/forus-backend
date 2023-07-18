@@ -229,7 +229,6 @@ class VoucherPolicy
             $voucher->exists &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
-            $voucher->isInternal() &&
             $voucher->activation_code &&
             !$voucher->identity_address &&
             !$voucher->deactivated;

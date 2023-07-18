@@ -4,6 +4,9 @@ return [
     'user_login' => [
         'title' => 'Log in op :platform geldig tot :time',
     ],
+    'contact_form' => [
+        'title' => 'New message from contact form',
+    ],
     'email_activation' => [
         'title' => 'E-mailadres bevestigen',
     ],
