@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Tiny\FundTinyResource;
+use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\FundConfig;
 use App\Models\Organization;
@@ -58,14 +59,15 @@ class Identity2FAStateResource extends BaseJsonResource
     {
         return $this->resource->funds
             ->where('fund_config.auth_2fa_remember_ip', false)
-            ->where(function (Builder $query) {
-                $query->where('fund_config.auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_REQUIRED)
-                    ->orWhere(function (Builder $query) {
-                        $query->where('fund_config.auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_GLOBAL)
-                            ->whereHas('organization', function(Builder $builder) {
-                                $builder->where('auth_2fa_funds_policy', FundConfig::AUTH_2FA_POLICY_REQUIRED);
-                            });
+            ->where(function (Fund $fund) {
+                $fund->where(
+                    'fund_config.auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_REQUIRED
+                )->orWhere(function (Builder $query) {
+                    $query->where('fund_config.auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_GLOBAL);
+                    $query->whereHas('organization', function(Builder $query) {
+                        $query->where('auth_2fa_funds_policy', FundConfig::AUTH_2FA_POLICY_REQUIRED);
                     });
+                });
             })
             ->isNotEmpty();
     }
