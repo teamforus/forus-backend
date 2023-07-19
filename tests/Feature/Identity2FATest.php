@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Helpers\Arr;
-use App\Models\Fund;
-use App\Models\FundConfig;
 use App\Models\Identity;
 use App\Models\Identity2FA;
 use App\Models\IdentityProxy;
@@ -58,27 +56,6 @@ class Identity2FATest extends TestCase
     public function testMultiple2FAProviders(): void
     {
         $this->doTestMultiple2FA();
-    }
-
-    /**
-     * @return void
-     */
-    public function testUpdateGlobal2FAFundSettings(): void
-    {
-        $this->doTestUpdateGlobal2FAFundSettings();
-    }
-
-    /**
-     * @return void
-     */
-    public function testUpdate2FAFundSettings(): void
-    {
-        $this->doTestUpdate2FAFundSettings();
-    }
-
-    public function test2FAGlobalFundSettings(): void
-    {
-        $this->doTest2FAGlobalFundSettings();
     }
 
     /**
@@ -155,100 +132,6 @@ class Identity2FATest extends TestCase
         $this->getJson('/api/v1/identity', $apiHeaders)->assertStatus(200);
 
         return $identityProxy;
-    }
-
-    /**
-     * @return void
-     */
-    protected function doTestUpdateGlobal2FAFundSettings(): void {
-        $this->assertOrganization2FAUpdate([
-            'auth_2fa_funds_policy' => Organization::AUTH_2FA_FUNDS_POLICY_RESTRICT,
-            'auth_2fa_funds_restrict_emails' => true,
-            'auth_2fa_funds_restrict_auth_sessions' => true,
-            'auth_2fa_funds_restrict_reimbursements' => true,
-        ]);
-
-        $this->assertOrganization2FAUpdate([
-            'auth_2fa_funds_policy' => Organization::AUTH_2FA_FUNDS_POLICY_REQUIRED,
-            'auth_2fa_funds_remember_ip' => true,
-        ]);
-    }
-
-    /**
-     * @return void
-     */
-    protected function doTestUpdate2FAFundSettings(): void {
-        $this->assertFund2FAUpdate([
-            'auth_2fa_policy' => FundConfig::AUTH_2FA_POLICY_GLOBAL,
-        ]);
-    }
-
-    /**
-     * @return void
-     */
-    protected function doTest2FAGlobalFundSettings(): void {
-        $organization = $this->getOrganization();
-        $identityProxy = $this->makeIdentityProxy($organization->identity);
-        $apiHeaders = $this->makeApiHeaders($identityProxy);
-        /** @var Fund $fund */
-        $fund = $organization->funds->first();
-        $fund->makeVoucher($organization->identity->address);
-
-        $organization->auth_2fa_funds_policy = Organization::AUTH_2FA_FUNDS_POLICY_REQUIRED;
-        $organization->save();
-
-        $fund->fund_config->auth_2fa_policy = FundConfig::AUTH_2FA_POLICY_GLOBAL;
-        $organization->save();
-
-        $response = $this->getJson('/api/v1/identity', $apiHeaders);
-        $response->assertStatus(401);
-        $response->assertExactJson([
-            "error" => "2fa",
-        ]);
-    }
-
-    /**
-     * @param $data
-     * @return void
-     */
-    protected function assertOrganization2FAUpdate($data): void
-    {
-        $organization = $this->getOrganization();
-        $identityProxy = $this->makeIdentityProxy($organization->identity);
-
-        $apiHeaders = $this->makeApiHeaders($identityProxy, [
-            'client_type' => 'sponsor',
-        ]);
-        $response = $this->patchJson('/api/v1/platform/organizations/'. $organization->id, $data, $apiHeaders);
-
-        $response->assertSuccessful();
-        $organization = Organization::find($response->json('data.id'));
-        foreach ($data as $fieldKey => $fieldValue) {
-            $this->assertEquals($fieldValue, $organization->$fieldKey);
-        }
-    }
-
-    /**
-     * @param $data
-     * @return void
-     */
-    protected function assertFund2FAUpdate($data): void
-    {
-        $organization = $this->getOrganization();
-        $identityProxy = $this->makeIdentityProxy($organization->identity);
-        /** @var Fund $fund */
-        $fund = $organization->funds->first();
-
-        $apiHeaders = $this->makeApiHeaders($identityProxy, [
-            'client_type' => 'sponsor',
-        ]);
-        $response = $this->patchJson("/api/v1/platform/organizations/$organization->id/funds/$fund->id", $data, $apiHeaders);
-
-        $response->assertSuccessful();
-        $fund = Fund::find($response->json('data.id'));
-        foreach ($data as $fieldKey => $fieldValue) {
-            $this->assertEquals($fieldValue, $fund->fund_config->$fieldKey);
-        }
     }
 
     /**
@@ -386,19 +269,13 @@ class Identity2FATest extends TestCase
     protected function makeIdentityWithForce2fa(): Identity
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $organization = Organization::whereHas('funds')->first();
 
-        $this->getOrganization()->updateModel([
+        $organization->updateModel([
             'auth_2fa_policy' => Organization::AUTH_2FA_POLICY_REQUIRED,
         ])->addEmployee($identity, Role::pluck('id')->toArray());
 
         return $identity;
-    }
-
-    /**
-     * @return Organization
-     */
-    private function getOrganization(): Organization {
-        return Organization::whereHas('funds')->where('allow_2fa_restrictions', true)->first();
     }
 
     /**

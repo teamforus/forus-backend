@@ -188,7 +188,7 @@ class Identity extends Model implements Authenticatable
             'identity_address',
             'fund_id',
             'address',
-        )->groupBy('id');
+        )->groupBy('funds.id');
     }
 
     /**
@@ -890,12 +890,16 @@ class Identity extends Model implements Authenticatable
                 'auth_2fa_policy',
                 FundConfig::AUTH_2FA_POLICY_REQUIRED
             )->orWhere(function (Builder $builder) {
-                $builder->whereRelation('fund_config','auth_2fa_policy',FundConfig::AUTH_2FA_POLICY_GLOBAL);
+                $builder->whereRelation(
+                    'fund_config',
+                    'auth_2fa_policy',
+                    FundConfig::AUTH_2FA_POLICY_GLOBAL,
+                );
 
                 $builder->whereRelation(
                     'fund_config.fund.organization',
                     'auth_2fa_funds_policy',
-                    Organization::AUTH_2FA_FUNDS_POLICY_REQUIRED
+                    Organization::AUTH_2FA_FUNDS_POLICY_REQUIRED,
                 );
             });
         })->exists();
@@ -940,7 +944,7 @@ class Identity extends Model implements Authenticatable
                 }} ?? false;
             }
 
-            if ($fund->organization->auth_2fa_policy == Organization::AUTH_2FA_FUNDS_POLICY_RESTRICT) {
+            if ($fund->organization->auth_2fa_funds_policy == Organization::AUTH_2FA_FUNDS_POLICY_RESTRICT) {
                 return $fund->organization->{match($feature) {
                     'emails' => 'auth_2fa_funds_restrict_emails',
                     'sessions' => 'auth_2fa_funds_restrict_auth_sessions',

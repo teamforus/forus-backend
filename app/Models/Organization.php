@@ -81,10 +81,10 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string|null $auth_2fa_policy
  * @property bool|null $auth_2fa_remember_ip
  * @property string $auth_2fa_funds_policy
- * @property int $auth_2fa_funds_remember_ip
- * @property int $auth_2fa_funds_restrict_emails
- * @property int $auth_2fa_funds_restrict_auth_sessions
- * @property int $auth_2fa_funds_restrict_reimbursements
+ * @property bool $auth_2fa_funds_remember_ip
+ * @property bool $auth_2fa_funds_restrict_emails
+ * @property bool $auth_2fa_funds_restrict_auth_sessions
+ * @property bool $auth_2fa_funds_restrict_reimbursements
  * @property int $show_provider_transactions
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -283,6 +283,7 @@ class Organization extends BaseModel
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
         'auth_2fa_remember_ip'                  => 'boolean',
+        'auth_2fa_funds_remember_ip'            => 'boolean',
         'auth_2fa_funds_restrict_emails'        => 'boolean',
         'auth_2fa_funds_restrict_auth_sessions' => 'boolean',
         'auth_2fa_funds_restrict_reimbursements' => 'boolean',

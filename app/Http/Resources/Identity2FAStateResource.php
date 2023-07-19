@@ -55,21 +55,22 @@ class Identity2FAStateResource extends BaseJsonResource
     /**
      * @return bool
      */
-    protected function forceForgetVoucher(): bool
+    public function forceForgetVoucher(): bool
     {
-        return $this->resource->funds
-            ->where('fund_config.auth_2fa_remember_ip', false)
-            ->where(function (Fund $fund) {
-                $fund->where(
-                    'fund_config.auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_REQUIRED
-                )->orWhere(function (Builder $query) {
-                    $query->where('fund_config.auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_GLOBAL);
-                    $query->whereHas('organization', function(Builder $query) {
-                        $query->where('auth_2fa_funds_policy', FundConfig::AUTH_2FA_POLICY_REQUIRED);
-                    });
+        return $this->resource->funds()->where(function (Builder|Fund $builder) {
+            $builder->whereHas('fund_config', function(Builder|FundConfig $builder) {
+                $builder->where('auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_REQUIRED);
+                $builder->where('auth_2fa_remember_ip', false);
+            });
+
+            $builder->orWhereHas('fund_config', function(Builder|FundConfig $builder) {
+                $builder->where('auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_GLOBAL);
+                $builder->whereHas('fund.organization', function(Builder|Organization $builder) {
+                    $builder->where('auth_2fa_funds_policy', Organization::AUTH_2FA_FUNDS_POLICY_REQUIRED);
+                    $builder->where('auth_2fa_funds_remember_ip', false);
                 });
-            })
-            ->isNotEmpty();
+            });
+        })->exists();
     }
 
     /**

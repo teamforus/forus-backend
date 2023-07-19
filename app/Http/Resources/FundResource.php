@@ -59,7 +59,7 @@ class FundResource extends BaseJsonResource
         $criteriaData = $isWebShop ? $this->getCriteriaData($fund, $baseRequest) : [];
         $generatorData = $isDashboard ? $this->getVoucherGeneratorData($fund) : [];
         $prevalidationCsvData = $isDashboard ? $this->getPrevalidationCsvData($fund) : [];
-        $organization2FAFundsOnlyData = $baseRequest->isDashboard() ? $this->organization2FAFundsOnlyData($organization) : [];
+        $organizationFunds2FAData = $baseRequest->isDashboard() ? $this->organizationFunds2FAData($organization) : [];
 
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'description_html', 'description_short',
@@ -85,7 +85,7 @@ class FundResource extends BaseJsonResource
             'has_pending_fund_requests' => $isWebShop && $baseRequest->auth_address() && $fund->fund_requests()->where(function (Builder $builder) {
                 FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth()->id());
             })->exists(),
-            'organization_2fa' => $organization2FAFundsOnlyData,
+            'organization_funds_2fa' => $organizationFunds2FAData,
         ], $fundConfigData, $criteriaData, $financialData, $generatorData, $prevalidationCsvData);
 
         if ($isDashboard && $organization->identityCan($identity, ['manage_funds', 'manage_fund_texts'], false)) {
@@ -123,7 +123,7 @@ class FundResource extends BaseJsonResource
      * @param Organization $organization
      * @return array
      */
-    protected function organization2FAFundsOnlyData(Organization $organization): array
+    protected function organizationFunds2FAData(Organization $organization): array
     {
         return $organization->only([
             'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
