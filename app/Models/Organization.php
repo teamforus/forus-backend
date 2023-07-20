@@ -52,7 +52,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $btw
  * @property string|null $website
  * @property bool $website_public
- * @property string|null $low_balance_email
  * @property int|null $business_type_id
  * @property bool $is_sponsor
  * @property bool $is_provider
@@ -87,6 +86,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
  * @property-read \App\Models\BusinessType|null $business_type
+ * @property-read Collection|\App\Models\OrganizationContact[] $contacts
+ * @property-read int|null $contacts_count
  * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
  * @property-read int|null $digests_count
  * @property-read Collection|\App\Models\Employee[] $employees
@@ -658,6 +659,14 @@ class Organization extends BaseModel
     }
 
     /**
+     * @return HasMany
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(OrganizationContact::class);
+    }
+
+    /**
      * @param string|array $role
      * @return EloquentBuilder|Relation
      */
@@ -996,5 +1005,20 @@ class Organization extends BaseModel
             'organization_bi_connection_token' => $this->bi_connection_token,
             'organization_bi_connection_token_previous' => $connectionToken,
         ]);
+    }
+
+    /**
+     * @param string $key
+     * @return string|null
+     */
+    public function getContactEmail(string $key): ?string
+    {
+        /** @var OrganizationContact|null $contact */
+        $contact = $this->contacts()
+            ->where('contact_key', $key)
+            ->where('type', OrganizationContact::TYPE_EMAIL)
+            ->first();
+
+        return $contact?->value;
     }
 }

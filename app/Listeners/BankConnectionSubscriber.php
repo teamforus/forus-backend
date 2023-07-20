@@ -11,8 +11,11 @@ use App\Events\BankConnections\BankConnectionMonetaryAccountChanged;
 use App\Events\BankConnections\BankConnectionRejected;
 use App\Events\BankConnections\BankConnectionReplaced;
 use App\Events\BankConnections\BaseBankConnectionEvent;
+use App\Mail\BankConnections\BankConnectionExpiringMail;
 use App\Models\BankConnection;
 use App\Models\Employee;
+use App\Models\Implementation;
+use App\Models\OrganizationContact;
 use App\Notifications\Organizations\BankConnections\BankConnectionActivatedNotification;
 use App\Notifications\Organizations\BankConnections\BankConnectionDisabledInvalidNotification;
 use App\Notifications\Organizations\BankConnections\BankConnectionExpiringNotification;
@@ -134,6 +137,18 @@ class BankConnectionSubscriber
         $eventLog = $this->makeEvent($event, $event->getBankConnection()::EVENT_EXPIRING);
 
         BankConnectionExpiringNotification::send($eventLog);
+
+        $organization = $event->getBankConnection()->organization;
+
+        if ($email = $organization->getContactEmail(OrganizationContact::BANK_CONNECTION_EXPIRING_KEY)) {
+            $implementation = Implementation::general();
+
+            $mailable = new BankConnectionExpiringMail(array_merge([
+                'url_sponsor' => $implementation->urlSponsorDashboard(),
+            ], $eventLog->data), $implementation->emailFrom());
+
+            resolve('forus.services.notification')->sendSystemMail($email, $mailable);
+        }
     }
 
     /**

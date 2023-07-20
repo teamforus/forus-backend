@@ -903,6 +903,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\AnnouncementController@index"
     );
 
+    $router->get(
+        'organizations/{organization}/contacts/available',
+        "Api\Platform\Organizations\OrganizationContactsController@available"
+    );
+
+    $router->resource(
+        'organizations.contacts',
+        "Api\Platform\Organizations\OrganizationContactsController"
+    )->only('index', 'store');
+
     $router->get('prevalidations/export', 'Api\Platform\PrevalidationController@export');
     $router->post('prevalidations/collection', 'Api\Platform\PrevalidationController@storeCollection');
     $router->post('prevalidations/collection/hash', 'Api\Platform\PrevalidationController@collectionHash');
