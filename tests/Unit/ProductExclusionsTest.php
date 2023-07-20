@@ -57,16 +57,20 @@ class ProductExclusionsTest extends TestCase
     /**
      * @param Product $product
      * @param Collection $funds
+     * @param array $providerParams
      * @return Collection
      */
-    protected function approveProductToFunds(Product $product, Collection $funds): Collection
-    {
-        return $funds->map(function(Fund $fund) use ($product) {
+    protected function approveProductToFunds(
+        Product $product,
+        Collection $funds,
+        array $providerParams = []
+    ): Collection {
+        return $funds->map(function(Fund $fund) use ($product, $providerParams) {
             $provider = $fund->providers()->updateOrCreate($product->only([
                 'organization_id',
-            ]), [
+            ]), array_merge([
                 'state' => FundProvider::STATE_ACCEPTED,
-            ]);
+            ], $providerParams));
 
             if ($fund->isTypeBudget()) {
                 $provider->update([
@@ -85,6 +89,32 @@ class ProductExclusionsTest extends TestCase
 
             return $provider;
         });
+    }
+
+    /**
+     * A basic unit test example.
+     *
+     * @return void
+     */
+    public function testProductExclusionOnWebshop(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $product = Product::first();
+        $funds = $implementation->funds;
+        $this->approveProductToFunds($product, $funds, [
+            'excluded' => false
+        ]);
+
+        // Product is approved for all funds
+        $approvedProducts = $this->getApprovedProducts($product->id, $funds->pluck('id')->toArray());
+        $this->assertTrue(count($approvedProducts) == 1 && $approvedProducts[0] == $product->id);
+
+        $this->approveProductToFunds($product, $funds, [
+            'excluded' => true
+        ]);
+
+        $approvedProducts = $this->getApprovedProducts($product->id, $funds->pluck('id')->toArray());
+        $this->assertTrue(count($approvedProducts) == 0);
     }
 
     /**
