@@ -515,12 +515,22 @@ class FundRequest extends BaseModel
     {
         $transKey = "export.fund_requests";
         $fundRequests = $builder->with('records.employee', 'fund')->get();
+        $recordKeyList = FundRequestRecord::query()->whereIn(
+            'fund_request_id', $builder->pluck('id')->toArray()
+        )->pluck('record_type_key');
 
-        return $fundRequests->map(static function(FundRequest $fundRequest) use ($transKey) {
+        return $fundRequests->map(static function(FundRequest $fundRequest) use ($transKey, $recordKeyList) {
             $employees = $fundRequest->records->pluck('employee')->filter();
             $employees = $employees->map(fn(Employee $employee) => $employee->identity->email)->unique();
 
-            return [
+            $records = [];
+            foreach ($recordKeyList as $recordKey) {
+                /** @var FundRequestRecord $record */
+                $record = $fundRequest->records()->where('record_type_key', $recordKey)->first();
+                $records[$recordKey] = $record->value ?? '-';
+            }
+
+            return array_merge([
                 trans("$transKey.bsn") => $fundRequest->identity?->bsn,
                 trans("$transKey.fund_name") => $fundRequest->fund->name,
                 trans("$transKey.status") => trans("$transKey.state-values.$fundRequest->state"),
@@ -529,7 +539,7 @@ class FundRequest extends BaseModel
                 trans("$transKey.resolved_at") => $fundRequest->resolved_at,
                 trans("$transKey.lead_time_days") => (string) $fundRequest->lead_time_days,
                 trans("$transKey.lead_time_locale") => $fundRequest->lead_time_locale,
-            ];
+            ], $records);
         })->values();
     }
 
