@@ -70,6 +70,7 @@ class FundQuery
                 $builder->whereHas('providers', static function(Builder $builder) use ($product) {
                     $builder->where('state', FundProvider::STATE_ACCEPTED);
                     $builder->where('allow_products', '=', true);
+                    $builder->where('excluded', false);
 
                     $builder->whereHas('organization.products', static function(Builder $builder) use ($product) {
                         $builder->where('products.id', $product->id);
@@ -79,6 +80,7 @@ class FundQuery
 
             $builder->orWhereHas('providers', static function(Builder $builder) use ($product) {
                 $builder->where('state', FundProvider::STATE_ACCEPTED);
+                $builder->where('excluded', false);
 
                 $builder->whereHas('fund_provider_products', static function(Builder $builder) use ($product) {
                     $builder->where('product_id', $product->id);
