@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Identity\Identity2FA;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Identity2FA;
+use App\Models\Identity2FACode;
 use Illuminate\Support\Facades\Config;
 use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
 use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;
@@ -60,6 +61,7 @@ abstract class BaseIdentity2FARequest extends BaseFormRequest
         $isValid = $identity2FA
             ->identity_2fa_codes()
             ->where('expire_at', '>', now())
+            ->where('status', Identity2FACode::STATUS_ACTIVE)
             ->where('code', $code)
             ->exists();
 
