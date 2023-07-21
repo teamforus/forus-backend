@@ -750,6 +750,10 @@ class Implementation extends BaseModel
     {
         $query = $query ?: Organization::query();
 
+        $query->whereHas('fund_providers', function(Builder $builder) {
+            $builder->where('excluded', false);
+        });
+
         $query->whereHas('supplied_funds_approved', static function (Builder $builder) {
             $builder->whereIn('funds.id', self::activeFundsQuery()->pluck('funds.id'));
         });
