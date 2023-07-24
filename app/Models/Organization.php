@@ -552,7 +552,8 @@ class Organization extends BaseModel
     public function supplied_funds_approved(): BelongsToMany
     {
         return $this->belongsToMany(Fund::class,'fund_providers')->where([
-            'fund_providers.state' => FundProvider::STATE_ACCEPTED
+            'fund_providers.state' => FundProvider::STATE_ACCEPTED,
+            'fund_providers.excluded' => false,
         ])->where(function(EloquentBuilder $builder) {
             $builder->where('fund_providers.allow_budget', true);
             $builder->orWhere(function(EloquentBuilder $builder) {
@@ -573,6 +574,7 @@ class Organization extends BaseModel
             'fund_providers'
         )->where(function(EloquentBuilder $builder) {
             $builder->where('fund_providers.state', FundProvider::STATE_ACCEPTED);
+            $builder->where('fund_providers.excluded', false);
             $builder->where('fund_providers.allow_budget', true);
         });
     }
@@ -588,6 +590,7 @@ class Organization extends BaseModel
             'fund_providers'
         )->where(static function(EloquentBuilder $builder) {
             $builder->where('fund_providers.state', FundProvider::STATE_ACCEPTED);
+            $builder->where('fund_providers.excluded', false);
             $builder->where('fund_providers.allow_products', true);
         });
     }
