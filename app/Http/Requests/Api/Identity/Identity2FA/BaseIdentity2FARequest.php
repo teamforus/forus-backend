@@ -61,7 +61,7 @@ abstract class BaseIdentity2FARequest extends BaseFormRequest
         $isValid = $identity2FA
             ->identity_2fa_codes()
             ->where('expire_at', '>', now())
-            ->where('status', Identity2FACode::STATUS_ACTIVE)
+            ->where('state', Identity2FACode::STATE_ACTIVE)
             ->where('code', $code)
             ->exists();
 

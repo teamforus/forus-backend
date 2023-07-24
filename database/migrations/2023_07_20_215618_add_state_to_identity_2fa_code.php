@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('identity_2fa_codes', function (Blueprint $table) {
-            $table->string('status', 20)->default('active')->after('identity_2fa_uuid');
+            $table->string('state', 20)->default('active')->after('identity_2fa_uuid');
         });
     }
 
@@ -26,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('identity_2fa_codes', function (Blueprint $table) {
-            $table->dropColumn('status');
+            $table->dropColumn('state');
         });
     }
 };

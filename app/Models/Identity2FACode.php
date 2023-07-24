@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property string $code
  * @property string $identity_2fa_uuid
- * @property string $status
+ * @property string $state
  * @property \Illuminate\Support\Carbon|null $expire_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -28,7 +28,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereExpireAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereIdentity2faUuid($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode withoutTrashed()
@@ -38,8 +38,8 @@ class Identity2FACode extends Model
 {
     use SoftDeletes;
 
-    public const STATUS_ACTIVE = 'active';
-    public const STATUS_DEACTIVATED = 'deactivated';
+    public const STATE_ACTIVE = 'active';
+    public const STATE_DEACTIVATED = 'deactivated';
 
     protected $table = 'identity_2fa_codes';
 
@@ -47,7 +47,7 @@ class Identity2FACode extends Model
      * @var string[]
      */
     protected $fillable = [
-        'code', 'expire_at', 'identity_2fa_uuid', 'status',
+        'code', 'expire_at', 'identity_2fa_uuid', 'state',
     ];
 
     /**

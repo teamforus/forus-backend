@@ -252,14 +252,9 @@ class Identity2FATest extends TestCase
             } else {
                 $deactivatedCode = $this->sendCodeToPhone($identity2FA);
                 sleep(1);
+
                 $code = $this->sendCodeToPhone($identity2FA);
-
-                $response = $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/activate", [
-                    'key' => $identity2FA->auth_2fa_provider->key,
-                    'code' => "$deactivatedCode",
-                ], $this->makeApiHeaders($identityProxy));
-
-                $response->assertJsonValidationErrorFor('code');
+                $this->assertInvalidCode($identity2FA, $deactivatedCode, $this->makeApiHeaders($identityProxy));
             }
 
             return $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/activate", [
@@ -310,13 +305,9 @@ class Identity2FATest extends TestCase
             } else {
                 $deactivatedCode = $this->sendCodeToPhone($identity2FA);
                 sleep(1);
+
                 $code = $this->sendCodeToPhone($identity2FA);
-
-                $response = $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/authenticate", [
-                    'code' => "$deactivatedCode",
-                ], $this->makeApiHeaders($identityProxy));
-
-                $response->assertJsonValidationErrorFor('code');
+                $this->assertInvalidCode($identity2FA, $deactivatedCode, $this->makeApiHeaders($identityProxy));
             }
 
             return $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/authenticate", [
@@ -343,5 +334,24 @@ class Identity2FATest extends TestCase
         $this->assertNotNull($code);
 
         return $code->code;
+    }
+
+    /**
+     * @param Identity2FA $identity2FA
+     * @param string $deactivatedCode
+     * @param array $apiHeaders
+     * @return void
+     */
+    protected function assertInvalidCode(
+        Identity2FA $identity2FA,
+        string $deactivatedCode,
+        array $apiHeaders
+    ): void {
+        $response = $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/activate", [
+            'key' => $identity2FA->auth_2fa_provider->key,
+            'code' => "$deactivatedCode",
+        ], $apiHeaders);
+
+        $response->assertJsonValidationErrorFor('code');
     }
 }
