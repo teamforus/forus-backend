@@ -117,7 +117,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
      */
     public function headings(): array
     {
-        return array_map(fn($key) => $this->trans($key), array_keys($this->first()));
+        return array_keys($this->first());
     }
 
     /**
