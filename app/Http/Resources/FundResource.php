@@ -59,7 +59,7 @@ class FundResource extends BaseJsonResource
         $criteriaData = $isWebShop ? $this->getCriteriaData($fund, $baseRequest) : [];
         $generatorData = $isDashboard ? $this->getVoucherGeneratorData($fund) : [];
         $prevalidationCsvData = $isDashboard ? $this->getPrevalidationCsvData($fund) : [];
-        $organizationFunds2FAData = $baseRequest->isDashboard() ? $this->organizationFunds2FAData($organization) : [];
+        $organizationFunds2FAData = $this->organizationFunds2FAData($organization);
 
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'description_html', 'description_short',
