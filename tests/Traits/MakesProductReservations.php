@@ -35,11 +35,21 @@ trait MakesProductReservations
             $organization->identity->vouchers()->whereIn('fund_id', $funds->pluck('id'))
         )->whereNull('product_id')->first();
 
+        if (!$voucher) {
+            $voucher = $funds->first()->makeVoucher($organization->identity_address, [
+                'state' => Voucher::STATE_ACTIVE
+            ], 10000);
+        }
+
         $this->assertNotNull($voucher, 'No suitable voucher found.');
 
         return $voucher;
     }
 
+    /**
+     * @param Organization $organization
+     * @return Product
+     */
     private function createProductForReservation(Organization $organization): Product
     {
         $product = Product::query()->create([
@@ -74,11 +84,10 @@ trait MakesProductReservations
         )->get();
 
         foreach ($fund_providers as $fund_provider) {
-            // $product->fund_provider_products()->delete();
             $product->fund_provider_products()->create([
-                'fund_provider_id' => $fund_provider->id,
-                'amount' => $fund_provider->fund->isTypeSubsidy() ? $product->price / 2 : null,
+                'amount' => $product->price,
                 'limit_total' => $product->unlimited_stock ? 1000 : $product->stock_amount,
+                'fund_provider_id' => $fund_provider->id,
                 'limit_per_identity' => $product->unlimited_stock ? 25 : ceil(max($product->stock_amount / 10, 1)),
             ]);
         }
@@ -115,6 +124,10 @@ trait MakesProductReservations
         /** @var Product $product */
         $product = $product->first();
 
+        if (!$product) {
+            return $this->createProductForReservation($voucher->fund->organization);
+        }
+
         return $product;
     }
 
@@ -126,7 +139,7 @@ trait MakesProductReservations
     public function makeBudgetReservationInDb(Organization $organization): ProductReservation
     {
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
-        $product = $this->findProductForReservation($voucher) ?: $this->createProductForReservation($voucher->fund->organization);
+        $product = $this->findProductForReservation($voucher);
 
         $reservation = $voucher->reserveProduct($product, null, [
             'first_name' => 'John',
