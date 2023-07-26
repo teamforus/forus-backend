@@ -43,7 +43,7 @@ class StoreProductReservationRequest extends BaseFormRequest
             'product_id' => [
                 'required',
                 'exists:products,id',
-                new ProductIdToReservationRule($this->input('voucher_address'))
+                new ProductIdToReservationRule($this->input('voucher_address'), true)
             ],
         ], array_merge(
             $this->fieldsRules($product),
