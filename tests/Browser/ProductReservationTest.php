@@ -300,6 +300,7 @@ class ProductReservationTest extends DuskTestCase
                 'accepted' => '@labelAccepted',
                 'rejected' => '@labelRejected',
                 'canceled' => '@labelCanceled',
+                'canceled_by_client' => '@labelCanceled',
             ][$reservation->state]);
 
             $browser->assertSeeIn('@reservationProduct', $reservation->product->name);

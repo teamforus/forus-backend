@@ -32,8 +32,10 @@ class ProductReservationsController extends Controller
             $builder->where('identity_address', $request->auth_address());
         });
 
-        $search = new ProductReservationsSearch($request->only([
+        $search = new ProductReservationsSearch(array_merge($request->only([
             'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
+        ]), [
+            'is_webshop' => true,
         ]), $builder);
 
         return ProductReservationResource::queryCollection(
