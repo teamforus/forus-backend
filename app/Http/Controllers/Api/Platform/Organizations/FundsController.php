@@ -79,7 +79,7 @@ class FundsController extends Controller
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
-            'name', 'description', 'description_short', 'start_date', 'end_date',
+            'name', 'description', 'description_short', 'description_position', 'start_date', 'end_date',
             'type', 'notification_amount', 'default_validator_employee_id',
             'faq_title', 'request_btn_text', 'external_link_text', 'external_link_url',
         ]), [
@@ -167,7 +167,7 @@ class FundsController extends Controller
         $manageFundTexts = Gate::allows('updateTexts', [$fund, $organization]);
 
         $fund->update($request->only(array_merge($manageFundTexts || $manageFund ? [
-            'name', 'description', 'description_short', 'request_btn_text',
+            'name', 'description', 'description_short', 'description_position', 'request_btn_text',
             'external_link_text', 'external_link_url', 'faq_title',
         ] : [], $manageFund ? [
             'notification_amount', 'default_validator_employee_id',
