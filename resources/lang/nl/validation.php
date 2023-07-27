@@ -253,6 +253,7 @@ return [
         'voucher_id' => 'voucher',
         'product_id' => 'product',
         'record_type_key_multiplier' => 'record type',
+        'birth_date' => 'Geboortedatum',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',
@@ -262,6 +263,9 @@ return [
             'free' => 'gratis',
             'discount_fixed' => 'korting',
             'discount_percentage' => 'korting',
+        ],
+        'birth_date' => [
+            'today' => 'vandaag',
         ],
     ],
     'reimbursement' => [
