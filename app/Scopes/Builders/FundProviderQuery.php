@@ -139,4 +139,22 @@ class FundProviderQuery extends BaseQuery
             ->where("fund_id", $fund_id)
             ->whereNotIn("id", $providersApproved->select("id"));
     }
+
+    /**
+     * @param Builder|FundProvider $builder
+     * @return Builder|FundProvider
+     */
+    public static function whereApproved(Builder|FundProvider $builder): Builder|FundProvider
+    {
+        $builder->where('state', FundProvider::STATE_ACCEPTED);
+        $builder->where('excluded', false);
+
+        $builder->where(function(Builder $builder) {
+            $builder->where('allow_budget', true);
+            $builder->orWhere('allow_products', true);
+            $builder->orWhere('allow_some_products', true);
+        });
+
+        return $builder;
+    }
 }
