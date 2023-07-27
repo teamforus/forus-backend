@@ -129,12 +129,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $reimbursement_categories_count
  * @property-read Collection|\App\Models\Fund[] $supplied_funds
  * @property-read int|null $supplied_funds_count
- * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved
- * @property-read int|null $supplied_funds_approved_count
- * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved_budget
- * @property-read int|null $supplied_funds_approved_budget_count
- * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved_products
- * @property-read int|null $supplied_funds_approved_products_count
  * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
  * @property-read Collection|\App\Models\OrganizationValidator[] $validated_organizations
@@ -543,56 +537,6 @@ class Organization extends BaseModel
     public function fund_provider_invitations(): HasMany
     {
         return $this->hasMany(FundProviderInvitation::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function supplied_funds_approved(): BelongsToMany
-    {
-        return $this->belongsToMany(Fund::class,'fund_providers')->where([
-            'fund_providers.state' => FundProvider::STATE_ACCEPTED,
-            'fund_providers.excluded' => false,
-        ])->where(function(EloquentBuilder $builder) {
-            $builder->where('fund_providers.allow_budget', true);
-            $builder->orWhere(function(EloquentBuilder $builder) {
-                $builder->where('fund_providers.allow_products', true);
-                $builder->orWhere('fund_providers.allow_some_products', true);
-            });
-        });
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function supplied_funds_approved_budget(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Fund::class,
-            'fund_providers'
-        )->where(function(EloquentBuilder $builder) {
-            $builder->where('fund_providers.state', FundProvider::STATE_ACCEPTED);
-            $builder->where('fund_providers.excluded', false);
-            $builder->where('fund_providers.allow_budget', true);
-        });
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function supplied_funds_approved_products(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Fund::class,
-            'fund_providers'
-        )->where(static function(EloquentBuilder $builder) {
-            $builder->where('fund_providers.state', FundProvider::STATE_ACCEPTED);
-            $builder->where('fund_providers.excluded', false);
-            $builder->where('fund_providers.allow_products', true);
-        });
     }
 
     /**

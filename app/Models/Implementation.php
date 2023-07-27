@@ -7,6 +7,7 @@ use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\ImplementationPageResource;
 use App\Http\Resources\MediaResource;
 use App\Models\Traits\ValidatesValues;
+use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
 use App\Searches\AnnouncementSearch;
@@ -750,8 +751,9 @@ class Implementation extends BaseModel
     {
         $query = $query ?: Organization::query();
 
-        $query->whereHas('supplied_funds_approved', static function (Builder $builder) {
-            $builder->whereIn('funds.id', self::activeFundsQuery()->pluck('funds.id'));
+        $query->whereHas('fund_providers', static function (Builder $builder) {
+            $builder->whereIn('fund_id', self::activeFundsQuery()->select('id'));
+            FundProviderQuery::whereApproved($builder);
         });
 
         if ($business_type_id = array_get($options, 'business_type_id')) {
@@ -769,9 +771,7 @@ class Implementation extends BaseModel
         }
 
         if ($fund_id = array_get($options, 'fund_id')) {
-            $query->whereHas('supplied_funds_approved', static function (Builder $builder) use ($fund_id) {
-                $builder->where('funds.id', $fund_id);
-            });
+            $query->whereRelation('supplied_funds', 'funds.id', $fund_id);
         }
 
         if ($q = array_get($options, 'q')) {
