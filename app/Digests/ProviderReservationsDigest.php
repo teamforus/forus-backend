@@ -75,7 +75,7 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
             $builder->whereHas('product', function(Builder $builder) use ($organization) {
                 $builder->whereIn('id', $organization->products()->getQuery()->select('id'));
             });
-        })->whereNull('employee_id');
+        });
 
         // logs for selected period
         $logsApprovedReservations = EventLog::eventsOfTypeQuery(ProductReservation::class, $reservationQuery)
@@ -101,41 +101,65 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
         $mailBody = new MailBodyBuilder();
 
         // only those created by requester and with state created or accepted
-        $logsApprovedProducts = $this->getEvents($organization, [
+        $logsProducts = $this->getEvents($organization, [
             ProductReservation::EVENT_ACCEPTED,
-            ProductReservation::EVENT_CREATED
+            ProductReservation::EVENT_CREATED,
+            ProductReservation::EVENT_REJECTED,
+            ProductReservation::EVENT_CANCELED_BY_CLIENT,
+            ProductReservation::EVENT_CANCELED_BY_PROVIDER,
         ], ProductReservation::EVENTS);
 
-        $grouped = $logsApprovedProducts->groupBy('product_id');
+        $grouped = $logsProducts->groupBy('product_id');
 
-        if ($logsApprovedProducts->count() > 0) {
-            $count_reservations = $logsApprovedProducts->count();
+        if ($logsProducts->count() > 0) {
+            $count_reservations = $logsProducts->count();
+            $count_pending_reservations = $logsProducts->where(
+                'product_reservation_state', ProductReservation::STATE_PENDING
+            )->count();
             $provider_name = $organization->name;
 
             $mailBody->text(trans_choice(
                 "digests/provider_reservations.reservations.title",
                 $count_reservations,
-                compact('count_reservations', 'provider_name')
+                compact('count_reservations', 'provider_name', 'count_pending_reservations')
             ));
 
             foreach ($grouped as $group) {
                 /** @var Collection $groups */
                 $groups = $group->groupBy('product_reservation_state');
-                $reservations_pending = $groups[ProductReservation::STATE_PENDING] ?? [];
-                $reservations_accepted = $groups[ProductReservation::STATE_ACCEPTED] ?? [];
+                $states = [
+                    ProductReservation::STATE_PENDING  => 'in afwachting',
+                    ProductReservation::STATE_ACCEPTED => 'geaccepteerd',
+                    ProductReservation::STATE_REJECTED => 'geweigerd',
+                    ProductReservation::STATE_CANCELED_BY_CLIENT => 'geannuleerd door aanvrager',
+                    ProductReservation::STATE_CANCELED_BY_PROVIDER => 'geannuleerd',
+                ];
 
                 $mailBody->h5(trans("digests/provider_reservations.reservations.product_item.title", [
                     'product_name' => $group[0]['product_name'] ?? '',
                     'product_price_locale' => $group[0]['product_price_locale'] ?? '',
                 ]), ['margin_less']);
 
-                $mailBody->text(trans(
-                    "digests/provider_reservations.reservations.product_item.subtitle", [
-                        'count_total' => count($groups),
-                        'count_pending' => $reservations_pending ? count($reservations_pending) : 0,
-                        'count_accepted' => $reservations_accepted ? count($reservations_accepted) : 0,
+                $per_state_text = trans(
+                    "digests/provider_reservations.reservations.product_item.description_total", [
+                        'count_total' => count($group),
                     ]
-                ));
+                );
+
+                foreach ($states as $stateKey => $stateName) {
+                    $count_per_state = count($groups[$stateKey] ?? []);
+
+                    if ($count_per_state) {
+                        $per_state_text .= "\n".trans(
+                            "digests/provider_reservations.reservations.product_item.description_per_state", [
+                                'state_name' => $stateName,
+                                'count_per_state' => $count_per_state,
+                            ]
+                        );
+                    }
+                }
+
+                $mailBody->text($per_state_text);
             }
         }
 
