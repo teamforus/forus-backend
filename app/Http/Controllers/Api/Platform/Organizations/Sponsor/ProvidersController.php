@@ -113,7 +113,7 @@ class ProvidersController extends Controller
         $to = $request->input('to');
 
         $providers = Organization::searchProviderOrganizations($organization, array_merge($request->only([
-            'product_category_ids', 'provider_ids', 'postcodes', 'fund_ids'
+            'product_category_ids', 'provider_ids', 'postcodes', 'fund_ids', 'business_type_ids',
         ]), [
             'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
             'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,
@@ -145,7 +145,7 @@ class ProvidersController extends Controller
         $to = $request->input('to');
 
         $providers = Organization::searchProviderOrganizations($organization, array_merge($request->only([
-            'product_category_ids', 'provider_ids', 'postcodes', 'fund_ids'
+            'product_category_ids', 'provider_ids', 'postcodes', 'fund_ids', 'business_type_ids',
         ]), [
             'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
             'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,

@@ -69,6 +69,7 @@ class OrganizationResource extends JsonResource
         $permissionsCountDep = api_dependency_requested('permissions', $request, $baseRequest->isDashboard());
 
         $ownerData = $baseRequest->isDashboard() ? $this->ownerData($organization) : [];
+        $biConnectionData = $baseRequest->isDashboard() ? $this->getBIConnectionData($organization) : [];
         $privateData = $this->privateData($organization);
         $employeeOnlyData = $baseRequest->isDashboard() ? $this->employeeOnlyData($baseRequest, $organization) : [];
         $permissionsData = $permissionsCountDep ? $this->getIdentityPermissions($organization, $baseRequest->identity()) : null;
@@ -78,7 +79,7 @@ class OrganizationResource extends JsonResource
             'email_public', 'phone_public', 'website_public',
             'description', 'description_html', 'reservation_phone',
             'reservation_address', 'reservation_birth_date'
-        ]), $privateData, $ownerData, $employeeOnlyData, [
+        ]), $privateData, $ownerData, $biConnectionData, $employeeOnlyData, [
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),
             'business_type' => new BusinessTypeResource($organization->business_type),
@@ -131,7 +132,9 @@ class OrganizationResource extends JsonResource
             'allow_custom_fund_notifications', 'validator_auto_accept_funds',
             'reservations_budget_enabled', 'reservations_subsidy_enabled',
             'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled',
-            'allow_batch_reservations', 'allow_budget_fund_limits', 'allow_manual_bulk_processing',
+            'allow_batch_reservations', 'allow_budget_fund_limits',
+            'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
+            'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
         ])) : [];
     }
 
@@ -154,11 +157,26 @@ class OrganizationResource extends JsonResource
      */
     protected function ownerData(Organization $organization): array
     {
-        $canUpdate = Gate::allows('organizations.update', $organization);
+        $canUpdate = Gate::allows('update', $organization);
 
         return $canUpdate ? $organization->only([
             'iban', 'btw', 'phone', 'email', 'website', 'email_public',
             'phone_public', 'website_public',
+        ]) : [];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return array
+     */
+    protected function getBIConnectionData(Organization $organization): array
+    {
+        $canUpdate = Gate::allows('updateBIConnection', $organization);
+
+        return $canUpdate ? array_merge($organization->only([
+            'bi_connection_auth_type', 'bi_connection_token',
+        ]), [
+            'bi_connection_url' => route('biConnection'),
         ]) : [];
     }
 }

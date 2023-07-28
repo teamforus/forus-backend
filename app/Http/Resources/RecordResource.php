@@ -11,6 +11,12 @@ class RecordResource extends BaseJsonResource
 {
     public static $wrap = null;
 
+    public const LOAD = [
+        'record_type.translations',
+        'validations_approved.identity',
+        'validations_approved.organization',
+    ];
+
     /**
      * Transform the resource into an array.
      *

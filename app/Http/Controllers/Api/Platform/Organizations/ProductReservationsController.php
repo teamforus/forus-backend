@@ -9,6 +9,7 @@ use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProduc
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\AcceptProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RejectProductReservationRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\ProductReservationResource;
 use App\Models\Organization;
@@ -50,7 +51,7 @@ class ProductReservationsController extends Controller
         });
 
         $search = new ProductReservationsSearch($request->only([
-            'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id',
+            'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
         ]), ProductReservationQuery::whereProviderFilter($query, $organization->id));
 
         return ProductReservationResource::collection($search->query()->with(
@@ -232,7 +233,7 @@ class ProductReservationsController extends Controller
         $this->authorize('viewAnyProvider', [ProductReservation::class, $organization]);
 
         $search = new ProductReservationsSearch($request->only([
-            'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id',
+            'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
         ]), ProductReservationQuery::whereProviderFilter(ProductReservation::query(), $organization->id));
 
         $exportType = $request->input('data_format', 'xls');
@@ -241,5 +242,46 @@ class ProductReservationsController extends Controller
         $exportData = new ProductReservationsExport($search->get(), $fields);
 
         return resolve('excel')->download($exportData, $fileName);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @return ProductReservationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function archive(
+        BaseFormRequest $request,
+        Organization $organization,
+        ProductReservation $productReservation
+    ): ProductReservationResource {
+        $this->authorize('show', $organization);
+        $this->authorize('archive', [$productReservation, $organization]);
+
+        $productReservation->archive($organization->findEmployee($request->auth_address()));
+
+        return new ProductReservationResource($productReservation);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @return ProductReservationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function unArchive(
+        BaseFormRequest $request,
+        Organization $organization,
+        ProductReservation $productReservation
+    ): ProductReservationResource {
+        $this->authorize('show', $organization);
+        $this->authorize('unarchive', [$productReservation, $organization]);
+
+        $productReservation->unArchive($organization->findEmployee($request->auth_address()));
+
+        return new ProductReservationResource($productReservation);
     }
 }

@@ -90,8 +90,10 @@ class FundProviderController extends Controller
 
         DB::transaction(function() use ($fundProvider, $request, $fund){
             $fundProvider->update($request->only($fund->isTypeBudget() ? [
-                'allow_products', 'allow_budget',
-            ] : []));
+                'allow_products', 'allow_budget', 'excluded',
+            ] : [
+                'excluded'
+            ]));
 
             if ($request->has('state') && ($request->input('state') != $fundProvider->state)) {
                 $fundProvider->setState($request->input('state'));

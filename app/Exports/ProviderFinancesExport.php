@@ -8,10 +8,6 @@ use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-/**
- * Class ProviderFinancesExport
- * @package App\Exports
- */
 class ProviderFinancesExport implements FromCollection, WithHeadings
 {
     protected $data;
@@ -32,6 +28,7 @@ class ProviderFinancesExport implements FromCollection, WithHeadings
         return $providers->map(function(Organization $provider) use ($sponsor) {
             return [
                 $this->trans("provider")             => $provider->name,
+                $this->trans("business_type")        => $provider->business_type?->name ?: '-',
                 $this->trans("total_amount")         => (string) ($provider->total_spent ?? '0'),
                 $this->trans("highest_transaction")  => (string) ($provider->highest_transaction ?? '0'),
                 $this->trans("nr_transactions")      => (string) ($provider->nr_transactions ?? '0'),

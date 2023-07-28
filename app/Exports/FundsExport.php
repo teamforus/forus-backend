@@ -14,10 +14,6 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-/**
- * Class FundsExport
- * @package App\Exports
- */
 class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting, WithEvents
 {
     use Exportable, RegistersEventListeners, FormatsExportedData;
@@ -62,14 +58,21 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
 
     protected bool $detailed;
 
+    protected bool $withTotal;
+
     /**
      * FundsExport constructor.
      * @param EloquentCollection $funds
      * @param bool $detailed
+     * @param bool $withTotal
      */
-    public function __construct(EloquentCollection $funds, bool $detailed = true)
-    {
+    public function __construct(
+        EloquentCollection $funds,
+        bool $detailed = true,
+        bool $withTotal = true
+    ) {
         $this->detailed = $detailed;
+        $this->withTotal = $withTotal;
         $this->data = $this->exportTransform($funds);
     }
 
@@ -78,9 +81,13 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
      */
     public function collection(): Collection
     {
-        return $this->data->merge($this->getTotals())->mapWithKeys(fn ($value, $key) => [
-            $this->trans($key) => $value,
-        ]);
+        $data = $this->data->merge($this->getTotals());
+
+        return $data->map(function($item) {
+            return array_reduce(array_keys($item), fn($obj, $key) => array_merge($obj, [
+                $this->trans($key) => (string) $item[$key],
+            ]), []);
+        });
     }
 
     /**
@@ -88,7 +95,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
      */
     protected function getTotals(): array
     {
-        return !$this->detailed ? [[
+        return (!$this->detailed && $this->withTotal) ? [[
             "name" => $this->trans("total"),
             "total_top_up" => currency_format($this->data->sum('total_top_up')),
             "balance" => currency_format($this->data->sum('balance')),
@@ -110,7 +117,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
      */
     public function headings(): array
     {
-        return array_map(fn($key) => $this->trans($key), array_keys($this->first()));
+        return array_keys($this->first());
     }
 
     /**
@@ -166,7 +173,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
                 $activeVouchersPercentage = (float) $details['vouchers_amount'] ?
                     ($details['active_amount'] / $details['vouchers_amount'] * 100) : 0;
 
-                $voucherData = [
+                $voucherData = array_merge($voucherData, [
                     "budget_amount_per_voucher"            => currency_format($fund->fund_formulas->sum('amount')),
                     "budget_average_per_voucher"           => currency_format($averagePerVoucher),
                     "budget_total_spent_amount"            => currency_format($fund->budget_used_active_vouchers),
@@ -179,7 +186,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
                     "budget_vouchers_active_percentage"    => currency_format($activeVouchersPercentage / 100, 4),
                     "budget_vouchers_active_count"         => currency_format($details['active_count'], 0),
                     "budget_vouchers_deactivated_count"    => currency_format($details['deactivated_count'], 0),
-                ];
+                ]);
             }
 
             $voucherData = array_merge($voucherData, [

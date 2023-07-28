@@ -31,6 +31,8 @@ class IndexFundRequest extends BaseFormRequest
             'q' => 'nullable|string|max:100',
             'tag' => 'nullable|string|exists:tags,key',
             'fund_id' => 'nullable|exists:funds,id',
+            'fund_ids' => 'nullable|array',
+            'fund_ids.*' => 'nullable|exists:funds,id',
             'organization_id' => 'nullable|exists:organizations,id',
             'implementation_id' => 'nullable|exists:implementations,id',
             'order_by' => 'nullable|in:created_at',

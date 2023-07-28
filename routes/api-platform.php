@@ -139,6 +139,14 @@ $router->group([], static function() use ($router) {
         ]
     ]);
 
+    $router->resource(
+        'organizations.reimbursement-categories',
+        "Api\Platform\Organizations\ReimbursementCategoriesController", [
+        'only' => [
+            'index', 'show', 'update', 'store', 'destroy'
+        ]
+    ]);
+
     $router->get(
         'funds/{configured_fund}/ideal/issuers',
         "Api\Platform\FundsController@idealIssuers"
@@ -175,6 +183,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->patch('update-business', "Api\Platform\OrganizationsController@updateBusinessType");
         $router->patch('accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
         $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFieldSettings");
+        $router->patch('update-bi-connection', "Api\Platform\OrganizationsController@updateBIConnection");
     });
 
     $router->resource('organizations', "Api\Platform\OrganizationsController")
@@ -470,7 +479,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             "Api\Platform\Organizations\FundRequests\FundRequestRecordsController"
         )->parameters([
             'records' => 'fund_request_record',
-        ])->only( 'index', 'show', 'store');
+        ])->only( 'index', 'show', 'update', 'store');
 
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/clarifications',
@@ -607,6 +616,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->group(['prefix' => 'organizations/{organization}/product-reservations/{product_reservation}'], function() use ($router) {
         $router->post('accept', "Api\Platform\Organizations\ProductReservationsController@accept");
         $router->post('reject', "Api\Platform\Organizations\ProductReservationsController@reject");
+        $router->post('archive', "Api\Platform\Organizations\ProductReservationsController@archive");
+        $router->post('unarchive', "Api\Platform\Organizations\ProductReservationsController@unarchive");
     });
 
     $router->resource(
@@ -624,6 +635,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->post('approve', "Api\Platform\Organizations\ReimbursementsController@approve");
         $router->post('decline', "Api\Platform\Organizations\ReimbursementsController@decline");
     });
+
+    $router->get(
+        'organizations/{organization}/reimbursements/export-fields',
+        "Api\Platform\Organizations\ReimbursementsController@getExportFields"
+    );
+
+    $router->get(
+        'organizations/{organization}/reimbursements/export',
+        "Api\Platform\Organizations\ReimbursementsController@export"
+    );
 
     $router->resource(
         'organizations.reimbursements',
@@ -884,8 +905,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\AnnouncementController@index"
     );
 
-    $router->get('prevalidations/export','Api\Platform\PrevalidationController@export');
-    $router->post('prevalidations/collection','Api\Platform\PrevalidationController@storeCollection');
+    $router->get('prevalidations/export', 'Api\Platform\PrevalidationController@export');
+    $router->post('prevalidations/collection', 'Api\Platform\PrevalidationController@storeCollection');
     $router->post('prevalidations/collection/hash', 'Api\Platform\PrevalidationController@collectionHash');
 
     $router->resource('prevalidations', 'Api\Platform\PrevalidationController')

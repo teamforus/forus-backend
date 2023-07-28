@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Carbon\Carbon;
 
@@ -30,6 +31,7 @@ use Carbon\Carbon;
  * @property bool $allow_budget
  * @property bool $allow_products
  * @property bool $allow_some_products
+ * @property bool $excluded
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -42,6 +44,8 @@ use Carbon\Carbon;
  * @property-read int|null $fund_provider_products_with_trashed_count
  * @property-read Collection<int, \App\Models\FundProviderUnsubscribe> $fund_unsubscribes
  * @property-read int|null $fund_unsubscribes_count
+ * @property-read Collection|\App\Models\FundProviderUnsubscribe[] $fund_unsubscribes_active
+ * @property-read int|null $fund_unsubscribes_active_count
  * @property-read string $state_locale
  * @property-read Collection<int, \App\Services\EventLogService\Models\EventLog> $logs
  * @property-read int|null $logs_count
@@ -57,6 +61,7 @@ use Carbon\Carbon;
  * @method static Builder|FundProvider whereAllowProducts($value)
  * @method static Builder|FundProvider whereAllowSomeProducts($value)
  * @method static Builder|FundProvider whereCreatedAt($value)
+ * @method static Builder|FundProvider whereExcluded($value)
  * @method static Builder|FundProvider whereFundId($value)
  * @method static Builder|FundProvider whereId($value)
  * @method static Builder|FundProvider whereOrganizationId($value)
@@ -97,13 +102,14 @@ class FundProvider extends BaseModel
      */
     protected $fillable = [
         'organization_id', 'fund_id', 'state',
-        'allow_products', 'allow_budget', 'allow_some_products',
+        'allow_products', 'allow_budget', 'allow_some_products', 'excluded',
     ];
 
     /**
      * @var array
      */
     protected $casts = [
+        'excluded' => 'boolean',
         'allow_budget' => 'boolean',
         'allow_products' => 'boolean',
         'allow_some_products' => 'boolean',
@@ -448,28 +454,34 @@ class FundProvider extends BaseModel
      */
     private static function exportTransform(Builder $builder): mixed
     {
-        $transKey = "export.providers";
-
         return $builder->with([
-            'organization'
-        ])->get()->map(function(FundProvider $fundProvider) use ($transKey) {
+            'fund',
+            'organization.last_employee_session',
+        ])->get()->map(function(FundProvider $fundProvider) {
+            $transKey = "export.providers";
             $provider = $fundProvider->organization;
             $lastActivity = $fundProvider->getLastActivity();
 
-            $provider_products_count = ProductQuery::whereNotExpired(
-                $provider->products_provider()->getQuery()
-            )->count();
-            
-            $sponsor_products_count = ProductQuery::whereNotExpired($provider->products_sponsor()->where([
-                'sponsor_organization_id' => $fundProvider->fund->organization_id
-            ])->getQuery())->count();
+            $providerProductsQuery = ProductQuery::whereNotExpired($provider->products_provider());
+            $individualProductsQuery = $fundProvider->fund_provider_products()->whereHas('product');
 
-            $active_products_count = ProductQuery::approvedForFundsAndActiveFilter(
+            $sponsorProductsQuery = ProductQuery::whereNotExpired($provider->products_sponsor()->where([
+                'sponsor_organization_id' => $fundProvider->fund->organization_id,
+            ]));
+
+            $activeProductsQuery = ProductQuery::approvedForFundsAndActiveFilter(
                 $fundProvider->products()->getQuery(),
-                $fundProvider->fund_id
-            )->count();
+                $fundProvider->fund_id,
+            );
 
-            $hasIndividualProducts = $fundProvider->fund_provider_products()->whereHas('product')->exists();
+            $result = DB::query()->select([
+                'individual_products_count' => $individualProductsQuery->selectRaw('count(*)'),
+                'provider_products_count' => $providerProductsQuery->selectRaw('count(*)'),
+                'sponsor_products_count' => $sponsorProductsQuery->selectRaw('count(*)'),
+                'active_products_count' => $activeProductsQuery->selectRaw('count(*)'),
+            ])->first();
+
+            $hasIndividualProducts = ($result->individual_products_count > 0 || $fundProvider->allow_products);
 
             return [
                 trans("$transKey.fund") => $fundProvider->fund->name,
@@ -477,10 +489,10 @@ class FundProvider extends BaseModel
                 trans("$transKey.provider") => $provider->name,
                 trans("$transKey.iban") => $provider->iban,
                 trans("$transKey.provider_last_activity") => $lastActivity?->diffForHumans(now()),
-                trans("$transKey.products_provider_count") => $provider_products_count,
-                trans("$transKey.products_sponsor_count") => $sponsor_products_count,
-                trans("$transKey.products_active_count") => $active_products_count,
-                trans("$transKey.products_count") => $provider_products_count + $sponsor_products_count,
+                trans("$transKey.products_provider_count") => $result->provider_products_count,
+                trans("$transKey.products_sponsor_count") => $result->sponsor_products_count,
+                trans("$transKey.products_active_count") => $result->active_products_count,
+                trans("$transKey.products_count") => $result->provider_products_count + $result->sponsor_products_count,
                 trans("$transKey.phone") => $provider->phone,
                 trans("$transKey.email") => $provider->email,
                 trans("$transKey.phone") => $provider->phone,
@@ -488,7 +500,7 @@ class FundProvider extends BaseModel
                 trans("$transKey.state") => $fundProvider->state_locale,
                 trans("$transKey.allow_budget") => $fundProvider->allow_budget ? 'Ja' : 'Nee',
                 trans("$transKey.allow_products") => $fundProvider->allow_products ? 'Ja' : 'Nee',
-                trans("$transKey.allow_some_products") => $hasIndividualProducts || $fundProvider->allow_products ? 'Ja' : 'Nee',
+                trans("$transKey.allow_some_products") => $hasIndividualProducts ? 'Ja' : 'Nee',
             ];
         })->values();
     }

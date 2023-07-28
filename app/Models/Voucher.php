@@ -723,6 +723,19 @@ class Voucher extends BaseModel
             );
         }
 
+        if ($request->has('amount_available_min') || $request->has('amount_available_max')) {
+            $query = VoucherQuery::addBalanceFields($query);
+            $query = Voucher::query()->fromSub($query, 'vouchers');
+        }
+
+        if ($request->has('amount_available_min')) {
+            $query->where('balance', '>=', $request->input('amount_available_min'));
+        }
+
+        if ($request->has('amount_available_max')) {
+            $query->where('balance', '<=', $request->input('amount_available_max'));
+        }
+
         return $query;
     }
 
@@ -1138,6 +1151,30 @@ class Voucher extends BaseModel
         $files['zip'] = file_get_contents($zipFilePath);
 
         return compact('files', 'data');
+    }
+
+    /**
+     * TODO:
+     * @param Collection|Voucher[] $vouchers
+     * @param array $fields
+     * @return array
+     */
+    public static function exportOnlyDataArray(Collection|Arrayable $vouchers, array $fields): array
+    {
+        $data = [];
+
+        foreach ($vouchers as $voucher) {
+            do {
+                $voucherData = new VoucherExportData($voucher, $fields, empty($qrFormat));
+            } while(in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
+
+            $data[] = [
+                'name' => $voucherData->getName(),
+                'values' => $voucherData->toArray(),
+            ];
+        }
+
+        return Arr::pluck($data, 'values');
     }
 
     /**

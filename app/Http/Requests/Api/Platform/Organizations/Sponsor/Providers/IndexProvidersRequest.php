@@ -34,6 +34,8 @@ class IndexProvidersRequest extends IndexFundProviderRequest
             'order_dir'                 => 'nullable|in:asc,desc',
             'per_page'                  => $this->perPageRule(1000),
             'resource_type'             => $this->resourceTypeRule(['default', 'select']),
+            'business_type_ids'         => 'nullable|array',
+            'business_type_ids.*'       => 'nullable|exists:business_types,id',
         ]);
     }
 }

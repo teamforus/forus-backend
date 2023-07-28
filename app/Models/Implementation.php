@@ -7,6 +7,7 @@ use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\ImplementationPageResource;
 use App\Http\Resources\MediaResource;
 use App\Models\Traits\ValidatesValues;
+use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
 use App\Searches\AnnouncementSearch;
@@ -72,31 +73,35 @@ use Illuminate\Support\Facades\Gate;
  * @property bool $show_voucher_map
  * @property bool $show_product_map
  * @property bool $allow_per_fund_notification_templates
+ * @property string $currency_sign
+ * @property int $currency_round
  * @property bool $digid_enabled
- * @property bool $digid_required
- * @property bool $digid_sign_up_allowed
  * @property string $digid_connection_type
  * @property array|null $digid_saml_context
+ * @property bool $digid_required
+ * @property bool $digid_sign_up_allowed
  * @property string $digid_env
  * @property string|null $digid_app_id
  * @property string|null $digid_shared_secret
  * @property string|null $digid_a_select_server
  * @property string|null $digid_forus_api_url
  * @property string|null $digid_trusted_cert
+ * @property string|null $digid_cgi_tls_key
+ * @property string|null $digid_cgi_tls_cert
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Announcement> $announcements_webshop
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
  * @property-read int|null $announcements_webshop_count
  * @property-read Media|null $banner
  * @property-read Media|null $email_logo
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FundConfig> $fund_configs
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
  * @property-read int|null $fund_configs_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Fund> $funds
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\NotificationTemplate> $mail_templates
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\NotificationTemplate[] $mail_templates
  * @property-read int|null $mail_templates_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Media> $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\ImplementationPage|null $page_accessibility
@@ -104,21 +109,25 @@ use Illuminate\Support\Facades\Gate;
  * @property-read \App\Models\ImplementationPage|null $page_privacy
  * @property-read \App\Models\ImplementationPage|null $page_provider
  * @property-read \App\Models\ImplementationPage|null $page_terms_and_conditions
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ImplementationPage> $pages
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages
  * @property-read int|null $pages_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ImplementationPage> $pages_public
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages_public
  * @property-read int|null $pages_public_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ImplementationSocialMedia> $social_medias
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationSocialMedia[] $social_medias
  * @property-read int|null $social_medias_count
  * @method static Builder|Implementation newModelQuery()
  * @method static Builder|Implementation newQuery()
  * @method static Builder|Implementation query()
  * @method static Builder|Implementation whereAllowPerFundNotificationTemplates($value)
  * @method static Builder|Implementation whereCreatedAt($value)
+ * @method static Builder|Implementation whereCurrencyRound($value)
+ * @method static Builder|Implementation whereCurrencySign($value)
  * @method static Builder|Implementation whereDescription($value)
  * @method static Builder|Implementation whereDescriptionAlignment($value)
  * @method static Builder|Implementation whereDigidASelectServer($value)
  * @method static Builder|Implementation whereDigidAppId($value)
+ * @method static Builder|Implementation whereDigidCgiTlsCert($value)
+ * @method static Builder|Implementation whereDigidCgiTlsKey($value)
  * @method static Builder|Implementation whereDigidConnectionType($value)
  * @method static Builder|Implementation whereDigidEnabled($value)
  * @method static Builder|Implementation whereDigidEnv($value)
@@ -202,6 +211,7 @@ class Implementation extends BaseModel
         'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
+        'currency_sign', 'currency_round', 'digid_cgi_tls_key', 'digid_cgi_tls_cert',
     ];
 
     /**
@@ -233,6 +243,7 @@ class Implementation extends BaseModel
         'show_voucher_map' => 'boolean',
         'show_product_map' => 'boolean',
         'allow_per_fund_notification_templates' => 'boolean',
+        'currency_round' => 'boolean',
     ];
 
     /**
@@ -740,8 +751,9 @@ class Implementation extends BaseModel
     {
         $query = $query ?: Organization::query();
 
-        $query->whereHas('supplied_funds_approved', static function (Builder $builder) {
-            $builder->whereIn('funds.id', self::activeFundsQuery()->pluck('funds.id'));
+        $query->whereHas('fund_providers', static function (Builder $builder) {
+            $builder->whereIn('fund_id', self::activeFundsQuery()->select('id'));
+            FundProviderQuery::whereApproved($builder);
         });
 
         if ($business_type_id = array_get($options, 'business_type_id')) {
@@ -759,9 +771,7 @@ class Implementation extends BaseModel
         }
 
         if ($fund_id = array_get($options, 'fund_id')) {
-            $query->whereHas('supplied_funds_approved', static function (Builder $builder) use ($fund_id) {
-                $builder->where('funds.id', $fund_id);
-            });
+            $query->whereRelation('supplied_funds', 'funds.id', $fund_id);
         }
 
         if ($q = array_get($options, 'q')) {

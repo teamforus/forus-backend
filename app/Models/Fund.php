@@ -74,39 +74,40 @@ use Illuminate\Support\Facades\Event;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
- * @property-read Collection<int, \App\Models\FundBackofficeLog> $backoffice_logs
+ * @property string $description_position
+ * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
  * @property-read int|null $backoffice_logs_count
- * @property-read Collection<int, \App\Models\Voucher> $budget_vouchers
+ * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
- * @property-read Collection<int, \App\Models\FundCriterion> $criteria
+ * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
- * @property-read Collection<int, \App\Services\EventLogService\Models\Digest> $digests
+ * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
  * @property-read int|null $digests_count
- * @property-read Collection<int, \App\Models\Employee> $employees
+ * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
- * @property-read Collection<int, \App\Models\Employee> $employees_validator_managers
+ * @property-read Collection|\App\Models\Employee[] $employees_validator_managers
  * @property-read int|null $employees_validator_managers_count
- * @property-read Collection<int, \App\Models\Employee> $employees_validators
+ * @property-read Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
- * @property-read Collection<int, \App\Models\Faq> $faq
+ * @property-read Collection|\App\Models\Faq[] $faq
  * @property-read int|null $faq_count
- * @property-read Collection<int, \App\Models\Product> $formula_products
+ * @property-read Collection|\App\Models\Product[] $formula_products
  * @property-read int|null $formula_products_count
  * @property-read \App\Models\FundConfig|null $fund_config
- * @property-read Collection<int, \App\Models\FundConfigRecord> $fund_config_records
+ * @property-read Collection|\App\Models\FundConfigRecord[] $fund_config_records
  * @property-read int|null $fund_config_records_count
- * @property-read Collection<int, \App\Models\FundFormulaProduct> $fund_formula_products
+ * @property-read Collection|\App\Models\FundFormulaProduct[] $fund_formula_products
  * @property-read int|null $fund_formula_products_count
- * @property-read Collection<int, \App\Models\FundFormula> $fund_formulas
+ * @property-read Collection|\App\Models\FundFormula[] $fund_formulas
  * @property-read int|null $fund_formulas_count
- * @property-read Collection<int, \App\Models\FundLimitMultiplier> $fund_limit_multipliers
+ * @property-read Collection|\App\Models\FundLimitMultiplier[] $fund_limit_multipliers
  * @property-read int|null $fund_limit_multipliers_count
- * @property-read Collection<int, \App\Models\FundProvider> $fund_providers
+ * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
- * @property-read Collection<int, \App\Models\FundRequestRecord> $fund_request_records
+ * @property-read Collection|\App\Models\FundRequestRecord[] $fund_request_records
  * @property-read int|null $fund_request_records_count
- * @property-read Collection<int, \App\Models\FundRequest> $fund_requests
+ * @property-read Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read float $budget_left
  * @property-read float $budget_reserved
@@ -118,38 +119,38 @@ use Illuminate\Support\Facades\Event;
  * @property-read bool $is_external
  * @property-read string $type_locale
  * @property-read Media|null $logo
- * @property-read Collection<int, \App\Services\EventLogService\Models\EventLog> $logs
+ * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read Collection<int, Media> $medias
+ * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
- * @property-read Collection<int, \App\Models\Voucher> $product_vouchers
+ * @property-read Collection|\App\Models\Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
- * @property-read Collection<int, \App\Models\Product> $products
+ * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
- * @property-read Collection<int, \App\Models\FundProviderInvitation> $provider_invitations
+ * @property-read Collection|\App\Models\FundProviderInvitation[] $provider_invitations
  * @property-read int|null $provider_invitations_count
- * @property-read Collection<int, \App\Models\Organization> $provider_organizations
+ * @property-read Collection|\App\Models\Organization[] $provider_organizations
  * @property-read int|null $provider_organizations_count
- * @property-read Collection<int, \App\Models\Organization> $provider_organizations_approved
+ * @property-read Collection|\App\Models\Organization[] $provider_organizations_approved
  * @property-read int|null $provider_organizations_approved_count
- * @property-read Collection<int, \App\Models\FundProvider> $providers
+ * @property-read Collection|\App\Models\FundProvider[] $providers
  * @property-read int|null $providers_count
- * @property-read Collection<int, \App\Models\FundProvider> $providers_allowed_products
+ * @property-read Collection|\App\Models\FundProvider[] $providers_allowed_products
  * @property-read int|null $providers_allowed_products_count
- * @property-read Collection<int, \App\Models\Tag> $tags
+ * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
- * @property-read Collection<int, \App\Models\Tag> $tags_provider
+ * @property-read Collection|\App\Models\Tag[] $tags_provider
  * @property-read int|null $tags_provider_count
- * @property-read Collection<int, \App\Models\Tag> $tags_webshop
+ * @property-read Collection|\App\Models\Tag[] $tags_webshop
  * @property-read int|null $tags_webshop_count
- * @property-read Collection<int, \App\Models\FundTopUpTransaction> $top_up_transactions
+ * @property-read Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
  * @property-read int|null $top_up_transactions_count
- * @property-read Collection<int, \App\Models\FundTopUp> $top_ups
+ * @property-read Collection|\App\Models\FundTopUp[] $top_ups
  * @property-read int|null $top_ups_count
- * @property-read Collection<int, \App\Models\VoucherTransaction> $voucher_transactions
+ * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
- * @property-read Collection<int, \App\Models\Voucher> $vouchers
+ * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
  * @method static Builder|Fund newModelQuery()
  * @method static Builder|Fund newQuery()
@@ -162,6 +163,7 @@ use Illuminate\Support\Facades\Event;
  * @method static Builder|Fund whereCriteriaEditableAfterStart($value)
  * @method static Builder|Fund whereDefaultValidatorEmployeeId($value)
  * @method static Builder|Fund whereDescription($value)
+ * @method static Builder|Fund whereDescriptionPosition($value)
  * @method static Builder|Fund whereDescriptionShort($value)
  * @method static Builder|Fund whereDescriptionText($value)
  * @method static Builder|Fund whereEndDate($value)
@@ -186,6 +188,7 @@ class Fund extends BaseModel
     use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasFaq;
 
     public const EVENT_CREATED = 'created';
+    public const EVENT_UPDATED = 'updated';
     public const EVENT_PROVIDER_APPLIED = 'provider_applied';
     public const EVENT_PROVIDER_REPLIED = 'provider_replied';
     public const EVENT_PROVIDER_APPROVED_PRODUCTS = 'provider_approved_products';
@@ -232,6 +235,16 @@ class Fund extends BaseModel
         self::TYPE_EXTERNAL,
     ];
 
+    const DESCRIPTION_POSITION_AFTER = 'after';
+    const DESCRIPTION_POSITION_BEFORE = 'before';
+    const DESCRIPTION_POSITION_REPLACE = 'replace';
+
+    const DESCRIPTION_POSITIONS = [
+        self::DESCRIPTION_POSITION_AFTER,
+        self::DESCRIPTION_POSITION_BEFORE,
+        self::DESCRIPTION_POSITION_REPLACE,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -243,7 +256,7 @@ class Fund extends BaseModel
         'default_validator_employee_id', 'auto_requests_validation',
         'criteria_editable_after_start', 'type', 'archived', 'description_short',
         'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title',
-        'balance',
+        'balance', 'description_position',
     ];
 
     protected $hidden = [
@@ -377,8 +390,7 @@ class Fund extends BaseModel
      */
     public function tags_webshop(): MorphToMany
     {
-        return $this->morphToMany(Tag::class, 'taggable')
-            ->where('scope', 'webshop');
+        return $this->morphToMany(Tag::class, 'taggable')->where('scope', 'webshop');
     }
 
     /**
@@ -387,8 +399,7 @@ class Fund extends BaseModel
      */
     public function tags_provider(): MorphToMany
     {
-        return $this->morphToMany(Tag::class, 'taggable')
-            ->where('scope', 'provider');
+        return $this->morphToMany(Tag::class, 'taggable')->where('scope', 'provider');
     }
 
     /**
@@ -442,10 +453,13 @@ class Fund extends BaseModel
      */
     public function updateFundsConfig(array $attributes): void
     {
-        $values = array_only($attributes, [
+        $values = Arr::only($attributes, [
             'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'email_required', 'contact_info_enabled', 'contact_info_required',
             'contact_info_message_custom', 'contact_info_message_text',
+            'auth_2fa_policy', 'auth_2fa_remember_ip',
+            'auth_2fa_restrict_emails', 'auth_2fa_restrict_auth_sessions',
+            'auth_2fa_restrict_reimbursements',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([

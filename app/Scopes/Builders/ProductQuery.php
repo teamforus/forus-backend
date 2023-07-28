@@ -32,6 +32,7 @@ class ProductQuery
                     $builder->whereIn('fund_id', (array) $fund_id);
                     $builder->where('state', FundProvider::STATE_ACCEPTED);
                     FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id);
+                    $builder->where('excluded', false);
                 });
 
                 $builder->orWhereHas('organization.fund_providers', static function(Builder $builder) use ($fund_id) {
@@ -41,6 +42,7 @@ class ProductQuery
 
                     $builder->whereRelation('fund', 'type', Fund::TYPE_BUDGET);
                     $builder->where('allow_products', true);
+                    $builder->where('excluded', false);
                 });
             });
         });
@@ -202,10 +204,10 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $query
-     * @return Builder
+     * @param Builder|Relation $query
+     * @return Builder|Relation
      */
-    public static function whereNotExpired(Builder $query): Builder
+    public static function whereNotExpired(Builder|Relation $query): Builder|Relation
     {
         return $query->where(static function(Builder $builder) {
             $builder->whereNull('products.expire_at');

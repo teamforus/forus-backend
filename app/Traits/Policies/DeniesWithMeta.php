@@ -12,7 +12,7 @@ trait DeniesWithMeta
      * @param int $code
      * @return Response
      */
-    protected function deny(mixed $message, int $code = 403): Response
+    protected function denyWithMeta(mixed $message, int $code = 403): Response
     {
         return AuthorizationJsonResponse::deny(is_array($message) ? $message : array_merge([
             'key' => $message,

@@ -21,6 +21,7 @@ use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
+use App\Models\ReimbursementCategory;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
@@ -45,6 +46,7 @@ use App\Policies\OfficePolicy;
 use App\Policies\FundProviderPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ProductReservationPolicy;
+use App\Policies\ReimbursementCategoryPolicy;
 use App\Policies\ReimbursementPolicy;
 use App\Policies\VoucherPolicy;
 use App\Policies\VoucherTransactionBulkPolicy;
@@ -93,6 +95,7 @@ class AuthServiceProvider extends ServiceProvider
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
         ProductReservation::class       => ProductReservationPolicy::class,
         PhysicalCardRequest::class      => PhysicalCardRequestPolicy::class,
+        ReimbursementCategory::class    => ReimbursementCategoryPolicy::class,
         VoucherTransactionBulk::class   => VoucherTransactionBulkPolicy::class,
         FundProviderInvitation::class   => FundProviderInvitationPolicy::class,
         FundProviderChatMessage::class  => FundProviderChatMessagePolicy::class,

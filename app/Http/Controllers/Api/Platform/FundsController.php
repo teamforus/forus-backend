@@ -38,7 +38,7 @@ class FundsController extends Controller
         ] : Fund::STATE_ACTIVE;
 
         $query = (new FundSearch($request->only([
-            'tag', 'tag_id', 'organization_id', 'fund_id', 'q', 'implementation_id',
+            'tag', 'tag_id', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id',
             'with_external', 'has_products', 'has_subsidies', 'has_providers',
             'order_by', 'order_by_dir',
         ]), Implementation::queryFundsByState($state)))->query();

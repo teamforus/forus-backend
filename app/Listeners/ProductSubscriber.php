@@ -12,12 +12,15 @@ use App\Events\Products\ProductReserved;
 use App\Events\Products\ProductRevoked;
 use App\Events\Products\ProductSoldOut;
 use App\Events\Products\ProductUpdated;
+use App\Models\Fund;
+use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Notifications\Organizations\Products\ProductApprovedNotification;
 use App\Notifications\Organizations\Products\ProductExpiredNotification;
 use App\Notifications\Organizations\Products\ProductReservedNotification;
 use App\Notifications\Organizations\Products\ProductRevokedNotification;
 use App\Notifications\Organizations\Products\ProductSoldOutNotification;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Events\Dispatcher;
 
 class ProductSubscriber
@@ -39,7 +42,12 @@ class ProductSubscriber
             'provider' => $product->organization,
         ]);
 
-        foreach ($product->organization->supplied_funds_approved_products as $fund) {
+        $funds = Fund::whereHas('fund_providers', function (Builder $builder) use ($product) {
+            $builder->where('organization_id', $product->organization_id);
+            $builder->where('state', FundProvider::STATE_ACCEPTED);
+        })->get();
+
+        foreach ($funds as $fund) {
             FundProductAddedEvent::dispatch($fund, $product);
         }
     }

@@ -4,9 +4,9 @@ namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
-use App\Rules\FundRequestFilesRule;
-use App\Rules\FundRequestRecordRecordTypeKeyRule;
-use App\Rules\FundRequestRecordValueRule;
+use App\Rules\FundRequests\FundRequestFilesRule;
+use App\Rules\FundRequests\FundRequestRecordRecordTypeKeyRule;
+use App\Rules\FundRequests\FundRequestRecordValueRule;
 use App\Rules\RecordTypeKeyExistsRule;
 use Illuminate\Support\Arr;
 
@@ -70,13 +70,19 @@ class StoreFundRequestRequest extends BaseFormRequest
 
         return [
             'records' => $this->isValidationRequest ? 'present|array' : 'present|array|min:1',
-            'records.*' => ['required', new FundRequestFilesRule($fund),],
-            'records.*.value' => ['required', new FundRequestRecordValueRule($this, $fund)],
+            'records.*' => [
+                'required',
+                new FundRequestFilesRule($fund),
+            ],
+            'records.*.value' => [
+                'required',
+                new FundRequestRecordValueRule($fund, $this),
+            ],
             'records.*.fund_criterion_id' => 'required|in:' . $criteria,
             'records.*.record_type_key' => [
                 'required',
                 new RecordTypeKeyExistsRule(true),
-                new FundRequestRecordRecordTypeKeyRule($this, $fund),
+                new FundRequestRecordRecordTypeKeyRule($fund, $this),
             ],
             'records.*.files' => 'nullable|array',
             'records.*.files.*' => 'required|exists:files,uid',
@@ -90,7 +96,7 @@ class StoreFundRequestRequest extends BaseFormRequest
     {
         $messages = [];
 
-        foreach ($this->get('records') as $val) {
+        foreach ($this->get('records', []) as $val) {
             $record_type_key = Arr::get($val, 'record_type_key', false);
 
             if ($record_type_key) {

@@ -19,7 +19,10 @@ class UpdateReimbursementRequest extends StoreReimbursementRequest
      */
     public function authorize(): bool
     {
-        return Gate::allows('update', $this->reimbursement);
+        return Gate::allows('update', [
+            $this->reimbursement,
+            $this->identityProxy2FAConfirmed(),
+        ]);
     }
 
     /**
