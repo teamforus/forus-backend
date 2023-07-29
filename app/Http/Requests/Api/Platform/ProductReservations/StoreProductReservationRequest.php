@@ -45,9 +45,10 @@ class StoreProductReservationRequest extends BaseFormRequest
                 'exists:products,id',
                 new ProductIdToReservationRule($this->input('voucher_address'), true)
             ],
-        ], array_merge(
+        ],
             $this->fieldsRules($product),
-        ));
+            $this->reservationCustomFieldRules($product),
+        );
     }
 
     /**
@@ -76,5 +77,58 @@ class StoreProductReservationRequest extends BaseFormRequest
                 'before:today',
             ],
         ];
+    }
+
+    /**
+     * @param Product|null $product
+     * @return array
+     */
+    private function reservationCustomFieldRules(?Product $product): array
+    {
+        if (!$product?->organization->allow_reservation_custom_fields) {
+            return [];
+        }
+
+        $rules = [
+            'custom_fields' => 'nullable|array',
+        ];
+
+        if ($product) {
+            foreach ($product->organization->reservation_fields as $field) {
+                $type = match($field->type) {
+                    'number' => 'int',
+                    default => 'string'
+                };
+
+                $rules = array_merge($rules, [
+                    "custom_fields.{$field->id}" => array_filter([
+                        $field->required ? 'required' : 'nullable',
+                        $type,
+                        $type === 'string' ? 'max:200' : null
+                    ])
+                ]);
+            }
+        }
+
+        return $rules;
+    }
+
+    /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        $attributes = [];
+        $product = Product::find($this->input('product_id'));
+
+        if ($product) {
+            foreach ($product->organization->reservation_fields as $field) {
+                $attributes = array_merge($attributes, [
+                    "custom_fields.{$field->id}" => $field->label
+                ]);
+            }
+        }
+
+        return $attributes;
     }
 }

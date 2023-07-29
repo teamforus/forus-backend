@@ -1024,6 +1024,16 @@ class Voucher extends BaseModel
             'first_name', 'last_name', 'user_note', 'note', 'phone', 'address', 'birth_date'
         ]), $product->only('price', 'price_type', 'price_discount')));
 
+        // store custom fields
+        if ($product->organization->allow_reservation_custom_fields) {
+            foreach ($product->organization->reservation_fields as $field) {
+                $reservation->custom_fields()->create([
+                    'organization_reservation_field_id' => $field->id,
+                    'value' => Arr::get($extraData, "custom_fields.$field->id"),
+                ]);
+            }
+        }
+
         $reservation->makeVoucher();
 
         ProductReservationCreated::dispatch($reservation);
