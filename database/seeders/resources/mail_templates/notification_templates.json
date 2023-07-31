@@ -431,7 +431,10 @@
         }
     },
     "notifications_identities.product_reservation_accepted": {
-        "mail": {},
+        "mail": {
+            "title": "Reserverving is geaccepteerd.",
+            "template": "notifications_identities/product_reservation_accepted.md"
+        },
         "push": {},
         "database": {
             "title": "Reserverving is geaccepteerd.",
