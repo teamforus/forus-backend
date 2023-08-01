@@ -74,7 +74,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_2fa_restrictions
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
- * @property int $allow_reservation_custom_fields
+ * @property bool $allow_reservation_custom_fields
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $bi_connection_auth_type
@@ -256,6 +256,7 @@ class Organization extends BaseModel
         'allow_manual_bulk_processing'          => 'boolean',
         'allow_2fa_restrictions'                => 'boolean',
         'allow_fund_request_record_edit'        => 'boolean',
+        'allow_reservation_custom_fields'       => 'boolean',
         'allow_bi_connection'                   => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
@@ -614,8 +615,7 @@ class Organization extends BaseModel
      */
     public function reservation_fields(): HasMany
     {
-        return $this->hasMany(OrganizationReservationField::class)
-            ->orderBy('order');
+        return $this->hasMany(OrganizationReservationField::class)->orderBy('order');
     }
 
     /**
@@ -963,20 +963,19 @@ class Organization extends BaseModel
      * @param array $fields
      * @return void
      */
-    public function storeReservationFields(array $fields): void
+    public function syncReservationFields(array $fields): void
     {
-        $this->reservation_fields()->whereNotIn(
-            'id', array_filter(Arr::pluck($fields, 'id'))
-        )->delete();
+        $this->reservation_fields()
+            ->whereNotIn('id', array_filter(Arr::pluck($fields, 'id')))
+            ->delete();
 
         foreach ($fields as $order => $item) {
-            $field = $this->reservation_fields()->find($item['id'] ?? null);
-
-            $params = array_merge(Arr::only($item, [
-                'label', 'type', 'description', 'required',
-            ]), compact('order'));
-
-            $field ? $field->update($params) : $this->reservation_fields()->create($params);
+            $this->reservation_fields()->updateOrCreate([
+                'id' => Arr::get($item, 'id'),
+            ], [
+                ...Arr::only($item, ['label', 'type', 'description', 'required']),
+                'order' => $order,
+            ]);
         }
     }
 }

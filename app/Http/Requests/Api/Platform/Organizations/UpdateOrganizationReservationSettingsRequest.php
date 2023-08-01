@@ -28,10 +28,10 @@ class UpdateOrganizationReservationSettingsRequest extends BaseOrganizationReque
      */
     public function rules(): array
     {
-        return array_merge(
-            $this->reservationRules(),
-            $this->reservationCustomFieldRules(),
-        );
+        return [
+            ...$this->reservationRules(),
+            ...$this->reservationCustomFieldRules(),
+        ];
     }
 
     /**
@@ -39,20 +39,16 @@ class UpdateOrganizationReservationSettingsRequest extends BaseOrganizationReque
      */
     private function reservationCustomFieldRules(): array
     {
-        if (!$this->organization->allow_reservation_custom_fields) {
-            return [];
-        }
-
         return [
-            'fields' => 'nullable|array',
+            'fields' => 'nullable|array|max:10',
             'fields.*' => 'required|array',
             'fields.*.type' => [
                 'required',
-                Rule::in(OrganizationReservationField::$types),
+                Rule::in(OrganizationReservationField::TYPES),
             ],
             'fields.*.label' => 'required|string|max:200',
-            'fields.*.description' => 'nullable|string|max:1000',
             'fields.*.required' => 'nullable|boolean',
+            'fields.*.description' => 'nullable|string|max:1000',
         ];
     }
 

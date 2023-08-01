@@ -10,10 +10,6 @@ use App\Rules\ProductReservations\ProductIdToReservationRule;
 use App\Rules\Vouchers\IdentityVoucherAddressRule;
 use Illuminate\Support\Facades\Gate;
 
-/**
- * Class StoreProductReservationRequest
- * @package App\Http\Requests\Api\Platform\Vouchers
- */
 class StoreProductReservationRequest extends BaseFormRequest
 {
     /**
@@ -35,7 +31,7 @@ class StoreProductReservationRequest extends BaseFormRequest
     {
         $product = Product::find($this->input('product_id'));
 
-        return array_merge([
+        return [
             'voucher_address' => [
                 'required',
                 new IdentityVoucherAddressRule($this->auth_address(), Voucher::TYPE_BUDGET),
@@ -45,10 +41,9 @@ class StoreProductReservationRequest extends BaseFormRequest
                 'exists:products,id',
                 new ProductIdToReservationRule($this->input('voucher_address'), true)
             ],
-        ],
-            $this->fieldsRules($product),
-            $this->reservationCustomFieldRules($product),
-        );
+            ...$this->fieldsRules($product),
+            ...$this->customFieldRules($product),
+        ];
     }
 
     /**
@@ -79,38 +74,27 @@ class StoreProductReservationRequest extends BaseFormRequest
         ];
     }
 
+
     /**
      * @param Product|null $product
      * @return array
      */
-    private function reservationCustomFieldRules(?Product $product): array
+    private function customFieldRules(?Product $product): array
     {
         if (!$product?->organization->allow_reservation_custom_fields) {
             return [];
         }
 
-        $rules = [
+        return $product->organization->reservation_fields->reduce(fn (array $result, $field) => [
+            ...$result,
+            "custom_fields.$field->id" => array_filter([
+                $field->required ? 'required' : 'nullable',
+                $field->type == $field::TYPE_NUMBER ? 'int' : 'string',
+                $field->type == $field::TYPE_TEXT ? 'max:200' : null,
+            ])
+        ], [
             'custom_fields' => 'nullable|array',
-        ];
-
-        if ($product) {
-            foreach ($product->organization->reservation_fields as $field) {
-                $type = match($field->type) {
-                    'number' => 'int',
-                    default => 'string'
-                };
-
-                $rules = array_merge($rules, [
-                    "custom_fields.{$field->id}" => array_filter([
-                        $field->required ? 'required' : 'nullable',
-                        $type,
-                        $type === 'string' ? 'max:200' : null
-                    ])
-                ]);
-            }
-        }
-
-        return $rules;
+        ]);
     }
 
     /**
@@ -118,17 +102,11 @@ class StoreProductReservationRequest extends BaseFormRequest
      */
     public function attributes(): array
     {
-        $attributes = [];
         $product = Product::find($this->input('product_id'));
 
-        if ($product) {
-            foreach ($product->organization->reservation_fields as $field) {
-                $attributes = array_merge($attributes, [
-                    "custom_fields.{$field->id}" => $field->label
-                ]);
-            }
-        }
-
-        return $attributes;
+        return $product?->organization->reservation_fields->reduce(fn (array $result, $field) => [
+            ...$result,
+            "custom_fields.$field->id" => $field->label,
+        ], []) ?: [];
     }
 }

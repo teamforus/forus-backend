@@ -40,7 +40,7 @@ class OrganizationReservationField extends BaseModel
     public const TYPE_TEXT = 'text';
     public const TYPE_NUMBER = 'number';
 
-    public static array $types = [
+    public const TYPES = [
         self::TYPE_TEXT,
         self::TYPE_NUMBER,
     ];

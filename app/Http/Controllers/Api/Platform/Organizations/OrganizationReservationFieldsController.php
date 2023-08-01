@@ -26,7 +26,8 @@ class OrganizationReservationFieldsController extends Controller
         $this->authorize('viewAny', [OrganizationReservationField::class, $organization]);
 
         return OrganizationReservationFieldResource::queryCollection(
-            $organization->reservation_fields(), $request
+            $organization->reservation_fields(),
+            $request,
         );
     }
 }

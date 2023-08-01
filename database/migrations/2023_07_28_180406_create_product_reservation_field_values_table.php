@@ -20,10 +20,7 @@ return new class extends Migration
             $table->string('value')->nullable();
             $table->timestamps();
 
-            $table->foreign(
-                'organization_reservation_field_id',
-                'reservation_fields_organization_field_id_foreign'
-            )
+            $table->foreign('organization_reservation_field_id', 'organization_field_id_foreign')
                 ->references('id')->on('organization_reservation_fields')
                 ->onDelete('cascade');
 

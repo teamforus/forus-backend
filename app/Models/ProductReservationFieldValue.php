@@ -45,10 +45,10 @@ class ProductReservationFieldValue extends BaseModel
      */
     public function organization_reservation_field(): BelongsTo
     {
-        /** @var BelongsTo|SoftDeletes $hasMany */
-        $hasMany = $this->belongsTo(OrganizationReservationField::class);
+        /** @var BelongsTo|OrganizationReservationField $relation */
+        $relation = $this->belongsTo(OrganizationReservationField::class);
 
-        return $hasMany->withTrashed();
+        return $relation->withTrashed();
     }
 
     /**

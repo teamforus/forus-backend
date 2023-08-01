@@ -360,7 +360,7 @@ class TestData
         array $fields = [],
         int $offices_count = 0
     ): Organization {
-        $data = array_merge([
+        $data = [
             'kvk' => Organization::GENERIC_KVK,
             'iban' => $this->config('default_organization_iban') ?: $this->faker->iban('NL'),
             'phone' => '123456789',
@@ -374,7 +374,10 @@ class TestData
             'business_type_id' => BusinessType::pluck('id')->random(),
             'reservations_budget_enabled' => true,
             'reservations_subsidy_enabled' => true,
-        ], $fields, $this->config("organizations.$name.organization", []));
+            ...$this->config("default.organizations", []),
+            ...$this->config("organizations.$name.organization", []),
+            ...$fields,
+        ];
 
         $organization = Organization::forceCreate(array_merge($data, [
             'name' => $name,
@@ -459,7 +462,7 @@ class TestData
         $autoValidation = Arr::get($config, 'auto_requests_validation', false);
 
         /** @var Fund $fund */
-        $fund = $organization->funds()->create(array_merge([
+        $fund = $organization->funds()->create([
             'name'                          => $name,
             'start_date'                    => Carbon::now()->format('Y-m-d'),
             'end_date'                      => Carbon::now()->addDays(60)->format('Y-m-d'),
@@ -470,7 +473,9 @@ class TestData
             'default_validator_employee_id' => $autoValidation ? $validator->id : null,
             'criteria_editable_after_start' => false,
             'type'                          => Fund::TYPE_BUDGET,
-        ], $config));
+            ...$this->config("default.funds", []),
+            ...$config,
+        ]);
 
         $topUp = $fund->getOrCreateTopUp();
         $transaction = $topUp->transactions()->forceCreate([
@@ -508,14 +513,19 @@ class TestData
         $cgiCertData = $this->makeImplementationCgiCertData();
         $configData = $this->config("implementations.$name.implementation", []);
 
-        return Implementation::forceCreate(array_merge([
+        return Implementation::forceCreate([
             'key' => $key,
             'name' => $name,
             'organization_id' => $organization?->id,
             'informal_communication' => false,
             'allow_per_fund_notification_templates' => false,
             'productboard_api_key' => $this->config('productboard_api_key'),
-        ], $urlData, $samlData, $cgiCertData, $configData));
+            ...$this->config("default.implementations", []),
+            ...$urlData,
+            ...$samlData,
+            ...$cgiCertData,
+            ...$configData,
+        ]);
     }
 
     /**
