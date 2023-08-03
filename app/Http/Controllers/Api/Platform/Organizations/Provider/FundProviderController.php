@@ -39,7 +39,8 @@ class FundProviderController extends Controller
         $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
         $query = (new FundSearch($request->only([
-            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_dir'
+            'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id',
+            'order_by', 'order_dir',
         ]), FundProvider::queryAvailableFunds($organization)))->query()->latest();
 
         $meta = [

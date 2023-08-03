@@ -117,7 +117,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
      */
     public function headings(): array
     {
-        return array_map(fn($key) => $this->trans($key), array_keys($this->first()));
+        return array_keys($this->first());
     }
 
     /**
@@ -173,7 +173,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
                 $activeVouchersPercentage = (float) $details['vouchers_amount'] ?
                     ($details['active_amount'] / $details['vouchers_amount'] * 100) : 0;
 
-                $voucherData = [
+                $voucherData = array_merge($voucherData, [
                     "budget_amount_per_voucher"            => currency_format($fund->fund_formulas->sum('amount')),
                     "budget_average_per_voucher"           => currency_format($averagePerVoucher),
                     "budget_total_spent_amount"            => currency_format($fund->budget_used_active_vouchers),
@@ -186,7 +186,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
                     "budget_vouchers_active_percentage"    => currency_format($activeVouchersPercentage / 100, 4),
                     "budget_vouchers_active_count"         => currency_format($details['active_count'], 0),
                     "budget_vouchers_deactivated_count"    => currency_format($details['deactivated_count'], 0),
-                ];
+                ]);
             }
 
             $voucherData = array_merge($voucherData, [

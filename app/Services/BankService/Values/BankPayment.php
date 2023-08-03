@@ -2,6 +2,8 @@
 
 namespace App\Services\BankService\Values;
 
+use Illuminate\Support\Arr;
+
 class BankPayment
 {
     protected string $id;
@@ -135,6 +137,14 @@ class BankPayment
     public function getDescription(): string
     {
         return $this->description;
+    }
+
+    /**
+     * @return BankCreditorAccount
+     */
+    public function getCreditorAccount(): BankCreditorAccount
+    {
+        return new BankCreditorAccount(Arr::get($this->raw, 'creditorAccount.iban'));
     }
 
     /**

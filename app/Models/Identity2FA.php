@@ -211,6 +211,10 @@ class Identity2FA extends Model
      */
     public function sendCode(): bool
     {
+        $this->identity_2fa_codes()->update([
+            'state' => Identity2FACode::STATE_DEACTIVATED
+        ]);
+
         return resolve('forus.services.sms_notification')->sendSms(
             'Confirmation code: ' . $this->makePhoneCode()->code,
             $this->phone,

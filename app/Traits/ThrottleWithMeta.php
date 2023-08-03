@@ -86,7 +86,7 @@ trait ThrottleWithMeta
     ): void {
         $key = $this->throttleKey($request);
         $available_in = $this->limiter()->tooManyAttempts($key, $this->maxAttempts()) ?
-            $this->limiter()->availableIn($key) : null;
+            max(1, $this->limiter()->availableIn($key)) : null;
         $available_in_min = $available_in !== null ? ceil($available_in / 60) : null;
         $available_in_sec = $available_in !== null ? ceil($available_in) : null;
 
@@ -97,6 +97,7 @@ trait ThrottleWithMeta
             'available_in_min' => $available_in_min,
             'available_in_sec' => $available_in_sec,
             'decay_minutes' => $this->decayMinutes(),
+            'decay_seconds' => $this->decayMinutes() * 60,
             'max_attempts' => $this->maxAttempts(),
         ];
 

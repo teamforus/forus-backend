@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Helpers\Arr;
 use App\Models\Identity;
 use App\Models\Identity2FA;
+use App\Models\Identity2FACode;
 use App\Models\IdentityProxy;
 use App\Models\Organization;
 use App\Models\Role;
@@ -247,9 +248,15 @@ class Identity2FATest extends TestCase
         // assert 2fa confirmation/activation works
         /** @var TestResponse $response */
         $response = $this->assertNoException(function () use ($identityProxy, $identity2FA) {
-            $code = $identity2FA->isTypeAuthenticator() ?
-                $identity2FA->makeAuthenticatorCode() :
-                $identity2FA->makePhoneCode()->code;
+            if ($identity2FA->isTypeAuthenticator()) {
+                $code = $identity2FA->makeAuthenticatorCode();
+            } else {
+                $deactivatedCode = $this->sendCodeToPhone($identity2FA);
+                sleep(1);
+
+                $code = $this->sendCodeToPhone($identity2FA);
+                $this->assertInvalidCode($identity2FA, $deactivatedCode, $this->makeApiHeaders($identityProxy));
+            }
 
             return $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/activate", [
                 'key' => $identity2FA->auth_2fa_provider->key,
@@ -294,9 +301,15 @@ class Identity2FATest extends TestCase
         $this->assertNotNull($identity2FA);
 
         $response = $this->assertNoException(function () use ($identityProxy, $identity2FA) {
-            $code = $identity2FA->isTypeAuthenticator() ?
-                $identity2FA->makeAuthenticatorCode() :
-                $identity2FA->makePhoneCode()->code;
+            if ($identity2FA->isTypeAuthenticator()) {
+                $code = $identity2FA->makeAuthenticatorCode();
+            } else {
+                $deactivatedCode = $this->sendCodeToPhone($identity2FA);
+                sleep(1);
+
+                $code = $this->sendCodeToPhone($identity2FA);
+                $this->assertInvalidCode($identity2FA, $deactivatedCode, $this->makeApiHeaders($identityProxy));
+            }
 
             return $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/authenticate", [
                 'code' => "$code",
@@ -304,5 +317,42 @@ class Identity2FATest extends TestCase
         });
 
         $response->assertStatus(200);
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    protected function sendCodeToPhone(Identity2FA $identity2FA): string
+    {
+        $now = now();
+        $identity2FA->sendCode();
+
+        /** @var Identity2FACode $code */
+        $code = $identity2FA->identity_2fa_codes()
+            ->where('created_at', '>=', $now)
+            ->first();
+
+        $this->assertNotNull($code);
+
+        return $code->code;
+    }
+
+    /**
+     * @param Identity2FA $identity2FA
+     * @param string $deactivatedCode
+     * @param array $apiHeaders
+     * @return void
+     */
+    protected function assertInvalidCode(
+        Identity2FA $identity2FA,
+        string $deactivatedCode,
+        array $apiHeaders
+    ): void {
+        $response = $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/activate", [
+            'key' => $identity2FA->auth_2fa_provider->key,
+            'code' => "$deactivatedCode",
+        ], $apiHeaders);
+
+        $response->assertJsonValidationErrorFor('code');
     }
 }
