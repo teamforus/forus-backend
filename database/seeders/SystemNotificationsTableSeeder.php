@@ -60,7 +60,7 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.requester_product_revoked' => [], // TODO can database notifications be removed
 
         "notifications_identities.product_reservation_created" => ["database"],
-        "notifications_identities.product_reservation_accepted" => ["database"],
+        "notifications_identities.product_reservation_accepted" => ["database", "mail"],
         "notifications_identities.product_reservation_canceled" => ["database"],
         "notifications_identities.product_reservation_rejected" => ["database"],
 
@@ -180,6 +180,8 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.identity_voucher_assigned_budget',
         'notifications_identities.identity_voucher_assigned_subsidy',
         'notifications_identities.identity_voucher_assigned_product',
+
+        'notifications_identities.product_reservation_accepted',
 
         'notifications_identities.voucher_deactivated',
         'notifications_identities.voucher_expire_soon_budget',
