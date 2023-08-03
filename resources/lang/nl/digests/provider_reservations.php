@@ -10,8 +10,8 @@ return [
         ]),
         'product_item' => [
             'title' => ':product_name voor :product_price_locale',
-            'description_total' => '- :count_total totaal reserveringen.',
-            'description_per_state' => '- :count_per_state :state_name reserveringen',
+            'description' => '- :count :state reserveringen',
+            'description_total' => ':count_total totaal reserveringen.',
         ],
     ],
 

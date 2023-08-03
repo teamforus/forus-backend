@@ -71,24 +71,24 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
         array $otherEvents
     ): Collection {
         // reservations query
-        $reservationQuery = ProductReservation::where(function(Builder $builder) use ($organization) {
+        $query = ProductReservation::where(function(Builder $builder) use ($organization) {
             $builder->whereHas('product', function(Builder $builder) use ($organization) {
-                $builder->whereIn('id', $organization->products()->getQuery()->select('id'));
+                $builder->whereIn('id', $organization->products()->select('id'));
             });
         });
 
         // logs for selected period
-        $logsApprovedReservations = EventLog::eventsOfTypeQuery(ProductReservation::class, $reservationQuery)
+        $logsApprovedReservations = EventLog::eventsOfTypeQuery(ProductReservation::class, $query)
             ->whereIn('event', $otherEvents)
             ->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization))
             ->get()
             ->groupBy('loggable_id');
 
-        return $logsApprovedReservations->filter(static function(Collection $group) use ($targetEvents) {
-            return in_array($group->sortBy('created_at')->last()->event, $targetEvents);
-        })->map(static function(Collection $group) {
-            return $group->sortBy('created_at')->last();
-        })->flatten(1)->pluck('data');
+        return $logsApprovedReservations
+            ->filter(fn (Collection $group) => in_array($group->sortBy('created_at')->last()->event, $targetEvents))
+            ->map(fn (Collection $group) => $group->sortBy('created_at')->last())
+            ->flatten(1)
+            ->pluck('data');
     }
 
     /**
@@ -125,41 +125,25 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
             ));
 
             foreach ($grouped as $group) {
+                /** @var Collection $group */
                 /** @var Collection $groups */
                 $groups = $group->groupBy('product_reservation_state');
-                $states = [
-                    ProductReservation::STATE_PENDING  => 'in afwachting',
-                    ProductReservation::STATE_ACCEPTED => 'geaccepteerd',
-                    ProductReservation::STATE_REJECTED => 'geweigerd',
-                    ProductReservation::STATE_CANCELED_BY_CLIENT => 'geannuleerd door aanvrager',
-                    ProductReservation::STATE_CANCELED_BY_PROVIDER => 'geannuleerd',
-                ];
 
                 $mailBody->h5(trans("digests/provider_reservations.reservations.product_item.title", [
                     'product_name' => $group[0]['product_name'] ?? '',
                     'product_price_locale' => $group[0]['product_price_locale'] ?? '',
                 ]), ['margin_less']);
 
-                $per_state_text = trans(
-                    "digests/provider_reservations.reservations.product_item.description_total", [
-                        'count_total' => count($group),
-                    ]
-                );
+                $mailBody->text(trans("digests/provider_reservations.reservations.product_item.description_total", [
+                    'count_total' => count($group),
+                ]), ['strong', 'margin_less']);
 
-                foreach ($states as $stateKey => $stateName) {
-                    $count_per_state = count($groups[$stateKey] ?? []);
-
-                    if ($count_per_state) {
-                        $per_state_text .= "\n".trans(
-                            "digests/provider_reservations.reservations.product_item.description_per_state", [
-                                'state_name' => $stateName,
-                                'count_per_state' => $count_per_state,
-                            ]
-                        );
-                    }
-                }
-
-                $mailBody->text($per_state_text);
+                $mailBody->text($groups->keys()->map(function ($state) use ($groups) {
+                    return trans("digests/provider_reservations.reservations.product_item.description", [
+                        'count' => count($groups[$state]),
+                        'state' => strtolower(trans("states/product_reservations.$state")),
+                    ]);
+                })->join("\n"));
             }
         }
 
