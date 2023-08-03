@@ -10,12 +10,13 @@ use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\Traits\MakesProductReservations;
 
 class ProductReservationTest extends TestCase
 {
-    use AssertsSentEmails, MakesProductReservations;
+    use AssertsSentEmails, MakesProductReservations, DatabaseTransactions;
 
     /**
      * @var string
@@ -248,6 +249,23 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testReservationArchiving(): void
+    {
+        /** @var Organization $organization */
+        $organization = Organization::where('name', $this->organizationBudgetName)->first();
+        $this->assertNotNull($organization);
+
+        $identity = $organization->identity;
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $product = $this->findProductForReservation($voucher);
+
+        $this->checkReservationArchiving($identity, $voucher, $product);
+    }
+
+    /**
      * @param Identity $identity
      * @param Voucher $voucher
      * @param Product $product
@@ -277,6 +295,87 @@ class ProductReservationTest extends TestCase
 
         $reservation = ProductReservation::find($reservation->id);
         $this->assertTrue($reservation->isCanceledByClient());
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Voucher $voucher
+     * @param Product $product
+     * @return void
+     * @throws \Throwable
+     */
+    private function checkReservationArchiving(
+        Identity $identity,
+        Voucher $voucher,
+        Product $product
+    ): void {
+        $proxy = $this->makeIdentityProxy($identity);
+        $headers = $this->makeApiHeaders($proxy);
+        $reservation = $this->makeReservation($identity, $voucher, $product);
+
+        $this->archiveReservation($reservation, $headers, false);
+
+        $reservation->acceptProvider();
+        /*$this->archiveReservation($reservation, $headers);
+        $this->unarchiveReservation($reservation, $headers);*/
+
+        $reservation->rejectOrCancelProvider();
+        /*$this->archiveReservation($reservation, $headers);
+        $this->unarchiveReservation($reservation, $headers);*/
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param array $apiHeaders
+     * @param bool $assertSuccess
+     * @return void
+     */
+    protected function archiveReservation(
+        ProductReservation $reservation,
+        array $apiHeaders,
+        bool $assertSuccess = true
+    ): void {
+        $providers = $reservation->product->organization;
+        $reservationUrl = sprintf($this->apiOrganizationUrl . '/%s', $providers->id, $reservation->id);
+        $response = $this->post("$reservationUrl/archive", [], $apiHeaders);
+
+        if ($assertSuccess) {
+            $response->assertSuccessful();
+            $response->assertJsonStructure(['data' => $this->resourceStructure]);
+        } else {
+            $response->assertForbidden();
+        }
+
+        if ($assertSuccess) {
+            $this->assertTrue($reservation->refresh()->isArchived());
+        }
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param array $apiHeaders
+     * @param bool $assertSuccess
+     * @return void
+     */
+    protected function unarchiveReservation(
+        ProductReservation $reservation,
+        array $apiHeaders,
+        bool $assertSuccess = true
+    ): void {
+        $providers = $reservation->product->organization;
+        $reservationUrl = sprintf($this->apiOrganizationUrl . '/%s', $providers->id, $reservation->id);
+        $response = $this->post("$reservationUrl/unarchive", [], $apiHeaders);
+
+        if ($assertSuccess) {
+            $response->assertSuccessful();
+            $response->assertJsonStructure(['data' => $this->resourceStructure]);
+        } else {
+            $response->assertForbidden();
+        }
+
+        if ($assertSuccess) {
+            $this->assertTrue(!$reservation->refresh()->isArchived());
+        }
     }
 
     /**

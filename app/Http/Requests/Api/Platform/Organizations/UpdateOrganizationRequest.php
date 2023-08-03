@@ -37,7 +37,6 @@ class UpdateOrganizationRequest extends FormRequest
         $kvk = $this->input('kvk');
         $kvkDebug = Config::get('forus.kvk-api.debug', false);
         $kvkGeneric = $kvk === Organization::GENERIC_KVK;
-        $auth2FAPolicies = implode(',', Organization::AUTH_2FA_POLICIES);
 
         $kvkUniqueRule = $this->organization ? Rule::unique('organizations', 'kvk')->ignore(
             $this->organization->id
@@ -61,9 +60,27 @@ class UpdateOrganizationRequest extends FormRequest
             'website'               => 'nullable|max:200|url',
             'website_public'        => 'nullable|boolean',
             'business_type_id'      => 'nullable|exists:business_types,id',
-            'auth_2fa_policy'       => "nullable|in:$auth2FAPolicies",
-            'auth_2fa_remember_ip'  => 'nullable|boolean',
+            ...$this->auth2FARules(),
             ...$this->contactsRules(),
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function auth2FARules(): array
+    {
+        $auth2FAPolicies = implode(',', Organization::AUTH_2FA_POLICIES);
+        $auth2FAFundsPolicies = implode(',', Organization::AUTH_2FA_FUNDS_POLICIES);
+
+        return [
+            'auth_2fa_policy' => "nullable|in:$auth2FAPolicies",
+            'auth_2fa_remember_ip' => 'nullable|boolean',
+            'auth_2fa_funds_policy' => "nullable|in:$auth2FAFundsPolicies",
+            'auth_2fa_funds_remember_ip' => 'nullable|boolean',
+            'auth_2fa_funds_restrict_emails' => 'nullable|boolean',
+            'auth_2fa_funds_restrict_auth_sessions' => 'nullable|boolean',
+            'auth_2fa_funds_restrict_reimbursements' => 'nullable|boolean',
         ];
     }
 

@@ -73,6 +73,7 @@ class OrganizationResource extends JsonResource
         $biConnectionData = $baseRequest->isDashboard() ? $this->getBIConnectionData($organization) : [];
         $privateData = $this->privateData($organization);
         $employeeOnlyData = $baseRequest->isDashboard() ? $this->employeeOnlyData($baseRequest, $organization) : [];
+        $funds2FAOnlyData = $baseRequest->isDashboard() ? $this->funds2FAOnlyData($organization) : [];
         $permissionsData = $permissionsCountDep ? $this->getIdentityPermissions($organization, $baseRequest->identity()) : null;
         
         return array_filter(array_merge($organization->only([
@@ -80,7 +81,7 @@ class OrganizationResource extends JsonResource
             'email_public', 'phone_public', 'website_public',
             'description', 'description_html', 'reservation_phone',
             'reservation_address', 'reservation_birth_date'
-        ]), $privateData, $ownerData, $biConnectionData, $employeeOnlyData, [
+        ]), $privateData, $ownerData, $biConnectionData, $employeeOnlyData, $funds2FAOnlyData, [
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),
             'business_type' => new BusinessTypeResource($organization->business_type),
@@ -136,7 +137,20 @@ class OrganizationResource extends JsonResource
             'allow_batch_reservations', 'allow_budget_fund_limits',
             'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
             'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
+            'allow_reservation_custom_fields',
         ])) : [];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return array
+     */
+    protected function funds2FAOnlyData(Organization $organization): array
+    {
+        return $organization->only([
+            'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
+            'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
+        ]);
     }
 
     /**

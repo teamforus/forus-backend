@@ -122,6 +122,9 @@ class OrganizationsController extends Controller
         if ($organization->allow_2fa_restrictions) {
             $organization->update($request->only([
                 'auth_2fa_policy', 'auth_2fa_remember_ip',
+                'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip',
+                'auth_2fa_funds_restrict_emails', 'auth_2fa_funds_restrict_auth_sessions',
+                'auth_2fa_funds_restrict_reimbursements'
             ]));
         }
 
@@ -221,6 +224,10 @@ class OrganizationsController extends Controller
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'reservation_phone', 'reservation_address', 'reservation_birth_date',
         ])));
+
+        if ($organization->allow_reservation_custom_fields) {
+            $organization->syncReservationFields($request->get('fields', []));
+        }
 
         return new OrganizationResource($organization);
     }

@@ -8,6 +8,7 @@ use App\Events\ProductReservations\ProductReservationRejected;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +37,7 @@ use Illuminate\Support\Facades\Event;
  * @property string|null $birth_date
  * @property string|null $user_note
  * @property string|null $note
+ * @property bool $archived
  * @property \Illuminate\Support\Carbon|null $accepted_at
  * @property \Illuminate\Support\Carbon|null $canceled_at
  * @property \Illuminate\Support\Carbon|null $rejected_at
@@ -43,6 +45,8 @@ use Illuminate\Support\Facades\Event;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservationField[] $custom_fields
+ * @property-read int|null $custom_fields_count
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
  * @property-read string $state_locale
@@ -54,11 +58,12 @@ use Illuminate\Support\Facades\Event;
  * @property-read \App\Models\VoucherTransaction|null $voucher_transaction
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation newQuery()
- * @method static \Illuminate\Database\Query\Builder|ProductReservation onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation query()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAcceptedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereArchived($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereBirthDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCanceledAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCode($value)
@@ -82,8 +87,8 @@ use Illuminate\Support\Facades\Event;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereUserNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereVoucherId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereVoucherTransactionId($value)
- * @method static \Illuminate\Database\Query\Builder|ProductReservation withTrashed()
- * @method static \Illuminate\Database\Query\Builder|ProductReservation withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation withoutTrashed()
  * @mixin \Eloquent
  */
 class ProductReservation extends BaseModel
@@ -101,6 +106,8 @@ class ProductReservation extends BaseModel
     public const STATE_REJECTED = 'rejected';
     public const STATE_CANCELED_BY_CLIENT = 'canceled_by_client';
     public const STATE_CANCELED_BY_PROVIDER = 'canceled';
+    public const EVENT_ARCHIVED = 'archived';
+    public const EVENT_UNARCHIVED = 'unarchived';
 
     /**
      * The events of the product reservation.
@@ -149,7 +156,14 @@ class ProductReservation extends BaseModel
         'product_id', 'voucher_id', 'voucher_transaction_id', 'fund_provider_product_id',
         'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
-        'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date',
+        'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'archived',
+    ];
+
+    /**
+     * @var string[]
+     */
+    protected $casts = [
+        'archived' => 'boolean',
     ];
 
     /**
@@ -225,6 +239,15 @@ class ProductReservation extends BaseModel
     }
 
     /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function custom_fields(): HasMany
+    {
+        return $this->hasMany(ProductReservationFieldValue::class);
+    }
+
+    /**
      * @return string
      * @noinspection PhpUnused
      */
@@ -268,6 +291,22 @@ class ProductReservation extends BaseModel
     }
 
     /**
+     * @return bool
+     */
+    public function isArchived(): bool
+    {
+        return $this->archived;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isArchivable(): bool
+    {
+        return !$this->archived && ($this->isAccepted() || $this->isCanceled());
+    }
+
+    /**
      * @param Employee|null $employee
      * @return $this
      * @throws \Throwable
@@ -277,6 +316,30 @@ class ProductReservation extends BaseModel
         DB::transaction(function() use ($employee) {
             return $this->setAccepted($this->makeTransaction($employee));
         });
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function archive(Employee $employee): self
+    {
+        $this->updateModel([
+            'archived' => true,
+        ])->log(self::EVENT_ARCHIVED, $this->getLogModels($employee));
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function unArchive(Employee $employee): self
+    {
+        $this->updateModel([
+            'archived' => false,
+        ])->log(self::EVENT_UNARCHIVED, $this->getLogModels($employee));
 
         return $this;
     }
@@ -435,5 +498,19 @@ class ProductReservation extends BaseModel
         $note && $transaction->addNote('provider', $note);
 
         return $transaction;
+    }
+
+    /**
+     * @param Employee|null $employee
+     * @param array $extraModels
+     * @return array
+     */
+    protected function getLogModels(?Employee $employee = null, array $extraModels = []): array
+    {
+        return array_merge([
+            'provider' => $this->product->organization,
+            'employee' => $employee,
+            'product_reservation' => $this,
+        ], $extraModels);
     }
 }

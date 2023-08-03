@@ -32,8 +32,10 @@ class ProductReservationsController extends Controller
             $builder->where('identity_address', $request->auth_address());
         });
 
-        $search = new ProductReservationsSearch($request->only([
+        $search = new ProductReservationsSearch(array_merge($request->only([
             'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
+        ]), [
+            'is_webshop' => true,
         ]), $builder);
 
         return ProductReservationResource::queryCollection(
@@ -58,7 +60,7 @@ class ProductReservationsController extends Controller
         $voucher = Voucher::findByAddress($request->input('voucher_address'), $request->auth_address());
 
         $reservation = $voucher->reserveProduct($product, null, $request->only([
-            'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date',
+            'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'custom_fields',
         ]));
 
         if ($reservation->product->autoAcceptsReservations($voucher->fund)) {

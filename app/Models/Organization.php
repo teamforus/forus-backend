@@ -39,8 +39,6 @@ use Illuminate\Support\Collection as SupportCollection;
  *
  * @property int $id
  * @property string|null $identity_address
- * @property string $auth_2fa_policy
- * @property bool $auth_2fa_remember_ip
  * @property string $name
  * @property string|null $description
  * @property string|null $description_text
@@ -73,6 +71,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_2fa_restrictions
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
+ * @property bool $allow_reservation_custom_fields
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $bi_connection_auth_type
@@ -80,6 +79,13 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
+ * @property string|null $auth_2fa_policy
+ * @property bool|null $auth_2fa_remember_ip
+ * @property string $auth_2fa_funds_policy
+ * @property bool $auth_2fa_funds_remember_ip
+ * @property bool $auth_2fa_funds_restrict_emails
+ * @property bool $auth_2fa_funds_restrict_auth_sessions
+ * @property bool $auth_2fa_funds_restrict_reimbursements
  * @property int $show_provider_transactions
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -129,14 +135,10 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $products_sponsor_count
  * @property-read Collection|\App\Models\ReimbursementCategory[] $reimbursement_categories
  * @property-read int|null $reimbursement_categories_count
+ * @property-read Collection|\App\Models\OrganizationReservationField[] $reservation_fields
+ * @property-read int|null $reservation_fields_count
  * @property-read Collection|\App\Models\Fund[] $supplied_funds
  * @property-read int|null $supplied_funds_count
- * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved
- * @property-read int|null $supplied_funds_approved_count
- * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved_budget
- * @property-read int|null $supplied_funds_approved_budget_count
- * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved_products
- * @property-read int|null $supplied_funds_approved_products_count
  * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
  * @property-read Collection|\App\Models\OrganizationValidator[] $validated_organizations
@@ -157,6 +159,12 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictEmails($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictReimbursements($value)
+ * @method static EloquentBuilder|Organization whereAllowReservationCustomFields($value)
  * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
@@ -212,12 +220,22 @@ class Organization extends BaseModel
     public const AUTH_2FA_POLICY_OPTIONAL = 'optional';
     public const AUTH_2FA_POLICY_REQUIRED = 'required';
 
+    public const AUTH_2FA_FUNDS_POLICY_OPTIONAL = 'optional';
+    public const AUTH_2FA_FUNDS_POLICY_REQUIRED = 'required';
+    public const AUTH_2FA_FUNDS_POLICY_RESTRICT = 'restrict_features';
+
     public const AUTH_2FA_POLICIES = [
         self::AUTH_2FA_POLICY_OPTIONAL,
         self::AUTH_2FA_POLICY_REQUIRED,
     ];
 
     const EVENT_BI_CONNECTION_UPDATED = 'bi_connection_updated';
+
+    public const AUTH_2FA_FUNDS_POLICIES = [
+        self::AUTH_2FA_FUNDS_POLICY_OPTIONAL,
+        self::AUTH_2FA_FUNDS_POLICY_REQUIRED,
+        self::AUTH_2FA_FUNDS_POLICY_RESTRICT,
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -234,6 +252,8 @@ class Organization extends BaseModel
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'allow_bi_connection',
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
         'bi_connection_auth_type', 'bi_connection_token',
+        'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
+        'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements'
     ];
 
     /**
@@ -259,10 +279,15 @@ class Organization extends BaseModel
         'allow_manual_bulk_processing'          => 'boolean',
         'allow_2fa_restrictions'                => 'boolean',
         'allow_fund_request_record_edit'        => 'boolean',
+        'allow_reservation_custom_fields'       => 'boolean',
         'allow_bi_connection'                   => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
         'auth_2fa_remember_ip'                  => 'boolean',
+        'auth_2fa_funds_remember_ip'            => 'boolean',
+        'auth_2fa_funds_restrict_emails'        => 'boolean',
+        'auth_2fa_funds_restrict_auth_sessions' => 'boolean',
+        'auth_2fa_funds_restrict_reimbursements' => 'boolean',
     ];
 
     /**
@@ -548,53 +573,6 @@ class Organization extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function supplied_funds_approved(): BelongsToMany
-    {
-        return $this->belongsToMany(Fund::class,'fund_providers')->where([
-            'fund_providers.state' => FundProvider::STATE_ACCEPTED
-        ])->where(function(EloquentBuilder $builder) {
-            $builder->where('fund_providers.allow_budget', true);
-            $builder->orWhere(function(EloquentBuilder $builder) {
-                $builder->where('fund_providers.allow_products', true);
-                $builder->orWhere('fund_providers.allow_some_products', true);
-            });
-        });
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function supplied_funds_approved_budget(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Fund::class,
-            'fund_providers'
-        )->where(function(EloquentBuilder $builder) {
-            $builder->where('fund_providers.state', FundProvider::STATE_ACCEPTED);
-            $builder->where('fund_providers.allow_budget', true);
-        });
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function supplied_funds_approved_products(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Fund::class,
-            'fund_providers'
-        )->where(static function(EloquentBuilder $builder) {
-            $builder->where('fund_providers.state', FundProvider::STATE_ACCEPTED);
-            $builder->where('fund_providers.allow_products', true);
-        });
-    }
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
@@ -665,6 +643,11 @@ class Organization extends BaseModel
     public function contacts(): HasMany
     {
         return $this->hasMany(OrganizationContact::class);
+    }
+
+    public function reservation_fields(): HasMany
+    {
+        return $this->hasMany(OrganizationReservationField::class)->orderBy('order');
     }
 
     /**
@@ -1031,5 +1014,25 @@ class Organization extends BaseModel
         ], [
             'value' => Arr::get($contact, 'value'),
         ]));
+    }
+
+    /**
+     * @param array $fields
+     * @return void
+     */
+    public function syncReservationFields(array $fields): void
+    {
+        $this->reservation_fields()
+            ->whereNotIn('id', array_filter(Arr::pluck($fields, 'id')))
+            ->delete();
+
+        foreach ($fields as $order => $item) {
+            $this->reservation_fields()->updateOrCreate([
+                'id' => Arr::get($item, 'id'),
+            ], [
+                ...Arr::only($item, ['label', 'type', 'description', 'required']),
+                'order' => $order,
+            ]);
+        }
     }
 }
