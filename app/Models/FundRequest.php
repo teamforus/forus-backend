@@ -513,33 +513,34 @@ class FundRequest extends BaseModel
      */
     private static function exportTransform(Builder $builder): mixed
     {
-        $transKey = "export.fund_requests";
-        $fundRequests = $builder->with('records.employee', 'fund')->get();
-        $recordKeyList = FundRequestRecord::query()->whereIn(
-            'fund_request_id', $builder->pluck('id')->toArray()
-        )->pluck('record_type_key');
+        $fundRequests = (clone $builder)->with([
+            'identity.record_bsn',
+            'records.employee',
+            'fund',
+        ])->get();
 
-        return $fundRequests->map(static function(FundRequest $fundRequest) use ($transKey, $recordKeyList) {
-            $employees = $fundRequest->records->pluck('employee')->filter();
+        $recordKeyList = FundRequestRecord::query()
+            ->whereIn('fund_request_id', (clone $builder)->select('id'))
+            ->pluck('record_type_key');
+
+        return $fundRequests->map(static function(FundRequest $request) use ($recordKeyList) {
+            $employees = $request->records->pluck('employee')->filter();
             $employees = $employees->map(fn(Employee $employee) => $employee->identity->email)->unique();
 
-            $records = [];
-            foreach ($recordKeyList as $recordKey) {
-                /** @var FundRequestRecord $record */
-                $record = $fundRequest->records()->where('record_type_key', $recordKey)->first();
-                $records[$recordKey] = $record->value ?? '-';
-            }
+            $records = $recordKeyList->reduce(fn ($records, $key) => [
+                ...$records, $key => $request->records->firstWhere('record_type_key', $key),
+            ], []);
 
             return array_merge([
-                trans("$transKey.bsn") => $fundRequest->identity?->bsn,
-                trans("$transKey.fund_name") => $fundRequest->fund->name,
-                trans("$transKey.status") => trans("$transKey.state-values.$fundRequest->state"),
-                trans("$transKey.validator") => $employees->filter()->join(', ') ?: null,
-                trans("$transKey.created_at") => $fundRequest->created_at,
-                trans("$transKey.resolved_at") => $fundRequest->resolved_at,
-                trans("$transKey.lead_time_days") => (string) $fundRequest->lead_time_days,
-                trans("$transKey.lead_time_locale") => $fundRequest->lead_time_locale,
-            ], $records);
+                trans("export.fund_requests.bsn") => $request->identity?->record_bsn?->value ?: '-',
+                trans("export.fund_requests.fund_name") => $request->fund->name,
+                trans("export.fund_requests.status") => trans("export.fund_requests.state-values.$request->state"),
+                trans("export.fund_requests.validator") => $employees->filter()->join(', ') ?: null,
+                trans("export.fund_requests.created_at") => $request->created_at,
+                trans("export.fund_requests.resolved_at") => $request->resolved_at,
+                trans("export.fund_requests.lead_time_days") => (string) $request->lead_time_days,
+                trans("export.fund_requests.lead_time_locale") => $request->lead_time_locale,
+            ], array_map(fn(?FundRequestRecord $record = null) => $record?->value ?: '-', $records));
         })->values();
     }
 
