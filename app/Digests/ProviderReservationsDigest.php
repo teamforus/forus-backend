@@ -128,19 +128,22 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
                 /** @var Collection $group */
                 /** @var Collection $groups */
                 $groups = $group->groupBy('product_reservation_state');
+                $count = count($group);
 
                 $mailBody->h5(trans("digests/provider_reservations.reservations.product_item.title", [
                     'product_name' => $group[0]['product_name'] ?? '',
                     'product_price_locale' => $group[0]['product_price_locale'] ?? '',
                 ]), ['margin_less']);
 
-                $mailBody->text(trans("digests/provider_reservations.reservations.product_item.description_total", [
-                    'count_total' => count($group),
+                $mailBody->text(trans_choice("digests/provider_reservations.reservations.product_item.description_total", $count, [
+                    'count_total' => $count,
                 ]), ['strong', 'margin_less']);
 
                 $mailBody->text($groups->keys()->map(function ($state) use ($groups) {
-                    return trans("digests/provider_reservations.reservations.product_item.description", [
-                        'count' => count($groups[$state]),
+                    $count = count($groups[$state]);
+
+                    return trans_choice("digests/provider_reservations.reservations.product_item.description", $count, [
+                        'count' => $count,
                         'state' => strtolower(trans("states/product_reservations.$state")),
                     ]);
                 })->join("\n"));
