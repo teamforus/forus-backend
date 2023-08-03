@@ -25,6 +25,12 @@ return [
     'fund_request_email_pattern' => '%s@example.com',
     'organization_email_pattern' => '%s@example.com',
 
+    'default' => [
+        'organizations' => [
+            'allow_reservation_custom_fields' => true,
+        ],
+    ],
+
     // default bunq key
     'bunq_key' => '',
 

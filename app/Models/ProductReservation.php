@@ -8,6 +8,7 @@ use App\Events\ProductReservations\ProductReservationRejected;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
@@ -36,7 +37,7 @@ use Illuminate\Support\Facades\Event;
  * @property string|null $birth_date
  * @property string|null $user_note
  * @property string|null $note
- * @property int $archived
+ * @property bool $archived
  * @property \Illuminate\Support\Carbon|null $accepted_at
  * @property \Illuminate\Support\Carbon|null $canceled_at
  * @property \Illuminate\Support\Carbon|null $rejected_at
@@ -44,6 +45,8 @@ use Illuminate\Support\Facades\Event;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservationField[] $custom_fields
+ * @property-read int|null $custom_fields_count
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
  * @property-read string $state_locale
@@ -55,7 +58,7 @@ use Illuminate\Support\Facades\Event;
  * @property-read \App\Models\VoucherTransaction|null $voucher_transaction
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation newQuery()
- * @method static \Illuminate\Database\Query\Builder|ProductReservation onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation query()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAcceptedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAddress($value)
@@ -84,8 +87,8 @@ use Illuminate\Support\Facades\Event;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereUserNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereVoucherId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereVoucherTransactionId($value)
- * @method static \Illuminate\Database\Query\Builder|ProductReservation withTrashed()
- * @method static \Illuminate\Database\Query\Builder|ProductReservation withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation withoutTrashed()
  * @mixin \Eloquent
  */
 class ProductReservation extends BaseModel
@@ -233,6 +236,15 @@ class ProductReservation extends BaseModel
     public function fund_provider_product(): BelongsTo
     {
         return $this->belongsTo(FundProviderProduct::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function custom_fields(): HasMany
+    {
+        return $this->hasMany(ProductReservationFieldValue::class);
     }
 
     /**
