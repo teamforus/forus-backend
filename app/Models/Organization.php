@@ -39,8 +39,6 @@ use Illuminate\Support\Collection as SupportCollection;
  *
  * @property int $id
  * @property string|null $identity_address
- * @property string $auth_2fa_policy
- * @property bool $auth_2fa_remember_ip
  * @property string $name
  * @property string|null $description
  * @property string|null $description_text
@@ -82,6 +80,13 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
+ * @property string|null $auth_2fa_policy
+ * @property bool|null $auth_2fa_remember_ip
+ * @property string $auth_2fa_funds_policy
+ * @property bool $auth_2fa_funds_remember_ip
+ * @property bool $auth_2fa_funds_restrict_emails
+ * @property bool $auth_2fa_funds_restrict_auth_sessions
+ * @property bool $auth_2fa_funds_restrict_reimbursements
  * @property int $show_provider_transactions
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -153,6 +158,11 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictEmails($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictReimbursements($value)
  * @method static EloquentBuilder|Organization whereAllowReservationCustomFields($value)
  * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
@@ -209,12 +219,22 @@ class Organization extends BaseModel
     public const AUTH_2FA_POLICY_OPTIONAL = 'optional';
     public const AUTH_2FA_POLICY_REQUIRED = 'required';
 
+    public const AUTH_2FA_FUNDS_POLICY_OPTIONAL = 'optional';
+    public const AUTH_2FA_FUNDS_POLICY_REQUIRED = 'required';
+    public const AUTH_2FA_FUNDS_POLICY_RESTRICT = 'restrict_features';
+
     public const AUTH_2FA_POLICIES = [
         self::AUTH_2FA_POLICY_OPTIONAL,
         self::AUTH_2FA_POLICY_REQUIRED,
     ];
 
     const EVENT_BI_CONNECTION_UPDATED = 'bi_connection_updated';
+
+    public const AUTH_2FA_FUNDS_POLICIES = [
+        self::AUTH_2FA_FUNDS_POLICY_OPTIONAL,
+        self::AUTH_2FA_FUNDS_POLICY_REQUIRED,
+        self::AUTH_2FA_FUNDS_POLICY_RESTRICT,
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -231,6 +251,8 @@ class Organization extends BaseModel
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'allow_bi_connection',
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
         'bi_connection_auth_type', 'bi_connection_token',
+        'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
+        'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements'
     ];
 
     /**
@@ -261,6 +283,10 @@ class Organization extends BaseModel
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
         'auth_2fa_remember_ip'                  => 'boolean',
+        'auth_2fa_funds_remember_ip'            => 'boolean',
+        'auth_2fa_funds_restrict_emails'        => 'boolean',
+        'auth_2fa_funds_restrict_auth_sessions' => 'boolean',
+        'auth_2fa_funds_restrict_reimbursements' => 'boolean',
     ];
 
     /**
