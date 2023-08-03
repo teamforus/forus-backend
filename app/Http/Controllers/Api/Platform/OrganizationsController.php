@@ -18,7 +18,6 @@ use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Organization;
-use App\Services\BIConnectionService\BIConnection;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -221,6 +220,10 @@ class OrganizationsController extends Controller
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'reservation_phone', 'reservation_address', 'reservation_birth_date',
         ])));
+
+        if ($organization->allow_reservation_custom_fields) {
+            $organization->syncReservationFields($request->get('fields', []));
+        }
 
         return new OrganizationResource($organization);
     }

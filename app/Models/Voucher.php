@@ -1021,8 +1021,18 @@ class Voucher extends BaseModel
             'fund_provider_product_id'  => $fundProviderProduct?->id,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
         ], array_only($extraData, [
-            'first_name', 'last_name', 'user_note', 'note', 'phone', 'address', 'birth_date'
+            'first_name', 'last_name', 'user_note', 'note', 'phone', 'address', 'birth_date',
         ]), $product->only('price', 'price_type', 'price_discount')));
+
+        // store custom fields
+        if ($product->organization->allow_reservation_custom_fields) {
+            $reservation->custom_fields()->createMany($product->organization->reservation_fields->map(fn (
+                OrganizationReservationField $field
+            ) => [
+                'organization_reservation_field_id' => $field->id,
+                'value' => Arr::get($extraData, "custom_fields.$field->id"),
+            ]));
+        }
 
         $reservation->makeVoucher();
 

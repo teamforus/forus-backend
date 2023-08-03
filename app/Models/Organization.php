@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
 
 /**
@@ -71,6 +72,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_2fa_restrictions
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
+ * @property bool $allow_reservation_custom_fields
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $bi_connection_auth_type
@@ -132,6 +134,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $products_sponsor_count
  * @property-read Collection|\App\Models\ReimbursementCategory[] $reimbursement_categories
  * @property-read int|null $reimbursement_categories_count
+ * @property-read Collection|\App\Models\OrganizationReservationField[] $reservation_fields
+ * @property-read int|null $reservation_fields_count
  * @property-read Collection|\App\Models\Fund[] $supplied_funds
  * @property-read int|null $supplied_funds_count
  * @property-read Collection|\App\Models\Tag[] $tags
@@ -159,6 +163,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictEmails($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictReimbursements($value)
+ * @method static EloquentBuilder|Organization whereAllowReservationCustomFields($value)
  * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
@@ -273,6 +278,7 @@ class Organization extends BaseModel
         'allow_manual_bulk_processing'          => 'boolean',
         'allow_2fa_restrictions'                => 'boolean',
         'allow_fund_request_record_edit'        => 'boolean',
+        'allow_reservation_custom_fields'       => 'boolean',
         'allow_bi_connection'                   => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
@@ -631,6 +637,14 @@ class Organization extends BaseModel
     }
 
     /**
+     * @return HasMany
+     */
+    public function reservation_fields(): HasMany
+    {
+        return $this->hasMany(OrganizationReservationField::class)->orderBy('order');
+    }
+
+    /**
      * @param string|array $role
      * @return EloquentBuilder|Relation
      */
@@ -969,5 +983,25 @@ class Organization extends BaseModel
             'organization_bi_connection_token' => $this->bi_connection_token,
             'organization_bi_connection_token_previous' => $connectionToken,
         ]);
+    }
+
+    /**
+     * @param array $fields
+     * @return void
+     */
+    public function syncReservationFields(array $fields): void
+    {
+        $this->reservation_fields()
+            ->whereNotIn('id', array_filter(Arr::pluck($fields, 'id')))
+            ->delete();
+
+        foreach ($fields as $order => $item) {
+            $this->reservation_fields()->updateOrCreate([
+                'id' => Arr::get($item, 'id'),
+            ], [
+                ...Arr::only($item, ['label', 'type', 'description', 'required']),
+                'order' => $order,
+            ]);
+        }
     }
 }

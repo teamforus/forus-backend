@@ -16,6 +16,7 @@ class ProductReservationResource extends BaseJsonResource
         'product.organization',
         'product.photo.presets',
         'voucher_transaction',
+        'custom_fields.organization_reservation_field'
     ];
 
     /**
@@ -72,6 +73,7 @@ class ProductReservationResource extends BaseJsonResource
                 'organization' => $voucher->fund->organization->only('id', 'name'),
             ]),
             'voucher_transaction' => $transaction?->only('id', 'address'),
+            'custom_fields' => ProductReservationFieldValueResource::collection($reservation->custom_fields),
         ], $this->makeTimestamps($reservation->only([
             'created_at', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at', 'birth_date',
         ]), true), $identityData);
