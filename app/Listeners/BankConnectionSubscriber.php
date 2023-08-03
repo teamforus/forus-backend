@@ -140,7 +140,7 @@ class BankConnectionSubscriber
 
         $organization = $event->getBankConnection()->organization;
 
-        if ($email = $organization->getContactEmail(OrganizationContact::BANK_CONNECTION_EXPIRING_KEY)) {
+        if ($email = $organization->getContact(OrganizationContact::KEY_BANK_CONNECTION_EXPIRING)) {
             $implementation = Implementation::general();
 
             $mailable = new BankConnectionExpiringMail(array_merge([

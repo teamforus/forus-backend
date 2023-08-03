@@ -20,7 +20,7 @@ class OrganizationContactResource extends BaseJsonResource
     public function toArray($request): array
     {
         return $this->resource->only([
-            'id', 'type', 'contact_key', 'value', 'organization_id',
+            'id', 'type', 'key', 'value', 'organization_id',
         ]);
     }
 }

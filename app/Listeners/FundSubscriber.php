@@ -202,7 +202,7 @@ class FundSubscriber
 
         FundProviderAppliedNotification::send($eventLog);
 
-        if ($email = $fund->organization->getContactEmail(OrganizationContact::PROVIDER_APPLIED_KEY)) {
+        if ($email = $fund->organization->getContact(OrganizationContact::KEY_PROVIDER_APPLIED)) {
             $mailable = new ProviderAppliedMail(array_merge($eventLog->data, [
                 'sponsor_dashboard_link' => $fund->urlSponsorDashboard(),
             ]), $fund->fund_config->implementation->getEmailFrom());
@@ -273,7 +273,7 @@ class FundSubscriber
 
         BalanceLowNotification::send($eventLog);
 
-        if ($email = $fund->organization->getContactEmail(OrganizationContact::FUND_BALANCE_LOW_EMAIL_KEY)) {
+        if ($email = $fund->organization->getContact(OrganizationContact::KEY_FUND_BALANCE_LOW_EMAIL)) {
             resolve('forus.services.notification')->sendSystemMail(
                 $email, new FundBalanceWarningMail($eventLog->data, $fund->getEmailFrom())
             );

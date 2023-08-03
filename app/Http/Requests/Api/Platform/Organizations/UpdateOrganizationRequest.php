@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations;
 
+use App\Helpers\Arr;
 use App\Models\Organization;
+use App\Models\OrganizationContact;
 use App\Rules\Base\BtwRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\Base\KvkRule;
@@ -61,6 +63,32 @@ class UpdateOrganizationRequest extends FormRequest
             'business_type_id'      => 'nullable|exists:business_types,id',
             'auth_2fa_policy'       => "nullable|in:$auth2FAPolicies",
             'auth_2fa_remember_ip'  => 'nullable|boolean',
+            ...$this->contactsRules(),
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function contactsRules(): array
+    {
+        $keys = Arr::pluck(OrganizationContact::AVAILABLE_TYPES, 'key');
+
+        return [
+            'contacts' => 'nullable|array',
+            'contacts.*' => 'required|array',
+            'contacts.*.key' => 'required|in:' . implode(',', $keys),
+            'contacts.*.value' => 'nullable|email|string|max:100',
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function attributes(): array
+    {
+        return [
+            'contacts.*.value' => 'Contact',
         ];
     }
 }

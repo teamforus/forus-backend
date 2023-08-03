@@ -16,9 +16,9 @@ return new class extends Migration
         Schema::create('organization_contacts', function (Blueprint $table) {
             $table->id();
             $table->integer('organization_id')->unsigned();
-            $table->string('type');
-            $table->string('contact_key');
-            $table->string('value')->nullable();
+            $table->enum('type', ['email'])->default('email');
+            $table->string('key', 100);
+            $table->string('value', 200)->nullable();
             $table->timestamps();
 
             $table->foreign('organization_id')
@@ -35,7 +35,7 @@ return new class extends Migration
             DB::table('organization_contacts')->insert([
                 'type' => 'email',
                 'value' => $email,
-                'contact_key' => 'fund_balance_low',
+                'key' => 'fund_balance_low',
                 'organization_id' => $id,
             ]);
         }
@@ -59,15 +59,13 @@ return new class extends Migration
         $emails = DB::table('organization_contacts')
             ->whereNotNull('value')
             ->where('type', 'email')
-            ->where('contact_key', 'fund_balance_low')
+            ->where('key', 'fund_balance_low')
             ->pluck('value', 'organization_id');
 
         foreach ($emails as $id => $email) {
-            DB::table('organizations')
-                ->where(compact('id'))
-                ->update([
-                    'low_balance_email' => $email,
-                ]);
+            DB::table('organizations')->where(compact('id'))->update([
+                'low_balance_email' => $email,
+            ]);
         }
 
         Schema::dropIfExists('organization_contacts');

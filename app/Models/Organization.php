@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
 
 /**
@@ -1011,14 +1012,24 @@ class Organization extends BaseModel
      * @param string $key
      * @return string|null
      */
-    public function getContactEmail(string $key): ?string
+    public function getContact(string $key): ?string
     {
         /** @var OrganizationContact|null $contact */
-        $contact = $this->contacts()
-            ->where('contact_key', $key)
-            ->where('type', OrganizationContact::TYPE_EMAIL)
-            ->first();
+        $contact = $this->contacts->firstWhere('key', $key);
 
         return $contact?->value;
+    }
+
+    /**
+     * @param array $contacts
+     * @return array
+     */
+    public function syncContacts(array $contacts): array
+    {
+        return Arr::map($contacts, fn (array $contact) => $this->contacts()->updateOrCreate([
+            'key' => Arr::get($contact, 'key'),
+        ], [
+            'value' => Arr::get($contact, 'value'),
+        ]));
     }
 }

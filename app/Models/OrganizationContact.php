@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $organization_id
  * @property string $type
- * @property string $contact_key
+ * @property string $key
  * @property string|null $value
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -32,25 +32,30 @@ class OrganizationContact extends Model
 {
     const TYPE_EMAIL = 'email';
 
-    const FUND_BALANCE_LOW_EMAIL_KEY = 'fund_balance_low';
-    const BANK_CONNECTION_EXPIRING_KEY = 'bank_connections_expiring';
-    const PROVIDER_APPLIED_KEY = 'provider_applied';
+    const KEY_FUND_BALANCE_LOW_EMAIL = 'fund_balance_low';
+    const KEY_BANK_CONNECTION_EXPIRING = 'bank_connections_expiring';
+    const KEY_PROVIDER_APPLIED = 'provider_applied';
 
     const TYPES = [
         self::TYPE_EMAIL
     ];
 
-    public static array $availableContacts = [
-        self::FUND_BALANCE_LOW_EMAIL_KEY => self::TYPE_EMAIL,
-        self::BANK_CONNECTION_EXPIRING_KEY => self::TYPE_EMAIL,
-        self::PROVIDER_APPLIED_KEY => self::TYPE_EMAIL,
-    ];
+    const AVAILABLE_TYPES = [[
+        'key' => self::KEY_FUND_BALANCE_LOW_EMAIL,
+        'type' => self::TYPE_EMAIL,
+    ], [
+        'key' => self::KEY_BANK_CONNECTION_EXPIRING,
+        'type' => self::TYPE_EMAIL,
+    ], [
+        'key' => self::KEY_PROVIDER_APPLIED,
+        'type' => self::TYPE_EMAIL,
+    ]];
 
     /**
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'type', 'contact_key', 'value',
+        'organization_id', 'type', 'key', 'value',
     ];
 
     /**

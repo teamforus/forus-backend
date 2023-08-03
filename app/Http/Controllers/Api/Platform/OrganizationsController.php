@@ -18,7 +18,6 @@ use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Organization;
-use App\Services\BIConnectionService\BIConnection;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -124,6 +123,10 @@ class OrganizationsController extends Controller
             $organization->update($request->only([
                 'auth_2fa_policy', 'auth_2fa_remember_ip',
             ]));
+        }
+
+        if ($request->has('contacts') && is_array($request->get('contacts'))) {
+            $organization->syncContacts($request->get('contacts'));
         }
 
         if ($request->has('iban') && Gate::allows('updateIban', $organization)) {
