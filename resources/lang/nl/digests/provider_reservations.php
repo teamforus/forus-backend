@@ -6,8 +6,8 @@ return [
 
     'reservations' => [
         'title' => implode('|', [
-            "Beste :provider_name,\n\nU heeft in totaal :count_reservations reservation ontvangen (:count_pending_reservations in afwachting) voor het volgende aanbod.",
-            "Beste :provider_name,\n\nU heeft in totaal :count_reservations reservations ontvangen (:count_pending_reservations in afwachting) voor het volgende aanbod.",
+            "Beste :provider_name,\n\nU heeft in totaal :count_reservations reservering ontvangen (:count_pending_reservations in afwachting) voor het volgende aanbod.",
+            "Beste :provider_name,\n\nU heeft in totaal :count_reservations reserveringen ontvangen (:count_pending_reservations in afwachting) voor het volgende aanbod.",
         ]),
         'product_item' => [
             'title' => ':product_name voor :product_price_locale',
@@ -16,8 +16,8 @@ return [
                 '- :count :state reservations,
             ]),
             'description_total' => implode('|', [
-                '- :count_total totaal reservation.',
-                '- :count_total totaal reservations.',
+                '- :count_total reservering in totaal.',
+                '- :count_total reserveringen in totaal.',
             ]),
         ],
     ],
