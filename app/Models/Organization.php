@@ -51,7 +51,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $btw
  * @property string|null $website
  * @property bool $website_public
- * @property string|null $low_balance_email
  * @property int|null $business_type_id
  * @property bool $is_sponsor
  * @property bool $is_provider
@@ -94,6 +93,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
  * @property-read \App\Models\BusinessType|null $business_type
+ * @property-read Collection|\App\Models\OrganizationContact[] $contacts
+ * @property-read int|null $contacts_count
  * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
  * @property-read int|null $digests_count
  * @property-read Collection|\App\Models\Employee[] $employees
@@ -639,6 +640,11 @@ class Organization extends BaseModel
     /**
      * @return HasMany
      */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(OrganizationContact::class);
+    }
+
     public function reservation_fields(): HasMany
     {
         return $this->hasMany(OrganizationReservationField::class)->orderBy('order');
@@ -983,6 +989,31 @@ class Organization extends BaseModel
             'organization_bi_connection_token' => $this->bi_connection_token,
             'organization_bi_connection_token_previous' => $connectionToken,
         ]);
+    }
+
+    /**
+     * @param string $key
+     * @return string|null
+     */
+    public function getContact(string $key): ?string
+    {
+        /** @var OrganizationContact|null $contact */
+        $contact = $this->contacts->firstWhere('key', $key);
+
+        return $contact?->value;
+    }
+
+    /**
+     * @param array $contacts
+     * @return array
+     */
+    public function syncContacts(array $contacts): array
+    {
+        return Arr::map($contacts, fn (array $contact) => $this->contacts()->updateOrCreate([
+            'key' => Arr::get($contact, 'key'),
+        ], [
+            'value' => Arr::get($contact, 'value'),
+        ]));
     }
 
     /**

@@ -36,6 +36,7 @@ class OrganizationResource extends JsonResource
         $load = [
             'tags',
             'offices',
+            'contacts',
             'business_type',
             'bank_connection_active',
             'employees.roles.permissions',
@@ -173,10 +174,13 @@ class OrganizationResource extends JsonResource
     {
         $canUpdate = Gate::allows('update', $organization);
 
-        return $canUpdate ? $organization->only([
-            'iban', 'btw', 'phone', 'email', 'website', 'email_public',
-            'phone_public', 'website_public',
-        ]) : [];
+        return $canUpdate ? [
+            ...$organization->only([
+                'iban', 'btw', 'phone', 'email', 'website', 'email_public',
+                'phone_public', 'website_public',
+            ]),
+            'contacts' => OrganizationContactResource::collection($organization->contacts),
+        ] : [];
     }
 
     /**
