@@ -34,7 +34,7 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
         NotificationService $notificationService
     ): void {
         $mailBody = new MailBodyBuilder();
-        $mailBody->h1(trans('digests/provider_funds.title', [
+        $mailBody->h1(trans('digests/provider_reservations.title', [
             'provider_name' => $organization->name,
         ]));
 
