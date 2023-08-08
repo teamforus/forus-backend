@@ -22,6 +22,8 @@
     $textStyle = "margin: 0 0 15px; font: 400 15px/22px $baseFont color: #383D45; $textLeft; cursor: default;";
     $textMutedStyle = $textStyle . "font-size: 14px; line-height: 22px; color: #646f79; cursor: default;";
 
+    $strongStyle = "font-weight: 700;";
+
     $linkBlockStyle = "margin: 0 0 15px;";
     $linkStyle = "font: 400 16px/28px $baseFont color: #383D45; cursor: pointer; color: $colorPrimary; text-decoration: underline;";
 
@@ -44,6 +46,7 @@
         'h4' => $h4Style,
         'h5' => $h5Style,
         'text' => $textStyle,
+        'strong' => $strongStyle,
         'link' => $linkStyle,
         'link_block' => $linkBlockStyle,
         'text_left' => $textLeft,
