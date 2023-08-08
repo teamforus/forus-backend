@@ -13,7 +13,7 @@ return [
             'title' => ':product_name voor :product_price_locale',
             'description' => implode('|', [
                 '- :count :state reservering',
-                '- :count :state reserveringen,
+                '- :count :state reserveringen',
             ]),
             'description_total' => implode('|', [
                 '- :count_total reservering in totaal.',
