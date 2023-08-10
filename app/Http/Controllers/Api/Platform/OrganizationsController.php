@@ -18,7 +18,6 @@ use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Organization;
-use App\Services\BIConnectionService\BIConnection;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -123,7 +122,14 @@ class OrganizationsController extends Controller
         if ($organization->allow_2fa_restrictions) {
             $organization->update($request->only([
                 'auth_2fa_policy', 'auth_2fa_remember_ip',
+                'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip',
+                'auth_2fa_funds_restrict_emails', 'auth_2fa_funds_restrict_auth_sessions',
+                'auth_2fa_funds_restrict_reimbursements'
             ]));
+        }
+
+        if ($request->has('contacts') && is_array($request->get('contacts'))) {
+            $organization->syncContacts($request->get('contacts'));
         }
 
         if ($request->has('iban') && Gate::allows('updateIban', $organization)) {
@@ -218,6 +224,10 @@ class OrganizationsController extends Controller
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'reservation_phone', 'reservation_address', 'reservation_birth_date',
         ])));
+
+        if ($organization->allow_reservation_custom_fields) {
+            $organization->syncReservationFields($request->get('fields', []));
+        }
 
         return new OrganizationResource($organization);
     }

@@ -217,4 +217,38 @@ class ProductReservationPolicy
     {
         return $this->update($identity, $productReservation) && $productReservation->isPending();
     }
+
+    /**
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function archive(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization
+    ): bool {
+        return
+            $productReservation->isArchivable() &&
+            $this->updateProvider($identity, $productReservation, $organization);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function unarchive(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization
+    ): bool {
+        return
+            $productReservation->archived &&
+            $this->updateProvider($identity, $productReservation, $organization);
+    }
 }

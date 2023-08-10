@@ -74,6 +74,7 @@ use Illuminate\Support\Facades\Event;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
+ * @property string $description_position
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
@@ -162,6 +163,7 @@ use Illuminate\Support\Facades\Event;
  * @method static Builder|Fund whereCriteriaEditableAfterStart($value)
  * @method static Builder|Fund whereDefaultValidatorEmployeeId($value)
  * @method static Builder|Fund whereDescription($value)
+ * @method static Builder|Fund whereDescriptionPosition($value)
  * @method static Builder|Fund whereDescriptionShort($value)
  * @method static Builder|Fund whereDescriptionText($value)
  * @method static Builder|Fund whereEndDate($value)
@@ -233,6 +235,16 @@ class Fund extends BaseModel
         self::TYPE_EXTERNAL,
     ];
 
+    const DESCRIPTION_POSITION_AFTER = 'after';
+    const DESCRIPTION_POSITION_BEFORE = 'before';
+    const DESCRIPTION_POSITION_REPLACE = 'replace';
+
+    const DESCRIPTION_POSITIONS = [
+        self::DESCRIPTION_POSITION_AFTER,
+        self::DESCRIPTION_POSITION_BEFORE,
+        self::DESCRIPTION_POSITION_REPLACE,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -244,7 +256,7 @@ class Fund extends BaseModel
         'default_validator_employee_id', 'auto_requests_validation',
         'criteria_editable_after_start', 'type', 'archived', 'description_short',
         'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title',
-        'balance',
+        'balance', 'description_position',
     ];
 
     protected $hidden = [

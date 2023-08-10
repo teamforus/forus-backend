@@ -51,7 +51,7 @@ class FundProviderResource extends BaseJsonResource
 
         return array_merge($fundProvider->only([
             'id', 'organization_id', 'fund_id', 'state', 'state_locale',
-            'allow_products', 'allow_some_products', 'allow_budget',
+            'allow_products', 'allow_some_products', 'allow_budget', 'excluded',
         ]), $this->productFields($fundProvider), [
             'fund' => new FundResource($fundProvider->fund),
             'offices' => OfficeResource::collection($fundProvider->organization->offices),
