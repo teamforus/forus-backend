@@ -21,6 +21,7 @@ class ClientTypeMiddleware
         'emailSignUpRedirect',
         'emailSignInRedirect',
         'bankOauthRedirect',
+        'biConnection',
     ];
 
     /**

@@ -10,10 +10,6 @@ use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-/**
- * Class FundProvidersExport
- * @package App\Exports
- */
 class FundProvidersExport implements FromCollection, WithHeadings
 {
     protected $request;

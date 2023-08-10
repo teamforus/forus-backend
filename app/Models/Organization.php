@@ -10,15 +10,17 @@ use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\BankService\Models\Bank;
+use App\Services\BIConnectionService\BIConnection;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
-use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
-use App\Traits\HasMarkdownDescription;
+use App\Services\MediaService\Traits\HasMedia;
 use App\Statistics\Funds\FinancialStatisticQueries;
+use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,18 +29,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * App\Models\Organization
  *
  * @property int $id
  * @property string|null $identity_address
- * @property string $auth_2fa_policy
- * @property bool $auth_2fa_remember_ip
  * @property string $name
  * @property string|null $description
  * @property string|null $description_text
@@ -51,7 +51,6 @@ use Illuminate\Database\Query\Builder;
  * @property string $btw
  * @property string|null $website
  * @property bool $website_public
- * @property string|null $low_balance_email
  * @property int|null $business_type_id
  * @property bool $is_sponsor
  * @property bool $is_provider
@@ -69,13 +68,24 @@ use Illuminate\Database\Query\Builder;
  * @property bool $allow_custom_fund_notifications
  * @property bool $allow_budget_fund_limits
  * @property bool $allow_manual_bulk_processing
- * @property bool $allow_fund_request_record_edit
  * @property bool $allow_2fa_restrictions
+ * @property bool $allow_fund_request_record_edit
+ * @property bool $allow_bi_connection
+ * @property bool $allow_reservation_custom_fields
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
+ * @property string $bi_connection_auth_type
+ * @property string $bi_connection_token
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
+ * @property string|null $auth_2fa_policy
+ * @property bool|null $auth_2fa_remember_ip
+ * @property string $auth_2fa_funds_policy
+ * @property bool $auth_2fa_funds_remember_ip
+ * @property bool $auth_2fa_funds_restrict_emails
+ * @property bool $auth_2fa_funds_restrict_auth_sessions
+ * @property bool $auth_2fa_funds_restrict_reimbursements
  * @property int $show_provider_transactions
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -83,6 +93,8 @@ use Illuminate\Database\Query\Builder;
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
  * @property-read \App\Models\BusinessType|null $business_type
+ * @property-read Collection|\App\Models\OrganizationContact[] $contacts
+ * @property-read int|null $contacts_count
  * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
  * @property-read int|null $digests_count
  * @property-read Collection|\App\Models\Employee[] $employees
@@ -123,14 +135,10 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $products_sponsor_count
  * @property-read Collection|\App\Models\ReimbursementCategory[] $reimbursement_categories
  * @property-read int|null $reimbursement_categories_count
+ * @property-read Collection|\App\Models\OrganizationReservationField[] $reservation_fields
+ * @property-read int|null $reservation_fields_count
  * @property-read Collection|\App\Models\Fund[] $supplied_funds
  * @property-read int|null $supplied_funds_count
- * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved
- * @property-read int|null $supplied_funds_approved_count
- * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved_budget
- * @property-read int|null $supplied_funds_approved_budget_count
- * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved_products
- * @property-read int|null $supplied_funds_approved_products_count
  * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
  * @property-read Collection|\App\Models\OrganizationValidator[] $validated_organizations
@@ -146,14 +154,23 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization query()
  * @method static EloquentBuilder|Organization whereAllow2faRestrictions($value)
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
+ * @method static EloquentBuilder|Organization whereAllowBiConnection($value)
  * @method static EloquentBuilder|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictEmails($value)
+ * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictReimbursements($value)
+ * @method static EloquentBuilder|Organization whereAllowReservationCustomFields($value)
  * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
  * @method static EloquentBuilder|Organization whereBankCronTime($value)
+ * @method static EloquentBuilder|Organization whereBiConnectionAuthType($value)
+ * @method static EloquentBuilder|Organization whereBiConnectionToken($value)
  * @method static EloquentBuilder|Organization whereBsnEnabled($value)
  * @method static EloquentBuilder|Organization whereBtw($value)
  * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
@@ -192,7 +209,7 @@ use Illuminate\Database\Query\Builder;
  */
 class Organization extends BaseModel
 {
-    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription;
+    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasLogs;
 
     public const GENERIC_KVK = "00000000";
 
@@ -203,9 +220,21 @@ class Organization extends BaseModel
     public const AUTH_2FA_POLICY_OPTIONAL = 'optional';
     public const AUTH_2FA_POLICY_REQUIRED = 'required';
 
+    public const AUTH_2FA_FUNDS_POLICY_OPTIONAL = 'optional';
+    public const AUTH_2FA_FUNDS_POLICY_REQUIRED = 'required';
+    public const AUTH_2FA_FUNDS_POLICY_RESTRICT = 'restrict_features';
+
     public const AUTH_2FA_POLICIES = [
         self::AUTH_2FA_POLICY_OPTIONAL,
         self::AUTH_2FA_POLICY_REQUIRED,
+    ];
+
+    const EVENT_BI_CONNECTION_UPDATED = 'bi_connection_updated';
+
+    public const AUTH_2FA_FUNDS_POLICIES = [
+        self::AUTH_2FA_FUNDS_POLICY_OPTIONAL,
+        self::AUTH_2FA_FUNDS_POLICY_REQUIRED,
+        self::AUTH_2FA_FUNDS_POLICY_RESTRICT,
     ];
 
     /**
@@ -220,8 +249,11 @@ class Organization extends BaseModel
         'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
-        'reservation_phone', 'reservation_address', 'reservation_birth_date',
+        'reservation_phone', 'reservation_address', 'reservation_birth_date', 'allow_bi_connection',
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
+        'bi_connection_auth_type', 'bi_connection_token',
+        'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
+        'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements'
     ];
 
     /**
@@ -247,9 +279,15 @@ class Organization extends BaseModel
         'allow_manual_bulk_processing'          => 'boolean',
         'allow_2fa_restrictions'                => 'boolean',
         'allow_fund_request_record_edit'        => 'boolean',
+        'allow_reservation_custom_fields'       => 'boolean',
+        'allow_bi_connection'                   => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
         'auth_2fa_remember_ip'                  => 'boolean',
+        'auth_2fa_funds_remember_ip'            => 'boolean',
+        'auth_2fa_funds_restrict_emails'        => 'boolean',
+        'auth_2fa_funds_restrict_auth_sessions' => 'boolean',
+        'auth_2fa_funds_restrict_reimbursements' => 'boolean',
     ];
 
     /**
@@ -535,53 +573,6 @@ class Organization extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function supplied_funds_approved(): BelongsToMany
-    {
-        return $this->belongsToMany(Fund::class,'fund_providers')->where([
-            'fund_providers.state' => FundProvider::STATE_ACCEPTED
-        ])->where(function(EloquentBuilder $builder) {
-            $builder->where('fund_providers.allow_budget', true);
-            $builder->orWhere(function(EloquentBuilder $builder) {
-                $builder->where('fund_providers.allow_products', true);
-                $builder->orWhere('fund_providers.allow_some_products', true);
-            });
-        });
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function supplied_funds_approved_budget(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Fund::class,
-            'fund_providers'
-        )->where(function(EloquentBuilder $builder) {
-            $builder->where('fund_providers.state', FundProvider::STATE_ACCEPTED);
-            $builder->where('fund_providers.allow_budget', true);
-        });
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function supplied_funds_approved_products(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Fund::class,
-            'fund_providers'
-        )->where(static function(EloquentBuilder $builder) {
-            $builder->where('fund_providers.state', FundProvider::STATE_ACCEPTED);
-            $builder->where('fund_providers.allow_products', true);
-        });
-    }
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
@@ -644,6 +635,19 @@ class Organization extends BaseModel
             'id',
             'identity_address'
         )->latest('last_activity_at');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(OrganizationContact::class);
+    }
+
+    public function reservation_fields(): HasMany
+    {
+        return $this->hasMany(OrganizationReservationField::class)->orderBy('order');
     }
 
     /**
@@ -960,5 +964,75 @@ class Organization extends BaseModel
     public function isOwner(Identity $identity): bool
     {
         return $this->identity_address == $identity->address;
+    }
+
+    public function updateBIConnection(?string $auth_type, bool $reset_token = false): void
+    {
+        if ($auth_type) {
+            $this->update(([
+                'bi_connection_auth_type' => $auth_type
+            ]));
+        }
+
+        $connectionToken = $this->bi_connection_token;
+        $connectionEnabled = $this->bi_connection_auth_type != BIConnection::AUTH_TYPE_DISABLED;
+
+        if ($reset_token || (empty($this->bi_connection_token) && $connectionEnabled)) {
+            $this->update([
+                'bi_connection_token' => BIConnection::makeToken(),
+            ]);
+        }
+
+        $this->log(self::EVENT_BI_CONNECTION_UPDATED, [
+            'organization' => $this,
+        ], [
+            'organization_bi_connection_token' => $this->bi_connection_token,
+            'organization_bi_connection_token_previous' => $connectionToken,
+        ]);
+    }
+
+    /**
+     * @param string $key
+     * @return string|null
+     */
+    public function getContact(string $key): ?string
+    {
+        /** @var OrganizationContact|null $contact */
+        $contact = $this->contacts->firstWhere('key', $key);
+
+        return $contact?->value;
+    }
+
+    /**
+     * @param array $contacts
+     * @return array
+     */
+    public function syncContacts(array $contacts): array
+    {
+        return Arr::map($contacts, fn (array $contact) => $this->contacts()->updateOrCreate([
+            'key' => Arr::get($contact, 'key'),
+        ], [
+            'value' => Arr::get($contact, 'value'),
+        ]));
+    }
+
+    /**
+     * @param array $fields
+     * @return void
+     */
+    public function syncReservationFields(array $fields): void
+    {
+        $this->reservation_fields()
+            ->whereNotIn('id', array_filter(Arr::pluck($fields, 'id')))
+            ->delete();
+
+        foreach ($fields as $order => $item) {
+            $this->reservation_fields()->updateOrCreate([
+                'id' => Arr::get($item, 'id'),
+            ], [
+                ...Arr::only($item, ['label', 'type', 'description', 'required']),
+                'order' => $order,
+            ]);
+        }
     }
 }

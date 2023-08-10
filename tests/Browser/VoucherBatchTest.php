@@ -157,6 +157,8 @@ class VoucherBatchTest extends DuskTestCase
         $browser->waitFor("@fundSelectorOption$fundId");
         $browser->pause(100);
         $browser->element("@fundSelectorOption$fundId")->click();
+        $browser->waitFor('@searchVoucher');
+        $browser->type('@searchVoucher', '');
         $browser->waitFor("@vouchersCard$fundId");
         $browser->pause(100);
     }

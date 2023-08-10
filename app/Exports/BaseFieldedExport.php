@@ -37,4 +37,12 @@ abstract class BaseFieldedExport implements FromCollection, WithHeadings
             'name' => static::$exportFields[$key],
         ]]), []);
     }
+
+    /**
+     * @return array
+     */
+    public static function getExportFieldsRaw() : array
+    {
+        return static::$exportFields;
+    }
 }

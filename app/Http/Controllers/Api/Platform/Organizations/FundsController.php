@@ -47,7 +47,7 @@ class FundsController extends Controller
         $this->authorize('viewAny', [Fund::class, $organization]);
 
         $query = (new FundSearch($request->only([
-            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by',
+            'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id', 'order_by',
             'order_by_dir', 'with_archived', 'with_external', 'configured',
         ]), $organization->funds()->getQuery()))->query();
 
@@ -79,7 +79,7 @@ class FundsController extends Controller
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
-            'name', 'description', 'description_short', 'start_date', 'end_date',
+            'name', 'description', 'description_short', 'description_position', 'start_date', 'end_date',
             'type', 'notification_amount', 'default_validator_employee_id',
             'faq_title', 'request_btn_text', 'external_link_text', 'external_link_url',
         ]), [
@@ -167,7 +167,7 @@ class FundsController extends Controller
         $manageFundTexts = Gate::allows('updateTexts', [$fund, $organization]);
 
         $fund->update($request->only(array_merge($manageFundTexts || $manageFund ? [
-            'name', 'description', 'description_short', 'request_btn_text',
+            'name', 'description', 'description_short', 'description_position', 'request_btn_text',
             'external_link_text', 'external_link_url', 'faq_title',
         ] : [], $manageFund ? [
             'notification_amount', 'default_validator_employee_id',

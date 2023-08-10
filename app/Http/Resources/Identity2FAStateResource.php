@@ -4,8 +4,12 @@ namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Tiny\FundTinyResource;
+use App\Models\Fund;
 use App\Models\Identity;
+use App\Models\FundConfig;
+use App\Models\Organization;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Config;
 
 /**
@@ -51,11 +55,22 @@ class Identity2FAStateResource extends BaseJsonResource
     /**
      * @return bool
      */
-    protected function forceForgetVoucher(): bool
+    public function forceForgetVoucher(): bool
     {
-        return $this->resource->funds
-            ->where('fund_config.auth_2fa_remember_ip', false)
-            ->isNotEmpty();
+        return $this->resource->funds()->where(function (Builder|Fund $builder) {
+            $builder->whereHas('fund_config', function(Builder|FundConfig $builder) {
+                $builder->where('auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_REQUIRED);
+                $builder->where('auth_2fa_remember_ip', false);
+            });
+
+            $builder->orWhereHas('fund_config', function(Builder|FundConfig $builder) {
+                $builder->where('auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_GLOBAL);
+                $builder->whereHas('fund.organization', function(Builder|Organization $builder) {
+                    $builder->where('auth_2fa_funds_policy', Organization::AUTH_2FA_FUNDS_POLICY_REQUIRED);
+                    $builder->where('auth_2fa_funds_remember_ip', false);
+                });
+            });
+        })->exists();
     }
 
     /**
@@ -65,6 +80,7 @@ class Identity2FAStateResource extends BaseJsonResource
     {
         return $this->resource->employees
             ->where('organization.auth_2fa_remember_ip', false)
+            ->where('organization.auth_2fa_policy', Organization::AUTH_2FA_POLICY_REQUIRED)
             ->isNotEmpty();
     }
 
@@ -106,11 +122,11 @@ class Identity2FAStateResource extends BaseJsonResource
         return [[
             'type' => 'authenticator',
             'title' => 'Authenticator app',
-            'subtitle' => 'Use an authenticator app',
+            'subtitle' => 'Gebruik een authenticator app',
         ], [
             'type' => 'phone',
-            'title' => 'SMS Verification',
-            'subtitle' => 'Use phone number for authentication',
+            'title' => 'SMS Verificatie',
+            'subtitle' => 'Gebruik je telefoonnummer als verificatie',
         ]];
     }
 }

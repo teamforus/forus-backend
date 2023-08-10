@@ -25,6 +25,12 @@ return [
     'fund_request_email_pattern' => '%s@example.com',
     'organization_email_pattern' => '%s@example.com',
 
+    'default' => [
+        'organizations' => [
+            'allow_reservation_custom_fields' => true,
+        ],
+    ],
+
     // default bunq key
     'bunq_key' => '',
 
@@ -63,6 +69,9 @@ return [
     'backoffice_client_cert' => "",
     'backoffice_client_cert_key' => "",
     'backoffice_fallback' => true,
+
+    "digid_cgi_tls_key" => "",
+    "digid_cgi_tls_cert" => "",
 
     'iconnect_url' => "",
     'iconnect_oin' => "",

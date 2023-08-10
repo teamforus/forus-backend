@@ -8,17 +8,17 @@ use App\Http\Middleware\ClientVersionMiddleware;
 use App\Http\Middleware\DomainDigIdMiddleware;
 use App\Http\Middleware\DomainMiddleware;
 use App\Http\Middleware\EncryptCookies;
-use App\Services\Forus\Auth2FAService\Middleware\Auth2FAMiddleware;
-use App\Services\Forus\Session\Middleware\ForusSessionMiddleware;
 use App\Http\Middleware\ImplementationKeyMiddleware;
-use App\Http\Middleware\ParseApiDependencyMiddleware;
 use App\Http\Middleware\LocaleMiddleware;
+use App\Http\Middleware\ParseApiDependencyMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\VerifyCsrfToken;
-use Illuminate\Http\Middleware\HandleCors;
+use App\Services\Forus\Auth2FAService\Middleware\Auth2FAMiddleware;
+use App\Services\Forus\Session\Middleware\ForusSessionMiddleware;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use Illuminate\Http\Middleware\HandleCors;
 
 class Kernel extends HttpKernel
 {

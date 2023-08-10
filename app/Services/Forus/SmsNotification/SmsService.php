@@ -27,7 +27,7 @@ class SmsService
         $sid = Config::get('forus.twilio.sid');
         $token = Config::get('forus.twilio.token');
 
-        if (!$sid || $token) {
+        if (!$sid || !$token) {
             return false;
         }
 

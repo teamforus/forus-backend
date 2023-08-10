@@ -1021,8 +1021,18 @@ class Voucher extends BaseModel
             'fund_provider_product_id'  => $fundProviderProduct?->id,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
         ], array_only($extraData, [
-            'first_name', 'last_name', 'user_note', 'note', 'phone', 'address', 'birth_date'
+            'first_name', 'last_name', 'user_note', 'note', 'phone', 'address', 'birth_date',
         ]), $product->only('price', 'price_type', 'price_discount')));
+
+        // store custom fields
+        if ($product->organization->allow_reservation_custom_fields) {
+            $reservation->custom_fields()->createMany($product->organization->reservation_fields->map(fn (
+                OrganizationReservationField $field
+            ) => [
+                'organization_reservation_field_id' => $field->id,
+                'value' => Arr::get($extraData, "custom_fields.$field->id"),
+            ]));
+        }
 
         $reservation->makeVoucher();
 
@@ -1151,6 +1161,30 @@ class Voucher extends BaseModel
         $files['zip'] = file_get_contents($zipFilePath);
 
         return compact('files', 'data');
+    }
+
+    /**
+     * TODO:
+     * @param Collection|Voucher[] $vouchers
+     * @param array $fields
+     * @return array
+     */
+    public static function exportOnlyDataArray(Collection|Arrayable $vouchers, array $fields): array
+    {
+        $data = [];
+
+        foreach ($vouchers as $voucher) {
+            do {
+                $voucherData = new VoucherExportData($voucher, $fields, empty($qrFormat));
+            } while(in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
+
+            $data[] = [
+                'name' => $voucherData->getName(),
+                'values' => $voucherData->toArray(),
+            ];
+        }
+
+        return Arr::pluck($data, 'values');
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\ImplementationPageResource;
 use App\Http\Resources\MediaResource;
 use App\Models\Traits\ValidatesValues;
+use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
 use App\Searches\AnnouncementSearch;
@@ -85,6 +86,8 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $digid_a_select_server
  * @property string|null $digid_forus_api_url
  * @property string|null $digid_trusted_cert
+ * @property string|null $digid_cgi_tls_key
+ * @property string|null $digid_cgi_tls_cert
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
@@ -123,6 +126,8 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder|Implementation whereDescriptionAlignment($value)
  * @method static Builder|Implementation whereDigidASelectServer($value)
  * @method static Builder|Implementation whereDigidAppId($value)
+ * @method static Builder|Implementation whereDigidCgiTlsCert($value)
+ * @method static Builder|Implementation whereDigidCgiTlsKey($value)
  * @method static Builder|Implementation whereDigidConnectionType($value)
  * @method static Builder|Implementation whereDigidEnabled($value)
  * @method static Builder|Implementation whereDigidEnv($value)
@@ -206,7 +211,7 @@ class Implementation extends BaseModel
         'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
-        'currency_sign', 'currency_round',
+        'currency_sign', 'currency_round', 'digid_cgi_tls_key', 'digid_cgi_tls_cert',
     ];
 
     /**
@@ -746,8 +751,9 @@ class Implementation extends BaseModel
     {
         $query = $query ?: Organization::query();
 
-        $query->whereHas('supplied_funds_approved', static function (Builder $builder) {
-            $builder->whereIn('funds.id', self::activeFundsQuery()->pluck('funds.id'));
+        $query->whereHas('fund_providers', static function (Builder $builder) {
+            $builder->whereIn('fund_id', self::activeFundsQuery()->select('id'));
+            FundProviderQuery::whereApproved($builder);
         });
 
         if ($business_type_id = array_get($options, 'business_type_id')) {
@@ -765,9 +771,7 @@ class Implementation extends BaseModel
         }
 
         if ($fund_id = array_get($options, 'fund_id')) {
-            $query->whereHas('supplied_funds_approved', static function (Builder $builder) use ($fund_id) {
-                $builder->where('funds.id', $fund_id);
-            });
+            $query->whereRelation('supplied_funds', 'funds.id', $fund_id);
         }
 
         if ($q = array_get($options, 'q')) {
