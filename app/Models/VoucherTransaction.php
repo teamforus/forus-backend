@@ -252,7 +252,8 @@ class VoucherTransaction extends BaseModel
      */
     public function notes_sponsor(): HasMany
     {
-        return $this->hasMany(VoucherTransactionNote::class)->where('group', 'sponsor')
+        return $this->hasMany(VoucherTransactionNote::class)
+            ->where('group', 'sponsor')
             ->orWhere('shared', true);
     }
 
@@ -262,7 +263,8 @@ class VoucherTransaction extends BaseModel
      */
     public function notes_provider(): HasMany
     {
-        return $this->hasMany(VoucherTransactionNote::class)->where('group', 'provider')
+        return $this->hasMany(VoucherTransactionNote::class)
+            ->where('group', 'provider')
             ->orWhere('shared', true);
     }
 
@@ -477,8 +479,11 @@ class VoucherTransaction extends BaseModel
      * @param bool $shared
      * @return VoucherTransactionNote|Model
      */
-    public function addNote(string $group, string $note, bool $shared = false): VoucherTransactionNote|Model
-    {
+    public function addNote(
+        string $group,
+        string $note,
+        bool $shared = false,
+    ): VoucherTransactionNote|Model {
         return $this->notes()->create([
             'message' => $note,
             'shared' => $shared,

@@ -25,7 +25,6 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
         'voucher.fund.logo.presets',
         'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
         'product',
-        'notes',
         'notes_provider',
     ];
 
@@ -38,7 +37,6 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
     public function toArray($request): array
     {
         $transaction = $this->resource;
-        $providerNotes = $transaction->notes_provider->values();
 
         return array_merge($transaction->only([
             "id", "organization_id", "product_id", "address",
@@ -49,7 +47,7 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
             'cancelable' => $transaction->isCancelable(),
             'transaction_in' => $transaction->daysBeforeTransaction(),
             "fund" => new FundTinyResource($transaction->voucher->fund),
-            'notes' => VoucherTransactionNoteResource::collection($providerNotes),
+            'notes' => VoucherTransactionNoteResource::collection($transaction->notes_provider),
             "product" => new ProductResource($transaction->product),
             'reservation' => new ProductReservationResource($transaction->product_reservation),
             "organization" => new OrganizationTinyResource($transaction->provider),
