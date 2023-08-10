@@ -128,6 +128,10 @@ class OrganizationsController extends Controller
             ]));
         }
 
+        if ($request->has('contacts') && is_array($request->get('contacts'))) {
+            $organization->syncContacts($request->get('contacts'));
+        }
+
         if ($request->has('iban') && Gate::allows('updateIban', $organization)) {
             $organization->update([
                 'iban' => strtoupper($request->get('iban'))

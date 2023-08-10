@@ -125,10 +125,13 @@ class FundResource extends BaseJsonResource
      */
     protected function organizationFunds2FAData(Organization $organization): array
     {
-        return $organization->only([
-            'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
-            'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
-        ]);
+        return [
+            'auth_2fa_policy' => $organization->auth_2fa_funds_policy,
+            'auth_2fa_remember_ip' => $organization->auth_2fa_funds_remember_ip,
+            'auth_2fa_restrict_emails' => $organization->auth_2fa_funds_restrict_emails,
+            'auth_2fa_restrict_auth_sessions' => $organization->auth_2fa_funds_restrict_auth_sessions,
+            'auth_2fa_restrict_reimbursements' => $organization->auth_2fa_funds_restrict_reimbursements,
+        ];
     }
 
     /**
