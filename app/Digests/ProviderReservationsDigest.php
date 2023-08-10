@@ -34,7 +34,7 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
         NotificationService $notificationService
     ): void {
         $mailBody = new MailBodyBuilder();
-        $mailBody->h1(trans('digests/provider_funds.title', [
+        $mailBody->h1(trans('digests/provider_reservations.title', [
             'provider_name' => $organization->name,
         ]));
 
@@ -71,24 +71,24 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
         array $otherEvents
     ): Collection {
         // reservations query
-        $reservationQuery = ProductReservation::where(function(Builder $builder) use ($organization) {
+        $query = ProductReservation::where(function(Builder $builder) use ($organization) {
             $builder->whereHas('product', function(Builder $builder) use ($organization) {
-                $builder->whereIn('id', $organization->products()->getQuery()->select('id'));
+                $builder->whereIn('id', $organization->products()->select('id'));
             });
-        })->whereNull('employee_id');
+        });
 
         // logs for selected period
-        $logsApprovedReservations = EventLog::eventsOfTypeQuery(ProductReservation::class, $reservationQuery)
+        $logsApprovedReservations = EventLog::eventsOfTypeQuery(ProductReservation::class, $query)
             ->whereIn('event', $otherEvents)
             ->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization))
             ->get()
             ->groupBy('loggable_id');
 
-        return $logsApprovedReservations->filter(static function(Collection $group) use ($targetEvents) {
-            return in_array($group->sortBy('created_at')->last()->event, $targetEvents);
-        })->map(static function(Collection $group) {
-            return $group->sortBy('created_at')->last();
-        })->flatten(1)->pluck('data');
+        return $logsApprovedReservations
+            ->filter(fn (Collection $group) => in_array($group->sortBy('created_at')->last()->event, $targetEvents))
+            ->map(fn (Collection $group) => $group->sortBy('created_at')->last())
+            ->flatten(1)
+            ->pluck('data');
     }
 
     /**
@@ -101,36 +101,52 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
         $mailBody = new MailBodyBuilder();
 
         // only those created by requester and with state created or accepted
-        $logsApprovedProducts = $this->getEvents($organization, [
+        $logsProducts = $this->getEvents($organization, [
             ProductReservation::EVENT_ACCEPTED,
-            ProductReservation::EVENT_CREATED
+            ProductReservation::EVENT_CREATED,
+            ProductReservation::EVENT_REJECTED,
+            ProductReservation::EVENT_CANCELED_BY_CLIENT,
+            ProductReservation::EVENT_CANCELED_BY_PROVIDER,
         ], ProductReservation::EVENTS);
 
-        $grouped = $logsApprovedProducts->groupBy('product_id');
+        $grouped = $logsProducts->groupBy('product_id');
 
-        if ($logsApprovedProducts->count() > 0) {
-            $count_reservations = $logsApprovedProducts->count();
+        if ($logsProducts->count() > 0) {
+            $count_reservations = $logsProducts->count();
+            $count_pending_reservations = $logsProducts->where(
+                'product_reservation_state', ProductReservation::STATE_PENDING
+            )->count();
             $provider_name = $organization->name;
 
             $mailBody->text(trans_choice(
                 "digests/provider_reservations.reservations.title",
                 $count_reservations,
-                compact('count_reservations', 'provider_name')
+                compact('count_reservations', 'provider_name', 'count_pending_reservations')
             ));
 
             foreach ($grouped as $group) {
-                $count_group = count($group);
+                /** @var Collection $group */
+                /** @var Collection $groups */
+                $groups = $group->groupBy('product_reservation_state');
+                $count = count($group);
 
                 $mailBody->h5(trans("digests/provider_reservations.reservations.product_item.title", [
                     'product_name' => $group[0]['product_name'] ?? '',
                     'product_price_locale' => $group[0]['product_price_locale'] ?? '',
                 ]), ['margin_less']);
 
-                $mailBody->text(trans_choice(
-                    "digests/provider_reservations.reservations.product_item.subtitle",
-                    $count_group,
-                    compact('count_reservations')
-                ));
+                $mailBody->text(trans_choice("digests/provider_reservations.reservations.product_item.description_total", $count, [
+                    'count_total' => $count,
+                ]), ['strong', 'margin_less']);
+
+                $mailBody->text($groups->keys()->map(function ($state) use ($groups) {
+                    $count = count($groups[$state]);
+
+                    return trans_choice("digests/provider_reservations.reservations.product_item.description", $count, [
+                        'count' => $count,
+                        'state' => strtolower(trans("states/product_reservations.$state")),
+                    ]);
+                })->join("\n"));
             }
         }
 

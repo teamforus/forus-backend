@@ -147,11 +147,13 @@ class FundConfig extends BaseModel
     public const VOUCHERS_TYPE_EXTERNAL = 'external';
     public const VOUCHERS_TYPE_INTERNAL = 'internal';
 
+    public const AUTH_2FA_POLICY_GLOBAL = 'global';
     public const AUTH_2FA_POLICY_OPTIONAL = 'optional';
     public const AUTH_2FA_POLICY_REQUIRED = 'required';
     public const AUTH_2FA_POLICY_RESTRICT = 'restrict_features';
 
     public const AUTH_2FA_POLICIES = [
+        self::AUTH_2FA_POLICY_GLOBAL,
         self::AUTH_2FA_POLICY_OPTIONAL,
         self::AUTH_2FA_POLICY_REQUIRED,
         self::AUTH_2FA_POLICY_RESTRICT,

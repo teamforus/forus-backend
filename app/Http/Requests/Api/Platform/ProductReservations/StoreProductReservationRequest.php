@@ -10,10 +10,6 @@ use App\Rules\ProductReservations\ProductIdToReservationRule;
 use App\Rules\Vouchers\IdentityVoucherAddressRule;
 use Illuminate\Support\Facades\Gate;
 
-/**
- * Class StoreProductReservationRequest
- * @package App\Http\Requests\Api\Platform\Vouchers
- */
 class StoreProductReservationRequest extends BaseFormRequest
 {
     /**
@@ -35,7 +31,7 @@ class StoreProductReservationRequest extends BaseFormRequest
     {
         $product = Product::find($this->input('product_id'));
 
-        return array_merge([
+        return [
             'voucher_address' => [
                 'required',
                 new IdentityVoucherAddressRule($this->auth_address(), Voucher::TYPE_BUDGET),
@@ -45,9 +41,9 @@ class StoreProductReservationRequest extends BaseFormRequest
                 'exists:products,id',
                 new ProductIdToReservationRule($this->input('voucher_address'), true)
             ],
-        ], array_merge(
-            $this->fieldsRules($product),
-        ));
+            ...$this->fieldsRules($product),
+            ...$this->customFieldRules($product),
+        ];
     }
 
     /**
@@ -76,5 +72,41 @@ class StoreProductReservationRequest extends BaseFormRequest
                 'before:today',
             ],
         ];
+    }
+
+
+    /**
+     * @param Product|null $product
+     * @return array
+     */
+    private function customFieldRules(?Product $product): array
+    {
+        if (!$product?->organization->allow_reservation_custom_fields) {
+            return [];
+        }
+
+        return $product->organization->reservation_fields->reduce(fn (array $result, $field) => [
+            ...$result,
+            "custom_fields.$field->id" => array_filter([
+                $field->required ? 'required' : 'nullable',
+                $field->type == $field::TYPE_NUMBER ? 'int' : 'string',
+                $field->type == $field::TYPE_TEXT ? 'max:200' : null,
+            ])
+        ], [
+            'custom_fields' => 'nullable|array',
+        ]);
+    }
+
+    /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        $product = Product::find($this->input('product_id'));
+
+        return $product?->organization->reservation_fields->reduce(fn (array $result, $field) => [
+            ...$result,
+            "custom_fields.$field->id" => $field->label,
+        ], []) ?: [];
     }
 }

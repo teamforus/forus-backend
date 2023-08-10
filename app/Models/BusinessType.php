@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\Translations\BusinessTypeTranslationTrait;
+use App\Scopes\Builders\FundProviderQuery;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -66,29 +67,24 @@ class BusinessType extends BaseModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function organizations(): HasMany {
+    public function organizations(): HasMany
+    {
        return $this->hasMany(Organization::class);
     }
 
     /**
      * @param Request $request
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder|BusinessType
      */
-    public static function search(Request $request): Builder {
-        /** @var Builder $query */
-        $query = self::query();
-
+    public static function search(Request $request): Builder|BusinessType
+    {
         if ($request->input('used', false)) {
-            $query->whereHas('organizations.supplied_funds_approved', static function(
-                Builder $builder
-            ) {
-                $builder->whereIn(
-                    'funds.id',
-                    Implementation::activeFunds()->pluck('id')->toArray()
-                );
+            return self::whereHas('organizations.fund_providers', function(Builder $builder) {
+                $builder->whereIn('fund_id', Implementation::activeFundsQuery()->select('id'));
+                FundProviderQuery::whereApproved($builder);
             });
         }
 
-        return $query;
+        return self::query();
     }
 }
