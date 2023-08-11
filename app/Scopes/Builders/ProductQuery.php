@@ -10,7 +10,9 @@ use App\Models\FundProviderProductExclusion;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Models\ProductReservation;
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Lang;
@@ -329,5 +331,40 @@ class ProductQuery
                 $builder->where('reservations_budget_enabled', true);
             }
         });
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function expiredSubQuery(Builder $query): Builder
+    {
+        return $query->selectRaw(
+            "* , IF(`expire_at` AND `expire_at` < CURRENT_DATE(), 1, 0) as `expired`"
+        );
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function stockAmountSubQuery(Builder $query): Builder
+    {
+        $query->addSelect([
+            'reservations_count' => ProductReservation::query()->where([
+                'state' => ProductReservation::STATE_PENDING,
+                'product_id' => 'products.id',
+            ])->selectRaw('COUNT(*)'),
+            'transactions_count' => VoucherTransaction::query()->where([
+                'product_id' => 'products.id',
+            ])->selectRaw('COUNT(*)'),
+        ])->getQuery();
+
+        $query = Product::fromSub($query, 'products');
+        $query->selectRaw(
+            "*, IF(`unlimited_stock`, NULL, `total_amount` - (`reservations_count` + `transactions_count`)) as `stock_amount`"
+        );
+
+        return Product::query()->fromSub($query, 'products');
     }
 }
