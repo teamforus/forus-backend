@@ -136,7 +136,6 @@ class BankProcessFundTopUpsCommand extends Command
         if ($connection->bank->isBNG() && $this->shouldSkipBNG($payment, $topUp)) {
             $topUp->transactions()->firstOrCreate([
                 'bank_transaction_id' => $payment->getId(),
-                'creditor_iban' => $payment->getCreditorAccount()->getIban(),
                 'amount' => NULL
             ]);
 
@@ -145,7 +144,6 @@ class BankProcessFundTopUpsCommand extends Command
 
         $transaction = $topUp->transactions()->firstOrCreate([
             'bank_transaction_id' => $payment->getId(),
-            'creditor_iban' => $payment->getCreditorAccount()->getIban(),
             'amount' => $payment->getAmount()
         ]);
 
@@ -170,7 +168,6 @@ class BankProcessFundTopUpsCommand extends Command
     {
         $query = $topUp->fund->top_up_transactions()
             ->whereRelation('fund_top_up', 'code', $topUp->code)
-            ->where('creditor_iban', $payment->getCreditorAccount()->getIban())
             ->where('fund_top_up_transactions.created_at', '>=', now()->subHours(48));
 
         $topUpExists = (clone $query)->where('amount', $payment->getAmount())->exists();

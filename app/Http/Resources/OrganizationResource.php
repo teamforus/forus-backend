@@ -36,6 +36,7 @@ class OrganizationResource extends JsonResource
         $load = [
             'tags',
             'offices',
+            'contacts',
             'business_type',
             'reservation_fields',
             'bank_connection_active',
@@ -73,6 +74,7 @@ class OrganizationResource extends JsonResource
         $biConnectionData = $baseRequest->isDashboard() ? $this->getBIConnectionData($organization) : [];
         $privateData = $this->privateData($organization);
         $employeeOnlyData = $baseRequest->isDashboard() ? $this->employeeOnlyData($baseRequest, $organization) : [];
+        $funds2FAOnlyData = $baseRequest->isDashboard() ? $this->funds2FAOnlyData($organization) : [];
         $permissionsData = $permissionsCountDep ? $this->getIdentityPermissions($organization, $baseRequest->identity()) : null;
         
         return array_filter(array_merge($organization->only([
@@ -80,7 +82,7 @@ class OrganizationResource extends JsonResource
             'email_public', 'phone_public', 'website_public',
             'description', 'description_html', 'reservation_phone',
             'reservation_address', 'reservation_birth_date'
-        ]), $privateData, $ownerData, $biConnectionData, $employeeOnlyData, [
+        ]), $privateData, $ownerData, $biConnectionData, $employeeOnlyData, $funds2FAOnlyData, [
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),
             'business_type' => new BusinessTypeResource($organization->business_type),
@@ -144,6 +146,18 @@ class OrganizationResource extends JsonResource
      * @param Organization $organization
      * @return array
      */
+    protected function funds2FAOnlyData(Organization $organization): array
+    {
+        return $organization->only([
+            'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
+            'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
+        ]);
+    }
+
+    /**
+     * @param Organization $organization
+     * @return array
+     */
     protected function privateData(Organization $organization): array
     {
         return [
@@ -165,6 +179,7 @@ class OrganizationResource extends JsonResource
             'iban', 'btw', 'phone', 'email', 'website', 'email_public',
             'phone_public', 'website_public',
         ]), [
+            'contacts' => OrganizationContactResource::collection($organization->contacts),
             'reservation_fields' => OrganizationReservationFieldResource::collection($organization->reservation_fields),
         ]) : [];
     }

@@ -58,6 +58,7 @@ class Identity2FATest extends TestCase
     {
         $this->doTestMultiple2FA();
     }
+
     /**
      * @return IdentityProxy
      */

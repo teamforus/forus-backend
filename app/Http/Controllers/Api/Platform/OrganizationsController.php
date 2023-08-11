@@ -122,7 +122,14 @@ class OrganizationsController extends Controller
         if ($organization->allow_2fa_restrictions) {
             $organization->update($request->only([
                 'auth_2fa_policy', 'auth_2fa_remember_ip',
+                'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip',
+                'auth_2fa_funds_restrict_emails', 'auth_2fa_funds_restrict_auth_sessions',
+                'auth_2fa_funds_restrict_reimbursements'
             ]));
+        }
+
+        if ($request->has('contacts') && is_array($request->get('contacts'))) {
+            $organization->syncContacts($request->get('contacts'));
         }
 
         if ($request->has('iban') && Gate::allows('updateIban', $organization)) {
