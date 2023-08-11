@@ -37,6 +37,7 @@ class OrganizationResource extends JsonResource
             'tags',
             'offices',
             'business_type',
+            'reservation_fields',
             'bank_connection_active',
             'employees.roles.permissions',
         ];
@@ -160,9 +161,11 @@ class OrganizationResource extends JsonResource
     {
         $canUpdate = Gate::allows('update', $organization);
 
-        return $canUpdate ? $organization->only([
+        return $canUpdate ? array_merge($organization->only([
             'iban', 'btw', 'phone', 'email', 'website', 'email_public',
             'phone_public', 'website_public',
+        ]), [
+            'reservation_fields' => OrganizationReservationFieldResource::collection($organization->reservation_fields),
         ]) : [];
     }
 

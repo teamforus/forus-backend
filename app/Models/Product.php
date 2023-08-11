@@ -44,7 +44,7 @@ use Illuminate\Support\Arr;
  * @property string $reservation_policy
  * @property string $reservation_phone
  * @property string $reservation_address
- * @property string $reservation_requester_birth_date
+ * @property string $reservation_birth_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -89,7 +89,7 @@ use Illuminate\Support\Arr;
  * @property-read int|null $vouchers_count
  * @method static Builder|Product newModelQuery()
  * @method static Builder|Product newQuery()
- * @method static \Illuminate\Database\Query\Builder|Product onlyTrashed()
+ * @method static Builder|Product onlyTrashed()
  * @method static Builder|Product query()
  * @method static Builder|Product whereAlternativeText($value)
  * @method static Builder|Product whereCreatedAt($value)
@@ -105,18 +105,18 @@ use Illuminate\Support\Arr;
  * @method static Builder|Product wherePriceType($value)
  * @method static Builder|Product whereProductCategoryId($value)
  * @method static Builder|Product whereReservationAddress($value)
+ * @method static Builder|Product whereReservationBirthDate($value)
  * @method static Builder|Product whereReservationEnabled($value)
  * @method static Builder|Product whereReservationPhone($value)
  * @method static Builder|Product whereReservationPolicy($value)
- * @method static Builder|Product whereReservationRequesterBirthDate($value)
  * @method static Builder|Product whereShowOnWebshop($value)
  * @method static Builder|Product whereSoldOut($value)
  * @method static Builder|Product whereSponsorOrganizationId($value)
  * @method static Builder|Product whereTotalAmount($value)
  * @method static Builder|Product whereUnlimitedStock($value)
  * @method static Builder|Product whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|Product withTrashed()
- * @method static \Illuminate\Database\Query\Builder|Product withoutTrashed()
+ * @method static Builder|Product withTrashed()
+ * @method static Builder|Product withoutTrashed()
  * @mixin \Eloquent
  */
 class Product extends BaseModel
