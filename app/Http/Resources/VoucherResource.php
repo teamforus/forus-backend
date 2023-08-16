@@ -280,6 +280,10 @@ class VoucherResource extends BaseJsonResource
             ]), [
                 'address' => $product_voucher->token_with_confirmation->address,
                 'amount' => currency_format($product_voucher->amount),
+                'amount_locale' => currency_format_locale(
+                    $product_voucher->amount,
+                    $product_voucher->fund->getImplementation()
+                ),
                 'date' => $product_voucher->created_at->format('M d, Y'),
                 'date_time' => $product_voucher->created_at->format('M d, Y H:i'),
                 'timestamp' => $product_voucher->created_at->timestamp,

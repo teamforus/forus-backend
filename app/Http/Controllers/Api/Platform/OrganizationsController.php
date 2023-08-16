@@ -215,7 +215,7 @@ class OrganizationsController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
-    public function updateReservationFieldSettings(
+    public function updateReservationFields(
         UpdateOrganizationReservationSettingsRequest $request,
         Organization $organization
     ): OrganizationResource {
