@@ -26,7 +26,7 @@ class IConnect
         self::ENV_PRODUCTION,
     ];
 
-    private const URL_SANDBOX = 'https://apitest.locgov.nl/iconnect/brpmks/1.3.0/';
+    private const URL_SANDBOX = 'https://lab.api.mijniconnect.nl/iconnect/apihcbrp/mks/v1/';
 
     private array $with = [
         'parents' => 'ouders',
