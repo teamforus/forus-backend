@@ -1175,10 +1175,6 @@ class Fund extends BaseModel
         $vouchers = [];
         $fundEndDate = $this->end_date;
 
-        if (!$identityAddress) {
-            return [];
-        }
-
         foreach ($this->fund_formula_products as $formulaProduct) {
             $productExpireDate = $formulaProduct->product->expire_at;
             $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
