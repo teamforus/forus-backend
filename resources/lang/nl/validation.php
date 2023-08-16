@@ -253,6 +253,7 @@ return [
         'voucher_id' => 'voucher',
         'product_id' => 'product',
         'record_type_key_multiplier' => 'record type',
+        'birth_date' => 'Geboortedatum',
         'label' => 'label',
         'type' => 'type',
     ],
@@ -264,6 +265,9 @@ return [
             'free' => 'gratis',
             'discount_fixed' => 'korting',
             'discount_percentage' => 'korting',
+        ],
+        'birth_date' => [
+            'today' => 'vandaag',
         ],
     ],
     'reimbursement' => [
