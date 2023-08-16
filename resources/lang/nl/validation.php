@@ -255,6 +255,7 @@ return [
         'record_type_key_multiplier' => 'record type',
         'label' => 'label',
         'type' => 'type',
+        'birth_date' => 'geboortedatum',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',
