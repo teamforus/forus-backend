@@ -35,10 +35,8 @@ class OrganizationBasicResource extends JsonResource
             'id', 'name', 'business_type_id',
             'email_public', 'phone_public', 'website_public',
         ]), (array_merge($privateData, [
-            'business_type' => $organization->business_type ? new BusinessTypeResource(
-                $organization->business_type
-            ) : null,
-            'logo' => new MediaCompactResource($organization->logo)
+            'logo' => new MediaCompactResource($organization->logo),
+            'business_type' => new BusinessTypeResource($organization->business_type),
         ])));
     }
 }
