@@ -196,10 +196,10 @@ return [
             'De reservering (#:code) kan niet gescant worden, de status van deze reservering is ":state".',
             'Ga naar de beheeromgeving om de reservering te beoordelen.'
         ]),
-        'reservations_limit_reached' => 'Reservation limit reached, you can have up to :count pending reservations.',
+        'reservations_limit_reached' => 'Reserveringslimiet bereikt, u kunt tot :count reserveringen hebben.',
         'too_many_canceled_reservations_for_product' => implode(' ', [
-            'You have canceled :count reservations in the last hour.',
-            'New reservations will be available after one hour.',
+            'U heeft :count geannuleerd in het afgelopen uur.',
+            'Nieuwe reserveringen kunnen pas weer na een uur worden gemaakt.',
         ]),
     ],
     'employees' => [
@@ -253,8 +253,10 @@ return [
         'voucher_id' => 'voucher',
         'product_id' => 'product',
         'record_type_key_multiplier' => 'record type',
+        'birth_date' => 'Geboortedatum',
         'label' => 'label',
         'type' => 'type',
+        'birth_date' => 'geboortedatum',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',
@@ -264,6 +266,9 @@ return [
             'free' => 'gratis',
             'discount_fixed' => 'korting',
             'discount_percentage' => 'korting',
+        ],
+        'birth_date' => [
+            'today' => 'vandaag',
         ],
     ],
     'reimbursement' => [
