@@ -43,8 +43,8 @@ class StoreIdentity2FARequest extends BaseIdentity2FARequest
             'phone' => [
                 'required',
                 'string',
-                'size:12',
-                'starts_with:+31',
+                'max:15',
+                'starts_with:+',
                 Rule::unique('identity_2fa', 'phone')->where('state', Identity2FA::STATE_ACTIVE),
             ]
         ] : []);
