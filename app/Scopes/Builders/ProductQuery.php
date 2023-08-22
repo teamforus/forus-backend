@@ -337,34 +337,20 @@ class ProductQuery
      * @param Builder $query
      * @return Builder
      */
-    public static function expiredSubQuery(Builder $query): Builder
-    {
-        return $query->selectRaw(
-            "* , IF(`expire_at` AND `expire_at` < CURRENT_DATE(), 1, 0) as `expired`"
-        );
-    }
-
-    /**
-     * @param Builder $query
-     * @return Builder
-     */
     public static function stockAmountSubQuery(Builder $query): Builder
     {
         $query->addSelect([
-            'reservations_count' => ProductReservation::query()->where([
+            'reservations_count' => ProductReservation::where([
                 'state' => ProductReservation::STATE_PENDING,
                 'product_id' => 'products.id',
             ])->selectRaw('COUNT(*)'),
-            'transactions_count' => VoucherTransaction::query()->where([
+            'transactions_count' => VoucherTransaction::where([
                 'product_id' => 'products.id',
             ])->selectRaw('COUNT(*)'),
         ])->getQuery();
 
-        $query = Product::fromSub($query, 'products');
-        $query->selectRaw(
+        return Product::query()->fromSub(Product::fromSub($query, 'products')->selectRaw(
             "*, IF(`unlimited_stock`, NULL, `total_amount` - (`reservations_count` + `transactions_count`)) as `stock_amount`"
-        );
-
-        return Product::query()->fromSub($query, 'products');
+        ), 'products');
     }
 }

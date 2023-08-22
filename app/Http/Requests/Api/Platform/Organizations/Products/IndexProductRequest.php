@@ -24,12 +24,11 @@ class IndexProductRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'q' => 'nullable|string',
             'source' => 'nullable|in:sponsor,provider,archive',
             'unlimited_stock' => 'nullable|boolean',
-            'per_page' => $this->perPageRule(),
-            'order_by'  => 'nullable|in:id,name,stock_amount,price,expired,expire_at',
-            'order_dir' => 'nullable|in:asc,desc',
+            ...$this->sortableResourceRules(100, [
+                'id', 'name', 'stock_amount', 'price', 'expire_at',
+            ]),
         ];
     }
 }

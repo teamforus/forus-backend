@@ -593,9 +593,7 @@ class Product extends BaseModel
         $orderBy = $request->get('order_by', 'created_at');
         $orderDir = $request->get('order_dir', 'desc');
 
-        if ($orderBy == 'expired') {
-            $query = ProductQuery::expiredSubQuery($query);
-        } elseif ($orderBy == 'stock_amount') {
+        if ($orderBy == 'stock_amount') {
             $query = ProductQuery::stockAmountSubQuery($query);
         }
 
