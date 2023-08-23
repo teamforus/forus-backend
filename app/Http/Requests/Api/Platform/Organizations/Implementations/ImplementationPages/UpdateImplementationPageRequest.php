@@ -43,6 +43,7 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
             'external_url'          => 'nullable|string|max:300',
             'media_uid'             => 'nullable|array',
             'media_uid.*'           => $this->mediaRule(),
+            'blocks_per_row'        => 'nullable|integer|min:1|max:3',
         ], $faqRules);
     }
 
