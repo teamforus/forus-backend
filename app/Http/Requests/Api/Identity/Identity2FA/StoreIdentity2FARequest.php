@@ -42,9 +42,8 @@ class StoreIdentity2FARequest extends BaseIdentity2FARequest
         ], $type === Auth2FAProvider::TYPE_PHONE ? [
             'phone' => [
                 'required',
-                'string',
-                'max:15',
-                'starts_with:+',
+                'numeric',
+                'digits_between:8,15',
                 Rule::unique('identity_2fa', 'phone')->where('state', Identity2FA::STATE_ACTIVE),
             ]
         ] : []);
