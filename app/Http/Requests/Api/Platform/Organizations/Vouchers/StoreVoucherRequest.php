@@ -38,17 +38,17 @@ class StoreVoucherRequest extends BaseFormRequest
         $bsn_enabled = $this->organization->bsn_enabled;
 
         return [
-            'fund_id'               => $this->fundIdRule(),
-            'email'                 => 'nullable|required_if:assign_by_type,email|email:strict',
             'bsn'                   => $this->bsnRule($bsn_enabled),
             'note'                  => 'nullable|string|max:280',
+            'email'                 => 'nullable|required_if:assign_by_type,email|email:strict',
             'amount'                => $this->amountRule($fund),
-            'expire_at'             => $this->expireAtRule($fund),
-            'product_id'            => $this->productIdRule($fund),
+            'fund_id'               => $this->fundIdRule(),
             'activate'              => 'boolean',
-            'activation_code'       => 'boolean',
+            'expire_at'             => $this->expireAtRule($fund),
             'client_uid'            => 'nullable|string|max:20',
+            'product_id'            => $this->productIdRule($fund),
             'assign_by_type'        => 'required|in:' . $this->availableAssignTypes($bsn_enabled),
+            'activation_code'       => 'boolean',
             'limit_multiplier'      => 'nullable|numeric|min:1|max:1000',
         ];
     }

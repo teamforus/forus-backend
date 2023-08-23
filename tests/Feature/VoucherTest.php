@@ -104,6 +104,7 @@ class VoucherTest extends TestCase
         Cache::clear();
 
         $fund = $this->findFund($testCase['fund_id']);
+        $this->assertTrue($fund->type == $testCase['assert_fund_type'], 'Unexpected fund type.');
 
         $fund->fund_config->forceFill($testCase['fund_config'] ?? [])->save();
         $fund->organization->forceFill($testCase['organization'] ?? [])->save();
@@ -137,10 +138,11 @@ class VoucherTest extends TestCase
         $startDate = now();
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity));
 
-        $data = array_merge([
+        $data = [
             'fund_id' => $fund->id,
-            'assign_by_type' => $assert['assign_by'] === 'client_uid' ? 'activation_code' : $assert['assign_by']
-        ], $this->makeVoucherData($fund, $assert)[0]);
+            'assign_by_type' => $assert['assign_by'] === 'client_uid' ? 'activation_code' : $assert['assign_by'],
+            ...$this->makeVoucherData($fund, $assert)[0],
+        ];
 
         $validateResponse = $this->postJson($this->getApiUrl($fund, '/validate'), $data, $headers);
         $uploadResponse = $this->postJson($this->getApiUrl($fund), $data, $headers);
@@ -181,41 +183,28 @@ class VoucherTest extends TestCase
             $voucher = $createdVouchers->first(fn(Voucher $item) => $item->note === $voucherArr['note']);
             $this->assertNotNull($voucher);
 
-            $this->checkAbilityActivateVoucher($voucher);
-            $voucher->refresh();
-
-            $this->checkAbilityDeactivateVoucher($voucher);
-            $voucher->refresh();
-
-            $this->checkAbilityReactivateVoucher($voucher);
-            $voucher->refresh();
-
-            $this->checkAbilityAssignVoucher($voucher, $assert);
-
-            $this->checkAbilityUpdateLimitMultiplier($voucher);
-            $voucher->refresh();
-
-            $this->checkAbilityGenerateActivationCode($voucher);
-            $voucher->refresh();
-
-            if ($voucher->fund->isTypeSubsidy() && $voucher->isBudgetType()) {
-                Cache::clear();
-
-                $this->checkAbilityAssignPhysicalCard($voucher);
-                $voucher->refresh();
-
-                $this->checkAbilityRemovePhysicalCard($voucher);
-                $voucher->refresh();
-
-                $this->checkAbilityCreatePhysicalCardRequest($voucher);
-                $voucher->refresh();
+            if ($voucher->isPending()) {
+                $this->assertAbilityActivateVoucher($voucher);
+                $this->assertAbilityDeactivateVoucher($voucher);
+                $this->assertAbilityReactivateVoucher($voucher);
             }
 
-            $this->checkAbilityCreateTransactions($voucher);
-            $voucher->refresh();
+            $this->assertAbilityAssignVoucher($voucher, $assert);
+            $this->assertAbilityUpdateLimitMultiplier($voucher);
+            $this->assertAbilityGenerateActivationCode($voucher);
 
-            $this->checkAbilityCreateTopUp($voucher);
-            $voucher->refresh();
+            if ($assert['type'] == 'budget' && $voucher->fund->isTypeSubsidy()) {
+                Cache::clear();
+
+                $this->assertAbilityAssignPhysicalCard($voucher);
+                $this->assertAbilityRemovePhysicalCard($voucher);
+                $this->assertAbilityCreatePhysicalCardRequest($voucher);
+            }
+
+            if ($assert['type'] == 'budget' && $voucher->fund->isTypeBudget()) {
+                $this->assertAbilityCreateTransactions($voucher);
+                $this->assertAbilityCreateTopUp($voucher);
+            }
         }
     }
 
@@ -225,8 +214,10 @@ class VoucherTest extends TestCase
      * @return void
      * @throws \Throwable
      */
-    protected function checkAbilityAssignVoucher(Voucher $voucher, array $assert): void
+    protected function assertAbilityAssignVoucher(Voucher $voucher, array $assert): void
     {
+        $voucher->refresh();
+
         if (!$voucher->identity) {
             $startDate = now();
             $params = [];
@@ -255,7 +246,7 @@ class VoucherTest extends TestCase
             $response = $this->patch($url, $params, $headers);
             $response->assertSuccessful();
 
-            $voucher = Voucher::find($voucher->id);
+            $voucher->refresh();
 
             if ($existingIdentity) {
                 $this->assertEquals($identity->address, $voucher->identity->address);
@@ -266,8 +257,8 @@ class VoucherTest extends TestCase
                 }
             } else {
                 match ($assign_by) {
-                    'bsn' => $this->checkAssignedToNewBsn($voucher, $params),
-                    'email' => $this->checkAssignedToNewEmail($voucher, $startDate),
+                    'bsn' => $this->assertAssignedToNewBsn($voucher, $params),
+                    'email' => $this->assertAssignedToNewEmail($voucher, $startDate),
                 };
             }
         }
@@ -277,44 +268,44 @@ class VoucherTest extends TestCase
      * @param Voucher $voucher
      * @return void
      */
-    protected function checkAbilityActivateVoucher(Voucher $voucher): void
+    protected function assertAbilityActivateVoucher(Voucher $voucher): void
     {
-        if ($voucher->isPending()) {
-            $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
-            $url = $this->getSponsorApiUrl($voucher, '/activate');
+        $voucher->refresh();
 
-            $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
-            $response->assertSuccessful();
+        $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+        $url = $this->getSponsorApiUrl($voucher, '/activate');
 
-            $voucher = Voucher::find($voucher->id);
-            $this->assertTrue($voucher->isActivated(), 'Voucher activation failed');
-        }
+        $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
+        $response->assertSuccessful();
+
+        $this->assertTrue($voucher->refresh()->isActivated(), 'Voucher activation failed');
     }
 
     /**
      * @param Voucher $voucher
      * @return void
      */
-    protected function checkAbilityDeactivateVoucher(Voucher $voucher): void
+    protected function assertAbilityDeactivateVoucher(Voucher $voucher): void
     {
-        if ($voucher->isActivated()) {
-            $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
-            $url = $this->getSponsorApiUrl($voucher, '/deactivate');
+        $voucher->refresh();
 
-            $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
-            $response->assertSuccessful();
+        $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+        $url = $this->getSponsorApiUrl($voucher, '/deactivate');
 
-            $voucher = Voucher::find($voucher->id);
-            $this->assertTrue($voucher->isDeactivated(), 'Voucher deactivation failed');
-        }
+        $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
+        $response->assertSuccessful();
+
+        $this->assertTrue($voucher->refresh()->isDeactivated(), 'Voucher deactivation failed');
     }
 
     /**
      * @param Voucher $voucher
      * @return void
      */
-    protected function checkAbilityReactivateVoucher(Voucher $voucher): void
+    protected function assertAbilityReactivateVoucher(Voucher $voucher): void
     {
+        $voucher->refresh();
+
         if ($voucher->isDeactivated()) {
             $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
             $url = $this->getSponsorApiUrl($voucher, '/activate');
@@ -322,8 +313,7 @@ class VoucherTest extends TestCase
             $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
             $response->assertSuccessful();
 
-            $voucher = Voucher::find($voucher->id);
-            $this->assertTrue($voucher->isActivated(), 'Voucher reactivation failed');
+            $this->assertTrue($voucher->refresh()->isActivated(), 'Voucher reactivation failed');
         }
     }
 
@@ -331,8 +321,10 @@ class VoucherTest extends TestCase
      * @param Voucher $voucher
      * @return void
      */
-    protected function checkAbilityUpdateLimitMultiplier(Voucher $voucher): void
+    protected function assertAbilityUpdateLimitMultiplier(Voucher $voucher): void
     {
+        $voucher->refresh();
+
         if ($voucher->fund->isTypeSubsidy()) {
             $limitMultiplier = $voucher->limit_multiplier + rand(1, 10);
             $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
@@ -341,10 +333,9 @@ class VoucherTest extends TestCase
             $response = $this->patch($url, ['limit_multiplier' => $limitMultiplier], $headers);
             $response->assertSuccessful();
 
-            $voucher = Voucher::find($voucher->id);
             $this->assertEquals(
                 $limitMultiplier,
-                $voucher->limit_multiplier,
+                $voucher->refresh()->limit_multiplier,
                 'Voucher update limit multiplier failed'
             );
         }
@@ -354,8 +345,10 @@ class VoucherTest extends TestCase
      * @param Voucher $voucher
      * @return void
      */
-    protected function checkAbilityGenerateActivationCode(Voucher $voucher): void
+    protected function assertAbilityGenerateActivationCode(Voucher $voucher): void
     {
+        $voucher->refresh();
+
         if (!$voucher->activation_code && !$voucher->isDeactivated() && !$voucher->is_granted) {
             $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
             $url = $this->getSponsorApiUrl($voucher, '/activation-code');
@@ -363,9 +356,8 @@ class VoucherTest extends TestCase
             $response = $this->patch($url, [], $headers);
             $response->assertSuccessful();
 
-            $voucher = Voucher::find($voucher->id);
             $this->assertNotEmpty(
-                $voucher->activation_code,
+                $voucher->refresh()->activation_code,
                 'Voucher generate activation code failed'
             );
         }
@@ -375,23 +367,20 @@ class VoucherTest extends TestCase
      * @param Voucher $voucher
      * @return void
      */
-    protected function checkAbilityCreateTransactions(Voucher $voucher): void
+    protected function assertAbilityCreateTransactions(Voucher $voucher): void
     {
-        $fund = $voucher->fund;
-        if ($fund->isTypeBudget() && $voucher->isBudgetType()) {
-            // make direct payment
-            $fund->fund_config()->update(['allow_direct_payments' => false]);
-            $this->makeDirectTransaction($voucher, false);
+        // make direct payment
+        $voucher->fund->fund_config()->update(['allow_direct_payments' => false]);
+        $this->makeDirectTransaction($voucher, false);
 
-            $fund->fund_config()->update(['allow_direct_payments' => true]);
-            $this->makeDirectTransaction($voucher);
+        $voucher->fund->fund_config()->update(['allow_direct_payments' => true]);
+        $this->makeDirectTransaction($voucher);
 
-            $fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_EXTERNAL]);
-            $this->makeTransactionToProvider($voucher);
+        $voucher->fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_EXTERNAL]);
+        $this->makeTransactionToProvider($voucher);
 
-            $fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_INTERNAL]);
-            $this->makeTransactionToProvider($voucher);
-        }
+        $voucher->fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_INTERNAL]);
+        $this->makeTransactionToProvider($voucher);
     }
 
     /**
@@ -475,22 +464,19 @@ class VoucherTest extends TestCase
      * @param Voucher $voucher
      * @return void
      */
-    protected function checkAbilityCreateTopUp(Voucher $voucher): void
+    protected function assertAbilityCreateTopUp(Voucher $voucher): void
     {
-        $fund = $voucher->fund;
-        if ($fund->isTypeBudget() && $voucher->isBudgetType()) {
-            $fund->fund_config()->update(['allow_voucher_top_ups' => false]);
-            $this->makeTopUp($voucher, false);
+        $voucher->fund->fund_config()->update(['allow_voucher_top_ups' => false]);
+        $this->makeTopUp($voucher, false);
 
-            $fund->fund_config()->update(['allow_voucher_top_ups' => true]);
-            $this->makeTopUp($voucher);
+        $voucher->fund->fund_config()->update(['allow_voucher_top_ups' => true]);
+        $this->makeTopUp($voucher);
 
-            $fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_EXTERNAL]);
-            $this->makeTopUp($voucher);
+        $voucher->fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_EXTERNAL]);
+        $this->makeTopUp($voucher);
 
-            $fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_INTERNAL]);
-            $this->makeTopUp($voucher);
-        }
+        $voucher->fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_INTERNAL]);
+        $this->makeTopUp($voucher);
     }
 
     /**
@@ -545,7 +531,7 @@ class VoucherTest extends TestCase
      * @return void
      * @throws \Exception
      */
-    protected function checkAbilityAssignPhysicalCard(Voucher $voucher): void
+    protected function assertAbilityAssignPhysicalCard(Voucher $voucher): void
     {
         $voucher->fund->fund_config()->update(['allow_physical_cards' => false]);
         $this->assignPhysicalCard($voucher, 'sponsor', false);
@@ -591,14 +577,14 @@ class VoucherTest extends TestCase
      * @return void
      * @throws \Exception
      */
-    protected function checkAbilityRemovePhysicalCard(Voucher $voucher): void
+    protected function assertAbilityRemovePhysicalCard(Voucher $voucher): void
     {
         /** @var PhysicalCard $card */
         $card = $voucher->physical_cards()->first();
         $this->assertNotNull($card);
 
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
-        $url = $this->getSponsorApiUrlPhysicalCards($voucher, "/{$card->id}");
+        $url = $this->getSponsorApiUrlPhysicalCards($voucher, "/$card->id");
 
         $response = $this->delete($url, [], $headers);
         $response->assertSuccessful();
@@ -612,10 +598,11 @@ class VoucherTest extends TestCase
      * @return void
      * @throws \Exception
      */
-    protected function checkAbilityCreatePhysicalCardRequest(Voucher $voucher): void
+    protected function assertAbilityCreatePhysicalCardRequest(Voucher $voucher): void
     {
         $startDate = now();
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+
         $url = sprintf(
             $this->apiOrganizationUrl . '/sponsor/vouchers/%s/physical-card-requests',
             $voucher->fund->organization->id,
@@ -623,11 +610,11 @@ class VoucherTest extends TestCase
         );
 
         $response = $this->post($url, [
-            'address' => $this->faker()->address,
-            'house' => $this->faker()->numberBetween(1, 100),
-            'house_addition' => $this->faker()->word,
-            'postcode' => $this->faker()->postcode,
             'city' => $this->faker()->city,
+            'house' => $this->faker()->numberBetween(1, 100),
+            'address' => $this->faker()->address,
+            'postcode' => $this->faker()->postcode,
+            'house_addition' => $this->faker()->word,
         ], $headers);
 
         $response->assertSuccessful();
@@ -678,21 +665,13 @@ class VoucherTest extends TestCase
                 if ($voucher->fund->isTypeSubsidy() && $voucher->isBudgetType()) {
                     Cache::clear();
 
-                    $this->checkAbilityIdentityAssignPhysicalCard($voucher);
-                    $voucher->refresh();
-
-                    $this->checkAbilityIdentityRemovePhysicalCard($voucher);
-                    $voucher->refresh();
-
-                    $this->checkAbilityIdentityCreatePhysicalCardRequest($voucher);
-                    $voucher->refresh();
+                    $this->assertAbilityIdentityAssignPhysicalCard($voucher);
+                    $this->assertAbilityIdentityRemovePhysicalCard($voucher);
+                    $this->assertAbilityIdentityCreatePhysicalCardRequest($voucher);
                 }
 
-                $this->checkAbilityIdentityShareVoucher($voucher);
-                $voucher->refresh();
-
-                $this->checkAbilityIdentitySendVoucherEmail($voucher);
-                $voucher->refresh();
+                $this->assertAbilityIdentityShareVoucher($voucher);
+                $this->assertAbilityIdentitySendVoucherEmail($voucher);
             }
         }
     }
@@ -702,8 +681,10 @@ class VoucherTest extends TestCase
      * @return void
      * @throws \Exception
      */
-    protected function checkAbilityIdentityAssignPhysicalCard(Voucher $voucher): void
+    protected function assertAbilityIdentityAssignPhysicalCard(Voucher $voucher): void
     {
+        $voucher->refresh();
+
         $voucher->fund->fund_config()->update(['allow_physical_cards' => false]);
         $this->assignPhysicalCard($voucher, 'identity', false);
 
@@ -716,14 +697,16 @@ class VoucherTest extends TestCase
      * @return void
      * @throws \Exception
      */
-    protected function checkAbilityIdentityRemovePhysicalCard(Voucher $voucher): void
+    protected function assertAbilityIdentityRemovePhysicalCard(Voucher $voucher): void
     {
+        $voucher->refresh();
+
         /** @var PhysicalCard $card */
         $card = $voucher->physical_cards()->first();
         $this->assertNotNull($card);
 
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity));
-        $url = $this->getIdentityApiUrl($voucher, "/physical-cards/{$card->id}");
+        $url = $this->getIdentityApiUrl($voucher, "/physical-cards/$card->id");
 
         $response = $this->delete($url, [], $headers);
         $response->assertSuccessful();
@@ -737,8 +720,10 @@ class VoucherTest extends TestCase
      * @return void
      * @throws \Exception
      */
-    protected function checkAbilityIdentityCreatePhysicalCardRequest(Voucher $voucher): void
+    protected function assertAbilityIdentityCreatePhysicalCardRequest(Voucher $voucher): void
     {
+        $voucher->refresh();
+
         $startDate = now();
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity));
         $url = $this->getIdentityApiUrl($voucher, '/physical-card-requests');
@@ -764,8 +749,10 @@ class VoucherTest extends TestCase
      * @param Voucher $voucher
      * @return void
      */
-    protected function checkAbilityIdentityShareVoucher(Voucher $voucher): void
+    protected function assertAbilityIdentityShareVoucher(Voucher $voucher): void
     {
+        $voucher->refresh();
+
         if ($voucher->isProductType() && $voucher->identity->email) {
             $startDate = now();
             $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity));
@@ -789,8 +776,10 @@ class VoucherTest extends TestCase
      * @param Voucher $voucher
      * @return void
      */
-    protected function checkAbilityIdentitySendVoucherEmail(Voucher $voucher): void
+    protected function assertAbilityIdentitySendVoucherEmail(Voucher $voucher): void
     {
+        $voucher->refresh();
+
         if ($voucher->identity->email) {
             $startDate = now();
             $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity));
@@ -839,10 +828,10 @@ class VoucherTest extends TestCase
         $organization = $voucher->fund->organization;
 
         return sprintf(
-                $this->apiBaseUrl . '/sponsor/%s/vouchers/%s/physical-cards',
-                $organization->id,
-                $voucher->id
-            ) . $append;
+            $this->apiBaseUrl . '/sponsor/%s/vouchers/%s/physical-cards',
+            $organization->id,
+            $voucher->id
+        ) . $append;
     }
 
     /**
@@ -853,8 +842,8 @@ class VoucherTest extends TestCase
     protected function getIdentityApiUrl(Voucher $voucher, string $append = ''): string
     {
         return sprintf(
-                $this->apiBaseUrl . '/vouchers/%s',
-                $voucher->token_without_confirmation->address,
-            ) . $append;
+            $this->apiBaseUrl . '/vouchers/%s',
+            $voucher->token_without_confirmation->address,
+        ) . $append;
     }
 }
