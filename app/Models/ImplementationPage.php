@@ -22,6 +22,7 @@ use Illuminate\Support\Arr;
  * @property string $description_alignment
  * @property string|null $external_url
  * @property bool $external
+ * @property int $blocks_per_row
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -30,18 +31,19 @@ use Illuminate\Support\Arr;
  * @property-read Collection|\App\Models\Faq[] $faq
  * @property-read int|null $faq_count
  * @property-read string $description_html
- * @property-read string $description_position
- * @property-read \App\Models\Implementation $implementation
+ * @property-read \App\Models\Implementation|null $implementation
  * @property-read Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newQuery()
- * @method static \Illuminate\Database\Query\Builder|ImplementationPage onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage query()
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereBlocksPerRow($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDescriptionAlignment($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDescriptionPosition($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternal($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternalUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereId($value)
@@ -49,8 +51,8 @@ use Illuminate\Support\Arr;
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage wherePageType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|ImplementationPage withTrashed()
- * @method static \Illuminate\Database\Query\Builder|ImplementationPage withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage withoutTrashed()
  * @mixin \Eloquent
  */
 class ImplementationPage extends BaseModel
@@ -167,7 +169,7 @@ class ImplementationPage extends BaseModel
      */
     protected $fillable = [
         'implementation_id', 'page_type', 'description', 'description_alignment',
-        'external', 'external_url', 'state', 'description_position',
+        'external', 'external_url', 'state', 'description_position', 'blocks_per_row',
     ];
 
     /**

@@ -62,7 +62,7 @@ class ImplementationPagesController extends Controller
         /** @var ImplementationPage $implementationPage */
         $implementationPage = $implementation->pages()->create(array_merge($request->only([
             'description', 'description_alignment', 'description_position',
-            'external', 'external_url', 'page_type', 'state',
+            'external', 'external_url', 'page_type', 'state', 'blocks_per_row',
         ]), $isInternalType ? [
             'external' => false,
             'external_url' => null,
@@ -142,7 +142,7 @@ class ImplementationPagesController extends Controller
 
         $data = array_merge($request->only([
             'state', 'description', 'description_position', 'description_alignment',
-            'external', 'external_url',
+            'external', 'external_url', 'blocks_per_row',
         ]), $isInternalType ? [
             'external' => false,
             'external_url' => null,

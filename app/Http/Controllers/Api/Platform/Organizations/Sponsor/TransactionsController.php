@@ -99,7 +99,7 @@ class TransactionsController extends Controller
 
         $fields = array_merge(match($target) {
             VoucherTransaction::TARGET_PROVIDER => $request->only([
-                'amount', 'organization_id', 'note',
+                'amount', 'organization_id', 'note', 'note_shared',
             ]),
             VoucherTransaction::TARGET_IBAN => array_merge($reimbursement ? [
                 'target_iban' => $reimbursement->iban,
