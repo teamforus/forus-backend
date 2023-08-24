@@ -203,7 +203,7 @@ class Identity2FATest extends TestCase
         $response = $this->postJson('/api/v1/identity/2fa', match ($type) {
             'phone' => [
                 'type' => 'phone',
-                'phone' => '+31123456789',
+                'phone' => '31123456789',
             ],
             'authenticator' => [
                 'type' => 'authenticator',
