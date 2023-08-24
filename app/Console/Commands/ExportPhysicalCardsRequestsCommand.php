@@ -3,10 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Exports\PhysicalCardRequestsExport;
-use Illuminate\Console\Command;
 use PhpOffice\PhpSpreadsheet\Writer\Exception;
 
-class ExportPhysicalCardsRequestsCommand extends Command
+class ExportPhysicalCardsRequestsCommand extends BaseCommand
 {
     /**
      * The name and signature of the console command.
@@ -50,14 +49,5 @@ class ExportPhysicalCardsRequestsCommand extends Command
         } catch (Exception | \PhpOffice\PhpSpreadsheet\Exception $e) {
             $this->error($e->getMessage());
         }
-    }
-
-    /**
-     * @param string $argument
-     * @param null $default
-     * @return array|string|null
-     */
-    protected function getOption(string $argument, $default = null) {
-        return $this->hasOption($argument) ? $this->option($argument) : $default;
     }
 }

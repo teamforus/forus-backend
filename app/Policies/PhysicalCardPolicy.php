@@ -36,14 +36,14 @@ class PhysicalCardPolicy
      * @param Identity $identity
      * @param Voucher $voucher
      * @param Organization $organization
-     * @return bool
+     * @return Response|bool
      * @noinspection PhpUnused
      */
     public function createSponsor(
         Identity $identity,
         Voucher $voucher,
         Organization $organization
-    ): bool {
+    ): Response|bool {
         if (($result = $this->baseCreatePolicy($voucher)) !== true) {
             return $result;
         }
@@ -98,19 +98,19 @@ class PhysicalCardPolicy
     protected function baseCreatePolicy(Voucher $voucher): Response|bool
     {
         if (!$voucher->fund->fund_config->allow_physical_cards) {
-            $this->deny("physical_cards_not_allowed");
+            return $this->deny("physical_cards_not_allowed");
         }
 
         if ($voucher->physical_cards()->exists()) {
-            $this->deny("physical_card_already_attached");
+            return $this->deny("physical_card_already_attached");
         }
 
         if (!$voucher->isBudgetType()) {
-            $this->deny("only_budget_vouchers");
+            return $this->deny("only_budget_vouchers");
         }
 
         if (!$voucher->isPending() && !$voucher->activated) {
-            $this->deny($voucher->state);
+            return $this->deny($voucher->state);
         }
 
         return true;

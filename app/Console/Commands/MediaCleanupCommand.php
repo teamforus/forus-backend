@@ -37,7 +37,7 @@ class MediaCleanupCommand extends Command
      *
      * @throws \Exception
      */
-    public function handle()
+    public function handle(): void
     {
         $minutes = null;
 
@@ -58,7 +58,8 @@ class MediaCleanupCommand extends Command
     /**
      * @throws \Exception
      */
-    public function mediaWithoutMediable() {
+    public function mediaWithoutMediable(): void
+    {
         $media = resolve('media');
         $countMedia = count($media->getMediaWithoutMediableList());
 
@@ -83,7 +84,8 @@ class MediaCleanupCommand extends Command
      * @param int $minutes
      * @throws \Exception
      */
-    public function expiredMedia(int $minutes) {
+    public function expiredMedia(int $minutes): void
+    {
         $media = resolve('media');
         $countMedia = count($media->getExpiredList($minutes ?: 5 * 60));
 
@@ -107,7 +109,8 @@ class MediaCleanupCommand extends Command
     /**
      * @throws \Exception
      */
-    public function unusedMediaFiles() {
+    public function unusedMediaFiles(): void
+    {
         $media = resolve('media');
         $countFiles = count($media->getUnusedFilesList());
 

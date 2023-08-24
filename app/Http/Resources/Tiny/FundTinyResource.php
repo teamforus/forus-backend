@@ -23,6 +23,7 @@ class FundTinyResource extends BaseJsonResource
             "id", "name", "organization_id",
         ]), [
             'logo' => new MediaResource($this->resource->logo),
+            'organization_name' => $this->resource->organization->name,
         ]);
     }
 }

@@ -194,6 +194,7 @@ trait VoucherTestTrait
      * @param array $vouchers
      * @param array $assert
      * @return void
+     * @throws \Throwable
      */
     protected function assertVouchersCreated(
         Builder|Voucher $query,
@@ -227,8 +228,8 @@ trait VoucherTestTrait
                 $this->checkExistingIdentityAssign($identity, $voucher, $startDate, $assert['assign_by']);
             } else {
                 match ($assert['assign_by']) {
-                    'bsn' => $this->checkAssignedToNewBsn($voucher, $voucherArr),
-                    'email' => $this->checkAssignedToNewEmail($voucher, $startDate),
+                    'bsn' => $this->assertAssignedToNewBsn($voucher, $voucherArr),
+                    'email' => $this->assertAssignedToNewEmail($voucher, $startDate),
                     'client_uid' => $this->checkAssignedToClientUid($voucher, $voucherArr),
                 };
             }
@@ -355,7 +356,7 @@ trait VoucherTestTrait
      * @param array $voucherArr
      * @return void
      */
-    protected function checkAssignedToNewBsn(Voucher $voucher, array $voucherArr): void
+    protected function assertAssignedToNewBsn(Voucher $voucher, array $voucherArr): void
     {
         $this->assertNotNull($voucher->voucher_relation);
         $this->assertEquals($voucherArr['bsn'], $voucher->voucher_relation->bsn);
@@ -380,7 +381,7 @@ trait VoucherTestTrait
      * @param Carbon $startDate
      * @return void
      */
-    protected function checkAssignedToNewEmail(Voucher $voucher, Carbon $startDate): void
+    protected function assertAssignedToNewEmail(Voucher $voucher, Carbon $startDate): void
     {
         $this->assertNotNull($voucher->identity);
 

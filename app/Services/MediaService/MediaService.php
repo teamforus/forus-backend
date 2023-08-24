@@ -520,7 +520,7 @@ class MediaService
     /**
      * @return \Illuminate\Contracts\Filesystem\Filesystem
      */
-    private function storage(): \Illuminate\Contracts\Filesystem\Filesystem
+    public function storage(): \Illuminate\Contracts\Filesystem\Filesystem
     {
         return resolve('filesystem')->disk($this->storageDriver);
     }
