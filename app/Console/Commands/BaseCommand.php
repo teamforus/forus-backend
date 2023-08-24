@@ -127,4 +127,14 @@ abstract class BaseCommand extends Command
         echo "Bye!  \n\n";
         exit();
     }
+
+    /**
+     * @param string $argument
+     * @param null $default
+     * @return array|string|null
+     */
+    protected function getOption(string $argument, $default = null): array|string|null
+    {
+        return $this->hasOption($argument) ? $this->option($argument) : $default;
+    }
 }
