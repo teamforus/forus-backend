@@ -515,6 +515,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
                 'requests' => 'fund_request',
             ]
         ]);
+
+        // requester route
+        $router->resource('fund-requests', "Api\Platform\FundRequestsController")->only([
+            'index', 'show',
+        ]);
     }
 
     $router->get(
