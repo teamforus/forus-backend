@@ -89,6 +89,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property int $show_provider_transactions
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Collection|\App\Models\Fund[] $active_funds
+ * @property-read int|null $active_funds_count
  * @property-read \App\Models\BankConnection|null $bank_connection_active
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
@@ -187,7 +189,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereIsSponsor($value)
  * @method static EloquentBuilder|Organization whereIsValidator($value)
  * @method static EloquentBuilder|Organization whereKvk($value)
- * @method static EloquentBuilder|Organization whereLowBalanceEmail($value)
  * @method static EloquentBuilder|Organization whereManageProviderProducts($value)
  * @method static EloquentBuilder|Organization whereName($value)
  * @method static EloquentBuilder|Organization wherePhone($value)
@@ -441,6 +442,15 @@ class Organization extends BaseModel
     public function funds(): HasMany
     {
         return $this->hasMany(Fund::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function active_funds(): HasMany
+    {
+        return $this->hasMany(Fund::class)->where('state', Fund::STATE_ACTIVE);
     }
 
     /**
