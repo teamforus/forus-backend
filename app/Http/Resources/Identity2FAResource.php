@@ -29,6 +29,6 @@ class Identity2FAResource extends BaseJsonResource
             $data = array_merge($data, $this->resource->only(['secret', 'secret_url']));
         }
 
-        return array_merge($data, $this->makeTimestamps($this->resource->only('created_at')));
+        return array_merge($data, $this->makeTimestamps($this->resource->only('created_at'), true));
     }
 }
