@@ -73,6 +73,7 @@ trait HasFrontendActions
         Identity $identity,
         string $frontend,
     ): void {
+        $browser->pause(10000);
         $browser->waitFor(match ($frontend) {
             'webshop' => $identity->email ? '@identityEmail' : '@userVouchers',
             'sponsor' => '@fundsTitle',
