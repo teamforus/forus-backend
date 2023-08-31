@@ -60,13 +60,14 @@ class SessionResource extends BaseJsonResource
         $locationData = GeoIp::isAvailable() ? GeoIp::getLocation($request->ip) : null;
 
         return [
-            'time_passed'       => $request->created_at->diffInSeconds(now()),
-            'location'          => $locationData,
-            'client_type'       => $request->client_type,
-            'client_version'    => $request->client_version,
-            'device_available'  => Browser::isEnabled(),
-            'device_string'     => $agentData?->toString(),
-            'device'            => $agentDataArray,
+            'device'=> $agentDataArray,
+            'location' => $locationData,
+            'client_type' => $request->client_type,
+            'client_version' => $request->client_version,
+            'device_string' => $agentData?->toString(),
+            'device_available'=> Browser::isEnabled(),
+            'time_passed' => $request->created_at->diffInSeconds(now()),
+            'time_passed_locale' => $request->created_at->diffForHumans(now()),
         ];
     }
 }
