@@ -13,7 +13,7 @@ class TestDataSeedCommand extends BaseCommand
      *
      * @var string
      */
-    protected $signature = 'test-data:seed {configKey="default"}';
+    protected $signature = 'test-data:seed';
 
     /**
      * The console command description.
@@ -33,8 +33,6 @@ class TestDataSeedCommand extends BaseCommand
         }
 
         $testData = new TestData();
-
-        $testData->setConfigKey($this->argument('configKey'));
         $testData->disableEmails();
 
         $testData->info("⇾ Making base identity!");

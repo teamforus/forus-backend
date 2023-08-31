@@ -50,7 +50,7 @@
         "zoon/commonmark-ext-youtube-iframe": "^2.0"
     },
     "require-dev": {
-        "laravel/dusk": "^6.25",
+        "laravel/dusk": "^7.9",
         "laravel/sail": "^1.0.1",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^6.1",
