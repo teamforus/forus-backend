@@ -89,8 +89,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property int $show_provider_transactions
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Collection|\App\Models\Fund[] $active_funds
- * @property-read int|null $active_funds_count
  * @property-read \App\Models\BankConnection|null $bank_connection_active
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
@@ -113,6 +111,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $fund_requests_count
  * @property-read Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
+ * @property-read Collection|\App\Models\Fund[] $funds_active
+ * @property-read int|null $funds_active_count
  * @property-read string $description_html
  * @property-read \App\Models\Identity|null $identity
  * @property-read Collection|\App\Models\Implementation[] $implementations
@@ -161,12 +161,12 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAllowReservationCustomFields($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictEmails($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictReimbursements($value)
- * @method static EloquentBuilder|Organization whereAllowReservationCustomFields($value)
  * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
@@ -448,9 +448,11 @@ class Organization extends BaseModel
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
-    public function active_funds(): HasMany
+    public function funds_active(): HasMany
     {
-        return $this->hasMany(Fund::class)->where('state', Fund::STATE_ACTIVE);
+        return $this->hasMany(Fund::class)->where(function (EloquentBuilder $builder) {
+            FundQuery::whereActiveFilter($builder);
+        });
     }
 
     /**
