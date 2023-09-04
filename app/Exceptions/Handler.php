@@ -13,7 +13,9 @@ class Handler extends ExceptionHandler
      *
      * @var array
      */
-    protected $dontReport = [];
+    protected $dontReport = [
+        AuthorizationJsonException::class,
+    ];
 
     /**
      * A list of the inputs that are never flashed for validation exceptions.

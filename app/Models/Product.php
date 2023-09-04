@@ -590,7 +590,14 @@ class Product extends BaseModel
             }
         }
 
-        return $query->orderBy('created_at', 'desc');
+        $orderBy = $request->get('order_by', 'created_at');
+        $orderDir = $request->get('order_dir', 'desc');
+
+        if ($orderBy == 'stock_amount') {
+            $query = ProductQuery::stockAmountSubQuery($query);
+        }
+
+        return $query->orderBy($orderBy, $orderDir);
     }
 
     /**
