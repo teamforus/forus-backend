@@ -110,6 +110,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $fund_requests_count
  * @property-read Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
+ * @property-read Collection|\App\Models\Fund[] $funds_active
+ * @property-read int|null $funds_active_count
  * @property-read string $description_html
  * @property-read \App\Models\Identity|null $identity
  * @property-read Collection|\App\Models\Implementation[] $implementations
@@ -158,6 +160,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAllowReservationCustomFields($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
@@ -437,6 +440,17 @@ class Organization extends BaseModel
     public function funds(): HasMany
     {
         return $this->hasMany(Fund::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function funds_active(): HasMany
+    {
+        return $this->hasMany(Fund::class)->where(function (EloquentBuilder $builder) {
+            FundQuery::whereActiveFilter($builder);
+        });
     }
 
     /**
