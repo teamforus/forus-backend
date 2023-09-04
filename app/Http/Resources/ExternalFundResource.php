@@ -8,12 +8,7 @@ use App\Scopes\Builders\FundCriteriaQuery;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * Class FundResource
- * @property Fund $resource
- * @package App\Http\Resources
- */
-class ExternalFundResource extends JsonResource
+class ExternalFundResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
@@ -30,6 +25,7 @@ class ExternalFundResource extends JsonResource
         return [
             'id' => $fund->id,
             'name' => $fund->name,
+            'logo' => new MediaResource($fund->logo),
             'organization' => $fund->organization->name,
             'criteria' => FundCriteriaQuery::whereHasExternalValidatorFilter(
                 $fund->criteria()->getQuery(),
