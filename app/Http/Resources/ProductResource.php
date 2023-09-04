@@ -177,7 +177,7 @@ class ProductResource extends BaseJsonResource
         $global = $product::RESERVATION_FIELD_GLOBAL;
         $request = BaseFormRequest::createFromBase(request());
         $organization = $product->organization;
-        $fields = $organization->allow_reservation_custom_fields ? $organization->reservation_fields: [];
+        $fields = $organization->reservation_fields;
 
         if ($request->isWebshop()) {
             return [
