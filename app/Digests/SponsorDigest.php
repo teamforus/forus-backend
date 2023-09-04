@@ -85,7 +85,7 @@ class SponsorDigest extends BaseOrganizationDigest
         $emailBody = new MailBodyBuilder();
         $transKey = $approved ? 'digests/sponsor.providers_approved' : 'digests/sponsor.providers_pending';
 
-        $fundProvidersList = $organization->funds->map(function(Fund $fund) use ($organization, $approved) {
+        $fundProvidersList = $organization->funds_active->map(function(Fund $fund) use ($organization, $approved) {
             $query = FundProvider::query()
                 ->where('fund_id', $fund->id)
                 ->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization))
@@ -137,7 +137,7 @@ class SponsorDigest extends BaseOrganizationDigest
     {
         $emailBody = new MailBodyBuilder();
 
-        $fundProvidersList = $organization->funds->map(function(Fund $fund) use ($organization) {
+        $fundProvidersList = $organization->funds_active->map(function(Fund $fund) use ($organization) {
             $query = FundProvider::query()
                 ->where('fund_id', $fund->id)
                 ->where(fn (Builder $builder) => FundProviderQuery::whereApprovedForFundsFilter($builder, $fund->id))
@@ -190,7 +190,7 @@ class SponsorDigest extends BaseOrganizationDigest
     ): ?MailBodyBuilder {
         $transKey = $manuallyApproved ? 'digests/sponsor.products_manual' : 'digests/sponsor.products_auto';
 
-        $productsList = $organization->funds->map(function(Fund $fund) use ($organization, $manuallyApproved) {
+        $productsList = $organization->funds_active->map(function(Fund $fund) use ($organization, $manuallyApproved) {
             $providerQuery = FundProviderQuery::whereApprovedForFundsFilter(FundProvider::query(), $fund->id);
 
             $query = Product::query()
@@ -222,7 +222,7 @@ class SponsorDigest extends BaseOrganizationDigest
     {
         $transKey = 'digests/sponsor.products_pending';
 
-        $productsList = $organization->funds->map(function(Fund $fund) use ($organization) {
+        $productsList = $organization->funds_active->map(function(Fund $fund) use ($organization) {
             $providerQuery = FundProviderQuery::whereApprovedForFundsFilter(
                 FundProvider::query(), $fund->id,
             )->select('organization_id');
@@ -301,7 +301,7 @@ class SponsorDigest extends BaseOrganizationDigest
         $events = [];
         $emailBody = new MailBodyBuilder();
 
-        foreach ($organization->funds as $fund) {
+        foreach ($organization->funds_active as $fund) {
             $query = EventLog::eventsOfTypeQuery(Fund::class, $fund->id);
             $query->where('event', Fund::EVENT_PROVIDER_REPLIED);
             $query->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));

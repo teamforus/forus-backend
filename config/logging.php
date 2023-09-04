@@ -44,6 +44,30 @@ return [
             'level' => 'debug',
         ],
 
+        'kvk' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/kvk-service.log'),
+            'level' => 'debug',
+        ],
+
+        'bunq' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/bunq-service.log'),
+            'level' => 'debug',
+        ],
+
+        'bng' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/bng-service.log'),
+            'level' => 'debug',
+        ],
+
+        'digid' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/digid-service.log'),
+            'level' => 'debug',
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
