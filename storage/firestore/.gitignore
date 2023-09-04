@@ -1,0 +1,3 @@
+*
+!.gitignore
+!firestore-context.example.json
