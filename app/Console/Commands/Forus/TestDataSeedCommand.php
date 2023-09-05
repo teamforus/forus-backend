@@ -33,7 +33,6 @@ class TestDataSeedCommand extends BaseCommand
         }
 
         $testData = new TestData();
-
         $testData->disableEmails();
 
         $testData->info("⇾ Making base identity!");

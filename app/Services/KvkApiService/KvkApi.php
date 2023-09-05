@@ -4,6 +4,7 @@ namespace App\Services\KvkApiService;
 
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class KvkApi
@@ -58,9 +59,7 @@ class KvkApi
             $response = json_decode($this->makeApiCall($kvk_number, $detailed), false);
             return is_object($response) ? $response : null;
         } catch (\Throwable $e) {
-            if ($logger = logger()) {
-                $logger->error($e->getMessage());
-            }
+            Log::channel('kvk')->warning($e->getMessage());
         }
 
         return null;

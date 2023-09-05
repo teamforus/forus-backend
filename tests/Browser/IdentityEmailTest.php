@@ -135,7 +135,7 @@ class IdentityEmailTest extends DuskTestCase
             $browser->pause(3000);
 
             $this->setEmailAsPrimary($browser, $identityEmail);
-            $this->deleteEmail($browser, $identity);
+            $this->deleteEmail($browser, $identity, $frontend);
             $this->logout($browser);
         });
     }
@@ -169,7 +169,7 @@ class IdentityEmailTest extends DuskTestCase
      * @return void
      * @throws TimeOutException
      */
-    private function deleteEmail(Browser $browser, Identity $identity): void
+    private function deleteEmail(Browser $browser, Identity $identity, string $frontend): void
     {
         /** @var IdentityEmail $notPrimaryEmail */
         $notPrimaryEmail = $identity->emails()->where('primary', false)->first();
@@ -177,6 +177,11 @@ class IdentityEmailTest extends DuskTestCase
         $browser->within('#email_' . $notPrimaryEmail->id, function(Browser $browser) {
             $browser->press('@btnDeleteIdentityEmail');
         });
+
+        if ($frontend != 'webshop') {
+            $browser->waitFor('@btnDangerZoneSubmit');
+            $browser->press('@btnDangerZoneSubmit');
+        }
 
         $browser->waitUntilMissing('#email_' . $notPrimaryEmail->id);
         $browser->assertNotPresent('#email_' . $notPrimaryEmail->id);

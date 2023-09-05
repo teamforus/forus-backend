@@ -24,5 +24,6 @@ class DatabaseSeeder extends Seeder
         $this->call(SystemNotificationsTableSeeder::class);
         $this->call(NotificationTemplatesTableSeeder::class);
         $this->call(Auth2FAProvidersTableSeeder::class);
+        $this->call(SystemConfigTableSeeder::class);
     }
 }
