@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\ProductReservations\IndexProductReservationsRequest;
+use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationAddressRequest;
+use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationClientRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\UpdateProductReservationsRequest;
 use App\Http\Resources\ProductReservationResource;
@@ -60,7 +62,8 @@ class ProductReservationsController extends Controller
         $voucher = Voucher::findByAddress($request->input('voucher_address'), $request->auth_address());
 
         $reservation = $voucher->reserveProduct($product, null, $request->only([
-            'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'custom_fields',
+            'first_name', 'last_name', 'user_note', 'phone', 'birth_date', 'custom_fields',
+            'street', 'house_nr', 'city', 'postal_code',
         ]));
 
         if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
@@ -74,7 +77,13 @@ class ProductReservationsController extends Controller
      * Validate product reservation request
      * @param StoreProductReservationRequest $request
      */
-    public function storeValidate(StoreProductReservationRequest $request): void {}
+    public function storeValidateClient(StoreProductReservationClientRequest $request): void {}
+
+    /**
+     * Validate product reservation request
+     * @param StoreProductReservationAddressRequest $request
+     */
+    public function storeValidateAddress(StoreProductReservationAddressRequest $request): void {}
 
     /**
      * Display the specified resource.

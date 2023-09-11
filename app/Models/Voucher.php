@@ -1021,7 +1021,8 @@ class Voucher extends BaseModel
             'fund_provider_product_id'  => $fundProviderProduct?->id,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
         ], array_only($extraData, [
-            'first_name', 'last_name', 'user_note', 'note', 'phone', 'address', 'birth_date',
+            'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
+            'street', 'house_nr', 'city', 'postal_code',
         ]), $product->only('price', 'price_type', 'price_discount')));
 
         // store custom fields
