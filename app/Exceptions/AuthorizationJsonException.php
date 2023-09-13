@@ -11,7 +11,7 @@ class AuthorizationJsonException extends \Exception
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return gettype($this->message);
     }
@@ -25,9 +25,7 @@ class AuthorizationJsonException extends \Exception
             json_decode($this->message, JSON_OBJECT_AS_ARRAY), config('app.debug', false) ? [
                 'file' => $this->getFile(),
                 'line' => $this->getLine(),
-                'trace' => collect($this->getTrace())->map(function ($trace) {
-                    return Arr::except($trace, ['args']);
-                })->all(),
+                'trace' => array_map(fn ($trace) => Arr::except($trace, ['args']), $this->getTrace()),
             ]: []
         ), $this->getCode());
     }

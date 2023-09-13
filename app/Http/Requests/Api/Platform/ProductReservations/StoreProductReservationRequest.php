@@ -81,11 +81,7 @@ class StoreProductReservationRequest extends BaseFormRequest
      */
     private function customFieldRules(?Product $product): array
     {
-        if (!$product?->organization->allow_reservation_custom_fields) {
-            return [];
-        }
-
-        return $product->organization->reservation_fields->reduce(fn (array $result, $field) => [
+        return $product?->organization->reservation_fields->reduce(fn (array $result, $field) => [
             ...$result,
             "custom_fields.$field->id" => array_filter([
                 $field->required ? 'required' : 'nullable',
