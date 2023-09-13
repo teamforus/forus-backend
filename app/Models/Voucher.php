@@ -1025,14 +1025,12 @@ class Voucher extends BaseModel
         ]), $product->only('price', 'price_type', 'price_discount')));
 
         // store custom fields
-        if ($product->organization->allow_reservation_custom_fields) {
-            $reservation->custom_fields()->createMany($product->organization->reservation_fields->map(fn (
-                OrganizationReservationField $field
-            ) => [
-                'organization_reservation_field_id' => $field->id,
-                'value' => Arr::get($extraData, "custom_fields.$field->id"),
-            ]));
-        }
+        $reservation->custom_fields()->createMany($product->organization->reservation_fields->map(fn (
+            OrganizationReservationField $field
+        ) => [
+            'organization_reservation_field_id' => $field->id,
+            'value' => Arr::get($extraData, "custom_fields.$field->id"),
+        ]));
 
         $reservation->makeVoucher();
 

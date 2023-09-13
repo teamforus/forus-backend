@@ -36,7 +36,7 @@ class SessionPolicy
         Session $session,
         bool $auth2FAConfirmed = false,
     ): Response|bool {
-        if ($session->identity_address === $identity->address) {
+        if ($session->identity_address !== $identity->address) {
             return false;
         }
 
@@ -54,7 +54,7 @@ class SessionPolicy
         Session $session,
         bool $auth2FAConfirmed = false
     ): Response|bool {
-        if ($session->identity_address === $identity->address) {
+        if ($session->identity_address !== $identity->address) {
             return false;
         }
 
