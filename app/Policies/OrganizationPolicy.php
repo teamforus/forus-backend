@@ -166,4 +166,14 @@ class OrganizationPolicy
     {
         return $organization->isOwner($identity);
     }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
+    public function showFeatures(Identity $identity, Organization $organization): bool
+    {
+        return $organization->isEmployee($identity) && $organization->funds->count();
+    }
 }

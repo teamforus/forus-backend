@@ -1045,4 +1045,44 @@ class Organization extends BaseModel
             ]);
         }
     }
+
+    /**
+     * @return bool
+     */
+    public function reimbursementsEnabled(): bool
+    {
+        return $this->funds->filter(fn(Fund $f) => $f->fund_config->allow_reimbursements)->count() > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function voucherRecordsEnabled(): bool
+    {
+        return $this->funds->filter(fn(Fund $f) => $f->fund_config->allow_voucher_records)->count() > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function physicalCardsEnabled(): bool
+    {
+        return $this->funds->filter(fn(Fund $f) => $f->fund_config->allow_physical_cards)->count() > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function iConnectApiOinEnabled(): bool
+    {
+        return $this->funds->filter(fn(Fund $f) => $f->hasIConnectApiOin())->count() > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function digidEnabled(): bool
+    {
+        return $this->implementations->filter(fn(Implementation $i) => $i->digidEnabled())->count() > 0;
+    }
 }
