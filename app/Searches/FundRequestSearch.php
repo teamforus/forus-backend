@@ -7,7 +7,6 @@ namespace App\Searches;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
-use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\IdentityEmail;
 use App\Scopes\Builders\FundRequestQuery;
@@ -52,14 +51,9 @@ class FundRequestSearch extends BaseSearch
         }
 
         if ($this->hasFilter('archived')) {
-            $states = [
-                FundRequest::STATE_DECLINED,
-                FundRequest::STATE_DISREGARDED,
-            ];
-
             $this->getFilter('archived')
-                ? $builder->whereIn('state', $states)
-                : $builder->whereNotIn('state', $states);
+                ? $builder->whereIn('state', FundRequest::STATES_ARCHIVED)
+                : $builder->whereNotIn('state', FundRequest::STATES_ARCHIVED);
         }
 
         if ($this->hasFilter('from') && $from = $this->getFilter('from')) {
@@ -137,11 +131,10 @@ class FundRequestSearch extends BaseSearch
                 ->limit(1),
             'no_answer_clarification' => FundRequestRecord::query()
                 ->whereColumn('fund_request_id', 'fund_requests.id')
-                ->whereRelation(
-                    'fund_request_clarifications',
-                    fn(Builder $q) => $q->whereNull('answered_at')
-                )
-                ->selectRaw('COUNT(*)'),
+                ->whereRelation('fund_request_clarifications', function(Builder $builder) {
+                    $builder->whereNull('answered_at');
+                })
+                ->selectRaw('count(*)'),
             default => null,
         };
 

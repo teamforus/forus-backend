@@ -21,9 +21,11 @@ class FundRequestsController extends Controller
     {
         $this->authorize('viewAnyAsRequester', FundRequest::class);
 
-        $query = new FundRequestSearch($request->only('archived', 'order_by', 'order_dir', 'fund_id'));
+        $search = new FundRequestSearch($request->only([
+            'archived', 'order_by', 'order_dir', 'fund_id',
+        ]));
 
-        return FundRequestResource::queryCollection($query->query()->where([
+        return FundRequestResource::queryCollection($search->query()->where([
             'identity_address' => $request->auth_address()
         ]), $request);
     }
