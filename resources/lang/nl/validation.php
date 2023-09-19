@@ -260,6 +260,7 @@ return [
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',
+        'invalid_amounts' => 'Invalid vouchers amounts',
     ],
     'values' => [
         'price_type' => [

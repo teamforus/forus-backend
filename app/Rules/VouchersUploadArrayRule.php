@@ -33,6 +33,8 @@ class VouchersUploadArrayRule implements Rule
      */
     public function passes($attribute, $value)
     {
+        $vouchers = collect($value);
+
         if (!$this->fund) {
             return false;
         }
@@ -41,7 +43,13 @@ class VouchersUploadArrayRule implements Rule
             return trans('validation.array');
         }
 
-        if (collect($value)->sum('amount') > $this->fund->getMaxAmountSumVouchers()) {
+        $invalidAmounts = $vouchers->filter(fn(array $item) => !is_numeric($item['amount'] ?? null));
+
+        if ($invalidAmounts->count() > 0) {
+            return trans('validation.voucher_generator.invalid_amounts');
+        }
+
+        if ($vouchers->sum('amount') > $this->fund->getMaxAmountSumVouchers()) {
             return trans('validation.voucher_generator.budget_exceeded');
         }
 
