@@ -60,7 +60,6 @@ use Illuminate\Support\Facades\Event;
  * @property-read \App\Models\Voucher|null $product_voucher
  * @property-read \App\Models\Voucher $voucher
  * @property-read \App\Models\VoucherTransaction|null $voucher_transaction
- * @property-read string $full_address
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation onlyTrashed()
