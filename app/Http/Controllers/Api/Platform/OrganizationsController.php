@@ -225,9 +225,7 @@ class OrganizationsController extends Controller
             'reservation_phone', 'reservation_address', 'reservation_birth_date',
         ])));
 
-        if ($organization->allow_reservation_custom_fields) {
-            $organization->syncReservationFields($request->get('fields', []));
-        }
+        $organization->syncReservationFields($request->get('fields', []));
 
         return new OrganizationResource($organization);
     }

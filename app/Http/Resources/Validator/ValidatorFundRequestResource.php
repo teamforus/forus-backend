@@ -200,6 +200,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
     static function getHistory(FundRequestRecord $record): Collection
     {
         return $record->historyLogs()->map(fn (EventLog $eventLog) => array_merge([
+            'id' => $eventLog->id,
             'new_value' => $eventLog->data['fund_request_record_value'] ?? '',
             'old_value' => $eventLog->data['fund_request_record_previous_value'] ?? '',
             'employee_email' => $eventLog->data['employee_email'] ?? '',

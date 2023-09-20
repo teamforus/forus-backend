@@ -230,7 +230,8 @@ class DigIdSession extends Model
      */
     private function setError($message, $errorCode): self
     {
-        Log::error(sprintf('Could not make digid auth request, got %s: %s', $errorCode, $message));
+        Log::channel('digid')->error("Could not make digid auth request: $errorCode - $message");
+
         $canceled = $errorCode == DigIdCgiRepo::DIGID_CANCELLED;
 
         return $this->updateModel([

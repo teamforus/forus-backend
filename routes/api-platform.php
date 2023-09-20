@@ -951,4 +951,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     ]);
 
     $router->post('format', 'Api\Platform\FormatController@format');
+
+    $router
+        ->post('firestore-tokens', 'Api\Platform\FirestoreTokensController@store')
+        ->middleware('throttle:30,1');
 });
