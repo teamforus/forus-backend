@@ -196,18 +196,15 @@ class ProductReservation extends BaseModel
     }
 
     /**
+     * @param $value
      * @return string
      * @noinspection PhpUnused
      */
-    public function getFullAddressAttribute(): string
+    public function getAddressAttribute($value): string
     {
-        if ($this->street) {
-            return sprintf("%s %s, %s, %s", $this->street, $this->house_nr, $this->postal_code, $this->city);
-        } elseif ($this->address) {
-            return $this->address;
-        }
-
-        return '';
+        return $value ?: sprintf("%s %s", $this->street ?: '', implode(', ', array_filter([
+            $this->house_nr, $this->postal_code, $this->city,
+        ])));
     }
 
     /**

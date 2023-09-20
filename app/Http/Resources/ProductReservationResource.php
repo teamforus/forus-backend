@@ -55,7 +55,7 @@ class ProductReservationResource extends BaseJsonResource
 
         return array_merge($reservation->only([
             'id', 'state', 'state_locale', 'amount', 'code',
-            'first_name', 'last_name', 'user_note', 'phone', 'archived',
+            'first_name', 'last_name', 'user_note', 'phone', 'address', 'archived',
         ]), [
             'price' => $price,
             'price_locale' => $price_locale,
@@ -74,7 +74,6 @@ class ProductReservationResource extends BaseJsonResource
             ]),
             'voucher_transaction' => $transaction?->only('id', 'address'),
             'custom_fields' => ProductReservationFieldValueResource::collection($reservation->custom_fields),
-            'address' => $reservation->full_address,
         ], $this->makeTimestamps($reservation->only([
             'created_at', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at', 'birth_date',
         ]), true), $identityData);

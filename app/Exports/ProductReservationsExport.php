@@ -66,7 +66,7 @@ class ProductReservationsExport extends BaseFieldedExport
                 'last_name'     => $reservation->last_name,
                 'user_note'     => $reservation->user_note ?: '-',
                 'phone'         => $reservation->phone ?: '-',
-                'address'       => $reservation->full_address ?: '-',
+                'address'       => $reservation->address ?: '-',
                 'birth_date'    => $reservation->birth_date ?: '-',
                 'state'         => $reservation->state_locale,
                 'created_at'    => format_date_locale($reservation->created_at),

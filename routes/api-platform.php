@@ -206,7 +206,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource('product-reservations', "Api\Platform\ProductReservationsController")
         ->only('index', 'store', 'show', 'update');
 
-    $router->post('product-reservations/validate-client', "Api\Platform\ProductReservationsController@storeValidateClient");
+    $router->post('product-reservations/validate-fields', "Api\Platform\ProductReservationsController@storeValidateFields");
     $router->post('product-reservations/validate-address', "Api\Platform\ProductReservationsController@storeValidateAddress");
 
     $router->group(['prefix' => '/provider'], static function() use ($router) {

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\ProductReservations\IndexProductReservationsRequest;
-use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationAddressRequest;
-use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationClientRequest;
+use App\Http\Requests\Api\Platform\ProductReservations\ValidateProductReservationAddressRequest;
+use App\Http\Requests\Api\Platform\ProductReservations\ValidateProductReservationFieldsRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\UpdateProductReservationsRequest;
 use App\Http\Resources\ProductReservationResource;
@@ -75,15 +75,15 @@ class ProductReservationsController extends Controller
 
     /**
      * Validate product reservation request
-     * @param StoreProductReservationRequest $request
+     * @param ValidateProductReservationFieldsRequest $request
      */
-    public function storeValidateClient(StoreProductReservationClientRequest $request): void {}
+    public function storeValidateFields(ValidateProductReservationFieldsRequest $request): void {}
 
     /**
      * Validate product reservation request
-     * @param StoreProductReservationAddressRequest $request
+     * @param ValidateProductReservationAddressRequest $request
      */
-    public function storeValidateAddress(StoreProductReservationAddressRequest $request): void {}
+    public function storeValidateAddress(ValidateProductReservationAddressRequest $request): void {}
 
     /**
      * Display the specified resource.
