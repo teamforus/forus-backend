@@ -50,6 +50,9 @@ class StoreVoucherRequest extends BaseFormRequest
             'assign_by_type'        => 'required|in:' . $this->availableAssignTypes($bsn_enabled),
             'activation_code'       => 'boolean',
             'limit_multiplier'      => 'nullable|numeric|min:1|max:1000',
+            'records'               => 'nullable|array',
+            'records.*.key'         => 'required|string|exists:record_types,key',
+            'records.*.value'       => 'required|string|max:50',
         ];
     }
 

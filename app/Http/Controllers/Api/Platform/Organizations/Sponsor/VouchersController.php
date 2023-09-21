@@ -16,10 +16,10 @@ use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
-use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Arr\VoucherExportArrResource;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\UpdateVoucherRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
+use App\Http\Resources\VoucherExportFieldResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
@@ -84,14 +84,15 @@ class VouchersController extends Controller
         $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
         $multiplier = $request->input('limit_multiplier');
+        $records = $request->input('records');
         $employee_id = $organization->findEmployee($request->auth_address())->id;
         $extraFields = compact('note', 'employee_id');
         $productVouchers = [];
 
         if ($product_id) {
-            $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
+            $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at, null, $records);
         } else {
-            $mainVoucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
+            $mainVoucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier, $records);
             $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $extraFields, $expire_at);
         }
 
@@ -408,7 +409,7 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        return ExportFieldArrResource::collection(VoucherExport::getExportFields(
+        return VoucherExportFieldResource::collection(VoucherExport::getExportFields(
             $request->input('type', 'budget')
         ));
     }

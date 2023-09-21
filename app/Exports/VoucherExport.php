@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\RecordType;
 use Illuminate\Support\Collection;
 
 class VoucherExport extends BaseFieldedExport
@@ -55,12 +56,30 @@ class VoucherExport extends BaseFieldedExport
      */
     public static function getExportFields(string $type = 'budget') : array
     {
+        $fields = parent::getExportFields();
+        self::addRecordFields($fields);
+
         if ($type === 'product') {
-            return parent::getExportFields();
+            return $fields;
         }
 
-        return array_values(array_filter(parent::getExportFields(), static function(array $item) {
+        return array_values(array_filter($fields, static function(array $item) {
             return !in_array($item['key'], static::$productVoucherOnlyKeys);
         }));
+    }
+
+    /**
+     * @param $fields
+     * @return void
+     */
+    private static function addRecordFields(&$fields) : void
+    {
+        foreach (RecordType::all() as $recordType) {
+            $fields[] = [
+                'key'  => $recordType->key,
+                'name' => $recordType->name ?: $recordType->key,
+                'is_record_field' => true,
+            ];
+        }
     }
 }
