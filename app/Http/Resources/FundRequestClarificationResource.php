@@ -5,9 +5,7 @@ namespace App\Http\Resources;
 use App\Models\FundRequestClarification;
 
 /**
- * Class FundRequestClarificationResource
  * @property FundRequestClarification $resource
- * @package App\Http\Resources
  */
 class FundRequestClarificationResource extends BaseJsonResource
 {

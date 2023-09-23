@@ -7,6 +7,7 @@ namespace App\Searches;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
+use App\Models\FundRequestRecord;
 use App\Models\IdentityEmail;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundRequestRecordQuery;
@@ -33,14 +34,26 @@ class FundRequestSearch extends BaseSearch
         /** @var FundRequest|Builder $builder */
         $builder = parent::query();
 
-        FundRequestQuery::whereEmployeeIsValidatorOrSupervisor($builder, $this->employee);
+        if ($this->employee) {
+            FundRequestQuery::whereEmployeeIsValidatorOrSupervisor($builder, $this->employee);
+        }
 
         if ($this->hasFilter('q') && $q = $this->getFilter('q')) {
             FundRequestQuery::whereQueryFilter($builder, $q);
         }
 
+        if ($this->hasFilter('fund_id') && $fundId = $this->getFilter('fund_id')) {
+            $builder->where('fund_id', $fundId);
+        }
+
         if ($this->hasFilter('state') && $state = $this->getFilter('state')) {
             $builder->where('state', $state);
+        }
+
+        if ($this->hasFilter('archived')) {
+            $this->getFilter('archived')
+                ? $builder->whereIn('state', FundRequest::STATES_ARCHIVED)
+                : $builder->whereNotIn('state', FundRequest::STATES_ARCHIVED);
         }
 
         if ($this->hasFilter('from') && $from = $this->getFilter('from')) {
@@ -116,6 +129,12 @@ class FundRequestSearch extends BaseSearch
                 ->where('primary', true)
                 ->select('email')
                 ->limit(1),
+            'no_answer_clarification' => FundRequestRecord::query()
+                ->whereColumn('fund_request_id', 'fund_requests.id')
+                ->whereRelation('fund_request_clarifications', function(Builder $builder) {
+                    $builder->whereNull('answered_at');
+                })
+                ->selectRaw('count(*)'),
             default => null,
         };
 
