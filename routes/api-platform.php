@@ -58,7 +58,7 @@ $router->group([], static function() use ($router) {
             'funds/{fund}/requests/{fund_request}/clarifications',
             "Api\Platform\Funds\Requests\FundRequestClarificationsController", [
             'only' => [
-                'index', 'show', 'update'
+                'update'
             ],
             'parameters' => [
                 'clarifications' => 'fund_request_clarification',
