@@ -59,6 +59,8 @@ use Illuminate\Support\Facades\Event;
  * @property string $request_btn_text
  * @property string|null $external_link_url
  * @property string $external_link_text
+ * @property bool $external_page
+ * @property string|null $external_page_url
  * @property string|null $type
  * @property string $state
  * @property string $balance
@@ -169,6 +171,8 @@ use Illuminate\Support\Facades\Event;
  * @method static Builder|Fund whereEndDate($value)
  * @method static Builder|Fund whereExternalLinkText($value)
  * @method static Builder|Fund whereExternalLinkUrl($value)
+ * @method static Builder|Fund whereExternalPage($value)
+ * @method static Builder|Fund whereExternalPageUrl($value)
  * @method static Builder|Fund whereFaqTitle($value)
  * @method static Builder|Fund whereId($value)
  * @method static Builder|Fund whereName($value)
@@ -256,7 +260,7 @@ class Fund extends BaseModel
         'default_validator_employee_id', 'auto_requests_validation',
         'criteria_editable_after_start', 'type', 'archived', 'description_short',
         'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title',
-        'balance', 'description_position',
+        'balance', 'description_position', 'external_page', 'external_page_url',
     ];
 
     protected $hidden = [
@@ -266,6 +270,7 @@ class Fund extends BaseModel
     protected $casts = [
         'public' => 'boolean',
         'archived' => 'boolean',
+        'external_page' => 'boolean',
         'auto_requests_validation' => 'boolean',
         'criteria_editable_after_start' => 'boolean',
     ];
