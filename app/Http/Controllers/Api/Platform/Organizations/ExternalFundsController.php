@@ -93,6 +93,6 @@ class ExternalFundsController extends Controller
 
         $fund->setAttribute('external_validator', $organization);
 
-        return new ExternalFundResource($fund);
+        return ExternalFundResource::create($fund);
     }
 }

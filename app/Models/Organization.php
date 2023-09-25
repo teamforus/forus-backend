@@ -71,7 +71,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_2fa_restrictions
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
- * @property bool $allow_reservation_custom_fields
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $bi_connection_auth_type
@@ -111,6 +110,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $fund_requests_count
  * @property-read Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
+ * @property-read Collection|\App\Models\Fund[] $funds_active
+ * @property-read int|null $funds_active_count
  * @property-read string $description_html
  * @property-read \App\Models\Identity|null $identity
  * @property-read Collection|\App\Models\Implementation[] $implementations
@@ -159,12 +160,12 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAllowReservationCustomFields($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictEmails($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictReimbursements($value)
- * @method static EloquentBuilder|Organization whereAllowReservationCustomFields($value)
  * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
@@ -187,7 +188,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereIsSponsor($value)
  * @method static EloquentBuilder|Organization whereIsValidator($value)
  * @method static EloquentBuilder|Organization whereKvk($value)
- * @method static EloquentBuilder|Organization whereLowBalanceEmail($value)
  * @method static EloquentBuilder|Organization whereManageProviderProducts($value)
  * @method static EloquentBuilder|Organization whereName($value)
  * @method static EloquentBuilder|Organization wherePhone($value)
@@ -279,7 +279,6 @@ class Organization extends BaseModel
         'allow_manual_bulk_processing'          => 'boolean',
         'allow_2fa_restrictions'                => 'boolean',
         'allow_fund_request_record_edit'        => 'boolean',
-        'allow_reservation_custom_fields'       => 'boolean',
         'allow_bi_connection'                   => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
@@ -441,6 +440,17 @@ class Organization extends BaseModel
     public function funds(): HasMany
     {
         return $this->hasMany(Fund::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function funds_active(): HasMany
+    {
+        return $this->hasMany(Fund::class)->where(function (EloquentBuilder $builder) {
+            FundQuery::whereActiveFilter($builder);
+        });
     }
 
     /**

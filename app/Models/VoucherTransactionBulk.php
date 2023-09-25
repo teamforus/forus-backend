@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -253,7 +254,7 @@ class VoucherTransactionBulk extends BaseModel
     /**
      * @return BulkPaymentValue|DraftPayment|null
      */
-    public function fetchPayment()
+    public function fetchPayment(): BulkPaymentValue|DraftPayment|null
     {
         if ($this->bank_connection->bank->isBunq()) {
             if (!$this->bank_connection->useContext()) {
@@ -270,7 +271,7 @@ class VoucherTransactionBulk extends BaseModel
             try {
                 return $bngService->getBulkDetails($this->payment_id, $this->access_token);
             } catch (ApiException $exception) {
-                logger()->error($exception->getMessage());
+                Log::channel('bng')->error($exception->getMessage());
             }
         }
 
@@ -298,7 +299,7 @@ class VoucherTransactionBulk extends BaseModel
 
                 $transaction->forceFill([
                     'state'             => VoucherTransaction::STATE_SUCCESS,
-                    'payment_id'        => $payment ? $payment->getId() : null,
+                    'payment_id'        => $payment?->getId(),
                     'payment_time'      => now(),
                 ])->save();
 
@@ -385,7 +386,7 @@ class VoucherTransactionBulk extends BaseModel
             });
 
         } catch (Throwable $e) {
-            logger()->error($e->getMessage() . "\n" . $e->getTraceAsString());
+            Log::channel('bunq')->error($e->getMessage() . "\n" . $e->getTraceAsString());
 
             $this->updateModel([
                 'state' => self::STATE_ERROR,
@@ -437,7 +438,7 @@ class VoucherTransactionBulk extends BaseModel
             // Throttle calls just in case
             sleep(2);
         } catch (Throwable $e) {
-            logger()->error($e->getMessage() . "\n" . $e->getTraceAsString());
+            Log::channel('bng')->error($e->getMessage() . "\n" . $e->getTraceAsString());
 
             $this->updateModel([
                 'state' => self::STATE_ERROR,
