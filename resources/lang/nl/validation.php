@@ -201,6 +201,7 @@ return [
             'U heeft :count geannuleerd in het afgelopen uur.',
             'Nieuwe reserveringen kunnen pas weer na een uur worden gemaakt.',
         ]),
+        'not_enough_voucher_funds' => 'Onvoldoende budget op de voucher',
     ],
     'employees' => [
         'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',
