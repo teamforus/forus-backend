@@ -24,13 +24,13 @@ class FundRequestPolicy
      * Determine whether the user can view the fundRequest.
      *
      * @param Identity $identity
-     * @param Fund|null $fund
+     * @param Fund $fund
      * @return Response|bool
      * @noinspection PhpUnused
      */
-    public function viewAnyAsRequester(Identity $identity, ?Fund $fund = null): Response|bool
+    public function viewAnyAsRequester(Identity $identity, Fund $fund): Response|bool
     {
-        if ($fund && !$fund->isActive()) {
+        if (!$fund->isActive()) {
             return $this->deny('fund_not_active');
         }
 

@@ -17,10 +17,10 @@ class FundRequestResource extends BaseJsonResource
      * @var string[]
      */
     public const LOAD = [
+        'fund.logo.presets',
         'records.record_type.translations',
         'records.fund_request_clarifications.files.preview.presets',
         'records.fund_request_clarifications.fund_request_record.record_type.translations',
-        'fund.logo.presets',
     ];
 
     /**
@@ -32,11 +32,13 @@ class FundRequestResource extends BaseJsonResource
     public function toArray($request): array
     {
         return array_merge($this->resource->only([
-            'id', 'state', 'employee_id', 'fund_id', 'contact_information', 'note', 'state_locale',
+            'id', 'fund_id', 'contact_information', 'note', 'state', 'state_locale',
         ]), [
             'fund' => new FundTinyResource($this->resource->fund),
             'records' => $this->getRecordsDetails($this->resource),
-        ], $this->timestamps($this->resource, 'created_at', 'updated_at'));
+        ], $this->makeTimestamps($this->resource->only([
+            'created_at', 'updated_at',
+        ])));
     }
 
     /**
@@ -51,8 +53,7 @@ class FundRequestResource extends BaseJsonResource
             return !in_array($record->record_type_key, $bsnFields, true);
         })->map(function(FundRequestRecord $record) {
             return array_merge($record->only([
-                'id', 'state', 'record_type_key', 'fund_request_id', 'employee_id', 'value',
-                'fund_criterion_id',
+                'id', 'state', 'record_type_key', 'fund_request_id', 'value',
             ]), [
                 'record_type' => $record->record_type->only('id', 'key', 'type', 'system', 'name'),
                 'clarifications' => FundRequestClarificationResource::collection(

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Platform\FundRequests;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\FundRequest;
 
 class IndexFundRequestsRequest extends BaseFormRequest
 {
@@ -25,11 +24,11 @@ class IndexFundRequestsRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'per_page'      => 'numeric|between:1,100',
-            'state'         => 'nullable|in:' . implode(',', FundRequest::STATES),
-            'fund_id'       => 'nullable|exists:funds,id',
-            'order_by'      => 'nullable|in:id,fund_name,created_at,note,state,no_answer_clarification',
-            'order_dir'     => 'nullable|in:asc,desc',
+            'fund_id' => 'nullable|exists:funds,id',
+            'archived' => 'nullable|boolean',
+            ...$this->sortableResourceRules(100, [
+                'id', 'fund_name', 'created_at', 'state', 'no_answer_clarification',
+            ])
         ];
     }
 }
