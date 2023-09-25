@@ -16,60 +16,6 @@ class FundRequestClarificationPolicy
     use HandlesAuthorization;
 
     /**
-     * Determine whether the user can view FundRequestRecords.
-     *
-     * @param Identity $identity
-     * @param FundRequest $request
-     * @param Fund $fund
-     * @return Response|bool
-     * @noinspection PhpUnused
-     */
-    public function viewAnyRequester(
-        Identity $identity,
-        FundRequest $request,
-        Fund $fund
-    ): Response|bool {
-        if (!$this->checkIntegrityRequester($fund, $request)) {
-            return $this->deny('fund_requests.invalid_endpoint');
-        }
-
-        // only fund requester is allowed to see records
-        if ($request->identity_address !== $identity->address) {
-            return $this->deny('fund_requests.not_requester');
-        }
-
-        return true;
-    }
-
-    /**
-     * Determine whether the user can view the fundRequestClarification.
-     *
-     * @param Identity $identity
-     * @param FundRequestClarification $requestClarification
-     * @param FundRequest $request
-     * @param Fund $fund
-     * @return Response|bool
-     * @noinspection PhpUnused
-     */
-    public function viewRequester(
-        Identity $identity,
-        FundRequestClarification $requestClarification,
-        FundRequest $request,
-        Fund $fund
-    ): Response|bool {
-        if (!$this->checkIntegrityRequester($fund, $request, $requestClarification)) {
-            return $this->deny('fund_requests.invalid_endpoint');
-        }
-
-        // only fund requester is allowed to see records
-        if ($request->identity_address !== $identity->address) {
-            return $this->deny('fund_requests.not_requester');
-        }
-
-        return true;
-    }
-
-    /**
      * Determine whether the user can update the fundRequestClarification.
      *
      * @param Identity $identity
