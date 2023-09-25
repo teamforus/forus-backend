@@ -47,6 +47,8 @@ class UpdateFundRequest extends BaseFundRequest
             'request_btn_text'          => 'nullable|string|max:50',
             'external_link_text'        => 'nullable|string|max:50',
             'external_link_url'         => 'nullable|string|max:200',
+            'external_page'             => 'nullable|boolean',
+            'external_page_url'         => 'nullable|required_if:external_page,true|string|max:200|url',
             'auto_requests_validation'  => 'nullable|boolean',
             'default_validator_employee_id' => [
                 'nullable',

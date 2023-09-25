@@ -257,6 +257,7 @@ return [
         'label' => 'label',
         'type' => 'type',
         'birth_date' => 'geboortedatum',
+        'external_page_url' => 'externe url'
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',

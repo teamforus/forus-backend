@@ -94,4 +94,14 @@ abstract class BaseFundRequest extends BaseFormRequest
             'criteria.*.value' => 'Waarde',
         ], $this->getFaqAttributes());
     }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'external_page_url.required_if' => 'Het external URL veld is verplicht',
+        ];
+    }
 }

@@ -82,6 +82,7 @@ class FundsController extends Controller
             'name', 'description', 'description_short', 'description_position', 'start_date', 'end_date',
             'type', 'notification_amount', 'default_validator_employee_id',
             'faq_title', 'request_btn_text', 'external_link_text', 'external_link_url',
+            'external_page', 'external_page_url',
         ]), [
             'state' => $organization->initialFundState($request->input('type')),
             'auto_requests_validation' => $auto_requests_validation,
@@ -168,7 +169,7 @@ class FundsController extends Controller
 
         $fund->update($request->only(array_merge($manageFundTexts || $manageFund ? [
             'name', 'description', 'description_short', 'description_position', 'request_btn_text',
-            'external_link_text', 'external_link_url', 'faq_title',
+            'external_link_text', 'external_link_url', 'faq_title', 'external_page', 'external_page_url',
         ] : [], $manageFund ? [
             'notification_amount', 'default_validator_employee_id',
             'auto_requests_validation', 'request_btn_text',
