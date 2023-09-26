@@ -351,8 +351,29 @@ class Organization extends BaseModel
             $query->where($request->only('is_validator'));
         }
 
+        if ($request->has('email')) {
+            $query->where(function(EloquentBuilder $builder) use ($request) {
+                $builder->where('email', 'LIKE', "%{$request->get('email')}%");
+                $builder->where('email_public', true);
+            });
+        }
+
+        if ($request->has('phone')) {
+            $query->where(function(EloquentBuilder $builder) use ($request) {
+                $builder->where('phone', 'LIKE', "%{$request->get('phone')}%");
+                $builder->where('phone_public', true);
+            });
+        }
+
+        if ($request->has('website')) {
+            $query->where(function(EloquentBuilder $builder) use ($request) {
+                $builder->where('website', 'LIKE', "%{$request->get('website')}%");
+                $builder->where('website_public', true);
+            });
+        }
+
         if ($q = $request->input('q')) {
-            return $query->where(function(Builder $builder) use ($q) {
+            return $query->where(function(EloquentBuilder $builder) use ($q) {
                 $builder->where('name', 'LIKE', "%$q%");
                 $builder->orWhere('description_text', 'LIKE', "%$q%");
             });
@@ -388,10 +409,10 @@ class Organization extends BaseModel
             $query->whereDoesntHave('products');
         }
 
-        return $query->orderBy(
-            $request->get('order_by', 'created_at'),
-            $request->get('order_by_dir', 'asc'),
-        )->latest();
+        $orderBy = $request->get('order_by', 'created_at');
+        $orderDir = $request->get('order_dir', 'desc');
+
+        return $query->orderBy($orderBy, $orderDir);
     }
 
     /**
