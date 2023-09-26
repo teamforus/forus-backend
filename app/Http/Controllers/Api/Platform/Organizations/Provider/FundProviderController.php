@@ -97,6 +97,13 @@ class FundProviderController extends Controller
             $query->whereIn('id', FundProvider::queryPending($organization)->select('id'));
         }
 
+        if ($sponsor_organization_id = $request->input('sponsor_organization_id')) {
+            $query->whereIn(
+                'fund_id',
+                Organization::find($sponsor_organization_id)?->funds()->pluck('id')->toArray()
+            );
+        }
+
         return FundProviderResource::queryCollection($query, $request);
     }
 

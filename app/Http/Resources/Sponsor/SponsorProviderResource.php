@@ -9,10 +9,9 @@ use App\Http\Resources\MediaCompactResource;
 use App\Http\Resources\OfficeResource;
 use App\Http\Resources\OrganizationWithPrivateResource;
 use App\Http\Resources\Tiny\OrganizationTinyResource;
-use App\Models\FundProvider;
 use App\Models\Organization;
-use App\Scopes\Builders\FundProviderQuery;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property Organization $resource
@@ -73,11 +72,11 @@ class SponsorProviderResource extends BaseJsonResource
      */
     protected function fundApprovalDetails(Organization $provider): array
     {
-        $funds = $this->getProviderFunds($this->sponsor_organization, $provider);
-        $fundsIds = $funds->pluck('id')->toArray();
+        $fundProviders = $this->getFundProviders($this->sponsor_organization, $provider);
+        $fundsIds = $fundProviders->pluck('fund_id')->toArray();
 
         return [
-            'funds' => $funds,
+            'fund_providers' => $fundProviders->paginate(10),
             'products_count' => $provider->providerProductsQuery($fundsIds)->count(),
         ];
     }
@@ -85,23 +84,18 @@ class SponsorProviderResource extends BaseJsonResource
     /**
      * @param Organization $sponsorOrganization
      * @param Organization $providerOrganization
-     * @return Collection
+     * @return HasMany
      */
-    protected function getProviderFunds(
+    protected function getFundProviders(
         Organization $sponsorOrganization,
         Organization $providerOrganization
-    ): Collection {
-        $fund_providers = $providerOrganization->fund_providers
-            ->filter(fn(FundProvider $provider) => $provider->fund->organization_id == $sponsorOrganization->id)
-            ->filter(fn(FundProvider $provider) => $provider->fund->archived == false)
-            ->values();
-
-        return $fund_providers->map(fn (FundProvider $provider) => array_merge($provider->fund->only([
-            'id', 'name', 'organization_id',
-        ]), [
-            'fund_provider_id' => $provider->id,
-            'fund_provider_state' => $provider->state,
-            'fund_provider_state_locale' => $provider->state_locale,
-        ]))->values();
+    ): HasMany {
+        return $providerOrganization->fund_providers()->whereHas(
+            'fund', function (Builder $builder) use ($sponsorOrganization) {
+            $builder->where([
+                'organization_id' => $sponsorOrganization->id,
+                'archived' => false,
+            ]);
+        })->with('fund:id,name,organization_id');
     }
 }
