@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\Identity;
@@ -20,23 +19,21 @@ class FundRequestClarificationPolicy
      *
      * @param Identity $identity
      * @param FundRequestClarification $requestClarification
-     * @param FundRequest $request
-     * @param Fund $fund
+     * @param FundRequest $fundRequest
      * @return Response|bool
      * @noinspection PhpUnused
      */
     public function update(
         Identity $identity,
         FundRequestClarification $requestClarification,
-        FundRequest $request,
-        Fund $fund
+        FundRequest $fundRequest
     ): Response|bool {
-        if (!$this->checkIntegrityRequester($fund, $request, $requestClarification)) {
+        if (!$this->checkIntegrityRequester($fundRequest, $requestClarification)) {
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
         // only fund requester is allowed to see records
-        if ($request->identity_address !== $identity->address) {
+        if ($fundRequest->identity_address !== $identity->address) {
             return $this->deny('fund_requests.not_requester');
         }
 
@@ -121,23 +118,16 @@ class FundRequestClarificationPolicy
     }
 
     /**
-     * @param Fund $fund
      * @param FundRequest $request
      * @param FundRequestClarification|null $fundRequestClarification
      * @return bool
      * @noinspection PhpUnused
      */
     private function checkIntegrityRequester(
-        Fund $fund,
         FundRequest $request,
-        FundRequestClarification $fundRequestClarification = null
+        FundRequestClarification $fundRequestClarification = null,
     ): bool {
-        if ($request->fund_id !== $fund->id) {
-            return false;
-        }
-
-        if ($fundRequestClarification && (
-            $fundRequestClarification->fund_request_record->fund_request_id !== $request->id)) {
+        if ($fundRequestClarification->fund_request_record->fund_request_id !== $request->id) {
             return false;
         }
 
