@@ -90,7 +90,6 @@ class VouchersController extends Controller
         $productVouchers = [];
 
         $allowVoucherRecords = $fund?->fund_config?->allow_voucher_records;
-        $records = collect($records)->pluck('value', 'key')->toArray();
         if ($product_id) {
             $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
             $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
