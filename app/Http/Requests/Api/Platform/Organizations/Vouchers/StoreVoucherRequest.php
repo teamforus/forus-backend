@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Rules\ProductIdInStockRule;
@@ -15,7 +14,7 @@ use Illuminate\Validation\Rule;
  * @property-read Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
  */
-class StoreVoucherRequest extends BaseFormRequest
+class StoreVoucherRequest extends StoreVoucherRecordsRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -37,7 +36,7 @@ class StoreVoucherRequest extends BaseFormRequest
         $fund = $this->getFund();
         $bsn_enabled = $this->organization->bsn_enabled;
 
-        return [
+        return array_merge(parent::rules(), [
             'bsn'                   => $this->bsnRule($bsn_enabled),
             'note'                  => 'nullable|string|max:280',
             'email'                 => 'nullable|required_if:assign_by_type,email|email:strict',
@@ -50,10 +49,7 @@ class StoreVoucherRequest extends BaseFormRequest
             'assign_by_type'        => 'required|in:' . $this->availableAssignTypes($bsn_enabled),
             'activation_code'       => 'boolean',
             'limit_multiplier'      => 'nullable|numeric|min:1|max:1000',
-            'records'               => 'nullable|array',
-            'records.*.key'         => 'required|string|exists:record_types,key',
-            'records.*.value'       => 'required|string|max:50',
-        ];
+        ]);
     }
 
     /**

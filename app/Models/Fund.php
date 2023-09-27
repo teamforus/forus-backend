@@ -1133,7 +1133,6 @@ class Fund extends BaseModel
      * @param float|null $voucherAmount
      * @param Carbon|null $expire_at
      * @param int|null $limit_multiplier
-     * @param array $records
      * @return Voucher|null
      */
     public function makeVoucher(
@@ -1142,7 +1141,6 @@ class Fund extends BaseModel
         float $voucherAmount = null,
         Carbon $expire_at = null,
         ?int $limit_multiplier = null,
-        array $records = [],
     ): ?Voucher {
         $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
         $returnable = false;
@@ -1156,15 +1154,6 @@ class Fund extends BaseModel
                 'identity_address', 'amount', 'expire_at', 'fund_id',
                 'returnable', 'limit_multiplier'
             ), $extraFields));
-
-            if (count($records)) {
-                foreach ($records as $record) {
-                    $voucher->voucher_records()->create([
-                        'record_type_id' => RecordType::findByKey($record['key'])->id,
-                        'value' => $record['value'],
-                    ]);
-                }
-            }
 
             VoucherCreated::dispatch($voucher);
         }
@@ -1214,7 +1203,6 @@ class Fund extends BaseModel
      * @param int|null $product_id
      * @param Carbon|null $expire_at
      * @param float|null $price
-     * @param array $records
      * @return Voucher
      */
     public function makeProductVoucher(
@@ -1223,7 +1211,6 @@ class Fund extends BaseModel
         int $product_id = null,
         Carbon $expire_at = null,
         float $price = null,
-        array $records = [],
     ): Voucher {
         $amount = $price ?: Product::findOrFail($product_id)->price;
         $expire_at = $expire_at ?: $this->end_date;
@@ -1234,15 +1221,6 @@ class Fund extends BaseModel
             'identity_address', 'amount', 'expire_at',
             'product_id','fund_id', 'returnable'
         ), $extraFields));
-
-        if (count($records)) {
-            foreach ($records as $record) {
-                $voucher->voucher_records()->create([
-                    'record_type_id' => RecordType::findByKey($record['key'])->id,
-                    'value' => $record['value'],
-                ]);
-            }
-        }
 
         VoucherCreated::dispatch($voucher, false);
 

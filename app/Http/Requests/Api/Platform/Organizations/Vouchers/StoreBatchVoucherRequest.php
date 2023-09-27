@@ -2,11 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Rules\Base\IbanRule;
-use App\Rules\BatchVoucherRecordsRule;
 use App\Rules\ProductIdInStockRule;
 use App\Rules\VouchersUploadArrayRule;
 use Illuminate\Validation\Rule;
@@ -14,7 +12,7 @@ use Illuminate\Validation\Rule;
 /**
  * @property-read Organization $organization
  */
-class StoreBatchVoucherRequest extends BaseFormRequest
+class StoreBatchVoucherRequest extends StoreVoucherRecordsRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -36,7 +34,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
         $fund = $this->getFund();
         $bsn_enabled = $this->organization->bsn_enabled;
 
-        return array_merge([
+        return array_merge(parent::rules(), [
             'fund_id'                           => $this->fundIdRule(),
             'vouchers'                          => ['required', new VouchersUploadArrayRule($fund)],
             'vouchers.*'                        => 'required|array',
@@ -50,20 +48,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
             'vouchers.*.activation_code'        => 'boolean',
             'vouchers.*.client_uid'             => 'nullable|string|max:20',
             'vouchers.*.limit_multiplier'       => 'nullable|numeric|min:1|max:1000',
-            'vouchers.*.records'                => $this->recordsRule(),
         ], $this->directPaymentRules($fund));
-    }
-
-    /**
-     * @return array
-     */
-    protected function recordsRule(): array
-    {
-        return [
-            'nullable',
-            'array',
-            new BatchVoucherRecordsRule(),
-        ];
     }
 
     /**

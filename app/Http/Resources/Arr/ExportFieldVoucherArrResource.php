@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Arr;
 
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Arr;
 
-class VoucherExportFieldResource extends JsonResource
+class ExportFieldVoucherArrResource extends ExportFieldArrResource
 {
     /**
      * Transform the resource into an array.
@@ -15,6 +14,6 @@ class VoucherExportFieldResource extends JsonResource
      */
     public function toArray($request): array
     {
-        return Arr::only($this->resource, ['key', 'name', 'is_record_field']);
+        return array_merge(parent::toArray($request), Arr::only($this->resource, 'is_record_field'));
     }
 }

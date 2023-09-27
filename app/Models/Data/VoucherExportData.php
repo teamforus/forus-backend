@@ -4,6 +4,7 @@ namespace App\Models\Data;
 
 use App\Models\RecordType;
 use App\Models\Voucher;
+use App\Models\VoucherRecord;
 
 /**
  * Class VoucherExportData
@@ -87,12 +88,11 @@ class VoucherExportData
             'expire_at' => format_date_locale($this->voucher->expire_at),
         ]);
 
-        $records_data = [];
-        foreach ($this->voucher->voucher_records as $record) {
-            $records_data[RecordType::find($record->record_type_id)->key] = $record->value;
-        }
+        $records_data = $this->voucher->voucher_records->reduce(function($data, VoucherRecord $record) {
+            return array_merge($data, [$record->record_type->key => $record->value]);
+        }, []);
         $export_data = array_merge($export_data, $records_data);
 
-        return array_only($export_data, array_merge(['name'], $this->fields));
+        return array_only($export_data, array_merge(['name'], $this->fields, array_keys($records_data)));
     }
 }

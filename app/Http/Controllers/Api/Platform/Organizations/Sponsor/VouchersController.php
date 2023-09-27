@@ -16,14 +16,14 @@ use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
-use App\Http\Resources\Arr\VoucherExportArrResource;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\UpdateVoucherRequest;
+use App\Http\Resources\Arr\ExportFieldVoucherArrResource;
+use App\Http\Resources\Arr\VoucherExportArrResource;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
-use App\Http\Resources\VoucherExportFieldResource;
 use App\Models\Fund;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Voucher;
-use App\Models\Identity;
 use App\Scopes\Builders\VoucherSubQuery;
 use Carbon\Carbon;
 use Exception;
@@ -84,15 +84,19 @@ class VouchersController extends Controller
         $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
         $multiplier = $request->input('limit_multiplier');
-        $records = $request->input('records');
+        $records = $request->input('records', []);
         $employee_id = $organization->findEmployee($request->auth_address())->id;
         $extraFields = compact('note', 'employee_id');
         $productVouchers = [];
 
+        $allowVoucherRecords = $fund?->fund_config?->allow_voucher_records;
+        $records = collect($records)->pluck('value', 'key')->toArray();
         if ($product_id) {
-            $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at, null, $records);
+            $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
+            $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
         } else {
-            $mainVoucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier, $records);
+            $mainVoucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
+            $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
             $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $extraFields, $expire_at);
         }
 
@@ -409,7 +413,7 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        return VoucherExportFieldResource::collection(VoucherExport::getExportFields(
+        return ExportFieldVoucherArrResource::collection(VoucherExport::getExportFields(
             $request->input('type', 'budget')
         ));
     }
@@ -439,6 +443,7 @@ class VouchersController extends Controller
             'transactions', 'voucher_relation', 'product', 'fund',
             'token_without_confirmation', 'identity.primary_email', 'identity.record_bsn',
             'product_vouchers', 'top_up_transactions', 'reimbursements_pending',
+            'voucher_records', 'voucher_records.record_type',
         ])->get();
 
         $exportData = Voucher::exportData($vouchers, $fields, $dataFormat, $qrFormat);
