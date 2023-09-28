@@ -71,12 +71,10 @@ class VoucherExport extends BaseFieldedExport
      */
     private static function addRecordFields() : array
     {
-        $types = collect(record_types_cached())->filter(fn($record) => $record['vouchers']);
-
         return array_map(fn ($type) => [
-            'name'  => $type['name'],
-            'key'   => $type['key'],
+            'key' => $type['key'],
+            'name' => $type['name'],
             'is_record_field' => true,
-        ], $types->toArray());
+        ], array_filter(record_types_cached(), fn($record) => $record['vouchers'] ?? false));
     }
 }

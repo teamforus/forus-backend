@@ -69,38 +69,38 @@ class VouchersController extends Controller
      */
     public function store(
         StoreVoucherRequest $request,
-        Organization $organization
+        Organization        $organization
     ): SponsorVoucherResource {
         $fund = Fund::find($request->post('fund_id'));
 
         $this->authorize('show', $organization);
         $this->authorize('storeSponsor', [Voucher::class, $organization, $fund]);
 
-        $note       = $request->input('note');
-        $email      = $request->input('email', false);
-        $amount     = $fund->isTypeBudget() ? $request->input('amount', 0) : 0;
-        $identity   = $email ? Identity::findOrMake($email)->address : null;
-        $expire_at  = $request->input('expire_at', false);
-        $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
+        $note = $request->input('note');
+        $email = $request->input('email', false);
+        $amount = $fund->isTypeBudget() ? $request->input('amount', 0) : 0;
+        $identity = $email ? Identity::findOrMake($email)->address : null;
+        $expire_at = $request->input('expire_at', false);
+        $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
         $multiplier = $request->input('limit_multiplier');
         $records = $request->input('records', []);
+
         $employee_id = $organization->findEmployee($request->auth_address())->id;
         $extraFields = compact('note', 'employee_id');
         $productVouchers = [];
+        $allowVoucherRecords = $fund->fund_config?->allow_voucher_records;
 
-        $allowVoucherRecords = $fund?->fund_config?->allow_voucher_records;
         if ($product_id) {
             $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
-            $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
         } else {
             $mainVoucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
-            $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
             $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $extraFields, $expire_at);
         }
 
         /** @var Voucher[] $vouchers */
         $vouchers = array_merge([$mainVoucher], $productVouchers);
+        $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
 
         foreach ($vouchers as $voucher) {
             if ($organization->bsn_enabled && ($bsn = $request->input('bsn', false))) {
@@ -136,7 +136,7 @@ class VouchersController extends Controller
      */
     public function storeValidate(
         StoreVoucherRequest $request,
-        Organization $organization
+        Organization        $organization
     ): void {}
 
     /**
@@ -150,7 +150,7 @@ class VouchersController extends Controller
      */
     public function storeBatch(
         StoreBatchVoucherRequest $request,
-        Organization $organization
+        Organization             $organization
     ): AnonymousResourceCollection {
         $fund = Fund::find($request->post('fund_id'));
         $allowVoucherRecords = $fund?->fund_config?->allow_voucher_records;
@@ -227,7 +227,7 @@ class VouchersController extends Controller
      */
     public function storeBatchValidate(
         StoreBatchVoucherRequest $request,
-        Organization $organization
+        Organization             $organization
     ): void {}
 
     /**
@@ -439,10 +439,10 @@ class VouchersController extends Controller
         $query = VoucherSubQuery::appendFirstUseFields($query);
 
         $vouchers = $query->with([
-            'transactions', 'voucher_relation', 'product', 'fund',
+            'transactions', 'voucher_relation', 'product', 'fund.fund_config',
             'token_without_confirmation', 'identity.primary_email', 'identity.record_bsn',
             'product_vouchers', 'top_up_transactions', 'reimbursements_pending',
-            'voucher_records', 'voucher_records.record_type',
+            'voucher_records.record_type',
         ])->get();
 
         $exportData = Voucher::exportData($vouchers, $fields, $dataFormat, $qrFormat);

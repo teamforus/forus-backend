@@ -3,29 +3,13 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
-use App\Models\Organization;
 use App\Rules\ProductIdInStockRule;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
 
-/**
- * Class StoreVoucherRequest
- * @property-read Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
- */
-class StoreVoucherRequest extends StoreVoucherRecordsRequest
+class StoreVoucherRequest extends BaseStoreVouchersRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->organization->identityCan($this->identity(), 'manage_vouchers');
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -36,20 +20,21 @@ class StoreVoucherRequest extends StoreVoucherRecordsRequest
         $fund = $this->getFund();
         $bsn_enabled = $this->organization->bsn_enabled;
 
-        return array_merge(parent::rules(), [
-            'bsn'                   => $this->bsnRule($bsn_enabled),
-            'note'                  => 'nullable|string|max:280',
-            'email'                 => 'nullable|required_if:assign_by_type,email|email:strict',
-            'amount'                => $this->amountRule($fund),
-            'fund_id'               => $this->fundIdRule(),
-            'activate'              => 'boolean',
-            'expire_at'             => $this->expireAtRule($fund),
-            'client_uid'            => 'nullable|string|max:20',
-            'product_id'            => $this->productIdRule($fund),
-            'assign_by_type'        => 'required|in:' . $this->availableAssignTypes($bsn_enabled),
-            'activation_code'       => 'boolean',
-            'limit_multiplier'      => 'nullable|numeric|min:1|max:1000',
-        ]);
+        return [
+            'bsn' => $this->bsnRule($bsn_enabled),
+            'note' => 'nullable|string|max:280',
+            'email' => 'nullable|required_if:assign_by_type,email|email:strict',
+            'amount' => $this->amountRule($fund),
+            'records' => $this->recordsRule(),
+            'fund_id' => $this->fundIdRule(),
+            'activate' => 'boolean',
+            'expire_at' => $this->expireAtRule($fund),
+            'client_uid' => 'nullable|string|max:20',
+            'product_id' => $this->productIdRule($fund),
+            'assign_by_type' => 'required|in:' . $this->availableAssignTypes($bsn_enabled),
+            'activation_code' => 'boolean',
+            'limit_multiplier' => 'nullable|numeric|min:1|max:1000',
+        ];
     }
 
     /**

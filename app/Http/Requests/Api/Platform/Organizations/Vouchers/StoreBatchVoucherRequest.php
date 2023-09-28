@@ -3,27 +3,13 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
-use App\Models\Organization;
 use App\Rules\Base\IbanRule;
 use App\Rules\ProductIdInStockRule;
 use App\Rules\VouchersUploadArrayRule;
 use Illuminate\Validation\Rule;
 
-/**
- * @property-read Organization $organization
- */
-class StoreBatchVoucherRequest extends StoreVoucherRecordsRequest
+class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->organization->identityCan($this->identity(), 'manage_vouchers');
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -34,21 +20,23 @@ class StoreBatchVoucherRequest extends StoreVoucherRecordsRequest
         $fund = $this->getFund();
         $bsn_enabled = $this->organization->bsn_enabled;
 
-        return array_merge(parent::rules(), [
-            'fund_id'                           => $this->fundIdRule(),
-            'vouchers'                          => ['required', new VouchersUploadArrayRule($fund)],
-            'vouchers.*'                        => 'required|array',
-            'vouchers.*.amount'                 => $this->amountRule($fund),
-            'vouchers.*.product_id'             => $this->productIdRule($fund),
-            'vouchers.*.expire_at'              => $this->expireAtRule($fund),
-            'vouchers.*.note'                   => 'nullable|string|max:280',
-            'vouchers.*.email'                  => 'nullable|string|email:strict',
-            'vouchers.*.bsn'                    => $bsn_enabled ? 'nullable|string|digits:9' : 'nullable|in:',
-            'vouchers.*.activate'               => 'boolean',
-            'vouchers.*.activation_code'        => 'boolean',
-            'vouchers.*.client_uid'             => 'nullable|string|max:20',
-            'vouchers.*.limit_multiplier'       => 'nullable|numeric|min:1|max:1000',
-        ], $this->directPaymentRules($fund));
+        return [
+            'fund_id' => $this->fundIdRule(),
+            'vouchers' => ['required', new VouchersUploadArrayRule($fund)],
+            'vouchers.*' => 'required|array',
+            'vouchers.*.amount' => $this->amountRule($fund),
+            'vouchers.*.product_id' => $this->productIdRule($fund),
+            'vouchers.*.expire_at' => $this->expireAtRule($fund),
+            'vouchers.*.note' => 'nullable|string|max:280',
+            'vouchers.*.email' => 'nullable|string|email:strict',
+            'vouchers.*.bsn' => $bsn_enabled ? 'nullable|string|digits:9' : 'nullable|in:',
+            'vouchers.*.activate' => 'boolean',
+            'vouchers.*.activation_code' => 'boolean',
+            'vouchers.*.client_uid' => 'nullable|string|max:20',
+            'vouchers.*.limit_multiplier' => 'nullable|numeric|min:1|max:1000',
+            'vouchers.*.records' => $this->recordsRule(),
+            ...$this->directPaymentRules($fund),
+        ];
     }
 
     /**
