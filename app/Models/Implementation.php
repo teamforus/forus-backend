@@ -60,7 +60,6 @@ use Illuminate\Support\Facades\Gate;
  * @property float|null $lon
  * @property float|null $lat
  * @property bool $informal_communication
- * @property string|null $productboard_api_key
  * @property string|null $email_from_address
  * @property string|null $email_from_name
  * @property string|null $email_color
@@ -152,7 +151,6 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder|Implementation whereOverlayEnabled($value)
  * @method static Builder|Implementation whereOverlayOpacity($value)
  * @method static Builder|Implementation whereOverlayType($value)
- * @method static Builder|Implementation whereProductboardApiKey($value)
  * @method static Builder|Implementation whereShowHomeMap($value)
  * @method static Builder|Implementation whereShowHomeProducts($value)
  * @method static Builder|Implementation whereShowOfficeMap($value)
@@ -219,7 +217,7 @@ class Implementation extends BaseModel
      */
     protected $hidden = [
         'digid_enabled', 'digid_env', 'digid_app_id', 'digid_shared_secret',
-        'digid_a_select_server', 'productboard_api_key'
+        'digid_a_select_server'
     ];
 
     /**
@@ -687,7 +685,6 @@ class Implementation extends BaseModel
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
                 // 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
                 'pages' => Arr::keyBy($pages, 'page_type'),
-                'has_productboard_integration' => !empty(resolve('productboard')),
                 'social_medias' => $implementation->social_medias->map(fn (ImplementationSocialMedia $media) => $media->only([
                     'url', 'type', 'title',
                 ])),
@@ -880,14 +877,6 @@ class Implementation extends BaseModel
         ]));
 
         return $announcement;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getProductboardApiKey(): ?string
-    {
-        return $this->productboard_api_key ?: Implementation::general()->productboard_api_key;
     }
 
     /**

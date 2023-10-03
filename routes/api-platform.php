@@ -913,7 +913,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ->parameter('prevalidations', 'prevalidation_uid')
         ->only('index', 'store', 'destroy');
 
-    $router->resource('productboard', 'Api\Platform\ProductBoardController')
+    $router->resource('feedback', 'Api\Platform\FeedbackController')
         ->only('store');
 
     $router->resource(
