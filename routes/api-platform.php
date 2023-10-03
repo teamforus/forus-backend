@@ -53,17 +53,6 @@ $router->group([], static function() use ($router) {
                 'records' => 'fund_request_record',
             ]
         ]);
-
-        $router->resource(
-            'funds/{fund}/requests/{fund_request}/clarifications',
-            "Api\Platform\Funds\Requests\FundRequestClarificationsController", [
-            'only' => [
-                'index', 'show', 'update'
-            ],
-            'parameters' => [
-                'clarifications' => 'fund_request_clarification',
-            ]
-        ]);
     }
 
     $router->resource(
@@ -515,6 +504,18 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
                 'requests' => 'fund_request',
             ]
         ]);
+
+        // requester route
+        $router->resource('fund-requests', "Api\Platform\FundRequestsController")->only([
+            'index', 'show',
+        ]);
+
+        $router->resource(
+            'fund-requests/{fund_request}/clarifications',
+            'Api\Platform\FundRequests\FundRequestClarificationsController'
+        )->parameters([
+            'clarifications' => 'fund_request_clarification',
+        ])->only('update');
     }
 
     $router->get(

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Funds\Requests\Clarifications;
+namespace App\Http\Requests\Api\Platform\FundRequests\FundRequestClarifications;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateFundRequestClarificationsRequest extends FormRequest
+class UpdateFundRequestClarificationRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
