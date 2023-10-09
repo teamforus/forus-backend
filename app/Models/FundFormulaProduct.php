@@ -63,12 +63,12 @@ class FundFormulaProduct extends BaseModel
     }
 
     /**
-     * @param string $identity_address
+     * @param string|null $identity_address
      * @return int
      */
-    public function getIdentityMultiplier(string $identity_address): int
+    public function getIdentityMultiplier(?string $identity_address = null): int
     {
-        if (is_null($this->record_type_key_multiplier)) {
+        if (!$identity_address || is_null($this->record_type_key_multiplier)) {
             return 1;
         }
 

@@ -174,7 +174,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         $is_assignable = $isRecordAssignable && !$is_assigned && !$record->employee && $record->isPending();
 
         $baseFields = array_merge($record->only([
-            'id', 'state', 'record_type_key', 'fund_request_id', 'employee_id', 'note',
+            'id', 'state', 'record_type_key', 'fund_request_id', 'employee_id', 'note', 'fund_criterion_id',
         ]), [
             'value' => $is_assignable || $is_assigned ? $record->value : null,
         ]);
@@ -200,6 +200,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
     static function getHistory(FundRequestRecord $record): Collection
     {
         return $record->historyLogs()->map(fn (EventLog $eventLog) => array_merge([
+            'id' => $eventLog->id,
             'new_value' => $eventLog->data['fund_request_record_value'] ?? '',
             'old_value' => $eventLog->data['fund_request_record_previous_value'] ?? '',
             'employee_email' => $eventLog->data['employee_email'] ?? '',

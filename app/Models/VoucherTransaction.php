@@ -252,7 +252,10 @@ class VoucherTransaction extends BaseModel
      */
     public function notes_sponsor(): HasMany
     {
-        return $this->hasMany(VoucherTransactionNote::class)->where('group', 'sponsor');
+        return $this->hasMany(VoucherTransactionNote::class)->where(function (Builder $builder) {
+            $builder->where('group', 'sponsor');
+            $builder->orWhere('shared', true);
+        });
     }
 
     /**
@@ -261,7 +264,10 @@ class VoucherTransaction extends BaseModel
      */
     public function notes_provider(): HasMany
     {
-        return $this->hasMany(VoucherTransactionNote::class)->where('group', 'provider');
+        return $this->hasMany(VoucherTransactionNote::class)->where(function (Builder $builder) {
+            $builder->where('group', 'provider');
+            $builder->orWhere('shared', true);
+        });
     }
 
     /**
@@ -386,7 +392,9 @@ class VoucherTransaction extends BaseModel
             VoucherTransactionsProviderExport::getExportFields()
         ), 'name', 'key');
 
-        $data = $builder->with('voucher.fund', 'provider')->get();
+        $data = $builder->with([
+            'voucher.fund', 'provider', 'product',
+        ])->get();
 
         $data = $data->map(fn (VoucherTransaction $transaction) => array_only([
             'id' => $transaction->id,
@@ -470,13 +478,18 @@ class VoucherTransaction extends BaseModel
     /**
      * @param string $group
      * @param string $note
-     * @return Model|VoucherTransactionNote
+     * @param bool $shared
+     * @return VoucherTransactionNote|Model
      */
-    public function addNote(string $group, string $note): VoucherTransactionNote|Model
-    {
+    public function addNote(
+        string $group,
+        string $note,
+        bool $shared = false,
+    ): VoucherTransactionNote|Model {
         return $this->notes()->create([
             'message' => $note,
-            'group' => $group
+            'shared' => $shared,
+            'group' => $group,
         ]);
     }
 
@@ -526,7 +539,7 @@ class VoucherTransaction extends BaseModel
             return null;
         }
 
-        return max($this->transfer_at->diffInDays(now()), 0);
+        return max(now()->diffInDays($this->transfer_at, false), 0);
     }
 
     /**

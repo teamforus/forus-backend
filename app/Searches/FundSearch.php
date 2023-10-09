@@ -7,7 +7,6 @@ namespace App\Searches;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Organization;
-use App\Models\Tag;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -57,6 +56,10 @@ class FundSearch extends BaseSearch
 
         if ($this->getFilter('fund_id')) {
             $builder->where('id', $this->getFilter('fund_id'));
+        }
+
+        if (is_array($this->getFilter('fund_ids'))) {
+            $builder->whereIn('id', $this->getFilter('fund_ids'));
         }
 
         if ($this->getFilter('q')) {
@@ -118,7 +121,7 @@ class FundSearch extends BaseSearch
     protected function order(Builder $builder): Builder
     {
         $orderBy = $this->getFilter('order_by', 'created_at');
-        $orderDir = $this->getFilter('order_dir', 'desc');
+        $orderDir = $this->getFilter('order_dir', 'asc');
 
         if ($orderBy == 'organization_name') {
             $builder->addSelect([

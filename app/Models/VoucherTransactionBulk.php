@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -253,7 +254,7 @@ class VoucherTransactionBulk extends BaseModel
     /**
      * @return BulkPaymentValue|DraftPayment|null
      */
-    public function fetchPayment()
+    public function fetchPayment(): BulkPaymentValue|DraftPayment|null
     {
         if ($this->bank_connection->bank->isBunq()) {
             if (!$this->bank_connection->useContext()) {
@@ -270,7 +271,7 @@ class VoucherTransactionBulk extends BaseModel
             try {
                 return $bngService->getBulkDetails($this->payment_id, $this->access_token);
             } catch (ApiException $exception) {
-                logger()->error($exception->getMessage());
+                Log::channel('bng')->error($exception->getMessage());
             }
         }
 
@@ -298,7 +299,7 @@ class VoucherTransactionBulk extends BaseModel
 
                 $transaction->forceFill([
                     'state'             => VoucherTransaction::STATE_SUCCESS,
-                    'payment_id'        => $payment ? $payment->getId() : null,
+                    'payment_id'        => $payment?->getId(),
                     'payment_time'      => now(),
                 ])->save();
 
@@ -385,7 +386,7 @@ class VoucherTransactionBulk extends BaseModel
             });
 
         } catch (Throwable $e) {
-            logger()->error($e->getMessage() . "\n" . $e->getTraceAsString());
+            Log::channel('bunq')->error($e->getMessage() . "\n" . $e->getTraceAsString());
 
             $this->updateModel([
                 'state' => self::STATE_ERROR,
@@ -437,7 +438,7 @@ class VoucherTransactionBulk extends BaseModel
             // Throttle calls just in case
             sleep(2);
         } catch (Throwable $e) {
-            logger()->error($e->getMessage() . "\n" . $e->getTraceAsString());
+            Log::channel('bng')->error($e->getMessage() . "\n" . $e->getTraceAsString());
 
             $this->updateModel([
                 'state' => self::STATE_ERROR,
@@ -696,7 +697,7 @@ class VoucherTransactionBulk extends BaseModel
     /**
      * @param array $array
      * @param Employee|null $employee
-     * @return \App\Services\EventLogService\Models\EventLog|mixed
+     * @return \App\Services\EventLogService\Models\EventLog
      */
     public function logError(array $array = [], ?Employee $employee = null): EventLog
     {
@@ -776,11 +777,16 @@ class VoucherTransactionBulk extends BaseModel
      * @param array $fields
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    private static function exportTransform(Builder $builder, array $fields)
+    private static function exportTransform(Builder $builder, array $fields): mixed
     {
         $fieldLabels = array_pluck(VoucherTransactionBulksExport::getExportFields(), 'name', 'key');
 
-        $data = $builder->get()->map(fn(VoucherTransactionBulk $transactionBulk) => array_only([
+        $data = $builder->with([
+            'voucher_transactions',
+            'bank_connection.bank',
+        ])->withCount([
+            'voucher_transactions',
+        ])->get()->map(fn(VoucherTransactionBulk $transactionBulk) => array_only([
             "id" => $transactionBulk->id,
             "quantity" => $transactionBulk->voucher_transactions_count,
             "amount" => currency_format($transactionBulk->voucher_transactions->sum('amount')),
@@ -802,7 +808,7 @@ class VoucherTransactionBulk extends BaseModel
      * @param array $fields
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    public static function export(Request $request, Organization $organization, array $fields)
+    public static function export(Request $request, Organization $organization, array $fields): mixed
     {
         return self::exportTransform(VoucherTransactionBulkQuery::order(
             self::search($request, $organization),

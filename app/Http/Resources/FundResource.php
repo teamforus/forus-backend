@@ -54,21 +54,18 @@ class FundResource extends BaseJsonResource
         $isWebShop = $baseRequest->isWebshop();
         $isDashboard = $baseRequest->isDashboard();
 
+        $fundConfigData = $this->getFundConfigData($fund);
         $financialData = $this->getFinancialData($fund, $this->stats);
         $criteriaData = $isWebShop ? $this->getCriteriaData($fund, $baseRequest) : [];
         $generatorData = $isDashboard ? $this->getVoucherGeneratorData($fund) : [];
         $prevalidationCsvData = $isDashboard ? $this->getPrevalidationCsvData($fund) : [];
+        $organizationFunds2FAData = $this->organizationFunds2FAData($organization);
 
         $data = array_merge($fund->only([
-            'id', 'name', 'description', 'description_html', 'description_short',
+            'id', 'name', 'description', 'description_html', 'description_short', 'description_position',
             'organization_id', 'state', 'notification_amount', 'type', 'type_locale', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
-            'balance_provider',
-        ]), $fund->fund_config->only([
-            'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
-            'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
-            'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
-            'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
+            'balance_provider', 'external_page', 'external_page_url',
         ]), [
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
             'tags' => TagResource::collection($fund->tags_webshop),
@@ -88,7 +85,8 @@ class FundResource extends BaseJsonResource
             'has_pending_fund_requests' => $isWebShop && $baseRequest->auth_address() && $fund->fund_requests()->where(function (Builder $builder) {
                 FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth()->id());
             })->exists(),
-        ], $criteriaData, $financialData, $generatorData, $prevalidationCsvData);
+            'organization_funds_2fa' => $organizationFunds2FAData,
+        ], $fundConfigData, $criteriaData, $financialData, $generatorData, $prevalidationCsvData);
 
         if ($isDashboard && $organization->identityCan($identity, ['manage_funds', 'manage_fund_texts'], false)) {
             $data = array_merge($data, $fund->only([
@@ -103,6 +101,37 @@ class FundResource extends BaseJsonResource
         }
 
         return array_merge($data, $fund->only(array_keys($this->select ?? [])));
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array
+     */
+    protected function getFundConfigData(Fund $fund): array
+    {
+        return $fund->fund_config?->only([
+            'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+            'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
+            'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
+            'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
+            'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',
+            'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails',
+        ]) ?: [];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return array
+     */
+    protected function organizationFunds2FAData(Organization $organization): array
+    {
+        return [
+            'auth_2fa_policy' => $organization->auth_2fa_funds_policy,
+            'auth_2fa_remember_ip' => $organization->auth_2fa_funds_remember_ip,
+            'auth_2fa_restrict_emails' => $organization->auth_2fa_funds_restrict_emails,
+            'auth_2fa_restrict_auth_sessions' => $organization->auth_2fa_funds_restrict_auth_sessions,
+            'auth_2fa_restrict_reimbursements' => $organization->auth_2fa_funds_restrict_reimbursements,
+        ];
     }
 
     /**
@@ -127,7 +156,7 @@ class FundResource extends BaseJsonResource
         $isVoucherManager = Gate::allows('funds.manageVouchers', [$fund, $fund->organization]);
 
         return $isVoucherManager ? array_merge($fund->fund_config->only([
-            'allow_direct_payments', 'allow_voucher_top_ups',
+            'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
             'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
         ]), [
             'limit_per_voucher' => $fund->getMaxAmountPerVoucher(),

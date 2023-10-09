@@ -30,6 +30,7 @@ class ImplementationPageResource extends BaseJsonResource
         return array_merge($page->only([
             'id', 'page_type', 'state', 'external', 'external_url', 'blocks', 'implementation_id',
             'description', 'description_alignment', 'description_position', 'description_html',
+            'blocks_per_row',
         ]), [
             'blocks' => ImplementationBlockResource::collection($page->blocks),
             'url_webshop' => $this->webshopUrl($page),

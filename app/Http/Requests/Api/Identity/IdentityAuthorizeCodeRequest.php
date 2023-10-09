@@ -24,7 +24,7 @@ class IdentityAuthorizeCodeRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'auth_code' => 'required'
+            'auth_code' => 'required|string',
         ];
     }
 }

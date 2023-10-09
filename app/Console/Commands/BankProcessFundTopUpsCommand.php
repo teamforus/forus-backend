@@ -12,6 +12,7 @@ use App\Services\BankService\Values\BankPayment;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class BankProcessFundTopUpsCommand extends Command
@@ -122,7 +123,7 @@ class BankProcessFundTopUpsCommand extends Command
         try {
             $this->applyTopUp($payment, $topUp, $connection);
         } catch (Throwable $e) {
-            resolve('log')->error($e->getMessage());
+            Log::channel($connection->bank->isBNG() ? 'bng' : 'bunq')->error($e->getMessage());
         }
     }
 
@@ -133,6 +134,15 @@ class BankProcessFundTopUpsCommand extends Command
      */
     protected function applyTopUp(BankPayment $payment, FundTopUp $topUp, BankConnection $connection): void
     {
+        if ($connection->bank->isBNG() && $this->shouldSkipBNG($payment, $topUp)) {
+            $topUp->transactions()->firstOrCreate([
+                'bank_transaction_id' => $payment->getId(),
+                'amount' => NULL
+            ]);
+
+            return;
+        }
+
         $transaction = $topUp->transactions()->firstOrCreate([
             'bank_transaction_id' => $payment->getId(),
             'amount' => $payment->getAmount()
@@ -148,5 +158,22 @@ class BankProcessFundTopUpsCommand extends Command
             $payment->getAmount(),
             $payment->getDescription()
         ));
+    }
+
+    /**
+     * @param BankPayment $payment
+     * @param FundTopUp $topUp
+     * @return bool
+     */
+    private function shouldSkipBNG(BankPayment $payment, FundTopUp $topUp): bool
+    {
+        $query = $topUp->fund->top_up_transactions()
+            ->whereRelation('fund_top_up', 'code', $topUp->code)
+            ->where('fund_top_up_transactions.created_at', '>=', now()->subHours(48));
+
+        $topUpExists = (clone $query)->where('amount', $payment->getAmount())->exists();
+        $doubleExists = (clone $query)->whereNull('amount')->exists();
+
+        return $topUpExists && !$doubleExists;
     }
 }

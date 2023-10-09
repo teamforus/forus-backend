@@ -20,9 +20,11 @@ use App\Events\Funds\FundUpdatedEvent;
 use App\Events\Funds\FundVouchersExportedEvent;
 use App\Mail\Forus\ForusFundCreatedMail;
 use App\Mail\Funds\FundBalanceWarningMail;
+use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderInvitationMail;
 use App\Models\Fund;
 use App\Models\FundProvider;
+use App\Models\OrganizationContact;
 use App\Notifications\Identities\Fund\IdentityRequesterProductRevokedNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderFundEndedNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderFundExpiringNotification;
@@ -58,6 +60,7 @@ class FundSubscriber
         return array_merge([
             'fund' => $fund,
             'sponsor' => $fund->organization,
+            'fund_config' => $fund->fund_config,
             'implementation' => $fund->getImplementation(),
         ], $extraModels);
     }
@@ -104,6 +107,8 @@ class FundSubscriber
         $fund->update([
             'description_text' => $fund->descriptionToText(),
         ]);
+
+        $fund->log($fund::EVENT_UPDATED, $this->getFundLogModels($fund));
     }
 
     /**
@@ -196,6 +201,14 @@ class FundSubscriber
         ]));
 
         FundProviderAppliedNotification::send($eventLog);
+
+        if ($email = $fund->organization->getContact(OrganizationContact::KEY_PROVIDER_APPLIED)) {
+            $mailable = new ProviderAppliedMail(array_merge($eventLog->data, [
+                'sponsor_dashboard_link' => $fund->urlSponsorDashboard(),
+            ]), $fund->fund_config->implementation->getEmailFrom());
+
+            resolve('forus.services.notification')->sendSystemMail($email, $mailable);
+        }
     }
 
     /**
@@ -260,10 +273,9 @@ class FundSubscriber
 
         BalanceLowNotification::send($eventLog);
 
-        if ($fund->organization->low_balance_email) {
+        if ($email = $fund->organization->getContact(OrganizationContact::KEY_FUND_BALANCE_LOW_EMAIL)) {
             resolve('forus.services.notification')->sendSystemMail(
-                $fund->organization->low_balance_email,
-                new FundBalanceWarningMail($eventLog->data, $fund->getEmailFrom()),
+                $email, new FundBalanceWarningMail($eventLog->data, $fund->getEmailFrom())
             );
         }
     }

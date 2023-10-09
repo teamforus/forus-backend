@@ -40,10 +40,10 @@ class ProductResource extends BaseJsonResource
         $baseRequest = BaseFormRequest::createFrom($request);
         $product = $this->resource;
         $simplified = $request->has('simplified') && $request->input('simplified');
+        $baseFields = $this->baseFields($product);
 
-        return $simplified ? $this->baseFields($product) : array_merge($this->baseFields($product), [
+        return $simplified ? $baseFields : array_merge($baseFields, [
             'total_amount' => $product->total_amount,
-
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->countReservedCached(),
             'sold_amount' => $product->countSold(),
@@ -68,15 +68,16 @@ class ProductResource extends BaseJsonResource
      * @param Product $product
      * @return array
      */
-    protected function baseFields(Product $product): array {
+    protected function baseFields(Product $product): array
+    {
         return array_merge($product->only([
             'id', 'name', 'description', 'description_html', 'product_category_id', 'sold_out',
             'organization_id', 'reservation_enabled', 'reservation_policy', 'alternative_text',
         ]), [
             'photo' => new MediaResource($product->photo),
-            'organization' => new OrganizationBasicResource($product->organization),
             'price' => is_null($product->price) ? null : currency_format($product->price),
             'price_locale' => $product->price_locale,
+            'organization' => new OrganizationBasicResource($product->organization),
         ]);
     }
 
@@ -175,19 +176,22 @@ class ProductResource extends BaseJsonResource
     {
         $global = $product::RESERVATION_FIELD_GLOBAL;
         $request = BaseFormRequest::createFromBase(request());
+        $organization = $product->organization;
+        $fields = $organization->reservation_fields;
 
         if ($request->isWebshop()) {
             return [
                 'reservation' => [
                     'phone' => $product->reservation_phone == $global ?
-                        $product->organization->reservation_phone :
+                        $organization->reservation_phone :
                         $product->reservation_phone,
                     'address' => $product->reservation_address == $global ?
-                        $product->organization->reservation_address :
+                        $organization->reservation_address :
                         $product->reservation_address,
                     'birth_date' => $product->reservation_birth_date == $global ?
-                        $product->organization->reservation_birth_date :
+                        $organization->reservation_birth_date :
                         $product->reservation_birth_date,
+                    'fields' => OrganizationReservationFieldResource::collection($fields)
                 ],
             ];
         }

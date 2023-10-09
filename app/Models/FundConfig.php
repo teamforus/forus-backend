@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $fund_id
  * @property int|null $implementation_id
  * @property string $key
+ * @property string $auth_2fa_policy
+ * @property bool $auth_2fa_remember_ip
  * @property int|null $record_validity_days
  * @property bool $hash_bsn
  * @property string|null $hash_bsn_salt
@@ -81,6 +83,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowReservations($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherRecords($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherTopUps($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAuth2faPolicy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAuth2faRememberIp($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeClientCert($value)
@@ -143,12 +147,25 @@ class FundConfig extends BaseModel
     public const VOUCHERS_TYPE_EXTERNAL = 'external';
     public const VOUCHERS_TYPE_INTERNAL = 'internal';
 
+    public const AUTH_2FA_POLICY_GLOBAL = 'global';
+    public const AUTH_2FA_POLICY_OPTIONAL = 'optional';
+    public const AUTH_2FA_POLICY_REQUIRED = 'required';
+    public const AUTH_2FA_POLICY_RESTRICT = 'restrict_features';
+
+    public const AUTH_2FA_POLICIES = [
+        self::AUTH_2FA_POLICY_GLOBAL,
+        self::AUTH_2FA_POLICY_OPTIONAL,
+        self::AUTH_2FA_POLICY_REQUIRED,
+        self::AUTH_2FA_POLICY_RESTRICT,
+    ];
+
     protected $fillable = [
         'backoffice_enabled', 'backoffice_url', 'backoffice_key',
         'backoffice_certificate', 'backoffice_fallback',
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'email_required', 'contact_info_enabled', 'contact_info_required',
         'contact_info_message_custom', 'contact_info_message_text',
+        'auth_2fa_policy', 'auth_2fa_remember_ip',
     ];
 
     /**
@@ -201,6 +218,10 @@ class FundConfig extends BaseModel
         'limit_voucher_total_amount' => 'string',
         'allow_generator_direct_payments' => 'boolean',
         'generator_ignore_fund_budget' => 'boolean',
+        'auth_2fa_remember_ip' => 'boolean',
+        'auth_2fa_restrict_emails' => 'boolean',
+        'auth_2fa_restrict_auth_sessions' => 'boolean',
+        'auth_2fa_restrict_reimbursements' => 'boolean',
     ];
 
     /**

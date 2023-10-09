@@ -25,6 +25,7 @@ class FundProviderQuery extends BaseQuery
     ): Builder|Relation|FundProvider {
         return $query->where(static function(Builder $builder) use ($fund_id, $type, $product_id) {
             $builder->where('state', FundProvider::STATE_ACCEPTED);
+            $builder->where('excluded', false);
             $builder->whereIn('fund_id', self::isQueryable($fund_id) ? $fund_id : (array) $fund_id);
 
             $builder->where(static function(Builder $builder) use ($type, $product_id) {
@@ -137,5 +138,23 @@ class FundProviderQuery extends BaseQuery
         return $builder
             ->where("fund_id", $fund_id)
             ->whereNotIn("id", $providersApproved->select("id"));
+    }
+
+    /**
+     * @param Builder|FundProvider $builder
+     * @return Builder|FundProvider
+     */
+    public static function whereApproved(Builder|FundProvider $builder): Builder|FundProvider
+    {
+        $builder->where('state', FundProvider::STATE_ACCEPTED);
+        $builder->where('excluded', false);
+
+        $builder->where(function(Builder $builder) {
+            $builder->where('allow_budget', true);
+            $builder->orWhere('allow_products', true);
+            $builder->orWhere('allow_some_products', true);
+        });
+
+        return $builder;
     }
 }

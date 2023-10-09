@@ -20,10 +20,11 @@ use Tests\DuskTestCase;
 use Tests\Traits\MakesTestIdentities;
 use Illuminate\Support\Facades\Cache;
 use Tests\Traits\MakesProductReservations;
+use Illuminate\Foundation\Testing\WithFaker;
 
 class ProductReservationTest extends DuskTestCase
 {
-    use AssertsSentEmails, MakesTestIdentities, MakesProductReservations, HasFrontendActions;
+    use AssertsSentEmails, MakesTestIdentities, MakesProductReservations, HasFrontendActions, WithFaker;
 
     protected ?Identity $identity;
 
@@ -177,11 +178,14 @@ class ProductReservationTest extends DuskTestCase
 
         // Wait for the reservation modal and submit with no data
         $browser->waitFor('@modalProductReserve');
-        $browser->within('@modalProductReserve', fn(Browser $el) => $el->click('@btnSubmit'));
+        if (!$identity->email) {
+            $browser->within('@modalProductReserve', fn(Browser $el) => $el->click('@reserveSkipEmailStep'));
+        }
+        $browser->within('@modalProductReserve', fn(Browser $el) => $el->click('@btnSelectVoucher'));
 
-        // Assert validation errors
-        $browser->waitFor('@modalProductReserveForm');
-        $browser->within('@modalProductReserveForm', function(Browser $browser) use ($user) {
+        // Fill reservation fields (except notes)
+        $browser->waitFor('@productReserveForm');
+        $browser->within('@productReserveForm', function(Browser $browser) use ($user) {
             $browser->press('@btnSubmit');
             $browser->waitFor('.form-error');
             $browser->assertVisible('.form-error');
@@ -190,11 +194,22 @@ class ProductReservationTest extends DuskTestCase
             $browser->type('@productReserveFormFirstName', $user['first_name']);
             $browser->type('@productReserveFormLastName', $user['last_name']);
             $browser->press('@btnSubmit');
-
-            // Assert success
-            $browser->waitForTextIn('@productReserveConfirmDetails', $user['first_name']);
-            $browser->press('@btnConfirmSubmit');
         });
+
+        // Fill reservation notes
+        $browser->waitFor('@productReserveNotes');
+        $browser->within('@productReserveNotes', function(Browser $browser) use ($user) {
+            // Fill form with data and submit again
+            $browser->type('@productReserveFormNote', $this->faker->text(100));
+            $browser->press('@btnSubmit');
+        });
+
+        // Assert success
+        $browser->waitForTextIn('@productReserveConfirmDetails', $user['first_name']);
+        $browser->press('@btnConfirmSubmit');
+
+        $browser->waitFor('@productReserveSuccess');
+        $browser->within('@productReserveSuccess', fn(Browser $el) => $el->click('@btnReservationFinish'));
 
         // Assert redirected to reservations list
         $browser->waitFor('@reservationsTitle');
@@ -204,7 +219,7 @@ class ProductReservationTest extends DuskTestCase
             ->where($user)
             ->where('created_at', '>=', $startTime)
             ->whereRelation('voucher.identity', 'address', $identity->address)
-            ->whereRelation('voucher', 'fund_id', $fund->id)
+            ->whereRelation('voucher.fund', 'name', $fund->name)
             ->whereRelation('product', 'name', $productName)
             ->first();
 
@@ -300,6 +315,7 @@ class ProductReservationTest extends DuskTestCase
                 'accepted' => '@labelAccepted',
                 'rejected' => '@labelRejected',
                 'canceled' => '@labelCanceled',
+                'canceled_by_client' => '@labelCanceled',
             ][$reservation->state]);
 
             $browser->assertSeeIn('@reservationProduct', $reservation->product->name);

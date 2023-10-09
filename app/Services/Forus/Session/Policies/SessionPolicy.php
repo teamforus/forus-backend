@@ -2,62 +2,92 @@
 
 namespace App\Services\Forus\Session\Policies;
 
+use App\Models\Identity;
 use App\Services\Forus\Session\Models\Session;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class SessionPolicy
 {
     use HandlesAuthorization;
 
     /**
-     * Create a new policy instance.
-     *
-     * @return void
+     * @param Identity $identity
+     * @param bool $auth2FAConfirmed
+     * @return Response|bool
      */
-    public function __construct()
+    public function viewAny(Identity $identity, bool $auth2FAConfirmed = false): Response|bool
     {
-        //
+        if (!$identity->exists()) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
-     * @param $identity_address
-     * @return mixed
-     */
-    public function viewAny(
-        $identity_address
-    ) {
-        return !empty($identity_address);
-    }
-
-    /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Session $session
-     * @return bool
+     * @param bool $auth2FAConfirmed
+     * @return Response|bool
      */
     public function show(
-        $identity_address, Session $session
-    ) {
-        return strcmp($session->identity_address, $identity_address) === 0;
+        Identity $identity,
+        Session $session,
+        bool $auth2FAConfirmed = false,
+    ): Response|bool {
+        if ($session->identity_address !== $identity->address) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Session $session
-     * @return bool
+     * @param bool $auth2FAConfirmed
+     * @return Response|bool
      */
     public function terminate(
-        $identity_address, Session $session
-    ) {
-        return strcmp($session->identity_address, $identity_address) === 0;
+        Identity $identity,
+        Session $session,
+        bool $auth2FAConfirmed = false
+    ): Response|bool {
+        if ($session->identity_address !== $identity->address) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
     }
 
     /**
-     * @param $identity_address
-     * @return mixed
+     * @param Identity $identity
+     * @param bool $auth2FAConfirmed
+     * @return Response|bool
      */
-    public function terminateAll(
-        $identity_address
-    ) {
-        return !empty($identity_address);
+    public function terminateAll(Identity $identity, bool $auth2FAConfirmed = false): Response|bool
+    {
+        if (!$identity->exists()) {
+            return false;
+        }
+
+        return $this->validate2FAFeatureRestriction($identity, $auth2FAConfirmed);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param bool $auth2FAConfirmed
+     * @return Response|bool
+     */
+    protected function validate2FAFeatureRestriction(
+        Identity $identity,
+        bool $auth2FAConfirmed = false,
+    ): Response|bool {
+        if ($identity->load('funds')->isFeature2FARestricted('sessions') && !$auth2FAConfirmed) {
+            return $this->deny('Invalid 2FA state.');
+        }
+
+        return true;
     }
 }

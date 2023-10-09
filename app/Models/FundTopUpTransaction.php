@@ -33,7 +33,7 @@ class FundTopUpTransaction extends BaseModel
     protected $perPage = 10;
 
     protected $fillable = [
-        'fund_top_up_id', 'bank_transaction_id', 'amount'
+        'fund_top_up_id', 'bank_transaction_id', 'amount',
     ];
 
     /**

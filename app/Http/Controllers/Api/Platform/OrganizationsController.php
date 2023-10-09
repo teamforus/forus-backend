@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\TransferOrganizationOwnershipRe
 use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationAcceptReservationsRequest;
+use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBIConnectionRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBusinessTypeRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationReservationSettingsRequest;
@@ -115,8 +116,21 @@ class OrganizationsController extends Controller
         $organization->update($request->only([
             'name', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
-            'business_type_id', 'description',
+            'business_type_id', 'description', 'auth_2fa_policy', 'auth_2fa_remember_ip',
         ]));
+
+        if ($organization->allow_2fa_restrictions) {
+            $organization->update($request->only([
+                'auth_2fa_policy', 'auth_2fa_remember_ip',
+                'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip',
+                'auth_2fa_funds_restrict_emails', 'auth_2fa_funds_restrict_auth_sessions',
+                'auth_2fa_funds_restrict_reimbursements'
+            ]));
+        }
+
+        if ($request->has('contacts') && is_array($request->get('contacts'))) {
+            $organization->syncContacts($request->get('contacts'));
+        }
 
         if ($request->has('iban') && Gate::allows('updateIban', $organization)) {
             $organization->update([
@@ -201,7 +215,7 @@ class OrganizationsController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
-    public function updateReservationFieldSettings(
+    public function updateReservationFields(
         UpdateOrganizationReservationSettingsRequest $request,
         Organization $organization
     ): OrganizationResource {
@@ -210,6 +224,31 @@ class OrganizationsController extends Controller
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'reservation_phone', 'reservation_address', 'reservation_birth_date',
         ])));
+
+        $organization->syncReservationFields($request->get('fields', []));
+
+        return new OrganizationResource($organization);
+    }
+
+    /**
+     * @param UpdateOrganizationBIConnectionRequest $request
+     * @param Organization $organization
+     * @return OrganizationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function updateBIConnection(
+        UpdateOrganizationBIConnectionRequest $request,
+        Organization $organization
+    ): OrganizationResource {
+        $this->authorize('updateBIConnection', $organization);
+
+        $authType = $request->input('bi_connection_auth_type');
+        $resetToken = $request->boolean('bi_connection_token_reset');
+
+        if ($authType != $organization->bi_connection_auth_type || $resetToken) {
+            $organization->updateBIConnection($authType, $resetToken);
+        }
 
         return new OrganizationResource($organization);
     }
@@ -236,6 +275,6 @@ class OrganizationsController extends Controller
             'identity_address' => $employee->identity_address
         ]);
 
-        return response()->json([]);
+        return new JsonResponse();
     }
 }

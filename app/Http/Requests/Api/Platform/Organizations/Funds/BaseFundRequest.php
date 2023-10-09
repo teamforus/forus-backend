@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\FundConfig;
 use App\Models\Organization;
 use App\Traits\ValidatesFaq;
 use Illuminate\Validation\Rule;
@@ -38,6 +39,8 @@ abstract class BaseFundRequest extends BaseFormRequest
      */
     protected function funConfigsRules(): array
     {
+        $auth2FAPolicies = implode(',', FundConfig::AUTH_2FA_POLICIES);
+
         return [
             'email_required' => 'nullable|boolean',
             'allow_fund_requests' => 'nullable|boolean',
@@ -47,6 +50,13 @@ abstract class BaseFundRequest extends BaseFormRequest
             'contact_info_required' => 'nullable|boolean',
             'contact_info_message_custom' => 'nullable|boolean',
             'contact_info_message_text' => 'nullable|string|max:8000',
+
+            // auth 2fa
+            'auth_2fa_policy' => "nullable|in:$auth2FAPolicies",
+            'auth_2fa_remember_ip' => 'nullable|boolean',
+            'auth_2fa_restrict_emails' => 'nullable|boolean',
+            'auth_2fa_restrict_auth_sessions' => 'nullable|boolean',
+            'auth_2fa_restrict_reimbursements' => 'nullable|boolean',
         ];
     }
 
@@ -83,5 +93,15 @@ abstract class BaseFundRequest extends BaseFormRequest
         return array_merge([
             'criteria.*.value' => 'Waarde',
         ], $this->getFaqAttributes());
+    }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'external_page_url.required_if' => 'Het external URL veld is verplicht',
+        ];
     }
 }

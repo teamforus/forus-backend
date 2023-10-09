@@ -35,9 +35,9 @@ class MediaRegenerateCommand extends Command
     /**
      * Execute the console command.
      *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \Throwable
      */
-    public function handle()
+    public function handle(): void
     {
         /** @var MediaService $media */
         $media = resolve('media');
