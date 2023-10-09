@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Helpers\Markdown;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use League\CommonMark\Exception\CommonMarkException;
 
 /**
  * App\Models\NotificationTemplate
@@ -71,9 +73,10 @@ class NotificationTemplate extends Model
 
     /**
      * @return string|null
+     * @throws CommonMarkException
      */
     public function convertToHtml(): ?string
     {
-        return resolve('markdown.converter')->convert($this->content)->getContent();
+        return Markdown::convert(e($this->content ?: ''));
     }
 }
