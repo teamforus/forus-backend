@@ -217,7 +217,7 @@ class Implementation extends BaseModel
      */
     protected $hidden = [
         'digid_enabled', 'digid_env', 'digid_app_id', 'digid_shared_secret',
-        'digid_a_select_server'
+        'digid_a_select_server',
     ];
 
     /**
