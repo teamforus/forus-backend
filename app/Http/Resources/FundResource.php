@@ -89,10 +89,15 @@ class FundResource extends BaseJsonResource
         ], $fundConfigData, $criteriaData, $financialData, $generatorData, $prevalidationCsvData);
 
         if ($isDashboard && $organization->identityCan($identity, ['manage_funds', 'manage_fund_texts'], false)) {
+            $requesterCount = VoucherQuery::whereNotExpiredAndActive($fund->vouchers())
+                ->whereNull('parent_id')
+                ->count();
+
             $data = array_merge($data, $fund->only([
                 'default_validator_employee_id', 'auto_requests_validation',
             ]), [
                 'criteria_editable' => $fund->criteriaIsEditable(),
+                'requester_count'  => $requesterCount,
             ]);
         }
 
@@ -199,10 +204,6 @@ class FundResource extends BaseJsonResource
             });
         })->count();
 
-        $requesterCount = VoucherQuery::whereNotExpiredAndActive($fund->vouchers())
-            ->whereNull('parent_id')
-            ->count();
-
         $loadBudgetStats = $stats == 'all' || $stats == 'budget';
         $loadProductVouchersStats = $stats == 'all' || $stats == 'product_vouchers';
 
@@ -211,7 +212,6 @@ class FundResource extends BaseJsonResource
             'provider_organizations_count'  => $fund->provider_organizations_approved->count(),
             'provider_employees_count'      => $providersEmployeeCount,
             'validators_count'              => $validatorsCount,
-            'requester_count'               => $requesterCount,
             'budget'                        => $loadBudgetStats ? $this->getVoucherData($fund, 'budget') : null,
             'product_vouchers'              => $loadProductVouchersStats ? $this->getVoucherData($fund, 'product') : null,
         ];
