@@ -20,7 +20,7 @@ class FormatController extends Controller
     public function format(FormatRequest $request): JsonResponse
     {
         return new JsonResponse([
-            'html' => Markdown::convert(e($request->string('markdown'))),
+            'html' => Markdown::convert($request->string('markdown')),
         ]);
     }
 }

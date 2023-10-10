@@ -351,7 +351,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
         $generalSignature = Implementation::general()->email_signature;
         $implementationSignature = Implementation::byKey($this->implementationKey())->email_signature;
 
-        return Markdown::convert(e(($implementationSignature ?: $generalSignature) ?: ''));
+        return Markdown::convert(($implementationSignature ?: $generalSignature) ?: '');
     }
 
     /**

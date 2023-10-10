@@ -96,7 +96,7 @@ class ImplementationPrivateResource extends BaseJsonResource
                 'email_color' => trim(strtoupper($implementation->email_color)),
                 'email_color_default' => trim(strtoupper($generalImplementation->email_color)),
                 'email_signature' => trim($implementation->email_signature ?: ''),
-                'email_signature_html' => Markdown::convert(e($implementation->email_signature ?: '')),
+                'email_signature_html' => Markdown::convert($implementation->email_signature ?: ''),
                 'email_signature_default' => trim($generalImplementation->email_signature ?: ''),
             ];
         }

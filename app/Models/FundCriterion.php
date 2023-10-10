@@ -103,6 +103,6 @@ class FundCriterion extends BaseModel
      */
     public function getDescriptionHtmlAttribute(): string
     {
-        return Markdown::convert(e($this->description ?: ''));
+        return Markdown::convert($this->description ?: '');
     }
 }
