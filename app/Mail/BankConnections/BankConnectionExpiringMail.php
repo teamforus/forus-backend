@@ -4,6 +4,7 @@ namespace App\Mail\BankConnections;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
 
 class BankConnectionExpiringMail extends ImplementationMail
@@ -12,6 +13,7 @@ class BankConnectionExpiringMail extends ImplementationMail
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {
