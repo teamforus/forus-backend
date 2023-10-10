@@ -3,6 +3,9 @@
 
 namespace App\Mail;
 
+use App\Helpers\Markdown;
+use League\CommonMark\Exception\CommonMarkException;
+
 /**
  * Class MailBodyBuilder
  * @package App\Mail
@@ -105,6 +108,7 @@ class MailBodyBuilder
      * @param string $globalStyles
      * @param string|null $textColor
      * @return MailBodyBuilder
+     * @throws CommonMarkException
      */
     public function markdown(
         string $markdown,
@@ -112,7 +116,7 @@ class MailBodyBuilder
         string $globalStyles = 'text_left',
         ?string $textColor = null
     ): MailBodyBuilder {
-        $templateHtml = resolve('markdown.converter')->convert($markdown)->getContent();
+        $templateHtml = Markdown::convert(e($markdown));
         $templateHtml = str_var_replace($templateHtml, $data);
 
         return $this->markdownHtml($templateHtml, $globalStyles, $textColor);
@@ -141,10 +145,11 @@ class MailBodyBuilder
         $document = new \DomDocument();
         $document->loadHTML('<?xml encoding="utf-8" ?>' . $html, $documentOptions);
 
+        $styles['li'] = $styles['text'] ?? '';
         $styles['p'] = $styles['text'] ?? '';
         $styles['a'] = $styles['link'] ?? '';
 
-        foreach (array_only($styles, ['h1', 'h2', 'h3', 'h4', 'h5', 'p', 'a']) as $tagName => $tagStyles) {
+        foreach (array_only($styles, ['h1', 'h2', 'h3', 'h4', 'h5', 'p', 'a', 'li']) as $tagName => $tagStyles) {
             $elements = $document->getElementsByTagName($tagName);
 
             for ($i = $elements->length; --$i >= 0; ) {

@@ -65,7 +65,7 @@ class FundResource extends BaseJsonResource
             'id', 'name', 'description', 'description_html', 'description_short', 'description_position',
             'organization_id', 'state', 'notification_amount', 'type', 'type_locale', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
-            'balance_provider',
+            'balance_provider', 'external_page', 'external_page_url',
         ]), [
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
             'tags' => TagResource::collection($fund->tags_webshop),
@@ -156,7 +156,7 @@ class FundResource extends BaseJsonResource
         $isVoucherManager = Gate::allows('funds.manageVouchers', [$fund, $fund->organization]);
 
         return $isVoucherManager ? array_merge($fund->fund_config->only([
-            'allow_direct_payments', 'allow_voucher_top_ups',
+            'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
             'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
         ]), [
             'limit_per_voucher' => $fund->getMaxAmountPerVoucher(),

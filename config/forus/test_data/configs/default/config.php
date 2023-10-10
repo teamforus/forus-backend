@@ -77,6 +77,4 @@ return [
     'iconnect_key' => "",
     'iconnect_key_pass' => "",
     'iconnect_cert_trust' => "",
-
-    'productboard_api_key' => null,
 ];

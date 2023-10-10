@@ -201,6 +201,7 @@ return [
             'U heeft :count geannuleerd in het afgelopen uur.',
             'Nieuwe reserveringen kunnen pas weer na een uur worden gemaakt.',
         ]),
+        'not_enough_voucher_funds' => 'Onvoldoende budget op de voucher',
     ],
     'employees' => [
         'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',
@@ -257,6 +258,7 @@ return [
         'label' => 'label',
         'type' => 'type',
         'birth_date' => 'geboortedatum',
+        'external_page_url' => 'externe url'
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',
