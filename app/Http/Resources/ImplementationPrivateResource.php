@@ -2,19 +2,22 @@
 
 namespace App\Http\Resources;
 
+use App\Helpers\Markdown;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Announcement;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
+use League\CommonMark\Exception\CommonMarkException;
 
 class ImplementationPrivateResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @property Implementation $resource
+     * @param \Illuminate\Http\Request $request
      * @return ?array
+     * @throws CommonMarkException
+     * @property Implementation $resource
      */
     public function toArray($request): ?array
     {
@@ -78,6 +81,7 @@ class ImplementationPrivateResource extends BaseJsonResource
      * @param BaseFormRequest $request
      * @param Implementation $implementation
      * @return array
+     * @throws CommonMarkException
      */
     protected function managerCMSDetails(
         BaseFormRequest $request,
@@ -92,6 +96,7 @@ class ImplementationPrivateResource extends BaseJsonResource
                 'email_color' => trim(strtoupper($implementation->email_color)),
                 'email_color_default' => trim(strtoupper($generalImplementation->email_color)),
                 'email_signature' => trim($implementation->email_signature ?: ''),
+                'email_signature_html' => Markdown::convert($implementation->email_signature ?: ''),
                 'email_signature_default' => trim($generalImplementation->email_signature ?: ''),
             ];
         }
@@ -113,7 +118,7 @@ class ImplementationPrivateResource extends BaseJsonResource
         return array_merge($announcement->only([
             'id', 'type', 'title', 'description', 'description_html', 'scope', 'active',
         ]), [
-            'expire_at' => $announcement?->expire_at?->format('Y-m-d'),
+            'expire_at' => $announcement->expire_at?->format('Y-m-d'),
         ]);
     }
 }
