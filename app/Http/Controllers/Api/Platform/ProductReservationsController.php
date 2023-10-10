@@ -63,7 +63,7 @@ class ProductReservationsController extends Controller
 
         $reservation = $voucher->reserveProduct($product, null, $request->only([
             'first_name', 'last_name', 'user_note', 'phone', 'birth_date', 'custom_fields',
-            'street', 'house_nr', 'city', 'postal_code',
+            'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
         ]));
 
         if ($reservation->product->autoAcceptsReservations($voucher->fund)) {

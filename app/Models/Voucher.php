@@ -1022,7 +1022,7 @@ class Voucher extends BaseModel
             'expire_at'                 => $this->calcExpireDateForProduct($product),
         ], array_only($extraData, [
             'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
-            'street', 'house_nr', 'city', 'postal_code',
+            'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
         ]), $product->only('price', 'price_type', 'price_discount')));
 
         // store custom fields

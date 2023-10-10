@@ -36,6 +36,7 @@ use Illuminate\Support\Facades\Event;
  * @property string $address
  * @property string|null $street
  * @property string|null $house_nr
+ * @property string|null $house_nr_addition
  * @property string|null $postal_code
  * @property string|null $city
  * @property string|null $birth_date
@@ -78,6 +79,7 @@ use Illuminate\Support\Facades\Event;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereExpireAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFirstName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFundProviderProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereHouseNumberAddition($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereHouseNr($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereLastName($value)
@@ -165,7 +167,7 @@ class ProductReservation extends BaseModel
         'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
         'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'archived',
-        'street', 'house_nr', 'postal_code', 'city',
+        'street', 'house_nr', 'house_nr_addition', 'postal_code', 'city',
     ];
 
     /**
@@ -202,7 +204,7 @@ class ProductReservation extends BaseModel
     public function getAddressAttribute($value): string
     {
         return $value ?: sprintf("%s %s", $this->street ?: '', implode(', ', array_filter([
-            $this->house_nr, $this->postal_code, $this->city,
+            $this->house_nr, $this->house_nr_addition, $this->postal_code, $this->city,
         ])));
     }
 
