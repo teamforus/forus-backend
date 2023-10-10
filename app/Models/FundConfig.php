@@ -165,7 +165,7 @@ class FundConfig extends BaseModel
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'email_required', 'contact_info_enabled', 'contact_info_required',
         'contact_info_message_custom', 'contact_info_message_text',
-        'auth_2fa_policy', 'auth_2fa_remember_ip',
+        'auth_2fa_policy', 'auth_2fa_remember_ip', 'hide_meta',
     ];
 
     /**
@@ -222,6 +222,7 @@ class FundConfig extends BaseModel
         'auth_2fa_restrict_emails' => 'boolean',
         'auth_2fa_restrict_auth_sessions' => 'boolean',
         'auth_2fa_restrict_reimbursements' => 'boolean',
+        'hide_meta' => 'boolean',
     ];
 
     /**
