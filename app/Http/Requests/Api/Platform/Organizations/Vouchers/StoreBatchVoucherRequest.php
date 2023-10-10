@@ -8,7 +8,7 @@ use App\Models\Organization;
 use App\Rules\Base\IbanRule;
 use App\Rules\BatchVoucherRecordsRule;
 use App\Rules\ProductIdInStockRule;
-use App\Rules\VouchersUploadArrayRule;
+use App\Rules\VouchersArraySumAmountsRule;
 use Illuminate\Validation\Rule;
 
 /**
@@ -38,7 +38,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
 
         return array_merge([
             'fund_id'                           => $this->fundIdRule(),
-            'vouchers'                          => ['required', new VouchersUploadArrayRule($fund)],
+            'vouchers'                          => 'required|array',
             'vouchers.*'                        => 'required|array',
             'vouchers.*.amount'                 => $this->amountRule($fund),
             'vouchers.*.product_id'             => $this->productIdRule($fund),
@@ -97,7 +97,8 @@ class StoreBatchVoucherRequest extends BaseFormRequest
     /**
      * @return array
      */
-    private function fundIdRule(): array {
+    private function fundIdRule(): array
+    {
         $fundIds = $this->organization->funds()->pluck('id')->toArray();
 
         return [
@@ -110,7 +111,8 @@ class StoreBatchVoucherRequest extends BaseFormRequest
      * @param Fund $fund
      * @return string[]
      */
-    private function expireAtRule(Fund $fund): array {
+    private function expireAtRule(Fund $fund): array
+    {
         return [
             'nullable',
             'date_format:Y-m-d',
@@ -130,6 +132,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
             'required_without:vouchers.*.product_id',
             'numeric',
             'between:.1,' . currency_format($fund->getMaxAmountPerVoucher()),
+            new VouchersArraySumAmountsRule($fund, $this->input('vouchers')),
         ] : 'nullable';
     }
 
