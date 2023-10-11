@@ -8,14 +8,6 @@ return [
             'informal_communication' => true,
         ],
     ],
-    'Nijmegen' => [
-        'implementation' => [
-            'digid_connection_type' => 'saml',
-            'digid_sign_up_allowed' => true,
-            'informal_communication' => true,
-            'allow_per_fund_notification_templates' => true,
-        ],
-    ],
     'Stadjerspas' => [
         'implementation' => [
             'key' => "groningen",

@@ -9,18 +9,6 @@ return [
             'allow_custom_fund_notifications' => true,
         ]
     ],
-    'Nijmegen' => [
-        'offices_count' => 0,
-        'organization' => [
-            'backoffice_available' => true,
-            'allow_bi_connection' => true,
-            'allow_2fa_restrictions' => true,
-            'allow_budget_fund_limits' => true,
-            'allow_manual_bulk_processing' => true,
-            'allow_fund_request_record_edit' => true,
-            'allow_custom_fund_notifications' => true,
-        ]
-    ],
     'Gemeente Groningen' => [
         'offices_count' => 0,
         'organization' => [
