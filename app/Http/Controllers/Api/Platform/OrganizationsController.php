@@ -288,6 +288,6 @@ class OrganizationsController extends Controller
     {
         $this->authorize('showFeatures', $organization);
 
-        return new OrganizationFeaturesResource($organization);
+        return OrganizationFeaturesResource::create($organization);
     }
 }

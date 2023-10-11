@@ -174,6 +174,6 @@ class OrganizationPolicy
      */
     public function showFeatures(Identity $identity, Organization $organization): bool
     {
-        return $organization->isEmployee($identity) && $organization->funds->count();
+        return $organization->isEmployee($identity) && $organization->funds->isNotEmpty();
     }
 }
