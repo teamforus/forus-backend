@@ -72,7 +72,11 @@ class StoreProductReservationRequest extends BaseFormRequest
      */
     public function addressRules(?Product $product): array
     {
-        $required = $product?->reservation_address_is_required;
+        $isPartiallyFilled = !empty(array_filter($this->only([
+            'city', 'street', 'house_nr_addition', 'postal_code',
+        ])));
+
+        $required = $isPartiallyFilled || $product?->reservation_address_is_required;
 
         return array_merge(parent::rules(), [
             'city' => [$required ? 'required' : 'nullable', 'alpha_dash', 'max:100'],
