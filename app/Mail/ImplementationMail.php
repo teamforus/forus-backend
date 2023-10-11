@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Helpers\Markdown;
 use App\Models\Implementation;
 use App\Models\NotificationTemplate;
 use App\Models\SystemNotification;
@@ -11,6 +12,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
+use League\CommonMark\Exception\CommonMarkException;
 
 /**
  * Class ImplementationMail
@@ -80,6 +82,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
 
     /**
      * @return array
+     * @throws CommonMarkException
      */
     public function getTransData(): array
     {
@@ -101,6 +104,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function buildBase(): Mailable
     {
@@ -160,6 +164,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {
@@ -179,6 +184,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
      * Build the message.
      *
      * @return Mailable|null
+     * @throws CommonMarkException
      */
     public function buildNotificationTemplatedMail(): ?Mailable
     {
@@ -187,10 +193,9 @@ class ImplementationMail extends Mailable implements ShouldQueue
         if ($template) {
             $data = $this->getTransData();
             $data = array_merge($data, $this->getMailExtraData($data));
-            $subject = $this->getSubject(str_var_replace(e($template->title), $data));
 
-            $templateHtml = resolve('markdown.converter')->convert(e($template->content))->getContent();
-            $templateHtml = str_var_replace($templateHtml, $data);
+            $subject = $this->getSubject(str_var_replace(e($template->title), $data));
+            $templateHtml = str_var_replace(Markdown::convert(e($template->content ?: '')), $data);
 
             $emailBody = new MailBodyBuilder();
             $emailBody->markdownHtml($templateHtml, $this->globalBuilderStyles, $this->implementationColor());
@@ -209,6 +214,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
     /**
      * @param string $template
      * @return Mailable
+     * @throws CommonMarkException
      */
     protected function buildSystemMail(string $template): Mailable
     {
@@ -232,15 +238,15 @@ class ImplementationMail extends Mailable implements ShouldQueue
      * @param string $subject
      * @param string $content
      * @return Mailable
+     * @throws CommonMarkException
      */
     protected function buildCustomMail(string $subject, string $content): Mailable
     {
         $data = $this->getTransData();
         $data = array_merge($data, $this->getMailExtraData($data));
-        $subject = str_var_replace(e($subject), $data);
 
-        $templateHtml = resolve('markdown.converter')->convert(e($content))->getContent();
-        $templateHtml = str_var_replace($templateHtml, $data);
+        $subject = str_var_replace(e($subject), $data);
+        $templateHtml = str_var_replace(Markdown::convert(e($content ?: '')), $data);
 
         $emailBody = new MailBodyBuilder();
         $emailBody->markdownHtml($templateHtml, $this->globalBuilderStyles, $this->implementationColor());
@@ -338,13 +344,14 @@ class ImplementationMail extends Mailable implements ShouldQueue
 
     /**
      * @return string
+     * @throws CommonMarkException
      */
     protected function implementationSignature(): string
     {
         $generalSignature = Implementation::general()->email_signature;
         $implementationSignature = Implementation::byKey($this->implementationKey())->email_signature;
 
-        return ($implementationSignature ?: $generalSignature) ?: '';
+        return Markdown::convert(($implementationSignature ?: $generalSignature) ?: '');
     }
 
     /**

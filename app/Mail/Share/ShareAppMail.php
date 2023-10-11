@@ -4,11 +4,8 @@ namespace App\Mail\Share;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class ShareAppMail
- * @package App\Mail\Share
- */
 class ShareAppMail extends ImplementationMail
 {
     protected string $subjectKey = 'share/email.me_app_download_link.title';
@@ -17,6 +14,7 @@ class ShareAppMail extends ImplementationMail
      * Build the message.
      *
      * @return $this
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

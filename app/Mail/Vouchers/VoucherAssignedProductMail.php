@@ -4,17 +4,15 @@ namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class AssignedVoucherMail
- * @package App\Mail\Vouchers
- */
 class VoucherAssignedProductMail extends ImplementationMail
 {
     protected string $notificationTemplateKey = 'notifications_identities.identity_voucher_assigned_product';
 
-    /**
+    s/**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

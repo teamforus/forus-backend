@@ -4,17 +4,15 @@ namespace App\Mail\ProductReservations;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class ProductReservationAcceptedMail
- * @package App\Mail\ProductReservations
- */
 class ProductReservationAcceptedMail extends ImplementationMail
 {
     protected string $notificationTemplateKey = 'notifications_identities.product_reservation_accepted';
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {
