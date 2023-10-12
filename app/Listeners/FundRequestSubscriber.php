@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Events\FundRequestClarifications\FundRequestRecordFeedbackReceived;
 use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
 use App\Events\FundRequestRecords\FundRequestRecordApproved;
 use App\Events\FundRequestRecords\FundRequestRecordAssigned;
@@ -24,6 +25,7 @@ use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotif
 use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRequestedNotification;
 use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
+use App\Notifications\Organizations\FundRequests\FundRequestRecordFeedbackReceivedNotification;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Gate;
@@ -254,6 +256,26 @@ class FundRequestSubscriber
     }
 
     /**
+     * @param FundRequestRecordFeedbackReceived $clarificationAnswered
+     * @noinspection PhpUnused
+     */
+    public function onFundRequestRecordFeedbackReceived(
+        FundRequestRecordFeedbackReceived $clarificationAnswered
+    ): void {
+        $clarification = $clarificationAnswered->getFundRequestClarification();
+        $fundRequestRecord = $clarification->fund_request_record;
+
+        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord, [
+            'fund_request_clarification' => $clarification,
+        ]);
+
+        FundRequestRecordFeedbackReceivedNotification::send($fundRequestRecord->log(
+            $fundRequestRecord::EVENT_CLARIFICATION_RECEIVED,
+            $eventModels
+        ));
+    }
+
+    /**
      * @param FundRequest $fundRequest
      * @param array $extraModels
      * @return array
@@ -320,5 +342,6 @@ class FundRequestSubscriber
         $events->listen(FundRequestRecordUpdated::class, "$class@onFundRequestRecordUpdated");
 
         $events->listen(FundRequestClarificationRequested::class, "$class@onFundRequestClarificationRequested");
+        $events->listen(FundRequestRecordFeedbackReceived::class, "$class@onFundRequestRecordFeedbackReceived");
     }
 }

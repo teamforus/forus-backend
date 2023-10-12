@@ -64,6 +64,7 @@ class FundRequestRecord extends BaseModel
     public const EVENT_APPROVED = 'approved';
     public const EVENT_DECLINED = 'declined';
     public const EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
+    public const EVENT_CLARIFICATION_RECEIVED = 'clarification_answered';
     public const EVENT_UPDATED = 'updated';
 
     public const EVENTS = [
@@ -73,6 +74,7 @@ class FundRequestRecord extends BaseModel
         self::EVENT_APPROVED,
         self::EVENT_DECLINED,
         self::EVENT_CLARIFICATION_REQUESTED,
+        self::EVENT_CLARIFICATION_RECEIVED,
     ];
 
     public const STATES = [
