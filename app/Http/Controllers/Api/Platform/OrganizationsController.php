@@ -148,26 +148,6 @@ class OrganizationsController extends Controller
     }
 
     /**
-     * @param UpdateOrganizationBusinessTypeRequest $request
-     * @param Organization $organization
-     * @return OrganizationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @noinspection PhpUnused
-     */
-    public function updateBusinessType(
-        UpdateOrganizationBusinessTypeRequest $request,
-        Organization $organization
-    ): OrganizationResource {
-        $this->authorize('update', $organization);
-
-        OrganizationUpdated::dispatch($organization->updateModel($request->only([
-            'business_type_id',
-        ])));
-
-        return new OrganizationResource($organization);
-    }
-
-    /**
      * @param UpdateOrganizationRolesRequest $request
      * @param Organization $organization
      * @return OrganizationResource
