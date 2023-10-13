@@ -10,7 +10,7 @@ class VoucherAssignedProductMail extends ImplementationMail
 {
     protected string $notificationTemplateKey = 'notifications_identities.identity_voucher_assigned_product';
 
-    s/**
+    /**
      * @return Mailable
      * @throws CommonMarkException
      */
