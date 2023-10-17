@@ -60,10 +60,13 @@ class ProductReservationsController extends Controller
 
         $product = Product::find($request->input('product_id'));
         $voucher = Voucher::findByAddress($request->input('voucher_address'), $request->auth_address());
+        $postCode = $request->input('postal_code') ?: '';
 
-        $reservation = $voucher->reserveProduct($product, null, $request->only([
+        $reservation = $voucher->reserveProduct($product, null, array_merge($request->only([
             'first_name', 'last_name', 'user_note', 'phone', 'birth_date', 'custom_fields',
-            'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
+            'street', 'house_nr', 'house_nr_addition', 'city',
+        ]), [
+            'postal_code' => strtoupper(preg_replace("/\s+/", "", $postCode)),
         ]));
 
         if ($reservation->product->autoAcceptsReservations($voucher->fund)) {

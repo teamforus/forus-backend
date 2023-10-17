@@ -1005,7 +1005,7 @@ class Voucher extends BaseModel
     public function reserveProduct(
         Product $product,
         ?Employee $employee = null,
-        array $extraData = []
+        array $extraData = [],
     ): ProductReservation {
         $isSubsidy = $this->fund->isTypeSubsidy();
         $fundProviderProduct = $product->getFundProviderProduct($this->fund);

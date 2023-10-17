@@ -129,11 +129,11 @@ return [
         'already_requested' => 'U heeft dit al een keer aangevraagd.',
     ],
 
-    'city_name' => 'geselecteerde :attribute is ongeldig.',
-    'street_name' => 'geselecteerde :attribute is ongeldig.',
-    'house_number' => 'geselecteerde :attribute is ongeldig.',
-    'house_addition' => 'geselecteerde :attribute is ongeldig.',
-    'postcode' => 'geselecteerde :attribute is ongeldig.',
+    'city_name' => 'Het lijkt erop dat de :attribute niet klopt. Controleer het nog even om verder te kunnen gaan.',
+    'street_name' => 'Het lijkt erop dat de :attribute niet klopt. Controleer het nog even om verder te kunnen gaan.',
+    'house_number' => 'Het lijkt erop dat het :attribute niet klopt. Controleer het nog even om verder te kunnen gaan.',
+    'house_addition' => 'Het lijkt erop dat het :attribute niet klopt. Controleer het nog even om verder te kunnen gaan.',
+    'postcode' => 'Het lijkt erop dat de :attribute niet klopt. Controleer het nog even om verder te kunnen gaan.',
 
     /*
     |--------------------------------------------------------------------------
