@@ -79,11 +79,11 @@ class StoreProductReservationRequest extends BaseFormRequest
         $required = $isPartiallyFilled || $product?->reservation_address_is_required;
 
         return array_merge(parent::rules(), [
-            'city' => [$required ? 'required' : 'nullable', 'alpha_dash', 'max:100'],
-            'street' => [$required ? 'required' : 'nullable', 'alpha_dash', 'max:80'],
-            'house_nr' => [$required ? 'required' : 'nullable', 'integer', 'digits_between:1,5'],
-            'house_nr_addition' => ['nullable', 'string', 'max:4'],
-            'postal_code' => [$required ? 'required' : 'nullable', 'alpha_dash', 'max:6'],
+            'city' => [$required ? 'required' : 'nullable', 'city_name'],
+            'street' => [$required ? 'required' : 'nullable', 'street_name'],
+            'house_nr' => [$required ? 'required' : 'nullable', 'house_number'],
+            'house_nr_addition' => ['nullable', 'house_addition'],
+            'postal_code' => [$required ? 'required' : 'nullable', 'postcode'],
         ]);
     }
 
