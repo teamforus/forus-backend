@@ -23,9 +23,10 @@ class BIVouchersExporter extends BaseBIExporter
         $query = VoucherSubQuery::appendFirstUseFields($query);
 
         $vouchers = $query->with([
-            'transactions', 'voucher_relation', 'product', 'fund',
+            'transactions', 'voucher_relation', 'product', 'fund.fund_config',
             'token_without_confirmation', 'identity.primary_email', 'identity.record_bsn',
             'product_vouchers', 'top_up_transactions', 'reimbursements_pending',
+            'voucher_records.record_type'
         ])->get();
 
         $array = Voucher::exportOnlyDataArray($vouchers, array_keys($fields));

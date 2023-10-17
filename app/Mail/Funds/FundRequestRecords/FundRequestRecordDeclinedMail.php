@@ -4,17 +4,15 @@ namespace App\Mail\Funds\FundRequestRecords;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class FundRequestCreatedMail
- * @package App\Mail\FundRequests
- */
 class FundRequestRecordDeclinedMail extends ImplementationMail
 {
     protected string $notificationTemplateKey = "notifications_identities.fund_request_record_declined";
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

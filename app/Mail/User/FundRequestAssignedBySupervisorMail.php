@@ -4,6 +4,7 @@ namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
 class FundRequestAssignedBySupervisorMail extends ImplementationMail
 {
@@ -11,6 +12,7 @@ class FundRequestAssignedBySupervisorMail extends ImplementationMail
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

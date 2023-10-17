@@ -5,9 +5,7 @@ namespace App\Models\Data;
 use App\Models\Voucher;
 
 /**
- * Class VoucherExportData
  * @property Voucher $voucher
- * @package App\Models\Data
  */
 class VoucherExportData
 {
@@ -56,6 +54,7 @@ class VoucherExportData
         $assigned = $this->voucher->identity_address && $this->voucher->is_granted;
         $identity = $this->voucher->identity;
         $firstUseDate = $this->voucher->first_use_date;
+        $allowRecords = $this->voucher->fund?->fund_config?->allow_voucher_records;
 
         $bsnData = $sponsor->bsn_enabled ? [
             'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
@@ -86,6 +85,20 @@ class VoucherExportData
             'expire_at' => format_date_locale($this->voucher->expire_at),
         ]);
 
-        return array_only($export_data, array_merge(['name'], $this->fields));
+        return array_only(array_merge(
+            $export_data,
+            $allowRecords ? $this->getRecordsData($this->voucher) : [],
+        ), array_merge(['name'], $this->fields));
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return array
+     */
+    protected function getRecordsData(Voucher $voucher): array
+    {
+        return $voucher->voucher_records->reduce(function(array $data, $record) {
+            return array_merge($data, [$record->record_type->key => $record->value]);
+        }, []);
     }
 }

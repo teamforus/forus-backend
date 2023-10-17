@@ -181,7 +181,7 @@ class ProductReservation extends BaseModel
      * @var string[]
      */
     protected $dates = [
-        'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
+        'accepted_at', 'rejected_at', 'canceled_at', 'expire_at', 'birth_date',
     ];
 
     /**

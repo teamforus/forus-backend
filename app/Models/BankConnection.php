@@ -30,6 +30,7 @@ use bunq\Model\Generated\Endpoint\Payment;
 use bunq\Model\Generated\Object\Pointer;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -299,7 +300,7 @@ class BankConnection extends BaseModel
         } catch (ApiException $exception) {
             $error_message = $exception->getMessage();
             $this->logError(compact('error_message'));
-            logger()->error($error_message);
+            Log::channel('bng')->error($error_message);
 
             return null;
         }
@@ -456,7 +457,7 @@ class BankConnection extends BaseModel
                 return $this->fetchConnectionMonetaryAccountsBunq();
             }
         } catch (Throwable $e) {
-            logger()->error($e->getMessage());
+            Log::channel($this->bank->isBNG() ? 'bng' : 'bunq')->error($e->getMessage());
         }
 
         return null;
@@ -580,6 +581,7 @@ class BankConnection extends BaseModel
      */
     protected function fetchBalanceBNG(string $monetary_account_id): ?BankBalance
     {
+        /** @var BNGService $bngService */
         $bngService = resolve('bng_service');
 
         try {
@@ -588,7 +590,7 @@ class BankConnection extends BaseModel
 
             return new BankBalance($balance->getBalanceAmount(), $balance->getBalanceCurrency());
         } catch (\Throwable $e) {
-            logger()->error($e->getMessage());
+            Log::channel('bng')->error($e->getMessage());
         }
 
         return null;
@@ -664,7 +666,7 @@ class BankConnection extends BaseModel
                 return $this->transactionBngToBankPayment($transaction);
             }, $transactions);
         } catch (Throwable $e) {
-            logger()->error($e->getMessage());
+            Log::channel('bng')->error($e->getMessage());
         }
 
         return null;
@@ -752,8 +754,10 @@ class BankConnection extends BaseModel
      * @param int $bank_connection_account_id
      * @param Employee $employee
      */
-    public function switchBankConnectionAccount(int $bank_connection_account_id, Employee $employee)
-    {
+    public function switchBankConnectionAccount(
+        int $bank_connection_account_id,
+        Employee $employee,
+    ): void {
         if ($bank_connection_account_id != $this->bank_connection_account_id) {
             BankConnectionMonetaryAccountChanged::dispatch($this->updateModel(
                 compact('bank_connection_account_id')
