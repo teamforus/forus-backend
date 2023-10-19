@@ -173,6 +173,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->patch('update-bi-connection', "Api\Platform\OrganizationsController@updateBIConnection");
         $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFields");
         $router->patch('update-accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
+        $router->get('features', "Api\Platform\OrganizationsController@getFeatures");
     });
 
     $router->resource('organizations', "Api\Platform\OrganizationsController")
