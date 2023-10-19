@@ -33,7 +33,12 @@ use Illuminate\Support\Facades\Event;
  * @property string|null $first_name
  * @property string|null $last_name
  * @property string|null $phone
- * @property string|null $address
+ * @property string $address
+ * @property string|null $street
+ * @property string|null $house_nr
+ * @property string|null $house_nr_addition
+ * @property string|null $postal_code
+ * @property string|null $city
  * @property string|null $birth_date
  * @property string|null $user_note
  * @property string|null $note
@@ -45,7 +50,7 @@ use Illuminate\Support\Facades\Event;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservationField[] $custom_fields
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservationFieldValue[] $custom_fields
  * @property-read int|null $custom_fields_count
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
@@ -66,6 +71,7 @@ use Illuminate\Support\Facades\Event;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereArchived($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereBirthDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCanceledAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCity($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereDeletedAt($value)
@@ -73,16 +79,20 @@ use Illuminate\Support\Facades\Event;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereExpireAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFirstName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFundProviderProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereHouseNumberAddition($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereHouseNr($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereLastName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePostalCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePriceDiscount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePriceType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereRejectedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereStreet($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereUserNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereVoucherId($value)
@@ -157,6 +167,7 @@ class ProductReservation extends BaseModel
         'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
         'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'archived',
+        'street', 'house_nr', 'house_nr_addition', 'postal_code', 'city',
     ];
 
     /**
@@ -183,6 +194,18 @@ class ProductReservation extends BaseModel
         } while(self::query()->where(compact('code'))->exists());
 
         return $code;
+    }
+
+    /**
+     * @param $value
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAddressAttribute($value): string
+    {
+        return $value ?: sprintf("%s %s", $this->street ?: '', implode(', ', array_filter([
+            $this->house_nr, $this->house_nr_addition, $this->postal_code, $this->city,
+        ])));
     }
 
     /**

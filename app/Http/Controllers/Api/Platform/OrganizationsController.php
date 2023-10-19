@@ -14,6 +14,7 @@ use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationReservationSettingsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRolesRequest;
 use App\Http\Requests\BaseFormRequest;
+use App\Http\Resources\OrganizationFeaturesResource;
 use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
@@ -276,5 +277,17 @@ class OrganizationsController extends Controller
         ]);
 
         return new JsonResponse();
+    }
+
+    /**
+     * @param Organization $organization
+     * @return OrganizationFeaturesResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function getFeatures(Organization $organization): OrganizationFeaturesResource
+    {
+        $this->authorize('showFeatures', $organization);
+
+        return OrganizationFeaturesResource::create($organization);
     }
 }
