@@ -4,17 +4,15 @@ namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class PaymentSuccessMail
- * @package App\Mail\Vouchers
- */
 class PaymentSuccessSubsidyMail extends ImplementationMail
 {
     protected string $notificationTemplateKey = 'notifications_identities.voucher_subsidy_transaction';
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

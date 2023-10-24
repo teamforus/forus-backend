@@ -252,9 +252,10 @@ class VoucherTransaction extends BaseModel
      */
     public function notes_sponsor(): HasMany
     {
-        return $this->hasMany(VoucherTransactionNote::class)
-            ->where('group', 'sponsor')
-            ->orWhere('shared', true);
+        return $this->hasMany(VoucherTransactionNote::class)->where(function (Builder $builder) {
+            $builder->where('group', 'sponsor');
+            $builder->orWhere('shared', true);
+        });
     }
 
     /**
@@ -263,9 +264,10 @@ class VoucherTransaction extends BaseModel
      */
     public function notes_provider(): HasMany
     {
-        return $this->hasMany(VoucherTransactionNote::class)
-            ->where('group', 'provider')
-            ->orWhere('shared', true);
+        return $this->hasMany(VoucherTransactionNote::class)->where(function (Builder $builder) {
+            $builder->where('group', 'provider');
+            $builder->orWhere('shared', true);
+        });
     }
 
     /**
@@ -537,7 +539,7 @@ class VoucherTransaction extends BaseModel
             return null;
         }
 
-        return max($this->transfer_at->diffInDays(now()), 0);
+        return max(now()->diffInDays($this->transfer_at, false), 0);
     }
 
     /**
