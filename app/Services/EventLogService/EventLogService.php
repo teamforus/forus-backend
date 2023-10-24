@@ -26,6 +26,7 @@ use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Interfaces\IEventLogService;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Services\MollieService\Models\MollieConnection;
 use Illuminate\Database\Eloquent\Model;
 
 class EventLogService implements IEventLogService
@@ -81,6 +82,7 @@ class EventLogService implements IEventLogService
             'voucher_transaction_bulk' => fn() => $this->voucherTransactionBulkMeta($model),
             'implementation' => fn() => $this->implementationMeta($model),
             'reimbursement' => fn() => $this->reimbursementMeta($model),
+            'mollie_connection' => fn() => $this->mollieConnectionMeta($model),
         ];
 
         return $modelMeta[$type] ? $modelMeta[$type]() : [];
@@ -460,6 +462,18 @@ class EventLogService implements IEventLogService
             'resolved_at' => $reimbursement->resolved_at?->format('Y-m-d H:i:s'),
             'deleted_at' => $reimbursement->deleted_at?->format('Y-m-d H:i:s'),
         ], 'reimbursement_');
+    }
+
+    /**
+     * @param MollieConnection $mollieConnection
+     * @return array
+     */
+    protected function mollieConnectionMeta(MollieConnection $mollieConnection): array
+    {
+        return $this->keyPrepend([
+            'id' => $mollieConnection->id,
+            'onboarding_state' => $mollieConnection->onboarding_state,
+        ], 'mollie_connection_');
     }
 
     /**

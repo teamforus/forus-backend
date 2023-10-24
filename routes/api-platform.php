@@ -742,6 +742,35 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     );
 
+    // Mollie
+    $router->group(['prefix' => 'organizations/{organization}/mollie-connections'], function() use ($router) {
+        $router->get('configured', "Api\Platform\Organizations\MollieConnectionController@getConfigured");
+        $router->get('connect', "Api\Platform\Organizations\MollieConnectionController@connectMollieAccount");
+        $router->get('fetch', "Api\Platform\Organizations\MollieConnectionController@fetchMollieAccount");
+    });
+
+    $router->resource(
+        'organizations.mollie-connections',
+        "Api\Platform\Organizations\MollieConnectionController", [
+        'only' => [
+            'store', 'destroy'
+        ],
+        'parameters' => [
+            'mollie-connections' => 'connection',
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.mollie-connections.profiles',
+        "Api\Platform\Organizations\MollieConnectionProfileController", [
+        'only' => [
+            'store', 'update'
+        ],
+        'parameters' => [
+            'mollie-connections' => 'connection',
+        ]
+    ]);
+
     $router->get(
         'organizations/{organization}/sponsor/finances',
         "Api\Platform\Organizations\FundsController@finances");

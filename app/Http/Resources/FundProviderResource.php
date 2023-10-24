@@ -50,7 +50,7 @@ class FundProviderResource extends BaseJsonResource
         $lastActivity = $fundProvider->getLastActivity();
 
         return array_merge($fundProvider->only([
-            'id', 'organization_id', 'fund_id', 'state', 'state_locale',
+            'id', 'organization_id', 'fund_id', 'state', 'state_locale', 'allow_extra_payments',
             'allow_products', 'allow_some_products', 'allow_budget', 'excluded',
         ]), $this->productFields($fundProvider), [
             'fund' => new FundResource($fundProvider->fund),
@@ -58,7 +58,7 @@ class FundProviderResource extends BaseJsonResource
             'employees' => EmployeeResource::collection($fundProvider->organization->employees),
             'organization' => array_merge((new OrganizationWithPrivateResource(
                 $fundProvider->organization
-            ))->toArray($request), $fundProvider->organization->only((array) 'iban')),
+            ))->toArray($request), $fundProvider->organization->only(['iban', 'allow_provider_extra_payments'])),
             'can_cancel' => !$fundProvider->hasTransactions() && !$fundProvider->isApproved() && $fundProvider->isPending(),
             'can_unsubscribe' => $fundProvider->canUnsubscribe(),
             'last_activity' => $lastActivity?->format('Y-m-d H:i:s'),

@@ -430,7 +430,7 @@ class MollieCliCommand extends BaseCommand
             'redirectUrl' => $this->ask('Redirect url', 'https://example.com/mollie-success'),
             'cancelUrl' => $this->ask('Cancel url', 'https://example.com/mollie-cancel'),
             'locale' => $this->ask('Locale', 'nl_NL'),
-            'method' => ['paypal'],
+            'method' => ['ideal'],
             'metadata' => $this->ask('Metadata', "['foo' => 'bar']"),
             'testmode' => $this->confirm('Test mode', true),
         ]);

@@ -8,6 +8,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Fund;
 use App\Models\Organization;
+use App\Services\MollieService\Models\MollieConnection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
 
@@ -47,7 +48,10 @@ class OrganizationResource extends JsonResource
         self::isRequested('funds', $request) && array_push($load, 'funds');
         self::isRequested('business_type', $request) && array_push($load, 'business_type.translations');
 
-        return $load;
+        return array_merge($load, $request->isProviderDashboard() ? [
+            'mollie_connection_configured',
+            'fund_provider_allowed_extra_payments',
+        ] : []);
     }
 
     public static function isRequested(string $key, $request = null): bool
@@ -72,6 +76,7 @@ class OrganizationResource extends JsonResource
 
         $ownerData = $baseRequest->isDashboard() ? $this->ownerData($organization) : [];
         $biConnectionData = $baseRequest->isDashboard() ? $this->getBIConnectionData($organization) : [];
+        $extraPaymentsData = $baseRequest->isProviderDashboard() ? $this->getExtraPaymentsData($organization) : [];
         $privateData = $this->privateData($organization);
         $employeeOnlyData = $baseRequest->isDashboard() ? $this->employeeOnlyData($baseRequest, $organization) : [];
         $funds2FAOnlyData = $baseRequest->isDashboard() ? $this->funds2FAOnlyData($organization) : [];
@@ -82,7 +87,7 @@ class OrganizationResource extends JsonResource
             'email_public', 'phone_public', 'website_public',
             'description', 'description_html', 'reservation_phone',
             'reservation_address', 'reservation_birth_date'
-        ]), $privateData, $ownerData, $biConnectionData, $employeeOnlyData, $funds2FAOnlyData, [
+        ]), $privateData, $ownerData, $biConnectionData, $employeeOnlyData, $funds2FAOnlyData, $extraPaymentsData, [
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),
             'business_type' => new BusinessTypeResource($organization->business_type),
@@ -130,7 +135,7 @@ class OrganizationResource extends JsonResource
 
         return $isEmployee ? array_merge([
             'has_bank_connection' => !empty($organization->bank_connection_active),
-        ], $organization->only([
+        ], array_merge($organization->only([
             'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
             'allow_custom_fund_notifications', 'validator_auto_accept_funds',
             'reservations_budget_enabled', 'reservations_subsidy_enabled',
@@ -138,7 +143,10 @@ class OrganizationResource extends JsonResource
             'allow_batch_reservations', 'allow_budget_fund_limits',
             'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
             'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
-        ])) : [];
+            'allow_provider_extra_payments',
+        ]), $request->isProviderDashboard() ? $organization->only([
+            'allow_extra_payments_by_sponsor', 'can_view_provider_extra_payments',
+        ]) : [])) : [];
     }
 
     /**
@@ -195,6 +203,19 @@ class OrganizationResource extends JsonResource
             'bi_connection_auth_type', 'bi_connection_token',
         ]), [
             'bi_connection_url' => route('biConnection'),
+        ]) : [];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return array
+     */
+    protected function getExtraPaymentsData(Organization $organization): array
+    {
+        $canUpdate = Gate::allows('allowExtraPayments', [MollieConnection::class, $organization]);
+
+        return $canUpdate ? $organization->only([
+            'allow_reservation_extra_payments',
         ]) : [];
     }
 }

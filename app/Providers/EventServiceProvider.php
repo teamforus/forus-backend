@@ -7,6 +7,7 @@ use App\Listeners\EmployeeSubscriber;
 use App\Listeners\FundProviderSubscriber;
 use App\Listeners\FundRequestSubscriber;
 use App\Listeners\FundSubscriber;
+use App\Listeners\MollieConnectionSubscriber;
 use App\Listeners\OrganizationSubscriber;
 use App\Listeners\ProductReservationSubscriber;
 use App\Listeners\ProductSubscriber;
@@ -38,6 +39,7 @@ class EventServiceProvider extends ServiceProvider
         ReimbursementSubscriber::class,
         VoucherRecordSubscriber::class,
         BankConnectionSubscriber::class,
+        MollieConnectionSubscriber::class,
         ProductReservationSubscriber::class,
         VoucherTransactionsSubscriber::class,
     ];

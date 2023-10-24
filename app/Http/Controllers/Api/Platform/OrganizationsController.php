@@ -20,6 +20,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Services\MediaService\Models\Media;
+use App\Services\MollieService\Models\MollieConnection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
@@ -222,9 +223,15 @@ class OrganizationsController extends Controller
     ): OrganizationResource {
         $this->authorize('update', $organization);
 
-        OrganizationUpdated::dispatch($organization->updateModel($request->only([
+        $attributes = $request->only([
             'reservation_phone', 'reservation_address', 'reservation_birth_date',
-        ])));
+        ]);
+
+        if (Gate::allows('allowExtraPayments', [MollieConnection::class, $organization])) {
+            $attributes = array_merge($attributes, $request->only('allow_reservation_extra_payments'));
+        }
+
+        OrganizationUpdated::dispatch($organization->updateModel($attributes));
 
         $organization->syncReservationFields($request->get('fields', []));
 
