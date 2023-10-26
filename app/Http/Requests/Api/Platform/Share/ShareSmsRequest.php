@@ -24,7 +24,11 @@ class ShareSmsRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'phone' => "required|starts_with:+31|size:12",
+            'phone' => [
+                'required',
+                'numeric',
+                'digits_between:8,15',
+            ],
         ];
     }
 }
