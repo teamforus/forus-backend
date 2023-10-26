@@ -18,11 +18,9 @@ return new class extends Migration
             $table->string('button_link_label', 500)->after('button_link');
         });
 
-        ImplementationBlock::get()->each(function (ImplementationBlock $block) {
-            $block->update([
-                'button_link_label' => $block->button_text
-            ]);
-        });
+        DB::table('implementation_blocks')->update([
+            'button_link_label' => DB::raw('button_text')
+        ]);
     }
 
     /**
