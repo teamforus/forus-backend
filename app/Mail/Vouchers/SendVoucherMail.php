@@ -4,17 +4,15 @@ namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class VoucherMail
- * @package App\Mail\Vouchers
- */
 class SendVoucherMail extends ImplementationMail
 {
     protected string $subjectKey = 'mails/system_mails.voucher_send_to_email.title';
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

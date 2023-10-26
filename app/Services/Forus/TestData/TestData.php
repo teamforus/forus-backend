@@ -527,7 +527,6 @@ class TestData
             'organization_id' => $organization?->id,
             'informal_communication' => false,
             'allow_per_fund_notification_templates' => false,
-            'productboard_api_key' => $this->config('productboard_api_key'),
             ...$this->config("default.implementations", []),
             ...$urlData,
             ...$samlData,

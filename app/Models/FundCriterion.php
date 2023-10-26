@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Helpers\Markdown;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use League\CommonMark\Exception\CommonMarkException;
 
 /**
  * App\Models\FundCriterion
@@ -114,9 +116,10 @@ class FundCriterion extends BaseModel
     /**
      * @return string
      * @noinspection PhpUnused
+     * @throws CommonMarkException
      */
     public function getDescriptionHtmlAttribute(): string
     {
-        return resolve('markdown.converter')->convert($this->description ?: '')->getContent();
+        return Markdown::convert($this->description ?: '');
     }
 }

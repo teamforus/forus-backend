@@ -118,7 +118,6 @@ class VoucherPolicy
             $voucher->fund->organization_id === $organization->id &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
-            $voucher->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->is_granted;
     }
@@ -140,7 +139,6 @@ class VoucherPolicy
             $voucher->fund->organization_id === $organization->id &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
-            $voucher->isInternal() &&
             !$voucher->activated &&
             !$voucher->expired;
     }

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\ProductReservations\IndexProductReservationsRequest;
+use App\Http\Requests\Api\Platform\ProductReservations\ValidateProductReservationAddressRequest;
+use App\Http\Requests\Api\Platform\ProductReservations\ValidateProductReservationFieldsRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\UpdateProductReservationsRequest;
 use App\Http\Resources\ProductReservationResource;
@@ -58,9 +60,13 @@ class ProductReservationsController extends Controller
 
         $product = Product::find($request->input('product_id'));
         $voucher = Voucher::findByAddress($request->input('voucher_address'), $request->auth_address());
+        $postCode = $request->input('postal_code') ?: '';
 
-        $reservation = $voucher->reserveProduct($product, null, $request->only([
-            'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'custom_fields',
+        $reservation = $voucher->reserveProduct($product, null, array_merge($request->only([
+            'first_name', 'last_name', 'user_note', 'phone', 'birth_date', 'custom_fields',
+            'street', 'house_nr', 'house_nr_addition', 'city',
+        ]), [
+            'postal_code' => strtoupper(preg_replace("/\s+/", "", $postCode)),
         ]));
 
         if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
@@ -72,9 +78,15 @@ class ProductReservationsController extends Controller
 
     /**
      * Validate product reservation request
-     * @param StoreProductReservationRequest $request
+     * @param ValidateProductReservationFieldsRequest $request
      */
-    public function storeValidate(StoreProductReservationRequest $request): void {}
+    public function storeValidateFields(ValidateProductReservationFieldsRequest $request): void {}
+
+    /**
+     * Validate product reservation request
+     * @param ValidateProductReservationAddressRequest $request
+     */
+    public function storeValidateAddress(ValidateProductReservationAddressRequest $request): void {}
 
     /**
      * Display the specified resource.

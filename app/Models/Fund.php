@@ -1162,7 +1162,7 @@ class Fund extends BaseModel
         array $extraFields = [],
         float $voucherAmount = null,
         Carbon $expire_at = null,
-        ?int $limit_multiplier = null
+        ?int $limit_multiplier = null,
     ): ?Voucher {
         $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
         $returnable = false;
@@ -1232,7 +1232,7 @@ class Fund extends BaseModel
         array $extraFields = [],
         int $product_id = null,
         Carbon $expire_at = null,
-        float $price = null
+        float $price = null,
     ): Voucher {
         $amount = $price ?: Product::findOrFail($product_id)->price;
         $expire_at = $expire_at ?: $this->end_date;

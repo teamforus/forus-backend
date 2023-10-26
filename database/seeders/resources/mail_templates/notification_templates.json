@@ -362,7 +362,7 @@
     },
     "notifications_funds.provider_applied": {
         "mail": {
-            "title": ":provider_name wilt zich aanmelden voor :fund_name",
+            "title": ":provider_name wil graag deelnemen aan :fund_name",
             "template": "notifications_funds/provider_applied.md"
         },
         "push": {},

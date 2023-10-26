@@ -21,4 +21,8 @@ return [
         'attempts' => env('DELETE_IDENTITY_THROTTLE_ATTEMPTS', 10),
         'decay' => env('DELETE_IDENTITY_THROTTLE_DECAY', 10),
     ],
+    'feedback_form' => [
+        'attempts' => env('FEEDBACK_FORM_API_ATTEMPTS', 15),
+        'decay' => env('FEEDBACK_FORM_API_DECAY', 15),
+    ],
 ];
