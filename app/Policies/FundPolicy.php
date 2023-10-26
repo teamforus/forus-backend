@@ -292,15 +292,11 @@ class FundPolicy
         }
 
         // Check criteria
-        $invalidCriteria = $fund->criteria->filter(static function(FundCriterion $criterion) use ($identity, $fund) {
-            return collect([$fund->getTrustedRecordOfType(
-                $identity->address,
-                $criterion->record_type_key,
-                $criterion
-            )])->where('value', $criterion->operator, $criterion->value)->count() === 0;
-        });
+        $hasInvalidCriteria = $fund->criteria
+            ->filter(fn (FundCriterion $criterion) => !$fund->checkFundCriteria($identity, $criterion))
+            ->isNotEmpty();
 
-        if ($invalidCriteria->count() > 0) {
+        if ($hasInvalidCriteria) {
             return $this->deny(trans('fund.unmet_criteria'));
         }
 

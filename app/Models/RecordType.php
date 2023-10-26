@@ -6,6 +6,8 @@ use App\Models\Traits\Translations\RecordTranslationsTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 
 /**
@@ -14,10 +16,15 @@ use Illuminate\Support\Arr;
  * @property int $id
  * @property string $key
  * @property string $type
+ * @property int|null $organization_id
  * @property bool $system
- * @property int $vouchers
+ * @property bool $criteria
+ * @property bool $vouchers
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Organization|null $organization
+ * @property-read Collection|\App\Models\RecordTypeOption[] $record_type_options
+ * @property-read int|null $record_type_options_count
  * @property-read \App\Models\RecordTypeTranslation|null $translation
  * @property-read Collection|\App\Models\RecordTypeTranslation[] $translations
  * @property-read int|null $translations_count
@@ -32,8 +39,10 @@ use Illuminate\Support\Arr;
  * @method static Builder|RecordType translated()
  * @method static Builder|RecordType translatedIn(?string $locale = null)
  * @method static Builder|RecordType whereCreatedAt($value)
+ * @method static Builder|RecordType whereCriteria($value)
  * @method static Builder|RecordType whereId($value)
  * @method static Builder|RecordType whereKey($value)
+ * @method static Builder|RecordType whereOrganizationId($value)
  * @method static Builder|RecordType whereSystem($value)
  * @method static Builder|RecordType whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
  * @method static Builder|RecordType whereTranslationLike(string $translationField, $value, ?string $locale = null)
@@ -47,13 +56,31 @@ class RecordType extends BaseModel
 {
     use Translatable, RecordTranslationsTrait;
 
+    public const TYPE_BOOL = 'bool';
+    public const TYPE_IBAN = 'iban';
+    public const TYPE_DATE = 'date';
+    public const TYPE_EMAIL = 'email';
+    public const TYPE_STRING = 'string';
+    public const TYPE_NUMBER = 'number';
+    public const TYPE_SELECT = 'select';
+
+    public const TYPES = [
+        self::TYPE_BOOL,
+        self::TYPE_IBAN,
+        self::TYPE_DATE,
+        self::TYPE_EMAIL,
+        self::TYPE_STRING,
+        self::TYPE_NUMBER,
+        self::TYPE_SELECT,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'key', 'type', 'system', 'vouchers',
+        'key', 'type', 'system', 'criteria', 'vouchers', 'organization_id',
     ];
 
     protected $perPage = 100;
@@ -70,6 +97,8 @@ class RecordType extends BaseModel
 
     protected $casts = [
         'system' => 'bool',
+        'criteria' => 'bool',
+        'vouchers' => 'bool',
     ];
 
     /**
@@ -77,7 +106,7 @@ class RecordType extends BaseModel
      * @param array $filters
      * @return RecordType|Builder
      */
-    public static function searchQuery(bool $withSystem = true, array $filters = []): RecordType|Builder
+    public static function searchQuery(array $filters = [], bool $withSystem = true): RecordType|Builder
     {
         /** @var RecordType $query */
         $query = static::where(fn(Builder $builder) => $builder->where($withSystem ? [] : [
@@ -86,6 +115,17 @@ class RecordType extends BaseModel
 
         if (Arr::get($filters, 'vouchers', false)) {
             $query->where('vouchers', true);
+        }
+
+        if (Arr::get($filters, 'criteria', false)) {
+            $query->where('criteria', true);
+        }
+
+        if (Arr::get($filters, 'organization_id', false)) {
+            $query->where(function(Builder|RecordType $builder) use ($filters) {
+                $builder->whereNull('organization_id');
+                $builder->orWhere('organization_id', Arr::get($filters, 'organization_id'));
+            });
         }
 
         return $query;
@@ -98,7 +138,7 @@ class RecordType extends BaseModel
      */
     public static function search(bool $withSystem = true, array $filters = []): Collection|array
     {
-        return static::searchQuery($withSystem, $filters)->get();
+        return static::searchQuery($filters, $withSystem)->get();
     }
 
     /**
@@ -108,5 +148,75 @@ class RecordType extends BaseModel
     public static function findByKey(string $key): ?RecordType
     {
         return static::where('key', $key)->first();
+    }
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function record_type_options(): HasMany
+    {
+        return $this->hasMany(RecordTypeOption::class);
+    }
+
+    /**
+     * @return array
+     */
+    public function getValidations(): array
+    {
+        return array_keys(array_filter([
+            'date' => $this->type == 'date',
+            'email' => $this->type == 'email',
+            'iban' => $this->type == 'iban',
+            'min' => in_array($this->type, ['string', 'number', 'date'], true),
+            'max' => in_array($this->type, ['string', 'number', 'date'], true),
+        ]));
+    }
+
+    /**
+     * @return array
+     */
+    public function getOperators(): array
+    {
+        if (in_array($this->type, ['number', 'date'], true)) {
+            return ['<', '=', '>', '*'];
+        }
+
+        if (in_array($this->type, ['string', 'select', 'bool'], true)) {
+            return ['=', '*'];
+        }
+
+        if (in_array($this->type, ['iban', 'email'], true)) {
+            return ['*'];
+        }
+
+        return [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getOptions(): array
+    {
+        if ($this->type == 'bool') {
+            return [
+                ['value' => 'true', 'name' =>  'Ja'],
+                ['value' => 'false', 'name' =>  'Nee'],
+            ];
+        }
+
+        return $this->record_type_options->map(fn (RecordTypeOption $option) => [
+            'value' => $option->value,
+            'name' => $option->name,
+        ])->toArray();
     }
 }

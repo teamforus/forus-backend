@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'auth' => [
+        'attempts' => env('AUTH_THROTTLE_ATTEMPTS', 10),
+        'decay' => env('AUTH_THROTTLE_DECAY', 10),
+    ],
     'fund_check' => [
         'attempts' => env('FUND_CHECK_ATTEMPTS', 20),
         'decay' => env('FUND_CHECK_DECAY', 60),

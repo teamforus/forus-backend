@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Rules\FundRequests;
+namespace App\Rules\FundRequests\FundRequestRecords;
+
+use App\Rules\FundRequests\BaseFundRequestRule;
 
 class FundRequestRecordValueRule extends BaseFundRequestRule
 {
@@ -15,16 +17,12 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
     {
         $criterion = $this->findCriterion($attribute);
 
-        if (is_string($criterion)) {
-            $this->msg = $criterion;
-            return false;
+        if (!$criterion) {
+            return $this->reject(trans('validation.in', compact('attribute')));
         }
 
-        $validator = $this->validateRecordValue($criterion, $attribute);
-
-        if (!$validator->passes()) {
-            $this->msg = array_first(array_first($validator->errors()->toArray()));
-            return false;
+        if (($validator = static::validateRecordValue($criterion, $value))->fails()) {
+            return $this->reject($validator->errors()->first('value'));
         }
 
         return true;

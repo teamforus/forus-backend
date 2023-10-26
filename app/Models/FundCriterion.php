@@ -15,6 +15,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property string $record_type_key
  * @property string $operator
  * @property string $value
+ * @property bool $optional
+ * @property int|null $min
+ * @property int|null $max
  * @property string|null $title
  * @property bool $show_attachment
  * @property string $description
@@ -27,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read int|null $fund_criterion_validators_count
  * @property-read \App\Models\FundRequestRecord|null $fund_request_record
  * @property-read string $description_html
+ * @property-read \App\Models\RecordType|null $record_type
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion query()
@@ -34,7 +38,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereMax($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereMin($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereOperator($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereOptional($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereRecordTypeKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereShowAttachment($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereTitle($value)
@@ -51,10 +58,11 @@ class FundCriterion extends BaseModel
      */
     protected $fillable = [
         'fund_id', 'record_type_key', 'operator', 'value', 'show_attachment',
-        'description', 'title',
+        'description', 'title', 'optional', 'min', 'max',
     ];
 
     protected $casts = [
+        'optional' => 'boolean',
         'show_attachment' => 'boolean',
     ];
 
@@ -65,6 +73,15 @@ class FundCriterion extends BaseModel
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function record_type(): BelongsTo
+    {
+        return $this->belongsTo(RecordType::class, 'record_type_key', 'key');
     }
 
     /**

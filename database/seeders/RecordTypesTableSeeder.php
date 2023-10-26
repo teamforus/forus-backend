@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Helpers\Arr;
 use App\Models\RecordType;
 
 class RecordTypesTableSeeder extends DatabaseSeeder
@@ -13,6 +14,9 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'email',
         'name' => 'E-mail',
+        'type' => 'email',
+        'vouchers' => true,
+        'criteria' => true,
     ], [
         'key' => 'given_name',
         'name' => 'Given Name',
@@ -22,12 +26,10 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'name' => 'Family Name',
         'vouchers' => true,
     ], [
-        'key' => 'children',
-        'name' => 'Children',
-    ], [
         'key' => 'children_nth',
-        'name' => 'Children count',
+        'name' => 'Number of children',
         'type' => 'number',
+        'criteria' => true,
     ], [
         'key' => 'parent',
         'name' => 'Parent',
@@ -38,10 +40,13 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'birth_date',
         'name' => 'Birth date',
+        'type' => 'date',
         'vouchers' => true,
+        'criteria' => true,
     ], [
         'key' => 'gender',
         'name' => 'Gender',
+        'criteria' => true,
     ], [
         'key' => 'spouse',
         'name' => 'Spouse',
@@ -60,19 +65,17 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'key' => 'base_salary',
         'name' => 'Base salary',
         'type' => 'number',
+        'criteria' => true,
     ], [
         'key' => 'bsn',
         'name' => 'BSN',
         'type' => 'number',
         'system' => true,
     ], [
-        'key' => 'kindpakket_2018_eligible',
-        'name' => 'Kindpakket Eligible',
-        'system' => true,
-    ], [
         'key' => 'uid',
         'name' => 'UID',
         'system' => true,
+        'criterion' => true,
     ], [
         'key' => 'bsn_hash',
         'name' => 'BSN Hash',
@@ -95,12 +98,21 @@ class RecordTypesTableSeeder extends DatabaseSeeder
      */
     public function run(): void
     {
-        foreach ($this->recordTypes as $recordType) {
-            RecordType::create(array_merge([
+        foreach ($this->recordTypes as $type) {
+            $recordType = RecordType::create([
                 'type' => 'string',
                 'system' => false,
                 'vouchers' => false,
-            ], $recordType));
+                'criteria' => false,
+                ...Arr::only($type, [
+                    'key', 'name', 'type', 'required', 'criteria', 'system', 'vouchers',
+                ]),
+            ]);
+
+            $recordType->record_type_options()->createMany(array_map(fn ($option) => [
+                'value' => $option[0],
+                'name' => $option[1],
+            ], $type['options'] ?? []));
         }
     }
 }

@@ -5,6 +5,11 @@ namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\FundConfig;
 use App\Models\Organization;
+use App\Rules\FundCriteria\FundCriteriaKeyRule;
+use App\Rules\FundCriteria\FundCriteriaMaxRule;
+use App\Rules\FundCriteria\FundCriteriaMinRule;
+use App\Rules\FundCriteria\FundCriteriaOperatorRule;
+use App\Rules\FundCriteria\FundCriteriaValueRule;
 use App\Traits\ValidatesFaq;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Config;
@@ -71,17 +76,25 @@ abstract class BaseFundRequest extends BaseFormRequest
         $validators = $organization->organization_validators()->pluck('id');
 
         return $criteriaEditable ? [
-            'criteria'                      => 'nullable|array',
-            'criteria.*'                    => 'required|array',
-            'criteria.*.id'                 => ['nullable', Rule::in($criteriaIds)],
-            'criteria.*.operator'           => 'required|in:=,<,>',
-            'criteria.*.record_type_key'    => 'required|exists:record_types,key',
-            'criteria.*.value'              => 'required|string|between:1,20',
-            'criteria.*.show_attachment'    => 'nullable|boolean',
-            'criteria.*.title'              => 'nullable|string|max:100',
-            'criteria.*.description'        => 'nullable|string|max:4000',
-            'criteria.*.validators'         => 'nullable|array',
-            'criteria.*.validators.*'       => Rule::in($validators->toArray())
+            'criteria' => 'nullable|array',
+            'criteria.*' => 'required|array',
+            'criteria.*.id' => ['nullable', Rule::in($criteriaIds)],
+
+            'criteria.*.operator' => ['present', new FundCriteriaOperatorRule($this, $organization)],
+            'criteria.*.record_type_key' => ['required', new FundCriteriaKeyRule($this, $organization)],
+            'criteria.*.value' => ['nullable', new FundCriteriaValueRule($this, $organization)],
+
+            'criteria.*.optional' => 'nullable|boolean',
+            'criteria.*.show_attachment' => 'nullable|boolean',
+
+            'criteria.*.min' => ['nullable', new FundCriteriaMinRule($this, $organization)],
+            'criteria.*.max' => ['nullable', new FundCriteriaMaxRule($this, $organization)],
+
+            'criteria.*.title' => 'nullable|string|max:100',
+            'criteria.*.description' => 'nullable|string|max:4000',
+
+            'criteria.*.validators' => 'nullable|array',
+            'criteria.*.validators.*' => Rule::in($validators->toArray())
         ] : [];
     }
 
