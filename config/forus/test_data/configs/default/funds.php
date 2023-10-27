@@ -379,4 +379,11 @@ return [
             'type' => 'budget',
         ],
     ],
+    'Goereeoverflakkee' => [
+        'implementation_name' => 'Goereeoverflakkee',
+        'organization_name' => 'Goereeoverflakkee',
+        'fund' => [
+            'type' => 'budget',
+        ],
+    ],
 ];
