@@ -11,8 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $fund_id
  * @property int|null $implementation_id
  * @property string $key
- * @property string $auth_2fa_policy
+ * @property string|null $auth_2fa_policy
  * @property bool $auth_2fa_remember_ip
+ * @property bool $auth_2fa_restrict_emails
+ * @property bool $auth_2fa_restrict_auth_sessions
+ * @property bool $auth_2fa_restrict_reimbursements
  * @property int|null $record_validity_days
  * @property bool $hash_bsn
  * @property string|null $hash_bsn_salt
@@ -40,6 +43,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $contact_info_required
  * @property bool $contact_info_message_custom
  * @property string|null $contact_info_message_text
+ * @property bool $hide_meta
  * @property string|null $limit_generator_amount
  * @property string|null $limit_voucher_top_up_amount
  * @property string|null $limit_voucher_total_amount
@@ -85,6 +89,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherTopUps($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAuth2faPolicy($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAuth2faRememberIp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAuth2faRestrictAuthSessions($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAuth2faRestrictEmails($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAuth2faRestrictReimbursements($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeClientCert($value)
@@ -113,6 +120,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsn($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsnSalt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashPartnerDeny($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHideMeta($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectApiOin($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectBaseUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectCert($value)

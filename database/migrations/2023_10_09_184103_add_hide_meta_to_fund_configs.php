@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->boolean('hide_meta')->after('contact_info_message_text')->default(false);
+            $table->boolean('hide_meta')->after('key')->default(false);
         });
     }
 
