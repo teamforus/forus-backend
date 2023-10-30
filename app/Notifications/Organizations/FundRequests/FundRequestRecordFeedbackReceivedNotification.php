@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 
 class FundRequestRecordFeedbackReceivedNotification extends BaseFundsRequestsNotification
 {
-    protected static ?string $key = 'notifications_fund_requests.feedback_received';
+    protected static ?string $key = 'notifications_fund_requests.clarification_received';
     protected static string|array $permissions = 'validate_records';
 
     /**

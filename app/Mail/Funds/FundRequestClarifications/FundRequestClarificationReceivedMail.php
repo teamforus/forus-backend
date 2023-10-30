@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class FundRequestClarificationReceivedMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = "notifications_fund_requests.feedback_received";
+    protected string $notificationTemplateKey = "notifications_fund_requests.clarification_received";
 
     /**
      * @return Mailable

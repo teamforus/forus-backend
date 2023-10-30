@@ -28,7 +28,7 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.requester_sponsor_custom_notification" => ["mail"],
 
         "notifications_fund_requests.created_validator_employee" => ["database"],
-        "notifications_fund_requests.feedback_received" => ["database", "mail"],
+        "notifications_fund_requests.clarification_received" => ["database", "mail"],
 
         "notifications_identities.fund_request_created" => ["database", "mail"],
         "notifications_identities.fund_request_denied" => ["database", "mail"],

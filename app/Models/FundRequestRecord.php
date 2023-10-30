@@ -64,7 +64,7 @@ class FundRequestRecord extends BaseModel
     public const EVENT_APPROVED = 'approved';
     public const EVENT_DECLINED = 'declined';
     public const EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
-    public const EVENT_CLARIFICATION_RECEIVED = 'clarification_answered';
+    public const EVENT_CLARIFICATION_RECEIVED = 'clarification_received';
     public const EVENT_UPDATED = 'updated';
 
     public const EVENTS = [

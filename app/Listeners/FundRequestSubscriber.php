@@ -2,7 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Events\FundRequestClarifications\FundRequestRecordFeedbackReceived;
+use App\Events\FundRequestClarifications\FundRequestClarificationReceived;
 use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
 use App\Events\FundRequestRecords\FundRequestRecordApproved;
 use App\Events\FundRequestRecords\FundRequestRecordAssigned;
@@ -256,13 +256,13 @@ class FundRequestSubscriber
     }
 
     /**
-     * @param FundRequestRecordFeedbackReceived $clarificationAnswered
+     * @param FundRequestClarificationReceived $clarificationReceived
      * @noinspection PhpUnused
      */
-    public function onFundRequestRecordFeedbackReceived(
-        FundRequestRecordFeedbackReceived $clarificationAnswered
+    public function onFundRequestClarificationReceived(
+        FundRequestClarificationReceived $clarificationReceived
     ): void {
-        $clarification = $clarificationAnswered->getFundRequestClarification();
+        $clarification = $clarificationReceived->getFundRequestClarification();
         $fundRequestRecord = $clarification->fund_request_record;
 
         $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord, [
@@ -342,6 +342,6 @@ class FundRequestSubscriber
         $events->listen(FundRequestRecordUpdated::class, "$class@onFundRequestRecordUpdated");
 
         $events->listen(FundRequestClarificationRequested::class, "$class@onFundRequestClarificationRequested");
-        $events->listen(FundRequestRecordFeedbackReceived::class, "$class@onFundRequestRecordFeedbackReceived");
+        $events->listen(FundRequestClarificationReceived::class, "$class@onFundRequestClarificationReceived");
     }
 }
