@@ -29,8 +29,28 @@ class StoreProductReservationRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $product = Product::find($this->input('product_id'));
+        $product = $this->getProduct();
 
+        return [
+            ...$this->baseRules($product),
+            ...$this->addressRules($product),
+        ];
+    }
+
+    /**
+     * @return Product|null
+     */
+    protected function getProduct(): ?Product
+    {
+        return Product::find($this->input('product_id'));
+    }
+
+    /**
+     * @param Product|null $product
+     * @return array
+     */
+    public function baseRules(?Product $product): array
+    {
         return [
             'voucher_address' => [
                 'required',
@@ -48,6 +68,27 @@ class StoreProductReservationRequest extends BaseFormRequest
 
     /**
      * @param Product|null $product
+     * @return array
+     */
+    public function addressRules(?Product $product): array
+    {
+        $isPartiallyFilled = !empty(array_filter($this->only([
+            'city', 'street', 'house_nr_addition', 'postal_code',
+        ])));
+
+        $required = $isPartiallyFilled || $product?->reservation_address_is_required;
+
+        return array_merge(parent::rules(), [
+            'city' => [$required ? 'required' : 'nullable', 'city_name'],
+            'street' => [$required ? 'required' : 'nullable', 'street_name'],
+            'house_nr' => [$required ? 'required' : 'nullable', 'house_number'],
+            'house_nr_addition' => ['nullable', 'house_addition'],
+            'postal_code' => [$required ? 'required' : 'nullable', 'postcode'],
+        ]);
+    }
+
+    /**
+     * @param Product|null $product
      * @return array[]
      */
     protected function fieldsRules(?Product $product): array
@@ -61,11 +102,6 @@ class StoreProductReservationRequest extends BaseFormRequest
                 'string',
                 'max:50',
             ],
-            'address' => [
-                $product->reservation_address_is_required ? 'required' : 'nullable',
-                'string',
-                'max:100',
-            ],
             'birth_date' => [
                 $product->reservation_birth_date_is_required ? 'required' : 'nullable',
                 'date_format:Y-m-d',
@@ -73,7 +109,6 @@ class StoreProductReservationRequest extends BaseFormRequest
             ],
         ];
     }
-
 
     /**
      * @param Product|null $product
