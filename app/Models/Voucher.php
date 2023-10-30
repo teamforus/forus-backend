@@ -1005,7 +1005,7 @@ class Voucher extends BaseModel
     public function reserveProduct(
         Product $product,
         ?Employee $employee = null,
-        array $extraData = []
+        array $extraData = [],
     ): ProductReservation {
         $isSubsidy = $this->fund->isTypeSubsidy();
         $fundProviderProduct = $product->getFundProviderProduct($this->fund);
@@ -1021,7 +1021,8 @@ class Voucher extends BaseModel
             'fund_provider_product_id'  => $fundProviderProduct?->id,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
         ], array_only($extraData, [
-            'first_name', 'last_name', 'user_note', 'note', 'phone', 'address', 'birth_date',
+            'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
+            'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
         ]), $product->only('price', 'price_type', 'price_discount')));
 
         // store custom fields

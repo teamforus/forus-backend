@@ -4,6 +4,7 @@ namespace App\Mail\Auth;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
 /**
  * Class UserLoginMail
@@ -15,6 +16,7 @@ class UserLoginMail extends ImplementationMail
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {
