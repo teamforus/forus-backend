@@ -83,7 +83,7 @@ class SystemNotification extends Model
         /** @var NotificationTemplate $generalTemplate */
         $generalTemplate = $systemNotification->templates()->where([
             'implementation_id' => $generalImplementation->id,
-            'formal' => !$currentImplementation->informal_communication,
+            'formal' => !($currentImplementation ?: $generalImplementation)->informal_communication,
             'type' => $type,
         ])->first();
 

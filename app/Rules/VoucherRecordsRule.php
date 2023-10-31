@@ -7,7 +7,7 @@ use App\Models\RecordType;
 use App\Models\VoucherRecord;
 use Illuminate\Contracts\Validation\Rule;
 
-class BatchVoucherRecordsRule implements Rule
+class VoucherRecordsRule implements Rule
 {
     /**
      * @var string

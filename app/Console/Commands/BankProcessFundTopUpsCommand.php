@@ -12,6 +12,7 @@ use App\Services\BankService\Values\BankPayment;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class BankProcessFundTopUpsCommand extends Command
@@ -122,7 +123,7 @@ class BankProcessFundTopUpsCommand extends Command
         try {
             $this->applyTopUp($payment, $topUp, $connection);
         } catch (Throwable $e) {
-            resolve('log')->error($e->getMessage());
+            Log::channel($connection->bank->isBNG() ? 'bng' : 'bunq')->error($e->getMessage());
         }
     }
 
