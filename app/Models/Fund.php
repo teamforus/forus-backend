@@ -1193,10 +1193,6 @@ class Fund extends BaseModel
                 $voucherExpireAt,
                 $formulaProduct->price
             ), array_fill(0, $multiplier, null));
-
-            foreach ($vouchers as $voucher) {
-                Event::dispatch(new VoucherAssigned($voucher));
-            }
         }
 
         return $vouchers;
