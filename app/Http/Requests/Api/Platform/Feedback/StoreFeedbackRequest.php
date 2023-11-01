@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\FeedbackProductBoard;
+namespace App\Http\Requests\Api\Platform\Feedback;
 
 use App\Http\Requests\BaseFormRequest;
 
-class StoreFeedbackProductBoardRequest extends BaseFormRequest
+class StoreFeedbackRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -13,7 +13,7 @@ class StoreFeedbackProductBoardRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->isAuthenticated() && !empty(resolve('productboard'));
+        return $this->isAuthenticated();
     }
 
     /**

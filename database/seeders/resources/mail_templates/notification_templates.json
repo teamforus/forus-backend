@@ -165,6 +165,17 @@
             "content": "Er is een nieuwe aanvraag voor :fund_name"
         }
     },
+    "notifications_fund_requests.clarification_received": {
+        "mail": {
+            "title": "Reactie ontvangen op een aanvulverzoek",
+            "template": "notifications_fund_requests/clarification_received.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Reactie ontvangen op een aanvulverzoek.",
+            "content": "Er zijn nieuwe gegevens aangeleverd in de aanvraag voor :fund_name"
+        }
+    },
     "notifications_bank_connections.activated": {
         "mail": {},
         "push": {},
@@ -362,7 +373,7 @@
     },
     "notifications_funds.provider_applied": {
         "mail": {
-            "title": ":provider_name wilt zich aanmelden voor :fund_name",
+            "title": ":provider_name wil graag deelnemen aan :fund_name",
             "template": "notifications_funds/provider_applied.md"
         },
         "push": {},

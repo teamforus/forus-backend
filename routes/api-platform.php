@@ -173,6 +173,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->patch('update-bi-connection', "Api\Platform\OrganizationsController@updateBIConnection");
         $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFields");
         $router->patch('update-accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
+        $router->get('features', "Api\Platform\OrganizationsController@getFeatures");
     });
 
     $router->resource('organizations', "Api\Platform\OrganizationsController")
@@ -195,7 +196,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource('product-reservations', "Api\Platform\ProductReservationsController")
         ->only('index', 'store', 'show', 'update');
 
-    $router->post('product-reservations/validate', "Api\Platform\ProductReservationsController@storeValidate");
+    $router->post('product-reservations/validate-fields', "Api\Platform\ProductReservationsController@storeValidateFields");
+    $router->post('product-reservations/validate-address', "Api\Platform\ProductReservationsController@storeValidateAddress");
 
     $router->group(['prefix' => '/provider'], static function() use ($router) {
         $router->resource('vouchers', "Api\Platform\Provider\VouchersController")
@@ -914,7 +916,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ->parameter('prevalidations', 'prevalidation_uid')
         ->only('index', 'store', 'destroy');
 
-    $router->resource('productboard', 'Api\Platform\ProductBoardController')
+    $router->resource('feedback', 'Api\Platform\FeedbackController')
         ->only('store');
 
     $router->resource(
