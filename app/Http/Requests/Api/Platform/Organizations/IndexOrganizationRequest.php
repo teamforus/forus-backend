@@ -8,9 +8,7 @@ use App\Models\Fund;
 use App\Rules\DependencyRule;
 
 /**
- * Class IndexOrganizationRequest
  * @property string $dependency
- * @package App\Http\Requests\Api\Platform\Organizations
  */
 class IndexOrganizationRequest extends BaseFormRequest
 {
