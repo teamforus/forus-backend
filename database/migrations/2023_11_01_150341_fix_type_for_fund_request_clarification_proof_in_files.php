@@ -15,7 +15,7 @@ return new class extends Migration
     {
         File::query()
             ->where('type', 'fund_request_record_proof')
-            ->where('fileable_type', (new FundRequestClarification())->getMorphClass())
+            ->where('fileable_type', 'fund_request_clarification')
             ->update([
                 'type' => 'fund_request_clarification_proof'
             ]);
