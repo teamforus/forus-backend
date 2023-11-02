@@ -819,7 +819,8 @@ class Implementation extends BaseModel
 
         return $query->orderBy(
             array_get($options, 'order_by', 'created_at'),
-            array_get($options, 'order_by_dir', 'desc'));
+            array_get($options, 'order_dir', 'desc'),
+        );
     }
 
     /**
