@@ -325,7 +325,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     public function via(): array
     {
         $channelKeys = $this->getChannels();
-        $channels = ['database'];
+        $channels = in_array('database', $channelKeys) ? ['database'] : [];
 
         if (in_array('mail', $channelKeys)) {
             $channels[] = MailChannel::class;
