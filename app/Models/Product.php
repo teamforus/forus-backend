@@ -537,7 +537,7 @@ class Product extends BaseModel
 
         $orderBy = Arr::get($options, 'order_by', 'created_at');
         $orderBy = $orderBy === 'most_popular' ? 'voucher_transactions_count' : $orderBy;
-        $orderDir = Arr::get($options, 'order_by_dir', 'desc');
+        $orderDir = Arr::get($options, 'order_dir', 'desc');
 
         return $query
             ->withCount('voucher_transactions')

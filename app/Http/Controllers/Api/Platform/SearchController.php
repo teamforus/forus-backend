@@ -33,7 +33,7 @@ class SearchController extends Controller
                 $request->input('search_item_types', [])
             )->orderBy(
                 $request->input('order_by', 'created_at'),
-                $request->input('order_by_dir', 'desc')
+                $request->input('order_dir', 'desc'),
             )->paginate($request->get('per_page', 15)));
         }
 

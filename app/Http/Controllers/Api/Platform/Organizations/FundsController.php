@@ -48,7 +48,7 @@ class FundsController extends Controller
 
         $query = (new FundSearch($request->only([
             'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id', 'order_by',
-            'order_by_dir', 'with_archived', 'with_external', 'configured',
+            'order_dir', 'with_archived', 'with_external', 'configured',
         ]), $organization->funds()->getQuery()))->query();
 
         if (!$request->isAuthenticated()) {

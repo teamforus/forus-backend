@@ -8,9 +8,7 @@ use App\Models\Fund;
 use App\Rules\DependencyRule;
 
 /**
- * Class IndexOrganizationRequest
  * @property string $dependency
- * @package App\Http\Requests\Api\Platform\Organizations
  */
 class IndexOrganizationRequest extends BaseFormRequest
 {
@@ -47,6 +45,7 @@ class IndexOrganizationRequest extends BaseFormRequest
             'fund_type'         => 'nullable|in:' . implode(',', Fund::TYPES),
         ], $this->sortableResourceRules(500, [
             'created_at', 'is_sponsor', 'is_provider', 'is_validator',
+            'name', 'phone', 'email', 'website'
         ]));
     }
 }
