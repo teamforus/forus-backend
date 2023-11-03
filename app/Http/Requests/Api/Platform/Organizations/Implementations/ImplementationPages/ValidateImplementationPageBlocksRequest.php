@@ -32,6 +32,7 @@ class ValidateImplementationPageBlocksRequest extends BaseFormRequest
             'blocks.*.button_enabled'       => 'nullable|boolean',
             'blocks.*.button_text'          => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
             'blocks.*.button_link'          => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
+            'blocks.*.button_link_label'    => 'nullable|required_if:blocks.*.button_enabled,true|string|max:500',
             'blocks.*.button_target_blank'  => 'nullable|required_if:blocks.*.button_enabled,true|boolean',
             'blocks.*.media_uid.*'          => $this->blockMediaRule(),
         ];
@@ -59,6 +60,7 @@ class ValidateImplementationPageBlocksRequest extends BaseFormRequest
             'blocks.*.description.required' => 'Het description veld is verplicht',
             'blocks.*.button_text.required_if' => 'Het button text veld is verplicht',
             'blocks.*.button_link.required_if' => 'Het button link veld is verplicht',
+            'blocks.*.button_link_label.required_if' => 'Het button link label veld is verplicht',
         ];
     }
 }

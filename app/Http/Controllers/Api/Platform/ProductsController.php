@@ -25,8 +25,7 @@ class ProductsController extends Controller
 
         $query = Product::search($request->only([
             'fund_type', 'product_category_id', 'fund_id', 'price_type', 'unlimited_stock',
-            'organization_id', 'q', 'order_by', 'order_by_dir', 'postcode',
-            'distance',
+            'organization_id', 'q', 'order_by', 'order_dir', 'postcode', 'distance',
         ]));
 
         if ($request->input('bookmarked', false)) {

@@ -464,7 +464,7 @@ class Fund extends BaseModel
             'contact_info_message_custom', 'contact_info_message_text',
             'auth_2fa_policy', 'auth_2fa_remember_ip',
             'auth_2fa_restrict_emails', 'auth_2fa_restrict_auth_sessions',
-            'auth_2fa_restrict_reimbursements',
+            'auth_2fa_restrict_reimbursements', 'hide_meta',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([

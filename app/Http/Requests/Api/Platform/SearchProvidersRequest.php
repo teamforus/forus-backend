@@ -36,7 +36,7 @@ class SearchProvidersRequest extends BaseFormRequest
             'postcode'              => 'nullable|string|max:100',
             'distance'              => 'nullable|integer|max:1000',
             'order_by'              => 'nullable|in:created_at,name',
-            'order_by_dir'          => 'nullable|in:asc,desc',
+            'order_dir'             => 'nullable|in:asc,desc',
             'business_type_id'      => 'nullable|exists:business_types,id',
             'product_category_id'   => 'nullable|exists:product_categories,id',
             'per_page'              => $this->perPageRule(1000),

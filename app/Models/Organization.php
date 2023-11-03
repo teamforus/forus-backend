@@ -368,9 +368,24 @@ class Organization extends BaseModel
         }
 
         if ($q = $request->input('q')) {
-            return $query->where(function(Builder $builder) use ($q) {
+            return $query->where(function(EloquentBuilder $builder) use ($q) {
                 $builder->where('name', 'LIKE', "%$q%");
                 $builder->orWhere('description_text', 'LIKE', "%$q%");
+
+                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
+                    $builder->where('email_public', true);
+                    $builder->where('email', 'LIKE', "%$q%");
+                });
+
+                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
+                    $builder->where('phone_public', true);
+                    $builder->where('phone', 'LIKE', "%$q%");
+                });
+
+                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
+                    $builder->where('website_public', true);
+                    $builder->where('website', 'LIKE', "%$q%");
+                });
             });
         }
 
@@ -406,8 +421,8 @@ class Organization extends BaseModel
 
         return $query->orderBy(
             $request->get('order_by', 'created_at'),
-            $request->get('order_by_dir', 'asc'),
-        )->latest();
+            $request->get('order_dir', 'asc'),
+        );
     }
 
     /**

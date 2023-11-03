@@ -337,6 +337,7 @@ class ImplementationCMSTest extends TestCase
         return [
             'button_enabled' => (bool) rand(0, 1),
             'button_link' => $this->faker->url,
+            'button_link_label' => $this->faker->text(),
             'button_target_blank' => (bool) rand(0, 1),
             'button_text' => $this->faker->text(100),
             'description' => $this->faker->text(),

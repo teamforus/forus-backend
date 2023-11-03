@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\FundRequests;
 
+use App\Events\FundRequestClarifications\FundRequestClarificationReceived;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\FundRequests\FundRequestClarifications\UpdateFundRequestClarificationRequest;
 use App\Http\Resources\FundRequestClarificationResource;
@@ -32,6 +33,8 @@ class FundRequestClarificationsController extends Controller
         ]));
 
         $requestClarification->appendFilesByUid($request->input('files', []));
+
+        FundRequestClarificationReceived::dispatch($requestClarification);
 
         return FundRequestClarificationResource::create($requestClarification);
     }
