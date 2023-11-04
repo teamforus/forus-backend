@@ -73,7 +73,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
  * @property bool $allow_provider_extra_payments
- * @property bool $allow_reservation_extra_payments
+ * @property bool $reservation_allow_extra_payments
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $bi_connection_auth_type
@@ -91,7 +91,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property int $show_provider_transactions
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property int|null $allow_reservation_custom_fields
  * @property-read \App\Models\BankConnection|null $bank_connection_active
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
@@ -172,8 +171,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
  * @method static EloquentBuilder|Organization whereAllowProviderExtraPayments($value)
- * @method static EloquentBuilder|Organization whereAllowReservationCustomFields($value)
- * @method static EloquentBuilder|Organization whereAllowReservationExtraPayments($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
@@ -208,6 +205,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
  * @method static EloquentBuilder|Organization whereProviderThrottlingValue($value)
  * @method static EloquentBuilder|Organization whereReservationAddress($value)
+ * @method static EloquentBuilder|Organization whereReservationAllowExtraPayments($value)
  * @method static EloquentBuilder|Organization whereReservationBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationPhone($value)
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
@@ -267,7 +265,7 @@ class Organization extends BaseModel
         'bi_connection_auth_type', 'bi_connection_token',
         'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
         'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
-        'allow_reservation_extra_payments', 'allow_provider_extra_payments',
+        'reservation_allow_extra_payments', 'allow_provider_extra_payments',
     ];
 
     /**
@@ -302,7 +300,7 @@ class Organization extends BaseModel
         'auth_2fa_funds_restrict_auth_sessions' => 'boolean',
         'auth_2fa_funds_restrict_reimbursements' => 'boolean',
         'allow_provider_extra_payments'         => 'boolean',
-        'allow_reservation_extra_payments'      => 'boolean',
+        'reservation_allow_extra_payments'      => 'boolean',
     ];
 
     /**

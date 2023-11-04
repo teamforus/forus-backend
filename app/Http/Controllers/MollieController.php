@@ -17,22 +17,20 @@ class MollieController extends Controller
     public function processCallback(BaseFormRequest $request): RedirectResponse
     {
         $code = $request->get('code');
+        $state = $request->get('state');
 
-        if (!$code) {
+        if (!$code || !$state) {
             return redirect(Implementation::general()->urlProviderDashboard());
         }
 
-        $mollieService = new MollieService();
         try {
-            $connection = $mollieService->exchangeOauthCode($code, $request->get('state'));
+            $connection = MollieService::make()->exchangeOauthCode($code, $state);
 
-            $url = Implementation::general()->urlProviderDashboard($connection ? sprintf(
-                "/organizations/%s/payment-methods",
-                $connection->organization_id
-            ) : '/');
-
-            return redirect($url);
+            return redirect(Implementation::general()->urlProviderDashboard(
+                $connection ? "/organizations/$connection->organization_id/payment-methods" : '/',
+            ));
         } catch (MollieApiException $e) {
+            MollieService::logError('Failed to redirect the user after mollie sign-up', $e);
             return redirect(Implementation::general()->urlProviderDashboard());
         }
     }

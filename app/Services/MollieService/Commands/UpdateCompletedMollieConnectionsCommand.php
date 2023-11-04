@@ -2,9 +2,10 @@
 
 namespace App\Services\MollieService\Commands;
 
-use App\Services\MollieService\Exceptions\MollieApiException;
 use App\Services\MollieService\Models\MollieConnection;
+use App\Services\MollieService\MollieService;
 use Illuminate\Console\Command;
+use Throwable;
 
 class UpdateCompletedMollieConnectionsCommand extends Command
 {
@@ -36,7 +37,12 @@ class UpdateCompletedMollieConnectionsCommand extends Command
             ->each(function (MollieConnection $mollieConnection) {
                 try {
                     $mollieConnection->fetchAndUpdateConnection();
-                } catch (MollieApiException $e) {}
+                }  catch (Throwable $e) {
+                    MollieService::logError(sprintf(
+                        'Failed to update a complete mollie connection [%s].',
+                        $mollieConnection->id,
+                    ), $e);
+                }
             });
     }
 }

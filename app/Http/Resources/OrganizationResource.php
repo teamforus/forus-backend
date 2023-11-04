@@ -215,7 +215,7 @@ class OrganizationResource extends JsonResource
         $canUpdate = Gate::allows('allowExtraPayments', [MollieConnection::class, $organization]);
 
         return $canUpdate ? $organization->only([
-            'allow_reservation_extra_payments',
+            'reservation_allow_extra_payments',
         ]) : [];
     }
 }

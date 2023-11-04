@@ -17,6 +17,7 @@ return [
             'allow_2fa_restrictions' => true,
             'allow_budget_fund_limits' => true,
             'allow_manual_bulk_processing' => true,
+            'allow_provider_extra_payments' => true,
             'allow_fund_request_record_edit' => true,
             'allow_custom_fund_notifications' => true,
         ]

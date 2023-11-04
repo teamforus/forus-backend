@@ -228,7 +228,7 @@ class OrganizationsController extends Controller
         ]);
 
         if (Gate::allows('allowExtraPayments', [MollieConnection::class, $organization])) {
-            $attributes = array_merge($attributes, $request->only('allow_reservation_extra_payments'));
+            $attributes = array_merge($attributes, $request->only('reservation_allow_extra_payments'));
         }
 
         OrganizationUpdated::dispatch($organization->updateModel($attributes));

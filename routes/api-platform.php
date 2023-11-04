@@ -744,9 +744,9 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     // Mollie
     $router->group(['prefix' => 'organizations/{organization}/mollie-connections'], function() use ($router) {
-        $router->get('configured', "Api\Platform\Organizations\MollieConnectionController@getConfigured");
-        $router->get('connect', "Api\Platform\Organizations\MollieConnectionController@connectMollieAccount");
         $router->get('fetch', "Api\Platform\Organizations\MollieConnectionController@fetchMollieAccount");
+        $router->get('configured', "Api\Platform\Organizations\MollieConnectionController@getConfigured");
+        $router->post('connect', "Api\Platform\Organizations\MollieConnectionController@connectOAuth");
     });
 
     $router->resource(

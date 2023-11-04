@@ -230,9 +230,7 @@ class MollieConnection extends Model
      */
     public function createProfile(MollieConnectionProfile $profile): MollieConnectionProfile
     {
-        $service = new MollieService($this);
-
-        $profileResponse = $service->createProfile($profile->only([
+        $profileResponse = MollieService::make($this)->createProfile($profile->only([
             'name', 'email', 'phone', 'website',
         ]));
 
@@ -246,9 +244,7 @@ class MollieConnection extends Model
      */
     public function updateProfile(MollieConnectionProfile $profile): MollieConnectionProfile
     {
-        $service = new MollieService($this);
-
-        $profileResponse = $service->updateProfile($profile->mollie_id, $profile->only([
+        $profileResponse = MollieService::make($this)->updateProfile($profile->mollie_id, $profile->only([
             'name', 'email', 'phone', 'website',
         ]));
 
@@ -279,7 +275,7 @@ class MollieConnection extends Model
             'current' => true,
         ]);
 
-        $service = new MollieService($this);
+        $service = MollieService::make($this);
         $service->enablePaymentMethod($profileResponse->id, $service::PAYMENT_METHOD_IDEAL);
 
         return $profile;
@@ -291,13 +287,13 @@ class MollieConnection extends Model
      */
     public function fetchAndUpdateConnection(): MollieConnection
     {
-        $service = new MollieService($this);
-
-        $organization = $service->readOrganization();
+        $service = MollieService::make($this);
 
         $state = $service->readOnboardingState();
         $oldState = $this->onboarding_state;
-        $becomeCompleted = $oldState !== $state->status &&
+        $organization = $service->readOrganization();
+
+        $onboardingComplete = $oldState !== $state->status &&
             $state->status === self::ONBOARDING_STATE_COMPLETED;
 
         $this->update([
@@ -307,7 +303,7 @@ class MollieConnection extends Model
             'postcode' => $organization->address->postalCode ?? '',
             'organization_name' => $organization->name,
             'mollie_organization_id' => $organization->id,
-            'completed_at' => $becomeCompleted ? now() : $this->completed_at,
+            'completed_at' => $onboardingComplete ? now() : $this->completed_at,
             'onboarding_state' => in_array($state->status, self::ONBOARDING_STATES)
                 ? $state->status
                 : $this->onboarding_state
@@ -317,7 +313,7 @@ class MollieConnection extends Model
 
         MollieConnectionUpdated::dispatch($this);
 
-        if ($becomeCompleted) {
+        if ($onboardingComplete) {
             MollieConnectionCompleted::dispatch($this);
         }
 
@@ -331,7 +327,7 @@ class MollieConnection extends Model
      */
     private function updateProfiles(bool $createIfEmpty = false): void
     {
-        $service = new MollieService($this);
+        $service = MollieService::make($this);
         $profiles = $service->readAllProfiles();
 
         if ($createIfEmpty && $this->pending_profile) {

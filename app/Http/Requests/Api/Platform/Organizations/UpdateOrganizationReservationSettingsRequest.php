@@ -29,7 +29,6 @@ class UpdateOrganizationReservationSettingsRequest extends BaseOrganizationReque
     public function rules(): array
     {
         return [
-            'allow_reservation_extra_payments' => 'nullable|boolean',
             ...$this->reservationRules(),
             ...$this->reservationCustomFieldRules(),
         ];

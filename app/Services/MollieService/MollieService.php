@@ -27,6 +27,8 @@ use Mollie\Api\Resources\Profile;
 use Mollie\Api\Resources\ProfileCollection;
 use Mollie\Api\Resources\Refund;
 use Mollie\OAuth2\Client\Provider\Mollie;
+use Psr\Http\Message\ResponseInterface;
+use Throwable;
 
 class MollieService
 {
@@ -37,16 +39,15 @@ class MollieService
     protected ?string $redirectUri;
     protected ?string $baseAccessToken;
     protected ?int $expireDecrease;
+
     protected ?MollieConnection $connection;
-    protected \Psr\Log\LoggerInterface $logger;
-    protected ?string $errorMessage;
 
     public const PAYMENT_METHOD_IDEAL = 'ideal';
 
     /**
      * @param MollieConnection|null $connection
      */
-    public function __construct(?MollieConnection $connection = null)
+    function __construct(?MollieConnection $connection = null)
     {
         $this->connection = $connection;
         $this->testMode = config('mollie.test_mode');
@@ -55,8 +56,15 @@ class MollieService
         $this->redirectUri = config('mollie.redirect_url');
         $this->baseAccessToken = config('mollie.base_access_token');
         $this->expireDecrease = config('mollie.expire_decrease');
+    }
 
-        $this->logger = Log::channel('mollie');
+    /**
+     * @param MollieConnection|null $connection
+     * @return static
+     */
+    public static function make(?MollieConnection $connection = null): static
+    {
+        return new static($connection);
     }
 
     /**
@@ -72,6 +80,25 @@ class MollieService
     }
 
     /**
+     * @return array
+     */
+    protected function getRequiredScopes(): array
+    {
+        return [
+            Mollie::SCOPE_ORGANIZATIONS_READ,
+            Mollie::SCOPE_PROFILES_READ,
+            Mollie::SCOPE_PROFILES_WRITE,
+            Mollie::SCOPE_PAYMENTS_READ,
+            Mollie::SCOPE_PAYMENTS_WRITE,
+            Mollie::SCOPE_ONBOARDING_READ,
+            Mollie::SCOPE_ONBOARDING_WRITE,
+            Mollie::SCOPE_REFUNDS_READ,
+            Mollie::SCOPE_REFUNDS_WRITE,
+            Mollie::SCOPE_BALANCES_READ,
+        ];
+    }
+
+    /**
      * @param Organization $organization
      * @return string
      * @noinspection PhpUnused
@@ -84,18 +111,7 @@ class MollieService
         $url = $provider->getAuthorizationUrl([
             'approval_prompt' => 'force',
             'state' => $state,
-            'scope' => [
-                \Mollie\OAuth2\Client\Provider\Mollie::SCOPE_ORGANIZATIONS_READ,
-                \Mollie\OAuth2\Client\Provider\Mollie::SCOPE_PROFILES_READ,
-                \Mollie\OAuth2\Client\Provider\Mollie::SCOPE_PROFILES_WRITE,
-                \Mollie\OAuth2\Client\Provider\Mollie::SCOPE_PAYMENTS_READ,
-                \Mollie\OAuth2\Client\Provider\Mollie::SCOPE_PAYMENTS_WRITE,
-                \Mollie\OAuth2\Client\Provider\Mollie::SCOPE_ONBOARDING_READ,
-                \Mollie\OAuth2\Client\Provider\Mollie::SCOPE_ONBOARDING_WRITE,
-                \Mollie\OAuth2\Client\Provider\Mollie::SCOPE_REFUNDS_READ,
-                \Mollie\OAuth2\Client\Provider\Mollie::SCOPE_REFUNDS_WRITE,
-                \Mollie\OAuth2\Client\Provider\Mollie::SCOPE_BALANCES_READ,
-            ],
+            'scope' => $this->getRequiredScopes(),
         ]);
 
         MollieConnectionCreated::dispatch($organization->mollie_connections()->create([
@@ -167,6 +183,7 @@ class MollieService
      */
     public function createClientLink(array $attributes = []): array
     {
+        $state = token_generator()->generate(64);
         $mollie = $this->setAccessToken(new MollieApiClient(), $this->baseAccessToken);
 
         try {
@@ -186,22 +203,10 @@ class MollieService
                 ],
             ]);
 
-            $state = token_generator()->generate(64);
-
-            $url = $response->getRedirectUrl($this->clientId, $state, [
-                Mollie::SCOPE_ORGANIZATIONS_READ,
-                Mollie::SCOPE_PROFILES_READ,
-                Mollie::SCOPE_PROFILES_WRITE,
-                Mollie::SCOPE_PAYMENTS_READ,
-                Mollie::SCOPE_PAYMENTS_WRITE,
-                Mollie::SCOPE_ONBOARDING_READ,
-                Mollie::SCOPE_ONBOARDING_WRITE,
-                Mollie::SCOPE_REFUNDS_READ,
-                Mollie::SCOPE_REFUNDS_WRITE,
-                Mollie::SCOPE_BALANCES_READ,
-            ]);
-
-            return compact('url', 'state');
+            return [
+                'url' => $response->getRedirectUrl($this->clientId, $state, $this->getRequiredScopes()),
+                'state' => $state,
+            ];
         } catch (ApiException $e) {
             return $this->processErrorResponse($e, 'createClientLink');
         }
@@ -509,17 +514,16 @@ class MollieService
     }
 
     /**
-     * @noinspection PhpUnused
+     * @return ResponseInterface|null
      */
-    public function revokeToken(): ?\Psr\Http\Message\ResponseInterface
+    public function revokeToken(): ?ResponseInterface
     {
-        $provider = $this->getProvider();
-
         try {
-            return $provider->revokeRefreshToken($this->connection->active_token->remember_token);
+            return $this
+                ->getProvider()
+                ->revokeRefreshToken($this->connection->active_token->remember_token);
         } catch (GuzzleException $e) {
-            $this->logger->error("revokeToken fail. {$e->getMessage()}");
-
+            static::logError("Failed to revoke refresh token.", $e);
             return null;
         }
     }
@@ -593,30 +597,39 @@ class MollieService
      */
     private function processErrorResponse(IdentityProviderException|ApiException $e, string $key)
     {
-        $body = self::parseResponseBody(
-            $e instanceof ApiException ? $e->getResponse() : $e->getResponseBody()
-        );
-        $this->logger->error("$key fail. {$e->getMessage()}");
+        $response = $e instanceof ApiException ? $e->getResponse() : $e->getResponseBody();
+        $body = static::parseResponseBody($response);
+
+        static::logError("$key error.", $e);
 
         throw new MollieApiException(
-            $body->detail ?? $body->title ?? 'Onbekende foutmelding!', $e->getCode()
+            $body['detail'] ?? $body['title'] ?? 'Onbekende foutmelding!', $e->getCode()
         );
     }
 
     /**
-     * @param \Psr\Http\Message\ResponseInterface $response
-     * @return \stdClass|null
+     * @param ResponseInterface $response
+     * @return array|null
      */
-    protected static function parseResponseBody(\Psr\Http\Message\ResponseInterface $response): ?\stdClass
+    protected static function parseResponseBody(ResponseInterface $response): ?array
     {
         $body = (string) $response->getBody();
+        $object = @json_decode($body, true);
 
-        $object = @json_decode($body);
+        return json_last_error() !== JSON_ERROR_NONE ? null : $object;
+    }
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return null;
-        }
-
-        return $object;
+    /**
+     * @param string $message
+     * @param Throwable|null $e
+     * @return void
+     */
+    public static function logError(string $message, ?Throwable $e): void
+    {
+        Log::channel('mollie')->error(implode("\n", array_filter([
+            $message,
+            $e?->getMessage(),
+            $e?->getTraceAsString(),
+        ])));
     }
 }

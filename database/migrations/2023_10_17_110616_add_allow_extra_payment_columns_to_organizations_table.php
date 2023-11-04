@@ -13,18 +13,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('fund_providers', function (Blueprint $table) {
-            $table->boolean('allow_extra_payments')
-                ->default(false)
-                ->after('allow_some_products');
-        });
-
         Schema::table('organizations', function (Blueprint $table) {
             $table->boolean('allow_provider_extra_payments')
                 ->default(false)
                 ->after('allow_bi_connection');
 
-            $table->boolean('allow_reservation_extra_payments')
+            $table->boolean('reservation_allow_extra_payments')
                 ->default(false)
                 ->after('allow_provider_extra_payments');
         });
@@ -37,12 +31,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('fund_providers', function (Blueprint $table) {
-            $table->dropColumn('allow_extra_payments');
-        });
-
         Schema::table('organizations', function (Blueprint $table) {
-            $table->dropColumn(['allow_reservation_extra_payments', 'allow_provider_extra_payments']);
+            $table->dropColumn([
+                'allow_provider_extra_payments', 'reservation_allow_extra_payments',
+            ]);
         });
     }
 };

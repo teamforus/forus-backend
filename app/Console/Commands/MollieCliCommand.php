@@ -33,10 +33,10 @@ class MollieCliCommand extends BaseCommand
     public function handle(): void
     {
         if (!App::isProduction()) {
-            $this->clientId = env('MOLLIE_CLIENT_ID', '');
-            $this->clientSecret = env('MOLLIE_CLIENT_SECRET', '');
-            $this->redirectUri = env('MOLLIE_REDIRECT_URI', '');
-            $this->accessToken = env('MOLLIE_ACCESS_TOKEN', '');
+            $this->clientId = config('mollie.client_id', '');
+            $this->clientSecret = config('mollie.client_secret', '');
+            $this->redirectUri = config('mollie.redirect_url', '');
+            $this->accessToken = config('mollie.base_access_token', '');
         }
 
         $this->askAction();
