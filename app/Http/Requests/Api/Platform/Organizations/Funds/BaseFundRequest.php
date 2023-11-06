@@ -47,6 +47,7 @@ abstract class BaseFundRequest extends BaseFormRequest
         $auth2FAPolicies = implode(',', FundConfig::AUTH_2FA_POLICIES);
 
         return [
+            'hide_meta' => 'nullable|boolean',
             'email_required' => 'nullable|boolean',
             'allow_fund_requests' => 'nullable|boolean',
             'allow_prevalidations' => 'nullable|boolean',

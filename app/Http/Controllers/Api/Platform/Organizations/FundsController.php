@@ -48,7 +48,7 @@ class FundsController extends Controller
 
         $query = (new FundSearch($request->only([
             'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id', 'order_by',
-            'order_by_dir', 'with_archived', 'with_external', 'configured',
+            'order_dir', 'with_archived', 'with_external', 'configured',
         ]), $organization->funds()->getQuery()))->query();
 
         if (!$request->isAuthenticated()) {
@@ -91,7 +91,7 @@ class FundsController extends Controller
         $fund->makeFundConfig($request->only([
             'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'email_required', 'contact_info_enabled', 'contact_info_required',
-            'contact_info_message_custom', 'contact_info_message_text',
+            'contact_info_message_custom', 'contact_info_message_text', 'hide_meta',
         ]));
 
         $fund->attachMediaByUid($request->input('media_uid'));
@@ -182,7 +182,7 @@ class FundsController extends Controller
 
             $fund->updateFundsConfig($request->only([
                 'email_required', 'contact_info_enabled', 'contact_info_required',
-                'contact_info_message_custom', 'contact_info_message_text',
+                'contact_info_message_custom', 'contact_info_message_text', 'hide_meta',
             ]));
 
             if ($fund->isWaiting()) {

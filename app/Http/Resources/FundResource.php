@@ -116,7 +116,7 @@ class FundResource extends BaseJsonResource
             'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
             'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
             'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',
-            'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails',
+            'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails', 'hide_meta',
         ]) ?: [];
     }
 
