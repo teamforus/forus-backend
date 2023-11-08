@@ -133,30 +133,6 @@
             "content": ":provider_name is geaccepteerd als aanbieder voor :fund_name door :sponsor_name"
         }
     },
-    "notifications_identities.requester_product_added": {
-        "mail": {},
-        "push": {},
-        "database": {
-            "title": ":product_name van :provider_name is beschikbaar voor :fund_name",
-            "content": ":product_name van :provider_name is toegevoegd aan de webshop"
-        }
-    },
-    "notifications_identities.requester_product_approved": {
-        "mail": {},
-        "push": {},
-        "database": {
-            "title": ":product_name van :provider_name is beschikbaar voor :fund_name",
-            "content": ":product_name van :provider_name is toegevoegd aan de webshop"
-        }
-    },
-    "notifications_identities.requester_product_revoked": {
-        "mail": {},
-        "push": {},
-        "database": {
-            "title": "",
-            "content": ""
-        }
-    },
     "notifications_fund_requests.created_validator_employee": {
         "mail": {},
         "push": {},
