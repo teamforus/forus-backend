@@ -49,7 +49,7 @@ class FundCriteriaValueRule extends BaseFundCriteriaRule
             ]),
             $recordType::TYPE_EMAIL => Validation::check($value, ['nullable', 'email']),
             $recordType::TYPE_IBAN => Validation::check($value, ['nullable', new IbanRule()]),
-            $recordType::TYPE_BOOL => Validation::check($value, ['nullable', Rule::in(['true', 'false'])]),
+            $recordType::TYPE_BOOL => Validation::check($value, ['nullable', Rule::in(['Ja', 'Nee'])]),
             $recordType::TYPE_DATE => Validation::check($value, implode('', [
                 "nullable|date|date_format:$this->dateFormat",
                 $this->isValidDate($min) ? "|after_or_equal:$min" : "",

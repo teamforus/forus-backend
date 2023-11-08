@@ -62,7 +62,7 @@ class FundCriterionResource extends BaseJsonResource
     protected function getValue(FundCriterion $criterion): string
     {
         if ($criterion->record_type?->type == 'bool') {
-            return $criterion->value ? 'true' : 'false';
+            return $criterion->value ? 'Ja' : 'Nee';
         }
 
         return $criterion->value;

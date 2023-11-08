@@ -89,15 +89,17 @@ class StoreFundRequestRequest extends BaseFormRequest
     public function messages(): array
     {
         $messages = [];
+        $records = $this->get('records', []);
 
-        foreach ($this->get('records', []) as $val) {
+        foreach (is_array($records) ? $records : [] as $val) {
             $record_type_key = Arr::get($val, 'record_type_key', false);
 
             if ($record_type_key) {
                 $prefix = (ends_with($record_type_key, '_eligible') ? 'eligible_' : '');
 
-                $messages["records.*.value.required"] =
-                    trans("validation.fund_request_request_{$prefix}field_incomplete");
+                $messages["records.*.value.required"] = trans(
+                    "validation.fund_request_request_{$prefix}field_incomplete",
+                );
             }
         }
 

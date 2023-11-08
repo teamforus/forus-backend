@@ -795,8 +795,8 @@ class TestData
                 'birth_date' => now()->subYears(20)->format('d-m-Y'),
                 'email' => $this->faker->email(),
                 'iban' => $this->faker->iban('NL'),
-                'civil_status' => 'true',
-                'single_parent' => 'true',
+                'civil_status' => 'Ja',
+                'single_parent' => 'Ja',
             ], $fund->fund_config->hash_bsn ? [
                 'bsn_hash' => $fund->getHashedValue($bsnValue),
                 'partner_bsn_hash' => $fund->getHashedValue($bsnValuePartner),

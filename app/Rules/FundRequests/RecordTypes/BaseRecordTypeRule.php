@@ -6,6 +6,7 @@ use App\Helpers\Validation;
 use App\Models\FundCriterion;
 use App\Rules\BaseRule;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 abstract class BaseRecordTypeRule extends BaseRule
 {
@@ -45,6 +46,22 @@ abstract class BaseRecordTypeRule extends BaseRule
     protected function isRequiredRule(): string
     {
         return $this->criterion->optional ? 'nullable' : 'required';
+    }
+
+    /**
+     * @return \Illuminate\Validation\Rules\In|string|null
+     */
+    protected function getLengthRule(): \Illuminate\Validation\Rules\In|string|null
+    {
+        return match($this->criterion->operator) {
+            '=' => Rule::in([$this->criterion->value]),
+            '>' => is_numeric($this->criterion->value) ? ("gt:{$this->criterion->value}") : 'in:',
+            '<' => is_numeric($this->criterion->value) ? ("lt:{$this->criterion->value}") : 'in:',
+            '>=' => is_numeric($this->criterion->value) ? ("gte:{$this->criterion->value}") : 'in:',
+            '<=' => is_numeric($this->criterion->value) ? ("lte:{$this->criterion->value}") : 'in:',
+            '*' => null,
+            default => Rule::in([]),
+        };
     }
 
     /**

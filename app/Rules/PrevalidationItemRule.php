@@ -9,6 +9,7 @@ use App\Models\RecordType;
 use App\Rules\FundRequests\BaseFundRequestRule;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 class PrevalidationItemRule extends BaseRule
 {
@@ -39,7 +40,11 @@ class PrevalidationItemRule extends BaseRule
      */
     public function passes($attribute, $value): bool
     {
-        $key = ltrim($attribute, $this->prefix);
+        if (!Str::startsWith($attribute, $this->prefix)) {
+            return $this->reject("Invalid record key!");
+        }
+
+        $key = substr($attribute, strlen($this->prefix));
 
         if (!$this->record_types->has($key) ||
             !in_array($key, $this->fund->requiredPrevalidationKeys(true), true)) {

@@ -19,6 +19,8 @@ class RecordTypeDateRule extends BaseRecordTypeRule
                 '=' => "date_equals:{$this->criterion->value}",
                 '>' => "after:{$this->criterion->value}",
                 '<' => "before:{$this->criterion->value}",
+                '>=' => "after_or_equal:{$this->criterion->value}",
+                '<=' => "before_or_equal:{$this->criterion->value}",
                 '*' => null,
                 default => [],
             },

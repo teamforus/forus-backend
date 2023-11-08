@@ -91,7 +91,7 @@ return [
             [
                 'record_type_key' => "single_parent",
                 'operator' => "=",
-                'value' => 'true',
+                'value' => 'Ja',
                 'title' => "Single parent",
                 'show_attachment' => false,
             ],

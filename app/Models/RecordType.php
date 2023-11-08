@@ -188,7 +188,7 @@ class RecordType extends BaseModel
     public function getOperators(): array
     {
         if (in_array($this->type, ['number', 'date'], true)) {
-            return ['<', '=', '>', '*'];
+            return ['<', '<=', '=', '>=', '>', '*'];
         }
 
         if (in_array($this->type, ['string', 'select', 'bool'], true)) {
@@ -209,8 +209,8 @@ class RecordType extends BaseModel
     {
         if ($this->type == 'bool') {
             return [
-                ['value' => 'true', 'name' =>  'Ja'],
-                ['value' => 'false', 'name' =>  'Nee'],
+                ['value' => 'Ja', 'name' =>  'Ja'],
+                ['value' => 'Nee', 'name' =>  'Nee'],
             ];
         }
 

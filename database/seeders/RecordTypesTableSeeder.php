@@ -61,6 +61,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'key' => 'net_worth',
         'name' => 'Net worth',
         'type' => 'number',
+        'criteria' => true,
     ], [
         'key' => 'base_salary',
         'name' => 'Base salary',
