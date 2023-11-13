@@ -25,15 +25,15 @@ class RolesTableSeeder extends Seeder
             'nl' => 'Manager beoordelaars',
         ],
         'policy_officer' => [
-            'en' => 'Manager',
+            'en' => 'Providers manager',
             'nl' => 'Manager aanbieders',
         ],
         'operation_officer' => [
-            'en' => 'Kassa',
+            'en' => 'Operation manager',
             'nl' => 'Kassa',
         ],
         'implementation_manager' => [
-            'en' => 'Implementatie manager',
+            'en' => 'Implementation manager',
             'nl' => 'Implementatie manager',
         ],
         'implementation_cms_manager' => [
@@ -41,7 +41,7 @@ class RolesTableSeeder extends Seeder
             'nl' => 'CMS manager',
         ],
         'implementation_communication_manager' => [
-            'en' => 'Implementatie communicatiemanager',
+            'en' => 'Implementation communication manager',
             'nl' => 'Communicatie',
         ],
         'finance_reader' => [
