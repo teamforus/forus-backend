@@ -21,4 +21,21 @@ return [
         'attempts' => env('FEEDBACK_FORM_API_ATTEMPTS', 15),
         'decay' => env('FEEDBACK_FORM_API_DECAY', 15),
     ],
+
+    'mollie' => [
+        'fetch' => [
+            'attempts' => env('MOLLIE_FETCH_ATTEMPTS', 10),
+            'decay' => env('MOLLIE_FETCH_DECAY', 10),
+        ],
+
+        'connect' => [
+            'attempts' => env('MOLLIE_CONNECT_ATTEMPTS', 10),
+            'decay' => env('MOLLIE_CONNECT_DECAY', 10),
+        ],
+
+        'create' => [
+            'attempts' => env('MOLLIE_CREATE_ATTEMPTS', 10),
+            'decay' => env('MOLLIE_CREATE_DECAY', 10),
+        ],
+    ]
 ];
