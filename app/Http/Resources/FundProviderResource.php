@@ -28,9 +28,10 @@ class FundProviderResource extends BaseJsonResource
         'fund.tags_webshop',
         'fund.fund_formulas',
         'fund.top_up_transactions',
-        'organization.offices.organization.business_type.translations',
+        'organization.offices.schedules',
+        'organization.offices.photo.presets',
         'organization.offices.organization.logo',
-        'organization.offices.photo',
+        'organization.offices.organization.business_type.translations',
         'organization.products',
         'organization.logo',
         'organization.employees.roles.translations',
@@ -77,11 +78,11 @@ class FundProviderResource extends BaseJsonResource
             'products_count_all' => $fundProvider->organization->products->count(),
             'products_count_available' => ProductQuery::whereFundNotExcludedOrHasHistory(
                 $fundProvider->organization->products()->getQuery(),
-                $fundProvider->fund_id
+                $fundProvider->fund_id,
             )->count(),
             'products_count_approved' => ProductQuery::approvedForFundsAndActiveFilter(
                 $fundProvider->organization->products()->getQuery(),
-                $fundProvider->fund_id
+                $fundProvider->fund_id,
             )->count(),
         ];
     }
