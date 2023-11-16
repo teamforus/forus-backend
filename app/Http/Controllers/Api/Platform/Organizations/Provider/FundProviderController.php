@@ -6,7 +6,7 @@ use App\Events\Funds\FundProviderApplied;
 use App\Http\Requests\Api\Platform\Organizations\Provider\StoreFundProviderRequest;
 use App\Http\Requests\Api\Platform\Organizations\Provider\UpdateFundProviderRequest;
 use App\Http\Resources\FundResource;
-use App\Http\Resources\FundProviderResource;
+use App\Http\Resources\Provider\ProviderFundProviderResource;
 use App\Http\Resources\TagResource;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -97,7 +97,7 @@ class FundProviderController extends Controller
             $query->whereIn('id', FundProvider::queryPending($organization)->select('id'));
         }
 
-        return FundProviderResource::queryCollection($query, $request);
+        return ProviderFundProviderResource::queryCollection($query, $request);
     }
 
     /**
@@ -105,13 +105,13 @@ class FundProviderController extends Controller
      *
      * @param StoreFundProviderRequest $request
      * @param Organization $organization
-     * @return FundProviderResource
+     * @return ProviderFundProviderResource
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(
         StoreFundProviderRequest $request,
         Organization $organization
-    ): FundProviderResource {
+    ): ProviderFundProviderResource {
         $this->authorize('show', $organization);
         $this->authorize('storeProvider', [FundProvider::class, $organization]);
 
@@ -126,7 +126,7 @@ class FundProviderController extends Controller
 
         FundProviderApplied::dispatch($fundProvider->fund, $fundProvider);
 
-        return new FundProviderResource($fundProvider);
+        return ProviderFundProviderResource::create($fundProvider);
     }
 
     /**
@@ -134,17 +134,17 @@ class FundProviderController extends Controller
      *
      * @param Organization $organization
      * @param FundProvider $organizationFund
-     * @return FundProviderResource
+     * @return ProviderFundProviderResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
         Organization $organization,
         FundProvider $organizationFund
-    ): FundProviderResource {
+    ): ProviderFundProviderResource {
         $this->authorize('show', $organization);
         $this->authorize('showProvider', [$organizationFund, $organization]);
 
-        return new FundProviderResource($organizationFund);
+        return ProviderFundProviderResource::create($organizationFund);
     }
 
     /**
@@ -153,14 +153,14 @@ class FundProviderController extends Controller
      * @param UpdateFundProviderRequest $request
      * @param Organization $organization
      * @param FundProvider $organizationFund
-     * @return FundProviderResource
+     * @return ProviderFundProviderResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(
         UpdateFundProviderRequest $request,
         Organization $organization,
         FundProvider $organizationFund
-    ): FundProviderResource {
+    ): ProviderFundProviderResource {
         $this->authorize('show', $organization);
         $this->authorize('updateProvider', [$organizationFund, $organization]);
 
@@ -168,7 +168,7 @@ class FundProviderController extends Controller
             'state'
         ]));
 
-        return new FundProviderResource($organizationFund);
+        return ProviderFundProviderResource::create($organizationFund);
     }
 
     /**

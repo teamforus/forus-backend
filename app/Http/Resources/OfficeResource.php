@@ -12,8 +12,10 @@ use App\Models\Office;
 class OfficeResource extends BaseJsonResource
 {
     public const LOAD = [
-        'photo.presets', 'organization.business_type.translations',
-        'organization.logo', 'schedules',
+        'schedules',
+        'photo.presets',
+        'organization.logo',
+        'organization.business_type.translations',
     ];
 
     /**

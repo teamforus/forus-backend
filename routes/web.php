@@ -27,3 +27,5 @@ Route::get('/email-verification/{identity_email_token}', 'Api\Identity\IdentityE
 
 Route::get('/bng/bank-connections/{bngBankConnectionToken}', 'BNGController@bankConnectionRedirect');
 Route::get('/bng/payment-bulks/{bngVoucherTransactionBulkToken}', 'BNGController@voucherTransactionBulkRedirect');
+
+Route::get('/mollie/callback', 'MollieController@processCallback');
