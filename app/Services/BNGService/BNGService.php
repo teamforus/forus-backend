@@ -17,9 +17,11 @@ use App\Services\BNGService\Responses\PaymentValue;
 use App\Services\BNGService\Responses\TransactionsValue;
 use App\Services\BNGService\Responses\TransactionValue;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Psr\Http\Message\ResponseInterface;
+use Throwable;
 
 class BNGService
 {
@@ -38,16 +40,16 @@ class BNGService
     public const ENDPOINT_PAYMENT = '/api/v1/payments/sepa-credit-transfers';
     public const ENDPOINT_PAYMENT_BULK = '/api/v1/bulk-payments/pain.001-sepa-credit-transfers';
 
-    protected $env;
-    protected $keyId;
-    protected $clientId;
-    protected $tlsCertificate;
-    protected $tlsCertificateKey;
-    protected $signatureCertificate;
-    protected $signatureCertificateKey;
-    protected $config;
+    protected string $env;
+    protected ?string $keyId;
+    protected ?string $clientId;
+    protected ?string $tlsCertificate;
+    protected ?string $tlsCertificateKey;
+    protected ?string $signatureCertificate;
+    protected ?string $signatureCertificateKey;
+    protected ?array $config;
 
-    protected $authRedirectUrl;
+    protected ?string $authRedirectUrl;
 
     /**
      * @param string $env
@@ -146,6 +148,7 @@ class BNGService
      * @param string $accessToken
      * @return AccountsValue
      * @throws ApiException
+     * @noinspection PhpUnused
      */
     public function getAccounts(string $consentId, string $accessToken): AccountsValue
     {
@@ -337,11 +340,16 @@ class BNGService
                 'cert' => $tlsCertificate->path(),
                 'ssl_key' => $tlsCertificateKey->path(),
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             throw new ApiException($e->getMessage(), $e->getCode());
         } finally {
-            $tlsCertificate->close();
-            $tlsCertificateKey->close();
+            if (isset($tlsCertificate)) {
+                $tlsCertificate->close();
+            }
+
+            if (isset($tlsCertificateKey)) {
+                $tlsCertificateKey->close();
+            }
         }
     }
 
@@ -352,7 +360,7 @@ class BNGService
      * @param string $bodyString
      * @param string $contentType
      * @param array $cHeaders
-     * @return mixed
+     * @return array
      */
     protected function makeHeaders(
         string $method,
@@ -361,7 +369,7 @@ class BNGService
         string $bodyString = "",
         string $contentType = 'application/json',
         array $cHeaders = []
-    ) {
+    ): array {
         $date = gmdate('r', time());
         $digest = $this->makeDigest($bodyString);
 
@@ -382,7 +390,7 @@ class BNGService
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     protected function psuIpAddress(): ?string
     {
@@ -398,11 +406,11 @@ class BNGService
     }
 
     /**
-     * @param $method
-     * @param $headers
+     * @param string $method
+     * @param array $headers
      * @return string
      */
-    protected function makeSignature($method = 'post', $headers = []): string
+    protected function makeSignature(string $method = 'post', array $headers = []): string
     {
         $private_key = openssl_pkey_get_private($this->signatureCertificateKey);
         $signatureHeaderNames = ['request-target', 'Date', 'Digest', 'X-Request-ID'];
@@ -451,7 +459,7 @@ class BNGService
     /**
      * @param $plainData
      * @param $privateKeyId
-     * @return false|string
+     * @return string|null
      */
     protected function encrypt_RSA($plainData, $privateKeyId): ?string
     {
@@ -517,7 +525,7 @@ class BNGService
     {
         try {
             return bin2hex(random_bytes($length / 2));
-        } catch (\Throwable $e) {
+        } catch (Throwable) {
             throw new RuntimeException("Failed to generate token.");
         }
     }
@@ -531,10 +539,24 @@ class BNGService
     }
 
     /**
-     * @return mixed
+     * @return string|null
      */
-    public function getAuthRedirectUrl()
+    public function getAuthRedirectUrl(): ?string
     {
         return $this->authRedirectUrl;
+    }
+
+    /**
+     * @param string $message
+     * @param Throwable|null $e
+     * @return void
+     */
+    public static function logError(string $message, ?Throwable $e): void
+    {
+        Log::channel('bng')->error(implode("\n", array_filter([
+            $message,
+            $e?->getMessage(),
+            $e?->getTraceAsString(),
+        ])));
     }
 }
