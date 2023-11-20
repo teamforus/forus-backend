@@ -23,6 +23,7 @@ class FundResource extends BaseJsonResource
         'tags',
         'logo.presets',
         'criteria.fund',
+        'criteria.record_type.translation',
         'criteria.fund_criterion_validators.external_validator',
         'organization.logo.presets',
         'organization.employees',
@@ -269,7 +270,7 @@ class FundResource extends BaseJsonResource
     {
         return [
             'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',
-            'csv_required_keys' => $fund->requiredPrevalidationKeys()->toArray(),
+            'csv_required_keys' => $fund->requiredPrevalidationKeys(),
         ];
     }
 

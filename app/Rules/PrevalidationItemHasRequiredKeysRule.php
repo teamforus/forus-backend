@@ -46,6 +46,6 @@ class PrevalidationItemHasRequiredKeysRule extends BaseRule
      */
     protected function requiredKeys(?Fund $fund): array
     {
-        return $fund?->requiredPrevalidationKeys()->toArray() ?: [];
+        return $fund?->requiredPrevalidationKeys();
     }
 }
