@@ -155,7 +155,7 @@ class VoucherBatchTest extends DuskTestCase
     private function switchToFund(Browser $browser, int $fundId): void
     {
         $browser->waitFor("@fundSelectorOption$fundId");
-        $browser->pause(100);
+        $browser->pause(200);
         $browser->element("@fundSelectorOption$fundId")->click();
         $browser->waitFor('@searchVoucher');
         $browser->type('@searchVoucher', '');

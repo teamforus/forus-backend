@@ -6,10 +6,10 @@ use App\Models\Fund;
 use App\Models\FundCriterion;
 use App\Models\PrevalidationRecord;
 use App\Models\RecordType;
+use App\Rules\FundRequests\BaseFundRequestRule;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class PrevalidationItemRule extends BaseRule
 {
@@ -40,10 +40,14 @@ class PrevalidationItemRule extends BaseRule
      */
     public function passes($attribute, $value): bool
     {
-        $key = ltrim($attribute, $this->prefix);
+        if (!Str::startsWith($attribute, $this->prefix)) {
+            return $this->reject("Invalid record key!");
+        }
+
+        $key = substr($attribute, strlen($this->prefix));
 
         if (!$this->record_types->has($key) ||
-            $this->fund->requiredPrevalidationKeys()->search($key, true) === false) {
+            !in_array($key, $this->fund->requiredPrevalidationKeys(true), true)) {
             return $this->reject("Invalid record key!");
         }
 
@@ -85,40 +89,18 @@ class PrevalidationItemRule extends BaseRule
      */
     private function validateRecord(string $key, $value): bool
     {
-        /** @var FundCriterion $fundCriterion */
-        $fundCriterion = $this->fund->criteria->where('record_type_key', $key)->first();
-        $recordType = $this->record_types[$fundCriterion->record_type_key];
+        /** @var FundCriterion $criterion */
+        $criterion = $this->fund->criteria->where('record_type_key', $key)->first();
+        $validation = $criterion ? BaseFundRequestRule::validateRecordValue($criterion, $value) : null;
 
-        $typeKey = [
-            'number' => 'numeric',
-            'string' => 'string',
-        ][$recordType['type']];
-
-        $operator = [
-            '<'     => 'lt:',
-            '<='    => 'lte:',
-            '='     => 'in:',
-            '>'     => 'gt:',
-            '>='    => 'gte:',
-        ][$fundCriterion->operator];
-
-        if ($typeKey === 'numeric') {
-            $operatorRule = $operator . $fundCriterion->value;
-        } elseif ($typeKey === 'string') {
-            $operatorRule = \Illuminate\Validation\Rule::in($fundCriterion->value);
-        } else {
-            return $this->reject("Invalid fund criteria rule!");
+        if (!$criterion || !$validation) {
+            return $this->reject(trans('validation.in', [
+                'attribute' => trans('validation.attributes.value'),
+            ]));
         }
 
-        try {
-            Validator::make([$key => $value], [
-                $fundCriterion->record_type_key => ['required', $typeKey, $operatorRule]
-            ])->validate();
-        } catch (ValidationException) {
-            return $this->reject(trans(
-                'validation.' . rtrim($operator, ':') . '.' . $typeKey,
-                $fundCriterion->only('value'))
-            );
+        if (!$validation->passes()) {
+            return $this->reject($validation->errors()->first('value'));
         }
 
         return true;

@@ -2,18 +2,25 @@
 
 namespace App\Rules\FundRequests;
 
+use App\Helpers\Arr;
+use App\Helpers\Validation;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\FundCriterion;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Contracts\Validation\Rule;
+use App\Models\RecordType;
+use App\Rules\BaseRule;
+use App\Rules\FundRequests\RecordTypes\RecordTypeBoolRule;
+use App\Rules\FundRequests\RecordTypes\RecordTypeDateRule;
+use App\Rules\FundRequests\RecordTypes\RecordTypeEmailRule;
+use App\Rules\FundRequests\RecordTypes\RecordTypeIbanRule;
+use App\Rules\FundRequests\RecordTypes\RecordTypeNumericRule;
+use App\Rules\FundRequests\RecordTypes\RecordTypeSelectRule;
+use App\Rules\FundRequests\RecordTypes\RecordTypeStringRule;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
-abstract class BaseFundRequestRule implements Rule
+abstract class BaseFundRequestRule extends BaseRule
 {
-    protected ?Fund $fund;
-    protected string $msg = '';
-    protected ?BaseFormRequest $request;
 
     /**
      * Create a new rule instance.
@@ -21,91 +28,49 @@ abstract class BaseFundRequestRule implements Rule
      * @param Fund|null $fund
      * @param BaseFormRequest|null $request
      */
-    public function __construct(?Fund $fund, ?BaseFormRequest $request = null) {
-        $this->fund = $fund;
-        $this->request = $request;
-    }
+    public function __construct(
+        protected ?Fund $fund,
+        protected ?BaseFormRequest $request = null,
+    ) {}
 
     /**
      * @param FundCriterion $criterion
-     * @param string $attribute
-     * @return \Illuminate\Validation\Validator
+     * @param mixed $value
+     * @return Validator
      */
-    protected function validateRecordValue(
-        FundCriterion $criterion,
-        string $attribute
-    ): \Illuminate\Validation\Validator {
-        $typesFull = array_pluck(record_types_cached(), 'type', 'key');
-        $types = array_map(fn ($value) => $value === 'number' ? 'numeric' : $value, $typesFull);
+    public static function validateRecordValue(FundCriterion $criterion, mixed $value): Validator
+    {
+        $recordType = RecordType::where('key', Arr::get($criterion, 'record_type_key'))->first();
 
-        $type = $types[$criterion->record_type_key];
-        $operator = $criterion->operator;
-        $rangeRule = null;
-
-        if ($type == 'numeric') {
-            switch ($operator) {
-                case '=': {
-                    $rangeRule = 'in:' . $criterion->value;
-                } break;
-                case '<': {
-                    $rangeRule = 'max:' . (intval($criterion->value) - 1);
-                } break;
-                case '<=': {
-                    $rangeRule = 'max:' . intval($criterion->value);
-                } break;
-                case '>': {
-                    $rangeRule = 'min:' . (intval($criterion->value) + 1);
-                } break;
-                case '>=': {
-                    $rangeRule = 'min:' . intval($criterion->value);
-                } break;
-            }
-        } else {
-            $rangeRule = 'in:' . $criterion->value;
-        }
-
-        return Validator::make($this->request->all(), [
-            $attribute => ['required', $type, $rangeRule],
-        ], [], [
-            $attribute => Arr::get(
-                Arr::pluck(record_types_cached(), 'name', 'key'),
-                $criterion->record_type_key,
-                $criterion->record_type_key
-            )
-        ]);
+        return match ($recordType->type) {
+            $recordType::TYPE_STRING => Validation::check($value, new RecordTypeStringRule($criterion)),
+            $recordType::TYPE_NUMBER => Validation::check($value, new RecordTypeNumericRule($criterion)),
+            $recordType::TYPE_SELECT => Validation::check($value, new RecordTypeSelectRule($criterion)),
+            $recordType::TYPE_EMAIL => Validation::check($value, new RecordTypeEmailRule($criterion)),
+            $recordType::TYPE_IBAN => Validation::check($value, new RecordTypeIbanRule($criterion)),
+            $recordType::TYPE_BOOL => Validation::check($value, new RecordTypeBoolRule($criterion)),
+            $recordType::TYPE_DATE => Validation::check($value, new RecordTypeDateRule($criterion)),
+            default => Validation::check('', ['required', Rule::in([])]),
+        };
     }
 
     /**
      * @param string $attribute
-     * @return FundCriterion|string
+     * @return FundCriterion|null
      */
-    protected function findCriterion(string $attribute): FundCriterion|string
+    protected function findCriterion(string $attribute): ?FundCriterion
     {
-        $inputRoot = implode('.', array_slice(explode('.', $attribute), 0, -1));
-        $criterionKey = $inputRoot . '.fund_criterion_id';
-        $inputRecordTypeKey = $inputRoot . '.record_type_key';
-        $criterionId = $this->request->input($criterionKey);
-        $typesByKey = @collect(record_types_cached())->keyBy('key');
+        $row = $this->getRecordRow($attribute);
 
-        /** @var FundCriterion|null $criterion */
-        $criterion = $this->fund->criteria->where('id', $criterionId)->first();
-
-        if (!$criterion) {
-            return trans('validation.in', [
-                'attribute' => $typesByKey[$inputRecordTypeKey] ?? ''
-            ]);
-        }
-
-        return $criterion;
+        return $this->fund->criteria()->find($row['fund_criterion_id'] ?? null);
     }
 
     /**
-     * Get the validation error message.
-     *
-     * @return string
+     * @param string $attribute
+     * @return array
      */
-    public function message(): string
+    protected function getRecordRow(string $attribute): array
     {
-        return $this->msg;
+        return $this->request->input(implode('.', array_slice(explode('.', $attribute), 0, -1)));
     }
 }

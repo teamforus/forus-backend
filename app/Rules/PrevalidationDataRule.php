@@ -47,7 +47,7 @@ class PrevalidationDataRule implements Rule
 
         /** @var Fund $fund */
         $fund = $this->fundId ? Fund::query()->find($this->fundId) : false;
-        $requiredKeys = $fund ? $fund->requiredPrevalidationKeys() : collect([]);
+        $requiredKeys = $fund ? $fund->requiredPrevalidationKeys() : [];
 
         foreach ($data as $records) {
             $records = collect($records);
@@ -58,7 +58,7 @@ class PrevalidationDataRule implements Rule
                 return false;
             }
 
-            if ($fund && $records->keys()->intersect($requiredKeys)->count() < $requiredKeys->count()) {
+            if ($fund && $records->keys()->intersect($requiredKeys)->count() < count($requiredKeys)) {
                 $this->messageText = trans('validation.prevalidation_missing_required_keys');
                 return false;
             }
