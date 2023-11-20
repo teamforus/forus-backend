@@ -48,7 +48,7 @@ class OrganizationResource extends JsonResource
         self::isRequested('funds', $request) && array_push($load, 'funds');
         self::isRequested('business_type', $request) && array_push($load, 'business_type.translations');
 
-        return array_merge($load, $request->isProviderDashboard() ? [
+        return array_merge($load, $request?->isProviderDashboard() ? [
             'mollie_connection_configured',
             'fund_provider_allowed_extra_payments',
         ] : []);
