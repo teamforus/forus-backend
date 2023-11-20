@@ -18,6 +18,7 @@ class DomainMiddleware
         'digidStart',
         'digidResolve',
         'digidRedirect',
+        'mollie.webhook',
     ];
 
     /**

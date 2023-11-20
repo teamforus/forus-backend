@@ -18,7 +18,8 @@ class MollieConnectionPolicy
      */
     public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $identity->exists && $organization->can_view_provider_extra_payments;
+        return $organization->identityCan($identity, 'manage_payment_methods') &&
+            $organization->can_view_provider_extra_payments;
     }
 
     /**
@@ -60,7 +61,8 @@ class MollieConnectionPolicy
      */
     public function allowExtraPayments(Identity $identity, Organization $organization): bool
     {
-        return $identity->exists && $organization->allow_extra_payments_by_sponsor;
+        return $organization->identityCan($identity, 'manage_payment_methods') &&
+            $organization->allow_extra_payments_by_sponsor;
     }
 
     /**

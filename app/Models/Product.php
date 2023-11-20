@@ -45,6 +45,7 @@ use Illuminate\Support\Arr;
  * @property string $reservation_phone
  * @property string $reservation_address
  * @property string $reservation_birth_date
+ * @property string $reservation_extra_payments
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -107,6 +108,7 @@ use Illuminate\Support\Arr;
  * @method static Builder|Product whereReservationAddress($value)
  * @method static Builder|Product whereReservationBirthDate($value)
  * @method static Builder|Product whereReservationEnabled($value)
+ * @method static Builder|Product whereReservationExtraPayments($value)
  * @method static Builder|Product whereReservationPhone($value)
  * @method static Builder|Product whereReservationPolicy($value)
  * @method static Builder|Product whereShowOnWebshop($value)
@@ -145,6 +147,10 @@ class Product extends BaseModel
     public const RESERVATION_FIELD_GLOBAL = 'global';
     public const RESERVATION_FIELD_NO = 'no';
 
+    public const RESERVATION_EXTRA_PAYMENT_GLOBAL = 'global';
+    public const RESERVATION_EXTRA_PAYMENT_YES = 'yes';
+    public const RESERVATION_EXTRA_PAYMENT_NO = 'no';
+
     public const RESERVATION_FIELDS_PRODUCT = [
         self::RESERVATION_FIELD_REQUIRED,
         self::RESERVATION_FIELD_OPTIONAL,
@@ -162,6 +168,12 @@ class Product extends BaseModel
         self::RESERVATION_POLICY_ACCEPT,
         self::RESERVATION_POLICY_REVIEW,
         self::RESERVATION_POLICY_GLOBAL,
+    ];
+
+    public const RESERVATION_EXTRA_PAYMENT_OPTIONS = [
+        self::RESERVATION_EXTRA_PAYMENT_GLOBAL,
+        self::RESERVATION_EXTRA_PAYMENT_YES,
+        self::RESERVATION_EXTRA_PAYMENT_NO,
     ];
 
     public const PRICE_DISCOUNT_TYPES = [
@@ -185,7 +197,7 @@ class Product extends BaseModel
         'name', 'description', 'description_text', 'organization_id', 'product_category_id',
         'price', 'total_amount', 'expire_at', 'sold_out',
         'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id',
-        'reservation_enabled', 'reservation_policy',
+        'reservation_enabled', 'reservation_policy', 'reservation_extra_payments',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'alternative_text',
     ];
 
@@ -242,6 +254,7 @@ class Product extends BaseModel
     public function product_reservations_pending(): HasMany
     {
         return $this->product_reservations()->whereIn('state', [
+            ProductReservation::STATE_WAITING,
             ProductReservation::STATE_PENDING,
             ProductReservation::STATE_ACCEPTED
         ])->whereDoesntHave('voucher_transaction');
@@ -353,6 +366,31 @@ class Product extends BaseModel
         }
 
         return $this->reservation_birth_date == self::RESERVATION_FIELD_REQUIRED;
+    }
+
+    /**
+     * @param Fund $fund
+     * @return bool
+     */
+    public function reservationExtraPaymentsEnabled(Fund $fund): bool
+    {
+        if ($fund->isTypeSubsidy()) {
+            return false;
+        }
+
+        $organization = $this->organization;
+        $allowedByFund = $organization->fund_providers_allowed_extra_payments
+            ->first(fn(FundProvider $provider) => $provider->fund_id === $fund->id);
+
+        if (!$organization->canReceiveExtraPayments() || !$allowedByFund) {
+            return false;
+        }
+
+        if ($this->reservation_extra_payments == self::RESERVATION_EXTRA_PAYMENT_GLOBAL) {
+            return $organization->reservation_allow_extra_payments;
+        }
+
+        return $this->reservation_extra_payments == self::RESERVATION_EXTRA_PAYMENT_YES;
     }
 
     /**
@@ -775,6 +813,10 @@ class Product extends BaseModel
             Product::PRICE_TYPE_DISCOUNT_PERCENTAGE
         ]) ? $request->input('price_discount') : 0;
 
+        $extraPayments = $organization->canReceiveExtraPayments()
+            ? $request->only('reservation_extra_payments')
+            : [];
+
         /** @var Product $product */
         $product = $organization->products()->create(array_merge($request->only([
             'name', 'description', 'price', 'product_category_id', 'expire_at',
@@ -783,7 +825,7 @@ class Product extends BaseModel
         ]), [
             'total_amount' => $unlimited_stock ? 0 : $total_amount,
             'unlimited_stock' => $unlimited_stock
-        ], compact('price', 'price_type', 'price_discount')));
+        ], compact('price', 'price_type', 'price_discount'), $extraPayments));
 
         return $product->attachMediaByUid($request->input('media_uid'));
     }
@@ -809,13 +851,17 @@ class Product extends BaseModel
             $this->resetSubsidyApprovals();
         }
 
+        $extraPayments = $this->organization->canReceiveExtraPayments()
+            ? $request->only('reservation_extra_payments')
+            : [];
+
         return $this->updateModel(array_merge($request->only([
             'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
             'reservation_enabled', 'reservation_policy', 'reservation_phone',
             'reservation_address', 'reservation_birth_date', 'alternative_text',
         ]), [
             'total_amount' => $this->unlimited_stock ? 0 : $total_amount,
-        ], compact('price', 'price_type', 'price_discount')));
+        ], compact('price', 'price_type', 'price_discount'), $extraPayments));
     }
 
     /**

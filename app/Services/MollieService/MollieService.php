@@ -17,6 +17,8 @@ use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Token\AccessTokenInterface;
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
+use Mollie\Api\Resources\Balance;
+use Mollie\Api\Resources\BalanceTransactionCollection;
 use Mollie\Api\Resources\BaseCollection;
 use Mollie\Api\Resources\CurrentProfile;
 use Mollie\Api\Resources\Method;
@@ -26,6 +28,7 @@ use Mollie\Api\Resources\Payment;
 use Mollie\Api\Resources\Profile;
 use Mollie\Api\Resources\ProfileCollection;
 use Mollie\Api\Resources\Refund;
+use Mollie\Api\Resources\RefundCollection;
 use Mollie\OAuth2\Client\Provider\Mollie;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
@@ -39,6 +42,7 @@ class MollieService
     protected ?string $redirectUri;
     protected ?string $baseAccessToken;
     protected ?int $expireDecrease;
+    protected ?string $webhookUri;
 
     protected ?MollieConnection $connection;
 
@@ -53,9 +57,10 @@ class MollieService
         $this->testMode = config('mollie.test_mode');
         $this->clientId = config('mollie.client_id');
         $this->clientSecret = config('mollie.client_secret');
-        $this->redirectUri = config('mollie.redirect_url');
+        $this->redirectUri = url(config('mollie.redirect_url'));
         $this->baseAccessToken = config('mollie.base_access_token');
         $this->expireDecrease = config('mollie.expire_decrease');
+        $this->webhookUri = url(config('mollie.webhook_url'));
     }
 
     /**
@@ -145,7 +150,6 @@ class MollieService
      * @param AccessToken $token
      * @param string $state
      * @return MollieConnection|null
-     * @throws MollieApiException
      */
     private function processConnectionByToken(AccessToken $token, string $state): ?MollieConnection
     {
@@ -415,11 +419,10 @@ class MollieService
     /**
      * @param string $profileId
      * @param array $attributes
-     * @return string
-     * @noinspection PhpUnused
+     * @return Payment
      * @throws MollieApiException
      */
-    public function createPayment(string $profileId, array $attributes): string
+    public function createPayment(string $profileId, array $attributes): Payment
     {
         $mollie = $this->setAccessToken(new MollieApiClient());
 
@@ -427,17 +430,17 @@ class MollieService
             return $mollie->payments->create([
                 'profileId' => $profileId,
                 'amount' => [
-                    "currency" => "EUR",
-                    "value" => $attributes['amount'],
+                    "currency" => $attributes['currency'],
+                    "value" => currency_format($attributes['amount']),
                 ],
                 'description' => $attributes['description'],
-                'redirectUrl' => $attributes['redirect_url'] ?? url('mollie/success'),
+                'redirectUrl' => $attributes['redirect_url'],
                 'cancelUrl' => $attributes['cancel_url'],
-                'webhookUrl' => url('mollie/webhook'),
+                'webhookUrl' => $this->webhookUri,
                 'locale' => 'nl_NL',
                 'method' => [self::PAYMENT_METHOD_IDEAL],
                 'testmode' => $this->testMode,
-            ])->getCheckoutUrl();
+            ]);
         } catch (ApiException $e) {
             return $this->processErrorResponse($e, 'createPayment');
         }
@@ -464,16 +467,33 @@ class MollieService
 
     /**
      * @param string $paymentId
-     * @param float|int $amount
-     * @param string $description
+     * @return Payment
+     * @noinspection PhpUnused
+     * @throws MollieApiException
+     */
+    public function cancelPayment(string $paymentId): Payment
+    {
+        $mollie = $this->setAccessToken(new MollieApiClient());
+
+        try {
+            return $mollie->payments->cancel($paymentId, [
+                'testmode' => $this->testMode,
+            ]);
+        } catch (ApiException $e) {
+            return $this->processErrorResponse($e, 'cancelPayment');
+        }
+    }
+
+    /**
+     * @param string $paymentId
+     * @param array $attributes
      * @return Refund
      * @noinspection PhpUnused
      * @throws MollieApiException
      */
     public function refundPayment(
         string $paymentId,
-        float|int $amount,
-        string $description = ''
+        array $attributes
     ): Refund {
         $this->setAccessToken(new MollieApiClient());
         $payment = $this->readPayment($paymentId);
@@ -481,14 +501,31 @@ class MollieService
         try {
             return $payment->refund([
                 'amount' => [
-                    "currency" => "EUR",
-                    "value" => $amount,
+                    "currency" => $attributes['currency'],
+                    "value" => currency_format($attributes['amount']),
                 ],
-                'description' => $description,
+                'description' => $attributes['description'],
                 'testmode' => $this->testMode,
             ]);
         } catch (ApiException $e) {
             return $this->processErrorResponse($e, 'refundPayment');
+        }
+    }
+
+    /**
+     * @param string|Payment $payment
+     * @return RefundCollection
+     * @throws MollieApiException
+     */
+    public function readPaymentRefunds(string|Payment $payment): RefundCollection
+    {
+        $this->setAccessToken(new MollieApiClient());
+        $payment = is_string($payment) ? $this->readPayment($payment) : $payment;
+
+        try {
+            return $payment->refunds();
+        } catch (ApiException $e) {
+            return $this->processErrorResponse($e, 'readPaymentRefund');
         }
     }
 
@@ -510,6 +547,22 @@ class MollieService
             ]);
         } catch (ApiException $e) {
             return $this->processErrorResponse($e, 'readPaymentRefund');
+        }
+    }
+
+    /**
+     * @return BalanceTransactionCollection|BaseCollection
+     * @noinspection PhpUnused
+     * @throws MollieApiException
+     */
+    public function readBalanceTransactions(): BalanceTransactionCollection|BaseCollection
+    {
+        $mollie = $this->setAccessToken(new MollieApiClient());
+
+        try {
+            return $mollie->balanceTransactions->listForPrimary();
+        } catch (ApiException $e) {
+            return $this->processErrorResponse($e, 'readBalanceTransactions');
         }
     }
 

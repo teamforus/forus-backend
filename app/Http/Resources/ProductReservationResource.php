@@ -12,10 +12,11 @@ use App\Models\ProductReservation;
 class ProductReservationResource extends BaseJsonResource
 {
     public const LOAD = [
-        'voucher.fund',
+        'voucher.fund.organization',
         'product.organization',
         'product.photo.presets',
         'voucher_transaction',
+        'extra_payment.refunds',
         'custom_fields.organization_reservation_field'
     ];
 
@@ -54,11 +55,12 @@ class ProductReservationResource extends BaseJsonResource
         }
 
         return array_merge($reservation->only([
-            'id', 'state', 'state_locale', 'amount', 'code',
+            'id', 'state', 'state_locale', 'amount', 'code', 'extra_amount',
             'first_name', 'last_name', 'user_note', 'phone', 'address', 'archived',
         ]), [
             'price' => $price,
             'price_locale' => $price_locale,
+            'amount_locale' => currency_format_locale($reservation->amount),
             'expired' => $reservation->hasExpired(),
             'canceled' => $reservation->isCanceled(),
             'archivable' => $reservation->isArchivable(),
@@ -74,6 +76,10 @@ class ProductReservationResource extends BaseJsonResource
             ]),
             'voucher_transaction' => $transaction?->only('id', 'address'),
             'custom_fields' => ProductReservationFieldValueResource::collection($reservation->custom_fields),
+            'extra_amount_locale' => currency_format_locale($reservation->extra_amount),
+            'extra_payment' => new ReservationExtraPaymentResource($reservation->extra_payment),
+            'extra_payment_expire_at' => ($reservation->extra_payment ?? $reservation)->created_at
+                ->clone()->addHour()->format('Y-m-d H:i:s'),
         ], $this->makeTimestamps($reservation->only([
             'created_at', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at', 'birth_date',
         ]), true), $identityData);

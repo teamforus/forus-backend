@@ -37,5 +37,9 @@ return [
             'attempts' => env('MOLLIE_CREATE_ATTEMPTS', 10),
             'decay' => env('MOLLIE_CREATE_DECAY', 10),
         ],
-    ]
+    ],
+    'reservation_extra_payment' => [
+        'attempts' => env('RESERVATION_EXTRA_PAYMENT_FETCH_ATTEMPTS', 15),
+        'decay' => env('RESERVATION_EXTRA_PAYMENT_FETCH_DECAY', 15),
+    ],
 ];

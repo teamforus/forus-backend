@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Exceptions\AuthorizationJsonException;
 use App\Exports\ProductReservationsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\IndexProductReservationsRequest;
@@ -19,12 +20,18 @@ use App\Models\Voucher;
 use App\Scopes\Builders\ProductReservationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Searches\ProductReservationsSearch;
+use App\Services\MollieService\Exceptions\MollieApiException;
+use App\Traits\ThrottleWithMeta;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Config;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProductReservationsController extends Controller
 {
+    use ThrottleWithMeta;
+
     /**
      * Display a listing of the resource.
      *
@@ -283,5 +290,53 @@ class ProductReservationsController extends Controller
         $productReservation->unArchive($organization->findEmployee($request->auth_address()));
 
         return new ProductReservationResource($productReservation);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @return ProductReservationResource
+     * @throws AuthorizationJsonException
+     */
+    public function fetchExtraPaymentDetails(
+        BaseFormRequest $request,
+        Organization $organization,
+        ProductReservation $productReservation
+    ): ProductReservationResource {
+        $this->maxAttempts = Config::get('forus.throttles.reservation_extra_payment.attempts');
+        $this->decayMinutes = Config::get('forus.throttles.reservation_extra_payment.decay');
+
+        $this->throttleWithKey('to_many_attempts', $request, 'reservation_extra_payment');
+
+        $this->authorize('show', $organization);
+        $this->authorize('fetchExtraPayment', [$productReservation, $organization]);
+
+        $productReservation->fetchExtraPaymentDetails();
+
+        return new ProductReservationResource($productReservation->refresh());
+    }
+
+    /**
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @return ProductReservationResource|JsonResponse
+     */
+    public function refundExtraPayment(
+        Organization $organization,
+        ProductReservation $productReservation
+    ): ProductReservationResource|JsonResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('refundExtraPayment', [$productReservation, $organization]);
+
+        try {
+            if ($productReservation->refundExtraPayment()) {
+                return new ProductReservationResource($productReservation->refresh());
+            }
+
+            return new JsonResponse([], 500);
+        } catch (MollieApiException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], 500);
+        }
     }
 }

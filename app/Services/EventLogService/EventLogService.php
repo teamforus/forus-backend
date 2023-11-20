@@ -18,6 +18,7 @@ use App\Models\PhysicalCardRequest;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
+use App\Models\ReservationExtraPayment;
 use App\Models\Voucher;
 use App\Models\VoucherRecord;
 use App\Models\VoucherTransactionBulk;
@@ -83,6 +84,7 @@ class EventLogService implements IEventLogService
             'implementation' => fn() => $this->implementationMeta($model),
             'reimbursement' => fn() => $this->reimbursementMeta($model),
             'mollie_connection' => fn() => $this->mollieConnectionMeta($model),
+            'reservation_extra_payment' => fn() => $this->reservationExtraPaymentMeta($model),
         ];
 
         return $modelMeta[$type] ? $modelMeta[$type]() : [];
@@ -474,6 +476,18 @@ class EventLogService implements IEventLogService
             'id' => $mollieConnection->id,
             'onboarding_state' => $mollieConnection->onboarding_state,
         ], 'mollie_connection_');
+    }
+
+    /**
+     * @param ReservationExtraPayment $extraPayment
+     * @return array
+     */
+    protected function reservationExtraPaymentMeta(ReservationExtraPayment $extraPayment): array
+    {
+        return $this->keyPrepend([
+            'id' => $extraPayment->id,
+            'state' => $extraPayment->state,
+        ], 'reservation_extra_payment_');
     }
 
     /**

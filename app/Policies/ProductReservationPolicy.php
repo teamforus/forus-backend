@@ -4,7 +4,9 @@ namespace App\Policies;
 
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\Voucher;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -112,7 +114,7 @@ class ProductReservationPolicy
     public function update(Identity $identity, ProductReservation $productReservation): bool
     {
         return
-            $productReservation->isPending() &&
+            $productReservation->isCancelableByRequester() &&
             $productReservation->voucher->identity_address === $identity->address;
     }
 
@@ -250,5 +252,59 @@ class ProductReservationPolicy
         return
             $productReservation->archived &&
             $this->updateProvider($identity, $productReservation, $organization);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Product $product
+     * @param Voucher $voucher
+     * @return bool
+     */
+    public function createExtraPayment(Identity $identity, Product $product, Voucher $voucher): bool
+    {
+        return $identity->exists && $product->reservationExtraPaymentsEnabled($voucher->fund);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param  ProductReservation $reservation
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function payExtraPayment(Identity $identity, ProductReservation $reservation): bool
+    {
+        return
+            $reservation->isWaiting() &&
+            $reservation->extra_amount > 0 &&
+            $reservation->voucher->identity_address === $identity->address &&
+            $reservation->product->reservationExtraPaymentsEnabled($reservation->voucher->fund);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @return bool
+     */
+    public function fetchExtraPayment(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization
+    ): bool {
+        return $this->updateProvider($identity, $productReservation, $organization);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @return bool
+     */
+    public function refundExtraPayment(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization
+    ): bool {
+        return $this->updateProvider($identity, $productReservation, $organization);
     }
 }

@@ -214,6 +214,7 @@ return [
             'You have canceled :count reservations in the last hour.',
             'New reservations will be available after one hour.',
         ]),
+        'reservations_has_not_paid_extra' => 'You already have reservation with same product and unpaid extra payment',
     ],
     'attributes' => [
         'pin_code' => "Pin code",

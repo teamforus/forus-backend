@@ -37,6 +37,7 @@ class VoucherResource extends BaseJsonResource
         'product_vouchers.tokens',
         'product_vouchers.token_with_confirmation',
         'product_vouchers.token_without_confirmation',
+        'product_vouchers.product_reservation',
         'product.photo.presets',
         'product.product_category.translations',
         'product.organization.business_type.translations',
@@ -234,7 +235,10 @@ class VoucherResource extends BaseJsonResource
         }
 
         if (!$voucher->fund->isTypeSubsidy()) {
-            $reservable = $reservable && $voucher->amount_available >= $product->price;
+            $reservable = $reservable && (
+                    $voucher->amount_available >= $product->price ||
+                    ($voucher->amount_available >= 0.1 && $product->reservationExtraPaymentsEnabled($voucher->fund))
+                );
         }
 
         return [
@@ -288,6 +292,7 @@ class VoucherResource extends BaseJsonResource
                 'date_time' => $product_voucher->created_at->format('M d, Y H:i'),
                 'timestamp' => $product_voucher->created_at->timestamp,
                 'product' => self::getProductDetails($product_voucher),
+                'product_reservation' => $product_voucher->product_reservation?->only('id', 'code')
             ], $this->timestamps($product_voucher, 'created_at'));
         })->values();
     }

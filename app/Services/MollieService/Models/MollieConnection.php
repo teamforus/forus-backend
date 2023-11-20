@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
 use League\OAuth2\Client\Token\AccessToken;
+use Mollie\Api\Resources\Payment;
 use Mollie\Api\Resources\Profile;
 
 /**
@@ -309,7 +310,11 @@ class MollieConnection extends Model
                 : $this->onboarding_state
         ]);
 
-        $this->updateProfiles();
+        try {
+            $this->updateProfiles();
+        } catch (MollieApiException $e) {
+            MollieService::logError("Update profile error in fetchAndUpdateConnection", $e);
+        }
 
         MollieConnectionUpdated::dispatch($this);
 
@@ -365,7 +370,6 @@ class MollieConnection extends Model
      * @param AccessToken $token
      * @param array $attributes
      * @return MollieConnection
-     * @throws MollieApiException
      */
     public function updateConnectionByToken(AccessToken $token, array $attributes): MollieConnection
     {
@@ -377,8 +381,8 @@ class MollieConnection extends Model
             'street' => $attributes['address']['streetAndNumber'] ?? '',
             'country' => $attributes['address']['country'] ?? '',
             'postcode' => $attributes['address']['postalCode'] ?? '',
-            'last_name' => $attributes['name'] ?? '',
-            'first_name' => $attributes['name'] ?? '',
+            'last_name' => $attributes['first_name'] ?? $this->last_name,
+            'first_name' => $attributes['last_name'] ?? $this->first_name,
             'state_code' => null,
             'organization_name' => $attributes['name'] ?? '',
             'mollie_organization_id' => $attributes['id'],
@@ -396,7 +400,11 @@ class MollieConnection extends Model
 
         $this->refresh();
 
-        $this->updateProfiles(true);
+        try {
+            $this->updateProfiles(true);
+        } catch (MollieApiException $e) {
+            MollieService::logError("Update profile error in updateConnectionByToken", $e);
+        }
 
         MollieConnectionUpdated::dispatch($this);
 
@@ -441,5 +449,58 @@ class MollieConnection extends Model
         MollieConnectionCreated::dispatch($connection);
 
         return $connection;
+    }
+
+    /**
+     * @param string $paymentId
+     * @return Payment|null
+     */
+    public function cancelPayment(string $paymentId): ?Payment
+    {
+        $service = new MollieService($this);
+
+        try {
+            $payment = $service->readPayment($paymentId);
+
+            return $payment->isCancelable ? $service->cancelPayment($paymentId) : null;
+        } catch (MollieApiException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * @param array $attributes
+     * @return Payment|null
+     */
+    public function createPayment(array $attributes): ?Payment
+    {
+        if (!($profile = $this->active_profile)) {
+            return null;
+        }
+
+        $service = new MollieService($this);
+
+        try {
+            return $service->createPayment($profile->mollie_id, Arr::only($attributes, [
+                'amount', 'currency', 'description', 'redirect_url', 'cancel_url',
+            ]));
+        } catch (MollieApiException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * @param string $paymentId
+     * @return Payment|null
+     */
+    public function readPayment(string $paymentId): ?Payment
+    {
+        $service = new MollieService($this);
+
+        try {
+            return $service->readPayment($paymentId);
+        } catch (MollieApiException $e) {
+            return null;
+        }
     }
 }

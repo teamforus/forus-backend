@@ -4,10 +4,12 @@ namespace App\Rules\ProductReservations;
 
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ReservationExtraPayment;
 use App\Models\Voucher;
 use App\Rules\BaseRule;
 use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\ProductSubQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Env;
 
 class ProductIdToReservationRule extends BaseRule
@@ -21,10 +23,12 @@ class ProductIdToReservationRule extends BaseRule
      *
      * @param string|null $voucherAddress
      * @param bool $throttle
+     * @param bool $checkExtraPayment
      */
     public function __construct(
         private readonly ?string $voucherAddress,
         private readonly bool $throttle = false,
+        private readonly bool $checkExtraPayment = false
     ) {
         $this->throttleTotalPendingCount = Env::get('RESERVATION_THROTTLE_TOTAL_PENDING', 100);
         $this->throttleRecentlyCanceledCount = Env::get('RESERVATION_THROTTLE_RECENTLY_CANCELED', 10);
@@ -66,7 +70,11 @@ class ProductIdToReservationRule extends BaseRule
             return $this->rejectTrans('reservation_not_allowed_by_fund');
         }
 
-        if ($voucher->fund->isTypeBudget() && ($product->price > $voucher->amount_available)) {
+        if (
+            $voucher->fund->isTypeBudget() &&
+            $product->price > $voucher->amount_available &&
+            !$this->checkExtraPaymentEnabled($voucher, $product)
+        ) {
             return $this->rejectTrans('not_enough_voucher_funds');
         }
 
@@ -78,6 +86,15 @@ class ProductIdToReservationRule extends BaseRule
         // validate voucher limit
         if (!$this->hasStock($voucher, $product['limit_available'] ?? null)) {
             return $this->reject(trans('validation.product_reservation.no_identity_stock'));
+        }
+
+        if ($product->product_reservations()->whereIn(
+            'state', [ProductReservation::STATE_WAITING]
+        )->whereHas(
+            'extra_payment',
+            fn(Builder $q) => $q->where('state', '!=', ReservationExtraPayment::STATE_PAID)
+        )->count()) {
+            return $this->reject(trans('validation.product_reservation.reservations_has_not_paid_extra'));
         }
 
         if ($this->throttle && $product->product_reservations()->whereIn(
@@ -101,6 +118,18 @@ class ProductIdToReservationRule extends BaseRule
         return ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $voucher->fund_id)
             ->where('id', $product->id)
             ->exists() || $this->reject('Product not available.');
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Product $product
+     * @return bool
+     */
+    protected function checkExtraPaymentEnabled(Voucher $voucher, Product $product): bool
+    {
+        return !$this->checkExtraPayment || (
+                $voucher->amount_available >= 0.1 && $product->reservationExtraPaymentsEnabled($voucher->fund)
+            );
     }
 
     /**

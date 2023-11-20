@@ -193,6 +193,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource('reimbursements', "Api\Platform\ReimbursementsController")
         ->only('index', 'store', 'show', 'update', 'destroy');
 
+    $router->get(
+        'product-reservations/{reservation}/extra-payment/create',
+        "Api\Platform\ProductReservationsController@createExtraPayment");
+
     $router->resource('product-reservations', "Api\Platform\ProductReservationsController")
         ->only('index', 'store', 'show', 'update');
 
@@ -621,6 +625,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->post('reject', "Api\Platform\Organizations\ProductReservationsController@reject");
         $router->post('archive', "Api\Platform\Organizations\ProductReservationsController@archive");
         $router->post('unarchive', "Api\Platform\Organizations\ProductReservationsController@unarchive");
+        $router->get('extra-payments/fetch', "Api\Platform\Organizations\ProductReservationsController@fetchExtraPaymentDetails");
+        $router->get('extra-payments/refund', "Api\Platform\Organizations\ProductReservationsController@refundExtraPayment");
     });
 
     $router->resource(
@@ -923,6 +929,18 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             ],
             'parameters' => [
                 'providers' => 'organization_id',
+            ]
+        ]
+    );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/reservation-extra-payments',
+        "Api\Platform\Organizations\Sponsor\ReservationExtraPaymentsController", [
+            'only' => [
+                'index', 'show',
+            ],
+            'parameters' => [
+                'reservation-extra-payments' => 'payment',
             ]
         ]
     );

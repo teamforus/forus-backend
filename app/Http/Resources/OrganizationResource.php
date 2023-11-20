@@ -50,7 +50,7 @@ class OrganizationResource extends JsonResource
 
         return array_merge($load, $request->isProviderDashboard() ? [
             'mollie_connection_configured',
-            'fund_provider_allowed_extra_payments',
+            'fund_providers_allowed_extra_payments',
         ] : []);
     }
 

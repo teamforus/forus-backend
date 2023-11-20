@@ -51,6 +51,7 @@ class MollieConnectionProfilePolicy
      */
     public function allowExtraPayments(Identity $identity, Organization $organization): bool
     {
-        return $identity->exists && $organization->allow_extra_payments_by_sponsor;
+        return $organization->identityCan($identity, 'manage_payment_methods') &&
+            $organization->allow_extra_payments_by_sponsor;
     }
 }

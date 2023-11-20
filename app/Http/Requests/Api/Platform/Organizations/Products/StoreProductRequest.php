@@ -47,9 +47,7 @@ class StoreProductRequest extends BaseProductRequest
 
             'expire_at'             => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
-        ], array_merge(
-            $this->reservationRules(),
-        ));
+        ], $this->reservationRules());
     }
 
     /**

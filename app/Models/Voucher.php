@@ -951,7 +951,7 @@ class Voucher extends BaseModel
             'parent_id'                 => $this->id,
             'fund_id'                   => $this->fund_id,
             'product_id'                => $product->id,
-            'amount'                    => $product->price,
+            'amount'                    => $productReservation->amount ?? $product->price,
             'returnable'                => false,
             'expire_at'                 => $voucherExpireAt
         ]);
@@ -1009,17 +1009,27 @@ class Voucher extends BaseModel
     ): ProductReservation {
         $isSubsidy = $this->fund->isTypeSubsidy();
         $fundProviderProduct = $product->getFundProviderProduct($this->fund);
-        $amount = $isSubsidy && $fundProviderProduct ? $fundProviderProduct->amount : $product->price;
+
+        if ($extraData['has_extra_payment'] ?? false) {
+            $amount = ($product->price > $this->amount_available) ? $this->amount_available : $product->price;
+            $state = ProductReservation::STATE_WAITING;
+            $extraAmount = $product->price - $amount;
+        } else {
+            $amount = ($isSubsidy && $fundProviderProduct) ? $fundProviderProduct->amount : $product->price;
+            $state = ProductReservation::STATE_PENDING;
+            $extraAmount = 0;
+        }
 
         /** @var ProductReservation $reservation */
         $reservation = $this->product_reservations()->create(array_merge([
             'code'                      => ProductReservation::makeCode(),
             'amount'                    => $amount,
-            'state'                     => ProductReservation::STATE_PENDING,
+            'state'                     => $state,
             'product_id'                => $product->id,
             'employee_id'               => $employee?->id,
             'fund_provider_product_id'  => $fundProviderProduct?->id,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
+            'extra_amount'              => $extraAmount,
         ], array_only($extraData, [
             'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
             'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',

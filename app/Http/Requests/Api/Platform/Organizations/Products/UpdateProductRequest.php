@@ -50,9 +50,7 @@ class UpdateProductRequest extends BaseProductRequest
             'expire_at'             => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
             'media_uid'             => ['nullable', new MediaUidRule('product_photo')],
-        ], array_merge([
-            static::reservationRules(),
-        ]));
+        ], static::reservationRules());
     }
 
     /**

@@ -22,6 +22,7 @@ class ClientTypeMiddleware
         'emailSignInRedirect',
         'bankOauthRedirect',
         'biConnection',
+        'mollie.webhook',
     ];
 
     /**

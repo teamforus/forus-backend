@@ -12,6 +12,7 @@ class ImplementationKeyMiddleware
      */
     private $except = [
         'status',
+        'mollie.webhook',
     ];
 
     /**

@@ -285,6 +285,7 @@ class VoucherQuery
                 $builder->whereDoesntHave('product_reservation');
                 $builder->orWhereHas('product_reservation', function (Builder $builder) {
                     $builder->whereIn('state', [
+                        ProductReservation::STATE_WAITING,
                         ProductReservation::STATE_PENDING,
                         ProductReservation::STATE_ACCEPTED
                     ]);

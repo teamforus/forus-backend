@@ -25,6 +25,7 @@ use App\Console\Commands\Digests\SendRequesterDigestCommand;
 use App\Console\Commands\Digests\SendSponsorDigestCommand;
 use App\Console\Commands\Digests\SendValidatorDigestCommand;
 use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
+use App\Console\Commands\ReservationExtraPaymentExpireCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
 use App\Console\Commands\UpdateProductCategoriesCommand;
@@ -112,6 +113,9 @@ class Kernel extends ConsoleKernel
         // mollie
         UpdateCompletedMollieConnectionsCommand::class,
         UpdatePendingMollieConnectionsCommand::class,
+
+        // extra payments
+        ReservationExtraPaymentExpireCommand::class,
     ];
 
     /**
@@ -170,6 +174,7 @@ class Kernel extends ConsoleKernel
         $this->scheduleQueue($schedule);
         $this->scheduleAuthExpiration($schedule);
         $this->scheduleMollie($schedule);
+        $this->scheduleReservationExtraPayments($schedule);
     }
 
     /**
@@ -315,7 +320,7 @@ class Kernel extends ConsoleKernel
     /**
      * @param Schedule $schedule
      */
-    public function scheduleMollie(Schedule $schedule): void
+    private function scheduleMollie(Schedule $schedule): void
     {
         /**
          * UpdatePendingMollieConnectionsCommand
@@ -330,6 +335,21 @@ class Kernel extends ConsoleKernel
          */
         $schedule->command('mollie:update-completed-connections')
             ->dailyAt("09:00")
+            ->withoutOverlapping()
+            ->onOneServer();
+    }
+
+    /**
+     * @param Schedule $schedule
+     * @return void
+     */
+    private function scheduleReservationExtraPayments(Schedule $schedule): void
+    {
+        /**
+         * UpdateCompletedMollieConnectionsCommand
+         */
+        $schedule->command('reservation:extra-payments-expire')
+            ->everyMinute()
             ->withoutOverlapping()
             ->onOneServer();
     }

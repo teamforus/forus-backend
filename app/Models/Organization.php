@@ -105,11 +105,12 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $employees_with_trashed_count
  * @property-read Collection|Organization[] $external_validators
  * @property-read int|null $external_validators_count
- * @property-read \App\Models\FundProvider|null $fund_provider_allowed_extra_payments
  * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
+ * @property-read Collection|\App\Models\FundProvider[] $fund_providers_allowed_extra_payments
+ * @property-read int|null $fund_providers_allowed_extra_payments_count
  * @property-read Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read Collection|\App\Models\Fund[] $funds
@@ -725,12 +726,12 @@ class Organization extends BaseModel
     }
 
     /**
-     * @return HasOne
+     * @return HasMany
      * @noinspection PhpUnused
      */
-    public function fund_provider_allowed_extra_payments(): HasOne
+    public function fund_providers_allowed_extra_payments(): HasMany
     {
-        return $this->hasOne(FundProvider::class)
+        return $this->hasMany(FundProvider::class)
             ->where('allow_extra_payments', true);
     }
 
@@ -740,7 +741,7 @@ class Organization extends BaseModel
      */
     public function getAllowExtraPaymentsBySponsorAttribute(): bool
     {
-        return (bool)$this->fund_provider_allowed_extra_payments;
+        return (bool)$this->fund_providers_allowed_extra_payments->count();
     }
 
     /**
@@ -1136,5 +1137,21 @@ class Organization extends BaseModel
                 'order' => $order,
             ]);
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function canReceiveExtraPayments(): bool
+    {
+        return $this->allow_extra_payments_by_sponsor && $this->hasActivePaymentMethod();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasActivePaymentMethod(): bool
+    {
+        return (bool)$this->mollie_connection_active;
     }
 }
