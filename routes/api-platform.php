@@ -169,7 +169,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     // Organizations
     $router->group(['prefix' => 'organizations/{organization}'], function() use ($router) {
         $router->patch('roles', "Api\Platform\OrganizationsController@updateRoles");
-        $router->patch('update-business', "Api\Platform\OrganizationsController@updateBusinessType");
         $router->patch('update-bi-connection', "Api\Platform\OrganizationsController@updateBIConnection");
         $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFields");
         $router->patch('update-accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
