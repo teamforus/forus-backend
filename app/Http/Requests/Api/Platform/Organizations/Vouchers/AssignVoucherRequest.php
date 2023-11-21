@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Voucher;
+use App\Rules\BsnRule;
 
 /**
  * Class AssignVoucherRequest
@@ -36,7 +37,7 @@ class AssignVoucherRequest extends BaseFormRequest
     {
         return $this->organization->bsn_enabled ? [
             'email' => 'required_without:bsn|email:strict',
-            'bsn' => 'required_without:email|string|between:8,9',
+            'bsn' => ['required_without:email', new BsnRule()],
         ] : [
             'email' => 'required|email:strict',
             'bsn' => 'nullable|in:',
