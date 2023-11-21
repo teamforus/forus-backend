@@ -1096,6 +1096,10 @@ class Voucher extends BaseModel
     ): array {
         $data = [];
 
+        $date = now()->format('Y-m-d_H_i_s');
+        $exportName = "Vouchers_export_$date";
+        $imagesDirName = "{$exportName}_QR_codes_images";
+
         $domPdf = resolve('dompdf.wrapper');
         $zipFile = tmpfile();
         $zipFilePath = stream_get_meta_data($zipFile)['uri'];
@@ -1104,7 +1108,7 @@ class Voucher extends BaseModel
         $zip->open($zipFilePath, ZipArchive::CREATE);
 
         if ($qrFormat === 'png') {
-            $zip->addEmptyDir('images');
+            $zip->addEmptyDir($imagesDirName);
         }
 
         foreach ($vouchers as $voucher) {
@@ -1120,7 +1124,7 @@ class Voucher extends BaseModel
             ];
 
             if (in_array($qrFormat, ['png', 'all'])) {
-                $pngPath = sprintf("images/%s.png", $dataItem['name']);
+                $pngPath = sprintf("$imagesDirName/%s.png", $dataItem['name']);
                 $pngData = make_qr_code('voucher', $dataItem['value']);
 
                 $zip->addFromString($pngPath, $pngData);
@@ -1132,21 +1136,20 @@ class Voucher extends BaseModel
                 'vouchersData' => Arr::pluck($data, 'voucherData'),
             ]);
 
-            $zip->addFromString('qr_codes.pdf', $domPdfFile->output());
+            $zip->addFromString($exportName . '_QR_codes_PDF.pdf', $domPdfFile->output());
         }
 
         $export = new VoucherExport(Arr::pluck($data, 'values'));
-        $exportName = 'qr_codes.';
         $files = [];
 
         if ($dataFormat === 'xls' || $dataFormat === 'all') {
             $files['xls'] = Excel::raw($export, ExcelModel::XLS);
-            $zip->addFromString($exportName . 'xls', $files['xls']);
+            $zip->addFromString($exportName . '_Data.xls', $files['xls']);
         }
 
         if ($dataFormat === 'csv' || $dataFormat === 'all') {
             $files['csv'] = Excel::raw($export, ExcelModel::CSV);
-            $zip->addFromString($exportName . 'csv', $files['csv']);
+            $zip->addFromString($exportName . '_Data.csv', $files['csv']);
         }
 
         $zip->close();
