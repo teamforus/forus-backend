@@ -28,7 +28,7 @@ class StoreFundRequestRecordRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'value' => 'required|numeric',
+            'value' => 'required|int|digits:9',
             'record_type_key' => 'required|in:' . ($this->organization->bsn_enabled ? 'partner_bsn' : ''),
         ];
     }
