@@ -16,6 +16,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\MollieService\Models\MollieConnection;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
@@ -71,6 +72,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_2fa_restrictions
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
+ * @property bool $allow_provider_extra_payments
+ * @property bool $reservation_allow_extra_payments
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $bi_connection_auth_type
@@ -102,6 +105,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $employees_with_trashed_count
  * @property-read Collection|Organization[] $external_validators
  * @property-read int|null $external_validators_count
+ * @property-read \App\Models\FundProvider|null $fund_provider_allowed_extra_payments
  * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
@@ -112,6 +116,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $funds_count
  * @property-read Collection|\App\Models\Fund[] $funds_active
  * @property-read int|null $funds_active_count
+ * @property-read bool $allow_extra_payments_by_sponsor
+ * @property-read bool $can_view_provider_extra_payments
  * @property-read string $description_html
  * @property-read \App\Models\Identity|null $identity
  * @property-read Collection|\App\Models\Implementation[] $implementations
@@ -122,6 +128,10 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $logs_count
  * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
+ * @property-read MollieConnection|null $mollie_connection_active
+ * @property-read MollieConnection|null $mollie_connection_configured
+ * @property-read Collection|MollieConnection[] $mollie_connections
+ * @property-read int|null $mollie_connections_count
  * @property-read Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
  * @property-read Collection|\App\Models\OrganizationValidator[] $organization_validators
@@ -160,6 +170,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAllowProviderExtraPayments($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
@@ -194,6 +205,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
  * @method static EloquentBuilder|Organization whereProviderThrottlingValue($value)
  * @method static EloquentBuilder|Organization whereReservationAddress($value)
+ * @method static EloquentBuilder|Organization whereReservationAllowExtraPayments($value)
  * @method static EloquentBuilder|Organization whereReservationBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationPhone($value)
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
@@ -252,7 +264,8 @@ class Organization extends BaseModel
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
         'bi_connection_auth_type', 'bi_connection_token',
         'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
-        'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements'
+        'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
+        'reservation_allow_extra_payments', 'allow_provider_extra_payments',
     ];
 
     /**
@@ -286,6 +299,8 @@ class Organization extends BaseModel
         'auth_2fa_funds_restrict_emails'        => 'boolean',
         'auth_2fa_funds_restrict_auth_sessions' => 'boolean',
         'auth_2fa_funds_restrict_reimbursements' => 'boolean',
+        'allow_provider_extra_payments'         => 'boolean',
+        'reservation_allow_extra_payments'      => 'boolean',
     ];
 
     /**
@@ -669,9 +684,72 @@ class Organization extends BaseModel
         return $this->hasMany(OrganizationContact::class);
     }
 
+    /**
+     * @return HasMany
+     */
     public function reservation_fields(): HasMany
     {
         return $this->hasMany(OrganizationReservationField::class)->orderBy('order');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function mollie_connections(): HasMany
+    {
+        return $this->hasMany(MollieConnection::class);
+    }
+
+    /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function mollie_connection_configured(): HasOne
+    {
+        return $this->hasOne(MollieConnection::class)
+            ->has('active_token')
+            ->where('connection_state', MollieConnection::CONNECTION_STATE_ACTIVE);
+    }
+
+    /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function mollie_connection_active(): HasOne
+    {
+        return $this->hasOne(MollieConnection::class)
+            ->has('active_token')
+            ->where('connection_state', MollieConnection::CONNECTION_STATE_ACTIVE)
+            ->where('onboarding_state', MollieConnection::ONBOARDING_STATE_COMPLETED);
+    }
+
+    /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function fund_provider_allowed_extra_payments(): HasOne
+    {
+        return $this->hasOne(FundProvider::class)
+            ->where('allow_extra_payments', true);
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getAllowExtraPaymentsBySponsorAttribute(): bool
+    {
+        return (bool)$this->fund_provider_allowed_extra_payments;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getCanViewProviderExtraPaymentsAttribute(): bool
+    {
+        return $this->allow_extra_payments_by_sponsor || $this->mollie_connection_configured;
     }
 
     /**

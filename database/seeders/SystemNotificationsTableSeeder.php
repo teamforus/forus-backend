@@ -56,10 +56,6 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_funds.balance_low" => ["database", "mail"],
         "notifications_funds.balance_supplied" => ["database"],
 
-        'notifications_identities.requester_product_added' => [], // TODO can database notifications be removed
-        'notifications_identities.requester_product_approved' => [], // TODO can database notifications be removed
-        'notifications_identities.requester_product_revoked' => [], // TODO can database notifications be removed
-
         "notifications_identities.product_reservation_created" => ["database"],
         "notifications_identities.product_reservation_accepted" => ["database", "mail"],
         "notifications_identities.product_reservation_canceled" => ["database"],
@@ -210,9 +206,6 @@ class SystemNotificationsTableSeeder extends Seeder
             "notifications_identities.identity_voucher_assigned_subsidy",
             "notifications_identities.voucher_added_subsidy",
             "notifications_identities.identity_voucher_assigned_product",
-            "notifications_identities.requester_product_revoked",
-            "notifications_identities.requester_product_approved",
-            "notifications_identities.requester_product_added",
             "notifications_identities.voucher_deactivated",
             "notifications_identities.voucher_expire_soon_budget",
             "notifications_identities.budget_voucher_expired",

@@ -74,6 +74,18 @@ return [
             'level' => 'debug',
         ],
 
+        'mollie' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/mollie-service.log'),
+            'level' => 'debug',
+        ],
+
+        'backoffice' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/backoffice-service.log'),
+            'level' => 'debug',
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
