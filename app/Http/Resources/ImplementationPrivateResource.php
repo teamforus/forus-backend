@@ -35,10 +35,13 @@ class ImplementationPrivateResource extends BaseJsonResource
             'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
             'show_office_map', 'show_voucher_map', 'show_product_map',
             'allow_per_fund_notification_templates',
+            'pre_check_enabled', 'pre_check_title', 'pre_check_description',
+            'pre_check_homepage_title', 'pre_check_homepage_description', 'pre_check_homepage_label',
         ]), [
             'communication_type' => $implementation->informal_communication ? 'informal' : 'formal',
             'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),
             'banner' => new MediaResource($implementation->banner),
+            'pre_check_banner' => new MediaResource($implementation->pre_check_banner),
             'announcement' => $this->getAnnouncement($implementation),
         ]);
 

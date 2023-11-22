@@ -8,6 +8,7 @@ use App\Media\ImplementationBannerMediaConfig;
 use App\Media\ImplementationBlockMediaConfig;
 use App\Media\ImplementationMailLogoMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
+use App\Media\PreCheckBannerMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ReimbursementFilePreviewMediaConfig;
 use App\Models\BankConnection;
@@ -103,6 +104,7 @@ class AppServiceProvider extends ServiceProvider
             new ReimbursementFilePreviewMediaConfig(),
             new ImplementationMailLogoMediaConfig(),
             new ImplementationBlockMediaConfig(),
+            new PreCheckBannerMediaConfig(),
         ]);
 
         StringHelper::setDecimalSeparator('.');

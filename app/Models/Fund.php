@@ -56,6 +56,7 @@ use Illuminate\Support\Facades\Event;
  * @property string|null $description
  * @property string|null $description_text
  * @property string|null $description_short
+ * @property string $description_position
  * @property string|null $faq_title
  * @property string $request_btn_text
  * @property string|null $external_link_url
@@ -77,11 +78,13 @@ use Illuminate\Support\Facades\Event;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
- * @property string $description_position
+ * @property int|null $parent_id
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
+ * @property-read Collection|Fund[] $children
+ * @property-read int|null $children_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
@@ -127,6 +130,7 @@ use Illuminate\Support\Facades\Event;
  * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
+ * @property-read Fund|null $parent
  * @property-read Collection|\App\Models\Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\Product[] $products
@@ -180,6 +184,7 @@ use Illuminate\Support\Facades\Event;
  * @method static Builder|Fund whereNotificationAmount($value)
  * @method static Builder|Fund whereNotifiedAt($value)
  * @method static Builder|Fund whereOrganizationId($value)
+ * @method static Builder|Fund whereParentId($value)
  * @method static Builder|Fund wherePublic($value)
  * @method static Builder|Fund whereRequestBtnText($value)
  * @method static Builder|Fund whereStartDate($value)
@@ -301,6 +306,24 @@ class Fund extends BaseModel
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'fund_products');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     /**

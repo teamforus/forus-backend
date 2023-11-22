@@ -66,7 +66,7 @@ class FundResource extends BaseJsonResource
             'id', 'name', 'description', 'description_html', 'description_short', 'description_position',
             'organization_id', 'state', 'notification_amount', 'type', 'type_locale', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
-            'balance_provider', 'external_page', 'external_page_url',
+            'balance_provider', 'external_page', 'external_page_url', 'parent_id',
         ]), [
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
             'tags' => TagResource::collection($fund->tags_webshop),
@@ -87,6 +87,8 @@ class FundResource extends BaseJsonResource
                 FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth()->id());
             })->exists(),
             'organization_funds_2fa' => $organizationFunds2FAData,
+            'parent' => $fund->parent()->select('id', 'name')->get(),
+            'children' => $fund->children()->select('id', 'name')->get(),
         ], $fundConfigData, $criteriaData, $financialData, $generatorData, $prevalidationCsvData);
 
         if ($isDashboard && $organization->identityCan($identity, ['manage_funds', 'manage_fund_texts'], false)) {

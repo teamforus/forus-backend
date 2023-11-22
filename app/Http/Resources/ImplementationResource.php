@@ -24,6 +24,8 @@ class ImplementationResource extends JsonResource
 
         return array_merge($implementation->only([
             'id', 'key', 'name', 'url_webshop', 'informal_communication', 'organization_id',
+            'pre_check_enabled', 'pre_check_title', 'pre_check_description',
+            'pre_check_homepage_title', 'pre_check_homepage_description', 'pre_check_homepage_label',
         ]), [
             'has_provider_terms_page' => $this->hasTermsPage($implementation->page_provider),
         ]);
