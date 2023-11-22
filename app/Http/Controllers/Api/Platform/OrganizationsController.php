@@ -9,7 +9,6 @@ use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationAcceptReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBIConnectionRequest;
-use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBusinessTypeRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationReservationSettingsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRolesRequest;
