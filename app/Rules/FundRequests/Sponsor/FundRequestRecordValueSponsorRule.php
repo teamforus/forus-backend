@@ -9,12 +9,17 @@ use App\Rules\FundRequests\BaseFundRequestRule;
 
 class FundRequestRecordValueSponsorRule extends BaseFundRequestRule
 {
-    protected FundCriterion $criterion;
-
-    public function __construct(?Fund $fund, ?BaseFormRequest $request, FundCriterion $criterion)
-    {
+    /**
+     * @param Fund|null $fund
+     * @param BaseFormRequest|null $request
+     * @param FundCriterion $criterion
+     */
+    public function __construct(
+        protected ?Fund $fund,
+        protected ?BaseFormRequest $request,
+        protected FundCriterion $criterion,
+    ) {
         parent::__construct($fund, $request);
-        $this->criterion = $criterion;
     }
 
     /**
@@ -26,11 +31,10 @@ class FundRequestRecordValueSponsorRule extends BaseFundRequestRule
      */
     public function passes($attribute, mixed $value): bool
     {
-        $validator = $this->validateRecordValue($this->criterion, $attribute);
+        $validator = static::validateRecordValue($this->criterion, $value);
 
         if (!$validator->passes()) {
-            $this->msg = array_first(array_first($validator->errors()->toArray()));
-            return false;
+            return $this->reject($validator->errors()->first('value'));
         }
 
         return true;

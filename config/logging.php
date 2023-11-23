@@ -62,6 +62,12 @@ return [
             'level' => 'debug',
         ],
 
+        'criteria' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/criteria.log'),
+            'level' => 'debug',
+        ],
+
         'digid' => [
             'driver' => 'single',
             'path' => storage_path('logs/digid-service.log'),
