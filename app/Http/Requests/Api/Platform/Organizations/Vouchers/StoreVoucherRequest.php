@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
+use App\Rules\BsnRule;
 use App\Rules\ProductIdInStockRule;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -106,7 +107,7 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
     private function bsnRule(bool $bsn_enabled): array
     {
         return $bsn_enabled ? [
-            'nullable', 'required_if:assign_by_type,bsn', 'digits:9',
+            'nullable', 'required_if:assign_by_type,bsn', new BsnRule(),
         ] : [
             'nullable', 'in:'
         ];
