@@ -48,10 +48,22 @@ class PreCheckController extends Controller
     public function calculateTotals(
         IndexPreCheckRequest $request,
     ): JsonResponse {
-        return new JsonResponse(PreCheck::calculateTotals(
+        $totals_per_fund = PreCheck::calculateTotalsPerFund(
             $request->implementation(),
+            $request->only('pre_checks'),
             $request->identity(),
-            $request->only('pre_checks'))
         );
+
+        $amount_total = array_reduce($totals_per_fund, function ($amount_total, $total_fund) {
+            return $amount_total + $total_fund['amount_total'];
+        }, 0);
+
+        return new JsonResponse([
+            'funds' => $totals_per_fund,
+            'amounts' => [
+                'amount_total' => $amount_total,
+                'amount_total_currency' => currency_format($amount_total),
+            ],
+        ]);
     }
 }
