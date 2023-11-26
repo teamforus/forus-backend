@@ -49,16 +49,8 @@ class IdentityController extends Controller
      */
     public function store(IdentityStoreRequest $request): IdentityResource
     {
-        // client type, key and primary email
-        $primaryEmail = $request->input('email', $request->input('records.primary_email'));
-
-        // build records list and remove bsn and primary_email
-        $records = array_filter($request->input('records', []), function($value, $key) {
-            return !empty($value) && !in_array($key, ['bsn', 'primary_email']);
-        }, ARRAY_FILTER_USE_BOTH);
-
         // make identity and exchange_token
-        $identity = Identity::make($primaryEmail, $records);
+        $identity = Identity::make($request->input('email'));
         $exchangeToken = $identity->makeIdentityPoxy()->exchange_token;
         $isMobile = in_array($request->client_type(), config('forus.clients.mobile'), true);
 
@@ -70,7 +62,7 @@ class IdentityController extends Controller
 
         // send confirmation email
         $request->notification_repo()->sendEmailConfirmationLink(
-            $primaryEmail,
+            $identity->email,
             $request->client_type(),
             Implementation::emailFrom(),
             url("/api/v1/identity/proxy/confirmation/redirect/$exchangeToken$queryParams")

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
 use App\Rules\Base\IbanRule;
+use App\Rules\BsnRule;
 use App\Rules\ProductIdInStockRule;
 use App\Rules\VouchersArraySumAmountsRule;
 use Illuminate\Validation\Rule;
@@ -29,7 +30,7 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
             'vouchers.*.expire_at' => $this->expireAtRule($fund),
             'vouchers.*.note' => 'nullable|string|max:280',
             'vouchers.*.email' => 'nullable|string|email:strict',
-            'vouchers.*.bsn' => $bsn_enabled ? 'nullable|string|digits:9' : 'nullable|in:',
+            'vouchers.*.bsn' => $bsn_enabled ? ['nullable', new BsnRule()] : 'nullable|in:',
             'vouchers.*.activate' => 'boolean',
             'vouchers.*.activation_code' => 'boolean',
             'vouchers.*.client_uid' => 'nullable|string|max:20',

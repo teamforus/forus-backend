@@ -62,9 +62,27 @@ return [
             'level' => 'debug',
         ],
 
+        'criteria' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/criteria.log'),
+            'level' => 'debug',
+        ],
+
         'digid' => [
             'driver' => 'single',
             'path' => storage_path('logs/digid-service.log'),
+            'level' => 'debug',
+        ],
+
+        'mollie' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/mollie-service.log'),
+            'level' => 'debug',
+        ],
+
+        'backoffice' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/backoffice-service.log'),
             'level' => 'debug',
         ],
 

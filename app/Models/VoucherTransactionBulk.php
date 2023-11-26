@@ -109,6 +109,9 @@ class VoucherTransactionBulk extends BaseModel
     public const EVENT_ERROR = 'error';
     public const EVENT_EXPORTED = 'exported';
 
+    /**
+     * @noinspection PhpUnused
+     */
     public const EVENTS = [
         self::EVENT_RESET,
         self::EVENT_CREATED,
@@ -270,8 +273,8 @@ class VoucherTransactionBulk extends BaseModel
 
             try {
                 return $bngService->getBulkDetails($this->payment_id, $this->access_token);
-            } catch (ApiException $exception) {
-                Log::channel('bng')->error($exception->getMessage());
+            } catch (ApiException $e) {
+                $bngService::logError('Fetch bulk payments', $e);
             }
         }
 
@@ -438,7 +441,7 @@ class VoucherTransactionBulk extends BaseModel
             // Throttle calls just in case
             sleep(2);
         } catch (Throwable $e) {
-            Log::channel('bng')->error($e->getMessage() . "\n" . $e->getTraceAsString());
+            $bngService::logError("Submit bulk", $e);
 
             $this->updateModel([
                 'state' => self::STATE_ERROR,

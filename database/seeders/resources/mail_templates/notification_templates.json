@@ -133,36 +133,23 @@
             "content": ":provider_name is geaccepteerd als aanbieder voor :fund_name door :sponsor_name"
         }
     },
-    "notifications_identities.requester_product_added": {
-        "mail": {},
-        "push": {},
-        "database": {
-            "title": ":product_name van :provider_name is beschikbaar voor :fund_name",
-            "content": ":product_name van :provider_name is toegevoegd aan de webshop"
-        }
-    },
-    "notifications_identities.requester_product_approved": {
-        "mail": {},
-        "push": {},
-        "database": {
-            "title": ":product_name van :provider_name is beschikbaar voor :fund_name",
-            "content": ":product_name van :provider_name is toegevoegd aan de webshop"
-        }
-    },
-    "notifications_identities.requester_product_revoked": {
-        "mail": {},
-        "push": {},
-        "database": {
-            "title": "",
-            "content": ""
-        }
-    },
     "notifications_fund_requests.created_validator_employee": {
         "mail": {},
         "push": {},
         "database": {
             "title": "Nieuwe aanvraag voor :fund_name",
             "content": "Er is een nieuwe aanvraag voor :fund_name"
+        }
+    },
+    "notifications_fund_requests.clarification_received": {
+        "mail": {
+            "title": "Reactie ontvangen op een aanvulverzoek",
+            "template": "notifications_fund_requests/clarification_received.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Reactie ontvangen op een aanvulverzoek.",
+            "content": "Er zijn nieuwe gegevens aangeleverd in de aanvraag voor :fund_name"
         }
     },
     "notifications_bank_connections.activated": {

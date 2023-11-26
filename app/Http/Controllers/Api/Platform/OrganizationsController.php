@@ -9,7 +9,6 @@ use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationAcceptReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBIConnectionRequest;
-use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBusinessTypeRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationReservationSettingsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRolesRequest;
@@ -20,6 +19,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Services\MediaService\Models\Media;
+use App\Services\MollieService\Models\MollieConnection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
@@ -149,26 +149,6 @@ class OrganizationsController extends Controller
     }
 
     /**
-     * @param UpdateOrganizationBusinessTypeRequest $request
-     * @param Organization $organization
-     * @return OrganizationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @noinspection PhpUnused
-     */
-    public function updateBusinessType(
-        UpdateOrganizationBusinessTypeRequest $request,
-        Organization $organization
-    ): OrganizationResource {
-        $this->authorize('update', $organization);
-
-        OrganizationUpdated::dispatch($organization->updateModel($request->only([
-            'business_type_id',
-        ])));
-
-        return new OrganizationResource($organization);
-    }
-
-    /**
      * @param UpdateOrganizationRolesRequest $request
      * @param Organization $organization
      * @return OrganizationResource
@@ -222,9 +202,15 @@ class OrganizationsController extends Controller
     ): OrganizationResource {
         $this->authorize('update', $organization);
 
-        OrganizationUpdated::dispatch($organization->updateModel($request->only([
+        $attributes = $request->only([
             'reservation_phone', 'reservation_address', 'reservation_birth_date',
-        ])));
+        ]);
+
+        if (Gate::allows('allowExtraPayments', [MollieConnection::class, $organization])) {
+            $attributes = array_merge($attributes, $request->only('reservation_allow_extra_payments'));
+        }
+
+        OrganizationUpdated::dispatch($organization->updateModel($attributes));
 
         $organization->syncReservationFields($request->get('fields', []));
 

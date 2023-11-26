@@ -108,7 +108,7 @@ class PrevalidationController extends Controller
      * @noinspection PhpUnused
      */
     public function export(
-        SearchPrevalidationsRequest $request
+        SearchPrevalidationsRequest $request,
     ): BinaryFileResponse {
         $this->authorize('viewAny', Prevalidation::class);
 
