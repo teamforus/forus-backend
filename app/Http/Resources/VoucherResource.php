@@ -222,7 +222,7 @@ class VoucherResource extends BaseJsonResource
 
         $expire_at = $voucher->calcExpireDateForProduct($product);
         $reservable_count = $product['limit_available'] ?? null;
-        $reservable_count = is_numeric($reservable_count) ? intval($reservable_count) : null;
+        $reservable_count = is_numeric($reservable_count) ? (int) $reservable_count : null;
         $reservable_expire_at = $expire_at?->format('Y-m-d');
         $allow_reservations = $voucher->fund->fund_config->allow_reservations;
         $reservable_enabled = $allow_reservations && $product->reservationsEnabled($voucher->fund);
@@ -236,9 +236,9 @@ class VoucherResource extends BaseJsonResource
 
         if (!$voucher->fund->isTypeSubsidy()) {
             $reservable = $reservable && (
-                    $voucher->amount_available >= $product->price ||
-                    ($voucher->amount_available >= 0.1 && $product->reservationExtraPaymentsEnabled($voucher->fund))
-                );
+                $voucher->amount_available >= $product->price ||
+                ($voucher->amount_available >= 0.1 && $product->reservationExtraPaymentsEnabled($voucher->fund))
+            );
         }
 
         return [

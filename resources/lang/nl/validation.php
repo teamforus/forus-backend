@@ -199,9 +199,9 @@ return [
         'reservation_not_enabled' => 'Reserveren staat niet aan voor dit aanbod.',
         'no_identity_stock' => 'Het aanbod heeft het limiet bereikt!',
         'no_total_stock' => 'Het aanbod heeft het limiet bereikt!',
-        'reservation_not_pending' => join(" ", [
+        'reservation_not_pending' => implode(" ", [
             'De reservering (#:code) kan niet gescant worden, de status van deze reservering is ":state".',
-            'Ga naar de beheeromgeving om de reservering te beoordelen.'
+            'Ga naar de beheeromgeving om de reservering te beoordelen.',
         ]),
         'reservations_limit_reached' => 'Reserveringslimiet bereikt, u kunt tot :count reserveringen hebben.',
         'too_many_canceled_reservations_for_product' => implode(' ', [
@@ -209,7 +209,7 @@ return [
             'Nieuwe reserveringen kunnen pas weer na een uur worden gemaakt.',
         ]),
         'not_enough_voucher_funds' => 'Onvoldoende budget op de voucher',
-        'reservations_has_not_paid_extra' => 'You already have reservation with same product and unpaid extra payment',
+        'reservations_has_unpaid_extra' => 'You already have reservation with same product and unpaid extra payment',
     ],
     'employees' => [
         'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',

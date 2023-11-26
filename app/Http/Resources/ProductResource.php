@@ -27,7 +27,7 @@ class ProductResource extends BaseJsonResource
         'organization.logo.presets',
         'organization.business_type.translations',
         'organization.fund_providers_allowed_extra_payments',
-        'organization.mollie_connection_active',
+        'organization.mollie_connection',
         'bookmarks',
     ];
 
@@ -185,13 +185,13 @@ class ProductResource extends BaseJsonResource
         if ($request->isWebshop()) {
             return [
                 'reservation' => [
-                    'phone' => $product->reservation_phone == $global ?
+                    'phone' => $product->reservation_phone === $global ?
                         $organization->reservation_phone :
                         $product->reservation_phone,
-                    'address' => $product->reservation_address == $global ?
+                    'address' => $product->reservation_address === $global ?
                         $organization->reservation_address :
                         $product->reservation_address,
-                    'birth_date' => $product->reservation_birth_date == $global ?
+                    'birth_date' => $product->reservation_birth_date === $global ?
                         $organization->reservation_birth_date :
                         $product->reservation_birth_date,
                     'fields' => OrganizationReservationFieldResource::collection($fields)

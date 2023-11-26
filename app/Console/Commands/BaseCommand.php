@@ -7,6 +7,7 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use JetBrains\PhpStorm\NoReturn;
+use Throwable;
 
 abstract class BaseCommand extends Command
 {
@@ -119,6 +120,19 @@ abstract class BaseCommand extends Command
     public function red(string $text): string
     {
         return "\e[0;31m$text\e[0m";
+    }
+
+    /**
+     * @param ...$value
+     * @return string
+     */
+    public function jsonPretty(...$value): string
+    {
+        try {
+            json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+        } catch (Throwable) {}
+
+        return '';
     }
 
     /**

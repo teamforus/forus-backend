@@ -16,19 +16,26 @@ return new class extends Migration
         Schema::create('reservation_extra_payments', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('product_reservation_id');
-            $table->string('type')->default('mollie');
+            $table->enum('type', ['mollie'])->default('mollie');
             $table->string('payment_id')->nullable();
             $table->string('method', 50)->nullable();
-            $table->string('state', 10)->default('pending');
+            $table->enum('state', [
+                'open', 'paid', 'failed', 'pending', 'canceled',
+            ])->default('pending');
             $table->decimal('amount');
+            $table->decimal('amount_refunded')->nullable();
+            $table->decimal('amount_captured')->nullable();
+            $table->decimal('amount_remaining')->nullable();
             $table->string('currency', 3);
-            $table->boolean('refunded')->default(false);
             $table->timestamp('paid_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
             $table->timestamp('canceled_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
-            $table->foreign('product_reservation_id')->references('id')
-                ->on('product_reservations')->onDelete('cascade');
+            $table->foreign('product_reservation_id')
+                ->references('id')->on('product_reservations')
+                ->onDelete('cascade');
         });
     }
 

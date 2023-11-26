@@ -20,7 +20,9 @@ class ReservationExtraPaymentPolicy
      */
     public function viewAnySponsor(Identity $identity, Organization $organization): bool
     {
-        return $organization->isEmployee($identity);
+        return
+            $organization->isEmployee($identity) &&
+            $organization->identityCan($identity, 'view_funds_extra_payments');
     }
 
     /**
@@ -32,9 +34,11 @@ class ReservationExtraPaymentPolicy
     public function viewSponsor(
         Identity $identity,
         ReservationExtraPayment $payment,
-        Organization $organization
+        Organization $organization,
     ): bool {
-        return $organization->isEmployee($identity) &&
-            $payment->product_reservation->voucher->fund->organization_id === $organization->id;
+        return
+            $organization->isEmployee($identity) &&
+            $organization->identityCan($identity, 'view_funds_extra_payments') &&
+            $payment?->product_reservation?->voucher?->fund?->organization_id === $organization->id;
     }
 }

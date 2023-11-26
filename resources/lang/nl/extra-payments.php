@@ -6,5 +6,5 @@ return [
     ],
     'refund' => [
         'description' => 'Refund payment',
-    ]
+    ],
 ];

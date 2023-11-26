@@ -17,15 +17,16 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('reservation_extra_payment_id');
             $table->string('refund_id')->nullable();
-            $table->string('state', 10)->default('pending');
+            $table->enum('state', [
+                'queued', 'failed', 'pending', 'refunded', 'canceled', 'processing',
+            ])->default('pending');
             $table->decimal('amount');
             $table->string('currency', 3);
             $table->timestamps();
 
-            $table->foreign(
-                'reservation_extra_payment_id',
-                'extra_payment_refunds__payment_id_foreign'
-            )->references('id')->on('reservation_extra_payments')->onDelete('cascade');
+            $table->foreign('reservation_extra_payment_id', 'extra_payment_refunds_payment_id_foreign')
+                ->references('id')->on('reservation_extra_payments')
+                ->onDelete('cascade');
         });
     }
 

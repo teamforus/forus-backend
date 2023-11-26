@@ -335,11 +335,11 @@ class Product extends BaseModel
      */
     public function getReservationPhoneIsRequiredAttribute(): bool
     {
-        if ($this->reservation_phone == self::RESERVATION_FIELD_GLOBAL) {
-            return $this->organization->reservation_phone == self::RESERVATION_FIELD_REQUIRED;
+        if ($this->reservation_phone === self::RESERVATION_FIELD_GLOBAL) {
+            return $this->organization->reservation_phone === self::RESERVATION_FIELD_REQUIRED;
         }
 
-        return $this->reservation_phone == self::RESERVATION_FIELD_REQUIRED;
+        return $this->reservation_phone === self::RESERVATION_FIELD_REQUIRED;
     }
 
     /**
@@ -348,11 +348,11 @@ class Product extends BaseModel
      */
     public function getReservationAddressIsRequiredAttribute(): bool
     {
-        if ($this->reservation_address == self::RESERVATION_FIELD_GLOBAL) {
-            return $this->organization->reservation_address == self::RESERVATION_FIELD_REQUIRED;
+        if ($this->reservation_address === self::RESERVATION_FIELD_GLOBAL) {
+            return $this->organization->reservation_address === self::RESERVATION_FIELD_REQUIRED;
         }
 
-        return $this->reservation_address == self::RESERVATION_FIELD_REQUIRED;
+        return $this->reservation_address === self::RESERVATION_FIELD_REQUIRED;
     }
 
     /**
@@ -361,11 +361,11 @@ class Product extends BaseModel
      */
     public function getReservationBirthDateIsRequiredAttribute(): bool
     {
-        if ($this->reservation_birth_date == self::RESERVATION_FIELD_GLOBAL) {
-            return $this->organization->reservation_birth_date == self::RESERVATION_FIELD_REQUIRED;
+        if ($this->reservation_birth_date === self::RESERVATION_FIELD_GLOBAL) {
+            return $this->organization->reservation_birth_date === self::RESERVATION_FIELD_REQUIRED;
         }
 
-        return $this->reservation_birth_date == self::RESERVATION_FIELD_REQUIRED;
+        return $this->reservation_birth_date === self::RESERVATION_FIELD_REQUIRED;
     }
 
     /**
@@ -374,23 +374,19 @@ class Product extends BaseModel
      */
     public function reservationExtraPaymentsEnabled(Fund $fund): bool
     {
-        if ($fund->isTypeSubsidy()) {
+        if ($this->reservation_extra_payments === self::RESERVATION_EXTRA_PAYMENT_GLOBAL) {
+            $allowed = $this->organization->reservation_allow_extra_payments;
+        } else {
+            $allowed = $this->reservation_extra_payments === self::RESERVATION_EXTRA_PAYMENT_YES;
+        }
+
+        if (!$allowed || $fund->isTypeSubsidy() || !$this->organization->canReceiveExtraPayments()) {
             return false;
         }
 
-        $organization = $this->organization;
-        $allowedByFund = $organization->fund_providers_allowed_extra_payments
+        return (bool) $this->organization
+            ->fund_providers_allowed_extra_payments
             ->first(fn(FundProvider $provider) => $provider->fund_id === $fund->id);
-
-        if (!$organization->canReceiveExtraPayments() || !$allowedByFund) {
-            return false;
-        }
-
-        if ($this->reservation_extra_payments == self::RESERVATION_EXTRA_PAYMENT_GLOBAL) {
-            return $organization->reservation_allow_extra_payments;
-        }
-
-        return $this->reservation_extra_payments == self::RESERVATION_EXTRA_PAYMENT_YES;
     }
 
     /**
@@ -439,7 +435,7 @@ class Product extends BaseModel
     public function countReservedCached(?Fund $fund = null): int
     {
         return $this->product_reservations_pending->filter(function(ProductReservation $reservation) use ($fund) {
-            return !$fund || $reservation->voucher->fund_id == $fund->id;
+            return !$fund || $reservation->voucher->fund_id === $fund->id;
         })->count();
     }
 
@@ -631,7 +627,7 @@ class Product extends BaseModel
         $orderBy = $request->get('order_by', 'created_at');
         $orderDir = $request->get('order_dir', 'desc');
 
-        if ($orderBy == 'stock_amount') {
+        if ($orderBy === 'stock_amount') {
             $query = ProductQuery::stockAmountSubQuery($query);
         }
 
@@ -676,7 +672,7 @@ class Product extends BaseModel
                 return currency_format_locale($this->price_discount);
             }
             case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
-                $isWhole = (double) ($this->price_discount - round($this->price_discount)) === 0.0;
+                $isWhole = ($this->price_discount - round($this->price_discount)) === 0.0;
 
                 return currency_format($this->price_discount, $isWhole ? 0 : 2) . '%';
             }
@@ -806,26 +802,27 @@ class Product extends BaseModel
         $price_type = $request->input('price_type');
         $total_amount = $request->input('total_amount');
         $unlimited_stock = $request->input('unlimited_stock', false);
-        $price = $price_type === Product::PRICE_TYPE_REGULAR ? $request->input('price') : 0;
+        $price = $price_type === self::PRICE_TYPE_REGULAR ? $request->input('price') : 0;
 
         $price_discount = in_array($price_type, [
-            Product::PRICE_TYPE_DISCOUNT_FIXED,
-            Product::PRICE_TYPE_DISCOUNT_PERCENTAGE
-        ]) ? $request->input('price_discount') : 0;
-
-        $extraPayments = $organization->canReceiveExtraPayments()
-            ? $request->only('reservation_extra_payments')
-            : [];
+            self::PRICE_TYPE_DISCOUNT_FIXED,
+            self::PRICE_TYPE_DISCOUNT_PERCENTAGE
+        ], true) ? $request->input('price_discount') : 0;
 
         /** @var Product $product */
-        $product = $organization->products()->create(array_merge($request->only([
-            'name', 'description', 'price', 'product_category_id', 'expire_at',
-            'reservation_enabled', 'reservation_policy', 'reservation_phone',
-            'reservation_address', 'reservation_birth_date', 'alternative_text',
-        ]), [
+        $product = $organization->products()->create([
+            ...$request->only([
+                'name', 'description', 'price', 'product_category_id', 'expire_at',
+                'reservation_enabled', 'reservation_policy', 'reservation_phone',
+                'reservation_address', 'reservation_birth_date', 'alternative_text',
+            ]),
+            ...$organization->canReceiveExtraPayments() ? $request->only([
+                'reservation_extra_payments',
+            ]) : [],
             'total_amount' => $unlimited_stock ? 0 : $total_amount,
-            'unlimited_stock' => $unlimited_stock
-        ], compact('price', 'price_type', 'price_discount'), $extraPayments));
+            'unlimited_stock' => $unlimited_stock,
+            ...compact('price', 'price_type', 'price_discount'),
+        ]);
 
         return $product->attachMediaByUid($request->input('media_uid'));
     }
@@ -843,7 +840,7 @@ class Product extends BaseModel
         $price_discount = in_array($price_type, [
             self::PRICE_TYPE_DISCOUNT_FIXED,
             self::PRICE_TYPE_DISCOUNT_PERCENTAGE
-        ]) ? $request->input('price_discount') : 0;
+        ], true) ? $request->input('price_discount') : 0;
 
         $this->attachMediaByUid($request->input('media_uid'));
 
@@ -851,17 +848,17 @@ class Product extends BaseModel
             $this->resetSubsidyApprovals();
         }
 
-        $extraPayments = $this->organization->canReceiveExtraPayments()
-            ? $request->only('reservation_extra_payments')
-            : [];
-
-        return $this->updateModel(array_merge($request->only([
-            'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
-            'reservation_enabled', 'reservation_policy', 'reservation_phone',
-            'reservation_address', 'reservation_birth_date', 'alternative_text',
-        ]), [
+        return $this->updateModel([
+            ...$request->only([
+                'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
+                'reservation_enabled', 'reservation_policy', 'reservation_phone',
+                'reservation_address', 'reservation_birth_date', 'alternative_text',
+            ]),
+            ...$this->organization->canReceiveExtraPayments() ? $request->only([
+                'reservation_extra_payments',
+            ]) : [],
             'total_amount' => $this->unlimited_stock ? 0 : $total_amount,
-        ], compact('price', 'price_type', 'price_discount'), $extraPayments));
+        ], compact('price', 'price_type', 'price_discount'));
     }
 
     /**

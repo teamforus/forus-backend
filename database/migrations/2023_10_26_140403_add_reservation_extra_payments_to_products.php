@@ -20,12 +20,17 @@ return new class extends Migration
         });
 
         Schema::table('product_reservations', function (Blueprint $table) {
-            $table->decimal('extra_amount')->after('amount')->default(0);
+            $table->decimal('amount_extra')->after('amount')->default(0);
         });
 
+        $states = [
+            'waiting', 'pending', 'accepted', 'rejected', 'canceled', 'canceled_by_client',
+            'canceled_payment_failed', 'canceled_payment_expired', 'canceled_payment_canceled',
+        ];
+
         DB::statement(
-            "ALTER TABLE `product_reservations` CHANGE `state` `state` ".
-            "ENUM('waiting', 'pending', 'accepted', 'rejected', 'canceled', 'canceled_by_client', 'canceled_payment_expired') DEFAULT 'pending';"
+            "ALTER TABLE `product_reservations` CHANGE `state` `state` " .
+            "ENUM('" . implode("', '", $states) . "') DEFAULT 'pending';",
         );
     }
 
@@ -38,11 +43,7 @@ return new class extends Migration
     {
         Schema::table('products', function (Blueprint $table) {
             $table->dropColumn('reservation_extra_payments');
+            $table->string('reservation_extra_payments', 50)->change();
         });
-
-        DB::statement(
-            "ALTER TABLE `product_reservations` CHANGE `state` `state` ".
-            "ENUM('pending', 'accepted', 'rejected', 'canceled', 'canceled_by_client') DEFAULT 'pending';"
-        );
     }
 };

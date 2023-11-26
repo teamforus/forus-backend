@@ -59,7 +59,7 @@ class StoreProductReservationRequest extends BaseFormRequest
             'product_id' => [
                 'required',
                 'exists:products,id',
-                new ProductIdToReservationRule($this->input('voucher_address'), true, true)
+                new ProductIdToReservationRule($this->input('voucher_address'), true, true),
             ],
             ...$this->fieldsRules($product),
             ...$this->customFieldRules($product),
@@ -120,8 +120,8 @@ class StoreProductReservationRequest extends BaseFormRequest
             ...$result,
             "custom_fields.$field->id" => array_filter([
                 $field->required ? 'required' : 'nullable',
-                $field->type == $field::TYPE_NUMBER ? 'int' : 'string',
-                $field->type == $field::TYPE_TEXT ? 'max:200' : null,
+                $field->type === $field::TYPE_NUMBER ? 'int' : 'string',
+                $field->type === $field::TYPE_TEXT ? 'max:200' : null,
             ])
         ], [
             'custom_fields' => 'nullable|array',

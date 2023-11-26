@@ -17,9 +17,11 @@ class ReservationExtraPaymentRefundResource extends BaseJsonResource
      */
     public function toArray($request): array
     {
-        return array_merge(
-            $this->resource->only('id', 'state', 'state_locale', 'amount'), [
-            'amount_locale' => currency_format_locale($this->resource->amount),
-        ], $this->makeTimestamps($this->resource->only('created_at')));
+        return [
+            ...$this->resource->only([
+                'id', 'state', 'state_locale', 'amount', 'amount_locale',
+            ]),
+            ...$this->makeTimestamps($this->resource->only('created_at')),
+        ];
     }
 }

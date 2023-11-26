@@ -474,7 +474,10 @@ class EventLogService implements IEventLogService
     {
         return $this->keyPrepend([
             'id' => $mollieConnection->id,
+            'business_type' => $mollieConnection->business_type,
             'onboarding_state' => $mollieConnection->onboarding_state,
+            'connection_state' => $mollieConnection->connection_state,
+            'mollie_organization_id' => $mollieConnection->mollie_organization_id,
         ], 'mollie_connection_');
     }
 
@@ -486,7 +489,17 @@ class EventLogService implements IEventLogService
     {
         return $this->keyPrepend([
             'id' => $extraPayment->id,
+            'type' => $extraPayment->type,
             'state' => $extraPayment->state,
+            'method' => $extraPayment->method,
+            'currency' => $extraPayment->currency,
+            'amount' => $extraPayment->amount,
+            'amount_locale' => $extraPayment->amount_locale,
+            'amount_refunded' => $extraPayment->amount_refunded,
+            'amount_refunded_locale' => $extraPayment->amount_refunded_locale,
+            'paid_at' => $extraPayment->paid_at,
+            'canceled_at' => $extraPayment->canceled_at,
+            'product_reservation_id' => $extraPayment->product_reservation_id,
         ], 'reservation_extra_payment_');
     }
 

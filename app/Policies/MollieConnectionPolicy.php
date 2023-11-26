@@ -18,8 +18,9 @@ class MollieConnectionPolicy
      */
     public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_payment_methods') &&
-            $organization->can_view_provider_extra_payments;
+        return
+            $organization->identityCan($identity, 'manage_payment_methods') &&
+            $organization->canViewExtraPaymentsAsProvider();
     }
 
     /**
@@ -29,8 +30,9 @@ class MollieConnectionPolicy
      */
     public function store(Identity $identity, Organization $organization): bool
     {
-        return $this->allowExtraPayments($identity, $organization) ||
-            !$organization->mollie_connection_configured()->exists();
+        return
+            $this->allowExtraPayments($identity, $organization) &&
+            $organization->mollie_connection()->doesntExist();
     }
 
     /**
@@ -40,7 +42,7 @@ class MollieConnectionPolicy
      */
     public function connectMollieAccount(Identity $identity, Organization $organization): bool
     {
-        return $this->allowExtraPayments($identity, $organization);
+        return $this->store($identity, $organization);
     }
 
     /**
@@ -50,19 +52,9 @@ class MollieConnectionPolicy
      */
     public function fetchMollieAccount(Identity $identity, Organization $organization): bool
     {
-        return $this->allowExtraPayments($identity, $organization) &&
-            $organization->mollie_connection_configured()->exists();
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Organization $organization
-     * @return bool
-     */
-    public function allowExtraPayments(Identity $identity, Organization $organization): bool
-    {
-        return $organization->identityCan($identity, 'manage_payment_methods') &&
-            $organization->allow_extra_payments_by_sponsor;
+        return
+            $organization->identityCan($identity, 'manage_payment_methods') &&
+            $organization->mollie_connection()->exists();
     }
 
     /**
@@ -74,10 +66,22 @@ class MollieConnectionPolicy
     public function destroy(
         Identity $identity,
         MollieConnection $connection,
-        Organization $organization
+        Organization $organization,
     ): bool {
-        return $identity->address === $organization->identity_address &&
-            $organization->can_view_provider_extra_payments &&
+        return
+            $organization->identityCan($identity, 'manage_payment_methods') &&
             $connection->organization_id === $organization->id;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
+    public function allowExtraPayments(Identity $identity, Organization $organization): bool
+    {
+        return
+            $organization->identityCan($identity, 'manage_payment_methods') &&
+            $organization->canUseExtraPaymentsAsProvider();
     }
 }

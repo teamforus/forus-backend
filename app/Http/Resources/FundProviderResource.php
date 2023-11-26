@@ -57,9 +57,10 @@ class FundProviderResource extends BaseJsonResource
             'fund' => new FundResource($fundProvider->fund),
             'offices' => OfficeResource::collection($fundProvider->organization->offices),
             'employees' => EmployeeResource::collection($fundProvider->organization->employees),
-            'organization' => array_merge((new OrganizationWithPrivateResource(
-                $fundProvider->organization
-            ))->toArray($request), $fundProvider->organization->only(['iban', 'allow_provider_extra_payments'])),
+            'organization' => [
+                ...(new OrganizationWithPrivateResource($fundProvider->organization))->toArray($request),
+                ...$fundProvider->organization->only(['iban', 'allow_provider_extra_payments']),
+            ],
             'can_cancel' => !$fundProvider->hasTransactions() && !$fundProvider->isApproved() && $fundProvider->isPending(),
             'can_unsubscribe' => $fundProvider->canUnsubscribe(),
             'last_activity' => $lastActivity?->format('Y-m-d H:i:s'),

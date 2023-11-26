@@ -3,9 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Models\ProductReservation;
-use App\Models\ReservationExtraPayment;
+use App\Scopes\Builders\ProductReservationQuery;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Config;
 use Throwable;
 
 class ReservationExtraPaymentExpireCommand extends Command
@@ -22,7 +24,18 @@ class ReservationExtraPaymentExpireCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Set canceled reservation if extra payment time is expired';
+    protected $description = 'Cancel the reservations where extra payment time is expired.';
+
+    /**
+     * @var int|mixed
+     */
+    private int $waitingTime;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->waitingTime = Config::get('forus.reservations.extra_payment_waiting_time', 60);
+    }
 
     /**
      * Execute the console command.
@@ -32,22 +45,20 @@ class ReservationExtraPaymentExpireCommand extends Command
      */
     public function handle(): void
     {
-        $expiresAt = now()->subMinutes(60);
+        foreach ($this->getReservationsWithExpiredExtraPaymentsQuery()->get() as $reservation) {
+            try {
+                $reservation->cancelByState($reservation::STATE_CANCELED_PAYMENT_EXPIRED);
+            } catch (Throwable) {}
+        }
+    }
 
-        ProductReservation::query()
+    /**
+     * @return Collection|ProductReservation
+     */
+    public function getReservationsWithExpiredExtraPaymentsQuery(): Builder|ProductReservation
+    {
+        return ProductReservation::query()
             ->where('state', ProductReservation::STATE_WAITING)
-            ->where(function (Builder $query) use ($expiresAt) {
-                $query->whereHas('extra_payment', function (Builder $builder) use ($expiresAt) {
-                    $builder->where('created_at', '<=', $expiresAt);
-                    $builder->where('state', '!=', ReservationExtraPayment::STATE_PAID);
-                })->orWhere(function (Builder $builder) use ($expiresAt) {
-                    $builder->doesntHave('extra_payment');
-                    $builder->where('created_at', '<=', $expiresAt);
-                });
-            })
-            ->get()
-            ->each(function (ProductReservation $productReservation) {
-                return $productReservation->cancelByExtraPaymentExpired();
-            });
+            ->where(fn ($b) => ProductReservationQuery::whereExtraPaymentExpired($b, $this->waitingTime));
     }
 }

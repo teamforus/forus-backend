@@ -158,7 +158,7 @@ class MollieCliCommand extends BaseCommand
         try {
             // Try to get an access token using the authorization code grant.
             $this->printText('Response:');
-            $this->info(json_pretty([
+            $this->info($this->jsonPretty([
                 'accessToken' => $provider->getAccessToken('authorization_code', compact('code')),
             ]));
             $this->printSeparator();
@@ -189,7 +189,7 @@ class MollieCliCommand extends BaseCommand
         $token = $provider->getAccessToken($grant, ['refresh_token' => $refreshToken]);
 
         $this->printText('Response:');
-        $this->info(json_pretty($token));
+        $this->info($this->jsonPretty($token));
         $this->printSeparator();
     }
 
@@ -240,7 +240,7 @@ class MollieCliCommand extends BaseCommand
         ]);
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
 
         $this->printText('Auth url:');
@@ -260,7 +260,7 @@ class MollieCliCommand extends BaseCommand
         $response = $mollie->organizations->current();
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
     }
 
@@ -276,7 +276,7 @@ class MollieCliCommand extends BaseCommand
         $response = $mollie->onboarding->get();
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
     }
 
@@ -300,7 +300,7 @@ class MollieCliCommand extends BaseCommand
         ]);
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
     }
 
@@ -317,7 +317,7 @@ class MollieCliCommand extends BaseCommand
         $response = $mollie->profiles->get($profileId);
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
     }
 
@@ -333,7 +333,7 @@ class MollieCliCommand extends BaseCommand
         $response = $mollie->profiles->page();
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
     }
 
@@ -352,7 +352,7 @@ class MollieCliCommand extends BaseCommand
         ]);
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
     }
 
@@ -371,7 +371,7 @@ class MollieCliCommand extends BaseCommand
         ]);
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
     }
 
@@ -389,7 +389,7 @@ class MollieCliCommand extends BaseCommand
             ->enableMethod($this->ask('Payment method'));
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
     }
 
@@ -407,7 +407,7 @@ class MollieCliCommand extends BaseCommand
             ->disableMethod($this->ask('Payment method'));
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
     }
 
@@ -436,7 +436,7 @@ class MollieCliCommand extends BaseCommand
         ]);
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
 
         $this->printText('Checkout url:');
@@ -458,7 +458,7 @@ class MollieCliCommand extends BaseCommand
         ]);
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
     }
 
@@ -489,7 +489,7 @@ class MollieCliCommand extends BaseCommand
         ]);
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
     }
 
@@ -515,7 +515,7 @@ class MollieCliCommand extends BaseCommand
         ]);
 
         $this->printText('Response:');
-        $this->info(json_pretty($response));
+        $this->info($this->jsonPretty($response));
         $this->printSeparator();
     }
 

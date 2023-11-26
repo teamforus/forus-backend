@@ -433,7 +433,7 @@ class ProductFundLimitsTest extends TestCase
 
             foreach ($productData['funds'] as $fundData) {
                 $fund = $this->findFund($fundData['fund_id']);
-                $limits = array_filter($productData['limits'], fn ($limit) => $limit['fund_id'] == $fund->id);
+                $limits = array_filter($productData['limits'], fn ($limit) => $limit['fund_id'] === $fund->id);
 
                 /** @var FundProvider $fundProvider */
                 $fundProvider = $fund->providers()->updateOrCreate([
@@ -664,9 +664,8 @@ class ProductFundLimitsTest extends TestCase
         };
 
         $reservation = ProductReservation::find($reservation->id);
-        $this->assertTrue(
-            $reservation->state === $state,
-            "Reservation state $reservation->state not equals $state"
+        $this->assertSame(
+            $reservation->state, $state, "Reservation state $reservation->state not equals $state",
         );
     }
 
@@ -724,9 +723,7 @@ class ProductFundLimitsTest extends TestCase
         $headers = $this->makeApiHeaders($proxy);
         $url = sprintf($this->urls['reservations'] . '/%s', $reservation->id);
 
-        $response = $this->patch($url, [
-            'state' => ProductReservation::STATE_CANCELED_BY_CLIENT
-        ], $headers);
+        $response = $this->postJson($url . '/cancel', [], $headers);
 
         $response->assertSuccessful();
     }

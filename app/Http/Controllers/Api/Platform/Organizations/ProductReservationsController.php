@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
-use App\Exceptions\AuthorizationJsonException;
 use App\Exports\ProductReservationsExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\ProductReservations\FetchExtraPaymentProductReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\IndexProductReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationBatchRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationRequest;
@@ -20,18 +20,14 @@ use App\Models\Voucher;
 use App\Scopes\Builders\ProductReservationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Searches\ProductReservationsSearch;
-use App\Services\MollieService\Exceptions\MollieApiException;
-use App\Traits\ThrottleWithMeta;
+use App\Services\MollieService\Exceptions\MollieException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Config;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProductReservationsController extends Controller
 {
-    use ThrottleWithMeta;
-
     /**
      * Display a listing of the resource.
      *
@@ -293,36 +289,36 @@ class ProductReservationsController extends Controller
     }
 
     /**
-     * @param BaseFormRequest $request
+     * @param FetchExtraPaymentProductReservationsRequest $request
      * @param Organization $organization
      * @param ProductReservation $productReservation
      * @return ProductReservationResource
-     * @throws AuthorizationJsonException
      */
-    public function fetchExtraPaymentDetails(
-        BaseFormRequest $request,
+    public function fetchExtraPayment(
+        FetchExtraPaymentProductReservationsRequest $request,
         Organization $organization,
         ProductReservation $productReservation
     ): ProductReservationResource {
-        $this->maxAttempts = Config::get('forus.throttles.reservation_extra_payment.attempts');
-        $this->decayMinutes = Config::get('forus.throttles.reservation_extra_payment.decay');
-
-        $this->throttleWithKey('to_many_attempts', $request, 'reservation_extra_payment');
-
         $this->authorize('show', $organization);
         $this->authorize('fetchExtraPayment', [$productReservation, $organization]);
 
-        $productReservation->fetchExtraPaymentDetails();
+        try {
+            $productReservation->fetchExtraPayment($request->employee($organization));
+        } catch (MollieException $e) {
+            abort(503, $e->getMessage());
+        }
 
         return new ProductReservationResource($productReservation->refresh());
     }
 
     /**
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param ProductReservation $productReservation
      * @return ProductReservationResource|JsonResponse
      */
     public function refundExtraPayment(
+        BaseFormRequest $request,
         Organization $organization,
         ProductReservation $productReservation
     ): ProductReservationResource|JsonResponse {
@@ -330,13 +326,15 @@ class ProductReservationsController extends Controller
         $this->authorize('refundExtraPayment', [$productReservation, $organization]);
 
         try {
-            if ($productReservation->refundExtraPayment()) {
-                return new ProductReservationResource($productReservation->refresh());
-            }
+            $this->authorize('fetchExtraPayment', [$productReservation, $organization]);
+            $productReservation->fetchExtraPayment($request->employee($organization));
 
-            return new JsonResponse([], 500);
-        } catch (MollieApiException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], 500);
+            $this->authorize('refundExtraPayment', [$productReservation, $organization]);
+            $productReservation->refundExtraPayment($request->employee($organization));
+        } catch (MollieException $e) {
+            abort(503, $e->getMessage());
         }
+
+        return new ProductReservationResource($productReservation->refresh());
     }
 }

@@ -4,20 +4,22 @@ namespace App\Models;
 
 use App\Events\ProductReservations\ProductReservationAccepted;
 use App\Events\ProductReservations\ProductReservationCanceled;
+use App\Events\ProductReservations\ProductReservationPending;
 use App\Events\ProductReservations\ProductReservationRejected;
-use App\Events\ReservationExtraPayments\ReservationExtraPaymentCanceled;
 use App\Events\ReservationExtraPayments\ReservationExtraPaymentCreated;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Services\EventLogService\Traits\HasLogs;
-use App\Services\MollieService\Exceptions\MollieApiException;
-use Carbon\Carbon;
+use App\Services\MollieService\Exceptions\MollieException;
+use App\Services\MollieService\MollieService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-
+use Mollie\Api\Resources\Payment;
 
 /**
  * App\Models\ProductReservation
@@ -29,7 +31,7 @@ use Illuminate\Support\Facades\Event;
  * @property int|null $voucher_transaction_id
  * @property int|null $fund_provider_product_id
  * @property string $amount
- * @property string $extra_amount
+ * @property string $amount_extra
  * @property string $price
  * @property string $price_discount
  * @property string $code
@@ -116,17 +118,22 @@ class ProductReservation extends BaseModel
     public const EVENT_CREATED = 'created';
     public const EVENT_REJECTED = 'rejected';
     public const EVENT_ACCEPTED = 'accepted';
-    public const EVENT_CANCELED_BY_CLIENT = 'canceled_by_client';
+    public const EVENT_PENDING = 'pending';
     public const EVENT_CANCELED_BY_PROVIDER = 'canceled';
+    public const EVENT_CANCELED_BY_CLIENT = 'canceled_by_client';
+    public const EVENT_CANCELED_PAYMENT_FAILED = 'canceled_payment_failed';
     public const EVENT_CANCELED_PAYMENT_EXPIRED = 'canceled_payment_expired';
+    public const EVENT_CANCELED_PAYMENT_CANCELED = 'canceled_payment_canceled';
 
     public const STATE_WAITING = 'waiting';
     public const STATE_PENDING = 'pending';
     public const STATE_ACCEPTED = 'accepted';
     public const STATE_REJECTED = 'rejected';
-    public const STATE_CANCELED_BY_CLIENT = 'canceled_by_client';
     public const STATE_CANCELED_BY_PROVIDER = 'canceled';
+    public const STATE_CANCELED_BY_CLIENT = 'canceled_by_client';
+    public const STATE_CANCELED_PAYMENT_FAILED = 'canceled_payment_failed';
     public const STATE_CANCELED_PAYMENT_EXPIRED = 'canceled_payment_expired';
+    public const STATE_CANCELED_PAYMENT_CANCELED = 'canceled_payment_canceled';
     public const EVENT_ARCHIVED = 'archived';
     public const EVENT_UNARCHIVED = 'unarchived';
 
@@ -137,9 +144,12 @@ class ProductReservation extends BaseModel
         self::EVENT_CREATED,
         self::EVENT_REJECTED,
         self::EVENT_ACCEPTED,
+        self::EVENT_PENDING,
         self::EVENT_CANCELED_BY_CLIENT,
         self::EVENT_CANCELED_BY_PROVIDER,
+        self::EVENT_CANCELED_PAYMENT_FAILED,
         self::EVENT_CANCELED_PAYMENT_EXPIRED,
+        self::EVENT_CANCELED_PAYMENT_CANCELED,
     ];
 
     /**
@@ -152,7 +162,9 @@ class ProductReservation extends BaseModel
         self::STATE_REJECTED,
         self::STATE_CANCELED_BY_CLIENT,
         self::STATE_CANCELED_BY_PROVIDER,
+        self::STATE_CANCELED_PAYMENT_FAILED,
         self::STATE_CANCELED_PAYMENT_EXPIRED,
+        self::STATE_CANCELED_PAYMENT_CANCELED,
     ];
 
     /**
@@ -161,18 +173,15 @@ class ProductReservation extends BaseModel
     public const STATES_CANCELED = [
         self::STATE_CANCELED_BY_CLIENT,
         self::STATE_CANCELED_BY_PROVIDER,
+        self::STATE_CANCELED_PAYMENT_FAILED,
         self::STATE_CANCELED_PAYMENT_EXPIRED,
+        self::STATE_CANCELED_PAYMENT_CANCELED,
     ];
 
     /**
      * The number of days the transaction payout has to be delayed.
      */
-    const TRANSACTION_DELAY = 14;
-
-    /**
-     * @var int
-     */
-    protected $perPage = 15;
+    public const TRANSACTION_DELAY = 14;
 
     /**
      * @var string[]
@@ -182,7 +191,7 @@ class ProductReservation extends BaseModel
         'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
         'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'archived',
-        'street', 'house_nr', 'house_nr_addition', 'postal_code', 'city', 'extra_amount',
+        'street', 'house_nr', 'house_nr_addition', 'postal_code', 'city', 'amount_extra',
     ];
 
     /**
@@ -291,18 +300,7 @@ class ProductReservation extends BaseModel
      */
     public function extra_payment(): HasOne
     {
-        return $this->hasOne(ReservationExtraPayment::class)
-            ->whereNull('canceled_at')
-            ->whereNotIn('state', ReservationExtraPayment::CANCELED_STATES);
-    }
-
-    /**
-     * @return HasOne
-     * @noinspection PhpUnused
-     */
-    public function mollie_extra_payment(): HasOne
-    {
-        return $this->extra_payment()->where('type', ReservationExtraPayment::TYPE_MOLLIE);
+        return $this->hasOne(ReservationExtraPayment::class);
     }
 
     /**
@@ -327,7 +325,7 @@ class ProductReservation extends BaseModel
      */
     public function isCanceled(): bool
     {
-        return in_array($this->state, self::STATES_CANCELED);
+        return in_array($this->state, self::STATES_CANCELED, true);
     }
 
     /**
@@ -336,7 +334,7 @@ class ProductReservation extends BaseModel
      */
     public function isCanceledByClient(): bool
     {
-        return $this->state == self::STATE_CANCELED_BY_CLIENT;
+        return $this->state === self::STATE_CANCELED_BY_CLIENT;
     }
 
     /**
@@ -345,7 +343,7 @@ class ProductReservation extends BaseModel
      */
     public function isCanceledByProvider(): bool
     {
-        return $this->state == self::STATE_CANCELED_BY_PROVIDER;
+        return $this->state === self::STATE_CANCELED_BY_PROVIDER;
     }
 
     /**
@@ -424,7 +422,7 @@ class ProductReservation extends BaseModel
             'fund_provider_product_id' => $this->fund_provider_product_id ?? null,
         ]));
 
-        VoucherTransactionCreated::dispatch($transaction);
+        Event::dispatch(new VoucherTransactionCreated($transaction));
 
         return $transaction;
     }
@@ -438,7 +436,7 @@ class ProductReservation extends BaseModel
             'state' => self::STATE_PENDING,
         ]);
 
-        ProductReservationAccepted::dispatch($this);
+        Event::dispatch(new ProductReservationPending($this));
 
         return $this;
     }
@@ -455,7 +453,7 @@ class ProductReservation extends BaseModel
             'voucher_transaction_id' => $transaction->id,
         ]);
 
-        ProductReservationAccepted::dispatch($this);
+        Event::dispatch(new ProductReservationAccepted($this));
 
         return $this;
     }
@@ -523,10 +521,14 @@ class ProductReservation extends BaseModel
      */
     public function isCancelableByProvider(): bool
     {
-        return $this->isCancelableByRequester() || (
-            $this->isAccepted() &&
-            $this->voucher_transaction &&
-            $this->voucher_transaction->isCancelable());
+        if ($this->isCancelableByRequester()) {
+            return true;
+        }
+
+        $hasUnRefundedExtra = $this->extra_payment && !$this->extra_payment->isFullyRefunded();
+        $isTransactionCancelable = !$this->isAccepted() || $this->voucher_transaction?->isCancelable();
+
+        return !$hasUnRefundedExtra && $isTransactionCancelable;
     }
 
     /**
@@ -534,9 +536,15 @@ class ProductReservation extends BaseModel
      */
     public function isCancelableByRequester(): bool
     {
-        return ($this->isPending() || $this->isWaiting()) && (
-                !$this->extra_payment || $this->extra_payment->isCancelable() || $this->extra_payment?->isFullRefunded()
-            );
+        if (!$this->isWaiting() && !$this->isPending()) {
+            return false;
+        }
+
+        return
+            !$this->extra_payment ||
+            $this->extra_payment->isExpired() ||
+            $this->extra_payment->isCanceled() ||
+            $this->extra_payment->isCancelable();
     }
 
     /**
@@ -570,22 +578,17 @@ class ProductReservation extends BaseModel
     }
 
     /**
+     * @param string $state
      * @return bool
      * @throws \Throwable
      */
-    public function cancelByExtraPaymentExpired(): bool
+    public function cancelByState(string $state): bool
     {
-        if ($this->extra_payment && !$this->cancelCurrentExtraPayment()) {
-            return false;
-        }
-
-        DB::transaction(function() {
-            if ($this->product_voucher) {
-                $this->product_voucher->delete();
-            }
+        DB::transaction(function() use ($state) {
+            $this->product_voucher?->delete();
 
             $this->update([
-                'state' => self::STATE_CANCELED_PAYMENT_EXPIRED,
+                'state' => $state,
                 'canceled_at' => now(),
             ]);
 
@@ -631,104 +634,43 @@ class ProductReservation extends BaseModel
     }
 
     /**
-     * @return bool
-     */
-    public function cancelCurrentExtraPayment(): bool
-    {
-        if (!($extraPayment = $this->extra_payment)) {
-            return true;
-        }
-
-        // we can cancel payment without payment_id for any type
-        if (!$extraPayment->payment_id) {
-            ReservationExtraPaymentCanceled::dispatch($extraPayment->updateModel([
-                'state' => ReservationExtraPayment::STATE_CANCELED,
-                'canceled_at' => now(),
-            ]));
-
-            return true;
-        }
-
-        if ($extraPayment->type === ReservationExtraPayment::TYPE_MOLLIE) {
-            return $this->cancelCurrentExtraPaymentByMollie();
-        }
-
-        return true;
-    }
-
-    /**
-     * @return bool
-     */
-    public function cancelCurrentExtraPaymentByMollie(): bool
-    {
-        if (!($extraPayment = $this->mollie_extra_payment)) {
-            return true;
-        }
-
-        if (!($connection = $this->product->organization->mollie_connection_active)) {
-            return false;
-        }
-
-        if (($payment = $connection->cancelPayment($extraPayment->payment_id)) && $payment->canceledAt) {
-            ReservationExtraPaymentCanceled::dispatch($extraPayment->updateModel([
-                'state' => $payment->status,
-                'canceled_at' => Carbon::parse($payment->canceledAt),
-            ]));
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * @param Implementation $implementation
-     * @param string $paymentMethod
-     * @return string|null
+     * @return Payment|null
      */
-    public function createExtraPayment(
-        Implementation $implementation,
-        string $paymentMethod
-    ): ?string {
-        if ($paymentMethod === ReservationExtraPayment::TYPE_MOLLIE) {
-            return $this->createExtraPaymentByMollie($implementation, $this->extra_amount);
-        }
-
-        return null;
+    public function createExtraPayment(Implementation $implementation): ?Payment
+    {
+        return $this->createExtraPaymentMollie($implementation, $this->amount_extra);
     }
 
     /**
      * @param Implementation $implementation
      * @param float $amount
-     * @return string|null
+     * @param string $currency
+     * @return Payment|null
      */
-    private function createExtraPaymentByMollie(
+    protected function createExtraPaymentMollie(
         Implementation $implementation,
-        float $amount
-    ): ?string {
-        $connection = $this->product->organization->mollie_connection_active;
-        if (!$connection) {
+        float $amount,
+        string $currency = 'EUR',
+    ): ?Payment {
+        if (!$this->product->organization?->mollie_connection?->onboardingComplete()) {
             return null;
         }
 
-        if (!$this->cancelCurrentExtraPayment()) {
-            return null;
-        }
-
-        $currency = 'EUR';
-        $cancel_url = $redirect_url = $implementation->urlWebshop(
-            sprintf("/reservations/%s", $this->id)
-        );
-
-        $payment = $connection->createPayment(array_merge([
+        $payment = $this->product->organization->mollie_connection->createPayment([
+            'method' => MollieService::PAYMENT_METHOD_IDEAL,
             'amount' => $amount,
             'currency' => $currency,
             'description' => trans('extra-payments.payment.description'),
-        ], compact('redirect_url', 'cancel_url')));
+            'redirect_url' => $implementation->urlWebshop("/reservations/$this->id"),
+            'cancel_url' => $implementation->urlWebshop("/reservations/$this->id"),
+        ]);
 
         if (!$payment) {
             return null;
         }
+
+        $expireAt = $payment->expiresAt ? Carbon::parse($payment->expiresAt, 'UTC') : null;
 
         $extraPayment = $this->extra_payment()->create([
             'type' => ReservationExtraPayment::TYPE_MOLLIE,
@@ -736,42 +678,54 @@ class ProductReservation extends BaseModel
             'amount' => $amount,
             'currency' => $currency,
             'method' => $payment->method,
+            'expires_at' => $expireAt?->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s'),
             'payment_id' => $payment->id,
         ]);
 
-        ReservationExtraPaymentCreated::dispatch($extraPayment);
+        Event::dispatch(new ReservationExtraPaymentCreated($extraPayment));
 
-        return $payment->getCheckoutUrl();
+        return $payment;
     }
 
     /**
+     * @param Employee|null $employee
      * @return ReservationExtraPayment|null
+     * @throws MollieException
      */
-    public function fetchExtraPaymentDetails(): ?ReservationExtraPayment
+    public function fetchExtraPayment(?Employee $employee): ?ReservationExtraPayment
     {
-        if (!($extraPayment = $this->extra_payment) || !$extraPayment->payment_id) {
-            return null;
-        }
-
-        if ($extraPayment->type === ReservationExtraPayment::TYPE_MOLLIE) {
-            return $extraPayment->fetchAndUpdateMolliePayment();
+        if ($this->extra_payment?->payment_id && $this->extra_payment?->isMollieType()) {
+            return $this->extra_payment->fetchAndUpdateMolliePayment($employee);
         }
 
         return null;
     }
 
     /**
+     * @param Employee|null $employee
      * @return ReservationExtraPaymentRefund|null
-     * @throws MollieApiException
+     * @throws MollieException
      */
-    public function refundExtraPayment(): ?ReservationExtraPaymentRefund
+    public function refundExtraPayment(?Employee $employee): ?ReservationExtraPaymentRefund
     {
-        if (!($extraPayment = $this->extra_payment) || !$extraPayment->payment_id) {
-            return null;
+        if ($this->extra_payment?->payment_id && $this->extra_payment->isMollieType()) {
+            return $this->extra_payment->createMollieRefund($employee);
         }
 
-        if ($extraPayment->type === ReservationExtraPayment::TYPE_MOLLIE) {
-            return $extraPayment->createMollieRefund();
+        return null;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function expiresIn(): ?int
+    {
+        if ($this->created_at && $this->isWaiting()) {
+            $timeOffset = Config::get('forus.reservations.extra_payment_waiting_time');
+            $expireAt = $this->created_at->clone()->addMinutes($timeOffset);
+            $expiresIn = now()->diffInSeconds($expireAt, false);
+
+            return max(min($expiresIn, $this->extra_payment->expiresIn() ?: 0), 0) ?: null;
         }
 
         return null;

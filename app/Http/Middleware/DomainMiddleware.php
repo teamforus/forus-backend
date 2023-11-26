@@ -3,22 +3,20 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 
-/**
- * Class DomainMiddleware
- * @package App\Http\Middleware
- */
 class DomainMiddleware
 {
     /**
      * @var array
      */
-    private $except = [
+    private array $except = [
         'status',
         'digidStart',
         'digidResolve',
         'digidRedirect',
-        'mollie.webhook',
     ];
 
     /**
@@ -28,18 +26,18 @@ class DomainMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): mixed
     {
-        $exclude = in_array($request->route()->getName(), $this->except);
+        $exclude = in_array($request->route()->getName(), $this->except, true);
 
-        if (!$exclude && !env('DISABLE_DOMAIN_VERIFICATION')) {
-            $appDomain = parse_url(env('APP_URL', ''))['host'];
+        if (!$exclude && !Config::get('forus.domain.disable_domain_verification')) {
+            $appDomain = parse_url(Config::get('app.url', ''))['host'];
             $requestDomain = $request->getHost();
 
-            if ($appDomain != $requestDomain) {
-                return response()->json([
-                    "message" => 'invalid_host_name'
-                ])->setStatusCode(403);
+            if ($appDomain !== $requestDomain) {
+                return new JsonResponse([
+                    "message" => 'invalid_host_name',
+                ], 403);
             }
         }
 

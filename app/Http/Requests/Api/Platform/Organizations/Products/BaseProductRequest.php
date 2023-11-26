@@ -18,9 +18,10 @@ abstract class BaseProductRequest extends BaseFormRequest
     {
         $options = implode(',', Product::RESERVATION_FIELDS_PRODUCT);
         $policies = implode(',', Product::RESERVATION_POLICIES);
-        $extraPaymentOptions = $this->organization->allow_extra_payments_by_sponsor
-            ? implode(',', Product::RESERVATION_EXTRA_PAYMENT_OPTIONS)
-            : '';
+
+        $extraPaymentOptions = $this->organization->canUseExtraPaymentsAsProvider() ?
+            implode(',', Product::RESERVATION_EXTRA_PAYMENT_OPTIONS) :
+            '';
 
         return [
             'reservation_enabled' => "nullable|boolean",

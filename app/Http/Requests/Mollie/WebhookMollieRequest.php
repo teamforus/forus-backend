@@ -13,21 +13,16 @@ class WebhookMollieRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        if (!in_array($this->ip(), config('mollie.webhook_ip_whitelist'))) {
-            abort(403, 'Invalid request.');
-        }
-
         return true;
     }
 
     /**
-     * @return array
-     * @noinspection PhpUnused
+     * @return string[]
      */
     public function rules(): array
     {
         return [
-            'id' => 'required|string',
+            // 'id' => 'required|string',
         ];
     }
 }

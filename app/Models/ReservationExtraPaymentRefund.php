@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $currency
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string $amount_locale
  * @property-read string $state_locale
  * @property-read \App\Models\ProductReservation $reservation_extra_payment
  * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund newModelQuery()
@@ -49,10 +50,6 @@ class ReservationExtraPaymentRefund extends Model
         self::STATE_REFUNDED,
     ];
 
-    public const CANCELABLE_STATES = [
-        self::STATE_QUEUED,
-        self::STATE_PENDING,
-    ];
     /**
      * @var string[]
      */
@@ -75,7 +72,16 @@ class ReservationExtraPaymentRefund extends Model
      */
     public function getStateLocaleAttribute(): string
     {
-        return trans('states/reservation_extra_payment_refunds.' . $this->state);
+        return trans("states/reservation_extra_payment_refunds.$this->state");
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAmountLocaleAttribute(): string
+    {
+        return currency_format_locale($this->amount);
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Identity;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\Voucher;
 
 /**
  * @property ProductReservation $resource
@@ -40,49 +41,71 @@ class ProductReservationResource extends BaseJsonResource
             'price' => $reservation->price,
         ]));
 
-        $physicalCard = $voucher->physical_cards[0] ?? null;
-        $identityData = $reservation->product->organization->identityCan(Identity::auth(), 'scan_vouchers') ? [
-            'identity_email' => $voucher->identity?->email,
-            'identity_physical_card' => $physicalCard ? $physicalCard->code : null,
-        ] : [];
-
         $price = is_null($productSnapshot->price) ? null : currency_format($productSnapshot->price);
 
-        if (($price === currency_format(0)) && $reservation->price_type == 'regular') {
+        if ($reservation->price_type === 'regular' && ($price === currency_format(0))) {
             $price_locale = 'Gratis';
         } else {
             $price_locale = $productSnapshot->price_locale;
         }
 
-        return array_merge($reservation->only([
-            'id', 'state', 'state_locale', 'amount', 'code', 'extra_amount',
-            'first_name', 'last_name', 'user_note', 'phone', 'address', 'archived',
-        ]), [
+        return [
+            ...$reservation->only([
+                'id', 'state', 'state_locale', 'amount', 'code', 'amount_extra',
+                'first_name', 'last_name', 'user_note', 'phone', 'address', 'archived',
+            ]),
             'price' => $price,
             'price_locale' => $price_locale,
             'amount_locale' => currency_format_locale($reservation->amount),
             'expired' => $reservation->hasExpired(),
             'canceled' => $reservation->isCanceled(),
+            'cancelable' => $reservation->isCancelableByRequester(),
             'archivable' => $reservation->isArchivable(),
             'product' => array_merge($reservation->product->only('id', 'name', 'organization_id'), [
                 'deleted' => $reservation->product->trashed(),
                 'organization' => $reservation->product->organization->only('id', 'name'),
                 'photo' => new MediaResource($reservation->product->photo),
             ]),
-            'fund' => array_merge($voucher->fund->only([
-                'id', 'name',
-            ]), [
+            'fund' => [
+                ...$voucher->fund->only('id', 'name'),
                 'organization' => $voucher->fund->organization->only('id', 'name'),
-            ]),
+            ],
             'voucher_transaction' => $transaction?->only('id', 'address'),
             'custom_fields' => ProductReservationFieldValueResource::collection($reservation->custom_fields),
-            'extra_amount_locale' => currency_format_locale($reservation->extra_amount),
-            'extra_payment' => new ReservationExtraPaymentResource($reservation->extra_payment),
-            'extra_payment_expire_at' => ($reservation->extra_payment ?? $reservation)->created_at
-                ->clone()->addHour()->format('Y-m-d H:i:s'),
-        ], $this->makeTimestamps($reservation->only([
-            'created_at', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at', 'birth_date',
-        ]), true), $identityData);
+            ...$this->identityData($reservation, $voucher),
+            ...$this->extraPaymentData($reservation),
+            ...$this->makeTimestamps($reservation->only([
+                'created_at', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at', 'birth_date',
+            ]), true),
+        ];
+    }
 
+    /**
+     * @param ProductReservation $reservation
+     * @return array
+     */
+    protected function extraPaymentData(ProductReservation $reservation): array
+    {
+        return [
+            'amount_extra' => currency_format($reservation->amount_extra),
+            'amount_extra_locale' => currency_format_locale($reservation->amount_extra),
+            'extra_payment' => new ReservationExtraPaymentResource($reservation->extra_payment),
+            'extra_payment_expires_in' => $reservation->expiresIn(),
+        ];
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param Voucher $voucher
+     * @return array
+     */
+    protected function identityData(ProductReservation $reservation, Voucher $voucher): array
+    {
+        $physicalCard = $voucher->physical_cards[0] ?? null;
+
+        return $reservation->product->organization->identityCan(Identity::auth(), 'scan_vouchers') ? [
+            'identity_email' => $voucher->identity?->email,
+            'identity_physical_card' => $physicalCard->code ?? null,
+        ] : [];
     }
 }

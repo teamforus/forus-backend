@@ -108,7 +108,7 @@ class ProductReservationTest extends DuskTestCase
                 $reservation->acceptProvider();
                 $reservation = ProductReservation::find($reservation->id);
 
-                $this->assertTrue($reservation->state === ProductReservation::STATE_ACCEPTED);
+                $this->assertSame(ProductReservation::STATE_ACCEPTED, $reservation->state);
 
                 $browser->refresh();
                 $this->checkReservationState($browser, $reservation);
@@ -118,7 +118,7 @@ class ProductReservationTest extends DuskTestCase
                 $reservation->rejectOrCancelProvider();
                 $reservation = ProductReservation::find($reservation->id);
 
-                $this->assertTrue($reservation->state === ProductReservation::STATE_CANCELED_BY_PROVIDER);
+                $this->assertSame(ProductReservation::STATE_CANCELED_BY_PROVIDER, $reservation->state);
 
                 $browser->refresh();
                 $this->checkReservationState($browser, $reservation);
@@ -198,7 +198,7 @@ class ProductReservationTest extends DuskTestCase
 
         // Fill reservation notes
         $browser->waitFor('@productReserveNotes');
-        $browser->within('@productReserveNotes', function(Browser $browser) use ($user) {
+        $browser->within('@productReserveNotes', function(Browser $browser) {
             // Fill form with data and submit again
             $browser->type('@productReserveFormNote', $this->faker->text(100));
             $browser->press('@btnSubmit');

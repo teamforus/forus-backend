@@ -9,7 +9,6 @@ use App\Models\Voucher;
 use App\Rules\BaseRule;
 use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\ProductSubQuery;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Env;
 
 class ProductIdToReservationRule extends BaseRule
@@ -23,12 +22,12 @@ class ProductIdToReservationRule extends BaseRule
      *
      * @param string|null $voucherAddress
      * @param bool $throttle
-     * @param bool $checkExtraPayment
+     * @param bool $allowExtraPayment
      */
     public function __construct(
         private readonly ?string $voucherAddress,
         private readonly bool $throttle = false,
-        private readonly bool $checkExtraPayment = false
+        private readonly bool $allowExtraPayment = false,
     ) {
         $this->throttleTotalPendingCount = Env::get('RESERVATION_THROTTLE_TOTAL_PENDING', 100);
         $this->throttleRecentlyCanceledCount = Env::get('RESERVATION_THROTTLE_RECENTLY_CANCELED', 10);
@@ -71,9 +70,9 @@ class ProductIdToReservationRule extends BaseRule
         }
 
         if (
-            $voucher->fund->isTypeBudget() &&
             $product->price > $voucher->amount_available &&
-            !$this->checkExtraPaymentEnabled($voucher, $product)
+            $voucher->fund->isTypeBudget() &&
+            !$this->isExtraPaymentEnabled($voucher, $product)
         ) {
             return $this->rejectTrans('not_enough_voucher_funds');
         }
@@ -88,13 +87,13 @@ class ProductIdToReservationRule extends BaseRule
             return $this->reject(trans('validation.product_reservation.no_identity_stock'));
         }
 
-        if ($product->product_reservations()->whereIn(
-            'state', [ProductReservation::STATE_WAITING]
-        )->whereHas(
-            'extra_payment',
-            fn(Builder $q) => $q->where('state', '!=', ReservationExtraPayment::STATE_PAID)
-        )->count()) {
-            return $this->reject(trans('validation.product_reservation.reservations_has_not_paid_extra'));
+        // multiple reservations with unpaid extra by the same vouchers are not allowed
+        if ($this->allowExtraPayment && $product->product_reservations()
+            ->where('state', ProductReservation::STATE_WAITING)
+            ->where('voucher_id', $voucher->id)
+            ->whereRelation('extra_payment', 'state', '!=', ReservationExtraPayment::STATE_PAID)
+            ->exists()) {
+            return $this->reject(trans('validation.product_reservation.reservations_has_unpaid_extra'));
         }
 
         if ($this->throttle && $product->product_reservations()->whereIn(
@@ -125,11 +124,15 @@ class ProductIdToReservationRule extends BaseRule
      * @param Product $product
      * @return bool
      */
-    protected function checkExtraPaymentEnabled(Voucher $voucher, Product $product): bool
+    protected function isExtraPaymentEnabled(Voucher $voucher, Product $product): bool
     {
-        return !$this->checkExtraPayment || (
-                $voucher->amount_available >= 0.1 && $product->reservationExtraPaymentsEnabled($voucher->fund)
-            );
+        if (!$this->allowExtraPayment) {
+            return true;
+        }
+
+        return
+            $voucher->amount_available >= 0.1 &&
+            $product->reservationExtraPaymentsEnabled($voucher->fund);
     }
 
     /**

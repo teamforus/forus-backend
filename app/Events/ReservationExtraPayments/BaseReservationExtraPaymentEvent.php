@@ -2,6 +2,7 @@
 
 namespace App\Events\ReservationExtraPayments;
 
+use App\Models\Employee;
 use App\Models\ProductReservation;
 use App\Models\ReservationExtraPayment;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -12,13 +13,16 @@ class BaseReservationExtraPaymentEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct(protected ReservationExtraPayment $extraPayment) {}
+    public function __construct(
+        protected ReservationExtraPayment $extraPayment,
+        protected ?Employee $employee = null,
+        protected array $data = [],
+    ) {}
 
     /**
      * @return ProductReservation
@@ -34,5 +38,21 @@ class BaseReservationExtraPaymentEvent
     public function getReservationExtraPayment(): ReservationExtraPayment
     {
         return $this->extraPayment;
+    }
+
+    /**
+     * @return Employee|null
+     */
+    public function getEmployee(): ?Employee
+    {
+        return $this->employee;
+    }
+
+    /**
+     * @return array
+     */
+    public function getData(): array
+    {
+        return $this->data;
     }
 }

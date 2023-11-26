@@ -9,7 +9,8 @@ use App\Events\MollieConnections\MollieConnectionUpdated;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Services\EventLogService\Traits\HasLogs;
-use App\Services\MollieService\Exceptions\MollieApiException;
+use App\Services\MollieService\Data\MollieConnectionTokenData;
+use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\MollieService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use League\OAuth2\Client\Token\AccessToken;
 use Mollie\Api\Resources\Payment;
 use Mollie\Api\Resources\Profile;
@@ -36,22 +39,22 @@ use Mollie\Api\Resources\Profile;
  * @property string|null $postcode
  * @property string|null $state_code
  * @property string|null $vat_number
- * @property \Illuminate\Support\Carbon|null $completed_at
  * @property string|null $business_type
  * @property string|null $registration_number
  * @property string $connection_state
  * @property string $onboarding_state
  * @property int $organization_id
+ * @property \Illuminate\Support\Carbon|null $completed_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \App\Services\MollieService\Models\MollieConnectionProfile|null $active_profile
  * @property-read \App\Services\MollieService\Models\MollieConnectionToken|null $active_token
  * @property-read string $onboarding_state_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read Organization $organization
- * @property-read \App\Services\MollieService\Models\MollieConnectionProfile|null $pending_profile
+ * @property-read \App\Services\MollieService\Models\MollieConnectionProfile|null $profile_active
+ * @property-read \App\Services\MollieService\Models\MollieConnectionProfile|null $profile_pending
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MollieService\Models\MollieConnectionProfile[] $profiles
  * @property-read int|null $profiles_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MollieService\Models\MollieConnectionToken[] $tokens
@@ -88,18 +91,12 @@ class MollieConnection extends Model
 {
     use SoftDeletes, HasLogs;
 
-    public const CONNECTION_STATE_ACTIVE = 'active';
-    public const CONNECTION_STATE_PENDING = 'pending';
+    public const STATE_ACTIVE = 'active';
+    public const STATE_PENDING = 'pending';
 
     public const ONBOARDING_STATE_COMPLETED = 'completed';
     public const ONBOARDING_STATE_PENDING = 'needs-data';
     public const ONBOARDING_STATE_IN_REVIEW = 'in-review';
-
-    public const ONBOARDING_STATES = [
-        self::ONBOARDING_STATE_COMPLETED,
-        self::ONBOARDING_STATE_PENDING,
-        self::ONBOARDING_STATE_IN_REVIEW,
-    ];
 
     public const PENDING_ONBOARDING_STATES = [
         self::ONBOARDING_STATE_PENDING,
@@ -115,22 +112,9 @@ class MollieConnection extends Model
      * @var string[]
      */
     protected $fillable = [
-        'city',
-        'street',
-        'country',
-        'postcode',
-        'last_name',
-        'first_name',
-        'state_code',
-        'vat_number',
-        'completed_at',
-        'business_type',
-        'organization_id',
-        'connection_state',
-        'onboarding_state',
-        'organization_name',
-        'registration_number',
-        'mollie_organization_id',
+        'city', 'street', 'country', 'postcode', 'last_name', 'first_name', 'state_code',
+        'vat_number', 'completed_at', 'business_type', 'organization_id', 'connection_state',
+        'onboarding_state', 'organization_name', 'registration_number', 'mollie_organization_id',
     ];
 
     /**
@@ -162,7 +146,7 @@ class MollieConnection extends Model
      * @noinspection PhpUnused
      * @return HasOne
      */
-    public function active_profile(): HasOne
+    public function profile_active(): HasOne
     {
         return $this->hasOne(MollieConnectionProfile::class)
             ->where('state', MollieConnectionProfile::STATE_ACTIVE)
@@ -173,7 +157,7 @@ class MollieConnection extends Model
      * @noinspection PhpUnused
      * @return HasOne
      */
-    public function pending_profile(): HasOne
+    public function profile_pending(): HasOne
     {
         return $this->hasOne(MollieConnectionProfile::class)
             ->where('state', MollieConnectionProfile::STATE_PENDING)
@@ -207,7 +191,7 @@ class MollieConnection extends Model
      */
     public function getOnboardingStateLocaleAttribute(): string
     {
-        return trans('states/mollie_connection.' . $this->onboarding_state);
+        return trans("states/mollie_connection.$this->onboarding_state");
     }
 
     /**
@@ -227,11 +211,11 @@ class MollieConnection extends Model
     /**
      * @param MollieConnectionProfile $profile
      * @return MollieConnectionProfile
-     * @throws MollieApiException
+     * @throws MollieException
      */
     public function createProfile(MollieConnectionProfile $profile): MollieConnectionProfile
     {
-        $profileResponse = MollieService::make($this)->createProfile($profile->only([
+        $profileResponse = $this->getMollieService()->createProfile($profile->only([
             'name', 'email', 'phone', 'website',
         ]));
 
@@ -241,13 +225,14 @@ class MollieConnection extends Model
     /**
      * @param MollieConnectionProfile $profile
      * @return MollieConnectionProfile
-     * @throws MollieApiException
+     * @throws MollieException
      */
     public function updateProfile(MollieConnectionProfile $profile): MollieConnectionProfile
     {
-        $profileResponse = MollieService::make($this)->updateProfile($profile->mollie_id, $profile->only([
-            'name', 'email', 'phone', 'website',
-        ]));
+        $profileResponse = $this->getMollieService()->updateProfile(
+            $profile->mollie_id,
+            $profile->only(['name', 'email', 'phone', 'website']),
+        );
 
         return $this->updateProfileModelFromApiResponse($profile, $profileResponse);
     }
@@ -256,14 +241,14 @@ class MollieConnection extends Model
      * @param MollieConnectionProfile $profile
      * @param Profile $profileResponse
      * @return MollieConnectionProfile
-     * @throws MollieApiException
+     * @throws MollieException
      */
     private function updateProfileModelFromApiResponse(
         MollieConnectionProfile $profile,
-        Profile $profileResponse
+        Profile $profileResponse,
     ): MollieConnectionProfile {
         $profile->mollie_connection->profiles()->where('id', '!=', $profile->id)->update([
-            'current' => false
+            'current' => false,
         ]);
 
         $profile->update([
@@ -276,25 +261,45 @@ class MollieConnection extends Model
             'current' => true,
         ]);
 
-        $service = MollieService::make($this);
+        $service = $this->getMollieService();
         $service->enablePaymentMethod($profileResponse->id, $service::PAYMENT_METHOD_IDEAL);
 
         return $profile;
     }
 
     /**
-     * @return MollieConnection
-     * @throws MollieApiException
+     * @return MollieService
      */
-    public function fetchAndUpdateConnection(): MollieConnection
+    public function getMollieService(): MollieService
     {
-        $service = MollieService::make($this);
+        return MollieService::make(new MollieConnectionTokenData($this));
+    }
 
-        $state = $service->readOnboardingState();
+    /**
+     * @param MollieConnectionProfile $profile
+     * @return MollieConnectionProfile
+     * @throws MollieException
+     */
+    public function syncProfile(MollieConnectionProfile $profile): MollieConnectionProfile
+    {
+        return $profile->mollie_id ? $this->updateProfile($profile) : $this->createProfile($profile);
+    }
+
+    /**
+     * @param Employee|null $employee
+     * @return MollieConnection
+     * @throws MollieException
+     */
+    public function fetchAndUpdateConnection(?Employee $employee = null): MollieConnection
+    {
+        $service = $this->getMollieService();
+        $state = $service->getOnboardingState();
+
         $oldState = $this->onboarding_state;
-        $organization = $service->readOrganization();
+        $organization = $service->getOrganization();
 
-        $onboardingComplete = $oldState !== $state->status &&
+        $becomeComplete =
+            $oldState !== $state->status &&
             $state->status === self::ONBOARDING_STATE_COMPLETED;
 
         $this->update([
@@ -304,22 +309,20 @@ class MollieConnection extends Model
             'postcode' => $organization->address->postalCode ?? '',
             'organization_name' => $organization->name,
             'mollie_organization_id' => $organization->id,
-            'completed_at' => $onboardingComplete ? now() : $this->completed_at,
-            'onboarding_state' => in_array($state->status, self::ONBOARDING_STATES)
-                ? $state->status
-                : $this->onboarding_state
+            'completed_at' => $becomeComplete ? now() : $this->completed_at,
+            'onboarding_state' => $state->status,
         ]);
 
         try {
             $this->updateProfiles();
-        } catch (MollieApiException $e) {
+        } catch (MollieException $e) {
             MollieService::logError("Update profile error in fetchAndUpdateConnection", $e);
         }
 
-        MollieConnectionUpdated::dispatch($this);
+        Event::dispatch(new MollieConnectionUpdated($this, $employee));
 
-        if ($onboardingComplete) {
-            MollieConnectionCompleted::dispatch($this);
+        if ($becomeComplete) {
+            Event::dispatch(new MollieConnectionCompleted($this, $employee));
         }
 
         return $this->refresh();
@@ -328,15 +331,15 @@ class MollieConnection extends Model
     /**
      * @param bool $createIfEmpty
      * @return void
-     * @throws MollieApiException
+     * @throws MollieException
      */
     private function updateProfiles(bool $createIfEmpty = false): void
     {
-        $service = MollieService::make($this);
+        $service = $this->getMollieService();
         $profiles = $service->readAllProfiles();
 
-        if ($createIfEmpty && $this->pending_profile) {
-            $this->createProfile($this->pending_profile);
+        if ($createIfEmpty && $this->profile_pending) {
+            $this->createProfile($this->profile_pending);
         }
 
         /** @var Profile $profile */
@@ -351,12 +354,12 @@ class MollieConnection extends Model
                 'state' => MollieConnectionProfile::STATE_ACTIVE,
             ]);
 
-            if ($this->onboarding_state === self::ONBOARDING_STATE_COMPLETED) {
+            if ($this->onboardingComplete()) {
                 $service->enablePaymentMethod($profile->id, $service::PAYMENT_METHOD_IDEAL);
             }
         }
 
-        if (!$this->active_profile()->exists()) {
+        if (!$this->profile_active()->exists()) {
             $this->profiles()
                 ->where('state', MollieConnectionProfile::STATE_ACTIVE)
                 ->take(1)
@@ -373,10 +376,14 @@ class MollieConnection extends Model
      */
     public function updateConnectionByToken(AccessToken $token, array $attributes): MollieConnection
     {
-        $this->deleteAlreadyConfiguredConnections();
+        self::query()
+            ->where('organization_id', $this->organization_id)
+            ->where('connection_state', self::STATE_ACTIVE)
+            ->where('id', '!=', $this->id)
+            ->get()
+            ->each(fn (MollieConnection $connection) => $connection->delete());
 
         $this->update([
-            'connection_state' => self::CONNECTION_STATE_ACTIVE,
             'city' => $attributes['address']['city'] ?? '',
             'street' => $attributes['address']['streetAndNumber'] ?? '',
             'country' => $attributes['address']['country'] ?? '',
@@ -384,16 +391,16 @@ class MollieConnection extends Model
             'last_name' => $attributes['first_name'] ?? $this->last_name,
             'first_name' => $attributes['last_name'] ?? $this->first_name,
             'state_code' => null,
+            'connection_state' => self::STATE_ACTIVE,
             'organization_name' => $attributes['name'] ?? '',
             'mollie_organization_id' => $attributes['id'],
         ]);
 
         $this->tokens()->delete();
-        $expiredAt = Carbon::createFromTimestamp($token->getExpires())
-            ->subSeconds(config('mollie.expire_decrease'));
+        $expiredAt = Carbon::createFromTimestamp($token->getExpires());
 
         $this->tokens()->create([
-            'expired_at' => $expiredAt,
+            'expired_at' => $expiredAt->subSeconds(Config::get('mollie.token_expire_offset')),
             'access_token' => $token->getToken(),
             'remember_token' => $token->getRefreshToken(),
         ]);
@@ -402,51 +409,42 @@ class MollieConnection extends Model
 
         try {
             $this->updateProfiles(true);
-        } catch (MollieApiException $e) {
+        } catch (MollieException $e) {
             MollieService::logError("Update profile error in updateConnectionByToken", $e);
         }
 
-        MollieConnectionUpdated::dispatch($this);
+        Event::dispatch(new MollieConnectionUpdated($this));
 
         return $this;
     }
 
     /**
-     * @return void
-     */
-    private function deleteAlreadyConfiguredConnections(): void
-    {
-        self::where('organization_id', $this->organization_id)
-            ->where('id', '!=', $this->id)
-            ->where('connection_state', self::CONNECTION_STATE_ACTIVE)
-            ->get()
-            ->each(function (MollieConnection $connection) {
-                $connection->delete();
-            });
-    }
-
-    /**
      * @param Organization $organization
-     * @param array $attributes
+     * @param array $connectionData
+     * @param array $profileData
      * @return MollieConnection
      */
-    public static function makeNewConnection(Organization $organization, array $attributes): MollieConnection
-    {
+    public static function makeNewConnection(
+        Organization $organization,
+        array $connectionData,
+        array $profileData,
+    ): MollieConnection {
         $organization->mollie_connections->each(function (MollieConnection $mollieConnection) {
-            MollieConnectionDeleted::dispatch($mollieConnection);
+            Event::dispatch(new MollieConnectionDeleted($mollieConnection));
             $mollieConnection->delete();
         });
 
         /** @var MollieConnection $connection */
-        $connection = $organization->mollie_connections()->create(Arr::only($attributes, [
+        $connection = $organization->mollie_connections()->create(Arr::only($connectionData, [
             'name', 'email', 'first_name', 'last_name', 'street', 'city', 'postcode', 'state_code',
         ]));
 
-        $connection->profiles()->create(array_merge($attributes['profile'], [
+        $connection->profiles()->create([
+            ...$profileData,
             'current' => true
-        ]));
+        ]);
 
-        MollieConnectionCreated::dispatch($connection);
+        Event::dispatch(new MollieConnectionCreated($connection));
 
         return $connection;
     }
@@ -457,13 +455,9 @@ class MollieConnection extends Model
      */
     public function cancelPayment(string $paymentId): ?Payment
     {
-        $service = new MollieService($this);
-
         try {
-            $payment = $service->readPayment($paymentId);
-
-            return $payment->isCancelable ? $service->cancelPayment($paymentId) : null;
-        } catch (MollieApiException $e) {
+            return $this->getMollieService()->cancelPayment($paymentId);
+        } catch (MollieException) {
             return null;
         }
     }
@@ -474,17 +468,12 @@ class MollieConnection extends Model
      */
     public function createPayment(array $attributes): ?Payment
     {
-        if (!($profile = $this->active_profile)) {
-            return null;
-        }
-
-        $service = new MollieService($this);
-
         try {
-            return $service->createPayment($profile->mollie_id, Arr::only($attributes, [
-                'amount', 'currency', 'description', 'redirect_url', 'cancel_url',
-            ]));
-        } catch (MollieApiException $e) {
+            return $this->profile_active ? $this->getMollieService()->createPayment(
+                $this->profile_active->mollie_id,
+                $attributes,
+            ) : null;
+        } catch (MollieException) {
             return null;
         }
     }
@@ -495,12 +484,28 @@ class MollieConnection extends Model
      */
     public function readPayment(string $paymentId): ?Payment
     {
-        $service = new MollieService($this);
-
         try {
-            return $service->readPayment($paymentId);
-        } catch (MollieApiException $e) {
+            return $this->getMollieService()->getPayment($paymentId);
+        } catch (MollieException) {
             return null;
         }
+    }
+
+    /**
+     * @param Employee $employee
+     * @return void
+     */
+    public function revoke(Employee $employee): void
+    {
+        $this->getMollieService()->revokeToken();
+        Event::dispatch(new MollieConnectionDeleted($this, $employee));
+    }
+
+    /**
+     * @return bool
+     */
+    public function onboardingComplete(): bool
+    {
+        return $this->onboarding_state === static::ONBOARDING_STATE_COMPLETED;
     }
 }
