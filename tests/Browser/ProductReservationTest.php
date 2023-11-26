@@ -21,6 +21,7 @@ use Tests\Traits\MakesTestIdentities;
 use Illuminate\Support\Facades\Cache;
 use Tests\Traits\MakesProductReservations;
 use Illuminate\Foundation\Testing\WithFaker;
+use Throwable;
 
 class ProductReservationTest extends DuskTestCase
 {
@@ -305,7 +306,7 @@ class ProductReservationTest extends DuskTestCase
 
         try {
             $browser->waitFor($selector);
-        } catch (TimeOutException) {
+        } catch (Throwable) {
             return null;
         }
 

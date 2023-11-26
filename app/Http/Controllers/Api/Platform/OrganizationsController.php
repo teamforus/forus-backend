@@ -9,7 +9,6 @@ use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationAcceptReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBIConnectionRequest;
-use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBusinessTypeRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationReservationSettingsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRolesRequest;
@@ -145,26 +144,6 @@ class OrganizationsController extends Controller
         }
 
         OrganizationUpdated::dispatch($organization);
-
-        return new OrganizationResource($organization);
-    }
-
-    /**
-     * @param UpdateOrganizationBusinessTypeRequest $request
-     * @param Organization $organization
-     * @return OrganizationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @noinspection PhpUnused
-     */
-    public function updateBusinessType(
-        UpdateOrganizationBusinessTypeRequest $request,
-        Organization $organization
-    ): OrganizationResource {
-        $this->authorize('update', $organization);
-
-        OrganizationUpdated::dispatch($organization->updateModel($request->only([
-            'business_type_id',
-        ])));
 
         return new OrganizationResource($organization);
     }
