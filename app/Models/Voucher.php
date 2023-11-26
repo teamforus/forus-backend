@@ -1097,8 +1097,8 @@ class Voucher extends BaseModel
         $data = [];
 
         $date = now()->format('Y-m-d_H_i_s');
-        $exportName = "Vouchers_export_$date";
-        $imagesDirName = "{$exportName}_QR_codes_images";
+        $name = "Vouchers_export_$date";
+        $imagesDirName = "{$name}_QR_codes_images";
 
         $domPdf = resolve('dompdf.wrapper');
         $zipFile = tmpfile();
@@ -1136,7 +1136,7 @@ class Voucher extends BaseModel
                 'vouchersData' => Arr::pluck($data, 'voucherData'),
             ]);
 
-            $zip->addFromString($exportName . '_QR_codes_PDF.pdf', $domPdfFile->output());
+            $zip->addFromString($name . '_QR_codes_PDF.pdf', $domPdfFile->output());
         }
 
         $export = new VoucherExport(Arr::pluck($data, 'values'));
@@ -1144,12 +1144,12 @@ class Voucher extends BaseModel
 
         if ($dataFormat === 'xls' || $dataFormat === 'all') {
             $files['xls'] = Excel::raw($export, ExcelModel::XLS);
-            $zip->addFromString($exportName . '_Data.xls', $files['xls']);
+            $zip->addFromString($name . '_Data.xls', $files['xls']);
         }
 
         if ($dataFormat === 'csv' || $dataFormat === 'all') {
             $files['csv'] = Excel::raw($export, ExcelModel::CSV);
-            $zip->addFromString($exportName . '_Data.csv', $files['csv']);
+            $zip->addFromString($name . '_Data.csv', $files['csv']);
         }
 
         $zip->close();
@@ -1162,7 +1162,7 @@ class Voucher extends BaseModel
 
         $files['zip'] = file_get_contents($zipFilePath);
 
-        return compact('files', 'data');
+        return compact('files', 'data', 'date', 'name');
     }
 
     /**
