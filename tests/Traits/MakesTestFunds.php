@@ -5,6 +5,7 @@ namespace Tests\Traits;
 use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Organization;
+use Throwable;
 
 trait MakesTestFunds
 {
@@ -13,7 +14,6 @@ trait MakesTestFunds
      * @param array $fundData
      * @param array $fundConfigsData
      * @return Fund
-     * @throws \Throwable
      */
     protected function makeTestFund(
         Organization $organization,
@@ -48,7 +48,11 @@ trait MakesTestFunds
             ...$fundConfigsData,
         ]);
 
-        $fund->syncDescriptionMarkdownMedia('cms_media');
+        try {
+            $fund->syncDescriptionMarkdownMedia('cms_media');
+        } catch (Throwable) {
+            $this->assertTrue(false, 'Could not syncDescriptionMarkdownMedia.');
+        }
 
         if ($fundData['criteria'] ?? false) {
             $fund->syncCriteria($fundData['criteria']);
