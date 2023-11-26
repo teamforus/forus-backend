@@ -15,11 +15,13 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
+use Tests\Traits\MakesTestOrganizations;
 
 class Identity2FATest extends TestCase
 {
-    use DatabaseTransactions, WithFaker, MakesTestIdentities;
+    use DatabaseTransactions, WithFaker, MakesTestIdentities, MakesTestOrganizations, MakesTestFunds;
 
     /**
      * @return void
@@ -70,8 +72,8 @@ class Identity2FATest extends TestCase
 
         $identityProxy = $this->makeIdentityProxy($this->makeIdentity($this->makeUniqueEmail()));
         $identityProxy = $this->makeIdentityProxy($identityProxy->identity);
-
         $maxAttempts = Config::get('forus.auth_2fa.throttle_attempts') + 1;
+
         foreach (range(1, $maxAttempts) as $item) {
             $this->setup2FAProvider(
                 $identityProxy, 'authenticator', [], $item === $maxAttempts ? 429 : null
@@ -84,20 +86,20 @@ class Identity2FATest extends TestCase
     /**
      * @return void
      */
-    public function testSamePhone2FA()
+    public function testSamePhone2FA(): void
     {
         $identityProxy = $this->makeIdentityProxy($this->makeIdentity($this->makeUniqueEmail()));
         $identity2FA = $this->setup2FAProvider($identityProxy, 'phone');
         $this->assertNotNull($identity2FA);
 
-        $identityProxySecond = $this->makeIdentityProxy($this->makeIdentity($this->makeUniqueEmail()));
-        $identity2FASecond = $this->setup2FAProvider($identityProxySecond, 'phone');
+        $identityProxy2 = $this->makeIdentityProxy($this->makeIdentity($this->makeUniqueEmail()));
+        $identity2FA2 = $this->setup2FAProvider($identityProxy2, 'phone');
         $this->assertNotNull($identity2FA);
 
         $this->activate2FAProvider($identityProxy, $identity2FA);
         $this->assertIdentity2FAHasActiveProviders($identityProxy, true, ['phone']);
 
-        $this->activate2FAProvider($identityProxySecond, $identity2FASecond, false);
+        $this->activate2FAProvider($identityProxy2, $identity2FA2, false);
     }
 
     /**
@@ -243,7 +245,7 @@ class Identity2FATest extends TestCase
         $this->assertIsArray($providers);
 
         $active_keys = array_map(fn($provider) => Arr::get($provider, 'provider_type.type'), $providers);
-        array_walk($active_provider_types, fn ($key) => $this->assertTrue(in_array($key, $active_keys)));
+        array_walk($active_provider_types, fn ($key) => $this->assertContains($key, $active_keys));
     }
 
     /**
@@ -257,7 +259,7 @@ class Identity2FATest extends TestCase
         IdentityProxy $identityProxy,
         string $type,
         array $errors = [],
-        ?int $assertStatus = null
+        ?int $assertStatus = null,
     ): ?Identity2FA {
         $apiHeaders = $this->makeApiHeaders($identityProxy);
         $response = $this->postJson('/api/v1/identity/2fa', match ($type) {
@@ -334,7 +336,7 @@ class Identity2FATest extends TestCase
 
             return $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/activate", [
                 'key' => $identity2FA->auth_2fa_provider->key,
-                'code' => "$code",
+                'code' => $code,
             ], $this->makeApiHeaders($identityProxy));
         });
 
@@ -365,7 +367,7 @@ class Identity2FATest extends TestCase
 
             return $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/deactivate", [
                 'key' => $identity2FA->auth_2fa_provider->key,
-                'code' => "$code",
+                'code' => $code,
             ], $this->makeApiHeaders($identityProxy));
         });
 
@@ -380,26 +382,15 @@ class Identity2FATest extends TestCase
     protected function makeIdentityWithForce2fa(): Identity
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $organization = Organization::whereHas('funds')->first();
-
-        $organization->updateModel([
+        $organization = $this->makeTestOrganization($identity, [
             'auth_2fa_policy' => Organization::AUTH_2FA_POLICY_REQUIRED,
-        ])->addEmployee($identity, Role::pluck('id')->toArray());
+        ]);
 
-        return $identity;
-    }
+        $organization->addEmployee($identity, Role::pluck('id')->toArray());
 
-    /**
-     * @return Identity
-     */
-    protected function makeIdentityWithForce2faForFund(): Identity
-    {
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $organization = Organization::whereHas('funds')->first();
-
-        $organization->updateModel([
-            'auth_2fa_policy' => Organization::AUTH_2FA_POLICY_REQUIRED,
-        ])->addEmployee($identity, Role::pluck('id')->toArray());
+        $this->makeTestFund($organization);
+        $this->makeTestFund($organization);
+        $this->makeTestFund($organization);
 
         return $identity;
     }
@@ -436,7 +427,7 @@ class Identity2FATest extends TestCase
             }
 
             return $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/authenticate", [
-                'code' => "$code",
+                'code' => $code,
             ], $this->makeApiHeaders($identityProxy));
         });
 
@@ -470,11 +461,11 @@ class Identity2FATest extends TestCase
     protected function assertInvalidCode(
         Identity2FA $identity2FA,
         string $deactivatedCode,
-        array $apiHeaders
+        array $apiHeaders,
     ): void {
         $response = $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/activate", [
             'key' => $identity2FA->auth_2fa_provider->key,
-            'code' => "$deactivatedCode",
+            'code' => $deactivatedCode,
         ], $apiHeaders);
 
         $response->assertJsonValidationErrorFor('code');
@@ -485,10 +476,13 @@ class Identity2FATest extends TestCase
      * @param Identity2FA $identity2FA
      * @return Identity2FA
      */
-    protected function assertResendCode(IdentityProxy $identityProxy, Identity2FA $identity2FA): Identity2FA
-    {
+    protected function assertResendCode(
+        IdentityProxy $identityProxy,
+        Identity2FA $identity2FA,
+    ): Identity2FA {
         // check resend and throttle
         $maxAttempts = Config::get('forus.auth_2fa.resend_throttle_attempts') + 1;
+
         foreach (range(1, $maxAttempts) as $item) {
             $this->resendCode($identityProxy, $identity2FA, $item === $maxAttempts);
         }
@@ -506,12 +500,10 @@ class Identity2FATest extends TestCase
     protected function resendCode(
         IdentityProxy $identityProxy,
         Identity2FA $identity2FA,
-        bool $assertThrottle = false
+        bool $assertThrottle = false,
     ): Identity2FA {
-        $apiHeaders = $this->makeApiHeaders($identityProxy);
-        $response = $this->postJson(
-            "/api/v1/identity/2fa/$identity2FA->uuid/resend", [], $apiHeaders
-        );
+        $headers = $this->makeApiHeaders($identityProxy);
+        $response = $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/resend", [], $headers);
 
         if ($assertThrottle) {
             $response->assertTooManyRequests();

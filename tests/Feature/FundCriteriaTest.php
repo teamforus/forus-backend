@@ -65,7 +65,7 @@ class FundCriteriaTest extends TestCase
 
             $this->updateCriteriaValidationRequest([
                 'record_type_key' => $recordType->key,
-                'operator' => in_array('=', $recordType->getOperators()) ? '=' : '*',
+                'operator' => in_array('=', $recordType->getOperators(), true) ? '=' : '*',
                 'value' => $this->makeCriterionValue($recordType),
                 'min' => $min,
                 'max' => $max,
@@ -211,9 +211,9 @@ class FundCriteriaTest extends TestCase
 
     /**
      * @return void
-     * @throws \Throwable
      */
-    public function testFundRequestRecordsListFormat() {
+    public function testFundRequestRecordsListFormat(): void
+    {
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
@@ -229,9 +229,8 @@ class FundCriteriaTest extends TestCase
 
     /**
      * @return void
-     * @throws \Throwable
      */
-    public function testFundRequestRecordsApplySuccess()
+    public function testFundRequestRecordsApplySuccess(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
@@ -266,14 +265,13 @@ class FundCriteriaTest extends TestCase
 
         $this->assertTrue($fundRequest->isApproved());
         $this->assertCount(1, $vouchers);
-        $this->assertTrue($vouchers[0]?->amount == $fund->fund_formulas[0]?->amount);
+        $this->assertEquals($vouchers[0]?->amount, $fund->fund_formulas[0]?->amount);
     }
 
     /**
      * @return void
-     * @throws \Throwable
      */
-    public function testStoreSinglePrevalidationSuccess()
+    public function testStoreSinglePrevalidationSuccess(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
@@ -311,9 +309,8 @@ class FundCriteriaTest extends TestCase
 
     /**
      * @return void
-     * @throws \Throwable
      */
-    public function testFundRequestRecordsApplyErrorValue()
+    public function testFundRequestRecordsApplyErrorValue(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
@@ -338,7 +335,6 @@ class FundCriteriaTest extends TestCase
 
     /**
      * @return void
-     * @throws \Throwable
      */
     public function testFundRequestRecordsApplyErrorValueMin(): void
     {
@@ -362,7 +358,6 @@ class FundCriteriaTest extends TestCase
 
     /**
      * @return void
-     * @throws \Throwable
      */
     public function testFundRequestRecordsApplyErrorValueMax(): void
     {
@@ -386,7 +381,6 @@ class FundCriteriaTest extends TestCase
 
     /**
      * @return void
-     * @throws \Throwable
      */
     public function testFundRequestRecordsApplyErrorValueOptional(): void
     {
@@ -415,7 +409,6 @@ class FundCriteriaTest extends TestCase
 
     /**
      * @return void
-     * @throws \Throwable
      */
     public function testFundRequestRecordAttachments(): void
     {
@@ -496,7 +489,7 @@ class FundCriteriaTest extends TestCase
             'key' => $key,
         ]);
 
-         if ($type == $recordType::TYPE_SELECT) {
+         if ($type === $recordType::TYPE_SELECT) {
              $recordType->record_type_options()->createMany([[
                  'value' => 'foo',
                  'name' => 'Foo',
