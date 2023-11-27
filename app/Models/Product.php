@@ -858,7 +858,8 @@ class Product extends BaseModel
                 'reservation_extra_payments',
             ]) : [],
             'total_amount' => $this->unlimited_stock ? 0 : $total_amount,
-        ], compact('price', 'price_type', 'price_discount'));
+            ...compact('price', 'price_type', 'price_discount')
+        ]);
     }
 
     /**
