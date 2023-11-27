@@ -31,7 +31,7 @@ class UpdateProductRequest extends BaseProductRequest
         $price_type = $this->input('price_type');
         $minAmount = $product->countReserved() + $product->countSold();
 
-        return array_merge([
+        return [
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,2500',
             'alternative_text'      => 'nullable|between:2,500',
@@ -53,7 +53,8 @@ class UpdateProductRequest extends BaseProductRequest
             'expire_at' => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id' => 'required|exists:product_categories,id',
             'media_uid' => ['nullable', new MediaUidRule('product_photo')],
-        ], ...$this->reservationRules());
+            ...$this->reservationRules()
+        ];
     }
 
     /**
