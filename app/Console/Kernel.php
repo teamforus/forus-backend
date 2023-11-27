@@ -32,6 +32,8 @@ use App\Console\Commands\UpdateRolesCommand;
 use App\Console\Commands\UpdateSystemNotificationsCommand;
 use App\Services\Forus\Session\Commands\UpdateSessionsExpirationCommand;
 use App\Services\BackofficeApiService\Commands\SendBackofficeLogsCommand;
+use App\Services\MollieService\Commands\UpdateCompletedMollieConnectionsCommand;
+use App\Services\MollieService\Commands\UpdatePendingMollieConnectionsCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -106,6 +108,10 @@ class Kernel extends ConsoleKernel
         // seeders
         UpdateProductCategoriesCommand::class,
         UpdateRolesCommand::class,
+
+        // mollie
+        UpdateCompletedMollieConnectionsCommand::class,
+        UpdatePendingMollieConnectionsCommand::class,
     ];
 
     /**
@@ -163,6 +169,7 @@ class Kernel extends ConsoleKernel
         $this->scheduleBackoffice($schedule);
         $this->scheduleQueue($schedule);
         $this->scheduleAuthExpiration($schedule);
+        $this->scheduleMollie($schedule);
     }
 
     /**
@@ -302,6 +309,28 @@ class Kernel extends ConsoleKernel
         $schedule->command('funds.backoffice:send-logs')
             ->withoutOverlapping()
             ->everyMinute()
+            ->onOneServer();
+    }
+
+    /**
+     * @param Schedule $schedule
+     */
+    public function scheduleMollie(Schedule $schedule): void
+    {
+        /**
+         * UpdatePendingMollieConnectionsCommand
+         */
+        $schedule->command('mollie:update-pending-connections')
+            ->hourly()
+            ->onOneServer()
+            ->withoutOverlapping();
+
+        /**
+         * UpdateCompletedMollieConnectionsCommand
+         */
+        $schedule->command('mollie:update-completed-connections')
+            ->dailyAt("09:00")
+            ->withoutOverlapping()
             ->onOneServer();
     }
 

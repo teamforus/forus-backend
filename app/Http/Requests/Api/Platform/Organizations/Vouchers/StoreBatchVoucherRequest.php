@@ -4,8 +4,9 @@ namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
 use App\Rules\Base\IbanRule;
+use App\Rules\BsnRule;
 use App\Rules\ProductIdInStockRule;
-use App\Rules\VouchersUploadArrayRule;
+use App\Rules\VouchersArraySumAmountsRule;
 use Illuminate\Validation\Rule;
 
 class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
@@ -22,14 +23,14 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
 
         return [
             'fund_id' => $this->fundIdRule(),
-            'vouchers' => ['required', new VouchersUploadArrayRule($fund)],
+            'vouchers' => 'required|array',
             'vouchers.*' => 'required|array',
             'vouchers.*.amount' => $this->amountRule($fund),
             'vouchers.*.product_id' => $this->productIdRule($fund),
             'vouchers.*.expire_at' => $this->expireAtRule($fund),
             'vouchers.*.note' => 'nullable|string|max:280',
             'vouchers.*.email' => 'nullable|string|email:strict',
-            'vouchers.*.bsn' => $bsn_enabled ? 'nullable|string|digits:9' : 'nullable|in:',
+            'vouchers.*.bsn' => $bsn_enabled ? ['nullable', new BsnRule()] : 'nullable|in:',
             'vouchers.*.activate' => 'boolean',
             'vouchers.*.activation_code' => 'boolean',
             'vouchers.*.client_uid' => 'nullable|string|max:20',
@@ -70,7 +71,8 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
     /**
      * @return array
      */
-    private function fundIdRule(): array {
+    private function fundIdRule(): array
+    {
         $fundIds = $this->organization->funds()->pluck('id')->toArray();
 
         return [
@@ -83,7 +85,8 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
      * @param Fund $fund
      * @return string[]
      */
-    private function expireAtRule(Fund $fund): array {
+    private function expireAtRule(Fund $fund): array
+    {
         return [
             'nullable',
             'date_format:Y-m-d',
@@ -103,6 +106,7 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
             'required_without:vouchers.*.product_id',
             'numeric',
             'between:.1,' . currency_format($fund->getMaxAmountPerVoucher()),
+            new VouchersArraySumAmountsRule($fund, $this->input('vouchers')),
         ] : 'nullable';
     }
 

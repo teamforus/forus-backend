@@ -128,6 +128,13 @@ return [
         'wrong_categories'  => 'Verkeerde categorieën.',
         'already_requested' => 'U heeft dit al een keer aangevraagd.',
     ],
+
+    'city_name' => 'Het lijkt erop dat de :attribute niet klopt.',
+    'street_name' => 'Het lijkt erop dat de :attribute niet klopt.',
+    'house_number' => 'Het lijkt erop dat het :attribute niet klopt.',
+    'house_addition' => 'Het lijkt erop dat de :attribute niet klopt.',
+    'postcode' => 'Het lijkt erop dat de :attribute niet klopt.',
+
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines
@@ -254,11 +261,15 @@ return [
         'voucher_id' => 'voucher',
         'product_id' => 'product',
         'record_type_key_multiplier' => 'record type',
-        'birth_date' => 'Geboortedatum',
         'label' => 'label',
         'type' => 'type',
         'birth_date' => 'geboortedatum',
-        'external_page_url' => 'externe url'
+        'external_page_url' => 'externe url',
+
+        'house_nr' => 'huisnummer',
+        'house_nr_addition' => 'huisnummertoevoeging',
+        'postal_code' => 'postcode',
+        'street' => 'straat',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',

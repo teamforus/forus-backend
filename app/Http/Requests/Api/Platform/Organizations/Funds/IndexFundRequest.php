@@ -37,7 +37,7 @@ class IndexFundRequest extends BaseFormRequest
             'organization_id' => 'nullable|exists:organizations,id',
             'implementation_id' => 'nullable|exists:implementations,id',
             'order_by' => 'nullable|in:created_at',
-            'order_by_dir' => 'nullable|in:asc,desc',
+            'order_dir' => 'nullable|in:asc,desc',
             'configured' => 'nullable|bool',
             'with_archived' => 'nullable|bool',
             'with_external' => 'nullable|bool',

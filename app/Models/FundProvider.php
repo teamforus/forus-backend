@@ -35,6 +35,7 @@ use Carbon\Carbon;
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property bool $allow_extra_payments
  * @property-read \App\Models\Fund $fund
  * @property-read Collection<int, \App\Models\FundProviderChat> $fund_provider_chats
  * @property-read int|null $fund_provider_chats_count
@@ -58,6 +59,7 @@ use Carbon\Carbon;
  * @method static Builder|FundProvider newQuery()
  * @method static Builder|FundProvider query()
  * @method static Builder|FundProvider whereAllowBudget($value)
+ * @method static Builder|FundProvider whereAllowExtraPayments($value)
  * @method static Builder|FundProvider whereAllowProducts($value)
  * @method static Builder|FundProvider whereAllowSomeProducts($value)
  * @method static Builder|FundProvider whereCreatedAt($value)
@@ -102,7 +104,7 @@ class FundProvider extends BaseModel
      */
     protected $fillable = [
         'organization_id', 'fund_id', 'state',
-        'allow_products', 'allow_budget', 'allow_some_products', 'excluded',
+        'allow_products', 'allow_budget', 'allow_some_products', 'excluded', 'allow_extra_payments',
     ];
 
     /**
@@ -113,6 +115,7 @@ class FundProvider extends BaseModel
         'allow_budget' => 'boolean',
         'allow_products' => 'boolean',
         'allow_some_products' => 'boolean',
+        'allow_extra_payments' => 'boolean',
     ];
 
     /**

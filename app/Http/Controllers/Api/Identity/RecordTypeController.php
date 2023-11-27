@@ -18,14 +18,11 @@ class RecordTypeController extends Controller
      */
     public function index(IndexRecordTypesRequest $request): JsonResponse
     {
-        $insertableOnly = $request->input('insertable_only', false);
-        $system = $request->input('system', false);
-
-        $recordTypes = RecordType::searchQuery(!$insertableOnly || $system, $request->only([
-            'vouchers',
+        $query = RecordType::searchQuery($request->only([
+            'vouchers', 'criteria', 'organization_id',
         ]));
 
-        $recordTypesCollection = RecordTypeResource::queryCollection($recordTypes, 1000);
+        $recordTypesCollection = RecordTypeResource::queryCollection($query, 1000);
 
         return new JsonResponse($recordTypesCollection->toArray($request));
     }

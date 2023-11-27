@@ -19,7 +19,7 @@ class EmployeePolicy
      */
     public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $organization->isEmployee($identity);
+        return $organization->findEmployee($identity)?->roles()->exists();
     }
 
     /**

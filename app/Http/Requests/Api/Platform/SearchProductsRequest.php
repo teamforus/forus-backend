@@ -35,7 +35,7 @@ class SearchProductsRequest extends BaseFormRequest
             'product_category_id'   => 'nullable|exists:product_categories,id',
             'fund_type'             => 'nullable|in:' . implode(',', Fund::TYPES),
             'order_by'              => 'nullable|in:name,created_at,price_min,price_max,price,most_popular',
-            'order_by_dir'          => 'nullable|in:asc,desc',
+            'order_dir'             => 'nullable|in:asc,desc',
             'simplified'            => 'nullable|bool',
             'postcode'              => 'nullable|string|max:100',
             'distance'              => 'nullable|integer|max:1000',

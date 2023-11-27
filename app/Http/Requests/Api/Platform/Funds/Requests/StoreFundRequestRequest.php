@@ -4,10 +4,9 @@ namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
-use App\Rules\FundRequests\FundRequestFilesRule;
-use App\Rules\FundRequests\FundRequestRecordRecordTypeKeyRule;
-use App\Rules\FundRequests\FundRequestRecordValueRule;
-use App\Rules\RecordTypeKeyExistsRule;
+use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordCriterionIdRule;
+use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordFilesRule;
+use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordValueRule;
 use Illuminate\Support\Arr;
 
 /**
@@ -36,7 +35,7 @@ class StoreFundRequestRequest extends BaseFormRequest
     {
         return array_merge(
             $this->contactInformationRule($this->fund),
-            $this->recordsRule($this->fund)
+            $this->recordsRule($this->fund),
         );
     }
 
@@ -66,26 +65,21 @@ class StoreFundRequestRequest extends BaseFormRequest
      */
     protected function recordsRule(Fund $fund): array
     {
-        $criteria = $fund->criteria()->pluck('id')->implode(',');
-
         return [
             'records' => $this->isValidationRequest ? 'present|array' : 'present|array|min:1',
-            'records.*' => [
-                'required',
-                new FundRequestFilesRule($fund),
-            ],
+            'records.*' => 'required|array',
             'records.*.value' => [
-                'required',
+                'present',
                 new FundRequestRecordValueRule($fund, $this),
             ],
-            'records.*.fund_criterion_id' => 'required|in:' . $criteria,
-            'records.*.record_type_key' => [
-                'required',
-                new RecordTypeKeyExistsRule(true),
-                new FundRequestRecordRecordTypeKeyRule($fund, $this),
+            'records.*.files' => [
+                'present',
+                new FundRequestRecordFilesRule($fund, $this),
             ],
-            'records.*.files' => 'nullable|array',
-            'records.*.files.*' => 'required|exists:files,uid',
+            'records.*.fund_criterion_id' => [
+                'present',
+                new FundRequestRecordCriterionIdRule($fund, $this),
+            ],
         ];
     }
 
@@ -95,15 +89,17 @@ class StoreFundRequestRequest extends BaseFormRequest
     public function messages(): array
     {
         $messages = [];
+        $records = $this->get('records', []);
 
-        foreach ($this->get('records', []) as $val) {
+        foreach (is_array($records) ? $records : [] as $val) {
             $record_type_key = Arr::get($val, 'record_type_key', false);
 
             if ($record_type_key) {
                 $prefix = (ends_with($record_type_key, '_eligible') ? 'eligible_' : '');
 
-                $messages["records.*.value.required"] =
-                    trans("validation.fund_request_request_{$prefix}field_incomplete");
+                $messages["records.*.value.required"] = trans(
+                    "validation.fund_request_request_{$prefix}field_incomplete",
+                );
             }
         }
 

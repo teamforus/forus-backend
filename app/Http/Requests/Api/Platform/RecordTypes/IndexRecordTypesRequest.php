@@ -24,8 +24,9 @@ class IndexRecordTypesRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
+            'criteria' => 'nullable|boolean',
             'vouchers' => 'nullable|boolean',
-            'insertable_only' => 'nullable|boolean',
+            'organization_id' => 'nullable|exists:organizations,id',
         ];
     }
 }

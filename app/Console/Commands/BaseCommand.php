@@ -38,7 +38,11 @@ abstract class BaseCommand extends Command
     {
         foreach ($list as $item) {
             if (is_string($item)) {
-                echo str_repeat("    ", $depth) . " - $item  \n";
+                if (starts_with($item, '#')) {
+                    echo str_repeat("    ", $depth) . '[' . $this->green($item) . "]  \n";
+                } else {
+                    echo str_repeat("    ", $depth) . " - $item  \n";
+                }
             }
 
             if (is_null($item)) {

@@ -50,11 +50,65 @@ return [
         'organization_name' => 'Nijmegen',
         'fund' => [
             'type' => 'subsidies',
+            'criteria_editable_after_start' => true,
         ],
         'fund_config' => [
             'auth_2fa_restrict_emails' => true,
             'auth_2fa_restrict_auth_sessions' => true,
             'auth_2fa_restrict_reimbursements' => true,
+        ],
+        "fund_criteria" => [
+            [
+                'record_type_key' => "municipality",
+                'operator' => "*",
+                'value' => '',
+                'title' => "Municipality",
+                'show_attachment' => false,
+                'optional' => true,
+            ],
+            [
+                'record_type_key' => "children_nth",
+                'operator' => ">",
+                'value' => '2',
+                'title' => "Number of children",
+                'show_attachment' => false,
+            ],
+            [
+                'record_type_key' => "income_level",
+                'operator' => "<",
+                'value' => '1000',
+                'title' => "Income level",
+                'show_attachment' => false,
+            ],
+            [
+                'record_type_key' => "birth_date",
+                'operator' => "<",
+                'value' => now()->subYears(18)->format('d-m-Y'),
+                'title' => "Birth date",
+                'show_attachment' => false,
+                'optional' => false,
+            ],
+            [
+                'record_type_key' => "single_parent",
+                'operator' => "=",
+                'value' => 'Ja',
+                'title' => "Single parent",
+                'show_attachment' => false,
+            ],
+            [
+                'record_type_key' => "iban",
+                'operator' => "*",
+                'title' => "Bank account (IBAN)",
+                'show_attachment' => false,
+                'optional' => true,
+            ],
+            [
+                'record_type_key' => "email",
+                'operator' => "*",
+                'title' => "Contact email",
+                'show_attachment' => false,
+                'optional' => true,
+            ],
         ],
     ],
     'Westerkwartier' => [
@@ -80,8 +134,6 @@ return [
             'criteria_editable_after_start' => false,
             'notification_amount' => null,
             'manage_provider_products' => true,
-            'start_date' => "2020-09-18",
-            'end_date' => "2023-12-23",
             'default_validator_employee_id' => null,
             'auto_requests_validation' => false,
         ],
@@ -186,8 +238,6 @@ return [
             'criteria_editable_after_start' => false,
             'notification_amount' => null,
             'manage_provider_products' => true,
-            'start_date' => "2020-09-18",
-            'end_date' => "2023-12-23",
             'default_validator_employee_id' => null,
             'auto_requests_validation' => false,
         ],
@@ -321,6 +371,13 @@ return [
     'Doetegoed' => [
         'implementation_name' => 'Doetegoed',
         'organization_name' => 'Doetegoed',
+        'fund' => [
+            'type' => 'budget',
+        ],
+    ],
+    'Goereeoverflakkee' => [
+        'implementation_name' => 'Goereeoverflakkee',
+        'organization_name' => 'Goereeoverflakkee',
         'fund' => [
             'type' => 'budget',
         ],
