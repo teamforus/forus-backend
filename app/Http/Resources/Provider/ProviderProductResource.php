@@ -8,21 +8,18 @@ use App\Models\Fund;
 use App\Models\FundProviderChatMessage;
 use Illuminate\Database\Eloquent\Builder;
 
-/**
- * Class ProductResource
- * @package App\Http\Resources
- */
 class ProviderProductResource extends ProductResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request|any $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      */
     public function toArray($request): array
     {
-        return array_merge(parent::toArray($request), [
+        return [
+            ...parent::toArray($request),
             'sponsor_organization_id' => $this->resource->sponsor_organization_id,
             'sponsor_organization' => new OrganizationBasicResource($this->resource->sponsor_organization),
             'unseen_messages' => $this->hasUnseenMessages(),
@@ -32,7 +29,8 @@ class ProviderProductResource extends ProductResource
             })->select([
                 'id', 'name', 'state'
             ])->get(),
-        ]);
+            ...$this->extraPaymentConfigs(),
+        ];
     }
 
     /**
@@ -43,5 +41,15 @@ class ProviderProductResource extends ProductResource
         return FundProviderChatMessage::whereIn(
             'fund_provider_chat_id', $this->resource->fund_provider_chats()->pluck('id')
         )->where('provider_seen', '=', false)->count();
+    }
+
+    /**
+     * @return array
+     */
+    private function extraPaymentConfigs(): array
+    {
+        return $this->resource->organization->canReceiveExtraPayments()
+            ? $this->resource->only('reservation_extra_payments')
+            : [];
     }
 }

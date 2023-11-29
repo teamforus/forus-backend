@@ -12,7 +12,6 @@ use App\Models\Organization;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 
 class FundProviderController extends Controller
 {
@@ -90,19 +89,12 @@ class FundProviderController extends Controller
         $this->authorize('updateSponsor', [$fundProvider, $organization, $fund]);
 
         DB::transaction(function() use ($organization, $fundProvider, $request, $fund) {
-            $attributes = $request->only($fund->isTypeBudget() ? [
-                'allow_products', 'allow_budget', 'excluded',
-            ] : [
-                'excluded'
-            ]);
+            $fundProvider->update($request->only([
+                ...$fund->isTypeBudget() ? ['allow_products', 'allow_budget', 'excluded'] : ['excluded'],
+                ...$organization->allow_provider_extra_payments ? ['allow_extra_payments'] : [],
+            ]));
 
-            if ($organization->allow_provider_extra_payments) {
-                $attributes = array_merge($attributes, $request->only('allow_extra_payments'));
-            }
-
-            $fundProvider->update($attributes);
-
-            if ($request->has('state') && ($request->input('state') != $fundProvider->state)) {
+            if ($request->has('state') && ($request->input('state') !== $fundProvider->state)) {
                 $fundProvider->setState($request->input('state'));
             }
 

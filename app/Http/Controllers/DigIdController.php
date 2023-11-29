@@ -55,12 +55,12 @@ class DigIdController extends Controller
         }
 
         // Authentication
-        if ($session->session_request == 'auth') {
+        if ($session->session_request === 'auth') {
             return $this->_resolveAuth($session, $request);
         }
 
         // Fund request
-        if ($session->session_request == 'fund_request') {
+        if ($session->session_request === 'fund_request') {
             return $this->_resolveFundRequest($session);
         }
 

@@ -2,37 +2,35 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
-use App\Events\MollieConnections\MollieConnectionDeleted;
-use App\Exceptions\AuthorizationJsonException;
+use App\Events\MollieConnections\MollieConnectionCreated;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\MollieConnections\FetchMollieConnectionRequest;
+use App\Http\Requests\Api\Platform\Organizations\MollieConnections\OauthMollieConnectionRequest;
 use App\Http\Requests\Api\Platform\Organizations\MollieConnections\StoreMollieConnectionRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\MollieConnectionResource;
 use App\Models\Organization;
-use App\Services\MollieService\Exceptions\MollieApiException;
+use App\Services\MollieService\Data\ForusTokenData;
+use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Models\MollieConnection;
 use App\Services\MollieService\MollieService;
-use App\Traits\ThrottleWithMeta;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Config;
-use Throwable;
+use Illuminate\Support\Facades\Event;
 
 class MollieConnectionController extends Controller
 {
-    use ThrottleWithMeta;
-
     /**
      * @param Organization $organization
      * @return MollieConnectionResource
      * @throws AuthorizationException
      */
-    public function getConfigured(Organization $organization): MollieConnectionResource
+    public function getActive(Organization $organization): MollieConnectionResource
     {
         $this->authorize('viewAny', [MollieConnection::class, $organization]);
 
-        return new MollieConnectionResource($organization->mollie_connection_configured);
+        return MollieConnectionResource::create($organization->mollie_connection);
     }
 
     /**
@@ -47,99 +45,105 @@ class MollieConnectionController extends Controller
     ): JsonResponse {
         $this->authorize('store', [MollieConnection::class, $organization]);
 
+        $data = $request->only([
+            'name', 'country_code', 'profile_name', 'phone', 'website',
+            'email', 'first_name', 'last_name', 'street', 'city', 'postcode',
+        ]);
+
+        $mollieService = MollieService::make(new ForusTokenData());
+        $state = token_generator()->generate(64);
+
         try {
-            $data = MollieService::make()->createClientLink([
-                'name' => $request->get('name'),
-                'owner' => $request->only([
-                    'email', 'first_name', 'last_name',
-                ]),
-                'address' => $request->only([
-                    'street', 'city', 'postcode', 'country_code',
-                ]),
-                'profile' => array_merge($request->only('email', 'phone', 'website'), [
-                    'name' => $request->get('profile_name')
-                ]),
+            $connectAuthUrl = $mollieService->createClientLink($state, $request->get('name'), [
+                "email" => Arr::get($data, 'email'),
+                "givenName" => Arr::get($data, 'first_name'),
+                "familyName" => Arr::get($data, 'last_name'),
+            ], [
+                'streetAndNumber' => Arr::get($data, 'street'),
+                'postalCode' => Arr::get($data, 'postcode'),
+                'city' => Arr::get($data, 'city'),
+                'country' => Arr::get($data, 'country_code'),
             ]);
-        } catch (MollieApiException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], 422);
-        } catch (Throwable) {
-            return new JsonResponse(['message' => 'Onbekende foutmelding!'], 500);
+        } catch (MollieException $e) {
+            abort(503, $e->getMessage());
         }
 
-        MollieConnection::makeNewConnection($organization, array_merge($request->only([
-            'email', 'first_name', 'last_name', 'street', 'city', 'postcode',
-        ]), [
-            'organization_name' => $request->get('name'),
-            'country' => $request->get('country_code'),
-            'state_code' => $data['state'],
-            'profile' => array_merge($request->only('email', 'phone', 'website'), [
-                'name' => $request->get('profile_name'),
+        MollieConnection::makeNewConnection($organization, [
+            ...Arr::only($data, [
+                'email', 'first_name', 'last_name', 'street', 'city', 'postcode',
             ]),
-        ]));
-
-        return new JsonResponse(Arr::only($data, 'url'));
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param Organization $organization
-     * @return JsonResponse
-     * @throws AuthorizationException|AuthorizationJsonException
-     */
-    public function connectOAuth(
-        BaseFormRequest $request,
-        Organization $organization,
-    ): JsonResponse {
-        $this->maxAttempts = Config::get('forus.throttles.mollie.connect.attempts');
-        $this->decayMinutes = Config::get('forus.throttles.mollie.connect.decay');
-
-        $this->throttleWithKey('to_many_attempts', $request, 'mollie_connection');
-        $this->authorize('connectMollieAccount', [MollieConnection::class, $organization]);
+            'organization_name' => Arr::get($data, 'name'),
+            'state_code' => $state,
+            'country' => Arr::get($data, 'country_code'),
+        ], [
+            'name' => Arr::get($data, 'profile_name'),
+            ...Arr::only($data, ['email', 'phone', 'website']),
+        ]);
 
         return new JsonResponse([
-            'url' => MollieService::make()->mollieConnect($organization),
+            'url' => $connectAuthUrl,
         ]);
     }
 
     /**
-     * @param BaseFormRequest $request
+     * @param OauthMollieConnectionRequest $request
      * @param Organization $organization
-     * @return MollieConnectionResource|JsonResponse
-     * @throws AuthorizationJsonException
+     * @return JsonResponse
      */
-    public function fetchMollieAccount(
-        BaseFormRequest $request,
+    public function connectOAuth(
+        OauthMollieConnectionRequest $request,
         Organization $organization,
-    ): MollieConnectionResource|JsonResponse {
-        $this->maxAttempts = Config::get('forus.throttles.mollie.fetch.attempts');
-        $this->decayMinutes = Config::get('forus.throttles.mollie.fetch.decay');
+    ): JsonResponse {
+        $this->authorize('connectMollieAccount', [MollieConnection::class, $organization]);
 
-        $this->throttleWithKey('to_many_attempts', $request, 'mollie_connection');
+        $state = token_generator()->generate(64);
+        $mollieService = MollieService::make(new ForusTokenData());
+        $connectAuthUrl = $mollieService->mollieConnect($state);
+
+        Event::dispatch(new MollieConnectionCreated($organization->mollie_connections()->create([
+            'state_code' => $state,
+        ]), $request->employee($organization)));
+
+        return new JsonResponse([
+            'url' => $connectAuthUrl,
+        ]);
+    }
+
+    /**
+     * @param FetchMollieConnectionRequest $request
+     * @param Organization $organization
+     * @return MollieConnectionResource
+     */
+    public function fetchActive(
+        FetchMollieConnectionRequest$request,
+        Organization $organization,
+    ): MollieConnectionResource {
         $this->authorize('fetchMollieAccount', [MollieConnection::class, $organization]);
 
         try {
-            $connection = $organization->mollie_connection_configured->fetchAndUpdateConnection();
+            $employee = $request->employee($organization);
+            $connection = $organization->mollie_connection->fetchAndUpdateConnection($employee);
 
             return MollieConnectionResource::create($connection);
-        } catch (MollieApiException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], 422);
+        } catch (MollieException $e) {
+            abort(503, $e->getMessage());
         }
     }
 
     /**
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param MollieConnection $connection
      * @return JsonResponse
      */
     public function destroy(
+        BaseFormRequest $request,
         Organization $organization,
         MollieConnection $connection,
     ): JsonResponse {
         $this->authorize('destroy', [$connection, $organization]);
 
-        MollieService::make($connection)->revokeToken();
-        MollieConnectionDeleted::dispatch($connection);
-
+        $connection->revoke($request->employee($organization));
         $connection->delete();
 
         return new JsonResponse([]);

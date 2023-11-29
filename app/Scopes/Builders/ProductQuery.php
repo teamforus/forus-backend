@@ -340,10 +340,10 @@ class ProductQuery
     public static function stockAmountSubQuery(Builder $query): Builder
     {
         $query->addSelect([
-            'reservations_count' => ProductReservation::where([
-                'state' => ProductReservation::STATE_PENDING,
-                'product_id' => 'products.id',
-            ])->selectRaw('COUNT(*)'),
+            'reservations_count' => ProductReservation::whereIn('state', [
+                ProductReservation::STATE_WAITING,
+                ProductReservation::STATE_PENDING,
+            ])->where('product_id', 'products.id')->selectRaw('COUNT(*)'),
             'transactions_count' => VoucherTransaction::where([
                 'product_id' => 'products.id',
             ])->selectRaw('COUNT(*)'),

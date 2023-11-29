@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Exports\ProductReservationsExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\ProductReservations\FetchExtraPaymentProductReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\IndexProductReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationBatchRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationRequest;
@@ -19,7 +20,9 @@ use App\Models\Voucher;
 use App\Scopes\Builders\ProductReservationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Searches\ProductReservationsSearch;
+use App\Services\MollieService\Exceptions\MollieException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -283,5 +286,57 @@ class ProductReservationsController extends Controller
         $productReservation->unArchive($organization->findEmployee($request->auth_address()));
 
         return new ProductReservationResource($productReservation);
+    }
+
+    /**
+     * @param FetchExtraPaymentProductReservationsRequest $request
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @return ProductReservationResource
+     * @throws \Throwable
+     */
+    public function fetchExtraPayment(
+        FetchExtraPaymentProductReservationsRequest $request,
+        Organization $organization,
+        ProductReservation $productReservation
+    ): ProductReservationResource {
+        $this->authorize('show', $organization);
+        $this->authorize('fetchExtraPayment', [$productReservation, $organization]);
+
+        try {
+            $productReservation->fetchExtraPayment($request->employee($organization));
+        } catch (MollieException $e) {
+            abort(503, $e->getMessage());
+        }
+
+        return new ProductReservationResource($productReservation->refresh());
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @return ProductReservationResource|JsonResponse
+     * @throws \Throwable
+     */
+    public function refundExtraPayment(
+        BaseFormRequest $request,
+        Organization $organization,
+        ProductReservation $productReservation
+    ): ProductReservationResource|JsonResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('refundExtraPayment', [$productReservation, $organization]);
+
+        try {
+            $this->authorize('fetchExtraPayment', [$productReservation, $organization]);
+            $productReservation->fetchExtraPayment($request->employee($organization));
+
+            $this->authorize('refundExtraPayment', [$productReservation, $organization]);
+            $productReservation->refundExtraPayment($request->employee($organization));
+        } catch (MollieException $e) {
+            abort(503, $e->getMessage());
+        }
+
+        return new ProductReservationResource($productReservation->refresh());
     }
 }

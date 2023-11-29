@@ -104,7 +104,7 @@ class VoucherTest extends TestCase
         Cache::clear();
 
         $fund = $this->findFund($testCase['fund_id']);
-        $this->assertTrue($fund->type == $testCase['assert_fund_type'], 'Unexpected fund type.');
+        $this->assertEquals($fund->type, $testCase['assert_fund_type'], 'Unexpected fund type.');
 
         $fund->fund_config->forceFill($testCase['fund_config'] ?? [])->save();
         $fund->organization->forceFill($testCase['organization'] ?? [])->save();
@@ -193,7 +193,7 @@ class VoucherTest extends TestCase
             $this->assertAbilityUpdateLimitMultiplier($voucher);
             $this->assertAbilityGenerateActivationCode($voucher);
 
-            if ($assert['type'] == 'budget' && $voucher->fund->isTypeSubsidy()) {
+            if ($assert['type'] === 'budget' && $voucher->fund->isTypeSubsidy()) {
                 Cache::clear();
 
                 $this->assertAbilityAssignPhysicalCard($voucher);
@@ -201,7 +201,7 @@ class VoucherTest extends TestCase
                 $this->assertAbilityCreatePhysicalCardRequest($voucher);
             }
 
-            if ($assert['type'] == 'budget' && $voucher->fund->isTypeBudget()) {
+            if ($assert['type'] === 'budget' && $voucher->fund->isTypeBudget()) {
                 $this->assertAbilityCreateTransactions($voucher);
                 $this->assertAbilityCreateTopUp($voucher);
             }
@@ -320,13 +320,14 @@ class VoucherTest extends TestCase
     /**
      * @param Voucher $voucher
      * @return void
+     * @throws \Exception
      */
     protected function assertAbilityUpdateLimitMultiplier(Voucher $voucher): void
     {
         $voucher->refresh();
 
         if ($voucher->fund->isTypeSubsidy()) {
-            $limitMultiplier = $voucher->limit_multiplier + rand(1, 10);
+            $limitMultiplier = $voucher->limit_multiplier + random_int(1, 10);
             $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
             $url = $this->getSponsorApiUrl($voucher);
 
@@ -349,7 +350,7 @@ class VoucherTest extends TestCase
     {
         $voucher->refresh();
 
-        if (!$voucher->activation_code && !$voucher->isDeactivated() && !$voucher->is_granted) {
+        if (!$voucher->is_granted && !$voucher->activation_code && !$voucher->isDeactivated()) {
             $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
             $url = $this->getSponsorApiUrl($voucher, '/activation-code');
 
@@ -366,6 +367,7 @@ class VoucherTest extends TestCase
     /**
      * @param Voucher $voucher
      * @return void
+     * @throws \Exception
      */
     protected function assertAbilityCreateTransactions(Voucher $voucher): void
     {
@@ -387,11 +389,12 @@ class VoucherTest extends TestCase
      * @param Voucher $voucher
      * @param bool $assert
      * @return void
+     * @throws \Exception
      */
     protected function makeDirectTransaction(Voucher $voucher, bool $assert = true): void
     {
         $startDate = now();
-        $amount = rand(1, round($voucher->amount_available / 2));
+        $amount = random_int(1, round($voucher->amount_available / 2));
         $organization = $voucher->fund->organization;
 
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
@@ -423,11 +426,12 @@ class VoucherTest extends TestCase
     /**
      * @param Voucher $voucher
      * @return void
+     * @throws \Exception
      */
     protected function makeTransactionToProvider(Voucher $voucher): void
     {
         $startDate = now();
-        $amount = rand(1, round($voucher->amount_available / 2));
+        $amount = random_int(1, round($voucher->amount_available / 2));
         $organization = $voucher->fund->organization;
         $fundProvider = FundProviderQuery::whereApprovedForFundsFilter(
             FundProvider::query(),
@@ -463,6 +467,7 @@ class VoucherTest extends TestCase
     /**
      * @param Voucher $voucher
      * @return void
+     * @throws \Exception
      */
     protected function assertAbilityCreateTopUp(Voucher $voucher): void
     {
@@ -483,6 +488,7 @@ class VoucherTest extends TestCase
      * @param Voucher $voucher
      * @param bool $assert
      * @return void
+     * @throws \Exception
      */
     protected function makeTopUp(Voucher $voucher, bool $assert = true): void
     {
@@ -492,7 +498,7 @@ class VoucherTest extends TestCase
             $voucher->fund->fund_config->limit_voucher_top_up_amount,
             $voucher->fund->fund_config->limit_voucher_total_amount - $voucher->amount_total,
         ]);
-        $amount = rand(1, round($maxAmount / 2));
+        $amount = random_int(1, round($maxAmount / 2));
 
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
         $url = sprintf($this->apiOrganizationUrl . '/sponsor/transactions', $organization->id);
@@ -753,7 +759,7 @@ class VoucherTest extends TestCase
     {
         $voucher->refresh();
 
-        if ($voucher->isProductType() && $voucher->identity->email) {
+        if ($voucher->identity->email && $voucher->isProductType()) {
             $startDate = now();
             $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity));
             $url = $this->getIdentityApiUrl($voucher, '/share');

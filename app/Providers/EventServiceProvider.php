@@ -12,6 +12,7 @@ use App\Listeners\OrganizationSubscriber;
 use App\Listeners\ProductReservationSubscriber;
 use App\Listeners\ProductSubscriber;
 use App\Listeners\ReimbursementSubscriber;
+use App\Listeners\ReservationExtraPaymentSubscriber;
 use App\Listeners\VoucherRecordSubscriber;
 use App\Listeners\VoucherSubscriber;
 use App\Listeners\VoucherTransactionsSubscriber;
@@ -42,6 +43,7 @@ class EventServiceProvider extends ServiceProvider
         MollieConnectionSubscriber::class,
         ProductReservationSubscriber::class,
         VoucherTransactionsSubscriber::class,
+        ReservationExtraPaymentSubscriber::class,
     ];
 
     /**
