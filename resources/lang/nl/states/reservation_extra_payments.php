@@ -2,8 +2,8 @@
 
 return [
     'open' => 'Open',
-    'paid' => 'Paid',
-    'failed' => 'Failed',
+    'paid' => 'Betaald',
+    'failed' => 'Mislukt',
     'pending' => 'In afwachting',
     'canceled' => 'Geannuleerd',
 ];
