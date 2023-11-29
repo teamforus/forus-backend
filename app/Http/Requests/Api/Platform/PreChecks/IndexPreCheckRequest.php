@@ -24,7 +24,9 @@ class IndexPreCheckRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            //
+            'q' => 'nullable|string',
+            'organization_id' => 'nullable|exists:organizations,id',
+            'tag' => 'nullable|string|exists:tags,key',
         ];
     }
 }

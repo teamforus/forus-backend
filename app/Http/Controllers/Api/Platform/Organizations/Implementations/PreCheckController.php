@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Implementations;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\PreChecks\IndexPreCheckRequest;
 use App\Http\Requests\Api\Platform\PreChecks\StorePreCheckRequest;
-use App\Http\Requests\Api\Platform\PreChecks\UpdatePreCheckRequest;
 use App\Http\Resources\PreCheckResource;
 use App\Models\Implementation;
 use App\Models\Organization;
@@ -82,32 +81,6 @@ class PreCheckController extends Controller
         }
 
         return PreCheckResource::queryCollection($implementation->getPreChecks(), $request);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param UpdatePreCheckRequest $request
-     * @param Organization $organization
-     * @param Implementation $implementation
-     * @return PreCheckResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function updateBannerFields(
-        UpdatePreCheckRequest $request,
-        Organization $organization,
-        Implementation $implementation
-    ): PreCheckResource  {
-        $this->authorize('show', $organization);
-        $this->authorize('viewAny', [Implementation::class, $organization]);
-        $this->authorize('view', [$implementation, $organization]);
-
-        /** @var PreCheck $preCheck */
-        $preCheck = $implementation->pre_checks()->updateOrCreate(
-            $request->only(['name', 'title', 'description'])
-        );
-
-        return PreCheckResource::create($preCheck);
     }
 
     /**

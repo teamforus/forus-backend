@@ -6,6 +6,8 @@ use App\Http\Resources\FundCriterionResource;
 use App\Http\Resources\FundResource;
 use App\Rules\FundRequests\BaseFundRequestRule;
 use App\Scopes\Builders\VoucherQuery;
+use App\Searches\FundSearch;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -63,28 +65,19 @@ class PreCheck extends BaseModel
     }
 
     /**
-     * @param Implementation $implementation
+     * @param Collection $funds
      * @param array $data
      * @param Identity|null $identity
      * @return array
      */
     public static function calculateTotalsPerFund(
-        Implementation $implementation,
+        Collection $funds,
         array $data,
         Identity $identity = null,
     ): array {
         $preChecksData = $data['pre_checks'];
 
-//        $fundsWithVouchers = $identity ? VoucherQuery::whereActive(
-//            $identity->vouchers()
-//        )->pluck('fund_id') : [];
-
-        $fundsWithVouchers = [];
-        $availableFunds = $implementation->funds()->whereNotIn(
-            'funds.id', $fundsWithVouchers
-        )->get();
-
-        return $availableFunds->reduce(function (array $result, Fund $fund) use ($identity, $preChecksData) {
+        return $funds->reduce(function (array $result, Fund $fund) use ($identity, $preChecksData) {
             $invalidCriteria = $fund->criteria->filter(function (FundCriterion $criterion) use ($preChecksData, &$criteriaMap) {
                 $recordValue = null;
 
@@ -94,7 +87,13 @@ class PreCheck extends BaseModel
                     })->first();
 
                     if ($preCheckRecord) {
-                        $recordValue = $preCheckRecord['input_value'] ?? null;
+                        $preCheckRecordValue = $preCheckRecord['input_value'];
+
+                        if ($preCheckRecord['record_type']['type'] == 'bool') {
+                            $preCheckRecordValue = $preCheckRecordValue ? 'Ja' : 'Nee';
+                        }
+
+                        $recordValue = $preCheckRecordValue ?? null;
                     }
                 });
 
@@ -111,8 +110,8 @@ class PreCheck extends BaseModel
                 'criteria' => $criteriaMap,
                 'criteria_valid_percentage' => $validCriteriaPercentage,
                 'criteria_invalid_percentage' => 100 - $validCriteriaPercentage,
-                'parent' => new FundResource($fund),
-                'children' => FundResource::collection($fund->children),
+                'parent' => $fund->parent ? new FundResource($fund->parent) : null,
+                'children' => $fund->children ? FundResource::collection($fund->children) : [],
                 'amount_for_identity' => currency_format($fund->amountForIdentity($identity)),
                 'multiplier_for_identity' => $fund->multiplierForIdentity($identity),
                 'amount_total' => $fund->multiplierForIdentity($identity) * $fund->amountForIdentity($identity),
@@ -123,6 +122,29 @@ class PreCheck extends BaseModel
 
             return $result;
         }, []);
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param array $filters
+     * @param Identity|null $identity
+     * @return Collection
+     */
+    public static function getAvailableFundList(
+        Implementation $implementation,
+        array $filters,
+        Identity $identity = null,
+    ): Collection
+    {
+        $availableFunds = $implementation->funds()->whereNotIn(
+            'funds.id', $identity ? VoucherQuery::whereActive(
+                $identity->vouchers()
+            )->pluck('fund_id') : []
+        );
+
+        return (new FundSearch($filters, Fund::query()->whereIn(
+            'funds.id', $availableFunds->pluck('funds.id')->toArray()
+        )))->query()->get();
     }
 
     /**

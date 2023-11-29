@@ -56,4 +56,17 @@ class StorePreCheckRequest extends BaseFormRequest
             'preChecks.*.pre_check_records.*.record_type.key' => 'required|string|exists:record_types,key',
         ];
     }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'preChecks.*.title.required' => 'Pre-check title veld is verplicht',
+            'preChecks.*.description.required' => 'Pre-check title veld is verplicht',
+            'preChecks.*.pre_check_records.*.title.required' => 'Pre-check record title veld is verplicht',
+            'preChecks.*.pre_check_records.*.record_type.key' => 'Pre-check record type key veld is verplicht',
+        ];
+    }
 }

@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\PreChecks\IndexPreCheckRequest;
 use App\Http\Resources\PreCheckResource;
+use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\PreCheck;
+use App\Scopes\Builders\VoucherQuery;
+use App\Searches\FundSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -48,8 +51,13 @@ class PreCheckController extends Controller
     public function calculateTotals(
         IndexPreCheckRequest $request,
     ): JsonResponse {
+        $implementation = $request->implementation();
+        $identity = $request->identity();
+
         $totals_per_fund = PreCheck::calculateTotalsPerFund(
-            $request->implementation(),
+            PreCheck::getAvailableFundList($implementation, $request->only([
+                'tag', 'tag_id', 'organization_id', 'q'
+            ]), $identity),
             $request->only('pre_checks'),
             $request->identity(),
         );
