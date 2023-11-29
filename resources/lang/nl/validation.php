@@ -209,7 +209,7 @@ return [
             'Nieuwe reserveringen kunnen pas weer na een uur worden gemaakt.',
         ]),
         'not_enough_voucher_funds' => 'Onvoldoende budget op de voucher',
-        'reservations_has_unpaid_extra' => 'You already have reservation with same product and unpaid extra payment',
+        'reservations_has_unpaid_extra' => 'Er bestaat al een reservering voor dit aanbod waar de bijbetaling nog niet is afgerond.',
     ],
     'employees' => [
         'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',

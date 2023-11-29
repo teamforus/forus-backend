@@ -1,10 +1,10 @@
 <?php
 
 return [
-    'queued' => 'Queued',
-    'failed' => 'Failed',
+    'queued' => 'In de wachtrij',
+    'failed' => 'Mislukt',
     'pending' => 'In afwachting',
-    'refunded' => 'Refunded',
+    'refunded' => 'Terugbetaald',
     'canceled' => 'Geannuleerd',
-    'processing' => 'Processing',
+    'processing' => 'In behandeling',
 ];
