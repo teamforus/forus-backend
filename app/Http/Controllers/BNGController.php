@@ -43,12 +43,7 @@ class BNGController extends Controller
             $connection->setActive();
             $connection->updateFundBalances();
         } catch (Throwable $e) {
-            $error_message = $e->getMessage();
-            $error_trace = $e->getTraceAsString();
-
-            $request->logger()->error(json_encode(compact('error_message', 'error_trace'), 128));
-            $connection->logError(compact('error_message'));
-
+            $connection->logBngError('Connection redirect', $e);
             return redirect($connection->dashboardDetailsUrl(null, 'unknown'));
         }
 

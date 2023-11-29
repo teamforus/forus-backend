@@ -2,16 +2,12 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
-use App\Http\Requests\BaseFormRequest;
-use App\Models\Organization;
-use Illuminate\Validation\Rule;
+use App\Models\Fund;
 
 /**
- * Class UpdateFundRequest
- * @property null|Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Funds
+ * @property null|Fund $fund
  */
-class StoreFundCriteriaRequest extends BaseFormRequest
+class StoreFundCriteriaRequest extends BaseFundRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -30,31 +26,8 @@ class StoreFundCriteriaRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $organization = $this->organization;
-        $validators = $organization->organization_validators()->pluck('id');
-
         return [
-            'criteria'                      => 'present|array',
-            'criteria.*'                    => 'required|array',
-            'criteria.*.id'                 => ['nullable', Rule::in([])],
-            'criteria.*.operator'           => 'required|in:=,<,>',
-            'criteria.*.record_type_key'    => 'required|exists:record_types,key',
-            'criteria.*.value'              => 'required|string|between:1,20',
-            'criteria.*.show_attachment'    => 'nullable|boolean',
-            'criteria.*.title'              => 'nullable|string|max:100',
-            'criteria.*.description'        => 'nullable|string|max:4000',
-            'criteria.*.validators'         => 'nullable|array',
-            'criteria.*.validators.*'       => Rule::in($validators->toArray())
+            ...$this->criteriaRule(),
         ];
-    }
-
-    public function attributes(): array
-    {
-        $keys = array_dot(array_keys($this->rules()));
-
-        return array_combine($keys, array_map(static function($key) {
-            $value = last(explode('.', $key));
-            return trans_fb("validation.attributes." . $value, $value);
-        }, $keys));
     }
 }

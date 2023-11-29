@@ -40,7 +40,7 @@ class FundsController extends Controller
         $query = (new FundSearch($request->only([
             'tag', 'tag_id', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id',
             'with_external', 'has_products', 'has_subsidies', 'has_providers',
-            'order_by', 'order_by_dir',
+            'order_by', 'order_dir',
         ]), Implementation::queryFundsByState($state)))->query();
 
         $organizations = Organization::whereIn('id', (clone $query)->select('organization_id'))->get();

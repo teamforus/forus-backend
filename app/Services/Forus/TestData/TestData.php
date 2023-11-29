@@ -150,8 +150,16 @@ class TestData
      */
     public function makeSponsorRecordTypes(): void
     {
-        foreach ($this->config('record_types', []) as $recordType) {
-            RecordType::firstOrCreate(Arr::only($recordType, 'key'), $recordType);
+        foreach ($this->config('record_types', []) as $type) {
+            $recordType = RecordType::firstOrCreate(Arr::only($type, 'key'), $type);
+
+            foreach (Arr::get($type, 'options', []) as $option) {
+                $recordType->record_type_options()->updateOrCreate([
+                    'value' => $option[0],
+                ], [
+                    'name' => $option[1],
+                ]);
+            }
         }
     }
 
@@ -519,7 +527,6 @@ class TestData
             'organization_id' => $organization?->id,
             'informal_communication' => false,
             'allow_per_fund_notification_templates' => false,
-            'productboard_api_key' => $this->config('productboard_api_key'),
             ...$this->config("default.implementations", []),
             ...$urlData,
             ...$samlData,
@@ -631,17 +638,23 @@ class TestData
         $eligibility_key = sprintf("%s_eligible", $fund->load('fund_config')->fund_config->key);
         $criteria = [];
 
+        $recordType = RecordType::firstOrCreate([
+            'key' => $eligibility_key,
+            'type' => 'bool',
+        ], [
+            'name' => "$fund->name eligible",
+            'system' => false,
+            'criteria' => true,
+            'vouchers' => true,
+            'organization_id' => $fund->organization_id,
+        ]);
+
         if (!$fund->isAutoValidatingRequests()) {
             $criteria = array_merge($criteria, $this->config('funds_criteria'));
         } else {
             $criteria[] = [
-                'record_type_key' => RecordType::firstOrCreate([
-                    'key' => $eligibility_key,
-                    'type' => 'string',
-                ], [
-                    'name' => "$fund->name eligible",
-                    'system' => true,
-                ])->key,
+                'record_type_key' => $recordType->key,
+                'organization_id' => $fund->organization_id,
                 'operator' => '=',
                 'value' => 'Ja',
                 'show_attachment' => false,
@@ -711,7 +724,7 @@ class TestData
         Fund $fund,
         array $records = []
     ): void {
-        $recordTypes = RecordType::search()->pluck('id', 'key');
+        $recordTypes = RecordType::pluck('id', 'key');
 
         collect($records)->map(static function($record) use ($recordTypes) {
             $record = collect($record);
@@ -760,29 +773,39 @@ class TestData
         // third prevalidation in list is partner for second prevalidation
         $bsn_prevalidation_partner_index = $count - 3;
 
-        $csv_primary_key = $fund->fund_config->csv_primary_key;
-        $env_lorem_bsn = $this->config('prevalidation_bsn', false);
+        $csvPrimaryKey = $fund->fund_config->csv_primary_key;
+        $envLoremBsn = $this->config('prevalidation_bsn', false);
 
         while ($count-- > 0) {
             do {
                 $primaryKeyValue = random_int(111111, 999999);
-            } while (collect($out)->pluck($csv_primary_key)->search($primaryKeyValue) !== false);
+            } while (collect($out)->pluck($csvPrimaryKey)->search($primaryKeyValue) !== false);
 
-            $bsn_value = $env_lorem_bsn && ($count === $bsn_prevalidation_index) ?
-                $env_lorem_bsn : self::randomFakeBsn();
+            $bsnValue = $envLoremBsn && ($count === $bsn_prevalidation_index) ?
+                $envLoremBsn : self::randomFakeBsn();
 
-            $bsn_value_partner = $env_lorem_bsn && ($count === $bsn_prevalidation_partner_index) ?
-                $env_lorem_bsn : self::randomFakeBsn();
+            $bsnValuePartner = $envLoremBsn && ($count === $bsn_prevalidation_partner_index) ?
+                $envLoremBsn : self::randomFakeBsn();
 
-            $out[] = array_merge($records, [
-                $csv_primary_key => $primaryKeyValue,
+            $prevalidation = array_merge($records, [
                 'gender' => 'Female',
                 'net_worth' => random_int(3, 6) * 100,
                 'children_nth' => random_int(3, 5),
+                'municipality' => Arr::get(RecordType::findByKey('municipality')->getOptions()[0] ?? [], 'value'),
+                'birth_date' => now()->subYears(20)->format('d-m-Y'),
+                'email' => $this->faker->email(),
+                'iban' => $this->faker->iban('NL'),
+                'civil_status' => 'Ja',
+                'single_parent' => 'Ja',
             ], $fund->fund_config->hash_bsn ? [
-                'bsn_hash' => $fund->getHashedValue($bsn_value),
-                'partner_bsn_hash' => $fund->getHashedValue($bsn_value_partner),
+                'bsn_hash' => $fund->getHashedValue($bsnValue),
+                'partner_bsn_hash' => $fund->getHashedValue($bsnValuePartner),
             ] : []);
+
+            $out[] = array_merge([
+                ...array_only($prevalidation, $fund->criteria->pluck('record_type_key')->toArray()),
+                $csvPrimaryKey => $primaryKeyValue,
+            ]);
         }
 
         return $out;
@@ -902,13 +925,14 @@ class TestData
                         '=' => $criterion->value,
                         '>' => (int) $criterion->value * 2,
                         '<' => (int) ((int) $criterion->value / 2),
+                        default => '',
                     },
-                    'fund_criterion_id' => $criterion->id,
-                    'record_type_key' => $criterion->record_type_key,
                     'files' => array_map(
                         fn() => $this->makeFundRequestFile()->uid,
                         range(1, $fundRequestFilesCount),
                     ),
+                    'record_type_key' => $criterion->record_type_key,
+                    'fund_criterion_id' => $criterion->id,
                 ])->toArray();
 
                 $fund->makeFundRequest($requester, $records);
@@ -1093,6 +1117,7 @@ class TestData
                             '=' => intval($criterion->value),
                             '>' => intval($criterion->value) + 1,
                             '<' => intval($criterion->value) - 1,
+                            default => '',
                         }
                     ]);
                 }, []);

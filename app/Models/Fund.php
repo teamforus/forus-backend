@@ -12,6 +12,7 @@ use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Models\Traits\HasFaq;
 use App\Models\Traits\HasTags;
+use App\Rules\FundRequests\BaseFundRequestRule;
 use App\Scopes\Builders\FundCriteriaQuery;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
@@ -464,7 +465,7 @@ class Fund extends BaseModel
             'contact_info_message_custom', 'contact_info_message_text',
             'auth_2fa_policy', 'auth_2fa_remember_ip',
             'auth_2fa_restrict_emails', 'auth_2fa_restrict_auth_sessions',
-            'auth_2fa_restrict_reimbursements',
+            'auth_2fa_restrict_reimbursements', 'hide_meta',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
@@ -913,7 +914,7 @@ class Fund extends BaseModel
     public function getTrustedRecordOfType(
         string $identity_address,
         string $record_type,
-        FundCriterion $criterion = null
+        FundCriterion $criterion = null,
     ): Record|Model|null {
         $fund = $this;
         $daysTrusted = $this->getTrustedDays($record_type);
@@ -1040,16 +1041,32 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @param bool $withOptional
+     * @return array
      */
-    public function requiredPrevalidationKeys(): \Illuminate\Support\Collection {
-        return collect(collect()->merge(
-            $this->fund_config ? [$this->fund_config->csv_primary_key] : []
-        )->merge(
-            $this->fund_formulas->where('type', 'multiply')->pluck('record_type_key')
-        )->merge(
-            $this->criteria->pluck('record_type_key')
-        ))->unique();
+    public function requiredPrevalidationKeys(bool $withOptional = false): array
+    {
+        $criteriaKeys = $withOptional ?
+            $this->criteria
+                ?->pluck('record_type_key')
+                ?->toArray() ?? [] :
+            $this->criteria
+                ?->where('optional', false)
+                ?->pluck('record_type_key')
+                ?->toArray() ?? [];
+
+        $formulaKeys = $this->fund_formulas
+            ?->where('type', 'multiply')
+            ?->pluck('record_type_key')
+            ?->toArray() ?? [];
+
+        $list = array_filter([
+            $this?->fund_config?->csv_primary_key,
+            ...$criteriaKeys,
+            ...$formulaKeys,
+        ]);
+
+        return array_unique($list);
     }
 
     /**
@@ -1145,7 +1162,7 @@ class Fund extends BaseModel
         array $extraFields = [],
         float $voucherAmount = null,
         Carbon $expire_at = null,
-        ?int $limit_multiplier = null
+        ?int $limit_multiplier = null,
     ): ?Voucher {
         $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
         $returnable = false;
@@ -1215,7 +1232,7 @@ class Fund extends BaseModel
         array $extraFields = [],
         int $product_id = null,
         Carbon $expire_at = null,
-        float $price = null
+        float $price = null,
     ): Voucher {
         $amount = $price ?: Product::findOrFail($product_id)->price;
         $expire_at = $expire_at ?: $this->end_date;
@@ -1327,8 +1344,19 @@ class Fund extends BaseModel
         ] : []));
 
         foreach ($records as $record) {
+            /** @var FundCriterion $criteria */
+            $criteria = $this->criteria()->find($record['fund_criterion_id'] ?? null);
+            $value = Arr::get($record, 'value');
+
+            if ($criteria->optional && ($value === '' || $value === null)) {
+                continue;
+            }
+
             /** @var FundRequestRecord $requestRecord */
-            $requestRecord = $fundRequest->records()->create($record);
+            $requestRecord = $fundRequest->records()->create(array_merge($record, [
+                'record_type_key' => $criteria->record_type_key,
+            ]));
+
             $requestRecord->appendFilesByUid($record['files'] ?? []);
         }
 
@@ -1375,8 +1403,11 @@ class Fund extends BaseModel
         /** @var FundCriterion|null $db_criteria */
         $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
-            'description', 'title'
+            'description', 'title', 'optional', 'min', 'max',
         ] : ['show_attachment', 'description', 'title']);
+
+        $data_criterion['value'] = Arr::get($data_criterion, 'value', '') ?: '';
+        $data_criterion['operator'] = Arr::get($data_criterion, 'operator', '') ?: '';
 
         if ($fundCriterion) {
             $fundCriterion->update($textsOnly ? array_only($data_criterion, [
@@ -1398,7 +1429,7 @@ class Fund extends BaseModel
      */
     protected function syncCriterionValidators(
         FundCriterion $criterion,
-        array $externalValidators
+        array $externalValidators,
     ): void {
         $fund = $this;
         $currentValidators = [];
@@ -1429,6 +1460,21 @@ class Fund extends BaseModel
             'fund_criterion_validators.id',
             $criterionValidators->pluck('id')->toArray()
         )->delete();
+    }
+
+    /**
+     * @param Identity $identity
+     * @param FundCriterion $criterion
+     * @return bool
+     */
+    public function checkFundCriteria(
+        Identity $identity,
+        FundCriterion $criterion,
+    ): bool {
+        $record_type = $criterion->record_type;
+        $value = $this->getTrustedRecordOfType($identity->address, $record_type->key, $criterion)?->value;
+
+        return BaseFundRequestRule::validateRecordValue($criterion, $value)->passes();
     }
 
     /**

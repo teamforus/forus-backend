@@ -30,6 +30,7 @@ use bunq\Model\Generated\Endpoint\Payment;
 use bunq\Model\Generated\Object\Pointer;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -99,6 +100,9 @@ class BankConnection extends BaseModel
     public const EVENT_EXPIRING = 'expiring';
     public const EVENT_ERROR = 'error';
 
+    /**
+     * @noinspection PhpUnused
+     */
     public const EVENTS = [
         self::EVENT_CREATED,
         self::EVENT_REPLACED,
@@ -284,6 +288,7 @@ class BankConnection extends BaseModel
      */
     protected function makeOauthUrlBNG(): ?string
     {
+        /** @var BNGService $bngService */
         $bngService = resolve('bng_service');
 
         try {
@@ -296,11 +301,8 @@ class BankConnection extends BaseModel
                 'auth_params' => $authData->getParams(),
                 'consent_id' => $consentId,
             ]);
-        } catch (ApiException $exception) {
-            $error_message = $exception->getMessage();
-            $this->logError(compact('error_message'));
-            logger()->error($error_message);
-
+        } catch (ApiException $e) {
+            $this->logBngError('Oauth url', $e);
             return null;
         }
 
@@ -456,7 +458,7 @@ class BankConnection extends BaseModel
                 return $this->fetchConnectionMonetaryAccountsBunq();
             }
         } catch (Throwable $e) {
-            logger()->error($e->getMessage());
+            Log::channel($this->bank->isBNG() ? 'bng' : 'bunq')->error($e->getMessage());
         }
 
         return null;
@@ -580,6 +582,7 @@ class BankConnection extends BaseModel
      */
     protected function fetchBalanceBNG(string $monetary_account_id): ?BankBalance
     {
+        /** @var BNGService $bngService */
         $bngService = resolve('bng_service');
 
         try {
@@ -587,8 +590,8 @@ class BankConnection extends BaseModel
             $balance = $response->getClosingBookedBalance();
 
             return new BankBalance($balance->getBalanceAmount(), $balance->getBalanceCurrency());
-        } catch (\Throwable $e) {
-            logger()->error($e->getMessage());
+        } catch (Throwable $e) {
+            $bngService::logError('Fetch balance', $e);
         }
 
         return null;
@@ -641,11 +644,12 @@ class BankConnection extends BaseModel
      */
     protected function fetchPaymentsBNG(string $monetary_account_id, int $count = 100): ?array
     {
+        /** @var BNGService $bngService */
+        $bngService = resolve('bng_service');
+
         try {
             $page = 1;
             $transactions = [];
-            /** @var BNGService $bngService */
-            $bngService = resolve('bng_service');
             $totalPages = $count / 10;
 
             do {
@@ -664,7 +668,7 @@ class BankConnection extends BaseModel
                 return $this->transactionBngToBankPayment($transaction);
             }, $transactions);
         } catch (Throwable $e) {
-            logger()->error($e->getMessage());
+            $bngService::logError('Fetch payments', $e);
         }
 
         return null;
@@ -752,8 +756,10 @@ class BankConnection extends BaseModel
      * @param int $bank_connection_account_id
      * @param Employee $employee
      */
-    public function switchBankConnectionAccount(int $bank_connection_account_id, Employee $employee)
-    {
+    public function switchBankConnectionAccount(
+        int $bank_connection_account_id,
+        Employee $employee,
+    ): void {
         if ($bank_connection_account_id != $this->bank_connection_account_id) {
             BankConnectionMonetaryAccountChanged::dispatch($this->updateModel(
                 compact('bank_connection_account_id')
@@ -778,13 +784,17 @@ class BankConnection extends BaseModel
     }
 
     /**
-     * @param array $array
-     * @param Employee|null $employee
+     * @param string $message
+     * @param Throwable $e
      * @return EventLog
      */
-    public function logError(array $array = [], ?Employee $employee = null): EventLog
+    public function logBngError(string $message, Throwable $e): EventLog
     {
-        return $this->log(static::EVENT_ERROR, $this->getLogModels($employee), $array);
+        BNGService::logError($message, $e);
+
+        return $this->log(static::EVENT_ERROR, $this->getLogModels(), [
+            'error_message' => $e->getMessage(),
+        ]);
     }
 
     /**

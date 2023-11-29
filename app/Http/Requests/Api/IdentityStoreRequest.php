@@ -3,8 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Rules\IdentityRecordsAddressRule;
-use App\Rules\IdentityRecordsRule;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\Rule;
 
 class IdentityStoreRequest extends BaseFormRequest
@@ -27,8 +26,8 @@ class IdentityStoreRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $this->maxAttempts = env('AUTH_THROTTLE_ATTEMPTS', 10);
-        $this->decayMinutes = env('AUTH_THROTTLE_DECAY', 10);
+        $this->maxAttempts = Config::get('forus.throttles.auth.attempts');
+        $this->decayMinutes = Config::get('forus.throttles.auth.decay');
         $this->throttleWithKey('to_many_attempts', $this, 'auth');
 
         return [
@@ -37,15 +36,6 @@ class IdentityStoreRequest extends BaseFormRequest
                 'email:strict',
                 Rule::unique('identity_emails', 'email')->whereNull('deleted_at'),
             ],
-            'records' => [
-                'nullable',
-                'array',
-                new IdentityRecordsRule()
-            ],
-            'records.address' => [
-                new IdentityRecordsAddressRule()
-            ],
-            'records.*' => 'required',
             'target' => 'nullable|alpha_dash',
         ];
     }

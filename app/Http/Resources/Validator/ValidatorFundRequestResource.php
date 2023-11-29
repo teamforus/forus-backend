@@ -38,6 +38,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         'records.fund_request_clarifications.files.preview.presets',
         'records.fund_request_clarifications.fund_request_record.record_type.translations',
         'identity.primary_email',
+        'fund.criteria.record_type.translation',
         'fund.criteria.fund_criterion_validators.external_validator',
         'fund.tags',
     ];
@@ -187,7 +188,10 @@ class ValidatorFundRequestResource extends BaseJsonResource
 
         return array_merge($baseFields, $relations, [
             'employee' => new EmployeeResource($record->employee),
-            'record_type' => $record->record_type->only('id', 'key', 'type', 'system', 'name'),
+            'record_type' => [
+                ...$record->record_type->only(['name', 'key', 'type']),
+                'options' => $record->record_type->getOptions(),
+            ],
             'is_assigned' => $is_assigned,
             'is_assignable' => $is_assignable,
         ], static::staticTimestamps($record, 'created_at', 'updated_at'));
