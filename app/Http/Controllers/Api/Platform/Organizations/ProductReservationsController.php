@@ -293,6 +293,7 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @param ProductReservation $productReservation
      * @return ProductReservationResource
+     * @throws \Throwable
      */
     public function fetchExtraPayment(
         FetchExtraPaymentProductReservationsRequest $request,
@@ -316,6 +317,7 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @param ProductReservation $productReservation
      * @return ProductReservationResource|JsonResponse
+     * @throws \Throwable
      */
     public function refundExtraPayment(
         BaseFormRequest $request,

@@ -450,19 +450,6 @@ class MollieConnection extends Model
     }
 
     /**
-     * @param string $paymentId
-     * @return Payment|null
-     */
-    public function cancelPayment(string $paymentId): ?Payment
-    {
-        try {
-            return $this->getMollieService()->cancelPayment($paymentId);
-        } catch (MollieException) {
-            return null;
-        }
-    }
-
-    /**
      * @param array $attributes
      * @return Payment|null
      */

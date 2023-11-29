@@ -46,8 +46,6 @@ class ReservationExtraPaymentSubscriber
     public function onReservationExtraPaymentCanceled(ReservationExtraPaymentCanceled $event): void
     {
         $this->makeEvent($event, $event->getReservationExtraPayment()::EVENT_CANCELED);
-        $reservation = $event->getProductReservation();
-        $reservation->cancelByState($reservation::STATE_CANCELED_PAYMENT_CANCELED);
     }
 
     /**
@@ -83,9 +81,6 @@ class ReservationExtraPaymentSubscriber
     public function onReservationExtraPaymentFailed(ReservationExtraPaymentFailed $event): void
     {
         $this->makeEvent($event, $event->getReservationExtraPayment()::EVENT_FAILED);
-
-        $reservation = $event->getProductReservation();
-        $reservation->cancelByState($reservation::STATE_CANCELED_PAYMENT_FAILED);
     }
 
     /**
@@ -95,9 +90,6 @@ class ReservationExtraPaymentSubscriber
     public function onReservationExtraPaymentExpired(ReservationExtraPaymentExpired $event): void
     {
         $this->makeEvent($event, $event->getReservationExtraPayment()::EVENT_EXPIRED);
-
-        $reservation = $event->getProductReservation();
-        $reservation->cancelByState($reservation::STATE_CANCELED_PAYMENT_EXPIRED);
     }
 
     /**
@@ -107,12 +99,6 @@ class ReservationExtraPaymentSubscriber
     public function onReservationExtraPaymentPaid(ReservationExtraPaymentPaid $event): void
     {
         $this->makeEvent($event, $event->getReservationExtraPayment()::EVENT_PAID);
-        $reservation = $event->getProductReservation();
-        $reservation->setPending();
-
-        if ($reservation->product->autoAcceptsReservations($reservation->voucher->fund)) {
-            $reservation->acceptProvider();
-        }
     }
 
     /**

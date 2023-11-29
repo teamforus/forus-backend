@@ -662,7 +662,7 @@ class ProductReservation extends BaseModel
             'amount' => $amount,
             'currency' => $currency,
             'description' => trans('extra-payments.payment.description'),
-            'redirect_url' => $implementation->urlWebshop("/reservations/$this->id"),
+            'redirect_url' => $implementation->urlWebshop("/reservations/$this->id?checkout=1"),
             'cancel_url' => $implementation->urlWebshop("/reservations/$this->id"),
         ]);
 
@@ -690,7 +690,7 @@ class ProductReservation extends BaseModel
     /**
      * @param Employee|null $employee
      * @return ReservationExtraPayment|null
-     * @throws MollieException
+     * @throws MollieException|\Throwable
      */
     public function fetchExtraPayment(?Employee $employee): ?ReservationExtraPayment
     {
@@ -704,7 +704,7 @@ class ProductReservation extends BaseModel
     /**
      * @param Employee|null $employee
      * @return ReservationExtraPaymentRefund|null
-     * @throws MollieException
+     * @throws MollieException|\Throwable
      */
     public function refundExtraPayment(?Employee $employee): ?ReservationExtraPaymentRefund
     {

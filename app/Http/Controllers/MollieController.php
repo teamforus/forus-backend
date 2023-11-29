@@ -42,6 +42,7 @@ class MollieController extends Controller
     /**
      * @param WebhookMollieRequest $request
      * @return JsonResponse
+     * @throws \Throwable
      */
     public function processWebhook(WebhookMollieRequest $request): JsonResponse
     {

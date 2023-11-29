@@ -180,6 +180,10 @@ class ProductReservationPolicy
             return $this->deny('Extra payment not paid.');
         }
 
+        if ($productReservation->extra_payment && $productReservation->extra_payment->isFullyRefunded()) {
+            return $this->deny('Extra payment is refunded.');
+        }
+
         if (!$productReservation->voucher->activated) {
             return $this->deny('The voucher used to make the reservation, is not active.');
         }

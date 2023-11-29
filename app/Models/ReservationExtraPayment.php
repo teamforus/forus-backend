@@ -180,6 +180,7 @@ class ReservationExtraPayment extends Model
      * @param Employee|null $employee
      * @return ReservationExtraPayment|null
      * @throws MollieException
+     * @throws \Throwable
      */
     public function fetchAndUpdateMolliePayment(?Employee $employee): ?ReservationExtraPayment
     {
@@ -187,6 +188,7 @@ class ReservationExtraPayment extends Model
             return null;
         }
 
+        $reservation = $this->product_reservation;
         $payment = $this->getMollieConnection()->getMollieService()->getPayment($this->payment_id);
         $becomePaid = !$this->paid_at && $payment->isPaid();
         $becomeFailed = !$this->paid_at && $payment->isFailed();
@@ -213,18 +215,27 @@ class ReservationExtraPayment extends Model
         }
 
         if ($becomeFailed) {
+            $reservation->cancelByState($reservation::STATE_CANCELED_PAYMENT_FAILED);
             Event::dispatch(new ReservationExtraPaymentFailed($this, $employee));
         }
 
         if ($becomePaid) {
+            $reservation->setPending();
+
+            if ($reservation->product->autoAcceptsReservations($reservation->voucher->fund)) {
+                $reservation->acceptProvider();
+            }
+
             Event::dispatch(new ReservationExtraPaymentPaid($this, $employee));
         }
 
         if ($becomeCanceled) {
+            $reservation->cancelByState($reservation::STATE_CANCELED_PAYMENT_CANCELED);
             Event::dispatch(new ReservationExtraPaymentCanceled($this, $employee));
         }
 
         if ($becomeExpired) {
+            $reservation->cancelByState($reservation::STATE_CANCELED_PAYMENT_EXPIRED);
             Event::dispatch(new ReservationExtraPaymentExpired($this, $employee));
         }
 
@@ -261,6 +272,7 @@ class ReservationExtraPayment extends Model
      * @param Employee|null $employee
      * @return ReservationExtraPaymentRefund|null
      * @throws MollieException
+     * @throws \Throwable
      */
     public function createMollieRefund(?Employee $employee): ?ReservationExtraPaymentRefund
     {
@@ -374,34 +386,6 @@ class ReservationExtraPayment extends Model
     public function checkCancelableMollie(): bool
     {
         return false;
-    }
-
-    /**
-     * @return bool
-     */
-    public function cancelPayment(): bool
-    {
-        if ($this->payment_id && $this->isMollieType()) {
-            $payment = $this->getMollieConnection()?->cancelPayment($this->payment_id);
-
-            if ($payment && $payment->canceledAt) {
-                Event::dispatch(new ReservationExtraPaymentCanceled($this->updateModel([
-                    'state' => $payment->status,
-                    'canceled_at' => Carbon::parse($payment->canceledAt),
-                ])));
-
-                return true;
-            }
-
-            return false;
-        }
-
-        Event::dispatch(new ReservationExtraPaymentCanceled($this->updateModel([
-            'state' => self::STATE_CANCELED,
-            'canceled_at' => now(),
-        ])));
-
-        return true;
     }
 
     /**
