@@ -190,10 +190,10 @@ class ReservationExtraPayment extends Model
 
         $reservation = $this->product_reservation;
         $payment = $this->getMollieConnection()->getMollieService()->getPayment($this->payment_id);
-        $becomePaid = !$this->paid_at && $payment->isPaid();
-        $becomeFailed = !$this->paid_at && $payment->isFailed();
-        $becomeExpired = $this->state !== self::STATE_EXPIRED && $payment->isExpired();
-        $becomeCanceled = $this->state !== self::STATE_CANCELED && $payment->isCanceled();
+        $becomePaid = !$this->isPaid() && $payment->isPaid();
+        $becomeFailed = !$this->isFailed() && $payment->isFailed();
+        $becomeExpired = !$this->isExpired() && $payment->isExpired();
+        $becomeCanceled = !$this->isCanceled() && $payment->isCanceled();
         $becomeRefunded = !$this->isFullyRefunded() && $payment->amountRefunded?->value >= $this->amount;
 
         $this->fetchMollieRefunds();
@@ -346,6 +346,15 @@ class ReservationExtraPayment extends Model
     public function isCanceled(): bool
     {
         return in_array($this->state, self::CANCELED_STATES, true);
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isFailed(): bool
+    {
+        return $this->state === self::STATE_FAILED;
     }
 
     /**
