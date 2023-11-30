@@ -169,7 +169,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     // Organizations
     $router->group(['prefix' => 'organizations/{organization}'], function() use ($router) {
         $router->patch('roles', "Api\Platform\OrganizationsController@updateRoles");
-        $router->patch('update-business', "Api\Platform\OrganizationsController@updateBusinessType");
         $router->patch('update-bi-connection', "Api\Platform\OrganizationsController@updateBIConnection");
         $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFields");
         $router->patch('update-accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
@@ -193,8 +192,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource('reimbursements', "Api\Platform\ReimbursementsController")
         ->only('index', 'store', 'show', 'update', 'destroy');
 
+    $router->post(
+        'product-reservations/{reservation}/extra-payment/checkout',
+        "Api\Platform\ProductReservationsController@checkoutExtraPayment");
+
+    $router->post(
+        'product-reservations/{reservation}/cancel',
+        "Api\Platform\ProductReservationsController@cancel");
+
     $router->resource('product-reservations', "Api\Platform\ProductReservationsController")
-        ->only('index', 'store', 'show', 'update');
+        ->only('index', 'store', 'show');
 
     $router->post('product-reservations/validate-fields', "Api\Platform\ProductReservationsController@storeValidateFields");
     $router->post('product-reservations/validate-address', "Api\Platform\ProductReservationsController@storeValidateAddress");
@@ -621,6 +628,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->post('reject', "Api\Platform\Organizations\ProductReservationsController@reject");
         $router->post('archive', "Api\Platform\Organizations\ProductReservationsController@archive");
         $router->post('unarchive', "Api\Platform\Organizations\ProductReservationsController@unarchive");
+        $router->get('extra-payments/fetch', "Api\Platform\Organizations\ProductReservationsController@fetchExtraPayment");
+        $router->get('extra-payments/refund', "Api\Platform\Organizations\ProductReservationsController@refundExtraPayment");
     });
 
     $router->resource(
@@ -744,32 +753,24 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     // Mollie
     $router->group(['prefix' => 'organizations/{organization}/mollie-connections'], function() use ($router) {
-        $router->get('fetch', "Api\Platform\Organizations\MollieConnectionController@fetchMollieAccount");
-        $router->get('configured', "Api\Platform\Organizations\MollieConnectionController@getConfigured");
-        $router->post('connect', "Api\Platform\Organizations\MollieConnectionController@connectOAuth");
+        $router->get('active', 'Api\Platform\Organizations\MollieConnectionController@getActive');
+        $router->get('fetch', 'Api\Platform\Organizations\MollieConnectionController@fetchActive');
+        $router->post('connect', 'Api\Platform\Organizations\MollieConnectionController@connectOAuth');
     });
 
     $router->resource(
         'organizations.mollie-connections',
-        "Api\Platform\Organizations\MollieConnectionController", [
-        'only' => [
-            'store', 'destroy'
-        ],
-        'parameters' => [
-            'mollie-connections' => 'connection',
-        ]
-    ]);
+        'Api\Platform\Organizations\MollieConnectionController',
+    )->parameters([
+        'mollie-connections' => 'connection',
+    ])->only('store', 'destroy');
 
     $router->resource(
         'organizations.mollie-connections.profiles',
-        "Api\Platform\Organizations\MollieConnectionProfileController", [
-        'only' => [
-            'store', 'update'
-        ],
-        'parameters' => [
-            'mollie-connections' => 'connection',
-        ]
-    ]);
+        'Api\Platform\Organizations\MollieConnectionProfileController',
+    )->parameters([
+        'mollie-connections' => 'connection',
+    ])->only('store', 'update');
 
     $router->get(
         'organizations/{organization}/sponsor/finances',
@@ -917,24 +918,26 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations/{organization}/sponsor/providers.products',
-        "Api\Platform\Organizations\Sponsor\Providers\ProductsController", [
-            'only' => [
-                'index', 'show', 'store', 'update', 'destroy',
-            ],
-            'parameters' => [
-                'providers' => 'organization_id',
-            ]
-        ]
-    );
+        'Api\Platform\Organizations\Sponsor\Providers\ProductsController',
+    )->parameters([
+        'providers' => 'organization_id',
+    ])->only('index', 'show', 'store', 'update', 'destroy');
+
+    $router->resource(
+        'organizations/{organization}/sponsor/reservation-extra-payments',
+        'Api\Platform\Organizations\Sponsor\ReservationExtraPaymentsController'
+    )->parameters([
+        'reservation-extra-payments' => 'payment',
+    ])->only('index', 'show');
 
     $router->get(
         'organizations/{organization}/logs',
-        'Api\Platform\Organizations\EventLogsController@index'
+        'Api\Platform\Organizations\EventLogsController@index',
     );
 
     $router->get(
         'organizations/{organization}/announcements',
-        "Api\Platform\Organizations\AnnouncementController@index"
+        'Api\Platform\Organizations\AnnouncementController@index',
     );
 
     $router->get('prevalidations/export', 'Api\Platform\PrevalidationController@export');

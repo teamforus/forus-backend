@@ -4,6 +4,7 @@
 namespace App\Scopes\Builders;
 
 use App\Models\ProductReservation;
+use App\Models\ReservationExtraPayment;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -118,5 +119,31 @@ class ProductReservationQuery
         return $builder->whereNotIn('id', self::whereArchived(
             ProductReservation::query()->select('id')
         ));
+    }
+
+    /**
+     * @param Builder|ProductReservation $builder
+     * @param int $waitingTime
+     * @return Builder|ProductReservation
+     */
+    public static function whereExtraPaymentExpired(
+        Builder|ProductReservation $builder,
+        int $waitingTime,
+    ): Builder|ProductReservation {
+        $expiredAt = now()->subMinutes($waitingTime);
+
+        return $builder->where(function (Builder $query) use ($expiredAt) {
+            $query->where('state', '=', ProductReservation::STATE_WAITING);
+            $query->where('amount_extra', '>', 0);
+
+            $query->where(function(Builder $query) use ($expiredAt) {
+                $query->where('created_at', '<', $expiredAt);
+
+                $query->orWhereHas('extra_payment', function(Builder $query) {
+                    $query->where('expires_at', '<', now());
+                    $query->where('state', '!=', ReservationExtraPayment::STATE_PAID);
+                });
+            });
+        });
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Services\MollieService\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -13,12 +13,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $email
  * @property string $phone
  * @property string $website
- * @property string $mollie_id
+ * @property string|null $mollie_id
+ * @property string $state
  * @property bool $current
  * @property int $mollie_connection_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string $state
  * @property-read \App\Services\MollieService\Models\MollieConnection $mollie_connection
  * @method static \Illuminate\Database\Eloquent\Builder|MollieConnectionProfile newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|MollieConnectionProfile newQuery()
@@ -36,7 +36,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|MollieConnectionProfile whereWebsite($value)
  * @mixin \Eloquent
  */
-class MollieConnectionProfile extends Model
+class MollieConnectionProfile extends BaseModel
 {
     public const STATE_ACTIVE = 'active';
     public const STATE_PENDING = 'pending';
@@ -45,13 +45,7 @@ class MollieConnectionProfile extends Model
      * @var string[]
      */
     protected $fillable = [
-        'name',
-        'email',
-        'phone',
-        'state',
-        'website',
-        'current',
-        'mollie_id',
+        'name', 'email', 'phone', 'state', 'website', 'current', 'mollie_id',
         'mollie_connection_id',
     ];
 

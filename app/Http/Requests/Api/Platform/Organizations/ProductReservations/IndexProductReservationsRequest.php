@@ -8,9 +8,7 @@ use App\Models\ProductReservation;
 use App\Scopes\Builders\TrashedQuery;
 
 /**
- * Class IndexProductReservationsRequest
  * @property Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\ProductReservations
  */
 class IndexProductReservationsRequest extends BaseFormRequest
 {
@@ -21,7 +19,8 @@ class IndexProductReservationsRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->isAuthenticated() &&
+        return
+            $this->isAuthenticated() &&
             $this->organization->identityCan($this->identity(), 'scan_vouchers');
     }
 

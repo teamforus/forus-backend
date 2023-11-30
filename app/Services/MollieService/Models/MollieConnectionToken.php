@@ -42,10 +42,7 @@ class MollieConnectionToken extends Model
      * @var string[]
      */
     protected $fillable = [
-        'access_token',
-        'remember_token',
-        'expired_at',
-        'mollie_connection_id',
+        'access_token', 'remember_token', 'expired_at', 'mollie_connection_id',
     ];
 
     /**
@@ -77,6 +74,6 @@ class MollieConnectionToken extends Model
      */
     public function isExpired(): bool
     {
-        return $this->expired_at->lte(now());
+        return $this->expired_at->isPast();
     }
 }
