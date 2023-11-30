@@ -78,11 +78,14 @@ class ProductReservationsController extends Controller
             }
 
             $reservation = $voucher->reserveProduct($product, null, [
-                ...$request->only([
-                    'first_name', 'last_name', 'user_note', 'phone', 'birth_date', 'custom_fields',
-                    'street', 'house_nr', 'house_nr_addition', 'city',
-                ]),
-                'postal_code' => strtoupper(preg_replace("/\s+/", "", $postCode)),
+                ...$request->only(array_merge([
+                    'first_name', 'last_name', 'user_note',
+                ], $product->reservation_fields ? [
+                    'phone', 'birth_date', 'custom_fields', 'street', 'house_nr', 'house_nr_addition', 'city',
+                ] : [])),
+                ...$product->reservation_fields ? [
+                    'postal_code' => strtoupper(preg_replace("/\s+/", "", $postCode))
+                ] : [],
                 'has_extra_payment' => $extraPaymentRequired,
             ]);
 

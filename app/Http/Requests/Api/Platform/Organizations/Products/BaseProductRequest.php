@@ -25,6 +25,7 @@ abstract class BaseProductRequest extends BaseFormRequest
 
         return [
             'reservation_enabled' => "nullable|boolean",
+            'reservation_fields' => "nullable|boolean",
             'reservation_policy' => "nullable|in:$policies",
             'reservation_phone' => "nullable|in:$options",
             'reservation_address' => "nullable|in:$options",
