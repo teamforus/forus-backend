@@ -117,6 +117,16 @@ class VoucherTransactionsSearch extends BaseSearch
             $builder->where(compact('voucher_id'));
         }
 
+        if ($parent_voucher_id = $this->getFilter('parent_voucher_id')) {
+            $builder->whereHas('voucher.parent', function (Builder $builder) use ($parent_voucher_id) {
+                $builder->where('id', $parent_voucher_id);
+            });
+        }
+
+        if ($this->hasFilter('has_product_reservation')) {
+            $builder->whereHas('voucher.product_reservation');
+        }
+
         if ($this->getFilter('pending_bulking')) {
             VoucherTransactionQuery::whereAvailableForBulking($builder);
         }

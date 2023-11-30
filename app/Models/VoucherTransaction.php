@@ -341,6 +341,7 @@ class VoucherTransaction extends BaseModel
             'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
             'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
             'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
+            'parent_voucher_id', 'has_product_reservation',
         ]), self::query());
 
         return $builder->searchSponsor($organization);

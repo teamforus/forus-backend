@@ -46,6 +46,8 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'notes' => VoucherTransactionNoteResource::collection($transaction->notes_sponsor),
             'bulk_status_locale' => $transaction->bulk_status_locale,
             'product' => new ProductTinyResource($transaction->product),
+            'voucher_parent_id' => $transaction->voucher->parent_id,
+            'has_voucher_reservation' => $transaction->voucher->product_reservation()->exists(),
         ], $this->timestamps($transaction, 'created_at', 'updated_at'));
     }
 
