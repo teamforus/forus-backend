@@ -4,13 +4,15 @@ namespace App\Http\Middleware;
 
 use App\Models\Implementation;
 use Closure;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ImplementationKeyMiddleware
 {
     /**
      * @var array
      */
-    private $except = [
+    private array $except = [
         'status',
     ];
 
@@ -21,17 +23,16 @@ class ImplementationKeyMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): mixed
     {
-        if (in_array($request->route()->getName(), $this->except)) {
+        if (in_array($request->route()->getName(), $this->except, true)) {
             return $next($request);
         }
 
-        if (Implementation::implementationKeysAvailable()->search(
-            Implementation::activeKey()) === false) {
-            return response()->json([
-                "message" => 'unknown_implementation_key'
-            ])->setStatusCode(403);
+        if (Implementation::implementationKeysAvailable()->search(Implementation::activeKey()) === false) {
+            return new JsonResponse([
+                "message" => 'unknown_implementation_key',
+            ], 403);
         }
 
         return $next($request);

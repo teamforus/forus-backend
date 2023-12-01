@@ -21,10 +21,11 @@ class MollieConnectionProfilePolicy
     public function store(
         Identity $identity,
         MollieConnection $connection,
-        Organization $organization
+        Organization $organization,
     ): bool {
-        return $this->allowExtraPayments($identity, $organization) &&
-            $organization->mollie_connection_configured()->where('id', $connection->id)->exists();
+        return
+            $this->allowExtraPayments($identity, $organization) &&
+            $organization->mollie_connection()->where('id', $connection->id)->exists();
     }
 
     /**
@@ -40,7 +41,8 @@ class MollieConnectionProfilePolicy
         MollieConnection $connection,
         Organization $organization
     ): bool {
-        return $this->store($identity, $connection, $organization) &&
+        return
+            $this->store($identity, $connection, $organization) &&
             $profile->mollie_connection_id === $connection->id;
     }
 
@@ -51,6 +53,8 @@ class MollieConnectionProfilePolicy
      */
     public function allowExtraPayments(Identity $identity, Organization $organization): bool
     {
-        return $identity->exists && $organization->allow_extra_payments_by_sponsor;
+        return
+            $organization->identityCan($identity, 'manage_payment_methods') &&
+            $organization->canUseExtraPaymentsAsProvider();
     }
 }

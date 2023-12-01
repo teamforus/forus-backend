@@ -7,33 +7,34 @@ use App\Http\Requests\Api\Platform\Organizations\MollieConnectionProfiles\StoreM
 use App\Http\Requests\Api\Platform\Organizations\MollieConnectionProfiles\UpdateMollieConnectionProfileRequest;
 use App\Http\Resources\MollieConnectionResource;
 use App\Models\Organization;
-use App\Services\MollieService\Exceptions\MollieApiException;
+use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Models\MollieConnection;
 use App\Services\MollieService\Models\MollieConnectionProfile;
-use Illuminate\Http\JsonResponse;
 
 class MollieConnectionProfileController extends Controller
 {
-
+    /**
+     * @param StoreMollieConnectionProfileRequest $request
+     * @param Organization $organization
+     * @param MollieConnection $connection
+     * @return MollieConnectionResource
+     */
     public function store(
         StoreMollieConnectionProfileRequest $request,
         Organization $organization,
-        MollieConnection $connection
-    ) {
+        MollieConnection $connection,
+    ): MollieConnectionResource {
         $this->authorize('store', [MollieConnectionProfile::class, $connection, $organization]);
 
-        $profile = $connection->profiles()->create(
-            $request->only('name', 'email', 'phone', 'website')
-        );
-
         try {
-            $connection->createProfile($profile);
+            $connection->createProfile($connection->profiles()->create($request->only([
+                'name', 'email', 'phone', 'website',
+            ])));
 
             return MollieConnectionResource::create($connection);
-        } catch (MollieApiException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], 422);
+        } catch (MollieException $e) {
+            abort(503, $e->getMessage());
         }
-
     }
 
     /**
@@ -41,26 +42,24 @@ class MollieConnectionProfileController extends Controller
      * @param Organization $organization
      * @param MollieConnection $connection
      * @param MollieConnectionProfile $profile
-     * @return MollieConnectionResource|JsonResponse
+     * @return MollieConnectionResource
      */
     public function update(
         UpdateMollieConnectionProfileRequest $request,
         Organization $organization,
         MollieConnection $connection,
         MollieConnectionProfile $profile
-    ) {
+    ): MollieConnectionResource {
         $this->authorize('update', [$profile, $connection, $organization]);
 
-        $profile->update($request->only('name', 'email', 'phone', 'website'));
-
         try {
-            $profile->mollie_id
-                ? $connection->updateProfile($profile)
-                : $connection->createProfile($profile);
+            $connection->syncProfile($profile->updateModel($request->only([
+                'name', 'email', 'phone', 'website',
+            ])));
 
             return MollieConnectionResource::create($connection->refresh());
-        } catch (MollieApiException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], 422);
+        } catch (MollieException $e) {
+            abort(503, $e->getMessage());
         }
     }
 }

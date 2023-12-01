@@ -31,29 +31,29 @@ use Carbon\Carbon;
  * @property bool $allow_budget
  * @property bool $allow_products
  * @property bool $allow_some_products
+ * @property bool $allow_extra_payments
  * @property bool $excluded
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property bool $allow_extra_payments
  * @property-read \App\Models\Fund $fund
- * @property-read Collection<int, \App\Models\FundProviderChat> $fund_provider_chats
+ * @property-read Collection|\App\Models\FundProviderChat[] $fund_provider_chats
  * @property-read int|null $fund_provider_chats_count
- * @property-read Collection<int, \App\Models\FundProviderProduct> $fund_provider_products
+ * @property-read Collection|\App\Models\FundProviderProduct[] $fund_provider_products
  * @property-read int|null $fund_provider_products_count
- * @property-read Collection<int, \App\Models\FundProviderProduct> $fund_provider_products_with_trashed
+ * @property-read Collection|\App\Models\FundProviderProduct[] $fund_provider_products_with_trashed
  * @property-read int|null $fund_provider_products_with_trashed_count
- * @property-read Collection<int, \App\Models\FundProviderUnsubscribe> $fund_unsubscribes
+ * @property-read Collection|\App\Models\FundProviderUnsubscribe[] $fund_unsubscribes
  * @property-read int|null $fund_unsubscribes_count
  * @property-read Collection|\App\Models\FundProviderUnsubscribe[] $fund_unsubscribes_active
  * @property-read int|null $fund_unsubscribes_active_count
  * @property-read string $state_locale
- * @property-read Collection<int, \App\Services\EventLogService\Models\EventLog> $logs
+ * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Organization $organization
- * @property-read Collection<int, \App\Models\FundProviderProductExclusion> $product_exclusions
+ * @property-read Collection|\App\Models\FundProviderProductExclusion[] $product_exclusions
  * @property-read int|null $product_exclusions_count
- * @property-read Collection<int, \App\Models\Product> $products
+ * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @method static Builder|FundProvider newModelQuery()
  * @method static Builder|FundProvider newQuery()
@@ -183,7 +183,7 @@ class FundProvider extends BaseModel
     public static function queryActive(Organization $organization): Builder|Relation|FundProvider
     {
         return $organization->fund_providers()
-            ->where('state', FundProvider::STATE_ACCEPTED)
+            ->where('state', self::STATE_ACCEPTED)
             ->whereNotIn('id', static::queryArchived($organization)->select('id'));
     }
 
@@ -321,7 +321,7 @@ class FundProvider extends BaseModel
      */
     public function isPending(): bool
     {
-        return $this->state == self::STATE_PENDING;
+        return $this->state === self::STATE_PENDING;
     }
 
     /**
@@ -329,7 +329,7 @@ class FundProvider extends BaseModel
      */
     public function isAccepted(): bool
     {
-        return $this->state == self::STATE_ACCEPTED;
+        return $this->state === self::STATE_ACCEPTED;
     }
 
     /**
@@ -337,7 +337,7 @@ class FundProvider extends BaseModel
      */
     public function isRejected(): bool
     {
-        return $this->state == self::STATE_REJECTED;
+        return $this->state === self::STATE_REJECTED;
     }
 
     /**
@@ -412,14 +412,14 @@ class FundProvider extends BaseModel
 
         if ($allow_products !== null) {
             if ($allow_products === 'some') {
-                $query->where(function(Builder $builder) use ($allow_products) {
-                    $builder->where(function(Builder $builder) use ($allow_products) {
+                $query->where(function(Builder $builder) {
+                    $builder->where(function(Builder $builder) {
                         $builder->whereHas('fund', function(Builder $builder) {
                             $builder->where('type', Fund::TYPE_BUDGET);
                         })->whereHas('products');
                     });
 
-                    $builder->orWhere(function(Builder $builder) use ($allow_products) {
+                    $builder->orWhere(function(Builder $builder) {
                         $builder->whereHas('fund', function(Builder $builder) {
                             $builder->where('type', Fund::TYPE_SUBSIDIES);
                         })->whereHas('fund_provider_products.product');
@@ -589,8 +589,10 @@ class FundProvider extends BaseModel
      * @param bool $withTrashed
      * @return FundProviderProduct
      */
-    protected function findFundProviderProductByIdOrCreate(array $data, bool $withTrashed = false): FundProviderProduct
-    {
+    protected function findFundProviderProductByIdOrCreate(
+        array $data,
+        bool $withTrashed = false,
+    ): FundProviderProduct {
         $query = $this->fund_provider_products()
             ->latest('created_at')
             ->latest('id');
@@ -632,10 +634,10 @@ class FundProvider extends BaseModel
             !is_null(Arr::get($data, 'limit_total_unlimited'));
 
         $hasChanged =
-            (Arr::get($data, 'expire_at') != $fundProviderProduct->expire_at?->format('Y-m-d')) ||
-            (Arr::get($data, 'limit_total') != $fundProviderProduct->limit_total) ||
-            (Arr::get($data, 'limit_per_identity') != $fundProviderProduct->limit_per_identity) ||
-            (((bool) Arr::get($data, 'limit_total_unlimited')) != $fundProviderProduct->limit_total_unlimited);
+            (Arr::get($data, 'expire_at') !== $fundProviderProduct->expire_at?->format('Y-m-d')) ||
+            (Arr::get($data, 'limit_total') !== $fundProviderProduct->limit_total) ||
+            (Arr::get($data, 'limit_per_identity') !== $fundProviderProduct->limit_per_identity) ||
+            (((bool) Arr::get($data, 'limit_total_unlimited')) !== $fundProviderProduct->limit_total_unlimited);
 
         if ($hasChanged) {
             $fundProviderProduct->delete();

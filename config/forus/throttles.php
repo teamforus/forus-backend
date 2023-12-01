@@ -27,19 +27,25 @@ return [
     ],
 
     'mollie' => [
-        'fetch' => [
-            'attempts' => env('MOLLIE_FETCH_ATTEMPTS', 10),
-            'decay' => env('MOLLIE_FETCH_DECAY', 10),
+        'fetch_connections' => [
+            'attempts' => env('MOLLIE_FETCH_CONNECTION_ATTEMPTS', 10),
+            'decay' => env('MOLLIE_FETCH_CONNECTION_DECAY', 10),
         ],
-
         'connect' => [
             'attempts' => env('MOLLIE_CONNECT_ATTEMPTS', 10),
             'decay' => env('MOLLIE_CONNECT_DECAY', 10),
         ],
-
         'create' => [
             'attempts' => env('MOLLIE_CREATE_ATTEMPTS', 10),
             'decay' => env('MOLLIE_CREATE_DECAY', 10),
         ],
-    ]
+        'create_profile' => [
+            'attempts' => env('MOLLIE_CREATE_PROFILE_ATTEMPTS', 20),
+            'decay' => env('MOLLIE_CREATE_PROFILE_DECAY', 20),
+        ],
+        'fetch_payments' => [
+            'attempts' => env('MOLLIE_FETCH_PAYMENT_ATTEMPTS', 50),
+            'decay' => env('MOLLIE_FETCH_PAYMENT_DECAY', 15),
+        ],
+    ],
 ];

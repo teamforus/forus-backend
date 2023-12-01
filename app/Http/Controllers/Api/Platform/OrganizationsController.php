@@ -9,7 +9,6 @@ use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationAcceptReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBIConnectionRequest;
-use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBusinessTypeRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationReservationSettingsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRolesRequest;
@@ -203,15 +202,12 @@ class OrganizationsController extends Controller
     ): OrganizationResource {
         $this->authorize('update', $organization);
 
-        $attributes = $request->only([
+        $allowExtraPayments = Gate::allows('allowExtraPayments', [MollieConnection::class, $organization]);
+
+        OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'reservation_phone', 'reservation_address', 'reservation_birth_date',
-        ]);
-
-        if (Gate::allows('allowExtraPayments', [MollieConnection::class, $organization])) {
-            $attributes = array_merge($attributes, $request->only('reservation_allow_extra_payments'));
-        }
-
-        OrganizationUpdated::dispatch($organization->updateModel($attributes));
+            ...$allowExtraPayments ? ['reservation_allow_extra_payments'] : [],
+        ])));
 
         $organization->syncReservationFields($request->get('fields', []));
 
@@ -234,7 +230,7 @@ class OrganizationsController extends Controller
         $authType = $request->input('bi_connection_auth_type');
         $resetToken = $request->boolean('bi_connection_token_reset');
 
-        if ($authType != $organization->bi_connection_auth_type || $resetToken) {
+        if ($authType !== $organization->bi_connection_auth_type || $resetToken) {
             $organization->updateBIConnection($authType, $resetToken);
         }
 
