@@ -73,11 +73,11 @@ class VoucherExportData
             'product_name' => $this->voucher->product?->name,
         ], $bsnData, [
             'identity_email' => $assigned ? ($identity?->email) : null,
-            'state' => $this->voucher->state ?? null,
+            'state' => $this->voucher->state_locale,
             'activation_code' => $this->voucher->activation_code ?? null,
             'client_uid' => $this->voucher->client_uid ?? null,
             'note' => $this->voucher->note,
-            'source' => $this->voucher->employee_id ? 'employee': 'user',
+            'source' => $this->voucher->source_locale,
             'amount' => $this->voucher->amount_total_cached,
             'amount_available' => $this->voucher->amount_available_cached,
             'fund_name' => $this->voucher->fund->name,

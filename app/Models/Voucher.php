@@ -92,6 +92,7 @@ use ZipArchive;
  * @property-read bool $is_external
  * @property-read bool $is_granted
  * @property-read \Illuminate\Support\Carbon|null $last_active_day
+ * @property-read string $source_locale
  * @property-read string $state_locale
  * @property-read string $type
  * @property-read string|null $updated_at_string
@@ -637,6 +638,15 @@ class Voucher extends BaseModel
     public function getStateLocaleAttribute(): string
     {
         return trans('states/vouchers.' . $this->state);
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getSourceLocaleAttribute(): string
+    {
+        return trans('vouchers.source.' . ($this->employee_id ? 'employee' : 'user'));
     }
 
     /**
