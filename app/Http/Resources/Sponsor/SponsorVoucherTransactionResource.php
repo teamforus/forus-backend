@@ -18,6 +18,7 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
     public const LOAD = [
         'voucher.fund:id,name,organization_id',
         'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
+        'voucher.product_reservation',
         'product.photo.presets',
         'provider:id,name,iban',
         'notes_sponsor',
@@ -46,8 +47,9 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'notes' => VoucherTransactionNoteResource::collection($transaction->notes_sponsor),
             'bulk_status_locale' => $transaction->bulk_status_locale,
             'product' => new ProductTinyResource($transaction->product),
-            'voucher_parent_id' => $transaction->voucher->parent_id,
-            'has_voucher_reservation' => $transaction->voucher->product_reservation()->exists(),
+            'product_reservation' => $transaction->product_reservation?->only([
+                'id', 'voucher_id',
+            ]),
         ], $this->timestamps($transaction, 'created_at', 'updated_at'));
     }
 

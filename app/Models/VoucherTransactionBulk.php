@@ -563,7 +563,7 @@ class VoucherTransactionBulk extends BaseModel
      */
     public static function getNextBulkTransactionsForSponsor(
         Organization $sponsor,
-        ?BaseFormRequest $request = null
+        ?BaseFormRequest $request = null,
     ): Builder {
         if ($request) {
             $options = array_merge($request->only([
