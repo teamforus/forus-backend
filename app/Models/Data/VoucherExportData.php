@@ -77,7 +77,7 @@ class VoucherExportData
             'activation_code' => $this->voucher->activation_code ?? null,
             'client_uid' => $this->voucher->client_uid ?? null,
             'note' => $this->voucher->note,
-            'source' => trans('vouchers.source.' . ($this->voucher->employee_id ? 'employee' : 'user')),
+            'source' => $this->voucher->source_locale,
             'amount' => $this->voucher->amount_total_cached,
             'amount_available' => $this->voucher->amount_available_cached,
             'fund_name' => $this->voucher->fund->name,
