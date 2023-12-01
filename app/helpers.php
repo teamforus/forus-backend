@@ -161,14 +161,18 @@ if (!function_exists('pretty_file_size')) {
 
 if (!function_exists('json_pretty')) {
     /**
-     * @param $value
+     * @param mixed $value
      * @param int $options
      * @param int $depth
      * @return false|string
      */
-    function json_pretty($value, int $options = 0, int $depth = 512): string|false
+    function json_pretty(mixed $value, int $options = 0, int $depth = 512): string|false
     {
-        return json_encode($value, $options + JSON_PRETTY_PRINT, $depth);
+        try {
+            return json_encode($value, JSON_THROW_ON_ERROR | $options + JSON_PRETTY_PRINT, $depth);
+        } catch (Throwable) {}
+
+        return $value;
     }
 }
 

@@ -22,6 +22,7 @@ use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
 use App\Models\ReimbursementCategory;
+use App\Models\ReservationExtraPayment;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
@@ -50,6 +51,7 @@ use App\Policies\ProductPolicy;
 use App\Policies\ProductReservationPolicy;
 use App\Policies\ReimbursementCategoryPolicy;
 use App\Policies\ReimbursementPolicy;
+use App\Policies\ReservationExtraPaymentPolicy;
 use App\Policies\VoucherPolicy;
 use App\Policies\VoucherTransactionBulkPolicy;
 use App\Policies\VoucherTransactionPolicy;
@@ -106,6 +108,7 @@ class AuthServiceProvider extends ServiceProvider
         FundProviderChatMessage::class  => FundProviderChatMessagePolicy::class,
         FundProviderUnsubscribe::class  => FundProviderUnsubscribePolicy::class,
         MollieConnectionProfile::class  => MollieConnectionProfilePolicy::class,
+        ReservationExtraPayment::class  => ReservationExtraPaymentPolicy::class,
         FundRequestClarification::class => FundRequestClarificationPolicy::class,
     ];
 

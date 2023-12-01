@@ -3,31 +3,14 @@
 namespace App\Http\Requests\Api\Platform\Organizations\MollieConnections;
 
 use App\Exceptions\AuthorizationJsonException;
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use Illuminate\Support\Facades\Config;
 
 /**
  * @property-read Organization $organization
  */
-class StoreMollieConnectionRequest extends BaseFormRequest
+class StoreMollieConnectionRequest extends BaseMollieConnectionRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     * @throws AuthorizationJsonException
-     */
-    public function authorize(): bool
-    {
-        $this->maxAttempts = Config::get('forus.throttles.mollie.create.attempts');
-        $this->decayMinutes = Config::get('forus.throttles.mollie.create.decay');
-
-        $this->throttleWithKey('to_many_attempts', $this, 'mollie_connection');
-
-        return true;
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -48,5 +31,17 @@ class StoreMollieConnectionRequest extends BaseFormRequest
             'website' => 'required|url|max:191',
             'phone' => 'required|string|max:191',
         ];
+    }
+
+    /**
+     * @return void
+     * @throws AuthorizationJsonException
+     */
+    protected function throttle(): void
+    {
+        $this->maxAttempts = Config::get('forus.throttles.mollie.create.attempts');
+        $this->decayMinutes = Config::get('forus.throttles.mollie.create.decay');
+
+        $this->throttleWithKey('to_many_attempts', $this, 'mollie_connection');
     }
 }

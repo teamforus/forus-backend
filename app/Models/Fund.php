@@ -1366,11 +1366,14 @@ class Fund extends BaseModel
             'contact_information' => $contactInformation,
         ] : []));
 
-        $records = array_filter($records, fn ($record) => !empty($record['value'] ?? null));
-
         foreach ($records as $record) {
             /** @var FundCriterion $criteria */
             $criteria = $this->criteria()->find($record['fund_criterion_id'] ?? null);
+            $value = Arr::get($record, 'value');
+
+            if ($criteria->optional && ($value === '' || $value === null)) {
+                continue;
+            }
 
             /** @var FundRequestRecord $requestRecord */
             $requestRecord = $fundRequest->records()->create(array_merge($record, [

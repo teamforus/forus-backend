@@ -27,5 +27,6 @@
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="TEST_DATA_CONFIG" value="default"/>
+        <env name="TWILIO_DEBUG" value="true"/>
     </php>
 </phpunit>
