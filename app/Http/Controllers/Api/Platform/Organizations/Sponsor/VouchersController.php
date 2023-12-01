@@ -454,6 +454,6 @@ class VouchersController extends Controller
             'voucher_ids' => $vouchers->pluck('id'),
         ]);
 
-        return new VoucherExportArrResource(Arr::only($exportData, ['files', 'data']));
+        return new VoucherExportArrResource(Arr::only($exportData, ['files', 'data', 'name']));
     }
 }
