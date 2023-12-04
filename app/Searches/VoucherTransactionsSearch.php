@@ -114,7 +114,11 @@ class VoucherTransactionsSearch extends BaseSearch
         }
 
         if ($voucher_id = $this->getFilter('voucher_id')) {
-            $builder->where(compact('voucher_id'));
+            $builder->where('voucher_id', $voucher_id);
+        }
+
+        if ($reservation_voucher_id = $this->getFilter('reservation_voucher_id')) {
+            $builder->whereRelation('product_reservation', 'voucher_id', $reservation_voucher_id);
         }
 
         if ($this->getFilter('pending_bulking')) {
