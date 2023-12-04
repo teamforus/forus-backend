@@ -21,7 +21,9 @@ class SponsorVoucherResource extends BaseJsonResource
         'transactions.provider.logo.presets',
         'transactions.product.photo.presets',
         'product_vouchers',
+        'reimbursements_pending',
         'fund.fund_config',
+        'fund.organization',
         'physical_cards',
         'voucher_records.record_type',
         'voucher_relation',
@@ -55,7 +57,7 @@ class SponsorVoucherResource extends BaseJsonResource
             'in_use', 'limit_multiplier', 'fund_id', 'is_external',
         ]), [
             'amount_available' => currency_format($amount_available),
-            'source' => $voucher->employee_id ? 'employee' : 'user',
+            'source_locale' => trans('vouchers.source.' . ($voucher->employee_id ? 'employee' : 'user')),
             'identity_bsn' => $identity_bsn ?? null,
             'identity_email' => $identity_email ?? null,
             'relation_bsn' => $bsn_enabled ? $voucher->voucher_relation->bsn ?? null : null,

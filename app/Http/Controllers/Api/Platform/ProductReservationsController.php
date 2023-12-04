@@ -7,7 +7,6 @@ use App\Http\Requests\Api\Platform\ProductReservations\IndexProductReservationsR
 use App\Http\Requests\Api\Platform\ProductReservations\ValidateProductReservationAddressRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\ValidateProductReservationFieldsRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
-use App\Http\Requests\Api\Platform\ProductReservations\UpdateProductReservationsRequest;
 use App\Http\Resources\ProductReservationResource;
 use App\Models\Product;
 use App\Models\ProductReservation;
@@ -16,6 +15,8 @@ use App\Searches\ProductReservationsSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class ProductReservationsController extends Controller
 {
@@ -50,30 +51,72 @@ class ProductReservationsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param StoreProductReservationRequest $request
-     * @return ProductReservationResource
+     * @return ProductReservationResource|JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Throwable
      */
-    public function store(StoreProductReservationRequest $request): ProductReservationResource
+    public function store(StoreProductReservationRequest $request): ProductReservationResource|JsonResponse
     {
         $this->authorize('create', ProductReservation::class);
+        DB::beginTransaction();
 
-        $product = Product::find($request->input('product_id'));
-        $voucher = Voucher::findByAddress($request->input('voucher_address'), $request->auth_address());
-        $postCode = $request->input('postal_code') ?: '';
+        try {
+            $product = Product::find($request->input('product_id'));
+            $postCode = $request->input('postal_code') ?: '';
 
-        $reservation = $voucher->reserveProduct($product, null, array_merge($request->only([
-            'first_name', 'last_name', 'user_note', 'phone', 'birth_date', 'custom_fields',
-            'street', 'house_nr', 'house_nr_addition', 'city',
-        ]), [
-            'postal_code' => strtoupper(preg_replace("/\s+/", "", $postCode)),
-        ]));
+            $voucher = Voucher::findByAddress(
+                $request->input('voucher_address'),
+                $request->auth_address(),
+            );
 
-        if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
-            $reservation->acceptProvider();
+            $extraPaymentRequired =
+                $voucher->fund->isTypeBudget() &&
+                $product->price > $voucher->amount_available;
+
+            if ($extraPaymentRequired) {
+                $this->authorize('createExtraPayment', [ProductReservation::class, $product, $voucher]);
+            }
+
+            $reservation = $voucher->reserveProduct($product, null, [
+                ...$request->only([
+                    'first_name', 'last_name', 'user_note', 'phone', 'birth_date', 'custom_fields',
+                    'street', 'house_nr', 'house_nr_addition', 'city',
+                ]),
+                'postal_code' => strtoupper(preg_replace("/\s+/", "", $postCode)),
+                'has_extra_payment' => $extraPaymentRequired,
+            ]);
+
+            if ($extraPaymentRequired) {
+                $payment = $reservation->createExtraPayment($request->implementation());
+
+                if ($payment) {
+                    DB::commit();
+
+                    return new JsonResponse([
+                        'checkout_url' => $payment->getCheckoutUrl(),
+                    ], 200);
+                }
+
+                DB::rollBack();
+
+                return new JsonResponse([
+                    'message' => "Could prepare the extra payment.",
+                ], 200);
+            }
+
+            if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
+                $reservation->acceptProvider();
+            }
+
+            DB::commit();
+            return ProductReservationResource::create($reservation);
+        } catch (Throwable) {
+            DB::rollBack();
         }
 
-        return ProductReservationResource::create($reservation);
+        return new JsonResponse([
+            'message' => "Something went wrong, please try again later.",
+        ], 200);
     }
 
     /**
@@ -105,22 +148,47 @@ class ProductReservationsController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param UpdateProductReservationsRequest $request
-     * @param ProductReservation $productReservation
+     * @param ProductReservation $reservation
+     * @return ProductReservationResource
+     * @throws Throwable
+     */
+    public function cancel(
+        ProductReservation $reservation,
+    ): ProductReservationResource {
+        $this->authorize('cancelAsRequester', $reservation);
+
+        $reservation->cancelByClient();
+
+        return ProductReservationResource::create($reservation);
+    }
+
+    /**
+     * @param ProductReservation $reservation
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Throwable
      */
-    public function update(
-        UpdateProductReservationsRequest $request,
-        ProductReservation $productReservation
+    public function checkoutExtraPayment(
+        ProductReservation $reservation,
     ): JsonResponse {
-        $this->authorize('update', $productReservation);
+        $this->authorize('checkoutExtraPayment', $reservation);
 
-        if ($request->input('state') == ProductReservation::STATE_CANCELED_BY_CLIENT) {
-            $productReservation->cancelByClient();
+        $payment = $reservation->extra_payment?->getPayment();
+
+        if (!$payment) {
+            abort(503, "Extra payment not found!");
         }
 
-        return new JsonResponse([]);
+        if ($payment->isPaid()) {
+            abort(503, "Extra payment already paid!");
+        }
+
+        if (!$payment->isOpen()) {
+            abort(503, "Extra payment not open for payment!");
+        }
+
+        return new JsonResponse([
+            'url' => $payment->getCheckoutUrl(),
+        ]);
     }
 }

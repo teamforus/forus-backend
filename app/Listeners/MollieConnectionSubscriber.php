@@ -23,7 +23,7 @@ class MollieConnectionSubscriber
         return $event->getMollieConnection()->log(
             $eventType,
             $event->getMollieConnection()->getLogModels($event->getEmployee()),
-            $event->getData()
+            $event->getData(),
         );
     }
 

@@ -14,26 +14,22 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Support\Facades\DB;
 
-/**
- * Class VoucherQuery
- * @package App\Scopes\Builders
- */
 class VoucherQuery
 {
     /**
-     * @param Builder $builder
+     * @param Builder|Voucher $builder
      * @param string $identity_address
      * @param $fund_id
      * @param null $organization_id Provider organization id
-     * @return Builder
+     * @return Builder|Voucher
      */
     public static function whereProductVouchersCanBeScannedForFundBy(
-        Builder $builder,
+        Builder|Voucher $builder,
         string $identity_address,
         $fund_id,
         $organization_id = null
-    ): Builder {
-        $builder = $builder->whereHas('product', static function(Builder $builder) use (
+    ): Builder|Voucher {
+        $builder->whereHas('product', static function(Builder $builder) use (
             $fund_id, $identity_address, $organization_id
         ) {
             $builder->whereHas('organization', static function(Builder $builder) use (
@@ -285,6 +281,7 @@ class VoucherQuery
                 $builder->whereDoesntHave('product_reservation');
                 $builder->orWhereHas('product_reservation', function (Builder $builder) {
                     $builder->whereIn('state', [
+                        ProductReservation::STATE_WAITING,
                         ProductReservation::STATE_PENDING,
                         ProductReservation::STATE_ACCEPTED
                     ]);

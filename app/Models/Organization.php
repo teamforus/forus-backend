@@ -105,19 +105,18 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $employees_with_trashed_count
  * @property-read Collection|Organization[] $external_validators
  * @property-read int|null $external_validators_count
- * @property-read \App\Models\FundProvider|null $fund_provider_allowed_extra_payments
  * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
+ * @property-read Collection|\App\Models\FundProvider[] $fund_providers_allowed_extra_payments
+ * @property-read int|null $fund_providers_allowed_extra_payments_count
  * @property-read Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read Collection|\App\Models\Fund[] $funds_active
  * @property-read int|null $funds_active_count
- * @property-read bool $allow_extra_payments_by_sponsor
- * @property-read bool $can_view_provider_extra_payments
  * @property-read string $description_html
  * @property-read \App\Models\Identity|null $identity
  * @property-read Collection|\App\Models\Implementation[] $implementations
@@ -128,8 +127,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $logs_count
  * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
- * @property-read MollieConnection|null $mollie_connection_active
- * @property-read MollieConnection|null $mollie_connection_configured
+ * @property-read MollieConnection|null $mollie_connection
  * @property-read Collection|MollieConnection[] $mollie_connections
  * @property-read int|null $mollie_connections_count
  * @property-read Collection|\App\Models\Office[] $offices
@@ -240,7 +238,7 @@ class Organization extends BaseModel
         self::AUTH_2FA_POLICY_REQUIRED,
     ];
 
-    const EVENT_BI_CONNECTION_UPDATED = 'bi_connection_updated';
+    public const EVENT_BI_CONNECTION_UPDATED = 'bi_connection_updated';
 
     public const AUTH_2FA_FUNDS_POLICIES = [
         self::AUTH_2FA_FUNDS_POLICY_OPTIONAL,
@@ -272,35 +270,35 @@ class Organization extends BaseModel
      * @var string[]
      */
     protected $casts = [
-        'btw'                                   => 'string',
-        'email_public'                          => 'boolean',
-        'phone_public'                          => 'boolean',
-        'website_public'                        => 'boolean',
-        'is_sponsor'                            => 'boolean',
-        'is_provider'                           => 'boolean',
-        'is_validator'                          => 'boolean',
-        'backoffice_available'                  => 'boolean',
-        'manage_provider_products'              => 'boolean',
-        'validator_auto_accept_funds'           => 'boolean',
-        'reservations_budget_enabled'           => 'boolean',
-        'reservations_subsidy_enabled'          => 'boolean',
-        'reservations_auto_accept'              => 'boolean',
-        'allow_batch_reservations'              => 'boolean',
-        'allow_custom_fund_notifications'       => 'boolean',
-        'allow_budget_fund_limits'              => 'boolean',
-        'allow_manual_bulk_processing'          => 'boolean',
-        'allow_2fa_restrictions'                => 'boolean',
-        'allow_fund_request_record_edit'        => 'boolean',
-        'allow_bi_connection'                   => 'boolean',
-        'pre_approve_external_funds'            => 'boolean',
-        'bsn_enabled'                           => 'boolean',
-        'auth_2fa_remember_ip'                  => 'boolean',
-        'auth_2fa_funds_remember_ip'            => 'boolean',
-        'auth_2fa_funds_restrict_emails'        => 'boolean',
-        'auth_2fa_funds_restrict_auth_sessions' => 'boolean',
-        'auth_2fa_funds_restrict_reimbursements' => 'boolean',
-        'allow_provider_extra_payments'         => 'boolean',
-        'reservation_allow_extra_payments'      => 'boolean',
+        'btw'                                       => 'string',
+        'email_public'                              => 'boolean',
+        'phone_public'                              => 'boolean',
+        'website_public'                            => 'boolean',
+        'is_sponsor'                                => 'boolean',
+        'is_provider'                               => 'boolean',
+        'is_validator'                              => 'boolean',
+        'backoffice_available'                      => 'boolean',
+        'manage_provider_products'                  => 'boolean',
+        'validator_auto_accept_funds'               => 'boolean',
+        'reservations_budget_enabled'               => 'boolean',
+        'reservations_subsidy_enabled'              => 'boolean',
+        'reservations_auto_accept'                  => 'boolean',
+        'allow_batch_reservations'                  => 'boolean',
+        'allow_custom_fund_notifications'           => 'boolean',
+        'allow_budget_fund_limits'                  => 'boolean',
+        'allow_manual_bulk_processing'              => 'boolean',
+        'allow_2fa_restrictions'                    => 'boolean',
+        'allow_fund_request_record_edit'            => 'boolean',
+        'allow_bi_connection'                       => 'boolean',
+        'pre_approve_external_funds'                => 'boolean',
+        'bsn_enabled'                               => 'boolean',
+        'auth_2fa_remember_ip'                      => 'boolean',
+        'auth_2fa_funds_remember_ip'                => 'boolean',
+        'auth_2fa_funds_restrict_emails'            => 'boolean',
+        'auth_2fa_funds_restrict_auth_sessions'     => 'boolean',
+        'auth_2fa_funds_restrict_reimbursements'    => 'boolean',
+        'allow_provider_extra_payments'             => 'boolean',
+        'reservation_allow_extra_payments'          => 'boolean',
     ];
 
     /**
@@ -705,51 +703,55 @@ class Organization extends BaseModel
      * @return HasOne
      * @noinspection PhpUnused
      */
-    public function mollie_connection_configured(): HasOne
+    public function mollie_connection(): HasOne
     {
-        return $this->hasOne(MollieConnection::class)
+        return $this
+            ->hasOne(MollieConnection::class)
             ->has('active_token')
-            ->where('connection_state', MollieConnection::CONNECTION_STATE_ACTIVE);
+            ->where('connection_state', MollieConnection::STATE_ACTIVE);
     }
 
     /**
-     * @return HasOne
+     * @return HasMany
      * @noinspection PhpUnused
      */
-    public function mollie_connection_active(): HasOne
+    public function fund_providers_allowed_extra_payments(): HasMany
     {
-        return $this->hasOne(MollieConnection::class)
-            ->has('active_token')
-            ->where('connection_state', MollieConnection::CONNECTION_STATE_ACTIVE)
-            ->where('onboarding_state', MollieConnection::ONBOARDING_STATE_COMPLETED);
-    }
-
-    /**
-     * @return HasOne
-     * @noinspection PhpUnused
-     */
-    public function fund_provider_allowed_extra_payments(): HasOne
-    {
-        return $this->hasOne(FundProvider::class)
+        return $this
+            ->hasMany(FundProvider::class)
             ->where('allow_extra_payments', true);
     }
 
     /**
+     * @param bool $fresh
      * @return bool
-     * @noinspection PhpUnused
      */
-    public function getAllowExtraPaymentsBySponsorAttribute(): bool
+    public function canUseExtraPaymentsAsProvider(bool $fresh = false): bool
     {
-        return (bool)$this->fund_provider_allowed_extra_payments;
+        if ($fresh) {
+            return $this->fund_providers_allowed_extra_payments()->exists();
+        }
+
+        return $this->fund_providers_allowed_extra_payments->isNotEmpty();
     }
 
     /**
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getCanViewProviderExtraPaymentsAttribute(): bool
+    public function canViewExtraPaymentsAsProvider(): bool
     {
-        return $this->allow_extra_payments_by_sponsor || $this->mollie_connection_configured;
+        return $this->canUseExtraPaymentsAsProvider() || $this->mollie_connection;
+    }
+
+    /**
+     * @return bool
+     */
+    public function canReceiveExtraPayments(): bool
+    {
+        return
+            $this->canUseExtraPaymentsAsProvider() &&
+            $this->mollie_connection?->onboardingComplete();
     }
 
     /**
@@ -963,7 +965,7 @@ class Organization extends BaseModel
         /** @var Carbon|null $dateTo */
         $dateTo = array_get($options, 'date_to');
 
-        $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $sponsor);
+        $query = OrganizationQuery::whereIsProviderOrganization(self::query(), $sponsor);
 
         if ($providerIds) {
             $query->whereIn('id', $providerIds);
@@ -1034,7 +1036,7 @@ class Organization extends BaseModel
         $funds = FundQuery::whereTopUpAndBalanceUpdateAvailable($this->funds(), $balanceProvider)->get();
         $balance = $funds->isNotEmpty() ? $this->bank_connection_active->fetchBalance() : null;
 
-        if ($funds->isNotEmpty() && $balance) {
+        if ($balance && $funds->isNotEmpty()) {
             foreach ($funds as $fund) {
                 $fund->setBalance($balance->getAmount(), $this->bank_connection_active);
             }
@@ -1065,7 +1067,7 @@ class Organization extends BaseModel
      */
     public function isOwner(Identity $identity): bool
     {
-        return $this->identity_address == $identity->address;
+        return $this->identity_address === $identity->address;
     }
 
     public function updateBIConnection(?string $auth_type, bool $reset_token = false): void
@@ -1077,7 +1079,7 @@ class Organization extends BaseModel
         }
 
         $connectionToken = $this->bi_connection_token;
-        $connectionEnabled = $this->bi_connection_auth_type != BIConnection::AUTH_TYPE_DISABLED;
+        $connectionEnabled = $this->bi_connection_auth_type !== BIConnection::AUTH_TYPE_DISABLED;
 
         if ($reset_token || (empty($this->bi_connection_token) && $connectionEnabled)) {
             $this->update([

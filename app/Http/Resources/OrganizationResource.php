@@ -49,8 +49,8 @@ class OrganizationResource extends JsonResource
         self::isRequested('business_type', $request) && array_push($load, 'business_type.translations');
 
         return array_merge($load, $request?->isProviderDashboard() ? [
-            'mollie_connection_configured',
-            'fund_provider_allowed_extra_payments',
+            'mollie_connection',
+            'fund_providers_allowed_extra_payments',
         ] : []);
     }
 
@@ -129,24 +129,23 @@ class OrganizationResource extends JsonResource
      */
     protected function employeeOnlyData(BaseFormRequest $request, Organization $organization): array
     {
-        $isEmployee = $request->identity() && $organization->employees
-            ->where('identity_address', $request->identity()->address)
-            ->isNotEmpty();
-
-        return $isEmployee ? array_merge([
+        return $request->identity() && $organization->isEmployee($request->identity()) ? [
             'has_bank_connection' => !empty($organization->bank_connection_active),
-        ], array_merge($organization->only([
-            'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
-            'allow_custom_fund_notifications', 'validator_auto_accept_funds',
-            'reservations_budget_enabled', 'reservations_subsidy_enabled',
-            'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled',
-            'allow_batch_reservations', 'allow_budget_fund_limits',
-            'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
-            'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
-            'allow_provider_extra_payments',
-        ]), $request->isProviderDashboard() ? $organization->only([
-            'allow_extra_payments_by_sponsor', 'can_view_provider_extra_payments',
-        ]) : [])) : [];
+            ...$organization->only([
+                'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
+                'allow_custom_fund_notifications', 'validator_auto_accept_funds',
+                'reservations_budget_enabled', 'reservations_subsidy_enabled',
+                'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled',
+                'allow_batch_reservations', 'allow_budget_fund_limits',
+                'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
+                'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
+                'allow_provider_extra_payments',
+            ]),
+            ...$request->isProviderDashboard() ? [
+                'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),
+                'can_view_provider_extra_payments' => $organization->canViewExtraPaymentsAsProvider(),
+            ] : [],
+        ] : [];
     }
 
     /**

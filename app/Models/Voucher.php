@@ -92,6 +92,7 @@ use ZipArchive;
  * @property-read bool $is_external
  * @property-read bool $is_granted
  * @property-read \Illuminate\Support\Carbon|null $last_active_day
+ * @property-read string $source_locale
  * @property-read string $state_locale
  * @property-read string $type
  * @property-read string|null $updated_at_string
@@ -510,7 +511,7 @@ class Voucher extends BaseModel
      */
     public function getAmountTotalAttribute(): string
     {
-        return currency_format(floatval($this->amount) + floatval($this->amount_top_up));
+        return currency_format((float) $this->amount + (float) $this->amount_top_up);
     }
 
     /**
@@ -519,7 +520,7 @@ class Voucher extends BaseModel
      */
     public function getAmountTotalCachedAttribute(): string
     {
-        return currency_format(floatval($this->amount) + floatval($this->amount_top_up_cached));
+        return currency_format((float) $this->amount + (float) $this->amount_top_up_cached);
     }
 
     /**
@@ -640,6 +641,15 @@ class Voucher extends BaseModel
     }
 
     /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getSourceLocaleAttribute(): string
+    {
+        return trans('vouchers.source.' . ($this->employee_id ? 'employee' : 'user'));
+    }
+
+    /**
      * The voucher is expired
      *
      * @return bool
@@ -649,7 +659,7 @@ class Voucher extends BaseModel
     {
         return $this->type === 'product' ?
             $this->transactions->count() > 0 :
-            floatval($this->amount_available_cached) === 0.0;
+            (float) $this->amount_available_cached === 0.0;
     }
 
     /**
@@ -769,11 +779,11 @@ class Voucher extends BaseModel
             }
         });
 
-        if ($state == 'expired') {
+        if ($state === 'expired') {
             VoucherQuery::whereExpired($query);
         }
 
-        if ($state && $state != 'expired') {
+        if ($state && $state !== 'expired') {
             VoucherQuery::whereNotExpired($query->where('state', $state));
         }
 
@@ -806,7 +816,7 @@ class Voucher extends BaseModel
         }
 
         if ($request->has('bsn') && $bsn = $request->input('bsn')) {
-            $query->where(static function(Builder $builder) use ($bsn, $request) {
+            $query->where(static function(Builder $builder) use ($bsn) {
                 $builder->where('identity_address', Identity::findByBsn($bsn)?->address ?: '-');
                 $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($bsn) {
                     $builder->where(compact('bsn'));
@@ -900,7 +910,7 @@ class Voucher extends BaseModel
      */
     public function getFirstUseDateAttribute(): ?Carbon
     {
-        if (key_exists('first_use_date', $this->attributes)) {
+        if (array_key_exists('first_use_date', $this->attributes)) {
             return $this->attributes['first_use_date'] ? Carbon::parse(
                 $this->attributes['first_use_date']
             ) : null;
@@ -951,7 +961,7 @@ class Voucher extends BaseModel
             'parent_id'                 => $this->id,
             'fund_id'                   => $this->fund_id,
             'product_id'                => $product->id,
-            'amount'                    => $product->price,
+            'amount'                    => $productReservation->amount ?? $product->price,
             'returnable'                => false,
             'expire_at'                 => $voucherExpireAt
         ]);
@@ -1009,17 +1019,27 @@ class Voucher extends BaseModel
     ): ProductReservation {
         $isSubsidy = $this->fund->isTypeSubsidy();
         $fundProviderProduct = $product->getFundProviderProduct($this->fund);
-        $amount = $isSubsidy && $fundProviderProduct ? $fundProviderProduct->amount : $product->price;
+
+        if ($extraData['has_extra_payment'] ?? false) {
+            $amount = ($product->price > $this->amount_available) ? $this->amount_available : $product->price;
+            $state = ProductReservation::STATE_WAITING;
+            $extraAmount = $product->price - $amount;
+        } else {
+            $amount = ($isSubsidy && $fundProviderProduct) ? $fundProviderProduct->amount : $product->price;
+            $state = ProductReservation::STATE_PENDING;
+            $extraAmount = 0;
+        }
 
         /** @var ProductReservation $reservation */
         $reservation = $this->product_reservations()->create(array_merge([
             'code'                      => ProductReservation::makeCode(),
             'amount'                    => $amount,
-            'state'                     => ProductReservation::STATE_PENDING,
+            'state'                     => $state,
             'product_id'                => $product->id,
             'employee_id'               => $employee?->id,
             'fund_provider_product_id'  => $fundProviderProduct?->id,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
+            'amount_extra'              => $extraAmount,
         ], array_only($extraData, [
             'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
             'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
@@ -1096,6 +1116,10 @@ class Voucher extends BaseModel
     ): array {
         $data = [];
 
+        $date = now()->format('Y-m-d_H_i_s');
+        $name = "Vouchers_export_$date";
+        $imagesDirName = "{$name}_QR_codes_images";
+
         $domPdf = resolve('dompdf.wrapper');
         $zipFile = tmpfile();
         $zipFilePath = stream_get_meta_data($zipFile)['uri'];
@@ -1104,7 +1128,7 @@ class Voucher extends BaseModel
         $zip->open($zipFilePath, ZipArchive::CREATE);
 
         if ($qrFormat === 'png') {
-            $zip->addEmptyDir('images');
+            $zip->addEmptyDir($imagesDirName);
         }
 
         foreach ($vouchers as $voucher) {
@@ -1120,7 +1144,7 @@ class Voucher extends BaseModel
             ];
 
             if (in_array($qrFormat, ['png', 'all'])) {
-                $pngPath = sprintf("images/%s.png", $dataItem['name']);
+                $pngPath = sprintf("$imagesDirName/%s.png", $dataItem['name']);
                 $pngData = make_qr_code('voucher', $dataItem['value']);
 
                 $zip->addFromString($pngPath, $pngData);
@@ -1132,34 +1156,33 @@ class Voucher extends BaseModel
                 'vouchersData' => Arr::pluck($data, 'voucherData'),
             ]);
 
-            $zip->addFromString('qr_codes.pdf', $domPdfFile->output());
+            $zip->addFromString($name . '_QR_codes_PDF.pdf', $domPdfFile->output());
         }
 
         $export = new VoucherExport(Arr::pluck($data, 'values'));
-        $exportName = 'qr_codes.';
         $files = [];
 
         if ($dataFormat === 'xls' || $dataFormat === 'all') {
             $files['xls'] = Excel::raw($export, ExcelModel::XLS);
-            $zip->addFromString($exportName . 'xls', $files['xls']);
+            $zip->addFromString($name . '_Data.xls', $files['xls']);
         }
 
         if ($dataFormat === 'csv' || $dataFormat === 'all') {
             $files['csv'] = Excel::raw($export, ExcelModel::CSV);
-            $zip->addFromString($exportName . 'csv', $files['csv']);
+            $zip->addFromString($name . '_Data.csv', $files['csv']);
         }
 
         $zip->close();
 
         $data = array_map(function($item) use ($qrFormat) {
-            return array_merge($item['values'], array_only($item, $qrFormat == 'data' ? [
+            return array_merge($item['values'], array_only($item, $qrFormat === 'data' ? [
                 'name', 'value',
             ] : []));
         }, $data);
 
         $files['zip'] = file_get_contents($zipFilePath);
 
-        return compact('files', 'data');
+        return compact('files', 'data', 'date', 'name');
     }
 
     /**
@@ -1173,7 +1196,7 @@ class Voucher extends BaseModel
 
         foreach ($vouchers as $voucher) {
             do {
-                $voucherData = new VoucherExportData($voucher, $fields, empty($qrFormat));
+                $voucherData = new VoucherExportData($voucher, $fields, true);
             } while(in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
 
             $data[] = [
@@ -1547,7 +1570,7 @@ class Voucher extends BaseModel
         Employee $employee,
         array $attributes,
     ): VoucherTransaction {
-        $isTopUp = Arr::get($attributes, 'target') == VoucherTransaction::TARGET_TOP_UP;
+        $isTopUp = Arr::get($attributes, 'target') === VoucherTransaction::TARGET_TOP_UP;
         $state = $isTopUp ? VoucherTransaction::STATE_SUCCESS : VoucherTransaction::STATE_PENDING;
         $note = Arr::get($attributes, 'note');
         $note_shared = Arr::get($attributes, 'note_shared', false);
