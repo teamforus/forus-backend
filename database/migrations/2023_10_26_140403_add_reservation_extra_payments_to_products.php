@@ -43,7 +43,10 @@ return new class extends Migration
     {
         Schema::table('products', function (Blueprint $table) {
             $table->dropColumn('reservation_extra_payments');
-            $table->string('reservation_extra_payments', 50)->change();
+        });
+
+        Schema::table('product_reservations', function (Blueprint $table) {
+            $table->dropColumn('amount_extra');
         });
     }
 };
