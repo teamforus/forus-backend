@@ -42,22 +42,31 @@ class FundsController extends Controller
      */
     public function index(
         IndexFundRequest $request,
-        Organization $organization
+        Organization $organization,
     ): AnonymousResourceCollection {
         $this->authorize('viewAny', [Fund::class, $organization]);
 
         $query = (new FundSearch($request->only([
             'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id', 'order_by',
-            'order_dir', 'with_archived', 'with_external', 'configured',
+            'order_dir', 'with_archived', 'with_external', 'configured', 'state',
         ]), $organization->funds()->getQuery()))->query();
 
         if (!$request->isAuthenticated()) {
             $query->where('public', true);
         }
 
+        $meta = [
+            'archived_funds_total' => (clone $query)->where('archived', true)->count(),
+            'unarchived_funds_total' => (clone $query)->where('archived', false)->count(),
+        ];
+
+        if ($request->has('archived')) {
+            $query->where('archived', $request->input('archived', false));
+        }
+
         return FundResource::queryCollection(FundQuery::sortByState($query, [
             'active', 'waiting', 'paused', 'closed',
-        ]), $request, $request->only('stats'));
+        ]), $request, $request->only('stats'))->additional(compact('meta'));
     }
 
     /**

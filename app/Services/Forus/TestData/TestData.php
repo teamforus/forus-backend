@@ -461,6 +461,7 @@ class TestData
      * @param Organization $organization
      * @param string $name
      * @return Fund
+     * @throws \Exception
      */
     public function makeFund(Organization $organization, string $name): Fund
     {
@@ -469,18 +470,23 @@ class TestData
         $validator = $organization->employeesOfRoleQuery('validation')->firstOrFail();
         $autoValidation = Arr::get($config, 'auto_requests_validation', false);
 
+        $description = implode("  \n\n", array_map(function () {
+            return $this->faker->text(random_int(300, 500));
+        }, range(1, random_int(5, 10))));
+
         /** @var Fund $fund */
         $fund = $organization->funds()->create([
-            'name'                          => $name,
-            'start_date'                    => Carbon::now()->format('Y-m-d'),
-            'end_date'                      => Carbon::now()->addDays(60)->format('Y-m-d'),
-            'state'                         => Fund::STATE_ACTIVE,
-            'description'                   => $this->faker->text(rand(600, 6500)),
-            'notification_amount'           => 10000,
-            'auto_requests_validation'      => $autoValidation,
+            'name' => $name,
+            'state' => Fund::STATE_ACTIVE,
+            'start_date' => Carbon::now()->format('Y-m-d'),
+            'end_date' => Carbon::now()->addDays(60)->format('Y-m-d'),
+            'description'=> $description,
+            'description_short' => $this->faker->text(random_int(300, 500)),
+            'notification_amount' => 10000,
+            'auto_requests_validation' => $autoValidation,
             'default_validator_employee_id' => $autoValidation ? $validator->id : null,
             'criteria_editable_after_start' => false,
-            'type'                          => Fund::TYPE_BUDGET,
+            'type' => Fund::TYPE_BUDGET,
             ...$this->config("default.funds", []),
             ...$config,
         ]);
