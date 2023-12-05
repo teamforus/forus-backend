@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Fund;
 
 /**
  * Class IndexFundRequest
@@ -40,8 +41,10 @@ class IndexFundRequest extends BaseFormRequest
             'configured' => 'nullable|bool',
             'with_archived' => 'nullable|bool',
             'with_external' => 'nullable|bool',
+            'archived' => 'nullable|bool',
             'stats' => 'nullable|string|in:all,budget,product_vouchers,min',
             'per_page' => $this->perPageRule(),
+            'state' => 'nullable|in:' . implode(',', Fund::STATES),
         ];
     }
 }
