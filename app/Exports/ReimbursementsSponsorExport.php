@@ -37,6 +37,11 @@ class ReimbursementsSponsorExport extends BaseFieldedExport
     ];
 
     /**
+     * @var string
+     */
+    protected static string $translationKey = 'reimbursements';
+
+    /**
      * @param Request $request
      * @param Organization $organization
      * @param array $fields

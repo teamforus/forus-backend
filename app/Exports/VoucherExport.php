@@ -34,6 +34,11 @@ class VoucherExport extends BaseFieldedExport
         'expire_at' => 'Verlopen op',
     ];
 
+//    /**
+//     * @var string
+//     */
+//    protected static string $translationKey = 'vouchers';
+
     /**
      * @var array|string[]
      */
@@ -76,5 +81,13 @@ class VoucherExport extends BaseFieldedExport
             'name' => $type['name'],
             'is_record_field' => true,
         ], array_filter(record_types_cached(), fn($record) => $record['vouchers'] ?? false));
+    }
+
+    /**
+     * @return array
+     */
+    public function headings(): array
+    {
+        return array_keys($this->collection()->first());
     }
 }

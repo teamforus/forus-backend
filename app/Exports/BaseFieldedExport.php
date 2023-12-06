@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 abstract class BaseFieldedExport implements FromCollection, WithHeadings
 {
     protected static array $exportFields = [];
+    protected static string $translationKey = '';
     protected Collection $data;
 
     /**
@@ -24,7 +25,17 @@ abstract class BaseFieldedExport implements FromCollection, WithHeadings
      */
     public function headings(): array
     {
-        return array_unique($this->data->reduce(fn($list, $row) => array_merge($list, array_keys($row)), []));
+        $headings = array_unique(
+            $this->data->reduce(fn($list, $row) => array_merge($list, array_keys($row)), [])
+        );
+
+        return array_map(static function($key) use ($headings) {
+            if (!static::$translationKey) {
+                return $key;
+            }
+
+            return trans("export.". static::$translationKey .".$key");
+        }, (array) $headings);
     }
 
     /**

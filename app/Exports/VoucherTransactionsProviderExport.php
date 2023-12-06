@@ -17,7 +17,7 @@ class VoucherTransactionsProviderExport extends BaseFieldedExport
     protected static array $exportFields = [
         'id' => 'ID',
         'amount' => 'Bedrag',
-        'date_transaction' => 'Datum transactie',
+        'date_transaction' => 'Datum',
         'date_payment' => 'Datum betaling',
         'fund_name' => 'Fonds',
         'provider' => 'Aanbieder',
