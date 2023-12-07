@@ -179,7 +179,7 @@ return [
         'product_voucher_used' => 'Het tegoed voor dit aanbod is al gebruikt!',
         'provider_not_applied' => 'U mag dit tegoed niet scannen! Uw organisatie is nog niet aangemeld bij het fonds van dit tegoed.',
         'provider_pending' => 'U mag dit tegoed niet scannen! Status voor aanmelding van het fonds van dit tegoed is wachtend.',
-        'provider_declined' => 'U mag dit tegoed niet scannen! Uw organisatie is geweigerd om deel te nemen aan het fonds. Zoek contact op met sponsor voor een reden.',
+        'provider_declined' => 'Dit tegoed kan niet gescand worden. Uw organisatie heeft niet de juiste rechten. Neem contact op met de partij die het tegoed uitgeeft of via support@forus.io.',
         'fund_not_active' => 'U mag dit tegoed nog niet scannen! Het fonds is niet actief.',
         'not_enough_funds' => 'Onvoldoende tegoed.',
         'product_sold_out' => 'Uw aanbod is uitverkocht, verhoog in uw beheeromgeving het aantal dat nog te koop is.',
