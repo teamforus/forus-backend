@@ -198,6 +198,10 @@ class VoucherQuery
             $builder->orWhereHas('physical_cards', function (Builder $builder) use ($q) {
                 $builder->where('code', 'LIKE', "%$q%");
             });
+
+            $builder->orWhereHas('voucher_records', function (Builder $builder) use ($q) {
+                $builder->where('value', 'LIKE', "%$q%");
+            });
         });
     }
 

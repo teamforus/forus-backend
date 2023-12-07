@@ -70,6 +70,10 @@ class FundSearch extends BaseSearch
             $builder->whereRelation('fund_config', 'implementation_id', $this->getFilter('implementation_id'));
         }
 
+        if ($this->hasFilter('state')) {
+            $builder->where('state', $this->getFilter('state'));
+        }
+
         if (!is_null($this->getFilter('has_products'))) {
             $this->filterByApproval($builder, (bool) $this->getFilter('has_products'), 'product');
         }
@@ -95,11 +99,11 @@ class FundSearch extends BaseSearch
     {
         $funds = (clone $builder)->pluck('id')->toArray();
 
-        if ($type == 'subsidy') {
+        if ($type === 'subsidy') {
             $builder->where('type', Fund::TYPE_SUBSIDIES);
         }
 
-        if ($type == 'product') {
+        if ($type === 'product') {
             $builder->where('type', Fund::TYPE_BUDGET);
         }
 
@@ -123,7 +127,7 @@ class FundSearch extends BaseSearch
         $orderBy = $this->getFilter('order_by', 'created_at');
         $orderDir = $this->getFilter('order_dir', 'asc');
 
-        if ($orderBy == 'organization_name') {
+        if ($orderBy === 'organization_name') {
             $builder->addSelect([
                 'organization_name' => Organization::query()
                     ->whereColumn('id', 'organization_id')
