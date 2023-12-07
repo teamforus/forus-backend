@@ -180,13 +180,14 @@ class ImplementationsController extends Controller
     public function updatePreCheckBanner(
         UpdatePreCheckBannerRequest $request,
         Organization $organization,
-        Implementation $implementation
+        Implementation $implementation,
     ): ImplementationPrivateResource {
         $this->authorize('show', $organization);
-        $this->authorize('updatePreCheckBanner', [$implementation, $organization]);
+        $this->authorize('updatePreChecks', [$implementation, $organization]);
 
         return new ImplementationPrivateResource($implementation->updateModel($request->only([
-            'pre_check_homepage_title', 'pre_check_homepage_description', 'pre_check_homepage_label',
+            'pre_check_banner_state', 'pre_check_banner_title',
+            'pre_check_banner_description', 'pre_check_banner_label',
         ]))->attachMediaByUid($request->input('pre_check_media_uid')));
     }
 }

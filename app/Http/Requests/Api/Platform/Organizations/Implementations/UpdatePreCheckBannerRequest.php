@@ -26,9 +26,10 @@ class UpdatePreCheckBannerRequest extends BaseFormRequest
     {
         return [
             'pre_check_media_uid' => ['nullable', new MediaUidRule('pre_check_banner')],
-            'pre_check_homepage_title' => 'required|string|max:50',
-            'pre_check_homepage_description' => 'required|string|max:1000',
-            'pre_check_homepage_label' => 'nullable|string|max:50',
+            'pre_check_banner_state' => 'required|in:draft,public',
+            'pre_check_banner_label' => 'nullable|string|max:50',
+            'pre_check_banner_title' => 'required|string|max:100',
+            'pre_check_banner_description' => 'required|string|max:1000',
         ];
     }
 }

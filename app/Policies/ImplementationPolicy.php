@@ -140,10 +140,10 @@ class ImplementationPolicy
      * @return bool
      * @noinspection PhpUnused
      */
-    public function updatePreCheckBanner(
+    public function updatePreChecks(
         Identity $identity,
         Implementation $implementation,
-        Organization $organization
+        Organization $organization,
     ): bool {
         if (!$this->checkIntegrity($implementation, $organization)) {
             return false;

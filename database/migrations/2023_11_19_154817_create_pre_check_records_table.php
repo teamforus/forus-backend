@@ -15,23 +15,29 @@ return new class extends Migration
     {
         Schema::create('pre_check_records', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedInteger('record_type_id');
-            $table->unsignedInteger('pre_check_id');
+            $table->string('record_type_key', 180);
+            $table->unsignedInteger('pre_check_id')->nullable();
+            $table->unsignedInteger('implementation_id');
             $table->unsignedInteger('order')->nullable();
-            $table->string('short_title', 30)->nullable();
-            $table->string('title', 50);
-            $table->string('description', 1000)->nullable();
+            $table->string('title', 200);
+            $table->string('title_short', 100);
+            $table->string('description', 2000)->nullable();
             $table->timestamps();
 
             $table->foreign('pre_check_id')
                 ->references('id')
                 ->on('pre_checks')
-                ->onDelete('cascade');
+                ->onDelete('set null');
 
-            $table->foreign('record_type_id')
+            $table->foreign('implementation_id')
                 ->references('id')
+                ->on('implementations')
+                ->onDelete('restrict');
+
+            $table->foreign('record_type_key')
+                ->references('key')
                 ->on('record_types')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
     }
 

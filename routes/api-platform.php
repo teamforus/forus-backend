@@ -63,12 +63,10 @@ $router->group([], static function() use ($router) {
         ]
     ]);
 
-    $router->post(
-        'pre-checks/calculate-totals',
-        "Api\Platform\PreCheckController@calculateTotals"
-    );
+    $router->post('pre-checks/calculate', 'Api\Platform\PreCheckController@calculateTotals');
 
-    $router->resource('pre-checks', "Api\Platform\PreCheckController")->only('index', 'show');
+    $router->resource('pre-checks', "Api\Platform\PreCheckController")
+        ->only('index');
 
     $router->get('products/sample', "Api\Platform\ProductsController@sample");
     $router->post('products/{product}/bookmark', "Api\Platform\ProductsController@bookmark");
@@ -368,7 +366,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource(
         'organizations/{organization}/implementations/{implementation}/pre-checks',
         "Api\Platform\Organizations\Implementations\PreCheckController"
-    )->only('index', 'show');
+    )->only('index');
 
     $router->resource(
         'organizations/{organization}/provider-invitations',

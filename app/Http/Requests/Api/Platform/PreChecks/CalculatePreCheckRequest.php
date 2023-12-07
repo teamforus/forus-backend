@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\Platform\PreChecks;
 
 use App\Http\Requests\BaseFormRequest;
 
-class IndexPreCheckRequest extends BaseFormRequest
+class CalculatePreCheckRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,8 +25,12 @@ class IndexPreCheckRequest extends BaseFormRequest
     {
         return [
             'q' => 'nullable|string',
-            'organization_id' => 'nullable|exists:organizations,id',
             'tag' => 'nullable|string|exists:tags,key',
+            'tag_id' => 'nullable|string|exists:tags,id',
+            'organization_id' => 'nullable|exists:organizations,id',
+            'records' => 'required|array',
+            'records.*.key' => 'required|string',
+            'records.*.value' => 'required|string',
         ];
     }
 }

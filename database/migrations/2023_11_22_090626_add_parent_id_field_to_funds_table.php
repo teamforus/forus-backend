@@ -14,10 +14,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('funds', function (Blueprint $table) {
-            $table->integer('parent_id')->unsigned()->nullable()->after('end_date');
+            $table->unsignedInteger('parent_id')->nullable()->after('description_position');
 
-            $table->foreign('parent_id'
-            )->references('id')->on('funds')->onDelete('cascade');
+            $table->foreign('parent_id')
+                ->references('id')
+                ->on('funds')
+                ->onDelete('restrict');
         });
     }
 
@@ -29,6 +31,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('funds', function (Blueprint $table) {
+            $table->dropForeign('funds_parent_id_foreign');
             $table->dropColumn('parent_id');
         });
     }
