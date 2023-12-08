@@ -185,7 +185,7 @@ return [
         'product_sold_out' => 'Uw aanbod is uitverkocht, verhoog in uw beheeromgeving het aantal dat nog te koop is.',
         'reservation_used' => 'De reservering is al gebruikt.',
         'reservation_product_removed' => 'Het aanbod is verwijderd van deze reservering.',
-        'throttled' => "Sorry, but you can make only one transaction per voucher within :hardLimit seconds.\n Please try in :hardLimit seconds.",
+        'throttled' => "Sorry, u kunt maar één transactie per voucher maken in :hardLimit seconden.\n Probeer het in :hardLimit seconden nog een keer.",
     ],
     'product_voucher' => [
         'product_not_found' => 'Aanbod niet gevonden.',
