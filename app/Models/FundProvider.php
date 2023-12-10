@@ -353,6 +353,7 @@ class FundProvider extends BaseModel
     ): Builder {
         $allow_products = $request->input('allow_products');
         $allow_budget = $request->input('allow_budget');
+        $allow_extra_payments = $request->input('allow_extra_payments');
         $has_products = $request->input('has_products');
 
         $fundsQuery = $organization->funds()->where('archived', false);
@@ -446,6 +447,10 @@ class FundProvider extends BaseModel
                     });
                 });
             }
+        }
+
+        if ($allow_extra_payments !== null) {
+            $query->where('allow_extra_payments', (bool) $allow_extra_payments);
         }
 
         return $query->orderBy('created_at');
