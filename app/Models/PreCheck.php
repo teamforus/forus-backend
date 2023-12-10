@@ -71,28 +71,41 @@ class PreCheck extends BaseModel
      */
     public static function calculateTotalsPerFund(Collection $funds, array $records): array
     {
-        return $funds->map(function (array $result, Fund $fund) use ($records) {
-            $value = $records[$criterion->record_type_key] ?? '';
+        return $funds->reduce(function (array $result, Fund $fund) use ($records) {
+            $criteria = $fund->criteria->map(function (FundCriterion $criterion) use ($records) {
+                $value = $records[$criterion->record_type_key] ?? '';
 
-            $criteria = $fund->criteria->map(fn (FundCriterion $criterion) => [
-                'id' => $criterion->id,
-                'value' => $value,
-                'name' => $criterion->record_type->name,
-                'is_valid' => BaseFundRequestRule::validateRecordValue($criterion, $value)->passes(),
-            ]);
+                return [
+                    'id' => $criterion->id,
+                    'value' => $value,
+                    'name' => $criterion->record_type->name,
+                    'is_valid' => BaseFundRequestRule::validateRecordValue($criterion, $value)->passes(),
+                ];
+            });
 
-            return array_merge([
+            $validCriteriaCount = $criteria->filter(fn ($criterion) => $criterion['is_valid'])->count();
+            $validCriteriaPercentage = round(($validCriteriaCount / $criteria->count()) * 100);
+
+            $result[] = [
                 ...$fund->only(['id', 'name', 'description', 'description_short']),
                 'parent' => $fund->parent ? new FundResource($fund->parent) : null,
                 'criteria' => $criteria,
+                'criteria_valid_percentage' => $validCriteriaPercentage,
+                'criteria_invalid_percentage' => 100 - $validCriteriaPercentage,
                 'children' => $fund->children ? FundResource::collection($fund->children) : [],
-                /*'amount_for_identity' => currency_format($fund->amountForIdentity(null, $value)),
-                'multiplier_for_identity' => $fund->multiplierForIdentity($identity),
-                'amount_total' => $fund->multiplierForIdentity($identity) * $fund->amountForIdentity($identity),
+                'amount_for_identity' => currency_format($fund->amountForIdentity(null, $records)),
+                'multiplier_for_identity' => $fund->multiplierForIdentity(null, $records),
+                'amount_total' => $fund->multiplierForIdentity(null, $records) * $fund->amountForIdentity(
+                    null, $records)
+                ,
                 'amount_total_currency' => currency_format(
-                    $fund->multiplierForIdentity($identity) * $fund->amountForIdentity($identity)
-                ),*/
-            ]);
-        })->toArray();
+                    $fund->multiplierForIdentity(null, $records) * $fund->amountForIdentity(
+                        null, $records
+                    )
+                ),
+            ];
+
+            return $result;
+        }, []);
     }
 }

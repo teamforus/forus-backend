@@ -998,25 +998,32 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identityAddress
+     * @param array|null $records
      * @return int
      */
-    public function amountForIdentity(?string $identityAddress): int
+    public function amountForIdentity(?string $identityAddress, array $records = null): int
     {
         if ($this->fund_formulas->count() === 0 &&
             $this->fund_formula_products->pluck('price')->sum() === 0) {
             return 0;
         }
 
-        return $this->fund_formulas->map(function(FundFormula $formula) use ($identityAddress) {
+        return $this->fund_formulas->map(function(FundFormula $formula) use ($identityAddress, $records) {
             switch ($formula->type) {
                 case 'fixed': return $formula->amount;
                 case 'multiply': {
-                    $record = $this->getTrustedRecordOfType(
-                        $identityAddress,
-                        $formula->record_type_key
-                    );
+                    if ($records) {
+                        $value = $records[$formula->record_type_key] ?? null;
+                    } else {
+                        $record = $this->getTrustedRecordOfType(
+                            $identityAddress,
+                            $formula->record_type_key
+                        );
 
-                    return is_numeric($record?->value) ? $formula->amount * $record->value : 0;
+                        $value = $record?->value;
+                    }
+
+                    return is_numeric($value) ? $formula->amount * $value : 0;
                 }
                 default: return 0;
             }
@@ -1025,23 +1032,30 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identityAddress
+     * @param array|null $records
      * @return int
      */
-    public function multiplierForIdentity(?string $identityAddress): int {
+    public function multiplierForIdentity(?string $identityAddress, array $records = null): int {
         /** @var FundLimitMultiplier[]|Collection $multipliers */
         $multipliers = $this->fund_limit_multipliers()->get();
 
-        if (!$identityAddress || ($multipliers->count() === 0)) {
+        if ((!$identityAddress && !$records) || ($multipliers->count() === 0)) {
             return 1;
         }
 
-        return $multipliers->map(function(FundLimitMultiplier $multiplier) use ($identityAddress) {
-            $record = $this->getTrustedRecordOfType(
-                $identityAddress,
-                $multiplier->record_type_key
-            );
+        return $multipliers->map(function(FundLimitMultiplier $multiplier) use ($identityAddress, $records) {
+            if ($records) {
+                $value = (int) ($records[$multiplier->record_type_key] ?: 1);
+            } else {
+                $record = $this->getTrustedRecordOfType(
+                    $identityAddress,
+                    $multiplier->record_type_key
+                );
 
-            return ((int) ($record ? $record->value: 1)) * $multiplier->multiplier;
+                $value = (int) ($record ? $record->value: 1);
+            }
+
+            return $value * $multiplier->multiplier;
         })->sum();
     }
 

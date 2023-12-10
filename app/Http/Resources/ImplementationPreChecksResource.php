@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\FundCriterion;
 use App\Models\Implementation;
 use App\Models\PreCheck;
 use App\Models\PreCheckRecord;
@@ -47,9 +48,13 @@ class ImplementationPreChecksResource extends BaseJsonResource
             ]] : [],
         ];
 
-        $preCheckRecords = $usedRecordTypes->map(function (RecordType $recordType) use ($preChecksRecords) {
+        $preCheckRecords = $usedRecordTypes->map(function (RecordType $recordType) use ($preChecksRecords, $implementation) {
             /** @var PreCheckRecord $preChecksRecord */
             $preChecksRecord = $preChecksRecords->firstWhere('record_type_key', $recordType->key);
+            /** @var FundCriterion $criterion */
+            $criterion = $recordType->fund_criteria()->whereIn(
+                'fund_id', $implementation->funds()->select('funds.id')
+            )->first();
 
             return [
                 ...$preChecksRecord ? $preChecksRecord->only([
@@ -63,6 +68,7 @@ class ImplementationPreChecksResource extends BaseJsonResource
                     'pre_check_id' => null,
                 ],
                 'record_type' => RecordTypeResource::create($recordType)->toArray(request()),
+                'value' => $criterion->value,
             ];
         })->toArray();
 
