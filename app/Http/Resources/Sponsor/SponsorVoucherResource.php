@@ -22,7 +22,7 @@ class SponsorVoucherResource extends BaseJsonResource
         'transactions.product.photo.presets',
         'product_vouchers',
         'reimbursements_pending',
-        'fund.fund_config',
+        'fund.fund_config.implementation',
         'fund.organization',
         'physical_cards',
         'voucher_records.record_type',
@@ -74,6 +74,7 @@ class SponsorVoucherResource extends BaseJsonResource
             'created_at_locale' => format_datetime_locale($voucher->created_at),
             'expire_at' => $voucher->updated_at->format('Y-m-d'),
             'expire_at_locale' => format_date_locale($voucher->expire_at),
+            'implementation_name' => $voucher->fund->getImplementation()->name,
         ]);
     }
 
