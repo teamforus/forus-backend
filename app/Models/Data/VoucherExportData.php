@@ -81,7 +81,6 @@ class VoucherExportData
             'amount' => $this->voucher->amount_total_cached,
             'amount_available' => $this->voucher->amount_available_cached,
             'fund_name' => $this->voucher->fund->name,
-            'implementation_name' => $this->voucher->fund->fund_config?->implementation?->name,
             'created_at' => format_date_locale($this->voucher->created_at),
             'expire_at' => format_date_locale($this->voucher->expire_at),
         ]);

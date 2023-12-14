@@ -34,7 +34,6 @@ class IndexVouchersRequest extends BaseFormRequest
     public function rules(): array
     {
         $funds = $this->organization->funds()->pluck('funds.id');
-        $implementations = $this->organization->implementations()->pluck('implementations.id');
         $fields = Arr::pluck(VoucherExport::getExportFields('product'), 'key');
 
         return [
@@ -65,7 +64,6 @@ class IndexVouchersRequest extends BaseFormRequest
             'identity_address'  => 'nullable|exists:identities,address',
             'amount_available_min'  => 'nullable|numeric',
             'amount_available_max'  => 'nullable|numeric',
-            'implementation_id' => 'nullable|exists:implementations,id|in:' . $implementations->join(','),
         ];
     }
 
