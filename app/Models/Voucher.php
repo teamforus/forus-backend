@@ -824,6 +824,12 @@ class Voucher extends BaseModel
             });
         }
 
+        if ($request->has('implementation_id') && $request->input('implementation_id')) {
+            $query->whereRelation('fund.fund_config', [
+                'implementation_id' => $request->input('implementation_id'),
+            ]);
+        }
+
         if ($expired !== null) {
             $query = $expired ? VoucherQuery::whereExpired($query) : VoucherQuery::whereNotExpired($query);
         }
