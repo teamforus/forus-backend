@@ -119,7 +119,7 @@ class FundsController extends Controller
 
         FundCreatedEvent::dispatch($fund);
 
-        return new FundResource($fund);
+        return FundResource::create($fund);
     }
 
     /**
@@ -226,7 +226,7 @@ class FundsController extends Controller
 
         FundUpdatedEvent::dispatch($fund);
 
-        return new FundResource($fund);
+        return FundResource::create($fund);
     }
 
     /**
@@ -296,7 +296,7 @@ class FundsController extends Controller
             'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         ]));
 
-        return new FundResource($fund);
+        return FundResource::create($fund);
     }
 
     /**
@@ -420,7 +420,7 @@ class FundsController extends Controller
         $this->authorize('show', [$fund, $organization]);
         $this->authorize('topUp', [$fund, $organization]);
 
-        return new TopUpResource($fund->getOrCreateTopUp());
+        return TopUpResource::create($fund->getOrCreateTopUp());
     }
 
     /**
@@ -459,7 +459,7 @@ class FundsController extends Controller
 
         $fund->archive($organization->findEmployee($request->auth_address()));
 
-        return new FundResource($fund);
+        return FundResource::create($fund);
     }
 
     /**
@@ -480,6 +480,6 @@ class FundsController extends Controller
 
         $fund->unArchive($organization->findEmployee($request->auth_address()));
 
-        return new FundResource($fund);
+        return FundResource::create($fund);
     }
 }
