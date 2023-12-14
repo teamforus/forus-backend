@@ -4,6 +4,8 @@
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
+use App\Models\ReservationExtraPayment;
+use App\Models\ReservationExtraPaymentRefund;
 use Illuminate\Database\Eloquent\Builder;
 
 class ReservationExtraPaymentQuery
@@ -33,12 +35,34 @@ class ReservationExtraPaymentQuery
      */
     public static function whereSponsorFilter(Builder $query, array|int $organization): Builder
     {
-        return $query->where(function(Builder $builder) use ($organization) {
+        return self::whereNotRefunded($query->where(function(Builder $builder) use ($organization) {
             $builder->whereHas('product_reservation.voucher.fund', function(
                 Builder|Fund $builder,
             ) use ($organization) {
                 $builder->whereIn('organization_id', (array) $organization);
             });
-        });
+        }));
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function whereNotRefunded(Builder $query): Builder
+    {
+        $query->addSelect([
+            'refund_amount' => ReservationExtraPaymentRefund::query()
+                ->whereColumn('reservation_extra_payments.id', 'reservation_extra_payment_id')
+                ->whereIn('state', [ReservationExtraPaymentRefund::STATE_REFUNDED])
+                ->selectRaw('sum(`amount`)')
+        ]);
+
+        $query = ReservationExtraPayment::fromSub($query, 'reservation_extra_payments')->selectRaw(
+            '*, CAST(IF(ISNULL(`refund_amount`), amount, amount - refund_amount) AS SIGNED) as `not_refunded`'
+        );
+
+        $query = ReservationExtraPayment::query()->fromSub($query, 'reservation_extra_payments');
+
+        return $query->where('not_refunded', '>', 0);
     }
 }

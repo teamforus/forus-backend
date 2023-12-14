@@ -27,6 +27,7 @@ class ReservationExtraPaymentResource extends BaseJsonResource
             ]),
             'is_paid' => $this->resource->isPaid(),
             'is_pending' => $this->resource->isPending(),
+            'available_refund_amount' => $this->resource->availableRefundAmount(),
             'is_fully_refunded' => $this->resource->isFullyRefunded(),
             'refunds' => ReservationExtraPaymentRefundResource::collection($this->resource->refunds),
             ...$this->makeTimestamps($this->resource->only([
