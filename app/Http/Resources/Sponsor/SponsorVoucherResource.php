@@ -65,6 +65,9 @@ class SponsorVoucherResource extends BaseJsonResource
             'fund' => array_merge($voucher->fund->only('id', 'name', 'organization_id', 'state', 'type'), [
                 'allow_physical_cards' => $voucher->fund->fund_config->allow_physical_cards ?? false,
                 'allow_voucher_records' => $voucher->fund->fund_config->allow_voucher_records ?? false,
+                'implementation' => $voucher->fund->fund_config->implementation?->only([
+                    'id', 'name',
+                ]),
             ]),
             'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
@@ -74,7 +77,6 @@ class SponsorVoucherResource extends BaseJsonResource
             'created_at_locale' => format_datetime_locale($voucher->created_at),
             'expire_at' => $voucher->updated_at->format('Y-m-d'),
             'expire_at_locale' => format_date_locale($voucher->expire_at),
-            'implementation_name' => $voucher->fund->getImplementation()->name,
         ]);
     }
 
