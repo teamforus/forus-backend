@@ -3,20 +3,22 @@
 namespace App\Http\Resources;
 
 use App\Models\FundTopUp;
+use Illuminate\Http\Request;
 
 /**
- * Class TopUpResource
  * @property FundTopUp $resource
- * @package App\Http\Resources
  */
 class TopUpResource extends BaseJsonResource
 {
+    public const LOAD = [
+        'fund.organization.bank_connection_active.bank_connection_default_account',
+    ];
+
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
-     * @return array|mixed
-     * @throws \Exception
+     * @param Request $request
+     * @return array
      */
     public function toArray($request): array
     {
@@ -24,7 +26,7 @@ class TopUpResource extends BaseJsonResource
         $bankConnectionAccount = $bankConnection->bank_connection_default_account;
 
         return array_merge($this->resource->only('id', 'code', 'state'), [
-            'iban' => $bankConnectionAccount ? $bankConnectionAccount->monetary_account_iban : null,
+            'iban' => $bankConnectionAccount?->monetary_account_iban,
         ], $this->timestamps($this->resource, 'created_at'));
     }
 }

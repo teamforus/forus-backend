@@ -211,6 +211,74 @@ class FundCriteriaTest extends TestCase
 
     /**
      * @return void
+     * @throws \Exception
+     */
+    public function testCriterionUpdateTextsAfterStart(): void
+    {
+        $fund = $this->getFund();
+        $recordTypes = $this->makeRecordTypes();
+
+        $fund->criteria()->delete();
+
+        $criterionData = [
+            'record_type_key' => $recordTypes['date']->key,
+            'operator' => '=',
+            'value' => now()->subYears(10)->format($this->dateFormat),
+            'min' => now()->subYears(10)->format($this->dateFormat),
+            'max' => now()->subYears(5)->format($this->dateFormat),
+        ];
+
+        // assert criteria created
+        $this->updateCriteriaRequest([$criterionData], $fund)
+            ->assertSuccessful()
+            ->assertJson(['data' => ['criteria' => [$criterionData]]])
+            ->assertJsonCount(1, 'data.criteria');
+
+        $criterionData = [
+            'id' => $fund->criteria[0]->id,
+            ...$criterionData,
+        ];
+
+        $criterionData2 = [
+            'id' => $fund->criteria[0]->id,
+            'record_type_key' => $recordTypes['number']->key,
+            'operator' => '=',
+            'value' => 50,
+            'min' => 1,
+            'max' => 100,
+            'title' => 'Lorem',
+            'description' => 'Ipsum',
+        ];
+
+        // assert criteria updated
+        $this->updateCriteriaRequest([$criterionData2], $fund)
+            ->assertSuccessful()
+            ->assertJson(['data' => ['criteria' => [$criterionData2]]])
+            ->assertJsonCount(1, 'data.criteria');
+
+
+        // change back to original
+        $this->updateCriteriaRequest([$criterionData], $fund)
+            ->assertSuccessful()
+            ->assertJson(['data' => ['criteria' => [$criterionData]]])
+            ->assertJsonCount(1, 'data.criteria');
+
+        $fund->update([
+            'criteria_editable_after_start' => false,
+        ]);
+
+        // assert only title and description updated
+        $this->updateCriteriaRequest([$criterionData2], $fund)
+            ->assertSuccessful()
+            ->assertJson(['data' => ['criteria' => [[
+                ...$criterionData,
+                ...Arr::only($criterionData2, ['title', 'description']),
+            ]]]])
+            ->assertJsonCount(1, 'data.criteria');
+    }
+
+    /**
+     * @return void
      */
     public function testFundRequestRecordsListFormat(): void
     {

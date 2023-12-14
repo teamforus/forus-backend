@@ -29,7 +29,8 @@ class ReservationExtraPaymentsController extends Controller
 
         $query = ReservationExtraPayment::query()
             ->whereNotNull('paid_at')
-            ->where('state', ReservationExtraPayment::EVENT_PAID);
+            ->where('amount_remaining', '>', 0)
+            ->where('state', ReservationExtraPayment::STATE_PAID);
 
         $search = new ReservationExtraPaymentsSearch($request->only([
             'q', 'fund_id', 'order_by', 'order_dir',
