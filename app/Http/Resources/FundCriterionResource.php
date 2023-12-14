@@ -34,9 +34,8 @@ class FundCriterionResource extends BaseJsonResource
         return array_merge($criterion->only([
             'id', 'record_type_key', 'operator', 'show_attachment',
             'title', 'description', 'description_html', 'record_type',
-            'min', 'max', 'optional'
+            'min', 'max', 'optional', 'value',
         ]), [
-            'value' => $this->getValue($criterion),
             'external_validators' => $external_validators->map(static function(
                 FundCriterionValidator $validator
             ) {
@@ -53,19 +52,6 @@ class FundCriterionResource extends BaseJsonResource
             'is_valid' => $this->isValid($request, $fund, $baseRequest->identity()),
             'has_record' => $this->hasTrustedRecord($fund, $baseRequest->identity()),
         ]);
-    }
-
-    /**
-     * @param FundCriterion $criterion
-     * @return string
-     */
-    protected function getValue(FundCriterion $criterion): string
-    {
-        if ($criterion->record_type?->type == 'bool') {
-            return $criterion->value ? 'Ja' : 'Nee';
-        }
-
-        return $criterion->value;
     }
 
     /**
