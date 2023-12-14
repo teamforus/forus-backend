@@ -22,7 +22,7 @@ class SponsorVoucherResource extends BaseJsonResource
         'transactions.product.photo.presets',
         'product_vouchers',
         'reimbursements_pending',
-        'fund.fund_config',
+        'fund.fund_config.implementation',
         'fund.organization',
         'physical_cards',
         'voucher_records.record_type',
@@ -65,6 +65,9 @@ class SponsorVoucherResource extends BaseJsonResource
             'fund' => array_merge($voucher->fund->only('id', 'name', 'organization_id', 'state', 'type'), [
                 'allow_physical_cards' => $voucher->fund->fund_config->allow_physical_cards ?? false,
                 'allow_voucher_records' => $voucher->fund->fund_config->allow_voucher_records ?? false,
+                'implementation' => $voucher->fund->fund_config->implementation?->only([
+                    'id', 'name',
+                ]),
             ]),
             'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
