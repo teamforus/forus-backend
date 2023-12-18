@@ -263,6 +263,7 @@ class Implementation extends BaseModel
         'show_product_map' => 'boolean',
         'allow_per_fund_notification_templates' => 'boolean',
         'currency_round' => 'boolean',
+        'pre_check_enabled' => 'boolean',
     ];
 
     /**

@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Platform\PreChecks\CalculatePreCheckRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\ImplementationPreChecksResource;
 use App\Models\Fund;
+use App\Models\Implementation;
 use App\Models\PreCheck;
 use App\Models\Voucher;
 use App\Scopes\Builders\VoucherQuery;
@@ -35,15 +36,11 @@ class PreCheckController extends Controller
     public function calculateTotals(CalculatePreCheckRequest $request): JsonResponse
     {
         $identity = $request->identity();
-        $implementation = $request->implementation();
         $records = array_pluck($request->input('records', []), 'value', 'key');
-
-        $availableFundsQuery = Fund::query()->whereIn(
-            'id', $implementation->funds()->select('funds.id')
-        );
+        $fundsQuery = Implementation::queryFundsByState('active');
 
         if ($identity) {
-            $availableFundsQuery->whereDoesntHave('vouchers', fn (
+            $fundsQuery->whereDoesntHave('vouchers', fn (
                 Builder|Voucher $builder
             ) => VoucherQuery::whereActive($builder->where([
                 'identity_address' => $identity->address,
@@ -52,15 +49,21 @@ class PreCheckController extends Controller
 
         $availableFunds = (new FundSearch($request->only([
             'q', 'tag', 'tag_id', 'organization_id',
-        ]), $availableFundsQuery))->query()->get();
+        ]), $fundsQuery))->query()->get();
 
-        $totalsPerFund = PreCheck::calculateTotalsPerFund($availableFunds, $records);
-        $amountTotal = array_sum(array_pluck($totalsPerFund, 'amount_total'));
+        $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
+        $fundsValid = array_where($funds, fn ($fund) => $fund['is_valid']);
+
+        $amountTotal = array_sum(array_pluck($funds, 'amount_total'));
+        $amountTotalValid = array_sum(array_pluck($fundsValid, 'amount_total'));
 
         return new JsonResponse([
-            'funds' => $totalsPerFund,
+            'funds' => $funds,
+            'funds_valid' => $fundsValid,
             'amount_total' => $amountTotal,
-            'amount_total_currency' => currency_format($amountTotal),
+            'amount_total_locale' => currency_format_locale($amountTotal),
+            'amount_total_valid' => $amountTotalValid,
+            'amount_total_valid_locale' => currency_format_locale($amountTotalValid),
         ]);
     }
 }

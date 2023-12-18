@@ -30,7 +30,7 @@ class CalculatePreCheckRequest extends BaseFormRequest
             'organization_id' => 'nullable|exists:organizations,id',
             'records' => 'required|array',
             'records.*.key' => 'required|string',
-            'records.*.value' => 'required|string',
+            'records.*.value' => 'nullable|string|min:0|max:200',
         ];
     }
 }

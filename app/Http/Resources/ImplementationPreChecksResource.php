@@ -6,7 +6,7 @@ use App\Models\FundCriterion;
 use App\Models\Implementation;
 use App\Models\PreCheck;
 use App\Models\PreCheckRecord;
-use App\Models\RecordType;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
 
 /**
@@ -28,14 +28,30 @@ class ImplementationPreChecksResource extends BaseJsonResource
     public function toArray($request): array
     {
         $implementation = $this->resource;
+        $preChecks = $this->getPreChecks($implementation);
+        $preCheckRecords = $this->getPreCheckRecords($implementation);
+
+        return array_map(fn ($step) => [
+            ...$step,
+            'record_types' => array_values(Arr::sort(Arr::where($preCheckRecords, function($type) use ($step) {
+                if ($type['pre_check_id'] === null) {
+                    return $step['default'];
+                }
+
+                return $type['pre_check_id'] === $step['id'];
+            }), 'order')),
+        ], $preChecks);
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @return array
+     */
+    public function getPreChecks(Implementation $implementation): array
+    {
         $preChecks = $implementation->pre_checks->sortBy('order');
-        $preChecksRecords = $implementation->pre_checks_records;
 
-        $usedRecordTypes = RecordType::whereRelation('fund_criteria.fund.fund_config', [
-            'implementation_id' => $implementation->id,
-        ])->get();
-
-        $preChecks = [
+        return [
             ...$preChecks->map(fn(PreCheck $preCheck) => $preCheck->only([
                 'id', 'title', 'title_short', 'description', 'default',
             ]))->toArray(),
@@ -47,14 +63,38 @@ class ImplementationPreChecksResource extends BaseJsonResource
                 'default' => true,
             ]] : [],
         ];
+    }
 
-        $preCheckRecords = $usedRecordTypes->map(function (RecordType $recordType) use ($preChecksRecords, $implementation) {
+    /**
+     * @param Implementation $implementation
+     * @return array
+     */
+    protected function getPreCheckRecords(Implementation $implementation): array
+    {
+        $preChecksRecords = $implementation->pre_checks_records;
+
+        $fundCriteria = FundCriterion::query()
+            ->where('optional', false)
+            ->whereRelation('fund.fund_config', 'implementation_id', $implementation->id)
+            ->groupBy('record_type_key')
+            ->get()
+            ->groupBy('record_type_key');
+
+        // todo: handle record types with multiple values
+        return $fundCriteria->map(function (Collection $fundCriteria) use ($preChecksRecords) {
             /** @var PreCheckRecord $preChecksRecord */
+            /** @var FundCriterion $fundCriterion */
+            $fundCriterion = $fundCriteria->first();
+            $recordType = $fundCriterion->record_type;
             $preChecksRecord = $preChecksRecords->firstWhere('record_type_key', $recordType->key);
-            /** @var FundCriterion $criterion */
-            $criterion = $recordType->fund_criteria()->whereIn(
-                'fund_id', $implementation->funds()->select('funds.id')
-            )->first();
+
+            if ($recordType->type == 'string') {
+                $values = $fundCriteria
+                    ->filter(fn(FundCriterion $fundCriterion) => $fundCriterion->operator == '=')
+                    ->pluck('value')->toArray();
+            } else {
+                $values = [$fundCriterion->value];
+            }
 
             return [
                 ...$preChecksRecord ? $preChecksRecord->only([
@@ -67,20 +107,9 @@ class ImplementationPreChecksResource extends BaseJsonResource
                     'order' => 999,
                     'pre_check_id' => null,
                 ],
+                'value' => $values[0] ?? '',
                 'record_type' => RecordTypeResource::create($recordType)->toArray(request()),
-                'value' => $criterion->value,
             ];
         })->toArray();
-
-        return array_map(fn ($step) => [
-            ...$step,
-            'record_types' => array_values(Arr::sort(Arr::where($preCheckRecords, function($type) use ($step) {
-                if ($type['pre_check_id'] === null) {
-                    return $step['default'];
-                }
-
-                return $type['pre_check_id'] === $step['id'];
-            }), 'order')),
-        ], $preChecks);
     }
 }

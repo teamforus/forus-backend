@@ -40,6 +40,7 @@ class ImplementationPrivateResource extends BaseJsonResource
                 'pre_check_banner_state', 'pre_check_banner_title',
                 'pre_check_banner_description', 'pre_check_banner_label',
             ]),
+            'pre_check_url' => $implementation->urlWebshop('/fund-pre-check'),
             'communication_type' => $implementation->informal_communication ? 'informal' : 'formal',
             'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),
             'banner' => new MediaResource($implementation->banner),
