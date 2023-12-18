@@ -26,6 +26,7 @@ class SponsorReimbursementResource extends ReimbursementResource
             'provider_name' => $reimbursement->provider_name,
             'employee' => EmployeeResource::create($reimbursement->employee),
             'reimbursement_category' => ReimbursementCategoryResource::create($reimbursement->reimbursement_category),
+            'implementation_name' => $reimbursement->voucher->fund->fund_config?->implementation?->name,
         ]);
     }
 }

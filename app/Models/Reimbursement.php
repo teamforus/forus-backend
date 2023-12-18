@@ -460,6 +460,7 @@ class Reimbursement extends Model
         return $data->map(fn (Reimbursement $reimbursement) => array_only([
             'id' => $reimbursement->id,
             'code' => '#' . $reimbursement->code,
+            'implementation_name' => $reimbursement->voucher->fund->fund_config?->implementation?->name,
             'fund_name' => $reimbursement->voucher->fund->name,
             'amount' => currency_format($reimbursement->amount),
             'employee' => $reimbursement->employee?->identity?->email ?: '-',
@@ -499,7 +500,7 @@ class Reimbursement extends Model
 
         $search = new ReimbursementsSearch($request->only([
             'q', 'fund_id', 'from', 'to', 'amount_min', 'amount_max', 'state',
-            'expired', 'archived', 'deactivated', 'identity_address',
+            'expired', 'archived', 'deactivated', 'identity_address', 'implementation_id',
         ]), $query);
 
         return self::exportTransform($search->query()->latest(), $fields);

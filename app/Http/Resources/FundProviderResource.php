@@ -55,6 +55,7 @@ class FundProviderResource extends BaseJsonResource
             'allow_products', 'allow_some_products', 'allow_budget', 'excluded',
         ]), $this->productFields($fundProvider), [
             'fund' => new FundResource($fundProvider->fund),
+            'implementation_name' => $fundProvider->fund->fund_config?->implementation?->name,
             'offices' => OfficeResource::collection($fundProvider->organization->offices),
             'employees' => EmployeeResource::collection($fundProvider->organization->employees),
             'organization' => [
