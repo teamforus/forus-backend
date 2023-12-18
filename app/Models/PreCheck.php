@@ -95,6 +95,7 @@ class PreCheck extends BaseModel
                 'criteria' => $criteria,
                 'is_valid' => $criteria->every(fn($criterion) => $criterion['is_valid']),
                 'identity_multiplier' => $multiplier,
+                'allow_direct_requests' => $fund->fund_config?->allow_direct_requests ?? false,
                 'amount_total' => currency_format($amountIdentityTotal),
                 'amount_total_locale' => currency_format_locale($amountIdentityTotal),
                 'amount_for_identity' => currency_format($amountIdentity),
