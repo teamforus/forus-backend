@@ -124,7 +124,7 @@ class VoucherResource extends BaseJsonResource
 
         return [
             'records' => VoucherRecordResource::collection($records),
-            'records_title' => $givenName ? strtoupper($givenName[0]) . '. ' . $familyName : null,
+            'records_title' => $givenName ? $givenName . ' ' . $familyName : null,
         ];
     }
 
