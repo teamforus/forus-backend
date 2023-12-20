@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Provider;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\ImplementationResource;
 use App\Http\Resources\Small\FundSmallResource;
 use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Models\FundProvider;
@@ -40,6 +41,7 @@ class ProviderFundProviderResource extends BaseJsonResource
             'organization' => new OrganizationTinyResource($fundProvider->organization),
             'can_cancel' => !$fundProvider->hasTransactions() && !$fundProvider->isApproved() && $fundProvider->isPending(),
             'can_unsubscribe' => $fundProvider->canUnsubscribe(),
+            'implementation' => new ImplementationResource($fundProvider->fund->fund_config->implementation ?? null),
         ]);
     }
 }

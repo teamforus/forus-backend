@@ -31,6 +31,7 @@ class FundProviderController extends Controller
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function availableFunds(
         IndexFundsRequest $request,

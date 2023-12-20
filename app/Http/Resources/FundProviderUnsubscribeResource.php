@@ -37,6 +37,9 @@ class FundProviderUnsubscribeResource extends BaseJsonResource
             'unsubscribe_at'            => $fundUnsubscribe->unsubscribe_at?->format('Y-m-d'),
             'unsubscribe_at_locale'     => format_date_locale($fundUnsubscribe->unsubscribe_at),
             'unsubscribe_days_left'     => now()->diffInDays($fundUnsubscribe->unsubscribe_at),
+            'implementation'            => new ImplementationResource(
+                $fundUnsubscribe->fund_provider->fund->fund_config->implementation ?? null
+            ),
         ], $this->timestamps($fundUnsubscribe, 'created_at'));
     }
 }

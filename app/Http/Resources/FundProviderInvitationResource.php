@@ -32,6 +32,7 @@ class FundProviderInvitationResource extends BaseJsonResource
             'from_fund'             => new FundResource($invitation->from_fund),
             'provider_organization' => new OrganizationResource($invitation->organization),
             'sponsor_organization'  => new OrganizationResource($invitation->fund->organization),
+            'implementation'        => new ImplementationResource($invitation->fund->fund_config->implementation ?? null),
             'can_be_accepted'       => $invitation->canBeAccepted(),
         ], $this->timestamps($invitation, 'created_at', 'expire_at'));
     }
