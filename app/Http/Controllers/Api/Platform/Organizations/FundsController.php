@@ -42,22 +42,31 @@ class FundsController extends Controller
      */
     public function index(
         IndexFundRequest $request,
-        Organization $organization
+        Organization $organization,
     ): AnonymousResourceCollection {
         $this->authorize('viewAny', [Fund::class, $organization]);
 
         $query = (new FundSearch($request->only([
             'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id', 'order_by',
-            'order_dir', 'with_archived', 'with_external', 'configured',
+            'order_dir', 'with_archived', 'with_external', 'configured', 'state',
         ]), $organization->funds()->getQuery()))->query();
 
         if (!$request->isAuthenticated()) {
             $query->where('public', true);
         }
 
+        $meta = [
+            'archived_funds_total' => (clone $query)->where('archived', true)->count(),
+            'unarchived_funds_total' => (clone $query)->where('archived', false)->count(),
+        ];
+
+        if ($request->has('archived')) {
+            $query->where('archived', $request->input('archived', false));
+        }
+
         return FundResource::queryCollection(FundQuery::sortByState($query, [
             'active', 'waiting', 'paused', 'closed',
-        ]), $request, $request->only('stats'));
+        ]), $request, $request->only('stats'))->additional(compact('meta'));
     }
 
     /**
@@ -110,7 +119,7 @@ class FundsController extends Controller
 
         FundCreatedEvent::dispatch($fund);
 
-        return new FundResource($fund);
+        return FundResource::create($fund);
     }
 
     /**
@@ -217,7 +226,7 @@ class FundsController extends Controller
 
         FundUpdatedEvent::dispatch($fund);
 
-        return new FundResource($fund);
+        return FundResource::create($fund);
     }
 
     /**
@@ -287,7 +296,7 @@ class FundsController extends Controller
             'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         ]));
 
-        return new FundResource($fund);
+        return FundResource::create($fund);
     }
 
     /**
@@ -411,7 +420,7 @@ class FundsController extends Controller
         $this->authorize('show', [$fund, $organization]);
         $this->authorize('topUp', [$fund, $organization]);
 
-        return new TopUpResource($fund->getOrCreateTopUp());
+        return TopUpResource::create($fund->getOrCreateTopUp());
     }
 
     /**
@@ -450,7 +459,7 @@ class FundsController extends Controller
 
         $fund->archive($organization->findEmployee($request->auth_address()));
 
-        return new FundResource($fund);
+        return FundResource::create($fund);
     }
 
     /**
@@ -471,6 +480,6 @@ class FundsController extends Controller
 
         $fund->unArchive($organization->findEmployee($request->auth_address()));
 
-        return new FundResource($fund);
+        return FundResource::create($fund);
     }
 }

@@ -1406,8 +1406,10 @@ class Fund extends BaseModel
             'description', 'title', 'optional', 'min', 'max',
         ] : ['show_attachment', 'description', 'title']);
 
-        $data_criterion['value'] = Arr::get($data_criterion, 'value', '') ?: '';
-        $data_criterion['operator'] = Arr::get($data_criterion, 'operator', '') ?: '';
+        if ($this->criteriaIsEditable()) {
+            $data_criterion['value'] = Arr::get($data_criterion, 'value', '') ?: '';
+            $data_criterion['operator'] = Arr::get($data_criterion, 'operator', '') ?: '';
+        }
 
         if ($fundCriterion) {
             $fundCriterion->update($textsOnly ? array_only($data_criterion, [
