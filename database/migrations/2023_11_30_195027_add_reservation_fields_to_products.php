@@ -19,7 +19,7 @@ return new class extends Migration
         });
 
         DB::table('products')->update([
-            'reservation_fields' => true
+            'reservation_fields' => true,
         ]);
     }
 
