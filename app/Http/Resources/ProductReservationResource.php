@@ -6,7 +6,6 @@ use App\Models\Identity;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
-use Illuminate\Support\Arr;
 
 /**
  * @property ProductReservation $resource
@@ -15,6 +14,7 @@ class ProductReservationResource extends BaseJsonResource
 {
     public const LOAD = [
         'voucher.fund.organization',
+        'voucher.voucher_records',
         'product.organization',
         'product.photo.presets',
         'voucher_transaction',
@@ -50,11 +50,6 @@ class ProductReservationResource extends BaseJsonResource
             $price_locale = $productSnapshot->price_locale;
         }
 
-        $records = $voucher->voucher_records->sortBy(['record_type_id']);
-        $recordsMap = $records->pluck('value', 'record_type.key');
-        $givenName = Arr::get($recordsMap, 'given_name');
-        $familyName = Arr::get($recordsMap, 'family_name');
-
         return [
             ...$reservation->only([
                 'id', 'state', 'state_locale', 'amount', 'code', 'amount_extra',
@@ -78,7 +73,7 @@ class ProductReservationResource extends BaseJsonResource
             ],
             'voucher_transaction' => $transaction?->only('id', 'address'),
             'custom_fields' => ProductReservationFieldValueResource::collection($reservation->custom_fields),
-            'records_title' => $givenName ? $givenName . ' ' . $familyName : null,
+            'records_title' => $voucher->getRecordsTitle(),
             ...$this->identityData($reservation, $voucher),
             ...$this->extraPaymentData($reservation),
             ...$this->makeTimestamps($reservation->only([
