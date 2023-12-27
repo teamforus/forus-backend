@@ -824,6 +824,12 @@ class Voucher extends BaseModel
             });
         }
 
+        if ($request->has('implementation_id') && $request->input('implementation_id')) {
+            $query->whereRelation('fund.fund_config', [
+                'implementation_id' => $request->input('implementation_id'),
+            ]);
+        }
+
         if ($expired !== null) {
             $query = $expired ? VoucherQuery::whereExpired($query) : VoucherQuery::whereNotExpired($query);
         }
@@ -1643,5 +1649,18 @@ class Voucher extends BaseModel
         VoucherRecordCreated::dispatch($record);
 
         return $record;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getRecordsTitle(): ?string
+    {
+        $records = $this->voucher_records->sortBy(['record_type_id']);
+        $recordsMap = $records->pluck('value', 'record_type.key');
+        $givenName = Arr::get($recordsMap, 'given_name');
+        $familyName = Arr::get($recordsMap, 'family_name');
+
+        return $givenName ? "$givenName $familyName" : null;
     }
 }

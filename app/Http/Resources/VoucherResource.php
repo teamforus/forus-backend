@@ -118,13 +118,10 @@ class VoucherResource extends BaseJsonResource
         }
 
         $records = $voucher->voucher_records->sortBy(['record_type_id']);
-        $recordsMap = $records->pluck('value', 'record_type.key');
-        $givenName = Arr::get($recordsMap, 'given_name');
-        $familyName = Arr::get($recordsMap, 'family_name');
 
         return [
             'records' => VoucherRecordResource::collection($records),
-            'records_title' => $givenName ? strtoupper($givenName[0]) . '. ' . $familyName : null,
+            'records_title' => $voucher->getRecordsTitle(),
         ];
     }
 
