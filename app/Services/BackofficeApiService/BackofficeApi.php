@@ -10,6 +10,7 @@ use App\Services\BackofficeApiService\Responses\EligibilityResponse;
 use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
 use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
@@ -283,7 +284,7 @@ class BackofficeApi
                 'response_body' => json_decode($response->getBody()->getContents(), true),
             ];
         } catch (\Throwable $e) {
-            $responseBody = $e instanceof \GuzzleHttp\Exception\RequestException && $e->hasResponse()
+            $responseBody = $e instanceof RequestException && $e->hasResponse()
                 ? $e->getResponse()->getBody()->getContents()
                 : null;
 
