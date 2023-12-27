@@ -5,7 +5,6 @@ namespace App\Http\Resources\Sponsor;
 use App\Http\Resources\EmployeeResource;
 use App\Http\Resources\ReimbursementCategoryResource;
 use App\Http\Resources\ReimbursementResource;
-use App\Models\ReimbursementCategory;
 
 class SponsorReimbursementResource extends ReimbursementResource
 {

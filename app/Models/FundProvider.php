@@ -458,7 +458,7 @@ class FundProvider extends BaseModel
     private static function exportTransform(Builder $builder): mixed
     {
         return $builder->with([
-            'fund',
+            'fund.fund_config.implementation',
             'organization.last_employee_session',
         ])->get()->map(function(FundProvider $fundProvider) {
             $transKey = "export.providers";
