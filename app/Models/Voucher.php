@@ -1650,4 +1650,17 @@ class Voucher extends BaseModel
 
         return $record;
     }
+
+    /**
+     * @return string|null
+     */
+    public function getRecordsTitle(): ?string
+    {
+        $records = $this->voucher_records->sortBy(['record_type_id']);
+        $recordsMap = $records->pluck('value', 'record_type.key');
+        $givenName = Arr::get($recordsMap, 'given_name');
+        $familyName = Arr::get($recordsMap, 'family_name');
+
+        return $givenName ? "$givenName $familyName" : null;
+    }
 }
