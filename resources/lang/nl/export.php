@@ -19,11 +19,11 @@ return [
         'fund' => 'Fondsnaam',
         'fund_type' => 'Fonds type',
         'iban' => 'IBAN',
-        'provider_last_activity' => 'Laatste activiteit',
+        'provider_last_activity' => 'Laatst actief',
         'products_provider_count' => 'Totaal aanbiedingen beheer door aanbieder',
         'products_sponsor_count' => 'Totaal aanbiedingen beheert door sponsor',
         'products_active_count' => 'Totaal geaccepteerde aanbiedingen',
-        'products_count' => 'Totaal aanbiedingen',
+        'products_count' => 'Aantal aanbiedingen',
         'provider' => 'Aanbieder',
         'email' => 'E-mailadres',
         'phone' => 'Telefoonnummer',
@@ -86,7 +86,7 @@ return [
 
     'finances'      => [
         'provider'            => 'Aanbieder',
-        'total_amount'        => 'Totaal uitgegeven bij',
+        'total_amount'        => 'Totaal uitgegeven',
         'business_type'       => 'Organisatie type',
         'nr_transactions'     => 'Aantal transacties',
         'highest_transaction' => 'Hoogste aankoopbedrag',
@@ -133,9 +133,10 @@ return [
     ],
 
     'employees'      => [
-        'email'         => 'E-mailadres',
-        'owner'         => 'Eigenaar',
-        'created_at'    => 'Created at',
-        'updated_at'    => 'Updated at',
+        'email'             => 'E-mailadres',
+        'owner'             => 'Eigenaar',
+        'is_2fa_configured' => '2FA',
+        'created_at'        => 'Created at',
+        'updated_at'        => 'Updated at',
     ],
 ];

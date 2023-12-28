@@ -61,6 +61,7 @@ class EmployeesExport extends BaseFieldedExport
             trans("export.employees.email") => $employee->identity->email,
             trans("export.employees.owner") => $employeeIsOwner ? 'ja' : 'nee',
         ], $employeeRoles, [
+            trans("export.employees.is_2fa_configured") => $employee->identity->is2FAConfigured() ? 'ja' : 'nee',
             trans("export.employees.created_at") => $employee->created_at?->format('Y-m-d H:i:s'),
             trans("export.employees.updated_at") => $employeeLastUpdate?->format('Y-m-d H:i:s'),
         ]);

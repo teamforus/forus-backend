@@ -459,11 +459,17 @@ class Reimbursement extends Model
 
         return $data->map(fn (Reimbursement $reimbursement) => array_only([
             'id' => $reimbursement->id,
+            'email' => $reimbursement->voucher->identity->email,
+            'amount' => currency_format($reimbursement->amount),
+            'submitted_at' => $reimbursement->submitted_at ?
+                format_datetime_locale($reimbursement->submitted_at) :
+                '-',
+            'lead_time' => $reimbursement->lead_time_locale,
+            'employee' => $reimbursement->employee?->identity?->email ?: '-',
+            'expired' => $reimbursement->expired ? 'Ja' : 'Nee',
+            'state' => $reimbursement->state_locale,
             'code' => '#' . $reimbursement->code,
             'fund_name' => $reimbursement->voucher->fund->name,
-            'amount' => currency_format($reimbursement->amount),
-            'employee' => $reimbursement->employee?->identity?->email ?: '-',
-            'email' => $reimbursement->voucher->identity->email,
             'bsn' => $reimbursement->voucher->fund->organization->bsn_enabled ?
                 ($reimbursement->voucher->identity->record_bsn?->value ?: '-') :
                 '-',
@@ -474,15 +480,9 @@ class Reimbursement extends Model
             'title' => $reimbursement->title,
             'description' => $reimbursement->description,
             'files_count' => $reimbursement->files_count,
-            'submitted_at' => $reimbursement->submitted_at ?
-                format_datetime_locale($reimbursement->submitted_at) :
-                '-',
             'resolved_at' => $reimbursement->resolved_at ?
                 format_datetime_locale($reimbursement->resolved_at) :
                 '-',
-            'lead_time' => $reimbursement->lead_time_locale,
-            'expired' => $reimbursement->expired ? 'Ja' : 'Nee',
-            'state' => $reimbursement->state_locale,
         ], $fields))->values();
     }
 
