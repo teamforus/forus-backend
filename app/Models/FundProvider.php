@@ -382,6 +382,10 @@ class FundProvider extends BaseModel
             $query->whereIn('fund_id', $request->input('fund_ids'));
         }
 
+        if ($request->has('implementation_id') && $implementation_id = $request->get('implementation_id')) {
+            $query->whereRelation('fund.fund_config', 'implementation_id', $implementation_id);
+        }
+
         if ($request->has('state')) {
             $query->where('state', $request->input('state'));
         }
