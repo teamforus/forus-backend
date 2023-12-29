@@ -530,13 +530,13 @@ class ProductReservation extends BaseModel
         }
 
         if ($this->isPending()) {
-            return !$this->extra_payment || $this->extra_payment->isFullyRefunded();
+            return !$this->extra_payment || $this->extra_payment?->isFullyRefunded();
         }
 
         if ($this->isAccepted()) {
             return
                 $this->voucher_transaction?->isCancelable() &&
-                !$this->extra_payment || $this->extra_payment->isFullyRefunded();
+                !$this->extra_payment || $this->extra_payment?->isFullyRefunded();
         }
 
         return false;
