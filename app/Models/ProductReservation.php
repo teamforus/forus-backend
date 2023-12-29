@@ -525,10 +525,21 @@ class ProductReservation extends BaseModel
             return true;
         }
 
-        $hasUnRefundedExtra = $this->extra_payment && !$this->extra_payment->isFullyRefunded();
-        $isTransactionCancelable = !$this->isAccepted() || $this->voucher_transaction?->isCancelable();
+        if ($this->isWaiting()) {
+            return $this->extra_payment?->isExpired();
+        }
 
-        return !$hasUnRefundedExtra && $isTransactionCancelable;
+        if ($this->isPending()) {
+            return !$this->extra_payment || $this->extra_payment->isFullyRefunded();
+        }
+
+        if ($this->isAccepted()) {
+            return
+                $this->voucher_transaction?->isCancelable() &&
+                !$this->extra_payment || $this->extra_payment->isFullyRefunded();
+        }
+
+        return false;
     }
 
     /**

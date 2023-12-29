@@ -62,6 +62,7 @@ class ProductReservationResource extends BaseJsonResource
             'canceled' => $reservation->isCanceled(),
             'cancelable' => $reservation->isCancelableByRequester(),
             'acceptable' => $reservation->isAcceptable(),
+            'rejectable' => $reservation->isCancelableByProvider(),
             'archivable' => $reservation->isArchivable(),
             'product' => array_merge($reservation->product->only('id', 'name', 'organization_id'), [
                 'deleted' => $reservation->product->trashed(),

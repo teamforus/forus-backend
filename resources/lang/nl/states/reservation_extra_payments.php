@@ -6,4 +6,5 @@ return [
     'failed' => 'Mislukt',
     'pending' => 'In afwachting',
     'canceled' => 'Geannuleerd',
+    'expired' => 'Verlopen',
 ];
