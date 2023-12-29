@@ -10,7 +10,7 @@ use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\BankService\Models\Bank;
-use App\Services\BIConnectionService\BIConnection;
+use App\Services\BIConnectionService\Models\BIConnection;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
@@ -52,7 +52,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $btw
  * @property string|null $website
  * @property bool $website_public
- * @property int|null $business_type_id
+ * @property int $business_type_id
  * @property bool $is_sponsor
  * @property bool $is_provider
  * @property bool $is_validator
@@ -76,8 +76,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $reservation_allow_extra_payments
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
- * @property string $bi_connection_auth_type
- * @property string $bi_connection_token
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
@@ -88,13 +86,15 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $auth_2fa_funds_restrict_emails
  * @property bool $auth_2fa_funds_restrict_auth_sessions
  * @property bool $auth_2fa_funds_restrict_reimbursements
+ * @property bool $auth_2fa_restrict_bi_connections
  * @property int $show_provider_transactions
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
- * @property-read \App\Models\BusinessType|null $business_type
+ * @property-read BIConnection|null $bi_connection
+ * @property-read \App\Models\BusinessType $business_type
  * @property-read Collection|\App\Models\OrganizationContact[] $contacts
  * @property-read int|null $contacts_count
  * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
@@ -176,10 +176,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictReimbursements($value)
  * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
+ * @method static EloquentBuilder|Organization whereAuth2faRestrictBiTools($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
  * @method static EloquentBuilder|Organization whereBankCronTime($value)
- * @method static EloquentBuilder|Organization whereBiConnectionAuthType($value)
- * @method static EloquentBuilder|Organization whereBiConnectionToken($value)
  * @method static EloquentBuilder|Organization whereBsnEnabled($value)
  * @method static EloquentBuilder|Organization whereBtw($value)
  * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
@@ -260,10 +259,10 @@ class Organization extends BaseModel
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'allow_bi_connection',
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
-        'bi_connection_auth_type', 'bi_connection_token',
         'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
         'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
         'reservation_allow_extra_payments', 'allow_provider_extra_payments',
+        'auth_2fa_restrict_bi_connections',
     ];
 
     /**
@@ -297,6 +296,7 @@ class Organization extends BaseModel
         'auth_2fa_funds_restrict_emails'            => 'boolean',
         'auth_2fa_funds_restrict_auth_sessions'     => 'boolean',
         'auth_2fa_funds_restrict_reimbursements'    => 'boolean',
+        'auth_2fa_restrict_bi_connections'          => 'boolean',
         'allow_provider_extra_payments'             => 'boolean',
         'reservation_allow_extra_payments'          => 'boolean',
     ];
@@ -691,6 +691,15 @@ class Organization extends BaseModel
     }
 
     /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function bi_connection(): HasOne
+    {
+        return $this->hasOne(BIConnection::class);
+    }
+
+    /**
      * @return HasMany
      * @noinspection PhpUnused
      */
@@ -1068,31 +1077,6 @@ class Organization extends BaseModel
     public function isOwner(Identity $identity): bool
     {
         return $this->identity_address === $identity->address;
-    }
-
-    public function updateBIConnection(?string $auth_type, bool $reset_token = false): void
-    {
-        if ($auth_type) {
-            $this->update(([
-                'bi_connection_auth_type' => $auth_type
-            ]));
-        }
-
-        $connectionToken = $this->bi_connection_token;
-        $connectionEnabled = $this->bi_connection_auth_type !== BIConnection::AUTH_TYPE_DISABLED;
-
-        if ($reset_token || (empty($this->bi_connection_token) && $connectionEnabled)) {
-            $this->update([
-                'bi_connection_token' => BIConnection::makeToken(),
-            ]);
-        }
-
-        $this->log(self::EVENT_BI_CONNECTION_UPDATED, [
-            'organization' => $this,
-        ], [
-            'organization_bi_connection_token' => $this->bi_connection_token,
-            'organization_bi_connection_token_previous' => $connectionToken,
-        ]);
     }
 
     /**

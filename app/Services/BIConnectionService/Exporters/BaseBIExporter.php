@@ -6,6 +6,8 @@ use App\Models\Organization;
 
 abstract class BaseBIExporter
 {
+    protected string $key;
+
     /**
      * @param string $name
      * @param Organization $organization
@@ -26,6 +28,14 @@ abstract class BaseBIExporter
     public function getName(): string
     {
         return $this->name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getKey(): string
+    {
+        return $this->key;
     }
 
     /**

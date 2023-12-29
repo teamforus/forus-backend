@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Services\BIConnectionService\BIConnection;
+use App\Services\BIConnectionService\BIConnectionService;
 use App\Services\BIConnectionService\Responses\UnauthorizedResponse;
 use Illuminate\Support\Facades\Config;
 
@@ -16,7 +16,7 @@ class ExportBIConnectionRequest extends BaseFormRequest
      */
     public function authorize(): UnauthorizedResponse|bool
     {
-        if (!BIConnection::getBIConnectionFromRequest($this)) {
+        if (!BIConnectionService::getBIConnectionFromRequest($this)) {
             return new UnauthorizedResponse();
         }
 

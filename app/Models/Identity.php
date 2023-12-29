@@ -937,6 +937,10 @@ class Identity extends Model implements Authenticatable
     {
         return $this->funds->filter(function (Fund $fund) use ($feature) {
             if ($fund->fund_config->auth_2fa_policy != FundConfig::AUTH_2FA_POLICY_GLOBAL) {
+                if ($feature === 'bi_connections') {
+                    return $fund->organization->auth_2fa_restrict_bi_connections;
+                }
+
                 return $fund->fund_config?->{match($feature) {
                     'emails' => 'auth_2fa_restrict_emails',
                     'sessions' => 'auth_2fa_restrict_auth_sessions',
@@ -949,6 +953,7 @@ class Identity extends Model implements Authenticatable
                     'emails' => 'auth_2fa_funds_restrict_emails',
                     'sessions' => 'auth_2fa_funds_restrict_auth_sessions',
                     'reimbursements' => 'auth_2fa_funds_restrict_reimbursements',
+                    'bi_connections' => 'auth_2fa_restrict_bi_connections',
                 }} ?? false;
             }
 

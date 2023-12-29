@@ -8,6 +8,8 @@ use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 
 class BIVoucherTransactionBulksExporter extends BaseBIExporter
 {
+    protected string $key = 'voucher_transaction_bulks';
+
     /**
      * @return array
      */

@@ -81,6 +81,7 @@ class UpdateOrganizationRequest extends FormRequest
             'auth_2fa_funds_restrict_emails' => 'nullable|boolean',
             'auth_2fa_funds_restrict_auth_sessions' => 'nullable|boolean',
             'auth_2fa_funds_restrict_reimbursements' => 'nullable|boolean',
+            'auth_2fa_restrict_bi_connections' => 'nullable|boolean',
         ];
     }
 

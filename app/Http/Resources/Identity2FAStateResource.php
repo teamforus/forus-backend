@@ -95,6 +95,7 @@ class Identity2FAStateResource extends BaseJsonResource
             'emails' => $this->getRestriction($isConfirmed, $identity, 'emails'),
             'sessions' => $this->getRestriction($isConfirmed, $identity, 'sessions'),
             'reimbursements' => $this->getRestriction($isConfirmed, $identity, 'reimbursements'),
+            'bi_connections' => $this->getRestriction($isConfirmed, $identity, 'bi_connections'),
         ];
     }
 

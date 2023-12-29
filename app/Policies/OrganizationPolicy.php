@@ -67,16 +67,6 @@ class OrganizationPolicy
      * @param Identity $identity
      * @param Organization $organization
      * @return bool
-     */
-    public function updateBIConnection(Identity $identity, Organization $organization): bool
-    {
-        return $organization->identityCan($identity, 'manage_bi_connection');
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Organization $organization
-     * @return bool
      * @noinspection PhpUnused
      */
     public function updateIban(Identity $identity, Organization $organization): bool

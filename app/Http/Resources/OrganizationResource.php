@@ -157,6 +157,7 @@ class OrganizationResource extends JsonResource
         return $organization->only([
             'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
             'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
+            'auth_2fa_restrict_bi_connections',
         ]);
     }
 
@@ -196,13 +197,9 @@ class OrganizationResource extends JsonResource
      */
     protected function getBIConnectionData(Organization $organization): array
     {
-        $canUpdate = Gate::allows('updateBIConnection', $organization);
-
-        return $canUpdate ? array_merge($organization->only([
-            'bi_connection_auth_type', 'bi_connection_token',
-        ]), [
-            'bi_connection_url' => route('biConnection'),
-        ]) : [];
+        return $organization->allow_bi_connection ? [
+            'bi_connection_url' => route('biConnection')
+        ] : [];
     }
 
     /**

@@ -24,6 +24,7 @@ use App\Models\VoucherRecord;
 use App\Models\VoucherTransactionBulk;
 use App\Models\VoucherTransaction;
 use App\Services\BankService\Models\Bank;
+use App\Services\BIConnectionService\Models\BIConnection;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Interfaces\IEventLogService;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -85,6 +86,7 @@ class EventLogService implements IEventLogService
             'reimbursement' => fn() => $this->reimbursementMeta($model),
             'mollie_connection' => fn() => $this->mollieConnectionMeta($model),
             'reservation_extra_payment' => fn() => $this->reservationExtraPaymentMeta($model),
+            'bi_connection' => fn() => $this->biConnectionMeta($model),
         ];
 
         return $modelMeta[$type] ? $modelMeta[$type]() : [];
@@ -479,6 +481,18 @@ class EventLogService implements IEventLogService
             'connection_state' => $mollieConnection->connection_state,
             'mollie_organization_id' => $mollieConnection->mollie_organization_id,
         ], 'mollie_connection_');
+    }
+
+    /**
+     * @param BIConnection $connection
+     * @return array
+     */
+    protected function biConnectionMeta(BIConnection $connection): array
+    {
+        return $this->keyPrepend([
+            'id' => $connection->id,
+            'auth_type' => $connection->auth_type,
+        ], 'bi_connection_');
     }
 
     /**

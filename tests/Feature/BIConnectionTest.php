@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Organization;
-use App\Services\BIConnectionService\BIConnection;
+use App\Services\BIConnectionService\Models\BIConnection;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
@@ -19,23 +19,32 @@ class BIConnectionTest extends TestCase
     /**
      * @var string
      */
-    protected string $apiOrganizationUrl = '/api/v1/platform/organizations/%s/update-bi-connection';
+    protected string $apiOrganizationUrl = '/api/v1/platform/organizations/%s/bi-connections';
 
     /**
      * @var string
      */
     protected string $organizationName = 'Nijmegen';
 
+    /**
+     * @return void
+     */
     public function testValidTokenAuthTypeHeader(): void
     {
         $this->testValidToken(BIConnection::AUTH_TYPE_HEADER);
     }
 
+    /**
+     * @return void
+     */
     public function testValidTokenAuthTypeParameter(): void
     {
         $this->testValidToken(BIConnection::AUTH_TYPE_PARAMETER);
     }
 
+    /**
+     * @return void
+     */
     public function testAuthTypeDisabled(): void
     {
         $this->testValidToken(BIConnection::AUTH_TYPE_DISABLED);
@@ -55,6 +64,9 @@ class BIConnectionTest extends TestCase
      */
     protected function testValidToken(string $authType): void
     {
+        $ip = '192.168.0.1';
+        $this->serverVariables = ['REMOTE_ADDR' => $ip];
+
         /** @var Organization $organization */
         $organization = Organization::where('name', $this->organizationName)->first();
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), [
@@ -63,15 +75,19 @@ class BIConnectionTest extends TestCase
 
         $this->assertNotNull($organization);
         $organization->update(['allow_bi_connection' => true]);
+        $organization->bi_connection()->delete();
 
-        $response = $this->patchJson(sprintf($this->apiOrganizationUrl, $organization->id), [
-            'bi_connection_auth_type' => $authType
+        $response = $this->postJson(sprintf($this->apiOrganizationUrl, $organization->id), [
+            'ips' => [$ip],
+            'auth_type' => $authType,
+            'data_types' => array_keys(BIConnection::DATA_TYPES),
+            'expiration_period' => BIConnection::EXPIRATION_PERIODS[0],
         ], $apiHeaders);
 
         $response->assertSuccessful();
-        $response->assertJsonStructure(['data' => ['bi_connection_token']]);
+        $response->assertJsonStructure(['data' => ['access_token']]);
 
-        $token = $response->json('data.bi_connection_token');
+        $token = $response->json('data.access_token');
 
         if ($authType == BIConnection::AUTH_TYPE_HEADER) {
             $this->getJson($this->apiUrl, [

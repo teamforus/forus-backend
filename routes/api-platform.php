@@ -169,7 +169,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     // Organizations
     $router->group(['prefix' => 'organizations/{organization}'], function() use ($router) {
         $router->patch('roles', "Api\Platform\OrganizationsController@updateRoles");
-        $router->patch('update-bi-connection', "Api\Platform\OrganizationsController@updateBIConnection");
         $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFields");
         $router->patch('update-accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
         $router->get('features', "Api\Platform\OrganizationsController@getFeatures");
@@ -770,6 +769,20 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'Api\Platform\Organizations\MollieConnectionProfileController',
     )->parameters([
         'mollie-connections' => 'connection',
+    ])->only('store', 'update');
+
+    // BI connection
+    $router->group(['prefix' => 'organizations/{organization}/bi-connections'], function() use ($router) {
+        $router->get('active', 'Api\Platform\Organizations\BIConnectionController@getActive');
+        $router->get('{connection}/reset', 'Api\Platform\Organizations\BIConnectionController@resetToken');
+        $router->get('data-types', 'Api\Platform\Organizations\BIConnectionController@getAvailableDataTypes');
+    });
+
+    $router->resource(
+        'organizations.bi-connections',
+        'Api\Platform\Organizations\BIConnectionController',
+    )->parameters([
+        'bi-connections' => 'connection',
     ])->only('store', 'update');
 
     $router->get(

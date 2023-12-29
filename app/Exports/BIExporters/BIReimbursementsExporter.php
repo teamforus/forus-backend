@@ -8,6 +8,8 @@ use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 
 class BIReimbursementsExporter extends BaseBIExporter
 {
+    protected string $key = 'reimbursements';
+
     /**
      * @return array
      */

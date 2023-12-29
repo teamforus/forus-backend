@@ -137,6 +137,7 @@ class FundResource extends BaseJsonResource
             'auth_2fa_restrict_emails' => $organization->auth_2fa_funds_restrict_emails,
             'auth_2fa_restrict_auth_sessions' => $organization->auth_2fa_funds_restrict_auth_sessions,
             'auth_2fa_restrict_reimbursements' => $organization->auth_2fa_funds_restrict_reimbursements,
+            'auth_2fa_restrict_bi_connections' => $organization->auth_2fa_restrict_bi_connections,
         ];
     }
 
