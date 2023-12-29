@@ -180,12 +180,12 @@ class ProductReservationPolicy
             return $this->deny('Extra payment not paid.');
         }
 
-        if ($productReservation->extra_payment && $productReservation->extra_payment->isFullyRefunded()) {
-            return $this->deny('Extra payment is refunded.');
-        }
-
         if ($productReservation->extra_payment && $productReservation->extra_payment->isPartlyRefunded()) {
             return $this->deny('Extra payment is partly refunded.');
+        }
+
+        if ($productReservation->extra_payment && $productReservation->extra_payment->isFullyRefunded()) {
+            return $this->deny('Extra payment is refunded.');
         }
 
         if ($productReservation->extra_payment && $productReservation->extra_payment->hasPendingRefunds()) {
@@ -349,7 +349,7 @@ class ProductReservationPolicy
             $this->updateProvider($identity, $productReservation, $organization) &&
             $productReservation->extra_payment &&
             $productReservation->extra_payment->isPaid() &&
-            $productReservation->extra_payment->availableRefundAmount() > 0 &&
+            $productReservation->extra_payment->isRefundable() &&
             $productReservation->extra_payment->isMollieType();
     }
 }

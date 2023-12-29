@@ -42,8 +42,6 @@ use Mollie\Api\Resources\Refund;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ReservationExtraPaymentRefund[] $completed_refunds
- * @property-read int|null $completed_refunds_count
  * @property-read string $amount_locale
  * @property-read string $amount_refunded_locale
  * @property-read string $state_locale
@@ -52,6 +50,12 @@ use Mollie\Api\Resources\Refund;
  * @property-read \App\Models\ProductReservation $product_reservation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ReservationExtraPaymentRefund[] $refunds
  * @property-read int|null $refunds_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ReservationExtraPaymentRefund[] $refunds_active
+ * @property-read int|null $refunds_active_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ReservationExtraPaymentRefund[] $refunds_completed
+ * @property-read int|null $refunds_completed_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ReservationExtraPaymentRefund[] $refunds_pending
+ * @property-read int|null $refunds_pending_count
  * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment onlyTrashed()
@@ -139,10 +143,34 @@ class ReservationExtraPayment extends Model
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
-    public function completed_refunds(): HasMany
+    public function refunds_active(): HasMany
     {
-        return $this->hasMany(ReservationExtraPaymentRefund::class)
+        return $this
+            ->hasMany(ReservationExtraPaymentRefund::class)
+            ->whereNotIn('state', ReservationExtraPaymentRefund::CANCELED_STATES);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function refunds_pending(): HasMany
+    {
+        return $this
+            ->hasMany(ReservationExtraPaymentRefund::class)
+            ->where('state', ReservationExtraPaymentRefund::STATE_PENDING);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function refunds_completed(): HasMany
+    {
+        return $this
+            ->hasMany(ReservationExtraPaymentRefund::class)
             ->where('state', ReservationExtraPaymentRefund::STATE_REFUNDED);
     }
 
@@ -209,6 +237,16 @@ class ReservationExtraPayment extends Model
 
         $this->fetchMollieRefunds();
 
+        log_debug([
+            'state' => $payment->status,
+            'paid_at' => $payment->paidAt ? Carbon::parse($payment->paidAt) : null,
+            'canceled_at' => $payment->canceledAt ? Carbon::parse($payment->canceledAt) : null,
+            'amount' => $payment->amount?->value,
+            'amount_captured' => $payment->amountCaptured?->value,
+            'amount_refunded' => $payment->amountRefunded?->value,
+            'amount_remaining' => $payment->amountRemaining?->value,
+        ]);
+
         $this->update([
             'state' => $payment->status,
             'paid_at' => $payment->paidAt ? Carbon::parse($payment->paidAt) : null,
@@ -269,6 +307,13 @@ class ReservationExtraPayment extends Model
             ->getPaymentRefunds($this->payment_id);
 
         foreach ($refunds as $refund) {
+            log_debug([
+                'refund_id' => $refund->id,
+                'state' => $refund->status,
+                'amount' => $refund->amount->value,
+                'currency' => $refund->amount->currency,
+            ]);
+
             $this->refunds()->updateOrCreate([
                 'refund_id' => $refund->id,
             ], [
@@ -345,6 +390,14 @@ class ReservationExtraPayment extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function isRefundable(): bool
+    {
+        return $this->availableRefundAmount() > 0;
+    }
+
+    /**
      * @return Payment|null
      */
     public function getPayment(): ?Payment
@@ -390,8 +443,7 @@ class ReservationExtraPayment extends Model
      */
     public function isFullyRefunded(): bool
     {
-        return $this->state === self::STATE_PAID &&
-            $this->completed_refunds->sum('amount') >= $this->amount;
+        return $this->isPaid() && $this->refunds_completed->sum('amount') >= $this->amount;
     }
 
     /**
@@ -399,7 +451,7 @@ class ReservationExtraPayment extends Model
      */
     public function isPartlyRefunded(): bool
     {
-        return $this->state === self::STATE_PAID && $this->completed_refunds->sum('amount') > 0;
+        return $this->isPaid() && $this->refunds_completed->sum('amount') > 0;
     }
 
     /**
@@ -407,9 +459,7 @@ class ReservationExtraPayment extends Model
      */
     public function hasPendingRefunds(): bool
     {
-        return $this->refunds
-            ->whereIn('state', ReservationExtraPaymentRefund::PENDING_STATES)
-            ->isNotEmpty();
+        return $this->refunds_pending->isNotEmpty();
     }
 
     /**
@@ -417,11 +467,7 @@ class ReservationExtraPayment extends Model
      */
     public function availableRefundAmount(): float|int
     {
-        $notCanceledRefunds = $this->refunds->filter(
-            fn(ReservationExtraPaymentRefund $refund) => !in_array($refund->state, $refund::CANCELED_STATES)
-        );
-
-        return $this->amount - $notCanceledRefunds->sum('amount');
+        return $this->amount - $this->refunds_active->sum('amount');
     }
 
     /**

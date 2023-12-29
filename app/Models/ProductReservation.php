@@ -215,7 +215,7 @@ class ProductReservation extends BaseModel
     {
         do {
             $code = random_int(11111111, 99999999);
-        } while(self::query()->where(compact('code'))->exists());
+        } while (self::query()->where(compact('code'))->exists());
 
         return $code;
     }
@@ -729,5 +729,18 @@ class ProductReservation extends BaseModel
         }
 
         return null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAcceptable(): bool
+    {
+        return
+            $this->isPending() &&
+            !$this->hasExpired() &&
+            !$this->product->trashed() &&
+            (!$this->extra_payment || $this->extra_payment->isPaid()) &&
+            (!$this->extra_payment || $this->extra_payment->refunds_active->isEmpty());
     }
 }

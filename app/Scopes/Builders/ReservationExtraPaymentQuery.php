@@ -51,18 +51,18 @@ class ReservationExtraPaymentQuery
     public static function whereNotRefunded(Builder $query): Builder
     {
         $query->addSelect([
-            'refund_amount' => ReservationExtraPaymentRefund::query()
+            '__refund_amount' => ReservationExtraPaymentRefund::query()
                 ->whereColumn('reservation_extra_payments.id', 'reservation_extra_payment_id')
                 ->whereIn('state', [ReservationExtraPaymentRefund::STATE_REFUNDED])
                 ->selectRaw('sum(`amount`)')
         ]);
 
         $query = ReservationExtraPayment::fromSub($query, 'reservation_extra_payments')->selectRaw(
-            '*, CAST(IF(ISNULL(`refund_amount`), amount, amount - refund_amount) AS SIGNED) as `not_refunded`'
+            '*, CAST(IF(ISNULL(`__refund_amount`), amount, amount - __refund_amount) AS SIGNED) as `__refund_amount`'
         );
 
         $query = ReservationExtraPayment::query()->fromSub($query, 'reservation_extra_payments');
 
-        return $query->where('not_refunded', '>', 0);
+        return $query->where('__refund_amount', '>', 0);
     }
 }
