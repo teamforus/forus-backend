@@ -237,16 +237,6 @@ class ReservationExtraPayment extends Model
 
         $this->fetchMollieRefunds();
 
-        log_debug([
-            'state' => $payment->status,
-            'paid_at' => $payment->paidAt ? Carbon::parse($payment->paidAt) : null,
-            'canceled_at' => $payment->canceledAt ? Carbon::parse($payment->canceledAt) : null,
-            'amount' => $payment->amount?->value,
-            'amount_captured' => $payment->amountCaptured?->value,
-            'amount_refunded' => $payment->amountRefunded?->value,
-            'amount_remaining' => $payment->amountRemaining?->value,
-        ]);
-
         $this->update([
             'state' => $payment->status,
             'paid_at' => $payment->paidAt ? Carbon::parse($payment->paidAt) : null,
@@ -307,13 +297,6 @@ class ReservationExtraPayment extends Model
             ->getPaymentRefunds($this->payment_id);
 
         foreach ($refunds as $refund) {
-            log_debug([
-                'refund_id' => $refund->id,
-                'state' => $refund->status,
-                'amount' => $refund->amount->value,
-                'currency' => $refund->amount->currency,
-            ]);
-
             $this->refunds()->updateOrCreate([
                 'refund_id' => $refund->id,
             ], [
