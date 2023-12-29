@@ -26,13 +26,16 @@ class EmployeesExport extends BaseFieldedExport
      */
     public function __construct(Builder|Relation|Employee $builder, bool $withRoles = true)
     {
-        $this->roles = Role::get()->collect();
+        $this->roles = Role::get()->load(['translations'])->collect();
         $this->withRoles = $withRoles;
 
         $this->data = $this->exportTransform($builder->with([
-            'roles',
+            'identity.emails',
+            'identity.primary_email',
+            'identity.identity_2fa_active',
+            'roles.translations',
             'organization',
-            'logs' => fn (MorphMany $b) => $b->where([
+            'logs' => fn (MorphMany $builder) => $builder->where([
                 'event' => Employee::EVENT_UPDATED,
             ])->take(1)->latest(),
         ])->get());
