@@ -14,6 +14,7 @@ class ProductReservationResource extends BaseJsonResource
 {
     public const LOAD = [
         'voucher.fund.organization',
+        'voucher.voucher_records',
         'product.organization',
         'product.photo.presets',
         'voucher_transaction',
@@ -72,6 +73,7 @@ class ProductReservationResource extends BaseJsonResource
             ],
             'voucher_transaction' => $transaction?->only('id', 'address'),
             'custom_fields' => ProductReservationFieldValueResource::collection($reservation->custom_fields),
+            'records_title' => $voucher->getRecordsTitle(),
             ...$this->identityData($reservation, $voucher),
             ...$this->extraPaymentData($reservation),
             ...$this->makeTimestamps($reservation->only([
