@@ -13,14 +13,14 @@ use App\Models\Traits\UpdatesModel;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Models\MollieConnection;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Event;
-use Mollie\Api\Resources\Payment;
-use Mollie\Api\Resources\Refund;
+use App\Services\MollieService\Objects\Payment;
+use App\Services\MollieService\Objects\Refund;
 
 /**
  * App\Models\ReservationExtraPayment
@@ -194,18 +194,17 @@ class ReservationExtraPayment extends Model
         $becomeFailed = !$this->isFailed() && $payment->isFailed();
         $becomeExpired = !$this->isExpired() && $payment->isExpired();
         $becomeCanceled = !$this->isCanceled() && $payment->isCanceled();
-        $becomeRefunded = !$this->isFullyRefunded() && $payment->amountRefunded?->value >= $this->amount;
+        $becomeRefunded = !$this->isFullyRefunded() && $payment->amount_refunded >= $this->amount;
 
         $this->fetchMollieRefunds();
 
         $this->update([
             'state' => $payment->status,
-            'paid_at' => $payment->paidAt ? Carbon::parse($payment->paidAt) : null,
-            'canceled_at' => $payment->canceledAt ? Carbon::parse($payment->canceledAt) : null,
-            'amount' => $payment->amount?->value,
-            'amount_captured' => $payment->amountCaptured?->value,
-            'amount_refunded' => $payment->amountRefunded?->value,
-            'amount_remaining' => $payment->amountRemaining?->value,
+            'paid_at' => $payment->paid_at,
+            'canceled_at' => $payment->canceled_at,
+            ...Arr::only($payment->toArray(), [
+                'amount', 'amount_captured', 'amount_refunded', 'amount_remaining',
+            ]),
         ]);
 
         Event::dispatch(new ReservationExtraPaymentUpdated($this, $employee));
@@ -262,8 +261,8 @@ class ReservationExtraPayment extends Model
                 'refund_id' => $refund->id,
             ], [
                 'state' => $refund->status,
-                'amount' => $refund->amount->value,
-                'currency' => $refund->amount->currency,
+                'amount' => $refund->amount,
+                'currency' => $refund->currency,
             ]);
         }
     }
@@ -288,8 +287,8 @@ class ReservationExtraPayment extends Model
         $reservationExtraPaymentRefund = $this->refunds()->create([
             'refund_id' => $refund->id,
             'state' => $refund->status,
-            'amount' => $refund->amount->value,
-            'currency' => $refund->amount->currency,
+            'amount' => $refund->amount,
+            'currency' => $refund->currency,
         ]);
 
         Event::dispatch(new ReservationExtraPaymentRefundedApi($this, $employee, [
