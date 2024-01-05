@@ -149,7 +149,7 @@ class ImplementationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity, 'manage_implementation');
+        return $organization->identityCan($identity, 'manage_implementation') && $organization->allow_pre_checks;
     }
 
     /**
