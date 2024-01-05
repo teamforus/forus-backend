@@ -12,6 +12,21 @@ class ImplementationPolicy
     use HandlesAuthorization;
 
     /**
+     * Determine whether the user can view any implementations public data.
+     *
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function viewAnyPublic(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, [
+            'manage_implementation', 'manage_implementation_cms', 'view_implementations',
+        ], false);
+    }
+
+    /**
      * Determine whether the user can view any implementations.
      *
      * @param Identity $identity

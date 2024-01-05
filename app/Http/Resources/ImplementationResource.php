@@ -4,9 +4,8 @@ namespace App\Http\Resources;
 
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
-use Illuminate\Http\Resources\Json\JsonResource;
 
-class ImplementationResource extends JsonResource
+class ImplementationResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
@@ -35,6 +34,6 @@ class ImplementationResource extends JsonResource
      */
     protected function hasTermsPage(?ImplementationPage $page_provider): bool
     {
-        return $page_provider && $page_provider->content;
+        return $page_provider && $page_provider->isPublic();
     }
 }
