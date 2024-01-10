@@ -21,11 +21,15 @@ class ImplementationResource extends BaseJsonResource
             return null;
         }
 
-        return array_merge($implementation->only([
-            'id', 'key', 'name', 'url_webshop', 'informal_communication', 'organization_id',
-        ]), [
+        return [
+            ...$implementation->only([
+                'id', 'key', 'name', 'url_webshop', 'informal_communication', 'organization_id',
+                'pre_check_enabled', 'pre_check_title', 'pre_check_description',
+                'pre_check_banner_state', 'pre_check_banner_title',
+                'pre_check_banner_description', 'pre_check_banner_label',
+            ]),
             'has_provider_terms_page' => $this->hasTermsPage($implementation->page_provider),
-        ]);
+        ];
     }
 
     /**
