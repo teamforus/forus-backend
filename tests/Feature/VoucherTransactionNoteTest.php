@@ -11,10 +11,11 @@ use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Database\Eloquent\Builder;
 use Tests\TestCase;
+use Tests\Traits\MakesTestFunds;
 
 class VoucherTransactionNoteTest extends TestCase
 {
-    use DatabaseTransactions;
+    use DatabaseTransactions, MakesTestFunds;
 
     /**
      * @var string
@@ -178,16 +179,12 @@ class VoucherTransactionNoteTest extends TestCase
      */
     private function getVoucher(Fund $fund): Voucher
     {
-        $builder = Voucher::query()
+        /** @var Voucher $voucher */
+        $voucher = $fund->vouchers()
             ->where(fn(Builder $builder) => VoucherQuery::whereNotExpiredAndActive($builder))
-            ->whereNull('product_id');
-
-        $builder = VoucherQuery::addBalanceFields($builder);
-        $builder = Voucher::query()->fromSub($builder, 'vouchers');
-        $builder->where('balance', '>', 0);
-        $builder->where('fund_id', $fund->id);
-
-        $voucher = $builder->first();
+            ->where(fn(Builder $builder) => VoucherQuery::whereHasBalance($builder))
+            ->whereNull('product_id')
+            ->first();
 
         $this->assertNotNull($voucher);
 
