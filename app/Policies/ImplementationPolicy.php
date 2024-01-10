@@ -134,6 +134,25 @@ class ImplementationPolicy
     }
 
     /**
+     * @param Identity $identity
+     * @param Implementation $implementation
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function updatePreChecks(
+        Identity $identity,
+        Implementation $implementation,
+        Organization $organization,
+    ): bool {
+        if (!$this->checkIntegrity($implementation, $organization)) {
+            return false;
+        }
+
+        return $organization->identityCan($identity, 'manage_implementation') && $organization->allow_pre_checks;
+    }
+
+    /**
      * @param Implementation $implementation
      * @param Organization $organization
      * @return bool
