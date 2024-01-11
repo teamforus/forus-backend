@@ -48,7 +48,7 @@ class UpdateOrganizationRequest extends BaseFormRequest
             'iban'                  => ['nullable', new IbanRule()],
             'email'                 => [
                 'nullable',
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'email_public'          => 'nullable|boolean',
             'phone'                 => 'nullable|digits_between:4,20',
@@ -100,7 +100,7 @@ class UpdateOrganizationRequest extends BaseFormRequest
             'contacts.*.key' => 'required|in:' . implode(',', $keys),
             'contacts.*.value' => [
                 'nullable',
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
         ];
     }

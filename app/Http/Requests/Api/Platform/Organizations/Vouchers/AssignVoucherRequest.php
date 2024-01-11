@@ -38,13 +38,13 @@ class AssignVoucherRequest extends BaseFormRequest
         return $this->organization->bsn_enabled ? [
             'email' => [
                 'required_without:bsn',
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'bsn' => ['required_without:email', new BsnRule()],
         ] : [
             'email' => [
                 'required',
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'bsn' => 'nullable|in:',
         ];

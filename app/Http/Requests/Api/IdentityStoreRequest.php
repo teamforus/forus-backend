@@ -34,7 +34,7 @@ class IdentityStoreRequest extends BaseFormRequest
             'email' => [
                 'required',
                 Rule::unique('identity_emails', 'email')->whereNull('deleted_at'),
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'target' => 'nullable|alpha_dash',
         ];

@@ -37,7 +37,7 @@ class SendVoucherRequest extends BaseFormRequest
             'email' => [
                 'required',
                 new IdentityEmailExistsRule(),
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
         ];
     }

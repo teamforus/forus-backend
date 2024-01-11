@@ -152,7 +152,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     /**
      * @return array
      */
-    public function emailRule(): array
+    public function emailRules(): array
     {
         return [
             'max:191',

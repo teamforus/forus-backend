@@ -31,7 +31,7 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
             'vouchers.*.note' => 'nullable|string|max:280',
             'vouchers.*.email' => [
                 'nullable',
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'vouchers.*.bsn' => $bsn_enabled ? ['nullable', new BsnRule()] : 'nullable|in:',
             'vouchers.*.activate' => 'boolean',

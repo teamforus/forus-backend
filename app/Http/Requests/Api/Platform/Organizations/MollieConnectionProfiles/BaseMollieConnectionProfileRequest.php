@@ -36,7 +36,7 @@ abstract class BaseMollieConnectionProfileRequest extends BaseFormRequest
             'email' => [
                 'required',
                 'max:191',
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'website' => 'required|url|max:191',
             'phone' => 'required|string|max:191',

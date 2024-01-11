@@ -38,7 +38,7 @@ class UpdateReimbursementRequest extends StoreReimbursementRequest
             'amount' => 'nullable|' . $this->amountRule($this->identity(), $this->reimbursement),
             'email' => [
                 'nullable',
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'iban' => ['nullable', 'string', new IbanRule()],
             'iban_name' => 'nullable|string|min:5|max:200',

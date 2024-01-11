@@ -22,7 +22,7 @@ class StoreMollieConnectionRequest extends BaseMollieConnectionRequest
             'name' => 'required|string|max:191',
             'email' => [
                 'required',
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'first_name' => 'required|string|max:191',
             'last_name' => 'required|string|max:191',

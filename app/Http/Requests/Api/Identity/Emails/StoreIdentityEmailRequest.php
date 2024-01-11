@@ -35,7 +35,7 @@ class StoreIdentityEmailRequest extends BaseIdentityEmailRequest
             'email' => [
                 'required',
                 new IdentityEmailUniqueRule(),
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
         ];
     }

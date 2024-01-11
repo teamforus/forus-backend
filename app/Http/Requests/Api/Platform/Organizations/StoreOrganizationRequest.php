@@ -37,7 +37,7 @@ class StoreOrganizationRequest extends BaseFormRequest
             'iban'                  => ['required', new IbanRule()],
             'email'                 => [
                 'required',
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'email_public'          => 'boolean',
             'phone'                 => 'required|digits_between:4,20',

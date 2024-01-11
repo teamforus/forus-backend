@@ -39,7 +39,7 @@ class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
             'email' => [
                 'required',
                 new IdentityEmailExistsRule(),
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'source' => 'required|in:' . Implementation::keysAvailable()->implode(','),
             'target' => 'nullable|alpha_dash'

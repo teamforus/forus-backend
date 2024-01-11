@@ -56,7 +56,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'q'                 => 'nullable|string|max:100',
             'email'             => [
                 'nullable',
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'bsn'               => 'nullable|string|max:100',
             'in_use'            => 'nullable|boolean',

@@ -27,7 +27,7 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
             'email' => [
                 'nullable',
                 'required_if:assign_by_type,email',
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'amount' => $this->amountRule($fund),
             'records' => $this->recordsRule(),

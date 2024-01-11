@@ -29,7 +29,7 @@ class StoreFeedbackRequest extends BaseFormRequest
             'urgency' => 'nullable|in:low,medium,high',
             'customer_email' => [
                 'nullable',
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
         ];
     }

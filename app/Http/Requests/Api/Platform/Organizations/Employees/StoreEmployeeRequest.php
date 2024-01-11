@@ -37,7 +37,7 @@ class StoreEmployeeRequest extends BaseFormRequest
             'email' => [
                 'required',
                 'not_in:' . $emails->filter()->join(','),
-                ...$this->emailRule(),
+                ...$this->emailRules(),
             ],
             'roles' => 'present|array',
             'roles.*' => 'exists:roles,id',
