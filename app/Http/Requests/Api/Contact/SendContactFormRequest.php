@@ -36,7 +36,10 @@ class SendContactFormRequest extends BaseFormRequest
     {
         return [
             'name' => 'required|string',
-            'email' => 'required|email',
+            'email' => [
+                'required',
+                ...$this->emailRule(),
+            ],
             'phone' => 'nullable|string',
             'organization' => 'nullable|string',
             'message' => 'required|string',

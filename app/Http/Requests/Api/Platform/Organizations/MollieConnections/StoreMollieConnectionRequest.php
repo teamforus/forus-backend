@@ -20,7 +20,10 @@ class StoreMollieConnectionRequest extends BaseMollieConnectionRequest
     {
         return [
             'name' => 'required|string|max:191',
-            'email' => 'required|email|max:191',
+            'email' => [
+                'required',
+                ...$this->emailRule(),
+            ],
             'first_name' => 'required|string|max:191',
             'last_name' => 'required|string|max:191',
             'street' => 'nullable|string|max:191',

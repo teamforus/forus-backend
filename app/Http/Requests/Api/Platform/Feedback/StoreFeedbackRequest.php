@@ -27,7 +27,10 @@ class StoreFeedbackRequest extends BaseFormRequest
             'title' => 'required|string|min:2|max:200',
             'content' => 'required|string|min:2|max:4000',
             'urgency' => 'nullable|in:low,medium,high',
-            'customer_email' => 'nullable|email',
+            'customer_email' => [
+                'nullable',
+                ...$this->emailRule(),
+            ],
         ];
     }
 }

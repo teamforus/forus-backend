@@ -38,7 +38,7 @@ class RecordStoreRequest extends BaseFormRequest
             ],
             'value' => [
                 'required',
-                $type === 'email' || $type === 'primary_email' ? 'email:strict' : null
+                ...$type === 'email' || $type === 'primary_email' ? $this->emailRule() : []
             ],
             'order' => 'nullable|numeric|min:0',
             'record_category_id' => ['nullable', new RecordCategoryIdRule()]

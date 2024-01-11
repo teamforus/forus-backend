@@ -150,6 +150,17 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     }
 
     /**
+     * @return array
+     */
+    public function emailRule(): array
+    {
+        return [
+            'max:191',
+            'email:strict,filter_unicode',
+        ];
+    }
+
+    /**
      * @param int $perPage
      * @param array $columns
      * @return array

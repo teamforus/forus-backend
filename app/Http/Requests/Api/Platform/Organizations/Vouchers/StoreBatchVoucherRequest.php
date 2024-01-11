@@ -29,7 +29,10 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
             'vouchers.*.product_id' => $this->productIdRule($fund),
             'vouchers.*.expire_at' => $this->expireAtRule($fund),
             'vouchers.*.note' => 'nullable|string|max:280',
-            'vouchers.*.email' => 'nullable|string|email:strict',
+            'vouchers.*.email' => [
+                'nullable',
+                ...$this->emailRule(),
+            ],
             'vouchers.*.bsn' => $bsn_enabled ? ['nullable', new BsnRule()] : 'nullable|in:',
             'vouchers.*.activate' => 'boolean',
             'vouchers.*.activation_code' => 'boolean',

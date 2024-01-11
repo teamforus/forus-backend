@@ -3,19 +3,19 @@
 namespace App\Http\Requests\Api\Platform\Organizations;
 
 use App\Helpers\Arr;
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\OrganizationContact;
 use App\Rules\Base\BtwRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\Base\KvkRule;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\Rule;
 
 /**
  * @property Organization|null $organization
  */
-class UpdateOrganizationRequest extends FormRequest
+class UpdateOrganizationRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -46,7 +46,10 @@ class UpdateOrganizationRequest extends FormRequest
             'name'                  => 'nullable|string|between:2,64',
             'description'           => 'nullable|string|max:4096',
             'iban'                  => ['nullable', new IbanRule()],
-            'email'                 => 'nullable|email:strict',
+            'email'                 => [
+                'nullable',
+                ...$this->emailRule(),
+            ],
             'email_public'          => 'nullable|boolean',
             'phone'                 => 'nullable|digits_between:4,20',
             'phone_public'          => 'nullable|boolean',
@@ -95,7 +98,10 @@ class UpdateOrganizationRequest extends FormRequest
             'contacts' => 'nullable|array',
             'contacts.*' => 'required|array',
             'contacts.*.key' => 'required|in:' . implode(',', $keys),
-            'contacts.*.value' => 'nullable|email|string|max:100',
+            'contacts.*.value' => [
+                'nullable',
+                ...$this->emailRule(),
+            ],
         ];
     }
 
