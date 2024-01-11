@@ -66,7 +66,7 @@ class SyncPreCheckRequest extends BaseFormRequest
         return [
             'pre_checks.*.record_types.*'=> 'nullable|array',
             'pre_checks.*.record_types.*.title' => 'required|string|max:100',
-            'pre_checks.*.record_types.*.title_short' => 'nullable|string|max:30',
+            'pre_checks.*.record_types.*.title_short' => 'required|string|max:40',
             'pre_checks.*.record_types.*.description' => 'nullable|string|max:1000',
             'pre_checks.*.record_types.*.record_type_key' => 'required|string|exists:record_types,key',
         ];
@@ -81,6 +81,7 @@ class SyncPreCheckRequest extends BaseFormRequest
             'pre_checks.*.title' => 'title',
             'pre_checks.*.description' => 'description',
             'pre_checks.*.record_types.*.title' => 'title',
+            'pre_checks.*.record_types.*.title_short' => 'short title',
             'pre_checks.*.record_types.*.record_type_key' => 'key',
         ];
     }
