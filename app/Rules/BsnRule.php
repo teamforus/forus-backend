@@ -15,7 +15,7 @@ class BsnRule extends BaseRule
      */
     public function passes($attribute, $value): bool
     {
-        $validation = Validation::check($value, 'required|int|digits_between:8,9');
+        $validation = Validation::check($value, 'required|digits_between:8,9');
 
         if (!$validation->passes()) {
             return $this->reject($validation->errors()->first('value'));

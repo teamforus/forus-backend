@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Http\Resources\Tiny\FundTinyResource;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -87,6 +88,8 @@ class FundResource extends BaseJsonResource
                 FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth()->id());
             })->exists(),
             'organization_funds_2fa' => $organizationFunds2FAData,
+            'parent' => $fund->parent?->only(['id', 'name']),
+            'children' => $fund->children->map(fn (Fund $child) => $child->only(['id', 'name'])),
         ], $fundConfigData, $criteriaData, $financialData, $generatorData, $prevalidationCsvData);
 
         if ($isDashboard && $organization->identityCan($identity, ['manage_funds', 'manage_fund_texts'], false)) {
