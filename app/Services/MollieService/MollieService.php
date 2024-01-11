@@ -4,35 +4,36 @@
 namespace App\Services\MollieService;
 
 use App\Services\MollieService\Exceptions\MollieException;
+use App\Services\MollieService\Interfaces\MollieServiceInterface;
 use App\Services\MollieService\Interfaces\MollieToken;
 use App\Services\MollieService\Models\MollieConnection;
+use App\Services\MollieService\Objects\PaymentMethod;
+use App\Services\MollieService\Objects\Profile;
+use App\Services\MollieService\Objects\Payment;
+use App\Services\MollieService\Objects\Refund;
+use App\Services\MollieService\Objects\Organization;
+use App\Services\MollieService\Objects\ResourceOwner;
+use Carbon\Carbon;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Log;
 use League\OAuth2\Client\Grant\RefreshToken;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Token\AccessTokenInterface;
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
-use Mollie\Api\Resources\BalanceTransactionCollection;
-use Mollie\Api\Resources\BaseCollection;
-use Mollie\Api\Resources\CurrentProfile;
 use Mollie\Api\Resources\Method;
-use Mollie\Api\Resources\MethodCollection;
-use Mollie\Api\Resources\Onboarding;
-use Mollie\Api\Resources\Organization;
-use Mollie\Api\Resources\Payment;
-use Mollie\Api\Resources\Profile;
-use Mollie\Api\Resources\ProfileCollection;
-use Mollie\Api\Resources\Refund;
-use Mollie\Api\Resources\RefundCollection;
+use Mollie\Api\Resources\Organization as MollieOrganization;
+use Mollie\Api\Resources\Payment as MolliePayment;
+use Mollie\Api\Resources\Profile as MollieProfile;
+use Mollie\Api\Resources\Refund as MollieRefund;
 use Mollie\OAuth2\Client\Provider\Mollie;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 
-class MollieService
+class MollieService implements MollieServiceInterface
 {
     protected bool $testMode = false;
 
@@ -40,8 +41,6 @@ class MollieService
     protected ?string $appClientSecret;
     protected ?string $redirectUri;
     protected ?string $webhookUri;
-
-    public const PAYMENT_METHOD_IDEAL = 'ideal';
 
     /**
      * @param MollieToken|null $token
@@ -137,8 +136,28 @@ class MollieService
     {
         return MollieConnection::firstWhere('state_code', $state)?->updateConnectionByToken(
             $token,
-            $this->getProvider()->getResourceOwner($token)->toArray(),
+            $this->mapResourceOwner($this->getProvider()->getResourceOwner($token)->toArray()),
         );
+    }
+
+    /**
+     * @param array $attributes
+     * @return ResourceOwner
+     */
+    private function mapResourceOwner(array $attributes): ResourceOwner
+    {
+        return new ResourceOwner([
+            'id' => $attributes['id'],
+            'name' => $attributes['name'] ?? '',
+            'city' => $attributes['address']['city'] ?? '',
+            'street' => $attributes['address']['streetAndNumber'] ?? '',
+            'country' => $attributes['address']['country'] ?? '',
+            'postcode' => $attributes['address']['postalCode'] ?? '',
+            'last_name' => $attributes['first_name'] ?? null,
+            'first_name' => $attributes['last_name'] ?? null,
+            'vat_number' => $attributes['vatNumber'] ?? null,
+            'registration_number' => $attributes['registrationNumber'] ?? null,
+        ]);
     }
 
     /**
@@ -192,21 +211,40 @@ class MollieService
     public function getOrganization(): Organization
     {
         try {
-            return $this->getMollie()->organizations->current();
+            return $this->mapOrganization($this->getMollie()->organizations->current());
         } catch (ApiException $e) {
             $this->processApiException($e, 'readOrganization');
         }
     }
 
     /**
-     * @return Onboarding
+     * @param MollieOrganization $organization
+     * @return Organization
+     */
+    private function mapOrganization(MollieOrganization $organization): Organization
+    {
+        return new Organization([
+            'id' => $organization->id,
+            'name' => $organization->name,
+            'email' => $organization->email,
+            'city' => $organization->address->city ?? '',
+            'street' => $organization->address->streetAndNumber ?? '',
+            'country' => $organization->address->country ?? '',
+            'postcode' => $organization->address->postalCode ?? '',
+            'vat_number' => $organization->vatNumber ?? null,
+            'registration_number' => $organization->registrationNumber ?? null,
+        ]);
+    }
+
+    /**
+     * @return string
      * @noinspection PhpUnused
      * @throws MollieException
      */
-    public function getOnboardingState(): Onboarding
+    public function getOnboardingState(): string
     {
         try {
-            return $this->getMollie()->onboarding->get();
+            return $this->getMollie()->onboarding->get()->status;
         } catch (ApiException $e) {
             $this->processApiException($e, 'readOnboardingState');
         }
@@ -221,11 +259,14 @@ class MollieService
     public function createProfile(array $attributes = []): Profile
     {
         try {
-            return $this->getMollie()->profiles->create(array_merge(Arr::only($attributes, [
-                'name', 'email', 'phone', 'website',
-            ]), [
-                'mode' => $this->testMode ? 'test' : 'live',
-            ]));
+            return $this->mapProfile(
+                $this->getMollie()->profiles->create(array_merge(Arr::only($attributes, [
+                    'name', 'email', 'phone', 'website',
+                ]), [
+                    'mode' => $this->testMode ? 'test' : 'live',
+                ]))
+            );
+
         } catch (ApiException $e) {
             $this->processApiException($e, 'createProfile');
         }
@@ -233,14 +274,14 @@ class MollieService
 
     /**
      * @param string $profileId
-     * @return CurrentProfile|Profile
+     * @return Profile
      * @noinspection PhpUnused
      * @throws MollieException
      */
-    public function readProfile(string $profileId): Profile|CurrentProfile
+    public function readProfile(string $profileId): Profile
     {
         try {
-            return $this->getMollie()->profiles->get($profileId);
+            return $this->mapProfile($this->getMollie()->profiles->get($profileId));
         } catch (ApiException $e) {
             $this->processApiException($e, 'readProfile');
         }
@@ -256,39 +297,57 @@ class MollieService
     public function updateProfile(string $profileId, array $attributes = []): Profile
     {
         try {
-            return $this->getMollie()->profiles->update($profileId, $attributes);
+            return $this->mapProfile($this->getMollie()->profiles->update($profileId, $attributes));
         } catch (ApiException $e) {
             $this->processApiException($e, 'updateProfile');
         }
     }
 
     /**
-     * @return ProfileCollection|null
+     * @return Collection
      * @noinspection PhpUnused
      * @throws MollieException
      */
-    public function readAllProfiles(): ?ProfileCollection
+    public function readAllProfiles(): Collection
     {
         try {
-            return $this->getMollie()->profiles->page();
+            return collect($this->getMollie()->profiles->page())
+                ->map(fn(MollieProfile $profile) => $this->mapProfile($profile));
         } catch (ApiException $e) {
             $this->processApiException($e, 'readAllProfiles');
         }
     }
 
     /**
+     * @param MollieProfile $profile
+     * @return Profile
+     */
+    private function mapProfile(MollieProfile $profile): Profile
+    {
+        return new Profile([
+            'id' => $profile->id,
+            'name' => $profile->name,
+            'email' => $profile->email,
+            'phone' => $profile->phone,
+            'status' => $profile->status,
+            'website' => $profile->website,
+            'created_at' => $profile->createdAt ? Carbon::parse($profile->createdAt, 'UTC') : null,
+        ]);
+    }
+
+    /**
      * @param string $profileId
-     * @return BaseCollection|MethodCollection
+     * @return Collection
      * @noinspection PhpUnused
      * @throws MollieException
      */
-    public function readAllPaymentMethods(string $profileId): BaseCollection|MethodCollection
+    public function readAllPaymentMethods(string $profileId): Collection
     {
         try {
-            return $this->getMollie()->methods->allAvailable([
+            return collect($this->getMollie()->methods->allAvailable([
                 'profileId' => $profileId,
-                'testmode' => $this->testMode,
-            ]);
+                'testmode' => $this->testMode
+            ]))->map(fn(Method $method) => $this->mapPaymentMethod($method));
         } catch (ApiException $e) {
             $this->processApiException($e, 'readAllPaymentMethods');
         }
@@ -296,33 +355,46 @@ class MollieService
 
     /**
      * @param string $profileId
-     * @return BaseCollection|MethodCollection
+     * @return Collection
      * @noinspection PhpUnused
      * @throws MollieException
      */
-    public function readActivePaymentMethods(string $profileId): BaseCollection|MethodCollection
+    public function readActivePaymentMethods(string $profileId): Collection
     {
         try {
-            return $this->getMollie()->methods->allActive([
+            return collect($this->getMollie()->methods->allActive([
                 'profileId' => $profileId,
                 'testmode' => $this->testMode
-            ]);
+            ]))->map(fn(Method $method) => $this->mapPaymentMethod($method));
         } catch (ApiException $e) {
             $this->processApiException($e, 'readActivePaymentMethods');
         }
     }
 
     /**
+     * @param Method $method
+     * @return PaymentMethod
+     */
+    private function mapPaymentMethod(Method $method): PaymentMethod
+    {
+        return new PaymentMethod([
+            'id' => $method->id,
+            'status' => $method->status,
+            'description' => $method->description,
+        ]);
+    }
+
+    /**
      * @param string $profileId
      * @param string $method
-     * @return Method
+     * @return bool
      * @noinspection PhpUnused
      * @throws MollieException
      */
-    public function enablePaymentMethod(string $profileId, string $method): Method
+    public function enablePaymentMethod(string $profileId, string $method): bool
     {
         try {
-            return $this->getMollie()->profiles->get($profileId)->enableMethod($method);
+            return (bool)$this->getMollie()->profiles->get($profileId)->enableMethod($method);
         } catch (ApiException $e) {
             $this->processApiException($e, 'enablePaymentMethod');
         }
@@ -331,14 +403,14 @@ class MollieService
     /**
      * @param string $profileId
      * @param string $method
-     * @return Method
+     * @return bool
      * @noinspection PhpUnused
      * @throws MollieException
      */
-    public function disablePaymentMethod(string $profileId, string $method): Method
+    public function disablePaymentMethod(string $profileId, string $method): bool
     {
         try {
-            return $this->getMollie()->profiles->get($profileId)->disableMethod($method);
+            return (bool)$this->getMollie()->profiles->get($profileId)->disableMethod($method);
         } catch (ApiException $e) {
             $this->processApiException($e, 'disablePaymentMethod');
         }
@@ -353,7 +425,7 @@ class MollieService
     public function createPayment(string $profileId, array $attributes): Payment
     {
         try {
-            return $this->getMollie()->payments->create([
+            $payment = $this->getMollie()->payments->create([
                 'profileId' => $profileId,
                 'amount' => [
                     "currency" => $attributes['currency'],
@@ -367,6 +439,8 @@ class MollieService
                 'method' => [self::PAYMENT_METHOD_IDEAL],
                 'testmode' => $this->testMode,
             ]);
+
+            return $this->mapPayment($payment);
         } catch (ApiException $e) {
             $this->processApiException($e, 'createPayment');
         }
@@ -374,11 +448,11 @@ class MollieService
 
     /**
      * @param string $paymentId
-     * @return Payment
+     * @return MolliePayment
      * @noinspection PhpUnused
      * @throws MollieException
      */
-    public function getPayment(string $paymentId): Payment
+    public function getMolliePayment(string $paymentId): MolliePayment
     {
         try {
             return $this->getMollie()->payments->get($paymentId, [
@@ -395,12 +469,29 @@ class MollieService
      * @noinspection PhpUnused
      * @throws MollieException
      */
+    public function getPayment(string $paymentId): Payment
+    {
+        try {
+            return $this->mapPayment($this->getMollie()->payments->get($paymentId, [
+                'testmode' => $this->testMode,
+            ]));
+        } catch (ApiException $e) {
+            $this->processApiException($e, 'readPayment');
+        }
+    }
+
+    /**
+     * @param string $paymentId
+     * @return Payment
+     * @noinspection PhpUnused
+     * @throws MollieException
+     */
     public function cancelPayment(string $paymentId): Payment
     {
         try {
-            return $this->getMollie()->payments->cancel($paymentId, [
+            return $this->mapPayment($this->getMollie()->payments->cancel($paymentId, [
                 'testmode' => $this->testMode,
-            ]);
+            ]));
         } catch (ApiException $e) {
             $this->processApiException($e, 'cancelPayment');
         }
@@ -416,7 +507,7 @@ class MollieService
     public function refundPayment(string $paymentId, array $attributes): Refund
     {
         try {
-            return $this->getPayment($paymentId)->refund([
+            $refund = $this->getMolliePayment($paymentId)->refund([
                 'amount' => [
                     "currency" => $attributes['currency'],
                     "value" => currency_format($attributes['amount']),
@@ -424,20 +515,66 @@ class MollieService
                 'description' => $attributes['description'],
                 'testmode' => $this->testMode,
             ]);
+
+            return $this->mapRefund($refund);
         } catch (ApiException $e) {
             $this->processApiException($e, 'refundPayment');
         }
     }
 
     /**
+     * @param MolliePayment $payment
+     * @return Payment
+     */
+    private function mapPayment(MolliePayment $payment): Payment
+    {
+        return new Payment([
+            'id' => $payment->id,
+            'amount' => $payment->amount->value,
+            'status' => $payment->status,
+            'method' => $payment->method,
+            'paid_at' => $payment->paidAt ? Carbon::parse($payment->paidAt, 'UTC') : null,
+            'currency' => $payment->amount->currency,
+            'profile_id' => $payment->profileId,
+            'canceled_at' => $payment->canceledAt ? Carbon::parse($payment->canceledAt, 'UTC') : null,
+            'expires_at' => $payment->expiresAt ? Carbon::parse($payment->expiresAt, 'UTC') : null,
+            'expired_at' => $payment->expiredAt ? Carbon::parse($payment->expiredAt, 'UTC') : null,
+            'created_at' => $payment->createdAt ? Carbon::parse($payment->createdAt, 'UTC') : null,
+            'description' => $payment->description,
+            'checkout_url' => $payment->getCheckoutUrl(),
+            'amount_refunded' => $payment->amountRefunded?->value,
+            'amount_captured' => $payment->amountCaptured?->value,
+            'amount_remaining' => $payment->amountRemaining?->value,
+        ]);
+    }
+
+    /**
+     * @param MollieRefund $refund
+     * @return Refund
+     */
+    private function mapRefund(MollieRefund $refund): Refund
+    {
+        return new Refund([
+            'id' => $refund->id,
+            'status' => $refund->status,
+            'amount' => $refund->amount->value,
+            'currency' => $refund->amount->currency,
+            'payment_id' => $refund->paymentId,
+            'created_at' => $refund->createdAt ? Carbon::parse($refund->createdAt, 'UTC') : null,
+            'description' => $refund->description,
+        ]);
+    }
+
+    /**
      * @param string $paymentId
-     * @return RefundCollection
+     * @return Collection
      * @throws MollieException
      */
-    public function getPaymentRefunds(string $paymentId): RefundCollection
+    public function getPaymentRefunds(string $paymentId): Collection
     {
         try {
-            return $this->getPayment($paymentId)->refunds();
+            return collect($this->getMolliePayment($paymentId)->refunds())
+                ->map(fn(MollieRefund $refund) => $this->mapRefund($refund));
         } catch (ApiException $e) {
             $this->processApiException($e, 'readPaymentRefund');
         }
@@ -453,25 +590,11 @@ class MollieService
     public function readPaymentRefund(string $paymentId, string $refundId): Refund
     {
         try {
-            return $this->getPayment($paymentId)->getRefund($refundId, [
+            return $this->mapRefund($this->getMolliePayment($paymentId)->getRefund($refundId, [
                 'testmode' => $this->testMode,
-            ]);
+            ]));
         } catch (ApiException $e) {
             $this->processApiException($e, 'readPaymentRefund');
-        }
-    }
-
-    /**
-     * @return BalanceTransactionCollection|BaseCollection
-     * @noinspection PhpUnused
-     * @throws MollieException
-     */
-    public function readBalanceTransactions(): BalanceTransactionCollection|BaseCollection
-    {
-        try {
-            return $this->getMollie()->balanceTransactions->listForPrimary();
-        } catch (ApiException $e) {
-            $this->processApiException($e, 'readBalanceTransactions');
         }
     }
 
@@ -486,7 +609,7 @@ class MollieService
 
             return true;
         } catch (GuzzleException $e) {
-            static::logError("Failed to revoke refresh token.", $e);
+            MollieServiceLogger::logError("Failed to revoke refresh token.", $e);
             return false;
         }
     }
@@ -515,7 +638,7 @@ class MollieService
         $body = static::parseResponseBody($e->getResponse());
 
         try {
-            static::logError("$key api error.\n" . json_encode($body, JSON_THROW_ON_ERROR), $e);
+            MollieServiceLogger::logError("$key api error.\n" . json_encode($body, JSON_THROW_ON_ERROR), $e);
         } catch (Throwable) {}
 
         throw new MollieException(
@@ -533,7 +656,7 @@ class MollieService
     private function processException(Throwable $e, string $key): void
     {
         try {
-            static::logError("$key error.\n", $e);
+            MollieServiceLogger::logError("$key error.\n", $e);
         } catch (Throwable) {}
 
         throw new MollieException($e->getMessage(), $e->getCode());
@@ -564,22 +687,8 @@ class MollieService
         try {
             return (new MollieApiClient())->setAccessToken($this->getAccessToken());
         } catch (Throwable $e) {
-            static::logError("setAccessToken error.", $e);
+            MollieServiceLogger::logError("setAccessToken error.", $e);
             throw new MollieException('Unknown error please try later.', 503);
         }
-    }
-
-    /**
-     * @param string $message
-     * @param Throwable|null $e
-     * @return void
-     */
-    public static function logError(string $message, ?Throwable $e): void
-    {
-        Log::channel('mollie')->error(implode("\n", array_filter([
-            $message,
-            $e?->getMessage(),
-            $e?->getTraceAsString(),
-        ])));
     }
 }

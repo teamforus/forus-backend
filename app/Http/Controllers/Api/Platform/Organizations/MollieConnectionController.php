@@ -10,10 +10,8 @@ use App\Http\Requests\Api\Platform\Organizations\MollieConnections\StoreMollieCo
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\MollieConnectionResource;
 use App\Models\Organization;
-use App\Services\MollieService\Data\ForusTokenData;
 use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Models\MollieConnection;
-use App\Services\MollieService\MollieService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
@@ -50,10 +48,10 @@ class MollieConnectionController extends Controller
             'email', 'first_name', 'last_name', 'street', 'city', 'postcode',
         ]);
 
-        $mollieService = MollieService::make(new ForusTokenData());
         $state = token_generator()->generate(64);
 
         try {
+            $mollieService = MollieConnection::getMollieServiceByForusToken();
             $connectAuthUrl = $mollieService->createClientLink($state, $request->get('name'), [
                 "email" => Arr::get($data, 'email'),
                 "givenName" => Arr::get($data, 'first_name'),
@@ -89,6 +87,7 @@ class MollieConnectionController extends Controller
      * @param OauthMollieConnectionRequest $request
      * @param Organization $organization
      * @return JsonResponse
+     * @throws MollieException
      */
     public function connectOAuth(
         OauthMollieConnectionRequest $request,
@@ -97,7 +96,7 @@ class MollieConnectionController extends Controller
         $this->authorize('connectMollieAccount', [MollieConnection::class, $organization]);
 
         $state = token_generator()->generate(64);
-        $mollieService = MollieService::make(new ForusTokenData());
+        $mollieService = MollieConnection::getMollieServiceByForusToken();
         $connectAuthUrl = $mollieService->mollieConnect($state);
 
         Event::dispatch(new MollieConnectionCreated($organization->mollie_connections()->create([
@@ -135,6 +134,7 @@ class MollieConnectionController extends Controller
      * @param Organization $organization
      * @param MollieConnection $connection
      * @return JsonResponse
+     * @throws MollieException
      */
     public function destroy(
         BaseFormRequest $request,

@@ -3,7 +3,7 @@
 namespace App\Services\MollieService\Commands;
 
 use App\Services\MollieService\Models\MollieConnection;
-use App\Services\MollieService\MollieService;
+use App\Services\MollieService\MollieServiceLogger;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -24,7 +24,7 @@ abstract class BaseUpdateMollieConnectionsCommand extends Command
             try {
                 $connection->fetchAndUpdateConnection();
             }  catch (Throwable $e) {
-                MollieService::logError("Failed to update [$state] mollie connection [$connection->id].", $e);
+                MollieServiceLogger::logError("Failed to update [$state] mollie connection [$connection->id].", $e);
             }
         }
     }

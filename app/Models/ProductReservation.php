@@ -10,16 +10,15 @@ use App\Events\ReservationExtraPayments\ReservationExtraPaymentCreated;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MollieService\Exceptions\MollieException;
-use App\Services\MollieService\MollieService;
+use App\Services\MollieService\Interfaces\MollieServiceInterface;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Mollie\Api\Resources\Payment;
+use App\Services\MollieService\Objects\Payment;
 
 /**
  * App\Models\ProductReservation
@@ -658,7 +657,7 @@ class ProductReservation extends BaseModel
         }
 
         $payment = $this->product->organization->mollie_connection->createPayment([
-            'method' => MollieService::PAYMENT_METHOD_IDEAL,
+            'method' => MollieServiceInterface::PAYMENT_METHOD_IDEAL,
             'amount' => $amount,
             'currency' => $currency,
             'description' => trans('extra-payments.payment.description'),
@@ -670,15 +669,13 @@ class ProductReservation extends BaseModel
             return null;
         }
 
-        $expireAt = $payment->expiresAt ? Carbon::parse($payment->expiresAt, 'UTC') : null;
-
         $extraPayment = $this->extra_payment()->create([
             'type' => ReservationExtraPayment::TYPE_MOLLIE,
             'state' => $payment->status,
             'amount' => $amount,
             'currency' => $currency,
             'method' => $payment->method,
-            'expires_at' => $expireAt?->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s'),
+            'expires_at' => $payment->expires_at?->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s'),
             'payment_id' => $payment->id,
         ]);
 
