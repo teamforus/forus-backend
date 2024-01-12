@@ -60,40 +60,15 @@ class ProductReservationsSearch extends BaseSearch
         }
 
         if ($this->hasFilter('archived') && $this->getFilter('archived')) {
-            if ($this->getFilter('is_webshop', false)) {
-                ProductReservationQuery::whereArchived($builder);
-            } else {
-                $builder->where(function(Builder $builder) {
-                    $builder->where('archived', true);
-                    $builder->orWhere(fn(Builder $q) => ProductReservationQuery::whereExpiredAndPending($q));
-                    $builder->orWhere(function(Builder $builder) {
-                        $builder->where('state', ProductReservation::STATE_PENDING);
-                        $builder->whereHas('voucher', function(Builder $builder) {
-                            VoucherQuery::whereExpiredOrNotActive($builder);
-                        });
-                    });
-                });
-            }
+            $this->getFilter('is_webshop', false) ?
+                ProductReservationQuery::whereArchived($builder) :
+                $builder->where('archived', true);
         }
 
         if ($this->hasFilter('archived') && !$this->getFilter('archived')) {
-            if ($this->getFilter('is_webshop', false)) {
-                ProductReservationQuery::whereNotArchived($builder);
-            } else {
-                $builder->where(function (Builder $builder) {
-                    $builder->where('archived', false);
-
-                    $builder->where(function(Builder $builder) {
-                        $builder->where('state', '!=', ProductReservation::STATE_PENDING);
-                        $builder->orWhere(function(Builder $builder) {
-                            ProductReservationQuery::whereNotExpiredAndPending($builder);
-                            $builder->whereHas('voucher', function(Builder $builder) {
-                                VoucherQuery::whereNotExpiredAndActive($builder);
-                            });
-                        });
-                    });
-                });
-            }
+            $this->getFilter('is_webshop', false) ?
+                ProductReservationQuery::whereNotArchived($builder) :
+                $builder->where('archived', false);
         }
 
         return $builder;

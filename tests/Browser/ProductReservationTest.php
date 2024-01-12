@@ -311,7 +311,7 @@ class ProductReservationTest extends DuskTestCase
         }
 
         $browser->within($selector, function(Browser $browser) use ($reservation) {
-            $browser->assertVisible($reservation->hasExpired() ? '@labelExpired' : [
+            $browser->assertVisible($reservation->isExpired() ? '@labelExpired' : [
                 'pending' => '@labelPending',
                 'accepted' => '@labelAccepted',
                 'rejected' => '@labelRejected',
