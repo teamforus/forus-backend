@@ -5,6 +5,7 @@ namespace App\Searches;
 
 use App\Models\ProductReservation;
 use App\Scopes\Builders\ProductReservationQuery;
+use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
 
 class ProductReservationsSearch extends BaseSearch
@@ -59,15 +60,40 @@ class ProductReservationsSearch extends BaseSearch
         }
 
         if ($this->hasFilter('archived') && $this->getFilter('archived')) {
-            $this->getFilter('is_webshop', false) ?
-                ProductReservationQuery::whereArchived($builder) :
-                $builder->where('archived', true);
+            if ($this->getFilter('is_webshop', false)) {
+                ProductReservationQuery::whereArchived($builder);
+            } else {
+                $builder->where(function(Builder $builder) {
+                    $builder->where('archived', true);
+                    $builder->orWhere(fn(Builder $q) => ProductReservationQuery::whereExpiredAndPending($q));
+                    $builder->orWhere(function(Builder $builder) {
+                        $builder->where('state', ProductReservation::STATE_PENDING);
+                        $builder->whereHas('voucher', function(Builder $builder) {
+                            VoucherQuery::whereExpiredOrNotActive($builder);
+                        });
+                    });
+                });
+            }
         }
 
         if ($this->hasFilter('archived') && !$this->getFilter('archived')) {
-            $this->getFilter('is_webshop', false) ?
-                ProductReservationQuery::whereNotArchived($builder) :
-                $builder->where('archived', false);
+            if ($this->getFilter('is_webshop', false)) {
+                ProductReservationQuery::whereNotArchived($builder);
+            } else {
+                $builder->where(function (Builder $builder) {
+                    $builder->where('archived', false);
+
+                    $builder->where(function(Builder $builder) {
+                        $builder->where('state', '!=', ProductReservation::STATE_PENDING);
+                        $builder->orWhere(function(Builder $builder) {
+                            ProductReservationQuery::whereNotExpiredAndPending($builder);
+                            $builder->whereHas('voucher', function(Builder $builder) {
+                                VoucherQuery::whereNotExpiredAndActive($builder);
+                            });
+                        });
+                    });
+                });
+            }
         }
 
         return $builder;

@@ -232,6 +232,10 @@ class ProductReservationPolicy
             return $this->deny('The voucher used to make the reservation, has expired.');
         }
 
+        if ($productReservation->hasExpired()) {
+            return $this->deny('Reservation expired.');
+        }
+
         return
             $this->updateProvider($identity, $productReservation, $organization) &&
             $productReservation->isCancelableByProvider();
