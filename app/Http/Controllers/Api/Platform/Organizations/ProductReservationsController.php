@@ -48,7 +48,7 @@ class ProductReservationsController extends Controller
             $builder->orWhere(function(Builder $builder) {
                 $builder->where('state', ProductReservation::STATE_PENDING);
                 $builder->whereHas('voucher', function(Builder $builder) {
-                    VoucherQuery::whereNotExpiredAndActive($builder);
+                    VoucherQuery::whereActive($builder);
                 });
             });
         });
