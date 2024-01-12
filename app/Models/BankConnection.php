@@ -660,7 +660,8 @@ class BankConnection extends BaseModel
                     ['bookingStatus' => 'booked', 'page' => $page++]
                 );
 
-                $totalPages = min($totalPages, $response->getTransactionsLinks()->getLast()->getParams()['page']);
+                $parsedLastPage = $response->getTransactionsLinks()->getLast()?->getParams()['page'] ?? 0;
+                $totalPages = min($totalPages, $parsedLastPage);
                 $transactions = array_merge($transactions, $response->getTransactionsBooked());
             } while ($page <= $totalPages);
 

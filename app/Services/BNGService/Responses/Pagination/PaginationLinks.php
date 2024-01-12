@@ -15,14 +15,17 @@ class PaginationLinks extends Value
         parent::__construct($responseData);
         $data = $this->responseData->getData();
 
-        if (is_array($data)) {
-            $this->responseData->setData(array_merge($data, [
-                'next' => $data['next'] ?? $data['Next'] ?? null,
-                'last' => $data['last'] ?? $data['Last'] ?? null,
-                'first' => $data['first'] ?? $data['First'] ?? null,
-                'previous' => $data['previous'] ?? $data['Previous'] ?? null,
-            ]));
-        }
+        $this->responseData->setData(is_array($data) ? array_merge($data, [
+            'next' => $data['next'] ?? $data['Next'] ?? null,
+            'last' => $data['last'] ?? $data['Last'] ?? null,
+            'first' => $data['first'] ?? $data['First'] ?? null,
+            'previous' => $data['previous'] ?? $data['Previous'] ?? null,
+        ]) : [
+            'next' => null,
+            'last' => null,
+            'first' => null,
+            'previous' => null,
+        ]);
     }
 
     /**
