@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\MollieConnectionProfiles\ChangeMollieConnectionCurrentProfileRequest;
 use App\Http\Requests\Api\Platform\Organizations\MollieConnectionProfiles\StoreMollieConnectionProfileRequest;
 use App\Http\Requests\Api\Platform\Organizations\MollieConnectionProfiles\UpdateMollieConnectionProfileRequest;
 use App\Http\Resources\MollieConnectionResource;
@@ -61,5 +62,25 @@ class MollieConnectionProfileController extends Controller
         } catch (MollieException $e) {
             abort(503, $e->getMessage());
         }
+    }
+
+    /**
+     * @param ChangeMollieConnectionCurrentProfileRequest $request
+     * @param Organization $organization
+     * @param MollieConnection $connection
+     * @param MollieConnectionProfile $profile
+     * @return MollieConnectionResource
+     */
+    public function setCurrentProfile(
+        ChangeMollieConnectionCurrentProfileRequest $request,
+        Organization $organization,
+        MollieConnection $connection,
+        MollieConnectionProfile $profile
+    ): MollieConnectionResource {
+        $this->authorize('update', [$profile, $connection, $organization]);
+
+        return MollieConnectionResource::create(
+            $connection->changeCurrentProfile($profile, $request->employee($organization))
+        );
     }
 }

@@ -784,6 +784,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'mollie-connections' => 'connection',
     ])->only('store', 'destroy');
 
+    $router->post(
+        'organizations/{organization}/mollie-connections/{connection}/profiles/{profile}/current',
+        'Api\Platform\Organizations\MollieConnectionProfileController@setCurrentProfile'
+    );
+
     $router->resource(
         'organizations.mollie-connections.profiles',
         'Api\Platform\Organizations\MollieConnectionProfileController',

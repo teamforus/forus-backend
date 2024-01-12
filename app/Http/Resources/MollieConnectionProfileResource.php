@@ -17,6 +17,6 @@ class MollieConnectionProfileResource extends BaseJsonResource
      */
     public function toArray($request): ?array
     {
-        return $this->resource->only('id', 'name', 'email', 'phone', 'website');
+        return $this->resource->only('id', 'name', 'email', 'phone', 'website', 'current');
     }
 }

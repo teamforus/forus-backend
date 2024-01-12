@@ -4,6 +4,7 @@ namespace App\Services\MollieService\Models;
 
 use App\Events\MollieConnections\MollieConnectionCompleted;
 use App\Events\MollieConnections\MollieConnectionCreated;
+use App\Events\MollieConnections\MollieConnectionCurrentProfileChanged;
 use App\Events\MollieConnections\MollieConnectionDeleted;
 use App\Events\MollieConnections\MollieConnectionUpdated;
 use App\Models\Employee;
@@ -107,6 +108,7 @@ class MollieConnection extends Model
     public const EVENT_UPDATED = 'updated';
     public const EVENT_COMPLETED = 'completed';
     public const EVENT_DELETED = 'deleted';
+    public const EVENT_CURRENT_PROFILE_CHANGED = 'current_profile_changed';
 
     /**
      * @var string[]
@@ -494,5 +496,28 @@ class MollieConnection extends Model
     public function onboardingComplete(): bool
     {
         return $this->onboarding_state === static::ONBOARDING_STATE_COMPLETED;
+    }
+
+    /**
+     * @param MollieConnectionProfile $profile
+     * @param Employee|null $employee
+     * @return MollieConnection
+     */
+    public function changeCurrentProfile(
+        MollieConnectionProfile $profile,
+        ?Employee $employee
+    ): MollieConnection {
+        /** @var MollieConnectionProfile|null $previous */
+        $previous = $this->profiles()->where('current', true)->first();
+
+        $this->profiles()->update(['current' => false]);
+        $profile->update(['current' => true]);
+
+        Event::dispatch(new MollieConnectionCurrentProfileChanged($this, $employee, [
+            'mollie_connection_profile_from_id' => $previous?->id,
+            'mollie_connection_profile_to_id' => $profile->id,
+        ]));
+
+        return $this->refresh();
     }
 }
