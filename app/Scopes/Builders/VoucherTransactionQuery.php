@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\VoucherTransaction;
+use App\Models\VoucherTransactionBulk;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\DB;
@@ -78,7 +79,12 @@ class VoucherTransactionQuery
             'product_name' => self::orderProductNameQuery(),
             'provider_name' => self::orderProviderNameQuery(),
             'transaction_in' => self::orderVoucherTransactionIn(),
+            'bulk_state' => self::orderBulkState(),
         ]);
+
+        if ($orderBy == 'date_non_cancelable') {
+            $orderBy = 'created_at';
+        }
 
         return $builder->orderBy(
             $orderBy && in_array($orderBy, $fields) ? $orderBy : 'created_at',
@@ -110,6 +116,14 @@ class VoucherTransactionQuery
     protected static function orderProductNameQuery(): Builder|QBuilder
     {
         return Product::whereColumn('id', 'product_id')->select('name');
+    }
+
+    /**
+     * @return Builder|QBuilder
+     */
+    protected static function orderBulkState(): Builder|QBuilder
+    {
+        return VoucherTransactionBulk::whereColumn('id', 'voucher_transaction_bulk_id')->select('state');
     }
 
     /**

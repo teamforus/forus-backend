@@ -69,6 +69,7 @@ class VoucherExportData
             'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
             'in_use_date' => $firstUseDate ? format_date_locale($firstUseDate) : null,
             'has_transactions' => $this->voucher->has_transactions ? 'Ja': 'Nee',
+            'has_payouts' => $this->voucher->has_payouts ? 'Ja': 'Nee',
             'has_reservations' => $this->voucher->has_reservations ? 'Ja': 'Nee',
             'product_name' => $this->voucher->product?->name,
         ], $bsnData, [

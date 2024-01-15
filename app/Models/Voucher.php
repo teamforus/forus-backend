@@ -86,6 +86,7 @@ use ZipArchive;
  * @property-read bool $deactivated
  * @property-read bool $expired
  * @property-read \Illuminate\Support\Carbon|null $first_use_date
+ * @property-read bool $has_payouts
  * @property-read bool $has_reservations
  * @property-read bool $has_transactions
  * @property-read bool $in_use
@@ -473,6 +474,19 @@ class Voucher extends BaseModel
 
     /**
      * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getHasPayoutsAttribute(): bool
+    {
+        return VoucherTransaction::where(
+            'voucher_id', $this->id
+        )->whereRelation(
+            'voucher_transaction_bulk', 'state', '!=', VoucherTransactionBulk::STATE_DRAFT
+        )->exists();
+    }
+
+    /**
+     * @return bool
      */
     public function isExternal(): bool
     {
@@ -764,6 +778,7 @@ class Voucher extends BaseModel
         $query = VoucherQuery::whereVisibleToSponsor(self::search($request));
         $unassignedOnly = $request->input('unassigned');
         $in_use = $request->input('in_use');
+        $has_payouts = $request->input('has_payouts');
         $expired = $request->input('expired');
         $count_per_identity_min = $request->input('count_per_identity_min');
         $count_per_identity_max = $request->input('count_per_identity_max');
@@ -844,6 +859,16 @@ class Voucher extends BaseModel
                     VoucherQuery::whereInUseQuery($builder);
                 } else {
                     VoucherQuery::whereNotInUseQuery($builder);
+                }
+            });
+        }
+
+        if ($request->has('has_payouts')) {
+            $query->where(function(Builder $builder) use ($has_payouts) {
+                if ($has_payouts) {
+                    VoucherQuery::whereHasPayoutsQuery($builder);
+                } else {
+                    VoucherQuery::whereNoPayoutsQuery($builder);
                 }
             });
         }

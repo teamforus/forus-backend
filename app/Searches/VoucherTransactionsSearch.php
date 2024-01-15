@@ -58,6 +58,26 @@ class VoucherTransactionsSearch extends BaseSearch
             );
         }
 
+        if ($this->hasFilter('from_non_cancelable') && $this->getFilter('from_non_cancelable')) {
+            $from_non_cancelable = Carbon::createFromFormat('Y-m-d', $this->getFilter('from_non_cancelable'));
+
+            $builder->where(
+                'created_at',
+                '>=',
+                $from_non_cancelable->startOfDay()->subDays(14)->format('Y-m-d H:i:s')
+            );
+        }
+
+        if ($this->hasFilter('to_non_cancelable') && $this->getFilter('to_non_cancelable')) {
+            $to_non_cancelable = Carbon::createFromFormat('Y-m-d', $this->getFilter('to_non_cancelable'));
+
+            $builder->where(
+                'created_at',
+                '<=',
+                $to_non_cancelable->endOfDay()->subDays(14)->format('Y-m-d H:i:s')
+            );
+        }
+
         if ($amount_min = $this->getFilter('amount_min')) {
             $builder->where('amount', '>=', $amount_min);
         }
@@ -84,6 +104,10 @@ class VoucherTransactionsSearch extends BaseSearch
 
         if ($this->hasFilter('fund_state') && ($fund_state = $this->getFilter('fund_state'))) {
             $builder->whereHas('voucher.fund', fn (Builder $b) => $b->where('state', '=', $fund_state));
+        }
+
+        if ($this->hasFilter('bulk_state') && ($bulk_state = $this->getFilter('bulk_state'))) {
+            $builder->whereRelation('voucher_transaction_bulk', 'state', $bulk_state);
         }
 
         $builder->whereIn('target', is_array($targets) ? $targets : []);

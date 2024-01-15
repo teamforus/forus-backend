@@ -16,6 +16,7 @@ class VoucherExport extends BaseFieldedExport
         'granted' => 'Toegekend',
         'identity_email' => 'E-mailadres',
         'in_use' => 'In gebruik',
+        'has_payouts' => 'Has payouts',
         'has_transactions' => 'Has transactions',
         'has_reservations' => 'Has reservations',
         'state' => 'Status',
