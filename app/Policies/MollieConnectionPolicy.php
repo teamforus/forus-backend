@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Services\MollieService\Models\MollieConnection;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class MollieConnectionPolicy
@@ -40,6 +39,18 @@ class MollieConnectionPolicy
      * @param Organization $organization
      * @return bool
      */
+    public function update(Identity $identity, Organization $organization): bool
+    {
+        return
+            $this->allowExtraPayments($identity, $organization) &&
+            $organization->mollie_connection()->exists();
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
     public function connectMollieAccount(Identity $identity, Organization $organization): bool
     {
         return $this->store($identity, $organization);
@@ -59,18 +70,13 @@ class MollieConnectionPolicy
 
     /**
      * @param Identity $identity
-     * @param MollieConnection $connection
      * @param Organization $organization
      * @return bool
      */
-    public function destroy(
-        Identity $identity,
-        MollieConnection $connection,
-        Organization $organization,
-    ): bool {
+    public function destroy(Identity $identity, Organization $organization): bool {
         return
             $organization->identityCan($identity, 'manage_payment_methods') &&
-            $connection->organization_id === $organization->id;
+            $organization->mollie_connection()->exists();
     }
 
     /**

@@ -249,10 +249,6 @@ class MollieConnection extends Model
         MollieConnectionProfile $profile,
         Profile $profileResponse,
     ): MollieConnectionProfile {
-        $profile->mollie_connection->profiles()->where('id', '!=', $profile->id)->update([
-            'current' => false,
-        ]);
-
         $profile->update([
             'mollie_id' => $profileResponse->id,
             'name' => $profileResponse->name,
@@ -260,7 +256,6 @@ class MollieConnection extends Model
             'phone' => $profileResponse->phone,
             'website' => $profileResponse->website,
             'state' => MollieConnectionProfile::STATE_ACTIVE,
-            'current' => true,
         ]);
 
         $service = $this->getMollieService();
@@ -505,7 +500,7 @@ class MollieConnection extends Model
      */
     public function changeCurrentProfile(
         MollieConnectionProfile $profile,
-        ?Employee $employee
+        ?Employee $employee,
     ): MollieConnection {
         /** @var MollieConnectionProfile|null $previous */
         $previous = $this->profiles()->where('current', true)->first();
