@@ -63,6 +63,11 @@ $router->group([], static function() use ($router) {
         ]
     ]);
 
+    $router->post('pre-checks/calculate', 'Api\Platform\PreCheckController@calculateTotals');
+
+    $router->resource('pre-checks', "Api\Platform\PreCheckController")
+        ->only('index');
+
     $router->get('products/sample', "Api\Platform\ProductsController@sample");
     $router->post('products/{product}/bookmark', "Api\Platform\ProductsController@bookmark");
     $router->post('products/{product}/remove-bookmark', "Api\Platform\ProductsController@removeBookmark");
@@ -318,6 +323,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\ImplementationsController@updateEmailBranding");
 
     $router->patch(
+        'organizations/{organization}/implementations/{implementation}/pre-check-banner',
+        "Api\Platform\Organizations\ImplementationsController@updatePreCheckBanner");
+
+    $router->patch(
         'organizations/{organization}/implementations/{implementation}/digid',
         "Api\Platform\Organizations\ImplementationsController@updateDigiD");
 
@@ -348,6 +357,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations/{organization}/implementations/{implementation}/system-notifications',
         "Api\Platform\Organizations\Implementations\SystemNotificationsController"
     )->only('index', 'show', 'update');
+
+    $router->post(
+        'organizations/{organization}/implementations/{implementation}/pre-checks/sync',
+        "Api\Platform\Organizations\Implementations\PreCheckController@syncPreChecks"
+    );
+
+    $router->resource(
+        'organizations/{organization}/implementations/{implementation}/pre-checks',
+        "Api\Platform\Organizations\Implementations\PreCheckController"
+    )->only('index');
 
     $router->resource(
         'organizations/{organization}/provider-invitations',
