@@ -10,6 +10,7 @@ use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 class BIFundsExporter extends BaseBIExporter
 {
     protected string $key = 'funds';
+    protected string $name = 'Financieel overzicht uitgaven';
 
     /**
      * @return array

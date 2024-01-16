@@ -2,12 +2,13 @@
 
 namespace App\Services\BIConnectionService\Models;
 
+use App\Helpers\Arr;
 use App\Models\Organization;
 use App\Models\Traits\HasDbTokens;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 /**
  * App\Services\BIConnectionService\Models\BIConnection
@@ -59,27 +60,10 @@ class BIConnection extends Model
         self::AUTH_TYPE_PARAMETER,
     ];
 
-    public const EXPIRATION_PERIODS = [
-        '24_hour',
-        '1_week',
-        '1_month',
-    ];
+    public const EXPIRATION_PERIODS = [1, 7, 30];
 
     public const EVENT_CREATED = 'created';
     public const EVENT_UPDATED = 'replaced';
-
-    public const DATA_TYPES = [
-        'vouchers' => 'Tegoeden',
-        'fund_identities' => 'Aanvragers',
-        'reimbursements' => 'Declaraties',
-        'employees' => 'Medewerkers',
-        'funds' => 'Financieel overzicht uitgaven',
-        'funds_detailed' => 'Financieel overzicht tegoeden',
-        'fund_providers' => 'Aanbieders',
-        'fund_provider_finances' => 'Aanbieder transacties',
-        'voucher_transactions' => 'Transacties vanuit tegoeden',
-        'voucher_transaction_bulks' => 'Bulk transacties vanuit tegoeden',
-    ];
 
     /**
      * @var string[]
@@ -102,6 +86,7 @@ class BIConnection extends Model
     protected $casts = [
         'ips' => 'array',
         'data_types' => 'array',
+        'expiration_period' => 'integer',
     ];
 
     /**
@@ -129,18 +114,16 @@ class BIConnection extends Model
 
     /**
      * @param Organization $organization
-     * @param Request $request
+     * @param array $config
      * @return BIConnection
      */
-    public static function makeConnection(Organization $organization, Request $request): BIConnection
+    public static function createConnection(Organization $organization, array $config): BIConnection
     {
-        $expirationUnits = explode('_', $request->get('expiration_period'));
-
         /** @var BIConnection $connection */
         $connection = $organization->bi_connection()->create([
-            ...$request->only('auth_type', 'expiration_period', 'data_types', 'ips'),
+            ...Arr::only($config, ['auth_type', 'expiration_period', 'data_types', 'ips']),
             'access_token' => BIConnection::makeToken(),
-            'expire_at' => now()->addUnit($expirationUnits[1], $expirationUnits[0]),
+            'expire_at' => Carbon::now()->addDays(Arr::get($config, 'expiration_period', 0)),
         ]);
 
         $connection->log(self::EVENT_CREATED, [
@@ -154,17 +137,18 @@ class BIConnection extends Model
     }
 
     /**
-     * @param Request $request
+     * @param array $config
      * @return $this
      */
-    public function change(Request $request): static
+    public function updateConnection(array $config): BIConnection
     {
-        $auth_type = $request->get('auth_type');
+        $disable = Arr::get($config, 'auth_type') === self::AUTH_TYPE_DISABLED;
 
-        $this->update($auth_type === self::AUTH_TYPE_DISABLED
-            ? compact('auth_type')
-            : $request->only('auth_type', 'expiration_period', 'data_types', 'ips')
-        );
+        $this->update($disable ? [
+            'auth_type' => self::AUTH_TYPE_DISABLED,
+        ]: Arr::only($config, [
+            'auth_type', 'expiration_period', 'data_types', 'ips',
+        ]));
 
         $this->log(self::EVENT_UPDATED, [
             'bi_connection' => $this,
@@ -180,11 +164,10 @@ class BIConnection extends Model
     {
         if ($this->auth_type !== self::AUTH_TYPE_DISABLED) {
             $connectionToken = $this->access_token;
-            $expirationUnits = explode('_', $this->expiration_period);
 
             $this->update([
                 'access_token' => BIConnection::makeToken(),
-                'expire_at' => now()->addUnit($expirationUnits[1], $expirationUnits[0]),
+                'expire_at' => Carbon::now()->addDays($this->expiration_period),
             ]);
 
             $this->log(self::EVENT_UPDATED, [
@@ -201,7 +184,7 @@ class BIConnection extends Model
     /**
      * @return bool
      */
-    public function tokenExpired(): bool
+    public function isExpired(): bool
     {
         return $this->expire_at->isPast();
     }

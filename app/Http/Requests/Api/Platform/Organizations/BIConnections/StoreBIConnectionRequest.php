@@ -4,7 +4,9 @@ namespace App\Http\Requests\Api\Platform\Organizations\BIConnections;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
+use App\Services\BIConnectionService\BIConnectionService;
 use App\Services\BIConnectionService\Models\BIConnection;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 /**
@@ -26,15 +28,19 @@ class StoreBIConnectionRequest extends BaseFormRequest
      * Get the validation rules that apply to the request.
      *
      * @return array
+     * @throws \Throwable
      */
     public function rules(): array
     {
+        $disable = $this->request->get('auth_type') === BIConnection::AUTH_TYPE_DISABLED;
+        $dataTypes = BIConnectionService::create($this->organization)->getDataTypes();
+
         return [
             'auth_type' => [
                 'required',
                 Rule::in(BIConnection::AUTH_TYPES),
             ],
-            ...$this->request->get('auth_type') !== BIConnection::AUTH_TYPE_DISABLED ? [
+            ...!$disable ? [
                 'expiration_period' => [
                     'required',
                     Rule::in(BIConnection::EXPIRATION_PERIODS),
@@ -44,9 +50,9 @@ class StoreBIConnectionRequest extends BaseFormRequest
                 'data_types' => 'required|array',
                 'data_types.*' => [
                     'required',
-                    Rule::in(array_keys(BIConnection::DATA_TYPES)),
+                    Rule::in(Arr::pluck($dataTypes, 'key')),
                 ],
-            ] : []
+            ] : [],
         ];
     }
 

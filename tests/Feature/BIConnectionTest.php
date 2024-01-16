@@ -3,13 +3,17 @@
 namespace Tests\Feature;
 
 use App\Models\Organization;
+use App\Services\BIConnectionService\BIConnectionService;
 use App\Services\BIConnectionService\Models\BIConnection;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Tests\TestCase;
+use Tests\Traits\MakesTestOrganizations;
+use Throwable;
 
 class BIConnectionTest extends TestCase
 {
-    use DatabaseTransactions;
+    use DatabaseTransactions, MakesTestOrganizations;
 
     /**
      * @var string
@@ -19,15 +23,11 @@ class BIConnectionTest extends TestCase
     /**
      * @var string
      */
-    protected string $apiOrganizationUrl = '/api/v1/platform/organizations/%s/bi-connections';
-
-    /**
-     * @var string
-     */
-    protected string $organizationName = 'Nijmegen';
+    protected string $apiOrganizationUrl = '/api/v1/platform/organizations/%s/bi-connection';
 
     /**
      * @return void
+     * @throws Throwable
      */
     public function testValidTokenAuthTypeHeader(): void
     {
@@ -36,6 +36,7 @@ class BIConnectionTest extends TestCase
 
     /**
      * @return void
+     * @throws Throwable
      */
     public function testValidTokenAuthTypeParameter(): void
     {
@@ -44,6 +45,7 @@ class BIConnectionTest extends TestCase
 
     /**
      * @return void
+     * @throws Throwable
      */
     public function testAuthTypeDisabled(): void
     {
@@ -61,6 +63,7 @@ class BIConnectionTest extends TestCase
     /**
      * @param string $authType
      * @return void
+     * @throws Throwable
      */
     protected function testValidToken(string $authType): void
     {
@@ -68,19 +71,22 @@ class BIConnectionTest extends TestCase
         $this->serverVariables = ['REMOTE_ADDR' => $ip];
 
         /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationName)->first();
+
+        $identity = $this->makeIdentity();
+        $organization = $this->makeTestOrganization($identity, [
+            'allow_bi_connection' => true,
+        ]);
+
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), [
             'Client-Type' => 'sponsor',
         ]);
 
         $this->assertNotNull($organization);
-        $organization->update(['allow_bi_connection' => true]);
-        $organization->bi_connection()->delete();
 
         $response = $this->postJson(sprintf($this->apiOrganizationUrl, $organization->id), [
             'ips' => [$ip],
             'auth_type' => $authType,
-            'data_types' => array_keys(BIConnection::DATA_TYPES),
+            'data_types' => Arr::pluck(BIConnectionService::create($organization)->getDataTypes(), 'key'),
             'expiration_period' => BIConnection::EXPIRATION_PERIODS[0],
         ], $apiHeaders);
 

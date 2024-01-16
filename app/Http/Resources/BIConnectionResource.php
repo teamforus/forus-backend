@@ -25,14 +25,15 @@ class BIConnectionResource extends BaseJsonResource
         return [
             ...$connection->only([
                 'id', 'auth_type', 'access_token', 'expiration_period', 'data_types', 'ips',
-                'organization_id', 'expire_at',
+                'organization_id', 'created_at', 'expire_at',
             ]),
             'expire_after_locale' => $connection->expire_at->diffForHumans(
-                now(), CarbonInterface::DIFF_RELATIVE_TO_NOW
+                now(), CarbonInterface::DIFF_RELATIVE_TO_NOW,
             ),
-            'expired' => $connection->tokenExpired(),
-            ...$this->makeTimestamps($connection->only('created_at')),
-            ...$this->makeTimestamps($connection->only('expire_at')),
+            'expired' => $connection->isExpired(),
+            ...$this->makeTimestamps($connection->only([
+                'created_at', 'expire_at',
+            ])),
         ];
     }
 }

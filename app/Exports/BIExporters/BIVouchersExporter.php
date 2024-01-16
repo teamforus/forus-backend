@@ -11,6 +11,7 @@ use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 class BIVouchersExporter extends BaseBIExporter
 {
     protected string $key = 'vouchers';
+    protected string $name = 'Tegoeden';
 
     /**
      * @return array

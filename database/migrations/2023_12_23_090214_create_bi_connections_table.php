@@ -32,14 +32,10 @@ return new class extends Migration
             $table->foreign('organization_id')
                 ->references('id')
                 ->on('organizations')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
 
         $organizations = Organization::where('allow_bi_connection', true)->get();
-        $dataTypes = [
-            'vouchers', 'fund_identities', 'reimbursements', 'employees', 'funds', 'funds_detailed',
-            'fund_providers', 'fund_provider_finances', 'voucher_transactions', 'voucher_transaction_bulks',
-        ];
 
         foreach ($organizations as $organization) {
             DB::table('bi_connections')->insert([
@@ -48,9 +44,13 @@ return new class extends Migration
                     ? $organization->bi_connection_token
                     : token_generator()->generate(64),
                 'organization_id' => $organization->id,
-                'expiration_period' => '1_month',
-                'expire_at' => now()->addMonth(),
-                'data_types' => json_encode($dataTypes),
+                'expiration_period' => 30,
+                'expire_at' => now()->addDays(30),
+                'data_types' => json_encode([
+                    'vouchers', 'fund_identities', 'reimbursements', 'employees', 'funds',
+                    'funds_detailed', 'fund_providers', 'fund_provider_finances',
+                    'voucher_transactions', 'voucher_transaction_bulks',
+                ]),
                 'ips' => json_encode([]),
                 'updated_at' => now(),
                 'created_at' => now(),

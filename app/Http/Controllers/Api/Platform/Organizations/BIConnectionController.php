@@ -10,9 +10,11 @@ use App\Http\Requests\Api\Platform\Organizations\BIConnections\StoreBIConnection
 use App\Http\Requests\Api\Platform\Organizations\BIConnections\UpdateBIConnectionRequest;
 use App\Http\Resources\BIConnectionResource;
 use App\Models\Organization;
+use App\Services\BIConnectionService\BIConnectionService;
 use App\Services\BIConnectionService\Models\BIConnection;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
+use Throwable;
 
 class BIConnectionController extends Controller
 {
@@ -23,7 +25,7 @@ class BIConnectionController extends Controller
      */
     public function getActive(
         IndexBIConnectionRequest $request,
-        Organization $organization
+        Organization $organization,
     ): BIConnectionResource {
         $this->authorize('viewAny', [
             BIConnection::class,
@@ -50,60 +52,63 @@ class BIConnectionController extends Controller
             $request->identityProxy2FAConfirmed(),
         ]);
 
-        $connection = BIConnection::makeConnection($organization, $request);
+        $connection = BIConnection::createConnection($organization, $request->only([
+            'auth_type', 'expiration_period', 'data_types', 'ips',
+        ]));
 
-        return new BIConnectionResource($connection);
+        return BIConnectionResource::create($connection);
     }
 
     /**
      * @param UpdateBIConnectionRequest $request
      * @param Organization $organization
-     * @param BIConnection $connection
      * @return BIConnectionResource
      * @noinspection PhpUnused
      */
     public function update(
         UpdateBIConnectionRequest $request,
         Organization $organization,
-        BIConnection $connection
     ): BIConnectionResource {
         $this->authorize('update', [
-            $connection,
+            BIConnection::class,
             $organization,
             $request->identityProxy2FAConfirmed(),
         ]);
 
-        return new BIConnectionResource($connection->change($request));
+        $organization->bi_connection->updateConnection($request->only([
+            'auth_type', 'expiration_period', 'data_types', 'ips',
+        ]));
+
+        return BIConnectionResource::create($organization->bi_connection);
     }
 
     /**
      * @param ResetTokenBIConnectionRequest $request
      * @param Organization $organization
-     * @param BIConnection $connection
      * @return BIConnectionResource
      */
     public function resetToken(
         ResetTokenBIConnectionRequest $request,
         Organization $organization,
-        BIConnection $connection
     ): BIConnectionResource {
         $this->authorize('update', [
-            $connection,
+            BIConnection::class,
             $organization,
             $request->identityProxy2FAConfirmed(),
         ]);
 
-        return new BIConnectionResource($connection->resetToken());
+        return BIConnectionResource::create($organization->bi_connection->resetToken());
     }
 
     /**
      * @param AvailableTypesBIConnectionRequest $request
      * @param Organization $organization
      * @return JsonResponse
+     * @throws Throwable
      */
     public function getAvailableDataTypes(
         AvailableTypesBIConnectionRequest $request,
-        Organization $organization
+        Organization $organization,
     ): JsonResponse {
         $this->authorize('viewAny', [
             BIConnection::class,
@@ -112,7 +117,7 @@ class BIConnectionController extends Controller
         ]);
 
         return new JsonResponse([
-            'data' => BIConnection::DATA_TYPES
+            'data' => BIConnectionService::create($organization)->getDataTypes(),
         ]);
     }
 }

@@ -491,7 +491,11 @@ class EventLogService implements IEventLogService
     {
         return $this->keyPrepend([
             'id' => $connection->id,
+            'ips' => $connection->ips,
+            'expire_at' => $connection->expire_at,
             'auth_type' => $connection->auth_type,
+            'data_types' => $connection->data_types,
+            'expiration_period' => $connection->expiration_period,
         ], 'bi_connection_');
     }
 
