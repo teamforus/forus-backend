@@ -22,7 +22,9 @@ class Identity2FAResource extends BaseJsonResource
         ]);
 
         if ($this->resource->isTypePhone()) {
-            $data = array_merge($data, $this->resource->only(['phone']));
+            $data = array_merge($data, [
+                'phone' => $this->resource->phone_masked,
+            ]);
         }
 
         if ($this->resource->isTypeAuthenticator() && $this->resource->isPending()) {
