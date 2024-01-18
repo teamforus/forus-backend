@@ -9,6 +9,7 @@ use App\Http\Resources\FundResource;
 use App\Http\Resources\Provider\ProviderFundProviderResource;
 use App\Http\Resources\TagResource;
 use App\Models\Fund;
+use App\Models\Implementation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
@@ -30,6 +31,7 @@ class FundProviderController extends Controller
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function availableFunds(
         IndexFundsRequest $request,
@@ -48,6 +50,11 @@ class FundProviderController extends Controller
                 $builder->whereIn('id', (clone($query))->select('funds.id'));
             })->select(['id', 'name'])->get()->map(static function(Organization $organization) {
                 return $organization->only('id', 'name');
+            }),
+            'implementations' => Implementation::whereHas('funds', function(Builder $builder) use ($query) {
+                $builder->whereIn('funds.id', (clone($query))->select('funds.id'));
+            })->select(['id', 'name'])->get()->map(static function(Implementation $implementation) {
+                return $implementation->only('id', 'name');
             }),
             'tags' => TagResource::collection(Tag::whereHas('funds', static function(Builder $builder) use ($query) {
                 return $builder->whereIn('funds.id', (clone($query))->select('funds.id'));

@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Provider;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\ImplementationResource;
 use App\Http\Resources\Small\FundSmallResource;
 use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Models\FundProvider;
@@ -16,6 +17,7 @@ class ProviderFundProviderResource extends BaseJsonResource
         'fund.logo.presets',
         'fund.fund_formulas',
         'fund.organization.logo.presets',
+        'fund.fund_config.implementation',
         'organization.logo.presets',
         'fund_provider_products',
         'fund_unsubscribes',

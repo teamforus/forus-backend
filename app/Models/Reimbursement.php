@@ -455,12 +455,14 @@ class Reimbursement extends Model
             'voucher.identity.record_bsn',
             'voucher.identity.primary_email',
             'employee.identity.primary_email',
+            'voucher.fund.fund_config.implementation',
         ])->get();
 
         return $data->map(fn (Reimbursement $reimbursement) => array_only([
             'id' => $reimbursement->id,
             'code' => '#' . $reimbursement->code,
             'fund_name' => $reimbursement->voucher->fund->name,
+            'implementation_name' => $reimbursement->voucher->fund->fund_config?->implementation?->name,
             'amount' => currency_format($reimbursement->amount),
             'employee' => $reimbursement->employee?->identity?->email ?: '-',
             'email' => $reimbursement->voucher->identity->email,
@@ -499,7 +501,7 @@ class Reimbursement extends Model
 
         $search = new ReimbursementsSearch($request->only([
             'q', 'fund_id', 'from', 'to', 'amount_min', 'amount_max', 'state',
-            'expired', 'archived', 'deactivated', 'identity_address',
+            'expired', 'archived', 'deactivated', 'identity_address', 'implementation_id',
         ]), $query);
 
         return self::exportTransform($search->query()->latest(), $fields);
