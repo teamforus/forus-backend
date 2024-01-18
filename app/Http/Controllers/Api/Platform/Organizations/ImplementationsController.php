@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplement
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationDigiDRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationEmailBrandingRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationEmailRequest;
+use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdatePreCheckBannerRequest;
 use App\Http\Resources\ImplementationPrivateResource;
 use App\Models\Implementation;
 use App\Models\Organization;
@@ -164,5 +165,29 @@ class ImplementationsController extends Controller
         return new ImplementationPrivateResource($implementation->updateModel($request->only([
             'email_color', 'email_signature',
         ]))->attachMediaByUid($request->input('email_logo_uid')));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param UpdatePreCheckBannerRequest $request
+     * @param Organization $organization
+     * @param Implementation $implementation
+     * @return ImplementationPrivateResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function updatePreCheckBanner(
+        UpdatePreCheckBannerRequest $request,
+        Organization $organization,
+        Implementation $implementation,
+    ): ImplementationPrivateResource {
+        $this->authorize('show', $organization);
+        $this->authorize('updatePreChecks', [$implementation, $organization]);
+
+        return new ImplementationPrivateResource($implementation->updateModel($request->only([
+            'pre_check_banner_state', 'pre_check_banner_title',
+            'pre_check_banner_description', 'pre_check_banner_label',
+        ]))->attachMediaByUid($request->input('pre_check_media_uid')));
     }
 }
