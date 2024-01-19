@@ -330,6 +330,7 @@ class ReservationExtraPayment extends Model
             'state' => $refund->status,
             'amount' => $refund->amount->value,
             'currency' => $refund->amount->currency,
+            'employee_id' => $employee?->id,
         ]);
 
         Event::dispatch(new ReservationExtraPaymentRefundedApi($this, $employee, [

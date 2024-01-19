@@ -354,6 +354,7 @@ class ProductReservationPolicy
             $productReservation->extra_payment &&
             $productReservation->extra_payment->isPaid() &&
             $productReservation->extra_payment->isRefundable() &&
-            $productReservation->extra_payment->isMollieType();
+            $productReservation->extra_payment->isMollieType() &&
+            $productReservation->isCancelableByProvider();
     }
 }

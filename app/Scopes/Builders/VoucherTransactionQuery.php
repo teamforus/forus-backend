@@ -6,6 +6,7 @@ namespace App\Scopes\Builders;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Models\ReservationExtraPayment;
 use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Expression;
@@ -25,6 +26,11 @@ class VoucherTransactionQuery
     protected static function whereReadyForPayment(Builder $builder): Builder
     {
         VoucherTransactionQuery::whereOutgoing($builder);
+
+        $builder->where(function (Builder $builder) {
+            $builder->doesntHave('product_reservation');
+            $builder->orWhere(fn(Builder $builder) => self::whereReservationNotRefunded($builder));
+        });
 
         $builder->where('voucher_transactions.state', VoucherTransaction::STATE_PENDING);
         $builder->whereNull('voucher_transaction_bulk_id');
@@ -161,6 +167,22 @@ class VoucherTransactionQuery
                 $query->orWhere('voucher_transactions.id', '=', $q);
                 $query->orWhereRelation('product', 'id', "=", $q);
             }
+        });
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    private static function whereReservationNotRefunded(Builder $builder): Builder
+    {
+        return $builder->whereHas('product_reservation', function (Builder $builder) {
+            $builder->where('amount_extra', '=', 0);
+
+            $builder->orWhereHas('extra_payment', function(Builder $builder) {
+                $builder->where('amount_remaining', '>', 0);
+                $builder->where('state', ReservationExtraPayment::STATE_PAID);
+            });
         });
     }
 }

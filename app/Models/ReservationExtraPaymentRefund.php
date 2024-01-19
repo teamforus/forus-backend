@@ -14,8 +14,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $state
  * @property string $amount
  * @property string $currency
+ * @property int|null $employee_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Employee|null $employee
  * @property-read string $amount_locale
  * @property-read string $state_locale
  * @property-read \App\Models\ProductReservation $reservation_extra_payment
@@ -25,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereCurrency($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereRefundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereReservationExtraPaymentId($value)
@@ -65,7 +68,7 @@ class ReservationExtraPaymentRefund extends Model
      * @var string[]
      */
     protected $fillable = [
-        'reservation_extra_payment_id', 'refund_id', 'state', 'currency', 'amount',
+        'reservation_extra_payment_id', 'refund_id', 'state', 'currency', 'amount', 'employee_id',
     ];
 
     /**
@@ -75,6 +78,15 @@ class ReservationExtraPaymentRefund extends Model
     public function reservation_extra_payment(): BelongsTo
     {
         return $this->belongsTo(ProductReservation::class);
+    }
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
     }
 
     /**
