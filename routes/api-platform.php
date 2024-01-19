@@ -771,25 +771,19 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     );
 
     // Mollie
-    $router->group(['prefix' => 'organizations/{organization}/mollie-connections'], function() use ($router) {
-        $router->get('active', 'Api\Platform\Organizations\MollieConnectionController@getActive');
+    $router->group(['prefix' => 'organizations/{organization}/mollie-connection'], function() use ($router) {
+        $router->get('', 'Api\Platform\Organizations\MollieConnectionController@getActive');
+        $router->post('', 'Api\Platform\Organizations\MollieConnectionController@store');
+        $router->patch('', 'Api\Platform\Organizations\MollieConnectionController@update');
+        $router->delete('', 'Api\Platform\Organizations\MollieConnectionController@destroy');
         $router->get('fetch', 'Api\Platform\Organizations\MollieConnectionController@fetchActive');
         $router->post('connect', 'Api\Platform\Organizations\MollieConnectionController@connectOAuth');
     });
 
     $router->resource(
-        'organizations.mollie-connections',
-        'Api\Platform\Organizations\MollieConnectionController',
-    )->parameters([
-        'mollie-connections' => 'connection',
-    ])->only('store', 'destroy');
-
-    $router->resource(
-        'organizations.mollie-connections.profiles',
+        'organizations/{organization}/mollie-connection/profiles',
         'Api\Platform\Organizations\MollieConnectionProfileController',
-    )->parameters([
-        'mollie-connections' => 'connection',
-    ])->only('store', 'update');
+    )->only('store', 'update');
 
     $router->get(
         'organizations/{organization}/sponsor/finances',
