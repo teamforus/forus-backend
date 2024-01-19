@@ -39,7 +39,11 @@ abstract class BaseMollieConnectionProfileRequest extends BaseFormRequest
                 ...$this->emailRules(),
             ],
             'website' => 'required|url|max:191',
-            'phone' => 'required|string|max:191',
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^\+[1-9]\d{10,14}$/'
+            ],
         ];
     }
 
