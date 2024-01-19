@@ -42,6 +42,7 @@ use Illuminate\Support\Arr;
  * @property int $show_on_webshop
  * @property bool $reservation_enabled
  * @property string $reservation_policy
+ * @property bool $reservation_fields
  * @property string $reservation_phone
  * @property string $reservation_address
  * @property string $reservation_birth_date
@@ -109,6 +110,7 @@ use Illuminate\Support\Arr;
  * @method static Builder|Product whereReservationBirthDate($value)
  * @method static Builder|Product whereReservationEnabled($value)
  * @method static Builder|Product whereReservationExtraPayments($value)
+ * @method static Builder|Product whereReservationFields($value)
  * @method static Builder|Product whereReservationPhone($value)
  * @method static Builder|Product whereReservationPolicy($value)
  * @method static Builder|Product whereShowOnWebshop($value)
@@ -199,6 +201,7 @@ class Product extends BaseModel
         'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id',
         'reservation_enabled', 'reservation_policy', 'reservation_extra_payments',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'alternative_text',
+        'reservation_fields',
     ];
 
     /**
@@ -212,6 +215,7 @@ class Product extends BaseModel
 
     protected $casts = [
         'unlimited_stock' => 'boolean',
+        'reservation_fields' => 'boolean',
         'reservation_enabled' => 'boolean',
     ];
 
@@ -335,6 +339,10 @@ class Product extends BaseModel
      */
     public function getReservationPhoneIsRequiredAttribute(): bool
     {
+        if (!$this->reservation_fields) {
+            return false;
+        }
+
         if ($this->reservation_phone === self::RESERVATION_FIELD_GLOBAL) {
             return $this->organization->reservation_phone === self::RESERVATION_FIELD_REQUIRED;
         }
@@ -348,6 +356,10 @@ class Product extends BaseModel
      */
     public function getReservationAddressIsRequiredAttribute(): bool
     {
+        if (!$this->reservation_fields) {
+            return false;
+        }
+
         if ($this->reservation_address === self::RESERVATION_FIELD_GLOBAL) {
             return $this->organization->reservation_address === self::RESERVATION_FIELD_REQUIRED;
         }
@@ -361,6 +373,10 @@ class Product extends BaseModel
      */
     public function getReservationBirthDateIsRequiredAttribute(): bool
     {
+        if (!$this->reservation_fields) {
+            return false;
+        }
+
         if ($this->reservation_birth_date === self::RESERVATION_FIELD_GLOBAL) {
             return $this->organization->reservation_birth_date === self::RESERVATION_FIELD_REQUIRED;
         }
@@ -815,6 +831,7 @@ class Product extends BaseModel
                 'name', 'description', 'price', 'product_category_id', 'expire_at',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
+                'reservation_fields',
             ]),
             ...$organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',
@@ -853,6 +870,7 @@ class Product extends BaseModel
                 'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
+                'reservation_fields',
             ]),
             ...$this->organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',

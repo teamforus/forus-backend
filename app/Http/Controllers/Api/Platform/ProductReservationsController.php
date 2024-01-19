@@ -77,12 +77,17 @@ class ProductReservationsController extends Controller
                 $this->authorize('createExtraPayment', [ProductReservation::class, $product, $voucher]);
             }
 
-            $reservation = $voucher->reserveProduct($product, null, [
+            $reservationFields = $product->reservation_fields ? [
                 ...$request->only([
-                    'first_name', 'last_name', 'user_note', 'phone', 'birth_date', 'custom_fields',
+                    'phone', 'birth_date', 'custom_fields',
                     'street', 'house_nr', 'house_nr_addition', 'city',
                 ]),
                 'postal_code' => strtoupper(preg_replace("/\s+/", "", $postCode)),
+            ] : [];
+
+            $reservation = $voucher->reserveProduct($product, null, [
+                ...$request->only('first_name', 'last_name', 'user_note'),
+                ...$reservationFields,
                 'has_extra_payment' => $extraPaymentRequired,
             ]);
 
