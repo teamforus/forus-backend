@@ -761,7 +761,7 @@ class ProductReservation extends BaseModel
     {
         return
             $this->isPending() &&
-            !$this->hasExpired() &&
+            !$this->isExpired() &&
             !$this->product->trashed() &&
             (!$this->extra_payment || $this->extra_payment->isPaid()) &&
             (!$this->extra_payment || $this->extra_payment->refunds_active->isEmpty());
