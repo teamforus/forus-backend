@@ -5,6 +5,7 @@ namespace App\Searches;
 
 use App\Models\ProductReservation;
 use App\Scopes\Builders\ProductReservationQuery;
+use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
 
 class ProductReservationsSearch extends BaseSearch

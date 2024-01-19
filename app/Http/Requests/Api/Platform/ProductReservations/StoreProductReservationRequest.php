@@ -140,4 +140,16 @@ class StoreProductReservationRequest extends BaseFormRequest
             "custom_fields.$field->id" => $field->label,
         ], []) ?: [];
     }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'birth_date.date_format' => trans('validation.date', [
+                'attribute' => trans('validation.attributes.birth_date')
+            ])
+        ];
+    }
 }

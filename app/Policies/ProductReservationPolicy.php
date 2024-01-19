@@ -204,7 +204,7 @@ class ProductReservationPolicy
             return $this->deny('Not pending.');
         }
 
-        if ($productReservation->hasExpired()) {
+        if ($productReservation->isExpired()) {
             return $this->deny('Reservation expired.');
         }
 
@@ -238,6 +238,10 @@ class ProductReservationPolicy
 
         if ($productReservation->voucher->expired && !$productReservation->isAccepted()) {
             return $this->deny('The voucher used to make the reservation, has expired.');
+        }
+
+        if ($productReservation->isExpired()) {
+            return $this->deny('Reservation expired.');
         }
 
         return

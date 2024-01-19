@@ -315,7 +315,7 @@ class ProductReservation extends BaseModel
     /**
      * @return bool
      */
-    public function hasExpired(): bool
+    public function isExpired(): bool
     {
         return $this->isPending() && !$this->expire_at->endOfDay()->isFuture();
     }
@@ -359,7 +359,11 @@ class ProductReservation extends BaseModel
      */
     public function isArchivable(): bool
     {
-        return !$this->archived && ($this->isAccepted() || $this->isCanceled());
+        return !$this->archived && (
+            $this->isAccepted() ||
+            $this->isRejected() ||
+            $this->isCanceled() ||
+            $this->isExpired());
     }
 
     /**
@@ -514,6 +518,14 @@ class ProductReservation extends BaseModel
     public function isAccepted(): bool
     {
         return $this->state === self::STATE_ACCEPTED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRejected(): bool
+    {
+        return $this->state === self::STATE_REJECTED;
     }
 
     /**

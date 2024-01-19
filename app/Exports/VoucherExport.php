@@ -24,6 +24,7 @@ class VoucherExport extends BaseFieldedExport
         'in_use_date' => 'In gebruik datum',
         'activation_code' => 'Activatiecode',
         'fund_name' => 'Fondsnaam',
+        'implementation_name' => 'Implementatie',
         'reference_bsn' => 'BSN (door medewerker)',
         'client_uid' => 'Uniek nummer',
         'created_at' => 'Aangemaakt op',
