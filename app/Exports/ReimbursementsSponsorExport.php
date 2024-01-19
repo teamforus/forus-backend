@@ -17,6 +17,7 @@ class ReimbursementsSponsorExport extends BaseFieldedExport
     protected static array $exportFields = [
         'id' => 'ID',
         'code' => 'NR',
+        'implementation_name' => 'Implementatie',
         'fund_name' => 'Fonds',
         'amount' => 'Bedrag',
         'employee' => 'Medewerker',

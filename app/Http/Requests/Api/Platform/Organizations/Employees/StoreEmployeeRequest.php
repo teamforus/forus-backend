@@ -34,7 +34,11 @@ class StoreEmployeeRequest extends BaseFormRequest
         $emails->push($this->organization->identity?->email);
 
         return [
-            'email' => 'required|email:strict|not_in:' . $emails->filter()->join(','),
+            'email' => [
+                'required',
+                'not_in:' . $emails->filter()->join(','),
+                ...$this->emailRules(),
+            ],
             'roles' => 'present|array',
             'roles.*' => 'exists:roles,id',
             'target' => 'nullable|alpha_dash',

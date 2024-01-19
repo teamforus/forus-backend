@@ -50,6 +50,17 @@ class ReservationExtraPaymentRefund extends Model
         self::STATE_REFUNDED,
     ];
 
+    public const PENDING_STATES = [
+        self::STATE_QUEUED,
+        self::STATE_PENDING,
+        self::STATE_PROCESSING,
+    ];
+
+    public const CANCELED_STATES = [
+        self::STATE_FAILED,
+        self::STATE_CANCELED,
+    ];
+
     /**
      * @var string[]
      */

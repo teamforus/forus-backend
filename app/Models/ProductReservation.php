@@ -215,7 +215,7 @@ class ProductReservation extends BaseModel
     {
         do {
             $code = random_int(11111111, 99999999);
-        } while(self::query()->where(compact('code'))->exists());
+        } while (self::query()->where(compact('code'))->exists());
 
         return $code;
     }
@@ -315,7 +315,7 @@ class ProductReservation extends BaseModel
     /**
      * @return bool
      */
-    public function hasExpired(): bool
+    public function isExpired(): bool
     {
         return $this->isPending() && !$this->expire_at->endOfDay()->isFuture();
     }
@@ -359,7 +359,11 @@ class ProductReservation extends BaseModel
      */
     public function isArchivable(): bool
     {
-        return !$this->archived && ($this->isAccepted() || $this->isCanceled());
+        return !$this->archived && (
+            $this->isAccepted() ||
+            $this->isRejected() ||
+            $this->isCanceled() ||
+            $this->isExpired());
     }
 
     /**
@@ -519,16 +523,35 @@ class ProductReservation extends BaseModel
     /**
      * @return bool
      */
+    public function isRejected(): bool
+    {
+        return $this->state === self::STATE_REJECTED;
+    }
+
+    /**
+     * @return bool
+     */
     public function isCancelableByProvider(): bool
     {
         if ($this->isCancelableByRequester()) {
             return true;
         }
 
-        $hasUnRefundedExtra = $this->extra_payment && !$this->extra_payment->isFullyRefunded();
-        $isTransactionCancelable = !$this->isAccepted() || $this->voucher_transaction?->isCancelable();
+        if ($this->isWaiting()) {
+            return $this->extra_payment?->isExpired();
+        }
 
-        return !$hasUnRefundedExtra && $isTransactionCancelable;
+        if ($this->isPending()) {
+            return !$this->extra_payment || $this->extra_payment?->isFullyRefunded();
+        }
+
+        if ($this->isAccepted()) {
+            return
+                $this->voucher_transaction?->isCancelable() &&
+                !$this->extra_payment || $this->extra_payment?->isFullyRefunded();
+        }
+
+        return false;
     }
 
     /**
@@ -729,5 +752,18 @@ class ProductReservation extends BaseModel
         }
 
         return null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAcceptable(): bool
+    {
+        return
+            $this->isPending() &&
+            !$this->isExpired() &&
+            !$this->product->trashed() &&
+            (!$this->extra_payment || $this->extra_payment->isPaid()) &&
+            (!$this->extra_payment || $this->extra_payment->refunds_active->isEmpty());
     }
 }

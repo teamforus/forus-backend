@@ -63,6 +63,11 @@ $router->group([], static function() use ($router) {
         ]
     ]);
 
+    $router->post('pre-checks/calculate', 'Api\Platform\PreCheckController@calculateTotals');
+
+    $router->resource('pre-checks', "Api\Platform\PreCheckController")
+        ->only('index');
+
     $router->get('products/sample', "Api\Platform\ProductsController@sample");
     $router->post('products/{product}/bookmark', "Api\Platform\ProductsController@bookmark");
     $router->post('products/{product}/remove-bookmark', "Api\Platform\ProductsController@removeBookmark");
@@ -318,6 +323,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\ImplementationsController@updateEmailBranding");
 
     $router->patch(
+        'organizations/{organization}/implementations/{implementation}/pre-check-banner',
+        "Api\Platform\Organizations\ImplementationsController@updatePreCheckBanner");
+
+    $router->patch(
         'organizations/{organization}/implementations/{implementation}/digid',
         "Api\Platform\Organizations\ImplementationsController@updateDigiD");
 
@@ -348,6 +357,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations/{organization}/implementations/{implementation}/system-notifications',
         "Api\Platform\Organizations\Implementations\SystemNotificationsController"
     )->only('index', 'show', 'update');
+
+    $router->post(
+        'organizations/{organization}/implementations/{implementation}/pre-checks/sync',
+        "Api\Platform\Organizations\Implementations\PreCheckController@syncPreChecks"
+    );
+
+    $router->resource(
+        'organizations/{organization}/implementations/{implementation}/pre-checks',
+        "Api\Platform\Organizations\Implementations\PreCheckController"
+    )->only('index');
 
     $router->resource(
         'organizations/{organization}/provider-invitations',
@@ -752,25 +771,19 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     );
 
     // Mollie
-    $router->group(['prefix' => 'organizations/{organization}/mollie-connections'], function() use ($router) {
-        $router->get('active', 'Api\Platform\Organizations\MollieConnectionController@getActive');
+    $router->group(['prefix' => 'organizations/{organization}/mollie-connection'], function() use ($router) {
+        $router->get('', 'Api\Platform\Organizations\MollieConnectionController@getActive');
+        $router->post('', 'Api\Platform\Organizations\MollieConnectionController@store');
+        $router->patch('', 'Api\Platform\Organizations\MollieConnectionController@update');
+        $router->delete('', 'Api\Platform\Organizations\MollieConnectionController@destroy');
         $router->get('fetch', 'Api\Platform\Organizations\MollieConnectionController@fetchActive');
         $router->post('connect', 'Api\Platform\Organizations\MollieConnectionController@connectOAuth');
     });
 
     $router->resource(
-        'organizations.mollie-connections',
-        'Api\Platform\Organizations\MollieConnectionController',
-    )->parameters([
-        'mollie-connections' => 'connection',
-    ])->only('store', 'destroy');
-
-    $router->resource(
-        'organizations.mollie-connections.profiles',
+        'organizations/{organization}/mollie-connection/profiles',
         'Api\Platform\Organizations\MollieConnectionProfileController',
-    )->parameters([
-        'mollie-connections' => 'connection',
-    ])->only('store', 'update');
+    )->only('store', 'update');
 
     $router->get(
         'organizations/{organization}/sponsor/finances',
