@@ -24,7 +24,10 @@ class ShareEmailRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'email' => "required|email:strict",
+            'email' => [
+                "required",
+                ...$this->emailRules(),
+            ],
         ];
     }
 }

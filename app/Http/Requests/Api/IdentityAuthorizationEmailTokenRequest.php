@@ -36,7 +36,11 @@ class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
         $this->throttleWithKey('to_many_attempts', $this, 'auth');
 
         return [
-            'email' => ['required', 'email:strict', new IdentityEmailExistsRule()],
+            'email' => [
+                'required',
+                new IdentityEmailExistsRule(),
+                ...$this->emailRules(),
+            ],
             'source' => 'required|in:' . Implementation::keysAvailable()->implode(','),
             'target' => 'nullable|alpha_dash'
         ];

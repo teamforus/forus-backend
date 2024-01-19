@@ -32,7 +32,11 @@ class StoreIdentityEmailRequest extends BaseIdentityEmailRequest
 
         return [
             'target' => 'nullable|alpha_dash',
-            'email' => ['required', 'email:strict', new IdentityEmailUniqueRule()],
+            'email' => [
+                'required',
+                new IdentityEmailUniqueRule(),
+                ...$this->emailRules(),
+            ],
         ];
     }
 }
