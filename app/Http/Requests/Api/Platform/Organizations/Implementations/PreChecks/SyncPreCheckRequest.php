@@ -79,6 +79,7 @@ class SyncPreCheckRequest extends BaseFormRequest
     {
         return [
             'pre_checks.*.title' => 'title',
+            'pre_checks.*.title_short' => 'short title',
             'pre_checks.*.description' => 'description',
             'pre_checks.*.record_types.*.title' => 'title',
             'pre_checks.*.record_types.*.title_short' => 'short title',
