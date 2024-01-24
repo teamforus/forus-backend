@@ -58,11 +58,11 @@ class ReservationExtraPaymentQuery
         ]);
 
         $query = ReservationExtraPayment::fromSub($query, 'reservation_extra_payments')->selectRaw(
-            '*, CAST(IF(ISNULL(`__refund_amount`), amount, amount - __refund_amount) AS SIGNED) as `__refund_amount`'
+            '*, CAST(IF(ISNULL(`__refund_amount`), amount, amount - __refund_amount) AS SIGNED) as `__not_refunded_amount`'
         );
 
         $query = ReservationExtraPayment::query()->fromSub($query, 'reservation_extra_payments');
 
-        return $query->where('__refund_amount', '>', 0);
+        return $query->where('__not_refunded_amount', '>', 0);
     }
 }
