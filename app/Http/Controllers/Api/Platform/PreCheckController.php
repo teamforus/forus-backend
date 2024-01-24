@@ -47,8 +47,10 @@ class PreCheckController extends Controller
             ])));
         }
 
-        $availableFunds = (new FundSearch($request->only([
+        $availableFunds = (new FundSearch(array_merge($request->only([
             'q', 'tag', 'tag_id', 'organization_id',
+        ]), [
+            'with_external' => true,
         ]), $fundsQuery))->query()->get();
 
         $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
