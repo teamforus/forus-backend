@@ -215,7 +215,7 @@ class ProductReservation extends BaseModel
     {
         do {
             $code = random_int(11111111, 99999999);
-        } while(self::query()->where(compact('code'))->exists());
+        } while (self::query()->where(compact('code'))->exists());
 
         return $code;
     }
@@ -537,10 +537,21 @@ class ProductReservation extends BaseModel
             return true;
         }
 
-        $hasUnRefundedExtra = $this->extra_payment && !$this->extra_payment->isFullyRefunded();
-        $isTransactionCancelable = !$this->isAccepted() || $this->voucher_transaction?->isCancelable();
+        if ($this->isWaiting()) {
+            return $this->extra_payment?->isExpired();
+        }
 
-        return !$hasUnRefundedExtra && $isTransactionCancelable;
+        if ($this->isPending()) {
+            return !$this->extra_payment || $this->extra_payment?->isFullyRefunded();
+        }
+
+        if ($this->isAccepted()) {
+            return
+                $this->voucher_transaction?->isCancelable() &&
+                !$this->extra_payment || $this->extra_payment?->isFullyRefunded();
+        }
+
+        return false;
     }
 
     /**
@@ -741,5 +752,18 @@ class ProductReservation extends BaseModel
         }
 
         return null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAcceptable(): bool
+    {
+        return
+            $this->isPending() &&
+            !$this->isExpired() &&
+            !$this->product->trashed() &&
+            (!$this->extra_payment || $this->extra_payment->isPaid()) &&
+            (!$this->extra_payment || $this->extra_payment->refunds_active->isEmpty());
     }
 }

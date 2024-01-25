@@ -20,7 +20,10 @@ class StoreMollieConnectionRequest extends BaseMollieConnectionRequest
     {
         return [
             'name' => 'required|string|max:191',
-            'email' => 'required|email|max:191',
+            'email' => [
+                'required',
+                ...$this->emailRules(),
+            ],
             'first_name' => 'required|string|max:191',
             'last_name' => 'required|string|max:191',
             'street' => 'nullable|string|max:191',
@@ -29,7 +32,11 @@ class StoreMollieConnectionRequest extends BaseMollieConnectionRequest
             'country_code' => 'required|string|max:2',
             'profile_name' => 'required|string|max:191',
             'website' => 'required|url|max:191',
-            'phone' => 'required|string|max:191',
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^\+[1-9]\d{10,14}$/'
+            ],
         ];
     }
 

@@ -42,6 +42,7 @@ class IndexFundsRequest extends FormRequest
             'has_products' => 'nullable|bool',
             'has_subsidies' => 'nullable|bool',
             'has_providers' => 'nullable|bool',
+            'implementation_id' => 'nullable|exists:implementations,id',
         ];
     }
 }

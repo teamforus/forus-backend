@@ -353,6 +353,7 @@ class FundProvider extends BaseModel
     ): Builder {
         $allow_products = $request->input('allow_products');
         $allow_budget = $request->input('allow_budget');
+        $allow_extra_payments = $request->input('allow_extra_payments');
         $has_products = $request->input('has_products');
 
         $fundsQuery = $organization->funds()->where('archived', false);
@@ -380,6 +381,10 @@ class FundProvider extends BaseModel
 
         if ($request->has('fund_ids')) {
             $query->whereIn('fund_id', $request->input('fund_ids'));
+        }
+
+        if ($request->has('implementation_id') && $implementation_id = $request->get('implementation_id')) {
+            $query->whereRelation('fund.fund_config', 'implementation_id', $implementation_id);
         }
 
         if ($request->has('state')) {
@@ -448,6 +453,10 @@ class FundProvider extends BaseModel
             }
         }
 
+        if ($allow_extra_payments !== null) {
+            $query->where('allow_extra_payments', (bool) $allow_extra_payments);
+        }
+
         return $query->orderBy('created_at');
     }
 
@@ -458,7 +467,7 @@ class FundProvider extends BaseModel
     private static function exportTransform(Builder $builder): mixed
     {
         return $builder->with([
-            'fund',
+            'fund.fund_config.implementation',
             'organization.last_employee_session',
         ])->get()->map(function(FundProvider $fundProvider) {
             $transKey = "export.providers";
@@ -488,6 +497,7 @@ class FundProvider extends BaseModel
 
             return [
                 trans("$transKey.fund") => $fundProvider->fund->name,
+                trans("$transKey.implementation") => $fundProvider->fund->fund_config?->implementation?->name,
                 trans("$transKey.fund_type") => $fundProvider->fund->type,
                 trans("$transKey.provider") => $provider->name,
                 trans("$transKey.iban") => $provider->iban,

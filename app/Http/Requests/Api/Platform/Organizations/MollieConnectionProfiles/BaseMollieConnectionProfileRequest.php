@@ -33,9 +33,17 @@ abstract class BaseMollieConnectionProfileRequest extends BaseFormRequest
     {
         return [
             'name' => 'required|string|max:191',
-            'email' => 'required|email|max:191',
+            'email' => [
+                'required',
+                'max:191',
+                ...$this->emailRules(),
+            ],
             'website' => 'required|url|max:191',
-            'phone' => 'required|string|max:191',
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^\+[1-9]\d{10,14}$/'
+            ],
         ];
     }
 

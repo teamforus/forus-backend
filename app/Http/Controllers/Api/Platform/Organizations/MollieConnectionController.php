@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\MollieConnections\FetchMollieConnectionRequest;
 use App\Http\Requests\Api\Platform\Organizations\MollieConnections\OauthMollieConnectionRequest;
 use App\Http\Requests\Api\Platform\Organizations\MollieConnections\StoreMollieConnectionRequest;
+use App\Http\Requests\Api\Platform\Organizations\MollieConnections\UpdateMollieConnectionRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\MollieConnectionResource;
 use App\Models\Organization;
@@ -115,7 +116,7 @@ class MollieConnectionController extends Controller
      * @return MollieConnectionResource
      */
     public function fetchActive(
-        FetchMollieConnectionRequest$request,
+        FetchMollieConnectionRequest $request,
         Organization $organization,
     ): MollieConnectionResource {
         $this->authorize('fetchMollieAccount', [MollieConnection::class, $organization]);
@@ -131,20 +132,37 @@ class MollieConnectionController extends Controller
     }
 
     /**
+     * @param UpdateMollieConnectionRequest $request
+     * @param Organization $organization
+     * @return MollieConnectionResource
+     */
+    public function update(
+        UpdateMollieConnectionRequest $request,
+        Organization $organization,
+    ): MollieConnectionResource {
+        $this->authorize('update', [MollieConnection::class, $organization]);
+
+        $profileId = $request->input('mollie_connection_profile_id');
+
+        $organization->mollie_connection->changeCurrentProfile(
+            $organization->mollie_connection->profiles()->find($profileId),
+            $request->employee($organization),
+        );
+
+        return MollieConnectionResource::create($organization->mollie_connection);
+    }
+
+    /**
      * @param BaseFormRequest $request
      * @param Organization $organization
-     * @param MollieConnection $connection
      * @return JsonResponse
      */
-    public function destroy(
-        BaseFormRequest $request,
-        Organization $organization,
-        MollieConnection $connection,
-    ): JsonResponse {
-        $this->authorize('destroy', [$connection, $organization]);
+    public function destroy(BaseFormRequest $request, Organization $organization): JsonResponse
+    {
+        $this->authorize('destroy', [MollieConnection::class, $organization]);
 
-        $connection->revoke($request->employee($organization));
-        $connection->delete();
+        $organization->mollie_connection->revoke($request->employee($organization));
+        $organization->mollie_connection->delete();
 
         return new JsonResponse([]);
     }
