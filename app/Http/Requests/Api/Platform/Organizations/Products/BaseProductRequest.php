@@ -19,12 +19,13 @@ abstract class BaseProductRequest extends BaseFormRequest
         $options = implode(',', Product::RESERVATION_FIELDS_PRODUCT);
         $policies = implode(',', Product::RESERVATION_POLICIES);
 
-        $extraPaymentOptions = $this->organization->canUseExtraPaymentsAsProvider() ?
+        $extraPaymentOptions = $this->organization->canReceiveExtraPayments() ?
             implode(',', Product::RESERVATION_EXTRA_PAYMENT_OPTIONS) :
             '';
 
         return [
             'reservation_enabled' => "nullable|boolean",
+            'reservation_fields' => "nullable|boolean",
             'reservation_policy' => "nullable|in:$policies",
             'reservation_phone' => "nullable|in:$options",
             'reservation_address' => "nullable|in:$options",

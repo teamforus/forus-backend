@@ -101,8 +101,8 @@ class ImplementationPreChecksResource extends BaseJsonResource
                     'record_type_key', 'title', 'title_short', 'description', 'order', 'pre_check_id',
                 ]) : [
                     'record_type_key' => $recordType->key,
-                    'title' => $recordType->name,
-                    'title_short' => $recordType->name,
+                    'title' => $recordType->name ?? $recordType->key,
+                    'title_short' => $recordType->name ?? $recordType->key,
                     'description' => $recordType->name,
                     'order' => 999,
                     'pre_check_id' => null,

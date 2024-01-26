@@ -48,8 +48,8 @@ class ProviderProductResource extends ProductResource
      */
     private function extraPaymentConfigs(): array
     {
-        return $this->resource->organization->canReceiveExtraPayments()
-            ? $this->resource->only('reservation_extra_payments')
-            : [];
+        return $this->resource->only([
+            'reservation_extra_payments',
+        ]);
     }
 }
