@@ -1240,17 +1240,17 @@ class Fund extends BaseModel
             $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
             $multiplier = $formulaProduct->getIdentityMultiplier($identityAddress);
 
-            $vouchers = array_map(fn () => $this->makeProductVoucher(
+            $vouchers = array_merge($vouchers, array_map(fn () => $this->makeProductVoucher(
                 $identityAddress,
                 $extraFields,
                 $formulaProduct->product->id,
                 $voucherExpireAt,
                 $formulaProduct->price
-            ), array_fill(0, $multiplier, null));
+            ), array_fill(0, $multiplier, null)));
+        }
 
-            foreach ($vouchers as $voucher) {
-                Event::dispatch(new VoucherAssigned($voucher));
-            }
+        foreach ($vouchers as $voucher) {
+            Event::dispatch(new VoucherAssigned($voucher));
         }
 
         return $vouchers;
