@@ -44,12 +44,6 @@ class RolePermissionsTableSeeder extends Seeder
         "voucher_officer" => [
             "manage_funds", "manage_vouchers", "view_person_bsn_data", "make_direct_payments", "manage_reimbursements", "manage_employees", "view_finances",
         ],
-        "implementation_manager" => [
-            "view_funds", "manage_implementation", "manage_implementation_cms",
-        ],
-        "implementation_cms_manager" => [
-            "view_funds", "manage_implementation_cms",
-        ],
         "implementation_communication_manager" => [
             "view_funds", "manage_implementation_cms", "manage_implementation_notifications", "manage_fund_texts",
         ],
