@@ -89,7 +89,10 @@ class PreCheck extends BaseModel
             });
 
             return [
-                ...$fund->only(['id', 'name', 'description', 'description_short']),
+                ...$fund->only([
+                    'id', 'name', 'description', 'description_short',
+                    'external_link_text', 'external_link_url', 'is_external',
+                ]),
                 'parent' => $fund->parent ? new FundResource($fund->parent) : null,
                 'children' => $fund->children ? FundResource::collection($fund->children) : [],
                 'criteria' => $criteria,
