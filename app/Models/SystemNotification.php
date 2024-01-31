@@ -104,6 +104,53 @@ class SystemNotification extends Model
     }
 
     /**
+     * @param string|null $implementation_key
+     * @param int|null $fund_id
+     * @return NotificationTemplate|null
+     */
+    public function findTemplateForDatabaseNotification(
+        ?string $implementation_key = null,
+        ?int $fund_id = null
+    ): ?NotificationTemplate {
+        $template = null;
+        $generalImplementation = Implementation::general();
+        $currentImplementation = $generalImplementation->key === $implementation_key
+            ? $generalImplementation
+            : Implementation::byKey($implementation_key);
+
+        $templates = $this->templates->filter(
+            fn (NotificationTemplate $template) => $template->type === 'database'
+        );
+
+        /** @var NotificationTemplate $generalTemplate */
+        $generalTemplate = $templates->first(function (NotificationTemplate $template) use (
+            $currentImplementation, $generalImplementation
+        ) {
+            return $template->implementation_id === $generalImplementation->id &&
+                $template->formal == !($currentImplementation ?: $generalImplementation)
+                    ->informal_communication;
+        });
+
+        if ($currentImplementation) {
+            /** @var NotificationTemplate|null $template */
+            $template = $templates->filter(function (NotificationTemplate $template) use (
+                $currentImplementation, $fund_id
+            ) {
+                $condition = $template->implementation_id === $currentImplementation->id &&
+                    $template->formal == !$currentImplementation->informal_communication;
+
+                $fundCondition = !$template->fund_id ||
+                    ($currentImplementation->allow_per_fund_notification_templates &&
+                        $template->fund_id === $fund_id);
+
+                return $condition && $fundCondition;
+            })->sortByDesc('fund_id')->first();
+        }
+
+        return $template ?: $generalTemplate;
+    }
+
+    /**
      * @return HasMany
      * @noinspection PhpUnused
      */

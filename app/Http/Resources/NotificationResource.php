@@ -23,8 +23,8 @@ class NotificationResource extends BaseJsonResource
      */
     public function toArray($request): array
     {
-        $key = $this->resource->data['key'];
-        $event = EventLog::find($this->resource->data['event_id']);
+        $key = $this->resource->key;
+        $event = $this->resource->event;
         $template = $this->getTemplate($event);
 
         return array_merge([
@@ -45,15 +45,13 @@ class NotificationResource extends BaseJsonResource
     public function getTemplate(EventLog $event): ?NotificationTemplate
     {
         try {
-            return SystemNotification::findTemplate(
-                $this->resource->data['key'],
-                'database',
+            return $this->resource->system_notification->findTemplateForDatabaseNotification(
                 $event->data['implementation_key'] ?? Implementation::KEY_GENERAL,
                 $event->data['fund_id'] ?? null,
             );
         } catch (Throwable $e) {
             if ($logger = logger()) {
-                $logger->error(sprintf('Could not find template for "%s" notification.', $this->resource->data['key']));
+                $logger->error(sprintf('Could not find template for "%s" notification.', $this->resource->key));
             }
 
             throw $e;
