@@ -46,6 +46,7 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'fund' => $transaction->voucher->fund->only('id', 'name', 'organization_id'),
             'notes' => VoucherTransactionNoteResource::collection($transaction->notes_sponsor),
             'bulk_status_locale' => $transaction->bulk_status_locale,
+            'transaction_cost' => currency_format_locale($transaction->transaction_cost),
             'product' => new ProductTinyResource($transaction->product),
             'product_reservation' => $transaction->product_reservation?->only([
                 'id', 'voucher_id',

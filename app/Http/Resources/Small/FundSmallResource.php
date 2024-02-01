@@ -27,6 +27,8 @@ class FundSmallResource extends BaseJsonResource
      */
     public function toArray($request): array
     {
+        $fundAmount = $this->resource->amountFixedByFormula();
+
         return [
             ...$this->resource->only([
                 'id', 'name', 'description', 'description_html', 'description_short',
@@ -35,7 +37,8 @@ class FundSmallResource extends BaseJsonResource
             ]),
             'logo' => new MediaResource($this->resource->logo),
             'organization' => new OrganizationTinyResource($this->resource->organization),
-            'fund_amount' => $this->resource->amountFixedByFormula(),
+            'fund_amount' => $fundAmount ? currency_format($fundAmount) : null,
+            'fund_amount_locale' => $fundAmount ? currency_format_locale($fundAmount) : null,
             ...$this->makeTimestamps($this->resource->only(['start_date', 'end_date']), true),
         ];
     }

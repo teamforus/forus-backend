@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Http\Resources\Tiny\FundTinyResource;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -43,7 +42,7 @@ class FundResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      */
     public function toArray($request): array
@@ -55,6 +54,7 @@ class FundResource extends BaseJsonResource
         $identity = $baseRequest->identity();
         $isWebShop = $baseRequest->isWebshop();
         $isDashboard = $baseRequest->isDashboard();
+        $fundAmount = $fund->amountFixedByFormula();
 
         $fundConfigData = $this->getFundConfigData($fund);
         $financialData = $this->getFinancialData($fund, $this->stats);
@@ -83,7 +83,8 @@ class FundResource extends BaseJsonResource
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'faq' => FaqResource::collection($fund->faq),
             'formula_products' => FundFormulaProductResource::collection($fund->fund_formula_products),
-            'fund_amount' => $fund->amountFixedByFormula(),
+            'fund_amount' => $fundAmount ? currency_format($fundAmount) : null,
+            'fund_amount_locale' => $fundAmount ? currency_format_locale($fundAmount) : null,
             'has_pending_fund_requests' => $isWebShop && $baseRequest->auth_address() && $fund->fund_requests()->where(function (Builder $builder) {
                 FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth()->id());
             })->exists(),
@@ -286,6 +287,6 @@ class FundResource extends BaseJsonResource
     {
         return $baseRequest->get('check_criteria', false) ? [
             'taken_by_partner' => $this->isTakenByPartner($fund, $baseRequest),
-        ]: [];
+        ] : [];
     }
 }
