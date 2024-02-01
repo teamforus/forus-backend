@@ -17,6 +17,7 @@ return [
     
     'providers'              => [
         'fund' => 'Fondsnaam',
+        'implementation' => 'Implementatie',
         'fund_type' => 'Fonds type',
         'iban' => 'IBAN',
         'provider_last_activity' => 'Laatste activiteit',

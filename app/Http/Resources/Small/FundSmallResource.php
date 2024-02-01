@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Small;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\ImplementationResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Models\Fund;
@@ -39,6 +40,7 @@ class FundSmallResource extends BaseJsonResource
             'organization' => new OrganizationTinyResource($this->resource->organization),
             'fund_amount' => $fundAmount ? currency_format($fundAmount) : null,
             'fund_amount_locale' => $fundAmount ? currency_format_locale($fundAmount) : null,
+            'implementation' => new ImplementationResource($this->resource->fund_config->implementation ?? null),
             ...$this->makeTimestamps($this->resource->only(['start_date', 'end_date']), true),
         ];
     }
