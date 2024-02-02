@@ -132,8 +132,18 @@
                         <td>
                             @if ($fund['is_valid'])
                                 Ja, de zorgtoeslag moet u zelf aanvragen
+
+                                @if ($fund['is_external'] && $fund['external_link_url'])
+                                    via <a href="{{ $fund['external_link_url'] }}">{{ $fund['external_link_text'] ?: 'Externe website bekijken' }}</a>
+                                @endif
+
                             @else
                                 U heeft op basis van uw gegeven antwoorden geen recht op toeslagen.
+
+                                @if ($fund['is_external'] && $fund['external_link_url'])
+                                    Op <a href="{{ $fund['external_link_url'] }}">{{ $fund['external_link_text'] ?: 'Externe website bekijken' }}</a>
+                                    kunt u zien wat de voorwaarden zijn om in aanmerking te komen voor de huurtoeslag.
+                                @endif
                             @endif
                         </td>
                     </tr>
