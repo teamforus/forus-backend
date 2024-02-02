@@ -85,8 +85,10 @@ class PreCheck extends BaseModel
             ])));
         }
 
-        return (new FundSearch($request->only([
+        return (new FundSearch(array_merge($request->only([
             'q', 'tag', 'tag_id', 'organization_id',
+        ]), [
+            'with_external' => true,
         ]), $fundsQuery))->query()->get();
     }
 
@@ -115,7 +117,10 @@ class PreCheck extends BaseModel
             });
 
             return [
-                ...$fund->only(['id', 'name', 'description', 'description_short']),
+                ...$fund->only([
+                    'id', 'name', 'description', 'description_short',
+                    'external_link_text', 'external_link_url', 'is_external',
+                ]),
                 'parent' => $fund->parent ? new FundResource($fund->parent) : null,
                 'children' => $fund->children ? FundResource::collection($fund->children) : [],
                 'criteria' => $criteria,

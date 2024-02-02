@@ -6,13 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\PreChecks\CalculatePreCheckRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\ImplementationPreChecksResource;
-use App\Models\Fund;
-use App\Models\Implementation;
 use App\Models\PreCheck;
-use App\Models\Voucher;
-use App\Scopes\Builders\VoucherQuery;
-use App\Searches\FundSearch;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 
 class PreCheckController extends Controller
