@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
 use App\Rules\FundRequests\BaseFundRequestRule;
+use App\Scopes\Builders\VoucherQuery;
+use App\Searches\FundSearch;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -62,6 +66,28 @@ class PreCheck extends BaseModel
     public function pre_check_records(): HasMany
     {
         return $this->hasMany(PreCheckRecord::class);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @return Collection
+     */
+    public static function getAvailableFunds(BaseFormRequest $request): Collection
+    {
+        $identity = $request->identity();
+        $fundsQuery = Implementation::queryFundsByState('active');
+
+        if ($identity) {
+            $fundsQuery->whereDoesntHave('vouchers', fn (
+                Builder|Voucher $builder
+            ) => VoucherQuery::whereActive($builder->where([
+                'identity_address' => $identity->address,
+            ])));
+        }
+
+        return (new FundSearch($request->only([
+            'q', 'tag', 'tag_id', 'organization_id',
+        ]), $fundsQuery))->query()->get();
     }
 
     /**

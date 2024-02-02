@@ -35,21 +35,8 @@ class PreCheckController extends Controller
      */
     public function calculateTotals(CalculatePreCheckRequest $request): JsonResponse
     {
-        $identity = $request->identity();
         $records = array_pluck($request->input('records', []), 'value', 'key');
-        $fundsQuery = Implementation::queryFundsByState('active');
-
-        if ($identity) {
-            $fundsQuery->whereDoesntHave('vouchers', fn (
-                Builder|Voucher $builder
-            ) => VoucherQuery::whereActive($builder->where([
-                'identity_address' => $identity->address,
-            ])));
-        }
-
-        $availableFunds = (new FundSearch($request->only([
-            'q', 'tag', 'tag_id', 'organization_id',
-        ]), $fundsQuery))->query()->get();
+        $availableFunds = PreCheck::getAvailableFunds($request);
 
         $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
         $fundsValid = array_where($funds, fn ($fund) => $fund['is_valid']);
@@ -65,5 +52,31 @@ class PreCheckController extends Controller
             'amount_total_valid' => $amountTotalValid,
             'amount_total_valid_locale' => currency_format_locale($amountTotalValid),
         ]);
+    }
+
+    /**
+     * @param CalculatePreCheckRequest $request
+     * @return \Illuminate\Http\Response
+     * @noinspection PhpUnused
+     */
+    public function downloadPDF(CalculatePreCheckRequest $request): \Illuminate\Http\Response
+    {
+        $records = array_pluck($request->input('records', []), 'value', 'key');
+        $availableFunds = PreCheck::getAvailableFunds($request);;
+
+        $domPdf = resolve('dompdf.wrapper')->setOption(
+            'chroot',
+            realpath(base_path()).'/public/assets/pre-check-totals-export'
+        );
+
+        $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
+
+        $domPdfFile = $domPdf->loadView('pdf.pre_check_totals', [
+            'date_locale' => format_date_locale(now()),
+            'implementation_key' => $request->implementation()->key,
+            'funds' => $funds,
+        ]);
+
+        return $domPdfFile->download('pre-check-totals.pdf');
     }
 }
