@@ -8,6 +8,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\ImplementationPreChecksResource;
 use App\Models\PreCheck;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 class PreCheckController extends Controller
 {
@@ -53,22 +54,22 @@ class PreCheckController extends Controller
      * @return \Illuminate\Http\Response
      * @noinspection PhpUnused
      */
-    public function downloadPDF(CalculatePreCheckRequest $request): \Illuminate\Http\Response
+    public function downloadPDF(CalculatePreCheckRequest $request): Response
     {
         $records = array_pluck($request->input('records', []), 'value', 'key');
-        $availableFunds = PreCheck::getAvailableFunds($request);;
+        $availableFunds = PreCheck::getAvailableFunds($request);
 
         $domPdf = resolve('dompdf.wrapper')->setOption(
             'chroot',
-            realpath(base_path()).'/public/assets/pre-check-totals-export'
+            realpath(base_path()) . '/public/assets/pre-check-totals-export'
         );
 
         $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
 
         $domPdfFile = $domPdf->loadView('pdf.pre_check_totals', [
+            'funds' => $funds,
             'date_locale' => format_date_locale(now()),
             'implementation_key' => $request->implementation()->key,
-            'funds' => $funds,
         ]);
 
         return $domPdfFile->download('pre-check-totals.pdf');

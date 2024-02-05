@@ -6,6 +6,7 @@
 <html lang="{{ app()->getLocale() }}">
     <head>
         <meta charset="UTF-8">
+        <title></title>
     </head>
 
     <style>
@@ -65,7 +66,7 @@
         <header>
             <div style="margin-bottom: 20px;">
                 <div style="display: inline-block; width: 200px; margin-right: 20px;">
-                    @if (file_exists(public_path('assets/pre-check-totals-export/logo-' . $implementation_key . '.png')))
+                    @if (file_exists(public_path("assets/pre-check-totals-export/logo-$implementation_key.png")))
                         <img src="{{ public_path('assets/pre-check-totals-export/logo-' . $implementation_key . '.png') }}" style="width: 100%;" alt="organization-logo"/>
                     @else
                         <img src="{{ public_path('assets/pre-check-totals-export/logo-general.png') }}" style="width: 100%;" alt="organization-logo"/>
