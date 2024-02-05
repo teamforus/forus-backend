@@ -20,6 +20,7 @@ use Illuminate\Support\Arr;
  * @property string $state
  * @property string|null $description
  * @property string $description_alignment
+ * @property string $description_position
  * @property string|null $external_url
  * @property bool $external
  * @property int $blocks_per_row

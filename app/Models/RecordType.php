@@ -22,7 +22,11 @@ use Illuminate\Support\Arr;
  * @property bool $vouchers
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Collection|\App\Models\FundCriterion[] $fund_criteria
+ * @property-read int|null $fund_criteria_count
  * @property-read \App\Models\Organization|null $organization
+ * @property-read Collection|\App\Models\PreCheckRecord[] $pre_check_records
+ * @property-read int|null $pre_check_records_count
  * @property-read Collection|\App\Models\RecordTypeOption[] $record_type_options
  * @property-read int|null $record_type_options_count
  * @property-read \App\Models\RecordTypeTranslation|null $translation
@@ -100,6 +104,24 @@ class RecordType extends BaseModel
         'criteria' => 'bool',
         'vouchers' => 'bool',
     ];
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_criteria(): HasMany
+    {
+        return $this->hasMany(FundCriterion::class, 'record_type_key', 'key');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function pre_check_records(): HasMany
+    {
+        return $this->hasMany(PreCheckRecord::class, 'record_type_key', 'key');
+    }
 
     /**
      * @param bool $withSystem

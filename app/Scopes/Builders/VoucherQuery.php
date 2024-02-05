@@ -77,9 +77,9 @@ class VoucherQuery
 
     /**
      * @param Builder|Relation $builder
-     * @return Builder|Relation
+     * @return Builder|Relation|Voucher
      */
-    public static function whereActive(Builder|Relation $builder): Builder|Relation
+    public static function whereActive(Builder|Relation $builder): Builder|Relation|Voucher
     {
         return $builder->where('state', Voucher::STATE_ACTIVE);
     }

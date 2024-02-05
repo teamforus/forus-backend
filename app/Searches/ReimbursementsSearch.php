@@ -52,6 +52,10 @@ class ReimbursementsSearch extends BaseSearch
             $builder->whereRelation('voucher', 'identity_address', $this->getFilter('identity_address'));
         }
 
+        if ($this->hasFilter('implementation_id') && $implementation_id = $this->getFilter('implementation_id')) {
+            $builder->whereRelation('voucher.fund.fund_config', 'implementation_id', $implementation_id);
+        }
+
         $this->filterByStateAndExpiration($builder);
         $this->filterByQueryString($builder);
 

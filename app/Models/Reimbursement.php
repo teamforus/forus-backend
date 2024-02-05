@@ -455,6 +455,7 @@ class Reimbursement extends Model
             'voucher.identity.record_bsn',
             'voucher.identity.primary_email',
             'employee.identity.primary_email',
+            'voucher.fund.fund_config.implementation',
         ])->get();
 
         return $data->map(fn (Reimbursement $reimbursement) => array_only([
@@ -470,6 +471,7 @@ class Reimbursement extends Model
             'state' => $reimbursement->state_locale,
             'code' => '#' . $reimbursement->code,
             'fund_name' => $reimbursement->voucher->fund->name,
+            'implementation_name' => $reimbursement->voucher->fund->fund_config?->implementation?->name,
             'bsn' => $reimbursement->voucher->fund->organization->bsn_enabled ?
                 ($reimbursement->voucher->identity->record_bsn?->value ?: '-') :
                 '-',
@@ -499,7 +501,7 @@ class Reimbursement extends Model
 
         $search = new ReimbursementsSearch($request->only([
             'q', 'fund_id', 'from', 'to', 'amount_min', 'amount_max', 'state',
-            'expired', 'archived', 'deactivated', 'identity_address',
+            'expired', 'archived', 'deactivated', 'identity_address', 'implementation_id',
         ]), $query);
 
         return self::exportTransform($search->query()->latest(), $fields);

@@ -52,7 +52,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $btw
  * @property string|null $website
  * @property bool $website_public
- * @property int|null $business_type_id
+ * @property int $business_type_id
  * @property bool $is_sponsor
  * @property bool $is_provider
  * @property bool $is_validator
@@ -73,6 +73,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
  * @property bool $allow_provider_extra_payments
+ * @property int $allow_pre_checks
  * @property bool $reservation_allow_extra_payments
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
@@ -94,7 +95,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read \App\Models\BankConnection|null $bank_connection_active
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
- * @property-read \App\Models\BusinessType|null $business_type
+ * @property-read \App\Models\BusinessType $business_type
  * @property-read Collection|\App\Models\OrganizationContact[] $contacts
  * @property-read int|null $contacts_count
  * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
@@ -168,6 +169,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAllowPreChecks($value)
  * @method static EloquentBuilder|Organization whereAllowProviderExtraPayments($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
@@ -298,6 +300,7 @@ class Organization extends BaseModel
         'auth_2fa_funds_restrict_auth_sessions'     => 'boolean',
         'auth_2fa_funds_restrict_reimbursements'    => 'boolean',
         'allow_provider_extra_payments'             => 'boolean',
+        'allow_pre_checks'                          => 'boolean',
         'reservation_allow_extra_payments'          => 'boolean',
     ];
 

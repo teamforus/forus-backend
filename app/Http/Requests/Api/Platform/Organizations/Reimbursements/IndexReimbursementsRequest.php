@@ -29,12 +29,15 @@ class IndexReimbursementsRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+        $implementations = $this->organization->implementations()->pluck('implementations.id');
+
         return [
             'fund_id' => $this->fundIdRule(),
             'expired' => 'nullable|boolean',
             'archived' => 'nullable|boolean',
             'deactivated' => 'nullable|boolean',
             'identity_address' => 'nullable|exists:identities,address',
+            'implementation_id' => 'nullable|exists:implementations,id|in:' . $implementations->join(','),
             'per_page' => $this->perPageRule(),
         ];
     }
