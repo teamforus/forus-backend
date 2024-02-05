@@ -5,7 +5,6 @@ namespace App\Searches;
 
 use App\Models\ProductReservation;
 use App\Scopes\Builders\ProductReservationQuery;
-use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
 
 class ProductReservationsSearch extends BaseSearch
@@ -32,11 +31,11 @@ class ProductReservationsSearch extends BaseSearch
         }
 
         if ($this->hasFilter('state')) {
-            if ($this->getFilter('state') != 'expired') {
+            if ($this->getFilter('state') === 'expired') {
+                ProductReservationQuery::whereExpired($builder);
+            } else {
                 ProductReservationQuery::whereNotExpired($builder);
                 $builder->where('state', $this->getFilter('state'));
-            } else {
-                ProductReservationQuery::whereExpired($builder);
             }
         }
 
