@@ -4,6 +4,7 @@ namespace App\Mail\Funds\FundRequestClarifications;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
 /**
  * Notify requester about fund request clarification being requested by the sponsor/validator
@@ -14,6 +15,7 @@ class FundRequestClarificationRequestedMail extends ImplementationMail
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

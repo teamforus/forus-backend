@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasDbTokens;
+use App\Scopes\Builders\EmployeeQuery;
+use App\Scopes\Builders\OrganizationQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 /**
@@ -173,23 +176,39 @@ class Prevalidation extends BaseModel
     }
 
     /**
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @return Builder
      */
-    public static function search(Request $request): Builder {
-        /** @var Builder $prevalidations */
-        $prevalidations = self::whereIdentityAddress(auth()->id());
+    public static function search(BaseFormRequest $request): Builder
+    {
+        $identity_address = $request->auth_address();
+
+        $prevalidations = static::where(function(Builder|Prevalidation $builder) use ($identity_address) {
+            $builder->where('identity_address', $identity_address);
+
+            $builder->orWhere(function(Builder $builder) use ($identity_address) {
+                // created for fund where you can manage funds
+                $builder->whereHas('fund.organization', function (Builder $builder) use ($identity_address) {
+                    OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');
+                });
+
+                // created by identity who can validate records on funds where you can manage funds
+                $builder->whereHas('identity.employees', function(Builder $builder) use ($identity_address) {
+                    EmployeeQuery::whereHasPermissionFilter($builder, 'validate_records');
+
+                    $builder->whereHas('organization', function(Builder $builder) use ($identity_address) {
+                        OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');
+                    });
+                });
+            });
+        });
 
         if ($request->has('q') && $q = $request->input('q')) {
             $prevalidations->where(static function(Builder $query) use ($q) {
                 $query->where('uid', 'like', "%$q%");
-                $query->orWhereIn('id', static function(
-                    \Illuminate\Database\Query\Builder $query
-                ) use ($q) {
-                    $query->from(
-                        (new PrevalidationRecord)->getTable()
-                    )->where(
-                        'value', 'like', "%$q%"
+                $query->orWhereIn('id', static function(QBuilder $query) use ($q) {
+                    $query->from((new PrevalidationRecord)->getTable())->where(
+                        'value', 'like', "%$q%",
                     )->select('prevalidation_id');
                 });
             });
@@ -223,10 +242,11 @@ class Prevalidation extends BaseModel
     }
 
     /**
-     * @param Request $request
-     * @return \Illuminate\Support\Collection
+     * @param BaseFormRequest $request
+     * @return Collection
      */
-    public static function export(Request $request): Collection {
+    public static function export(BaseFormRequest $request): Collection
+    {
         $transKey = "export.prevalidations";
 
         $query = self::search($request)->with([
@@ -287,7 +307,8 @@ class Prevalidation extends BaseModel
         $primaryKeyName = $fund->fund_config->csv_primary_key;
 
         $recordTypes = array_pluck(record_types_cached(), 'id', 'key');
-        $fundPrevalidationPrimaryKey = $recordTypes[$primaryKeyName] ?? abort(500);
+        $fundPrevalidationPrimaryKey = $recordTypes[$primaryKeyName] ??
+            abort(500, 'Unknown csv_primary_key');
 
         // list existing uid from fund prevalidations
         $existingPrimaryKeys = PrevalidationRecord::whereRelation('prevalidation', [

@@ -86,6 +86,7 @@ class FundRequestRuleTest extends TestCase
     protected function makeRecordValue(Fund $fund, string $key, string|int $value): array
     {
         return [
+            'files' => [],
             'value' => $value,
             'record_type_key' => $key,
             'fund_criterion_id' => $fund->criteria->fresh()->firstWhere('record_type_key', $key)?->id,

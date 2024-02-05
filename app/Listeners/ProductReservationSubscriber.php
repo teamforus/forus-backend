@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\ProductReservations\ProductReservationAccepted;
 use App\Events\ProductReservations\ProductReservationCanceled;
 use App\Events\ProductReservations\ProductReservationCreated;
+use App\Events\ProductReservations\ProductReservationPending;
 use App\Events\ProductReservations\ProductReservationRejected;
 use App\Models\ProductReservation;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationAcceptedNotification;
@@ -43,7 +44,7 @@ class ProductReservationSubscriber
         $productReservation = $event->getProductReservation();
         $voucher = $productReservation->voucher;
 
-        if (!$voucher->parent_id && $voucher->usedCount() == 1) {
+        if (!$voucher->parent_id && $voucher->usedCount() === 1) {
             $voucher->reportBackofficeFirstUse();
         }
 
@@ -63,8 +64,22 @@ class ProductReservationSubscriber
 
         IdentityProductReservationAcceptedNotification::send($productReservation->log(
             $productReservation::EVENT_ACCEPTED,
-            $this->getReservationLogModels($productReservation)
+            $this->getReservationLogModels($productReservation),
         ));
+    }
+
+    /**
+     * @param ProductReservationPending $event
+     * @noinspection PhpUnused
+     */
+    public function onProductReservationPending(ProductReservationPending $event): void
+    {
+        $productReservation = $event->getProductReservation();
+
+        $productReservation->log(
+            $productReservation::EVENT_PENDING,
+            $this->getReservationLogModels($productReservation),
+        );
     }
 
     /**
@@ -117,6 +132,7 @@ class ProductReservationSubscriber
 
         $events->listen(ProductReservationCreated::class, "$class@onProductReservationCreated");
         $events->listen(ProductReservationAccepted::class, "$class@onProductReservationAccepted");
+        $events->listen(ProductReservationPending::class, "$class@onProductReservationPending");
         $events->listen(ProductReservationRejected::class, "$class@onProductReservationRejected");
         $events->listen(ProductReservationCanceled::class, "$class@onProductReservationCanceled");
     }

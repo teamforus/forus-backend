@@ -8,7 +8,7 @@ use Illuminate\Support\ServiceProvider;
 
 class FileServiceProvider extends ServiceProvider
 {
-    public function boot()
+    public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/migrations');
 
@@ -26,7 +26,7 @@ class FileServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->app->singleton('file', function () {
             return new FileService();

@@ -6,11 +6,13 @@ use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use League\CommonMark\Exception\CommonMarkException;
 
 class FundSponsorCustomNotificationMail extends ImplementationMail
 {
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

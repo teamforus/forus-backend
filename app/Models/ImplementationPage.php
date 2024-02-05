@@ -20,6 +20,7 @@ use Illuminate\Support\Arr;
  * @property string $state
  * @property string|null $description
  * @property string $description_alignment
+ * @property string $description_position
  * @property string|null $external_url
  * @property bool $external
  * @property int $blocks_per_row
@@ -213,6 +214,7 @@ class ImplementationPage extends BaseModel
             $blockData = Arr::only($block, [
                 'type', 'key', 'media_uid', 'label', 'title', 'description',
                 'button_enabled', 'button_text', 'button_link', 'button_target_blank',
+                'button_link_label',
             ]);
 
             /** @var ImplementationBLock $block */

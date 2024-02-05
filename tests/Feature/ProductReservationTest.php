@@ -289,9 +289,7 @@ class ProductReservationTest extends TestCase
         $response->assertJsonStructure(['data' => $this->resourceStructure]);
 
         // cancel reservation
-        $this->patch($reservationUrl, [
-            'state' => ProductReservation::STATE_CANCELED_BY_CLIENT,
-        ], $headers)->assertSuccessful();
+        $this->postJson($reservationUrl . "/cancel", [], $headers)->assertSuccessful();
 
         $reservation = ProductReservation::find($reservation->id);
         $this->assertTrue($reservation->isCanceledByClient());
@@ -430,8 +428,7 @@ class ProductReservationTest extends TestCase
         Voucher $voucher,
         Product $product
     ): void {
-        $originalAmount = floatval($voucher->amount_available);
-        $amount = floatval($product->price);
+        $originalAmount = (float) $voucher->amount_available;
         $startTime = now();
 
         $reservation = $this->makeReservation($identity, $voucher, $product);
@@ -439,7 +436,7 @@ class ProductReservationTest extends TestCase
         $stateIsValid = $autoAccept ? $reservation->isAccepted() : $reservation->isPending();
 
         $this->assertTrue($stateIsValid, 'Wrong reservation status');
-        $this->assertTrue(floatval($voucher->amount_available) === $originalAmount - $amount);
+        $this->assertSame((float) $voucher->amount_available, $originalAmount - $reservation->amount);
 
         $providerOrganization = $product->organization;
         $this->assertNotNull($providerOrganization);
@@ -460,7 +457,7 @@ class ProductReservationTest extends TestCase
                 'state' => ProductReservation::STATE_ACCEPTED
             ]);
 
-            $this->assertTrue(floatval($voucher->amount_available) === $originalAmount - $amount);
+            $this->assertSame((float) $voucher->amount_available, $originalAmount - $reservation->amount);
 
             $reservation = ProductReservation::find($reservation->id);
             $this->assertTrue($reservation->isAccepted());
@@ -481,7 +478,7 @@ class ProductReservationTest extends TestCase
             'state' => ProductReservation::STATE_CANCELED_BY_PROVIDER
         ]);
 
-        $this->assertTrue(floatval($voucher->amount_available) === $originalAmount);
+        $this->assertSame((float) $voucher->amount_available, $originalAmount);
 
         $reservation = ProductReservation::find($reservation->id);
         $this->assertTrue($reservation->isCanceledByProvider());

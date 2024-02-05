@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Config;
  * @property bool $button_enabled
  * @property string|null $button_text
  * @property string|null $button_link
+ * @property string|null $button_link_label
  * @property bool $button_target_blank
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -36,6 +37,7 @@ use Illuminate\Support\Facades\Config;
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock query()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereButtonEnabled($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereButtonLink($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereButtonLinkLabel($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereButtonTargetBlank($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereButtonText($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereCreatedAt($value)
@@ -64,6 +66,7 @@ class ImplementationBlock extends Model
     protected $fillable = [
         'implementation_page_id', 'key', 'type', 'label', 'title', 'description',
         'button_enabled', 'button_text', 'button_link', 'button_target_blank',
+        'button_link_label',
     ];
 
     /**

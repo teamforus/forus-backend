@@ -2,27 +2,27 @@
 
 namespace App\Exports;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Prevalidation;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Illuminate\Support\Collection;
 
 class PrevalidationsExport implements FromCollection, WithHeadings
 {
-    protected $request;
-    protected $data;
-    protected $headers;
+    protected BaseFormRequest $request;
+    protected Collection $data;
 
-    public function __construct(Request $request)
+    public function __construct(BaseFormRequest $request)
     {
         $this->request = $request;
         $this->data = Prevalidation::export($this->request);
     }
 
     /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function collection()
+     * @return Collection
+     */
+    public function collection(): Collection
     {
         return $this->data;
     }

@@ -18,7 +18,7 @@ class VoucherExportArrResource extends JsonResource
      */
     public function toArray($request): array
     {
-        return array_merge(Arr::only($this->resource, ['data']), [
+        return array_merge(Arr::only($this->resource, ['data', 'name']), [
             'files' => array_map(function($rawFile) {
                 return base64_encode($rawFile);
             }, $this->resource['files'] ?? []),

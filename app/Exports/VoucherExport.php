@@ -24,6 +24,7 @@ class VoucherExport extends BaseFieldedExport
         'in_use_date' => 'In gebruik datum',
         'activation_code' => 'Activatiecode',
         'fund_name' => 'Fondsnaam',
+        'implementation_name' => 'Implementatie',
         'reference_bsn' => 'BSN (door medewerker)',
         'client_uid' => 'Uniek nummer',
         'created_at' => 'Aangemaakt op',
@@ -55,12 +56,26 @@ class VoucherExport extends BaseFieldedExport
      */
     public static function getExportFields(string $type = 'budget') : array
     {
+        $fields = array_merge(parent::getExportFields(), self::addRecordFields());
+
         if ($type === 'product') {
-            return parent::getExportFields();
+            return $fields;
         }
 
-        return array_values(array_filter(parent::getExportFields(), static function(array $item) {
+        return array_values(array_filter($fields, static function(array $item) {
             return !in_array($item['key'], static::$productVoucherOnlyKeys);
         }));
+    }
+
+    /**
+     * @return array
+     */
+    private static function addRecordFields() : array
+    {
+        return array_map(fn ($type) => [
+            'key' => $type['key'],
+            'name' => $type['name'],
+            'is_record_field' => true,
+        ], array_filter(record_types_cached(), fn($record) => $record['vouchers'] ?? false));
     }
 }

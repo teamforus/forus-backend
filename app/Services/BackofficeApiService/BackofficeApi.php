@@ -10,8 +10,11 @@ use App\Services\BackofficeApiService\Responses\EligibilityResponse;
 use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
 use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Class BackofficeApi
@@ -117,6 +120,13 @@ class BackofficeApi
             ]));
         }
 
+        self::logError(sprintf(
+            "\nID: $log->id\nAction: $log->action\nResponseCode: %s\nResponseError: %s\nResponseBody: %s",
+            Arr::get($response, 'response_code', ''),
+            Arr::get($response, 'response_error', ''),
+            Arr::get($response, 'response_body', ''),
+        ));
+
         return $log->updateModel(array_merge(Arr::only($response, [
             'response_code', 'response_error',
         ]), [
@@ -187,6 +197,13 @@ class BackofficeApi
                 'response_id' => ($response['response_body']['id'] ?? null) ?: $log->request_id,
             ]));
         }
+
+        self::logError(sprintf(
+            "\nID: $log->id\nAction: $log->action\nResponseCode: %s\nResponseError: %s\nResponseBody: %s",
+            Arr::get($response, 'response_code', ''),
+            Arr::get($response, 'response_error', ''),
+            Arr::get($response, 'response_body', ''),
+        ));
 
         return $log->updateModel(array_merge(Arr::only($response, [
             'response_code', 'response_error',
@@ -267,10 +284,15 @@ class BackofficeApi
                 'response_body' => json_decode($response->getBody()->getContents(), true),
             ];
         } catch (\Throwable $e) {
+            $responseBody = $e instanceof RequestException && $e->hasResponse()
+                ? $e->getResponse()->getBody()->getContents()
+                : null;
+
             return [
                 'success' => false,
                 'response_code' => $e->getCode(),
                 'response_error' => $e->getMessage(),
+                'response_body' => $responseBody,
             ];
         } finally {
             $certTmpFile->close();
@@ -433,6 +455,13 @@ class BackofficeApi
                     'response_code' => $response['response_code'],
                 ]);
             } else {
+                self::logError(sprintf(
+                    "\nID: $log->id\nAction: $log->action\nResponseCode: %s\nResponseError: %s\nResponseBody: %s",
+                    Arr::get($response, 'response_code', ''),
+                    Arr::get($response, 'response_error', ''),
+                    Arr::get($response, 'response_body', ''),
+                ));
+
                 $log->updateModel(array_merge(Arr::only($response, [
                     'response_code', 'response_error',
                 ]), [
@@ -440,5 +469,19 @@ class BackofficeApi
                 ]));
             }
         }
+    }
+
+    /**
+     * @param string $message
+     * @param Throwable|null $e
+     * @return void
+     */
+    public static function logError(string $message, ?Throwable $e = null): void
+    {
+        Log::channel('backoffice')->error(implode("\n", array_filter([
+            $message,
+            $e?->getMessage(),
+            $e?->getTraceAsString(),
+        ])));
     }
 }

@@ -8,6 +8,7 @@ use App\Media\ImplementationBannerMediaConfig;
 use App\Media\ImplementationBlockMediaConfig;
 use App\Media\ImplementationMailLogoMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
+use App\Media\PreCheckBannerMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ReimbursementFilePreviewMediaConfig;
 use App\Models\BankConnection;
@@ -26,6 +27,7 @@ use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
+use App\Models\ReservationExtraPayment;
 use App\Models\VoucherRecord;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
@@ -44,6 +46,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
 
@@ -79,6 +82,7 @@ class AppServiceProvider extends ServiceProvider
         'voucher_record'                => VoucherRecord::class,
         'voucher_transaction'           => VoucherTransaction::class,
         'voucher_transaction_bulk'      => VoucherTransactionBulk::class,
+        'reservation_extra_payment'     => ReservationExtraPayment::class,
     ];
 
     /**
@@ -87,6 +91,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->setLocale(config('app.locale'));
+        $this->extendValidator();
 
         Schema::defaultStringLength(191);
         Relation::morphMap(self::$morphMap);
@@ -101,6 +106,7 @@ class AppServiceProvider extends ServiceProvider
             new ReimbursementFilePreviewMediaConfig(),
             new ImplementationMailLogoMediaConfig(),
             new ImplementationBlockMediaConfig(),
+            new PreCheckBannerMediaConfig(),
         ]);
 
         StringHelper::setDecimalSeparator('.');
@@ -116,6 +122,32 @@ class AppServiceProvider extends ServiceProvider
             Config::set('mail.default', 'array');
             Config::set('queue.default', 'sync');
         }
+    }
+
+    /**
+     * @return void
+     */
+    protected function extendValidator(): void
+    {
+        Validator::extend('city_name', function($attribute, $value) {
+            return preg_match('/^[A-Za-z\- ]{0,100}$/', $value);
+        });
+
+        Validator::extend('street_name', function($attribute, $value) {
+            return preg_match('/^[A-Za-z\- ]{0,80}$/', $value);
+        });
+
+        Validator::extend('house_number', function($attribute, $value) {
+            return preg_match('/^[1-9][0-9]{0,4}$/', $value);
+        });
+
+        Validator::extend('postcode', function($attribute, $value) {
+            return preg_match('/^[1-9][0-9]{3} ?[a-zA-Z]{2}$/', $value);
+        });
+
+        Validator::extend('house_addition', function($attribute, $value) {
+            return preg_match('/^[a-zA-Z0-9\-]{1,4}$/', $value);
+        });
     }
 
     /**

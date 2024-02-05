@@ -41,7 +41,6 @@ class ImplementationsTableSeeder extends DatabaseSeeder
             'url_app'               => Config::get('forus.front_ends.landing-app', ''),
             'lon'                   => Config::get('forus.front_ends.map.lon', ''),
             'lat'                   => Config::get('forus.front_ends.map.lat', ''),
-            'productboard_api_key'  => Config::get('forus.seeders.productboard.api_key', ''),
             'digid_connection_type' => 'saml',
             'digid_saml_context'    => $this->getDefaultSamlContext(),
         ]);

@@ -18,7 +18,7 @@ class PaginationLinks extends Value
         if (is_array($data)) {
             $this->responseData->setData(array_merge($data, [
                 'next' => $data['next'] ?? $data['Next'] ?? null,
-                'last' => $data['first'] ?? $data['First'] ?? null,
+                'last' => $data['last'] ?? $data['Last'] ?? null,
                 'first' => $data['first'] ?? $data['First'] ?? null,
                 'previous' => $data['previous'] ?? $data['Previous'] ?? null,
             ]));

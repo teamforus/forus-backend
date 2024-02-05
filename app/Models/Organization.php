@@ -16,6 +16,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\MollieService\Models\MollieConnection;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
@@ -51,7 +52,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $btw
  * @property string|null $website
  * @property bool $website_public
- * @property int|null $business_type_id
+ * @property int $business_type_id
  * @property bool $is_sponsor
  * @property bool $is_provider
  * @property bool $is_validator
@@ -71,6 +72,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_2fa_restrictions
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
+ * @property bool $allow_provider_extra_payments
+ * @property int $allow_pre_checks
+ * @property bool $reservation_allow_extra_payments
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $bi_connection_auth_type
@@ -91,7 +95,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read \App\Models\BankConnection|null $bank_connection_active
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
- * @property-read \App\Models\BusinessType|null $business_type
+ * @property-read \App\Models\BusinessType $business_type
  * @property-read Collection|\App\Models\OrganizationContact[] $contacts
  * @property-read int|null $contacts_count
  * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
@@ -106,6 +110,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $fund_provider_invitations_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
+ * @property-read Collection|\App\Models\FundProvider[] $fund_providers_allowed_extra_payments
+ * @property-read int|null $fund_providers_allowed_extra_payments_count
  * @property-read Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read Collection|\App\Models\Fund[] $funds
@@ -122,6 +128,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $logs_count
  * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
+ * @property-read MollieConnection|null $mollie_connection
+ * @property-read Collection|MollieConnection[] $mollie_connections
+ * @property-read int|null $mollie_connections_count
  * @property-read Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
  * @property-read Collection|\App\Models\OrganizationValidator[] $organization_validators
@@ -160,7 +169,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
- * @method static EloquentBuilder|Organization whereAllowReservationCustomFields($value)
+ * @method static EloquentBuilder|Organization whereAllowPreChecks($value)
+ * @method static EloquentBuilder|Organization whereAllowProviderExtraPayments($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
@@ -195,6 +205,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
  * @method static EloquentBuilder|Organization whereProviderThrottlingValue($value)
  * @method static EloquentBuilder|Organization whereReservationAddress($value)
+ * @method static EloquentBuilder|Organization whereReservationAllowExtraPayments($value)
  * @method static EloquentBuilder|Organization whereReservationBirthDate($value)
  * @method static EloquentBuilder|Organization whereReservationPhone($value)
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
@@ -229,7 +240,7 @@ class Organization extends BaseModel
         self::AUTH_2FA_POLICY_REQUIRED,
     ];
 
-    const EVENT_BI_CONNECTION_UPDATED = 'bi_connection_updated';
+    public const EVENT_BI_CONNECTION_UPDATED = 'bi_connection_updated';
 
     public const AUTH_2FA_FUNDS_POLICIES = [
         self::AUTH_2FA_FUNDS_POLICY_OPTIONAL,
@@ -253,40 +264,44 @@ class Organization extends BaseModel
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
         'bi_connection_auth_type', 'bi_connection_token',
         'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
-        'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements'
+        'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
+        'reservation_allow_extra_payments', 'allow_provider_extra_payments',
     ];
 
     /**
      * @var string[]
      */
     protected $casts = [
-        'btw'                                   => 'string',
-        'email_public'                          => 'boolean',
-        'phone_public'                          => 'boolean',
-        'website_public'                        => 'boolean',
-        'is_sponsor'                            => 'boolean',
-        'is_provider'                           => 'boolean',
-        'is_validator'                          => 'boolean',
-        'backoffice_available'                  => 'boolean',
-        'manage_provider_products'              => 'boolean',
-        'validator_auto_accept_funds'           => 'boolean',
-        'reservations_budget_enabled'           => 'boolean',
-        'reservations_subsidy_enabled'          => 'boolean',
-        'reservations_auto_accept'              => 'boolean',
-        'allow_batch_reservations'              => 'boolean',
-        'allow_custom_fund_notifications'       => 'boolean',
-        'allow_budget_fund_limits'              => 'boolean',
-        'allow_manual_bulk_processing'          => 'boolean',
-        'allow_2fa_restrictions'                => 'boolean',
-        'allow_fund_request_record_edit'        => 'boolean',
-        'allow_bi_connection'                   => 'boolean',
-        'pre_approve_external_funds'            => 'boolean',
-        'bsn_enabled'                           => 'boolean',
-        'auth_2fa_remember_ip'                  => 'boolean',
-        'auth_2fa_funds_remember_ip'            => 'boolean',
-        'auth_2fa_funds_restrict_emails'        => 'boolean',
-        'auth_2fa_funds_restrict_auth_sessions' => 'boolean',
-        'auth_2fa_funds_restrict_reimbursements' => 'boolean',
+        'btw'                                       => 'string',
+        'email_public'                              => 'boolean',
+        'phone_public'                              => 'boolean',
+        'website_public'                            => 'boolean',
+        'is_sponsor'                                => 'boolean',
+        'is_provider'                               => 'boolean',
+        'is_validator'                              => 'boolean',
+        'backoffice_available'                      => 'boolean',
+        'manage_provider_products'                  => 'boolean',
+        'validator_auto_accept_funds'               => 'boolean',
+        'reservations_budget_enabled'               => 'boolean',
+        'reservations_subsidy_enabled'              => 'boolean',
+        'reservations_auto_accept'                  => 'boolean',
+        'allow_batch_reservations'                  => 'boolean',
+        'allow_custom_fund_notifications'           => 'boolean',
+        'allow_budget_fund_limits'                  => 'boolean',
+        'allow_manual_bulk_processing'              => 'boolean',
+        'allow_2fa_restrictions'                    => 'boolean',
+        'allow_fund_request_record_edit'            => 'boolean',
+        'allow_bi_connection'                       => 'boolean',
+        'pre_approve_external_funds'                => 'boolean',
+        'bsn_enabled'                               => 'boolean',
+        'auth_2fa_remember_ip'                      => 'boolean',
+        'auth_2fa_funds_remember_ip'                => 'boolean',
+        'auth_2fa_funds_restrict_emails'            => 'boolean',
+        'auth_2fa_funds_restrict_auth_sessions'     => 'boolean',
+        'auth_2fa_funds_restrict_reimbursements'    => 'boolean',
+        'allow_provider_extra_payments'             => 'boolean',
+        'allow_pre_checks'                          => 'boolean',
+        'reservation_allow_extra_payments'          => 'boolean',
     ];
 
     /**
@@ -352,9 +367,24 @@ class Organization extends BaseModel
         }
 
         if ($q = $request->input('q')) {
-            return $query->where(function(Builder $builder) use ($q) {
+            return $query->where(function(EloquentBuilder $builder) use ($q) {
                 $builder->where('name', 'LIKE', "%$q%");
                 $builder->orWhere('description_text', 'LIKE', "%$q%");
+
+                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
+                    $builder->where('email_public', true);
+                    $builder->where('email', 'LIKE', "%$q%");
+                });
+
+                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
+                    $builder->where('phone_public', true);
+                    $builder->where('phone', 'LIKE', "%$q%");
+                });
+
+                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
+                    $builder->where('website_public', true);
+                    $builder->where('website', 'LIKE', "%$q%");
+                });
             });
         }
 
@@ -390,8 +420,8 @@ class Organization extends BaseModel
 
         return $query->orderBy(
             $request->get('order_by', 'created_at'),
-            $request->get('order_by_dir', 'asc'),
-        )->latest();
+            $request->get('order_dir', 'asc'),
+        );
     }
 
     /**
@@ -655,9 +685,76 @@ class Organization extends BaseModel
         return $this->hasMany(OrganizationContact::class);
     }
 
+    /**
+     * @return HasMany
+     */
     public function reservation_fields(): HasMany
     {
         return $this->hasMany(OrganizationReservationField::class)->orderBy('order');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function mollie_connections(): HasMany
+    {
+        return $this->hasMany(MollieConnection::class);
+    }
+
+    /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function mollie_connection(): HasOne
+    {
+        return $this
+            ->hasOne(MollieConnection::class)
+            ->has('active_token')
+            ->where('connection_state', MollieConnection::STATE_ACTIVE);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_providers_allowed_extra_payments(): HasMany
+    {
+        return $this
+            ->hasMany(FundProvider::class)
+            ->where('allow_extra_payments', true);
+    }
+
+    /**
+     * @param bool $fresh
+     * @return bool
+     */
+    public function canUseExtraPaymentsAsProvider(bool $fresh = false): bool
+    {
+        if ($fresh) {
+            return $this->fund_providers_allowed_extra_payments()->exists();
+        }
+
+        return $this->fund_providers_allowed_extra_payments->isNotEmpty();
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function canViewExtraPaymentsAsProvider(): bool
+    {
+        return $this->canUseExtraPaymentsAsProvider() || $this->mollie_connection;
+    }
+
+    /**
+     * @return bool
+     */
+    public function canReceiveExtraPayments(): bool
+    {
+        return
+            $this->canUseExtraPaymentsAsProvider() &&
+            $this->mollie_connection?->onboardingComplete();
     }
 
     /**
@@ -871,7 +968,7 @@ class Organization extends BaseModel
         /** @var Carbon|null $dateTo */
         $dateTo = array_get($options, 'date_to');
 
-        $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $sponsor);
+        $query = OrganizationQuery::whereIsProviderOrganization(self::query(), $sponsor);
 
         if ($providerIds) {
             $query->whereIn('id', $providerIds);
@@ -942,7 +1039,7 @@ class Organization extends BaseModel
         $funds = FundQuery::whereTopUpAndBalanceUpdateAvailable($this->funds(), $balanceProvider)->get();
         $balance = $funds->isNotEmpty() ? $this->bank_connection_active->fetchBalance() : null;
 
-        if ($funds->isNotEmpty() && $balance) {
+        if ($balance && $funds->isNotEmpty()) {
             foreach ($funds as $fund) {
                 $fund->setBalance($balance->getAmount(), $this->bank_connection_active);
             }
@@ -973,7 +1070,7 @@ class Organization extends BaseModel
      */
     public function isOwner(Identity $identity): bool
     {
-        return $this->identity_address == $identity->address;
+        return $this->identity_address === $identity->address;
     }
 
     public function updateBIConnection(?string $auth_type, bool $reset_token = false): void
@@ -985,7 +1082,7 @@ class Organization extends BaseModel
         }
 
         $connectionToken = $this->bi_connection_token;
-        $connectionEnabled = $this->bi_connection_auth_type != BIConnection::AUTH_TYPE_DISABLED;
+        $connectionEnabled = $this->bi_connection_auth_type !== BIConnection::AUTH_TYPE_DISABLED;
 
         if ($reset_token || (empty($this->bi_connection_token) && $connectionEnabled)) {
             $this->update([

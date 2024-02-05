@@ -5,9 +5,7 @@ namespace App\Models\Data;
 use App\Models\Voucher;
 
 /**
- * Class VoucherExportData
  * @property Voucher $voucher
- * @package App\Models\Data
  */
 class VoucherExportData
 {
@@ -56,6 +54,7 @@ class VoucherExportData
         $assigned = $this->voucher->identity_address && $this->voucher->is_granted;
         $identity = $this->voucher->identity;
         $firstUseDate = $this->voucher->first_use_date;
+        $allowRecords = $this->voucher->fund?->fund_config?->allow_voucher_records;
 
         $bsnData = $sponsor->bsn_enabled ? [
             'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
@@ -66,26 +65,41 @@ class VoucherExportData
             'name' => $this->name,
         ], [
             'id' => $this->voucher->id,
-            'granted' => $assigned ? 'Ja': 'Nee',
-            'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
-            'in_use_date' => $firstUseDate ? format_date_locale($firstUseDate) : null,
-            'has_transactions' => $this->voucher->has_transactions ? 'Ja': 'Nee',
-            'has_reservations' => $this->voucher->has_reservations ? 'Ja': 'Nee',
-            'product_name' => $this->voucher->product?->name,
-        ], $bsnData, [
+            ...$bsnData,
             'identity_email' => $assigned ? ($identity?->email) : null,
-            'state' => $this->voucher->state ?? null,
             'activation_code' => $this->voucher->activation_code ?? null,
             'client_uid' => $this->voucher->client_uid ?? null,
-            'note' => $this->voucher->note,
-            'source' => $this->voucher->employee_id ? 'employee': 'user',
+            'source' => $this->voucher->source_locale,
             'amount' => $this->voucher->amount_total_cached,
             'amount_available' => $this->voucher->amount_available_cached,
+            'note' => $this->voucher->note,
             'fund_name' => $this->voucher->fund->name,
+            'implementation_name' => $this->voucher->fund->fund_config?->implementation?->name,
+            'product_name' => $this->voucher->product?->name,
+            'granted' => $assigned ? 'Ja': 'Nee',
             'created_at' => format_date_locale($this->voucher->created_at),
             'expire_at' => format_date_locale($this->voucher->expire_at),
+            'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
+            'in_use_date' => $firstUseDate ? format_date_locale($firstUseDate) : null,
+            'state' => $this->voucher->state ?? null,
+            'has_transactions' => $this->voucher->has_transactions ? 'Ja': 'Nee',
+            'has_reservations' => $this->voucher->has_reservations ? 'Ja': 'Nee',
         ]);
 
-        return array_only($export_data, array_merge(['name'], $this->fields));
+        return array_only(array_merge(
+            $export_data,
+            $allowRecords ? $this->getRecordsData($this->voucher) : [],
+        ), array_merge(['name'], $this->fields));
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return array
+     */
+    protected function getRecordsData(Voucher $voucher): array
+    {
+        return $voucher->voucher_records->reduce(function(array $data, $record) {
+            return array_merge($data, [$record->record_type->key => $record->value]);
+        }, []);
     }
 }

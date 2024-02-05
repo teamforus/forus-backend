@@ -18,6 +18,7 @@ use App\Models\PhysicalCardRequest;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
+use App\Models\ReservationExtraPayment;
 use App\Models\Voucher;
 use App\Models\VoucherRecord;
 use App\Models\VoucherTransactionBulk;
@@ -26,6 +27,7 @@ use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Interfaces\IEventLogService;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Services\MollieService\Models\MollieConnection;
 use Illuminate\Database\Eloquent\Model;
 
 class EventLogService implements IEventLogService
@@ -81,6 +83,8 @@ class EventLogService implements IEventLogService
             'voucher_transaction_bulk' => fn() => $this->voucherTransactionBulkMeta($model),
             'implementation' => fn() => $this->implementationMeta($model),
             'reimbursement' => fn() => $this->reimbursementMeta($model),
+            'mollie_connection' => fn() => $this->mollieConnectionMeta($model),
+            'reservation_extra_payment' => fn() => $this->reservationExtraPaymentMeta($model),
         ];
 
         return $modelMeta[$type] ? $modelMeta[$type]() : [];
@@ -460,6 +464,43 @@ class EventLogService implements IEventLogService
             'resolved_at' => $reimbursement->resolved_at?->format('Y-m-d H:i:s'),
             'deleted_at' => $reimbursement->deleted_at?->format('Y-m-d H:i:s'),
         ], 'reimbursement_');
+    }
+
+    /**
+     * @param MollieConnection $mollieConnection
+     * @return array
+     */
+    protected function mollieConnectionMeta(MollieConnection $mollieConnection): array
+    {
+        return $this->keyPrepend([
+            'id' => $mollieConnection->id,
+            'business_type' => $mollieConnection->business_type,
+            'onboarding_state' => $mollieConnection->onboarding_state,
+            'connection_state' => $mollieConnection->connection_state,
+            'mollie_organization_id' => $mollieConnection->mollie_organization_id,
+        ], 'mollie_connection_');
+    }
+
+    /**
+     * @param ReservationExtraPayment $extraPayment
+     * @return array
+     */
+    protected function reservationExtraPaymentMeta(ReservationExtraPayment $extraPayment): array
+    {
+        return $this->keyPrepend([
+            'id' => $extraPayment->id,
+            'type' => $extraPayment->type,
+            'state' => $extraPayment->state,
+            'method' => $extraPayment->method,
+            'currency' => $extraPayment->currency,
+            'amount' => $extraPayment->amount,
+            'amount_locale' => $extraPayment->amount_locale,
+            'amount_refunded' => $extraPayment->amount_refunded,
+            'amount_refunded_locale' => $extraPayment->amount_refunded_locale,
+            'paid_at' => $extraPayment->paid_at,
+            'canceled_at' => $extraPayment->canceled_at,
+            'product_reservation_id' => $extraPayment->product_reservation_id,
+        ], 'reservation_extra_payment_');
     }
 
     /**

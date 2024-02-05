@@ -4,18 +4,16 @@ namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 use Symfony\Component\Mime\Email;
 
-/**
- * Class EmailActivationMail
- * @package App\Mail\User
- */
 class EmailActivationMail extends ImplementationMail
 {
     protected string $subjectKey = 'mails/system_mails.email_activation.title';
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

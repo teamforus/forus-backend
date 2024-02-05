@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Platform\Reimbursements\UpdateReimbursementRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\ReimbursementResource;
 use App\Models\Reimbursement;
+use App\Models\Voucher;
 use App\Searches\ReimbursementsSearch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
@@ -52,14 +53,17 @@ class ReimbursementsController extends Controller
             $request->identityProxy2FAConfirmed(),
         ]);
 
-        $files = $request->input('files');
+        /** @var Voucher $voucher */
         $voucher = $request->identity()->vouchers()->find($request->input('voucher_id'));
+        $files = $request->input('files');
 
         $data = $request->only([
-            'title', 'description', 'amount', 'email', 'iban', 'iban_name', 'state',
+            'title', 'description', 'amount', 'email', 'iban_name', 'state',
         ]);
 
-        $reimbursement = $voucher->makeReimbursement($data);
+        $reimbursement = $voucher->makeReimbursement(array_merge($data, [
+            'iban' => strtoupper($request->get('iban')),
+        ]));
         $reimbursement->syncFilesByUid($files);
 
         return ReimbursementResource::create($reimbursement);

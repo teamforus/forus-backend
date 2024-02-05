@@ -4,17 +4,15 @@ namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class ProviderAppliedMail
- * @package App\Mail\Funds
- */
 class ProviderInvitationMail extends ImplementationMail
 {
     protected string $subjectKey = 'mails/system_mails.provider_invitation.title';
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

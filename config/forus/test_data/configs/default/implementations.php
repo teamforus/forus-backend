@@ -47,5 +47,10 @@ return [
             'currency_sign' => '⛁',
             'currency_round' => true,
         ]
+    ],
+    'Goereeoverflakkee' => [
+        'implementation' => [
+            'key' => "goereeoverflakkee",
+        ]
     ]
 ];

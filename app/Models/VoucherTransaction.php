@@ -341,6 +341,7 @@ class VoucherTransaction extends BaseModel
             'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
             'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
             'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
+            'reservation_voucher_id',
         ]), self::query());
 
         return $builder->searchSponsor($organization);
@@ -539,7 +540,7 @@ class VoucherTransaction extends BaseModel
             return null;
         }
 
-        return max($this->transfer_at->diffInDays(now()), 0);
+        return max(now()->diffInDays($this->transfer_at, false), 0);
     }
 
     /**

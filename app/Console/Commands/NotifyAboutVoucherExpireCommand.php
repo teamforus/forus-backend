@@ -75,15 +75,15 @@ class NotifyAboutVoucherExpireCommand extends Command
     }
 
     /**
-     * @return Builder[]|\Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
     private function getExpiredVouchers(): Collection
     {
         $builder = $this->queryVouchers(
             Voucher::query(),
             Voucher::EVENT_EXPIRED_BUDGET,
-            Voucher::EVENT_EXPIRED_PRODUCT
-        )->where('expire_at', now()->format('Y-m-d'));
+            Voucher::EVENT_EXPIRED_PRODUCT,
+        )->whereDate('expire_at', now()->subDay()->format('Y-m-d'));
 
         return $builder->with('fund', 'fund.organization')->get();
     }
@@ -96,7 +96,7 @@ class NotifyAboutVoucherExpireCommand extends Command
      */
     protected function queryVouchers(
         Builder $builder,
-        string  $budgetEvent,
+        string $budgetEvent,
         string $productEvent
     ): Builder {
         $builder->where(function(Builder $builder) use ($budgetEvent, $productEvent) {
@@ -119,25 +119,10 @@ class NotifyAboutVoucherExpireCommand extends Command
             });
         });
 
-        $builder->whereNull('parent_id');
-        $builder->whereNull('product_reservation_id');
-        $builder->whereNotNull('identity_address');
-
-        return $builder->whereHas('fund', function(Builder $builder) {
-            $this->validFundsQuery($builder);
-        });
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    protected function validFundsQuery(Builder $builder): Builder
-    {
-        $builder->whereHas('fund_config', function(Builder $builder) {
-            $builder->whereHas('implementation');
-        });
-
-        return FundQuery::whereActiveFilter($builder);
+        return $builder
+            ->whereNull('parent_id')
+            ->whereNull('product_reservation_id')
+            ->whereNotNull('identity_address')
+            ->whereHas('fund.fund_config.implementation');
     }
 }

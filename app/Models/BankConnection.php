@@ -100,6 +100,9 @@ class BankConnection extends BaseModel
     public const EVENT_EXPIRING = 'expiring';
     public const EVENT_ERROR = 'error';
 
+    /**
+     * @noinspection PhpUnused
+     */
     public const EVENTS = [
         self::EVENT_CREATED,
         self::EVENT_REPLACED,
@@ -285,6 +288,7 @@ class BankConnection extends BaseModel
      */
     protected function makeOauthUrlBNG(): ?string
     {
+        /** @var BNGService $bngService */
         $bngService = resolve('bng_service');
 
         try {
@@ -297,11 +301,8 @@ class BankConnection extends BaseModel
                 'auth_params' => $authData->getParams(),
                 'consent_id' => $consentId,
             ]);
-        } catch (ApiException $exception) {
-            $error_message = $exception->getMessage();
-            $this->logError(compact('error_message'));
-            Log::channel('bng')->error($error_message);
-
+        } catch (ApiException $e) {
+            $this->logBngError('Oauth url', $e);
             return null;
         }
 
@@ -589,8 +590,8 @@ class BankConnection extends BaseModel
             $balance = $response->getClosingBookedBalance();
 
             return new BankBalance($balance->getBalanceAmount(), $balance->getBalanceCurrency());
-        } catch (\Throwable $e) {
-            Log::channel('bng')->error($e->getMessage());
+        } catch (Throwable $e) {
+            $bngService::logError('Fetch balance', $e);
         }
 
         return null;
@@ -643,11 +644,12 @@ class BankConnection extends BaseModel
      */
     protected function fetchPaymentsBNG(string $monetary_account_id, int $count = 100): ?array
     {
+        /** @var BNGService $bngService */
+        $bngService = resolve('bng_service');
+
         try {
             $page = 1;
             $transactions = [];
-            /** @var BNGService $bngService */
-            $bngService = resolve('bng_service');
             $totalPages = $count / 10;
 
             do {
@@ -666,7 +668,7 @@ class BankConnection extends BaseModel
                 return $this->transactionBngToBankPayment($transaction);
             }, $transactions);
         } catch (Throwable $e) {
-            Log::channel('bng')->error($e->getMessage());
+            $bngService::logError('Fetch payments', $e);
         }
 
         return null;
@@ -782,13 +784,17 @@ class BankConnection extends BaseModel
     }
 
     /**
-     * @param array $array
-     * @param Employee|null $employee
+     * @param string $message
+     * @param Throwable $e
      * @return EventLog
      */
-    public function logError(array $array = [], ?Employee $employee = null): EventLog
+    public function logBngError(string $message, Throwable $e): EventLog
     {
-        return $this->log(static::EVENT_ERROR, $this->getLogModels($employee), $array);
+        BNGService::logError($message, $e);
+
+        return $this->log(static::EVENT_ERROR, $this->getLogModels(), [
+            'error_message' => $e->getMessage(),
+        ]);
     }
 
     /**

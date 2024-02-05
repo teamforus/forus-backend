@@ -113,6 +113,10 @@ class FundRequest extends BaseModel
         self::STATE_DISREGARDED,
     ];
 
+    public const STATES_ARCHIVED = [
+        self::STATE_DECLINED,
+    ];
+
     protected $fillable = [
         'fund_id', 'identity_address', 'employee_id', 'note', 'state', 'resolved_at',
         'disregard_note', 'disregard_notify', 'identity_address',

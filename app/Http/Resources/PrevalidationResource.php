@@ -21,16 +21,15 @@ class PrevalidationResource extends BaseJsonResource
      */
     public function toArray($request): array
     {
-        $isAssigned = auth()->id() === $this->resource->identity_address;
-
-        $fields = array_merge([
-            'id', 'uid', 'records_hash', 'uid_hash', 'state', 'exported', 'fund_id',
-        ], $isAssigned ? ['identity_address'] : []);
-
         $records = $this->resource->prevalidation_records->sortByDesc('record_type_id');
 
-        return array_merge($this->resource->only($fields), [
+        return [
+            ...$this->resource->only([
+                'id', 'uid', 'records_hash', 'uid_hash', 'state', 'exported', 'fund_id',
+                'identity_address',
+            ]),
             'records' => PrevalidationRecordResource::collection($records),
-        ], $isAssigned ? $this->timestamps('created_at') : []);
+            ...$this->makeTimestamps($this->resource->only(['created_at'])),
+        ];
     }
 }

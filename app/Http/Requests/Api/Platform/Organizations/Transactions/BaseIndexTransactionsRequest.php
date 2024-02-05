@@ -4,10 +4,14 @@ namespace App\Http\Requests\Api\Platform\Organizations\Transactions;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
+use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Models\ProductReservation;
 use Illuminate\Validation\Rule;
 
+/**
+ * @property Organization $organization
+ */
 abstract class BaseIndexTransactionsRequest extends BaseFormRequest
 {
     /**
@@ -27,6 +31,8 @@ abstract class BaseIndexTransactionsRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+        $fundIds = $this->organization?->funds?->pluck('id')->toArray();
+
         return [
             'per_page'      => $this->perPageRule(),
             'q'             => 'nullable|string',
@@ -48,6 +54,15 @@ abstract class BaseIndexTransactionsRequest extends BaseFormRequest
             'provider_ids'      => 'nullable|array',
             'provider_ids.*'    => 'nullable|exists:organizations,id',
             'pending_bulking'   => 'nullable|boolean',
+
+            'voucher_id' => [
+                'nullable',
+                Rule::exists('vouchers', 'id')->whereIn('fund_id', $fundIds),
+            ],
+            'reservation_voucher_id' => [
+                'nullable',
+                Rule::exists('vouchers', 'id')->whereIn('fund_id', $fundIds),
+            ],
 
             'product_category_ids'          => 'nullable|array',
             'product_category_ids.*'        => 'nullable|exists:product_categories,id',

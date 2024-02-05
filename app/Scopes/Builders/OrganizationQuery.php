@@ -23,7 +23,7 @@ class OrganizationQuery
      */
     public static function whereIsEmployee(
         Builder $builder,
-        string $identityAddress
+        string|array $identityAddress,
     ): Builder {
         return $builder->where(static function(Builder $builder) use ($identityAddress) {
             $builder->whereHas('employees', static function(Builder $builder) use ($identityAddress) {
@@ -34,14 +34,14 @@ class OrganizationQuery
 
     /**
      * @param Builder $builder
-     * @param string $identityAddress
-     * @param $permissions
+     * @param string|array $identityAddress
+     * @param string|array $permissions
      * @return Builder
      */
     public static function whereHasPermissions(
         Builder $builder,
-        string $identityAddress,
-        $permissions
+        string|array $identityAddress,
+        string|array $permissions,
     ): Builder {
         return $builder->where(static function(Builder $builder) use ($identityAddress, $permissions) {
             $builder->whereHas('employees', static function(Builder $builder) use ($identityAddress, $permissions) {

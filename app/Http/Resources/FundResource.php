@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Http\Resources\Tiny\FundTinyResource;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -23,6 +24,7 @@ class FundResource extends BaseJsonResource
         'tags',
         'logo.presets',
         'criteria.fund',
+        'criteria.record_type.translation',
         'criteria.fund_criterion_validators.external_validator',
         'organization.logo.presets',
         'organization.employees',
@@ -86,13 +88,20 @@ class FundResource extends BaseJsonResource
                 FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth()->id());
             })->exists(),
             'organization_funds_2fa' => $organizationFunds2FAData,
+            'parent' => $fund->parent?->only(['id', 'name']),
+            'children' => $fund->children->map(fn (Fund $child) => $child->only(['id', 'name'])),
         ], $fundConfigData, $criteriaData, $financialData, $generatorData, $prevalidationCsvData);
 
         if ($isDashboard && $organization->identityCan($identity, ['manage_funds', 'manage_fund_texts'], false)) {
+            $requesterCount = VoucherQuery::whereNotExpiredAndActive($fund->vouchers())
+                ->whereNull('parent_id')
+                ->count();
+
             $data = array_merge($data, $fund->only([
                 'default_validator_employee_id', 'auto_requests_validation',
             ]), [
                 'criteria_editable' => $fund->criteriaIsEditable(),
+                'requester_count'  => $requesterCount,
             ]);
         }
 
@@ -115,7 +124,7 @@ class FundResource extends BaseJsonResource
             'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
             'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
             'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',
-            'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails',
+            'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails', 'hide_meta',
         ]) ?: [];
     }
 
@@ -156,7 +165,7 @@ class FundResource extends BaseJsonResource
         $isVoucherManager = Gate::allows('funds.manageVouchers', [$fund, $fund->organization]);
 
         return $isVoucherManager ? array_merge($fund->fund_config->only([
-            'allow_direct_payments', 'allow_voucher_top_ups',
+            'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
             'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
         ]), [
             'limit_per_voucher' => $fund->getMaxAmountPerVoucher(),
@@ -199,10 +208,6 @@ class FundResource extends BaseJsonResource
             });
         })->count();
 
-        $requesterCount = VoucherQuery::whereNotExpiredAndActive($fund->vouchers())
-            ->whereNull('parent_id')
-            ->count();
-
         $loadBudgetStats = $stats == 'all' || $stats == 'budget';
         $loadProductVouchersStats = $stats == 'all' || $stats == 'product_vouchers';
 
@@ -211,7 +216,6 @@ class FundResource extends BaseJsonResource
             'provider_organizations_count'  => $fund->provider_organizations_approved->count(),
             'provider_employees_count'      => $providersEmployeeCount,
             'validators_count'              => $validatorsCount,
-            'requester_count'               => $requesterCount,
             'budget'                        => $loadBudgetStats ? $this->getVoucherData($fund, 'budget') : null,
             'product_vouchers'              => $loadProductVouchersStats ? $this->getVoucherData($fund, 'product') : null,
         ];
@@ -269,7 +273,7 @@ class FundResource extends BaseJsonResource
     {
         return [
             'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',
-            'csv_required_keys' => $fund->requiredPrevalidationKeys()->toArray(),
+            'csv_required_keys' => $fund->requiredPrevalidationKeys(),
         ];
     }
 

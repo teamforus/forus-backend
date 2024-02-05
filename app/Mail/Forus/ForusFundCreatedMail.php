@@ -4,6 +4,7 @@ namespace App\Mail\Forus;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
 /**
  * Class FundCreatedMail
@@ -15,6 +16,7 @@ class ForusFundCreatedMail extends ImplementationMail
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

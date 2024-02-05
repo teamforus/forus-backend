@@ -83,7 +83,7 @@ class SystemNotification extends Model
         /** @var NotificationTemplate $generalTemplate */
         $generalTemplate = $systemNotification->templates()->where([
             'implementation_id' => $generalImplementation->id,
-            'formal' => !$currentImplementation->informal_communication,
+            'formal' => !($currentImplementation ?: $generalImplementation)->informal_communication,
             'type' => $type,
         ])->first();
 
@@ -164,6 +164,18 @@ class SystemNotification extends Model
     }
 
     /**
+     * @return array
+     */
+    public function baseChannels(): array
+    {
+        return array_filter([
+            $this->database ? 'database' : false,
+            $this->mail ? 'mail' : false,
+            $this->push ? 'push' : false,
+        ]);
+    }
+
+    /**
      * @param int|null $implementationId
      * @return array
      */
@@ -173,10 +185,10 @@ class SystemNotification extends Model
         $configs = $this->optional ? $this->system_notification_configs : null;
         $config = $configs?->where('implementation_id', $implementationId)->first();
 
-        return array_filter([
-            ($this->database && (!$config || !$config->disable_database)) ? 'database' : false,
-            ($this->mail && (!$config || !$config->disable_mail)) ? 'mail' : false,
-            ($this->push && (!$config || !$config->disable_push)) ? 'push' : false,
+        return ($config && !$config->enable_all) ? [] : array_filter([
+            ($this->database && (!$config || $config->enable_database)) ? 'database' : false,
+            ($this->mail && (!$config || $config->enable_mail)) ? 'mail' : false,
+            ($this->push && (!$config || $config->enable_push)) ? 'push' : false,
         ]);
     }
 }

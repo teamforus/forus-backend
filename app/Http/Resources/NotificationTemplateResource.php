@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\NotificationTemplate;
 use Illuminate\Http\Resources\Json\JsonResource;
+use League\CommonMark\Exception\CommonMarkException;
 
 /**
  * @property NotificationTemplate $resource
@@ -13,8 +14,9 @@ class NotificationTemplateResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array
+     * @throws CommonMarkException
      */
     public function toArray($request): array
     {

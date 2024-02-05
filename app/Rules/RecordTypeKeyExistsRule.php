@@ -3,12 +3,10 @@
 namespace App\Rules;
 
 use App\Models\RecordType;
-use Illuminate\Contracts\Validation\Rule;
-use Illuminate\Database\Eloquent\Collection;
 
-class RecordTypeKeyExistsRule implements Rule
+class RecordTypeKeyExistsRule extends BaseRule
 {
-    protected Collection $recordTypes;
+    protected array $recordTypes;
 
     /**
      * Create a new rule instance.
@@ -17,7 +15,7 @@ class RecordTypeKeyExistsRule implements Rule
      */
     public function __construct(bool $allowSystemKeys = false)
     {
-        $this->recordTypes = RecordType::search($allowSystemKeys);
+        $this->recordTypes = RecordType::search($allowSystemKeys)->pluck('key')->toArray();
     }
 
     /**
@@ -29,16 +27,8 @@ class RecordTypeKeyExistsRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        return (bool) $this->recordTypes->first(fn(RecordType $type) => $type->key === $value);
-    }
-
-    /**
-     * Get the validation error message.
-     *
-     * @return string
-     */
-    public function message(): string
-    {
-        return trans('validation.exists');
+        return in_array($value, $this->recordTypes) || $this->reject(trans('validation.exists', [
+            'attribute' => $attribute,
+        ]));
     }
 }

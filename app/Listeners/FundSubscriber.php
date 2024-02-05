@@ -25,7 +25,6 @@ use App\Mail\Funds\ProviderInvitationMail;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\OrganizationContact;
-use App\Notifications\Identities\Fund\IdentityRequesterProductRevokedNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderFundEndedNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderFundExpiringNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderFundStartedNotification;
@@ -39,8 +38,6 @@ use App\Notifications\Organizations\Funds\FundProductAddedNotification;
 use App\Notifications\Organizations\Funds\FundProviderAppliedNotification;
 use App\Notifications\Organizations\Funds\FundProviderChatMessageNotification;
 use App\Notifications\Organizations\Funds\FundStartedNotification;
-use App\Notifications\Identities\Fund\IdentityRequesterProductAddedNotification;
-use App\Notifications\Identities\Fund\IdentityRequesterProductApprovedNotification;
 use App\Notifications\Organizations\Funds\FundUnArchivedNotification;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Events\Dispatcher;
@@ -313,7 +310,6 @@ class FundSubscriber
         ]));
 
         FundProductAddedNotification::send($eventLog);
-        IdentityRequesterProductAddedNotification::send($eventLog);
     }
 
     /**
@@ -324,12 +320,10 @@ class FundSubscriber
         $fund = $event->getFund();
         $product = $event->getProduct();
 
-        $eventLog = $fund->log($fund::EVENT_PRODUCT_APPROVED, $this->getFundLogModels($fund, [
+        $fund->log($fund::EVENT_PRODUCT_APPROVED, $this->getFundLogModels($fund, [
             'product' => $product,
             'provider' => $product->organization,
         ]));
-
-        IdentityRequesterProductApprovedNotification::send($eventLog);
     }
 
     /**
@@ -341,12 +335,10 @@ class FundSubscriber
         $fund = $event->getFund();
         $product = $event->getProduct();
 
-        $eventLog = $fund->log($fund::EVENT_PRODUCT_REVOKED, $this->getFundLogModels($fund, [
+        $fund->log($fund::EVENT_PRODUCT_REVOKED, $this->getFundLogModels($fund, [
             'product' => $product,
             'provider' => $product->organization,
         ]));
-
-        IdentityRequesterProductRevokedNotification::send($eventLog);
     }
 
     /**

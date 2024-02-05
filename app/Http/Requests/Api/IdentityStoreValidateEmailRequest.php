@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use App\Http\Requests\BaseFormRequest;
+use Illuminate\Support\Facades\Config;
 
 class IdentityStoreValidateEmailRequest extends BaseFormRequest
 {
@@ -24,8 +25,8 @@ class IdentityStoreValidateEmailRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $this->maxAttempts = env('AUTH_THROTTLE_ATTEMPTS', 10);
-        $this->decayMinutes = env('AUTH_THROTTLE_DECAY', 10);
+        $this->maxAttempts = Config::get('forus.throttles.auth.attempts');
+        $this->decayMinutes = Config::get('forus.throttles.auth.decay');
         $this->throttleWithKey('to_many_attempts', $this, 'auth');
 
         return [

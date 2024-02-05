@@ -7,10 +7,12 @@ use App\Listeners\EmployeeSubscriber;
 use App\Listeners\FundProviderSubscriber;
 use App\Listeners\FundRequestSubscriber;
 use App\Listeners\FundSubscriber;
+use App\Listeners\MollieConnectionSubscriber;
 use App\Listeners\OrganizationSubscriber;
 use App\Listeners\ProductReservationSubscriber;
 use App\Listeners\ProductSubscriber;
 use App\Listeners\ReimbursementSubscriber;
+use App\Listeners\ReservationExtraPaymentSubscriber;
 use App\Listeners\VoucherRecordSubscriber;
 use App\Listeners\VoucherSubscriber;
 use App\Listeners\VoucherTransactionsSubscriber;
@@ -38,8 +40,10 @@ class EventServiceProvider extends ServiceProvider
         ReimbursementSubscriber::class,
         VoucherRecordSubscriber::class,
         BankConnectionSubscriber::class,
+        MollieConnectionSubscriber::class,
         ProductReservationSubscriber::class,
         VoucherTransactionsSubscriber::class,
+        ReservationExtraPaymentSubscriber::class,
     ];
 
     /**

@@ -4,17 +4,15 @@ namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class ProviderAppliedMail
- * @package App\Mail\Funds
- */
 class ProviderAppliedMail extends ImplementationMail
 {
     protected string $notificationTemplateKey = "notifications_funds.provider_applied";
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

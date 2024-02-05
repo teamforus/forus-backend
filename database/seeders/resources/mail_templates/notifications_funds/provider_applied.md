@@ -1,4 +1,4 @@
-# :provider_name wilt zich aanmelden voor :fund_name
+# :provider_name wil graag deelnemen aan :fund_name
 
 Beste :sponsor_name,
 

@@ -285,11 +285,13 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     /**
      * @return array
      */
-    public static function getChannels(): array
+    public function getChannels(): array
     {
         $systemNotification = SystemNotification::getByKey(static::$key);
 
-        return $systemNotification ? $systemNotification->channels() : [];
+        return $systemNotification ? $systemNotification->channels(
+            $this->implementation->id ?? Implementation::general()?->id
+        ) : [];
     }
 
     /**
@@ -322,8 +324,8 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      */
     public function via(): array
     {
-        $channelKeys = static::getChannels();
-        $channels = ['database'];
+        $channelKeys = $this->getChannels();
+        $channels = in_array('database', $channelKeys) ? ['database'] : [];
 
         if (in_array('mail', $channelKeys)) {
             $channels[] = MailChannel::class;

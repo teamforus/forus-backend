@@ -60,7 +60,8 @@ use Illuminate\Support\Facades\Gate;
  * @property float|null $lon
  * @property float|null $lat
  * @property bool $informal_communication
- * @property string|null $productboard_api_key
+ * @property string|null $currency_sign
+ * @property bool $currency_round
  * @property string|null $email_from_address
  * @property string|null $email_from_name
  * @property string|null $email_color
@@ -73,13 +74,11 @@ use Illuminate\Support\Facades\Gate;
  * @property bool $show_voucher_map
  * @property bool $show_product_map
  * @property bool $allow_per_fund_notification_templates
- * @property string $currency_sign
- * @property int $currency_round
  * @property bool $digid_enabled
- * @property string $digid_connection_type
- * @property array|null $digid_saml_context
  * @property bool $digid_required
  * @property bool $digid_sign_up_allowed
+ * @property string $digid_connection_type
+ * @property array|null $digid_saml_context
  * @property string $digid_env
  * @property string|null $digid_app_id
  * @property string|null $digid_shared_secret
@@ -88,6 +87,13 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $digid_trusted_cert
  * @property string|null $digid_cgi_tls_key
  * @property string|null $digid_cgi_tls_cert
+ * @property int $pre_check_enabled
+ * @property string $pre_check_title
+ * @property string $pre_check_banner_title
+ * @property string $pre_check_description
+ * @property string $pre_check_banner_description
+ * @property string|null $pre_check_banner_label
+ * @property string $pre_check_banner_state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
@@ -113,6 +119,11 @@ use Illuminate\Support\Facades\Gate;
  * @property-read int|null $pages_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages_public
  * @property-read int|null $pages_public_count
+ * @property-read Media|null $pre_check_banner
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PreCheck[] $pre_checks
+ * @property-read int|null $pre_checks_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PreCheckRecord[] $pre_checks_records
+ * @property-read int|null $pre_checks_records_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationSocialMedia[] $social_medias
  * @property-read int|null $social_medias_count
  * @method static Builder|Implementation newModelQuery()
@@ -152,7 +163,13 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder|Implementation whereOverlayEnabled($value)
  * @method static Builder|Implementation whereOverlayOpacity($value)
  * @method static Builder|Implementation whereOverlayType($value)
- * @method static Builder|Implementation whereProductboardApiKey($value)
+ * @method static Builder|Implementation wherePreCheckBannerDescription($value)
+ * @method static Builder|Implementation wherePreCheckBannerLabel($value)
+ * @method static Builder|Implementation wherePreCheckBannerState($value)
+ * @method static Builder|Implementation wherePreCheckBannerTitle($value)
+ * @method static Builder|Implementation wherePreCheckDescription($value)
+ * @method static Builder|Implementation wherePreCheckEnabled($value)
+ * @method static Builder|Implementation wherePreCheckTitle($value)
  * @method static Builder|Implementation whereShowHomeMap($value)
  * @method static Builder|Implementation whereShowHomeProducts($value)
  * @method static Builder|Implementation whereShowOfficeMap($value)
@@ -212,6 +229,8 @@ class Implementation extends BaseModel
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
         'currency_sign', 'currency_round', 'digid_cgi_tls_key', 'digid_cgi_tls_cert',
+        'pre_check_enabled', 'pre_check_title', 'pre_check_banner_state', 'pre_check_banner_title',
+        'pre_check_description', 'pre_check_banner_description', 'pre_check_banner_label',
     ];
 
     /**
@@ -219,7 +238,7 @@ class Implementation extends BaseModel
      */
     protected $hidden = [
         'digid_enabled', 'digid_env', 'digid_app_id', 'digid_shared_secret',
-        'digid_a_select_server', 'productboard_api_key'
+        'digid_a_select_server',
     ];
 
     /**
@@ -244,6 +263,7 @@ class Implementation extends BaseModel
         'show_product_map' => 'boolean',
         'allow_per_fund_notification_templates' => 'boolean',
         'currency_round' => 'boolean',
+        'pre_check_enabled' => 'boolean',
     ];
 
     /**
@@ -305,8 +325,36 @@ class Implementation extends BaseModel
     public function banner(): MorphOne
     {
         return $this->morphOne(Media::class, 'mediable')->where([
-            'type' => 'implementation_banner'
+            'type' => 'implementation_banner',
         ]);
+    }
+
+    /**
+     * Get fund banner
+     * @return MorphOne
+     * @noinspection PhpUnused
+     */
+    public function pre_check_banner(): MorphOne
+    {
+        return $this->morphOne(Media::class, 'mediable')->where([
+            'type' => 'pre_check_banner',
+        ]);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function pre_checks(): HasMany
+    {
+        return $this->hasMany(PreCheck::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function pre_checks_records(): HasMany
+    {
+        return $this->hasMany(PreCheckRecord::class);
     }
 
     /**
@@ -687,14 +735,15 @@ class Implementation extends BaseModel
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
                 // 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
                 'pages' => Arr::keyBy($pages, 'page_type'),
-                'has_productboard_integration' => !empty(resolve('productboard')),
                 'social_medias' => $implementation->social_medias->map(fn (ImplementationSocialMedia $media) => $media->only([
                     'url', 'type', 'title',
                 ])),
-            ], $implementation->only(
-                'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
-                'show_office_map', 'show_voucher_map', 'show_product_map',
-            ));
+                ...$implementation->isGeneral() ? [] : $implementation->getPreCheckFields(),
+                ...$implementation->only([
+                    'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
+                    'show_office_map', 'show_voucher_map', 'show_product_map',
+                ])
+            ]);
         }
 
         return $config ?: [];
@@ -822,7 +871,8 @@ class Implementation extends BaseModel
 
         return $query->orderBy(
             array_get($options, 'order_by', 'created_at'),
-            array_get($options, 'order_by_dir', 'desc'));
+            array_get($options, 'order_dir', 'desc'),
+        );
     }
 
     /**
@@ -883,14 +933,6 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return string|null
-     */
-    public function getProductboardApiKey(): ?string
-    {
-        return $this->productboard_api_key ?: Implementation::general()->productboard_api_key;
-    }
-
-    /**
      * @param Identity $identity
      * @return array|Voucher[]
      */
@@ -930,5 +972,62 @@ class Implementation extends BaseModel
         }
 
         return Implementation::general()->urlFrontend($frontend, $uri);
+    }
+
+    /**
+     * @return array
+     */
+    private function getPreCheckFields(): array
+    {
+        return [
+            'pre_check_banner' => new MediaResource($this->pre_check_banner),
+            ...$this->only([
+                'pre_check_enabled', 'pre_check_title', 'pre_check_description',
+                'pre_check_banner_state', 'pre_check_banner_title', 'pre_check_banner_description',
+                'pre_check_banner_label',
+            ]),
+        ];
+    }
+
+    /**
+     * @param array $pre_checks
+     * @return void
+     */
+    public function syncPreChecks(array $pre_checks): void
+    {
+        $this->pre_checks()
+            ->whereNotIn('id', array_filter(Arr::pluck($pre_checks, 'id')))
+            ->delete();
+
+        foreach ($pre_checks as $order => $preCheck) {
+            $preCheckData = [
+                ...Arr::only($preCheck, ['title', 'title_short', 'description', 'default']),
+                'order' => $order,
+            ];
+
+            /** @var PreCheck $pre_check */
+            if ($pre_check = $this->pre_checks()->find($preCheck['id'] ?? null)) {
+                $pre_check->update($preCheckData);
+            } else {
+                $pre_check = $this->pre_checks()->create($preCheckData);
+            }
+
+            foreach (Arr::get($preCheck, 'record_types', []) as $order2 => $preCheckRecordType) {
+                $this->pre_checks_records()->updateOrCreate([
+                    'record_type_key' => $preCheckRecordType['record_type_key'],
+                ], [
+                    'order' => $order2,
+                    'pre_check_id' => $pre_check->id,
+                    ...Arr::only($preCheckRecordType, ['title', 'title_short', 'description'])
+                ]);
+            }
+        }
+
+        /** @var ?PreCheck $defaultPreCheck */
+        if ($defaultPreCheck = $this->pre_checks()->where('default', true)->first()) {
+            $this->pre_checks()->where('id', '!=', $defaultPreCheck->id)->update([
+                'default' => false,
+            ]);
+        }
     }
 }

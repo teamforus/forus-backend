@@ -25,7 +25,7 @@ class ContactFormController extends Controller
         if ($email = Config::get('forus.notification_mails.contact_form', false)) {
             resolve('forus.services.notification')->sendSystemMail($email, new ContactFormMail($data));
         } else {
-            Log::error('Contact form submitted but no contact email is not set:', $data);
+            Log::error('Contact form submitted but the feedback email is not set: ', $data);
         }
 
         return new JsonResponse();

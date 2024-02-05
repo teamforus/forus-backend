@@ -6,11 +6,8 @@ use App\Mail\ImplementationMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class DeactivationVoucherMail
- * @package App\Mail\Vouchers
- */
 class DeactivationVoucherMail extends ImplementationMail
 {
     use Queueable, SerializesModels;
@@ -19,6 +16,7 @@ class DeactivationVoucherMail extends ImplementationMail
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

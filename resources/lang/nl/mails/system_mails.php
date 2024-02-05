@@ -7,6 +7,9 @@ return [
     'contact_form' => [
         'title' => 'New message from contact form',
     ],
+    'feedback_form' => [
+        'title' => 'New feedback from customer :customer_email',
+    ],
     'email_activation' => [
         'title' => 'E-mailadres bevestigen',
     ],

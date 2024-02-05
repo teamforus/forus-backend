@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions;
 
 use App\Exports\VoucherTransactionsSponsorExport;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\BaseIndexTransactionsRequest as BaseIndexTransactionsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Transactions\BaseIndexTransactionsRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Arr;
 

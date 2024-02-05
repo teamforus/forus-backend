@@ -9,11 +9,13 @@ use App\Models\Organization;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
+use Tests\Traits\MakesTestOrganizations;
 
 class Organization2FATest extends TestCase
 {
-    use DatabaseTransactions, WithFaker, MakesTestIdentities;
+    use DatabaseTransactions, WithFaker, MakesTestIdentities, MakesTestOrganizations, MakesTestFunds;
 
     /**
      * @return void
@@ -30,6 +32,22 @@ class Organization2FATest extends TestCase
         $this->assertOrganization2FAUpdate([
             'auth_2fa_funds_policy' => Organization::AUTH_2FA_FUNDS_POLICY_REQUIRED,
             'auth_2fa_funds_remember_ip' => true,
+        ]);
+    }
+
+    /**
+     * @return void
+     */
+    public function testUpdateGlobal2FASettings(): void
+    {
+        $this->assertOrganization2FAUpdate([
+            'auth_2fa_policy' => Organization::AUTH_2FA_POLICY_OPTIONAL,
+            'auth_2fa_remember_ip' => false,
+        ]);
+
+        $this->assertOrganization2FAUpdate([
+            'auth_2fa_policy' => Organization::AUTH_2FA_POLICY_REQUIRED,
+            'auth_2fa_remember_ip' => true,
         ]);
     }
 
@@ -59,6 +77,18 @@ class Organization2FATest extends TestCase
             'auth_2fa_policy' => FundConfig::AUTH_2FA_POLICY_GLOBAL,
         ]);
 
+        // other funds without restriction
+        $unrestrictedFunds = $organization->funds
+            ->filter(fn (Fund $item) => $item->id !== $fund->id)
+            ->each(fn (Fund $fund) => $fund->fund_config->forceFill([
+                'auth_2fa_policy' => FundConfig::AUTH_2FA_POLICY_RESTRICT,
+                'auth_2fa_restrict_emails' => false,
+                'auth_2fa_restrict_auth_sessions' => false,
+                'auth_2fa_restrict_reimbursements' => false,
+            ])->save())
+            ->pluck('id')
+            ->toArray();
+
         $organization->update([
             'auth_2fa_funds_policy' => Organization::AUTH_2FA_FUNDS_POLICY_REQUIRED,
             'auth_2fa_funds_remember_ip' => false,
@@ -81,10 +111,17 @@ class Organization2FATest extends TestCase
         ]);
 
         $restrictions = $this->getJson('/api/v1/identity/2fa', $headers)->json('data.restrictions');
+        $restrictedEmails = Arr::get($restrictions, 'emails.funds');
+        $restrictedSessions = Arr::get($restrictions, 'sessions.funds');
+        $restrictedReimbursements = Arr::get($restrictions, 'reimbursements.funds');
 
-        $this->assertNotEmpty(Arr::first(Arr::get($restrictions, 'emails.funds'), fn ($item) => $item['id'] == $fund->id));
-        $this->assertNotEmpty(Arr::first(Arr::get($restrictions, 'sessions.funds'), fn ($item) => $item['id'] == $fund->id));
-        $this->assertNotEmpty(Arr::first(Arr::get($restrictions, 'reimbursements.funds'), fn ($item) => $item['id'] == $fund->id));
+        $this->assertNotEmpty(Arr::first($restrictedEmails, fn ($item) => $item['id'] === $fund->id));
+        $this->assertNotEmpty(Arr::first($restrictedSessions, fn ($item) => $item['id'] === $fund->id));
+        $this->assertNotEmpty(Arr::first($restrictedReimbursements, fn ($item) => $item['id'] === $fund->id));
+
+        $this->assertEmpty(Arr::first($restrictedEmails, fn ($item) => in_array($item['id'], $unrestrictedFunds, true)));
+        $this->assertEmpty(Arr::first($restrictedSessions, fn ($item) => in_array($item['id'], $unrestrictedFunds, true)));
+        $this->assertEmpty(Arr::first($restrictedReimbursements, fn ($item) => in_array($item['id'], $unrestrictedFunds, true)));
 
         $organization->update([
             'auth_2fa_funds_policy' => Organization::AUTH_2FA_FUNDS_POLICY_RESTRICT,
@@ -94,10 +131,13 @@ class Organization2FATest extends TestCase
         ]);
 
         $restrictions = $this->getJson('/api/v1/identity/2fa', $headers)->json('data.restrictions');
+        $restrictedEmails = Arr::get($restrictions, 'emails.funds');
+        $restrictedSessions = Arr::get($restrictions, 'sessions.funds');
+        $restrictedReimbursements = Arr::get($restrictions, 'reimbursements.funds');
 
-        $this->assertEmpty(Arr::first(Arr::get($restrictions, 'emails.funds'), fn ($item) => $item['id'] == $fund->id));
-        $this->assertEmpty(Arr::first(Arr::get($restrictions, 'sessions.funds'), fn ($item) => $item['id'] == $fund->id));
-        $this->assertEmpty(Arr::first(Arr::get($restrictions, 'reimbursements.funds'), fn ($item) => $item['id'] == $fund->id));
+        $this->assertEmpty(Arr::first($restrictedEmails, fn ($item) => $item['id'] === $fund->id));
+        $this->assertEmpty(Arr::first($restrictedSessions, fn ($item) => $item['id'] === $fund->id));
+        $this->assertEmpty(Arr::first($restrictedReimbursements, fn ($item) => $item['id'] === $fund->id));
 
     }
 
@@ -151,6 +191,14 @@ class Organization2FATest extends TestCase
      */
     private function getOrganization(): Organization
     {
-        return Organization::whereHas('funds')->where('allow_2fa_restrictions', true)->first();
+        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()), [
+            'allow_2fa_restrictions' => true,
+        ]);
+
+        $this->makeTestFund($organization);
+        $this->makeTestFund($organization);
+        $this->makeTestFund($organization);
+
+        return $organization->refresh();
     }
 }

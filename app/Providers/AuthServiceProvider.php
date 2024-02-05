@@ -22,6 +22,7 @@ use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
 use App\Models\ReimbursementCategory;
+use App\Models\ReservationExtraPayment;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
@@ -39,6 +40,8 @@ use App\Policies\IdentityEmailPolicy;
 use App\Policies\ImplementationPagePolicy;
 use App\Policies\ImplementationPolicy;
 use App\Policies\MediaPolicy;
+use App\Policies\MollieConnectionPolicy;
+use App\Policies\MollieConnectionProfilePolicy;
 use App\Policies\PhysicalCardPolicy;
 use App\Policies\PhysicalCardRequestPolicy;
 use App\Policies\PrevalidationPolicy;
@@ -48,6 +51,7 @@ use App\Policies\ProductPolicy;
 use App\Policies\ProductReservationPolicy;
 use App\Policies\ReimbursementCategoryPolicy;
 use App\Policies\ReimbursementPolicy;
+use App\Policies\ReservationExtraPaymentPolicy;
 use App\Policies\VoucherPolicy;
 use App\Policies\VoucherTransactionBulkPolicy;
 use App\Policies\VoucherTransactionPolicy;
@@ -56,6 +60,8 @@ use App\Services\AuthService\ServiceIdentityProvider;
 use App\Services\FileService\Models\File;
 use App\Models\IdentityEmail;
 use App\Services\MediaService\Models\Media;
+use App\Services\MollieService\Models\MollieConnection;
+use App\Services\MollieService\Models\MollieConnectionProfile;
 use Illuminate\Contracts\Auth\Access\Gate as GateContract;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -90,6 +96,7 @@ class AuthServiceProvider extends ServiceProvider
         Implementation::class           => ImplementationPolicy::class,
         BankConnection::class           => BankConnectionPolicy::class,
         FundProviderChat::class         => FundProviderChatPolicy::class,
+        MollieConnection::class         => MollieConnectionPolicy::class,
         FundRequestRecord::class        => FundRequestRecordPolicy::class,
         ImplementationPage::class       => ImplementationPagePolicy::class,
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
@@ -100,6 +107,8 @@ class AuthServiceProvider extends ServiceProvider
         FundProviderInvitation::class   => FundProviderInvitationPolicy::class,
         FundProviderChatMessage::class  => FundProviderChatMessagePolicy::class,
         FundProviderUnsubscribe::class  => FundProviderUnsubscribePolicy::class,
+        MollieConnectionProfile::class  => MollieConnectionProfilePolicy::class,
+        ReservationExtraPayment::class  => ReservationExtraPaymentPolicy::class,
         FundRequestClarification::class => FundRequestClarificationPolicy::class,
     ];
 

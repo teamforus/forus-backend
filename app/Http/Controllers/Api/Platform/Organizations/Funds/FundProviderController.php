@@ -88,14 +88,13 @@ class FundProviderController extends Controller
         $this->authorize('show', [$fund, $organization]);
         $this->authorize('updateSponsor', [$fundProvider, $organization, $fund]);
 
-        DB::transaction(function() use ($fundProvider, $request, $fund){
-            $fundProvider->update($request->only($fund->isTypeBudget() ? [
-                'allow_products', 'allow_budget', 'excluded',
-            ] : [
-                'excluded'
+        DB::transaction(function() use ($organization, $fundProvider, $request, $fund) {
+            $fundProvider->update($request->only([
+                ...$fund->isTypeBudget() ? ['allow_products', 'allow_budget', 'excluded'] : ['excluded'],
+                ...$organization->allow_provider_extra_payments ? ['allow_extra_payments'] : [],
             ]));
 
-            if ($request->has('state') && ($request->input('state') != $fundProvider->state)) {
+            if ($request->has('state') && ($request->input('state') !== $fundProvider->state)) {
                 $fundProvider->setState($request->input('state'));
             }
 

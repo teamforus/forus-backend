@@ -18,6 +18,7 @@ class IndexProvidersRequest extends IndexFundProviderRequest
     public function rules(): array
     {
         $funds = $this->organization->funds->pluck('id');
+        $implementations = $this->organization->implementations->pluck('id');
 
         return array_merge(parent::rules(), [
             'from'                      => 'nullable|date_format:Y-m-d',
@@ -36,6 +37,7 @@ class IndexProvidersRequest extends IndexFundProviderRequest
             'resource_type'             => $this->resourceTypeRule(['default', 'select']),
             'business_type_ids'         => 'nullable|array',
             'business_type_ids.*'       => 'nullable|exists:business_types,id',
+            'implementation_id'         => 'nullable|exists:implementations,id|in:' . $implementations->join(','),
         ]);
     }
 }

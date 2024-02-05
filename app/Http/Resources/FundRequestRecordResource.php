@@ -5,9 +5,7 @@ namespace App\Http\Resources;
 use App\Models\FundRequestRecord;
 
 /**
- * Class FundRequestRecordResource
  * @property FundRequestRecord $resource
- * @package App\Http\Resources
  */
 class FundRequestRecordResource extends BaseJsonResource
 {
@@ -19,13 +17,14 @@ class FundRequestRecordResource extends BaseJsonResource
      */
     public function toArray($request): array
     {
-        $recordTypes = collect(record_types_cached())->keyBy('key');
-
         return array_merge($this->resource->only([
             'id', 'state', 'record_type_key', 'fund_request_id', 'employee_id', 'value',
             'fund_criterion_id',
         ]), [
-            'record_type' => $recordTypes[$this->resource->record_type_key],
+            'record_type' => [
+                ...$this->resource->record_type->only(['name', 'key', 'type']),
+                'options' => $this->resource->record_type->getOptions(),
+            ],
         ], $this->timestamps($this->resource, 'created_at', 'updated_at'));
     }
 }

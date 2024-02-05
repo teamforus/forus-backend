@@ -128,6 +128,13 @@ return [
         'wrong_categories'  => 'Verkeerde categorieën.',
         'already_requested' => 'U heeft dit al een keer aangevraagd.',
     ],
+
+    'city_name' => 'Het lijkt erop dat de :attribute niet klopt.',
+    'street_name' => 'Het lijkt erop dat de :attribute niet klopt.',
+    'house_number' => 'Het lijkt erop dat het :attribute niet klopt.',
+    'house_addition' => 'Het lijkt erop dat de :attribute niet klopt.',
+    'postcode' => 'Het lijkt erop dat de :attribute niet klopt.',
+
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines
@@ -172,13 +179,13 @@ return [
         'product_voucher_used' => 'Het tegoed voor dit aanbod is al gebruikt!',
         'provider_not_applied' => 'U mag dit tegoed niet scannen! Uw organisatie is nog niet aangemeld bij het fonds van dit tegoed.',
         'provider_pending' => 'U mag dit tegoed niet scannen! Status voor aanmelding van het fonds van dit tegoed is wachtend.',
-        'provider_declined' => 'U mag dit tegoed niet scannen! Uw organisatie is geweigerd om deel te nemen aan het fonds. Zoek contact op met sponsor voor een reden.',
+        'provider_declined' => 'Dit tegoed kan niet gescand worden. Uw organisatie heeft niet de juiste rechten. Neem contact op met de partij die het tegoed uitgeeft of via support@forus.io.',
         'fund_not_active' => 'U mag dit tegoed nog niet scannen! Het fonds is niet actief.',
         'not_enough_funds' => 'Onvoldoende tegoed.',
         'product_sold_out' => 'Uw aanbod is uitverkocht, verhoog in uw beheeromgeving het aantal dat nog te koop is.',
         'reservation_used' => 'De reservering is al gebruikt.',
         'reservation_product_removed' => 'Het aanbod is verwijderd van deze reservering.',
-        'throttled' => "Sorry, but you can make only one transaction per voucher within :hardLimit seconds.\n Please try in :hardLimit seconds.",
+        'throttled' => "Sorry, u kunt maar één transactie per voucher maken in :hardLimit seconden.\n Probeer het in :hardLimit seconden nog een keer.",
     ],
     'product_voucher' => [
         'product_not_found' => 'Aanbod niet gevonden.',
@@ -192,9 +199,9 @@ return [
         'reservation_not_enabled' => 'Reserveren staat niet aan voor dit aanbod.',
         'no_identity_stock' => 'Het aanbod heeft het limiet bereikt!',
         'no_total_stock' => 'Het aanbod heeft het limiet bereikt!',
-        'reservation_not_pending' => join(" ", [
+        'reservation_not_pending' => implode(" ", [
             'De reservering (#:code) kan niet gescant worden, de status van deze reservering is ":state".',
-            'Ga naar de beheeromgeving om de reservering te beoordelen.'
+            'Ga naar de beheeromgeving om de reservering te beoordelen.',
         ]),
         'reservations_limit_reached' => 'Reserveringslimiet bereikt, u kunt tot :count reserveringen hebben.',
         'too_many_canceled_reservations_for_product' => implode(' ', [
@@ -202,6 +209,7 @@ return [
             'Nieuwe reserveringen kunnen pas weer na een uur worden gemaakt.',
         ]),
         'not_enough_voucher_funds' => 'Onvoldoende budget op de voucher',
+        'reservations_has_unpaid_extra' => 'Er bestaat al een reservering voor dit aanbod waar de bijbetaling nog niet is afgerond.',
     ],
     'employees' => [
         'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',
@@ -254,11 +262,15 @@ return [
         'voucher_id' => 'voucher',
         'product_id' => 'product',
         'record_type_key_multiplier' => 'record type',
-        'birth_date' => 'Geboortedatum',
         'label' => 'label',
         'type' => 'type',
         'birth_date' => 'geboortedatum',
-        'external_page_url' => 'externe url'
+        'external_page_url' => 'externe url',
+
+        'house_nr' => 'huisnummer',
+        'house_nr_addition' => 'huisnummertoevoeging',
+        'postal_code' => 'postcode',
+        'street' => 'straat',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',

@@ -4,17 +4,15 @@ namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class EmailActivationMail
- * @package App\Mail\User
- */
 class IdentityEmailVerificationMail extends ImplementationMail
 {
     protected string $subjectKey = 'mails/system_mails.identity_email_verification.title';
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

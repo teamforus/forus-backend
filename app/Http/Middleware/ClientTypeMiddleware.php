@@ -3,12 +3,9 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/**
- * Class ClientTypeMiddleware
- * @package App\Http\Middleware
- */
 class ClientTypeMiddleware
 {
     /**
@@ -27,20 +24,19 @@ class ClientTypeMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param Request $request
+     * @param Closure $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next): mixed
     {
-        $exclude = in_array($request->route()->getName(), static::EXCEPT);
+        $excludedUrl = in_array($request->route()->getName(), static::EXCEPT, true);
+        $validType = in_array($this->activeType($request), $this->availableTypes(), true);
 
-        if (!$exclude && !in_array(
-            $this->activeType($request),
-            $this->availableTypes())) {
-            return response()->json([
-                "message" => 'unknown_client_type'
-            ])->setStatusCode(403);
+        if (!$excludedUrl && !$validType) {
+            return new JsonResponse([
+                "message" => 'unknown_client_type',
+            ], 403);
         }
 
         return $next($request);

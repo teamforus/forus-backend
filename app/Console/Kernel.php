@@ -25,6 +25,7 @@ use App\Console\Commands\Digests\SendRequesterDigestCommand;
 use App\Console\Commands\Digests\SendSponsorDigestCommand;
 use App\Console\Commands\Digests\SendValidatorDigestCommand;
 use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
+use App\Console\Commands\ReservationExtraPaymentExpireCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
 use App\Console\Commands\UpdateProductCategoriesCommand;
@@ -32,8 +33,11 @@ use App\Console\Commands\UpdateRolesCommand;
 use App\Console\Commands\UpdateSystemNotificationsCommand;
 use App\Services\Forus\Session\Commands\UpdateSessionsExpirationCommand;
 use App\Services\BackofficeApiService\Commands\SendBackofficeLogsCommand;
+use App\Services\MollieService\Commands\UpdateCompletedMollieConnectionsCommand;
+use App\Services\MollieService\Commands\UpdatePendingMollieConnectionsCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Config;
 
 /**
  * Class Kernel
@@ -106,6 +110,13 @@ class Kernel extends ConsoleKernel
         // seeders
         UpdateProductCategoriesCommand::class,
         UpdateRolesCommand::class,
+
+        // mollie
+        UpdateCompletedMollieConnectionsCommand::class,
+        UpdatePendingMollieConnectionsCommand::class,
+
+        // extra payments
+        ReservationExtraPaymentExpireCommand::class,
     ];
 
     /**
@@ -163,6 +174,8 @@ class Kernel extends ConsoleKernel
         $this->scheduleBackoffice($schedule);
         $this->scheduleQueue($schedule);
         $this->scheduleAuthExpiration($schedule);
+        $this->scheduleMollieConnections($schedule);
+        $this->scheduleReservationExtraPayments($schedule);
     }
 
     /**
@@ -198,7 +211,7 @@ class Kernel extends ConsoleKernel
          * BankVoucherTransactionProcessZeroAmountCommand:
          */
         $schedule->command('bank:process-zero-amount')
-            ->dailyAt(env('BANK_DAILY_BULK_BUILD_TIME', '09:00'))
+            ->dailyAt(Config::get('forus.kernel.bank_daily_bulk_build_time', '09:00'))
             ->withoutOverlapping()
             ->onOneServer();
 
@@ -224,7 +237,7 @@ class Kernel extends ConsoleKernel
      */
     public function scheduleDigest(Schedule $schedule): void
     {
-        if (env('DISABLE_DIGEST', false)) {
+        if (Config::get('forus.kernel.disable_digest', false)) {
             return;
         }
 
@@ -262,11 +275,16 @@ class Kernel extends ConsoleKernel
     public function scheduleQueue(Schedule $schedule): void
     {
         // use cron to send email/notifications
-        if (env('QUEUE_USE_CRON', false)) {
-            $schedule->command('queue:work --queue=' . env('EMAIL_QUEUE_NAME', 'emails'))
+        if (Config::get('forus.kernel.queue_use_cron', false)) {
+            $emailQueue = Config::get('forus.kernel.email_queue_name', 'emails');
+            $notificationsQueue = Config::get('forus.kernel.notifications_queue_name', 'push_notifications');
+
+            $schedule
+                ->command('queue:work --queue=' . $emailQueue)
                 ->everyMinute()->withoutOverlapping()->onOneServer();
 
-            $schedule->command('queue:work --queue=' . env('NOTIFICATIONS_QUEUE_NAME', 'push_notifications'))
+            $schedule
+                ->command('queue:work --queue=' . $notificationsQueue)
                 ->everyMinute()->withoutOverlapping()->onOneServer();
         }
     }
@@ -277,7 +295,7 @@ class Kernel extends ConsoleKernel
      */
     private function scheduleAuthExpiration(Schedule $schedule): void
     {
-        if (env('DISABLE_AUTH_EXPIRATION', false)) {
+        if (Config::get('disable_auth_expiration', false)) {
             return;
         }
 
@@ -302,6 +320,43 @@ class Kernel extends ConsoleKernel
         $schedule->command('funds.backoffice:send-logs')
             ->withoutOverlapping()
             ->everyMinute()
+            ->onOneServer();
+    }
+
+    /**
+     * @param Schedule $schedule
+     */
+    private function scheduleMollieConnections(Schedule $schedule): void
+    {
+        /**
+         * UpdatePendingMollieConnectionsCommand
+         */
+        $schedule->command('mollie:update-pending-connections')
+            ->hourly()
+            ->onOneServer()
+            ->withoutOverlapping();
+
+        /**
+         * UpdateCompletedMollieConnectionsCommand
+         */
+        $schedule->command('mollie:update-completed-connections')
+            ->dailyAt("09:00")
+            ->withoutOverlapping()
+            ->onOneServer();
+    }
+
+    /**
+     * @param Schedule $schedule
+     * @return void
+     */
+    private function scheduleReservationExtraPayments(Schedule $schedule): void
+    {
+        /**
+         * UpdateCompletedMollieConnectionsCommand
+         */
+        $schedule->command('reservation:extra-payments-expire')
+            ->everyMinute()
+            ->withoutOverlapping()
             ->onOneServer();
     }
 

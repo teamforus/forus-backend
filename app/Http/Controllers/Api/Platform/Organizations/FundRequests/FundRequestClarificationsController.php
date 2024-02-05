@@ -38,11 +38,7 @@ class FundRequestClarificationsController extends Controller
             $query->where('fund_request_record_id', $recordId);
         }
 
-        return FundRequestClarificationResource::collection(
-            $query->paginate(
-                $request->input('per_page')
-            )
-        );
+        return FundRequestClarificationResource::queryCollection($query, $request);
     }
 
     /**
@@ -67,7 +63,7 @@ class FundRequestClarificationsController extends Controller
 
         FundRequestClarificationRequested::dispatch($clarification);
 
-        return new FundRequestClarificationResource($clarification);
+        return FundRequestClarificationResource::create($clarification);
     }
 
     /**
@@ -88,6 +84,6 @@ class FundRequestClarificationsController extends Controller
             $fundRequestClarification, $fundRequest, $organization
         ]);
 
-        return new FundRequestClarificationResource($fundRequestClarification);
+        return FundRequestClarificationResource::create($fundRequestClarification);
     }
 }

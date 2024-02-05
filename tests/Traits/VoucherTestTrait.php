@@ -89,7 +89,7 @@ trait VoucherTestTrait
 
         return array_reduce($range, function (array $vouchers, $index) use ($fund, $assert) {
             $params = [];
-            $amount = rand(1, $fund->getMaxAmountPerVoucher());
+            $amount = random_int(1, $fund->getMaxAmountPerVoucher());
             $voucherType = $assert['type'] ?? 'budget';
             $sameAssignBy = $assert['same_assign_by'] ?? 0;
             $activationCode = $assert['activation_code'] ?? 0;
@@ -116,7 +116,7 @@ trait VoucherTestTrait
             $item = array_merge($params, [
                 'activate' => $assert['activate'] ?? true,
                 'activation_code' => $activationCode > $index,
-                'limit_multiplier' => $voucherType === 'budget' ? rand(1, 3) : 1,
+                'limit_multiplier' => $voucherType === 'budget' ? random_int(1, 3) : 1,
                 'expire_at' => now()->addDays(30)->format('Y-m-d'),
                 'note' => $this->faker()->sentence(),
                 'amount' => $amount ?? null,

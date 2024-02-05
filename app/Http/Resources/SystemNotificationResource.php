@@ -48,7 +48,7 @@ class SystemNotificationResource extends BaseJsonResource
             'enable_push' => $config->enable_push ?? true,
             'enable_database' => $config->enable_database ?? true,
             'variables' => BaseNotification::getVariables($systemNotification->key),
-            'channels' => $systemNotification->channels(),
+            'channels' => $systemNotification->baseChannels(),
             'templates' => NotificationTemplateResource::collection($implementationTemplates),
             'templates_default' => NotificationTemplateResource::collection($generalTemplates),
         ]);
@@ -57,6 +57,7 @@ class SystemNotificationResource extends BaseJsonResource
     /**
      * @param Collection $templates
      * @param Implementation $implementation
+     * @param bool $formalCommunication
      * @return Collection
      */
     public function getTemplates(

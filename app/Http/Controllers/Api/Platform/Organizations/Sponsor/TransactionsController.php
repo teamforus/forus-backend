@@ -53,7 +53,8 @@ class TransactionsController extends Controller
             'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,
         ]);
 
-        if ($request->has('voucher_id') && !$organization->show_provider_transactions) {
+        if (!$organization->show_provider_transactions &&
+            ($request->has('voucher_id') || $request->has('reservation_voucher_id'))) {
             $options['target'] = [VoucherTransaction::TARGET_TOP_UP, VoucherTransaction::TARGET_IBAN];
             $options['initiator'] = VoucherTransaction::INITIATOR_SPONSOR;
         }
