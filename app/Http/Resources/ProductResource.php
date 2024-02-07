@@ -184,7 +184,7 @@ class ProductResource extends BaseJsonResource
 
         if ($request->isWebshop()) {
             return [
-                'reservation' => [
+                'reservation' => $product->reservation_fields ? [
                     'phone' => $product->reservation_phone === $global ?
                         $organization->reservation_phone :
                         $product->reservation_phone,
@@ -194,13 +194,19 @@ class ProductResource extends BaseJsonResource
                     'birth_date' => $product->reservation_birth_date === $global ?
                         $organization->reservation_birth_date :
                         $product->reservation_birth_date,
-                    'fields' => OrganizationReservationFieldResource::collection($fields)
+                    'fields' => OrganizationReservationFieldResource::collection($fields),
+                ] : [
+                    'phone' => $product::RESERVATION_FIELD_NO,
+                    'address' => $product::RESERVATION_FIELD_NO,
+                    'birth_date' => $product::RESERVATION_FIELD_NO,
+                    'fields' => [],
                 ],
             ];
         }
 
         return [
             'reservation_phone' => $product->reservation_phone,
+            'reservation_fields' => $product->reservation_fields,
             'reservation_address' => $product->reservation_address,
             'reservation_birth_date' => $product->reservation_birth_date,
         ];

@@ -143,6 +143,7 @@ class OrganizationResource extends JsonResource
             ]),
             ...$request->isProviderDashboard() ? [
                 'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),
+                'can_receive_extra_payments' => $organization->canReceiveExtraPayments(),
                 'can_view_provider_extra_payments' => $organization->canViewExtraPaymentsAsProvider(),
             ] : [],
         ] : [];

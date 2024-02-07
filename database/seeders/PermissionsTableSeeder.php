@@ -18,6 +18,7 @@ class PermissionsTableSeeder extends Seeder
         'manage_validators'         => "Manage validators",
         'manage_employees'          => "Manage employees",
         'manage_vouchers'           => "Manage vouchers",
+        'view_implementations'      => "View implementations",
         'manage_implementation'     => "Manage implementation",
         'manage_implementation_cms' => "Manage implementation CMS",
         'manage_implementation_notifications' => "Manage implementation notifications",

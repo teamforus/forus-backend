@@ -324,6 +324,7 @@ class VoucherTransaction extends BaseModel
     {
         return [
             static::STATE_PENDING => 'In afwachting',
+            static::STATE_CANCELED => 'Geannuleerd',
             static::STATE_SUCCESS => 'Voltooid',
         ][$this->state] ?? $this->state;
     }

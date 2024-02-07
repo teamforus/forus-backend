@@ -26,7 +26,7 @@ class ProductReservationsExport extends BaseFieldedExport
         'address'       => 'Adres',
         'birth_date'    => 'Geboortedatum',
         'state'         => 'Status',
-        'created_at'    => 'Indien datum',
+        'created_at'    => 'Aangemaakt op',
         'expire_at'     => 'Verlopen op',
     ];
 

@@ -10,6 +10,7 @@ use App\Services\MollieService\Models\MollieConnection;
 class MollieConnectionResource extends BaseJsonResource
 {
     public const LOAD = [
+        'profiles',
         'profile_active',
         'profile_pending',
     ];
@@ -34,6 +35,7 @@ class MollieConnectionResource extends BaseJsonResource
             'organization' => $connection->organization->only('id', 'name'),
             'profile_active' => new MollieConnectionProfileResource($connection->profile_active),
             'profile_pending' => new MollieConnectionProfileResource($connection->profile_pending),
+            'profiles' => MollieConnectionProfileResource::collection($connection->profiles),
             ...$this->makeTimestamps($connection->only('created_at')),
             ...$this->makeTimestamps($connection->only('completed_at'), true),
         ];
