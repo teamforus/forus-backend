@@ -83,7 +83,7 @@ class VoucherTransactionQuery
         ]);
 
         if ($orderBy == 'date_non_cancelable') {
-            $orderBy = 'created_at';
+            $orderBy = 'transfer_at';
         }
 
         return $builder->orderBy(
@@ -123,7 +123,9 @@ class VoucherTransactionQuery
      */
     protected static function orderBulkState(): Builder|QBuilder
     {
-        return VoucherTransactionBulk::whereColumn('id', 'voucher_transaction_bulk_id')->select('state');
+        return VoucherTransactionBulk::query()
+            ->whereColumn('id', 'voucher_transaction_bulk_id')
+            ->select('state');
     }
 
     /**
@@ -175,6 +177,24 @@ class VoucherTransactionQuery
                 $query->orWhere('voucher_transactions.id', '=', $q);
                 $query->orWhereRelation('product', 'id', "=", $q);
             }
+        });
+    }
+
+    /**
+     * @param Builder|VoucherTransaction $builder
+     * @param bool $hasPayouts
+     * @return Builder
+     */
+    public static function whereIsPaidOutQuery(
+        Builder|VoucherTransaction $builder,
+        bool $hasPayouts = true,
+    ): Builder {
+        return $builder->where(function(Builder|VoucherTransaction $builder) use ($hasPayouts) {
+            $builder->whereRelation('voucher_transaction_bulk', function(
+                Builder|VoucherTransactionBulk $builder
+            ) {
+                $builder->where('state', VoucherTransactionBulk::STATE_DRAFT);
+            });
         });
     }
 }

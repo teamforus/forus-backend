@@ -19,6 +19,7 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
         'voucher.fund:id,name,organization_id',
         'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
         'voucher.product_reservation',
+        'voucher_transaction_bulk',
         'product.photo.presets',
         'provider:id,name,iban',
         'notes_sponsor',

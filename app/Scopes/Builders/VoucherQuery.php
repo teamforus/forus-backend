@@ -252,28 +252,6 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder $builder
-     * @param bool $hasPayouts
-     * @return Builder
-     */
-    public static function whereHasPayoutsQuery(Builder $builder, bool $hasPayouts = true): Builder
-    {
-        return $builder->where(static function(Builder $builder) use ($hasPayouts) {
-            if ($hasPayouts) {
-                $builder->whereRelation(
-                    'transactions.voucher_transaction_bulk', 'state', '!=', VoucherTransactionBulk::STATE_DRAFT
-                );
-            } else {
-                $builder->whereDoesntHave(
-                    'transactions.voucher_transaction_bulk'
-                )->orWhereRelation(
-                    'transactions.voucher_transaction_bulk', 'state',  VoucherTransactionBulk::STATE_DRAFT
-                );
-            }
-        });
-    }
-
-    /**
      * @param Builder|Relation $builder
      * @param Carbon|null $fromDate
      * @param Carbon|null $toDate
@@ -333,15 +311,6 @@ class VoucherQuery
     public static function whereNotInUseQuery(Builder $builder): Builder
     {
         return static::whereInUseQuery($builder, false);
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    public static function whereNoPayoutsQuery(Builder $builder): Builder
-    {
-        return static::whereHasPayoutsQuery($builder, false);
     }
 
     /**

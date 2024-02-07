@@ -20,6 +20,7 @@ use App\Models\Traits\HasDbTokens;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Scopes\Builders\VoucherQuery;
 use App\Scopes\Builders\VoucherSubQuery;
+use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -104,6 +105,8 @@ use ZipArchive;
  * @property-read \App\Models\VoucherTransaction|null $last_transaction
  * @property-read Collection|EventLog[] $logs
  * @property-read int|null $logs_count
+ * @property-read Collection|\App\Models\VoucherTransaction[] $paid_out_transactions
+ * @property-read int|null $paid_out_transactions_count
  * @property-read Voucher|null $parent
  * @property-read Collection|\App\Models\PhysicalCardRequest[] $physical_card_requests
  * @property-read int|null $physical_card_requests_count
@@ -426,6 +429,17 @@ class Voucher extends BaseModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function paid_out_transactions(): HasMany
+    {
+        return $this
+            ->hasMany(VoucherTransaction::class)
+            ->where(fn (Builder $builder) => VoucherTransactionQuery::whereIsPaidOutQuery($builder));
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      * @noinspection PhpUnused
      */
@@ -478,11 +492,7 @@ class Voucher extends BaseModel
      */
     public function getHasPayoutsAttribute(): bool
     {
-        return VoucherTransaction::where(
-            'voucher_id', $this->id
-        )->whereRelation(
-            'voucher_transaction_bulk', 'state', '!=', VoucherTransactionBulk::STATE_DRAFT
-        )->exists();
+        return $this->paid_out_transactions->count() > 0;
     }
 
     /**
@@ -866,9 +876,9 @@ class Voucher extends BaseModel
         if ($request->has('has_payouts')) {
             $query->where(function(Builder $builder) use ($has_payouts) {
                 if ($has_payouts) {
-                    VoucherQuery::whereHasPayoutsQuery($builder);
+                    $builder->whereHas('paid_out_transactions');
                 } else {
-                    VoucherQuery::whereNoPayoutsQuery($builder);
+                    $builder->whereDoesntHave('paid_out_transactions');
                 }
             });
         }

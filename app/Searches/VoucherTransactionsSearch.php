@@ -58,23 +58,23 @@ class VoucherTransactionsSearch extends BaseSearch
             );
         }
 
-        if ($this->hasFilter('from_non_cancelable') && $this->getFilter('from_non_cancelable')) {
-            $from_non_cancelable = Carbon::createFromFormat('Y-m-d', $this->getFilter('from_non_cancelable'));
-
+        if ($nonCancelableFrom = $this->getFilter('non_cancelable_from')) {
             $builder->where(
-                'created_at',
+                'transfer_at',
                 '>=',
-                $from_non_cancelable->startOfDay()->subDays(14)->format('Y-m-d H:i:s')
+                Carbon::createFromFormat('Y-m-d', $nonCancelableFrom)
+                    ->startOfDay()
+                    ->format('Y-m-d H:i:s')
             );
         }
 
-        if ($this->hasFilter('to_non_cancelable') && $this->getFilter('to_non_cancelable')) {
-            $to_non_cancelable = Carbon::createFromFormat('Y-m-d', $this->getFilter('to_non_cancelable'));
-
+        if ($nonCancelableTo = $this->getFilter('non_cancelable_to')) {
             $builder->where(
-                'created_at',
+                'transfer_at',
                 '<=',
-                $to_non_cancelable->endOfDay()->subDays(14)->format('Y-m-d H:i:s')
+                Carbon::createFromFormat('Y-m-d', $nonCancelableTo)
+                    ->endOfDay()
+                    ->format('Y-m-d H:i:s')
             );
         }
 

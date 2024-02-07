@@ -53,7 +53,7 @@ use Carbon\Carbon;
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
  * @property-read string $bulk_status_locale
  * @property-read bool $iban_final
- * @property-read Carbon $non_cancelable_at
+ * @property-read \Carbon\Carbon|null $non_cancelable_at
  * @property-read string $state_locale
  * @property-read string $target_locale
  * @property-read float $transaction_cost
@@ -182,12 +182,12 @@ class VoucherTransaction extends BaseModel
     ];
 
     /**
-     * @return Carbon
+     * @return Carbon|null
      * @noinspection PhpUnused
      */
-    public function getNonCancelableAtAttribute(): Carbon
+    public function getNonCancelableAtAttribute(): ?Carbon
     {
-        return $this->created_at->addDays(14);
+        return $this->transfer_at?->clone();
     }
 
     /**
@@ -352,7 +352,7 @@ class VoucherTransaction extends BaseModel
             'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
             'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
             'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
-            'reservation_voucher_id', 'from_non_cancelable', 'to_non_cancelable', 'bulk_state',
+            'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
         ]), self::query());
 
         return $builder->searchSponsor($organization);

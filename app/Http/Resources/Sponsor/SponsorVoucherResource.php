@@ -29,6 +29,7 @@ class SponsorVoucherResource extends BaseJsonResource
         'voucher_relation',
         'identity.primary_email',
         'top_up_transactions',
+        'paid_out_transactions',
     ];
 
     /**
