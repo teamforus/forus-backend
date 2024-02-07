@@ -59,14 +59,9 @@ class PreCheckController extends Controller
         $records = array_pluck($request->input('records', []), 'value', 'key');
         $availableFunds = PreCheck::getAvailableFunds($request);
 
-        $domPdf = resolve('dompdf.wrapper')->setOption(
-            'chroot',
-            realpath(base_path()) . '/public/assets/pre-check-totals-export'
-        );
-
         $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
 
-        $domPdfFile = $domPdf->loadView('pdf.pre_check_totals', [
+        $domPdfFile = resolve('dompdf.wrapper')->loadView('pdf.pre_check_totals', [
             'funds' => $funds,
             'date_locale' => format_date_locale(now()),
             'implementation_key' => $request->implementation()->key,
