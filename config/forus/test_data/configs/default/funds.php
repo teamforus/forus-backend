@@ -26,7 +26,6 @@ return [
         'fund_config' => [
             'key' => 'meedoen',
             'allow_reimbursements' => true,
-            'allow_physical_cards' => true,
             'allow_voucher_top_ups' => true,
             'allow_voucher_records' => true,
             'allow_direct_payments' => true,
@@ -53,6 +52,7 @@ return [
             'criteria_editable_after_start' => true,
         ],
         'fund_config' => [
+            'allow_physical_cards' => true,
             'auth_2fa_restrict_emails' => true,
             'auth_2fa_restrict_auth_sessions' => true,
             'auth_2fa_restrict_reimbursements' => true,
