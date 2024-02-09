@@ -1,5 +1,10 @@
 <?php
-/** @var array $funds */
+    /** @var array $funds */
+    $eemsdeltaHeaderLogoStyles = 'width: 100px;';
+    $eemsdeltaHeaderDateBlockStyles = 'left: 100px;';
+
+    $eemsdeltaFooterStyles = 'height: 100px; bottom: -40px;';
+    $eemsdeltaFooterLogoStyles = 'width: 80px;';
 ?>
 
 <!doctype html>
@@ -12,7 +17,7 @@
     <style>
         body {
             padding: 30px;
-            margin: 70px 0 40px;
+            margin: 120px 0 40px;
         }
 
         header {
@@ -86,16 +91,20 @@
             left: 0;
             right: 0;
             height: 50px;
-            padding: 30px;
-            margin-top: 300px;
+            margin-top: 200px;
+        }
+
+        footer .footer-wrapper {
+            position: relative;
+            padding: 0 30px;
+            height: 100%;
         }
 
         footer .logo-block {
             display: inline-block;
-            width: 100px;
-            padding-right: 30px;
-            border-right: 1px solid #9E9E9E;
+            width: 120px;
             margin-right: 30px;
+            vertical-align: middle;
         }
 
         footer .logo-block img {
@@ -104,6 +113,25 @@
 
         footer .footer-date {
             display: inline-block;
+            font: 600 12px/18px Arial, sans-serif, Helvetica;
+            border-left: 2px solid #ddd;
+            padding-left: 20px;
+            vertical-align: middle;
+        }
+
+        footer .pagenum {
+            display: inline-block;
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            vertical-align: middle;
+            margin-top: -15px;
+        }
+
+        footer .pagenum:before {
+            white-space: nowrap;
+            content: "Pagina " counter(page);
             font: 600 12px/18px Arial, sans-serif, Helvetica;
         }
 
@@ -145,8 +173,12 @@
 
         .implementation-logo {
             display: inline-block;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
             width: 200px;
-            margin-right: 20px;
+            vertical-align: middle;
+            padding-right: 20px;
         }
 
         .implementation-logo img {
@@ -154,12 +186,22 @@
         }
 
         .header-wrapper {
+            position: relative;
+            height: 100px;
             margin-bottom: 15px;
         }
 
         .header-wrapper .date-block {
             display: inline-block;
+            width: fit-content;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 200px;
+            padding-left: 20px;
             margin-left: 20px;
+            vertical-align: middle;
+            border-left: 2px solid #ddd;
         }
 
         .header-wrapper .date-block .title {
@@ -171,7 +213,11 @@
         }
 
         .header-wrapper .powered-by-block {
-            float: right;
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-block;
             text-align: center;
         }
 
@@ -241,16 +287,6 @@
             font: 400 15px/18px Arial, sans-serif, Helvetica;
             margin: 0;
         }
-
-        .pagenum {
-            float: right;
-            display: inline-block;
-        }
-
-        .pagenum:before {
-            content: "Pagina " counter(page);
-            font: 600 12px/18px Arial, sans-serif, Helvetica;
-        }
     </style>
 
     <body>
@@ -260,7 +296,7 @@
         <!-- Header -->
         <header>
             <div class="header-wrapper">
-                <div class="implementation-logo">
+                <div class="implementation-logo" style="{{ $implementation_key == 'eemsdelta' ? $eemsdeltaHeaderLogoStyles : '' }}">
                     @if (file_exists(storage_path("app/pre-check/logo-$implementation_key.png")))
                         <img src="{{ storage_path("app/pre-check/logo-$implementation_key.png") }}" alt="organization-logo"/>
                     @else
@@ -268,7 +304,7 @@
                     @endif
                 </div>
 
-                <div class="date-block">
+                <div class="date-block" style="{{ $implementation_key == 'eemsdelta' ? $eemsdeltaHeaderDateBlockStyles : '' }}">
                     <div class="title">Forus PreCheck</div>
                     <div class="description">{{ $date_locale }}</div>
                 </div>
@@ -283,14 +319,20 @@
             <div class="border-right"></div>
         </header>
 
-        <footer>
-            <div class="logo-block">
-                <img src="{{ storage_path('app/pre-check/footer-blue.png') }}" alt="organization-logo"/>
+        <footer style="{{ $implementation_key == 'eemsdelta' ? $eemsdeltaFooterStyles : '' }}">
+            <div class="footer-wrapper">
+                <div class="logo-block" style="{{ $implementation_key == 'eemsdelta' ? $eemsdeltaFooterLogoStyles : '' }}">
+                    @if (file_exists(storage_path("app/pre-check/logo-$implementation_key.png")))
+                        <img src="{{ storage_path("app/pre-check/logo-$implementation_key.png") }}" alt="organization-logo"/>
+                    @else
+                        <img src="{{ storage_path('app/pre-check/logo-general.png') }}" alt="organization-logo"/>
+                    @endif
+                </div>
+
+                <div class="footer-date">{{ $date_locale }}</div>
+
+                <div class="pagenum"></div>
             </div>
-
-            <div class="footer-date">{{ $date_locale }}</div>
-
-            <div class="pagenum"></div>
         </footer>
 
         <main>
