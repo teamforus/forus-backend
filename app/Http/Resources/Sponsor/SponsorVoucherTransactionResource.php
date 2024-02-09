@@ -40,6 +40,7 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'transfer_at', 'iban_final', 'target', 'target_locale', 'uid', 'voucher_id',
         ]), $this->getIbanFields($transaction), [
             'amount' => currency_format($transaction->amount),
+            'amount_locale' => currency_format_locale($transaction->amount),
             'timestamp' => $transaction->created_at->timestamp,
             'transaction_in' => $transaction->daysBeforeTransaction(),
             'organization' => $transaction->provider?->only('id', 'name'),
