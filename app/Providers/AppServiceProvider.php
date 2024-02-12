@@ -48,6 +48,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Dusk\Dusk;
 use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
 
 class AppServiceProvider extends ServiceProvider
@@ -122,6 +123,8 @@ class AppServiceProvider extends ServiceProvider
             Config::set('mail.default', 'array');
             Config::set('queue.default', 'sync');
         }
+
+        Dusk::selectorHtmlAttribute('data-dusk');
     }
 
     /**
