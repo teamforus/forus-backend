@@ -175,7 +175,7 @@ class ProductReservationTest extends DuskTestCase
 
         // Find available fund and reserve product
         $fundElement = $this->findFundReservationOptionElement($browser, $fund->name);
-        $fundElement->findElement(WebDriverBy::xpath(".//*[@dusk='reserveProduct']"))->click();
+        $fundElement->findElement(WebDriverBy::xpath(".//*[@data-dusk='reserveProduct']"))->click();
 
         // Wait for the reservation modal and submit with no data
         $browser->waitFor('@modalProductReserve');
@@ -235,7 +235,7 @@ class ProductReservationTest extends DuskTestCase
         $this->assertNotNull($reservationElement, 'Reservation not created');
 
         // cancel reservation
-        $reservationElement->findElement(WebDriverBy::xpath(".//*[@dusk='btnCancelReservation']"))->click();
+        $reservationElement->findElement(WebDriverBy::xpath(".//*[@data-dusk='btnCancelReservation']"))->click();
 
         $browser->waitFor('@modalProductReserveCancel');
         $browser->within('@modalProductReserveCancel', fn(Browser $el) => $el->click('@btnSubmit'));
@@ -260,7 +260,7 @@ class ProductReservationTest extends DuskTestCase
 
         $browser->waitFor($selector);
         foreach ($browser->elements($selector) as $element) {
-            $text = $element->findElement(WebDriverBy::xpath(".//*[@dusk='voucherName']"))->getText();
+            $text = $element->findElement(WebDriverBy::xpath(".//*[@data-dusk='voucherName']"))->getText();
 
             if (trim($text) === $voucherTitle) {
                 return $element;
@@ -282,7 +282,7 @@ class ProductReservationTest extends DuskTestCase
         $browser->waitFor($selector);
 
         $element = Arr::first($browser->elements($selector), function(RemoteWebElement $element) use ($fundTitle) {
-            $fundNameElement = $element->findElement(WebDriverBy::xpath(".//*[@dusk='fundName']"));
+            $fundNameElement = $element->findElement(WebDriverBy::xpath(".//*[@data-dusk='fundName']"));
             $fundNameText = $fundNameElement->getText();
 
             return trim($fundNameText) === $fundTitle;
