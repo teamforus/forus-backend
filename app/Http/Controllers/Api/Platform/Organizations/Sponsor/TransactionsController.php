@@ -63,7 +63,8 @@ class TransactionsController extends Controller
         $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($organization, $options, $query);
 
         $total_amount = currency_format((clone $query)->sum('amount'));
-        $meta = compact('total_amount');
+        $total_amount_locale = currency_format_locale($total_amount);
+        $meta = compact('total_amount', 'total_amount_locale');
 
         return SponsorVoucherTransactionResource::queryCollection(VoucherTransactionQuery::order(
             $query,
