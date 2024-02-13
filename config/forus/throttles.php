@@ -26,6 +26,11 @@ return [
         'decay' => env('FEEDBACK_FORM_API_DECAY', 15),
     ],
 
+    'accept_reservation' => [
+        'attempts' => env('ACCEPT_RESERVATION_THROTTLE_ATTEMPTS', 1),
+        'decay' => env('ACCEPT_RESERVATION_THROTTLE_DECAY', 60),
+    ],
+
     'mollie' => [
         'fetch_connections' => [
             'attempts' => env('MOLLIE_FETCH_CONNECTION_ATTEMPTS', 10),
