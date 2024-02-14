@@ -1249,10 +1249,6 @@ class Fund extends BaseModel
             ), array_fill(0, $multiplier, null)));
         }
 
-        foreach ($vouchers as $voucher) {
-            Event::dispatch(new VoucherAssigned($voucher));
-        }
-
         return $vouchers;
     }
 

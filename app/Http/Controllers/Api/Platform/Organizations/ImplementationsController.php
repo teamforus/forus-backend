@@ -10,10 +10,12 @@ use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplement
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationEmailRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdatePreCheckBannerRequest;
 use App\Http\Resources\ImplementationPrivateResource;
+use App\Http\Resources\ImplementationResource;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Scopes\Builders\ImplementationQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
 
 class ImplementationsController extends Controller
 {
@@ -30,7 +32,7 @@ class ImplementationsController extends Controller
         Organization $organization
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
-        $this->authorize('viewAny', [Implementation::class, $organization]);
+        $this->authorize('viewAnyPublic', [Implementation::class, $organization]);
 
         $query = Implementation::whereOrganizationId($organization->id);
 
@@ -38,7 +40,11 @@ class ImplementationsController extends Controller
             $query = ImplementationQuery::whereQueryFilter($query, $q);
         }
 
-        return ImplementationPrivateResource::queryCollection($query, $request);
+        if (Gate::allows('viewAny', [Implementation::class, $organization])) {
+            return ImplementationPrivateResource::queryCollection($query, $request);
+        }
+
+        return ImplementationResource::queryCollection($query, $request);
     }
 
     /**

@@ -36,16 +36,19 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
 
         return array_merge($transaction->only([
             'id', 'organization_id', 'product_id', 'state_locale', 'updated_at', 'address', 'state',
-            'payment_id', 'voucher_transaction_bulk_id', 'transaction_cost', 'attempts',
+            'payment_id', 'voucher_transaction_bulk_id', 'attempts',
             'transfer_at', 'iban_final', 'target', 'target_locale', 'uid', 'voucher_id',
         ]), $this->getIbanFields($transaction), [
             'amount' => currency_format($transaction->amount),
+            'amount_locale' => currency_format_locale($transaction->amount),
             'timestamp' => $transaction->created_at->timestamp,
             'transaction_in' => $transaction->daysBeforeTransaction(),
             'organization' => $transaction->provider?->only('id', 'name'),
             'fund' => $transaction->voucher->fund->only('id', 'name', 'organization_id'),
             'notes' => VoucherTransactionNoteResource::collection($transaction->notes_sponsor),
             'bulk_status_locale' => $transaction->bulk_status_locale,
+            'transaction_cost' => currency_format($transaction->transaction_cost),
+            'transaction_cost_locale' => currency_format_locale($transaction->transaction_cost),
             'product' => new ProductTinyResource($transaction->product),
             'product_reservation' => $transaction->product_reservation?->only([
                 'id', 'voucher_id',
