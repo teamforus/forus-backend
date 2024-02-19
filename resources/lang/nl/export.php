@@ -71,8 +71,8 @@ return [
 
     'voucher_transactions_bulks' => [
         'state-values' => [
-            'draft' => 'Draft',
-            'error' => 'Error',
+            'draft' => 'In voorbereiding',
+            'error' => 'Mislukt',
             'pending' => 'In afwachting',
             'accepted' => 'Geaccepteerd',
             'rejected' => 'Geweigerd',

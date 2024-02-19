@@ -199,7 +199,7 @@ class VoucherTransactionBulk extends BaseModel
         return [
             static::STATE_PENDING => 'In afwachting',
             static::STATE_ACCEPTED => 'Geaccepteerd',
-            static::STATE_REJECTED => 'Geannuleerd',
+            static::STATE_REJECTED => 'Geweigerd',
             static::STATE_ERROR => 'Mislukt',
             static::STATE_DRAFT => 'In voorbereiding',
         ][$this->state] ?? $this->state;
