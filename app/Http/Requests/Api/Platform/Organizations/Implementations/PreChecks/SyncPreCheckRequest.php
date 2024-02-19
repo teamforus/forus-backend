@@ -34,6 +34,7 @@ class SyncPreCheckRequest extends BaseFormRequest
             'pre_check_description' => 'nullable|string|max:1000',
             ...$this->preCheckRules(),
             ...$this->preCheckRecordRules(),
+            ...$this->preCheckRecordSettingRules(),
         ];
     }
 
@@ -69,6 +70,20 @@ class SyncPreCheckRequest extends BaseFormRequest
             'pre_checks.*.record_types.*.title_short' => 'required|string|max:40',
             'pre_checks.*.record_types.*.description' => 'nullable|string|max:1000',
             'pre_checks.*.record_types.*.record_type_key' => 'required|string|exists:record_types,key',
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    private function preCheckRecordSettingRules(): array
+    {
+        return [
+            'pre_checks.*.record_types.*.record_settings.*'=> 'nullable|array',
+            'pre_checks.*.record_types.*.record_settings.*.fund_id'=> 'required|exists:funds,id',
+            'pre_checks.*.record_types.*.record_settings.*.is_knock_out'=> 'required|boolean',
+            'pre_checks.*.record_types.*.record_settings.*.description'=> 'nullable|string|max:1000',
+            'pre_checks.*.record_types.*.record_settings.*.impact_level'=> 'nullable|int|min:0|max:100',
         ];
     }
 

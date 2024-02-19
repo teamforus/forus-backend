@@ -1013,13 +1013,21 @@ class Implementation extends BaseModel
             }
 
             foreach (Arr::get($preCheck, 'record_types', []) as $order2 => $preCheckRecordType) {
-                $this->pre_checks_records()->updateOrCreate([
+                /** @var PreCheckRecord $preCheckRecord */
+                $preCheckRecord = $this->pre_checks_records()->updateOrCreate([
                     'record_type_key' => $preCheckRecordType['record_type_key'],
                 ], [
                     'order' => $order2,
                     'pre_check_id' => $pre_check->id,
                     ...Arr::only($preCheckRecordType, ['title', 'title_short', 'description'])
                 ]);
+
+                foreach (Arr::get($preCheckRecordType, 'record_settings', []) as $recordSetting) {
+                    $preCheckRecord->settings()->updateOrCreate([
+                        'pre_check_record_id' => $preCheckRecord->id,
+                        'fund_id' => $recordSetting['fund_id'],
+                    ], Arr::only($recordSetting, ['description', 'impact_level', 'is_knock_out']));
+                }
             }
         }
 

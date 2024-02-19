@@ -107,6 +107,9 @@ class ImplementationPreChecksResource extends BaseJsonResource
                     'order' => 999,
                     'pre_check_id' => null,
                 ],
+                'record_settings' => PreCheckRecordSettingResource::collection(
+                    $preChecksRecord->settings
+                ),
                 'value' => $values[0] ?? '',
                 'record_type' => RecordTypeResource::create($recordType)->toArray(request()),
             ];

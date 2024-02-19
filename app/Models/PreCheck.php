@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Resources\FundResource;
+use App\Http\Resources\PreCheckRecordSettingResource;
 use App\Rules\FundRequests\BaseFundRequestRule;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -79,12 +80,14 @@ class PreCheck extends BaseModel
 
             $criteria = $criteria->map(function (FundCriterion $criterion) use ($records) {
                 $value = $records[$criterion->record_type_key] ?? null;
+                $preCheckRecord = PreCheckRecord::where('record_type_key', $criterion->record_type_key)->first();
 
                 return [
                     'id' => $criterion->id,
                     'name' => $criterion->record_type->name,
                     'value' => $value,
                     'is_valid' => BaseFundRequestRule::validateRecordValue($criterion, $value)->passes(),
+                    'record_settings' => PreCheckRecordSettingResource::collection($preCheckRecord->settings),
                 ];
             });
 
