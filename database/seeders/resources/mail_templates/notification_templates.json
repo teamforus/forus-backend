@@ -430,7 +430,7 @@
     },
     "notifications_identities.product_reservation_canceled": {
         "mail": {
-            "title": "Geannuleerd door de aanbieder :refund_subject",
+            "title": "Reservering is geannuleerd.",
             "template": "notifications_identities/product_reservation_canceled.md"
         },
         "push": {},
@@ -449,7 +449,7 @@
     },
     "notifications_identities.product_reservation_rejected": {
         "mail": {
-            "title": "Afgewezen :refund_subject",
+            "title": "Reservering is geweigerd.",
             "template": "notifications_identities/product_reservation_rejected.md"
         },
         "push": {},

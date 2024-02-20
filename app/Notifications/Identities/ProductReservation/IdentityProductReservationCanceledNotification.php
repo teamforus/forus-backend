@@ -27,7 +27,6 @@ class IdentityProductReservationCanceledNotification extends BaseProductReservat
         $mailable = new ProductReservationCanceledMail(array_merge($this->eventLog->data, [
             'webshop_link' => $implementation->urlWebshop("/reservations/$reservation->id"),
             'refunded_body' => $refundedExtra ? trans("$transKey.refunded_body") : '',
-            'refund_subject' => $refundedExtra ? trans("$transKey.refunded_subject") : '',
         ]), $reservation->voucher->fund->getEmailFrom());
 
         $this->sendMailNotification($identity->email, $mailable);
