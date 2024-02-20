@@ -10,8 +10,8 @@ use App\Models\PreCheckRecordSetting;
 class PreCheckRecordSettingResource extends BaseJsonResource
 {
     const LOAD = [
-        'logo.presets',
-        'fund',
+        'fund.logo.presets',
+        'fund.fund_config.implementation',
     ];
 
     /**

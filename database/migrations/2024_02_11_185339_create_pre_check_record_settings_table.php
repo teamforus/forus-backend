@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedInteger('pre_check_record_id');
             $table->unsignedInteger('fund_id');
             $table->string('description', 1000)->nullable();
-            $table->unsignedInteger('impact_level')->nullable();
+            $table->unsignedTinyInteger('impact_level')->default(100);
             $table->boolean('is_knock_out')->default(false);
             $table->timestamps();
 

@@ -78,16 +78,20 @@ class PreCheck extends BaseModel
             $amountIdentity = $fund->amountForIdentity(null, $records);
             $amountIdentityTotal = $multiplier * $amountIdentity;
 
-            $criteria = $criteria->map(function (FundCriterion $criterion) use ($records) {
+            $criteria = $criteria->map(function (FundCriterion $criterion) use ($records, $fund) {
+                /** @var PreCheckRecordSetting|null $setting */
                 $value = $records[$criterion->record_type_key] ?? null;
                 $preCheckRecord = PreCheckRecord::where('record_type_key', $criterion->record_type_key)->first();
+                $setting = $preCheckRecord->settings->firstWhere('fund_id', $fund->id);
 
                 return [
                     'id' => $criterion->id,
                     'name' => $criterion->record_type->name,
                     'value' => $value,
                     'is_valid' => BaseFundRequestRule::validateRecordValue($criterion, $value)->passes(),
-                    'record_settings' => PreCheckRecordSettingResource::collection($preCheckRecord->settings),
+                    'is_knock_out' => $setting?->is_knock_out ?? false,
+                    'impact_level' => $setting?->impact_level ?? 100,
+                    'knock_out_description' => $setting?->description ?? '',
                 ];
             });
 

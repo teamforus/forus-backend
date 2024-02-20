@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -34,8 +33,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class PreCheckRecordSetting extends Model
 {
-    use HasFactory;
-
     /**
      * The attributes that are mass assignable.
      *
@@ -43,6 +40,13 @@ class PreCheckRecordSetting extends Model
      */
     protected $fillable = [
         'pre_check_record_id', 'fund_id', 'description', 'impact_level', 'is_knock_out',
+    ];
+
+    /**
+     * @var array
+     */
+    protected $casts = [
+        'is_knock_out' => 'boolean',
     ];
 
     /**
