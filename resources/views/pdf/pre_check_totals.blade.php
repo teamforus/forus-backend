@@ -394,21 +394,21 @@ $baseColor = $borderColors[0] ?? '#cecece';
 <main>
     <div style="min-height: 98%">
         <!-- Info block -->
-        <h1>Op welke tegemoetkomingen heeft u recht?</h1>
+        <h1>Welke regelingen kan ik aanvragen?</h1>
 
         <p>
-            Er bestaan allerlei tegemoetkomingen. Soms meer dan u denkt.
-            Bereken in een paar stappen op wel kebedragen u mogelijk recht heeft.
-            Ook ziet u waar u deze kunt aanvragen.
+            Er bestaan veel verschillende regelingen.
+            Op de website heeft u een paar vragen ingevuld om te zien voor welke regelingen u mogelijk in aanmerking komt.
+            Hieronder ziet u per regeling het resultaat.
         </p>
 
         <!-- Funds pre-check table -->
         <table>
             @if (count($funds) > 0)
                 <tr>
-                    <th>Uw tegemoetkomingen</th>
-                    <th>Indicatie bedrag per maand</th>
-                    <th>Uw tegemoetkomingen</th>
+                    <th>Regelingen</th>
+                    <th>Bedrag</th>
+                    <th>Uitleg</th>
                 </tr>
             @endif
 
@@ -422,7 +422,7 @@ $baseColor = $borderColors[0] ?? '#cecece';
                     </td>
                     <td>
                         @if ($fund['is_valid'])
-                            Ja, de zorgtoeslag moet u zelf aanvragen
+                            De regeling moet u zelf aanvragen
 
                             @if ($fund['is_external'] && $fund['external_link_url'])
                                 via
@@ -430,13 +430,13 @@ $baseColor = $borderColors[0] ?? '#cecece';
                             @endif
 
                         @else
-                            U heeft op basis van uw gegeven antwoorden geen recht op toeslagen.
+                            U heeft op basis van uw gegeven antwoorden geen recht op de regeling.
 
                             @if ($fund['is_external'] && $fund['external_link_url'])
-                                Op
+                                Via
                                 <a href="{{ $fund['external_link_url'] }}">{{ $fund['external_link_text'] ?: 'Externe website bekijken' }}</a>
                                 kunt u zien wat de voorwaarden zijn om in aanmerking te komen voor de
-                                huurtoeslag.
+                                regeling.
                             @endif
                         @endif
                     </td>
@@ -446,9 +446,8 @@ $baseColor = $borderColors[0] ?? '#cecece';
 
         <!-- Notice block -->
         <div class="notice-block">
-            Er bestaan allerlei tegemoetkomingen. Soms meer dan u denkt.
-            Bereken in een paar stappen op wel kebedragen u mogelijk recht heeft. Ook ziet u waar u deze
-            kunt aanvragen.
+            Let op: de uitkomst is enkel een advies.
+            Mocht u een lage kans hebben voor een regeling, dan kunt u alsnog een aanvraag doen.
         </div>
 
         <!-- Instructions blocks -->
@@ -456,72 +455,34 @@ $baseColor = $borderColors[0] ?? '#cecece';
 
         <div class="list-item">
             <div class="list-item-title">
-                <h2>Vraag toeslagen direct aan</h2>
+                <h2>Regelingen aanvragen</h2>
             </div>
 
             <div class="list-item-description">
-                Let op dat u uw inkomen niet te laag inschat: u ontvangt dan namelijk een hoger bedrag
-                dan waar u uiteindelijk recht op heeft.
-                Dit moet u later terugbetalen.
-                De toeslagen van de Belastingdienst die u krijgt zijn namelijk voorlopige bedragen.
-                De definitieve berekening ontvangt u 9 tot 12 maanden na afloop van het kalenderjaar.
+                De check geeft een advies over de kans dat u een regeling kunt krijgen.
+                In de omschrijving ziet u waar u de regeling kunt aanvragen.
+                Een regeling kunt u altijd aanvragen, ook als u volgens de check een lage kans heeft.
             </div>
         </div>
 
         <div class="list-item">
             <div class="list-item-title">
-                <h2>Geef veranderingen in uw situatie op tijd door</h2>
+                <h2>Heeft u vragen of hulp nodig?</h2>
             </div>
 
             <div class="list-item-description">
-                Worden uw inkomsten hoger? Of verandert uw gezinssituatie of uw woonsituatie?
-                Dit kan invloed hebben op de hoogte van uw toeslagen. Geef daarom alle veranderingen
-                meteen door via www.toeslagen.nl.
-                U kunt daar instellen vanaf wanneer de nieuwe situatie in gaat.
+                Voor vragen of ondersteuning kunt u contact opnemen met de gemeente of een hulp punt.
+                Op de website vindt u meer informatie.
             </div>
         </div>
+        
+        <h1>Toelichting</h1>
 
-        <div class="list-item">
-            <div class="list-item-title">
-                <h2>Check of u recht heeft op bijdragen vanuit uw gemeente</h2>
-            </div>
-
-            <div class="list-item-description">
-                Afhankelijk van het inkomen en uw gezinssituatie kunt u in aanmerking komen voor
-                tegemoetkomingen die uw gemeente aanbiedt.
-                Deze regelingen verschillen per gemeente. Denk aan een:
-            </div>
-
-            <div class="list-sub-item">
-                <div class="list-sub-item-title">
-                    <h2>Korting op een zorgverzekering</h2>
-                </div>
-
-                <div class="list-sub-item-title">
-                    <h2>Bijdrage voor sport- en culturele activiteiten</h2>
-                </div>
-            </div>
-        </div>
+        <p>
+            Aan de verstrekte informatie kunnen geen rechten worden ontleend.
+            Wij streven ernaar om correcte en actuele informatie te bieden.
+        </p>
     </div>
-
-    <h1>Disclaimer</h1>
-
-    <p>
-        BerekenUwRecht is met de grootst mogelijke zorgvuldigheid samengesteld.
-        Het Nibud streeft er vanzelfsprekend naar om altijd correcte en actuele informatie te
-        bieden.
-        Aan de verstrekte informatie kunnen geen rechten worden ontleend.
-        Het Nibud aanvaardt geen enkele aansprakelijkheid voor de inhoud van BerekenUwRecht en
-        de
-        daarin verstrekte informatie.
-        is met de grootst mogelijke zorgvuldigheid samengesteld.
-        Het Nibud streeft er vanzelfsprekend naar om altijd correcte en actuele informatie te
-        bieden.
-        Aan de verstrekte informatie kunnen geen rechten worden ontleend.
-        Het Nibud aanvaardt geen enkele aansprakelijkheid voor de inhoud van de BerekenUwRecht
-        de
-        daarin verstrekte informatie.
-    </p>
 </main>
 
 <div class="document-borders"
