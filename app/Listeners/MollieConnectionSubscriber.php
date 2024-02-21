@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\MollieConnections\MollieConnectionCompleted;
 use App\Events\MollieConnections\MollieConnectionCreated;
+use App\Events\MollieConnections\MollieConnectionCurrentProfileChanged;
 use App\Events\MollieConnections\MollieConnectionDeleted;
 use App\Events\MollieConnections\MollieConnectionUpdated;
 use App\Events\MollieConnections\BaseMollieConnectionEvent;
@@ -64,6 +65,15 @@ class MollieConnectionSubscriber
     }
 
     /**
+     * @param MollieConnectionCurrentProfileChanged $event
+     * @noinspection PhpUnused
+     */
+    public function onMollieConnectionCurrentProfileChanged(MollieConnectionCurrentProfileChanged $event): void
+    {
+        $this->makeEvent($event, $event->getMollieConnection()::EVENT_CURRENT_PROFILE_CHANGED);
+    }
+
+    /**
      * The events dispatcher
      *
      * @param Dispatcher $events
@@ -77,5 +87,6 @@ class MollieConnectionSubscriber
         $events->listen(MollieConnectionCompleted::class, "$class@onMollieConnectionCompleted");
         $events->listen(MollieConnectionUpdated::class, "$class@onMollieConnectionUpdated");
         $events->listen(MollieConnectionDeleted::class, "$class@onMollieConnectionDeleted");
+        $events->listen(MollieConnectionCurrentProfileChanged::class, "$class@onMollieConnectionCurrentProfileChanged");
     }
 }

@@ -88,7 +88,10 @@ class IdentityController extends Controller
                 'used' => $used,
                 'unique' => !$used,
                 'valid' => Validator::make(compact('email'), [
-                    'email' => 'required|email',
+                    'email' => [
+                        'required',
+                        ...$request->emailRules(),
+                    ],
                 ])->passes(),
             ]
         ]);

@@ -32,9 +32,11 @@ class TransactionsController extends Controller
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
         $query = VoucherTransaction::searchProvider($request, $organization);
+        $totalAmount = currency_format((clone $query)->sum('amount'));
         
         $meta = [
-            'total_amount' => currency_format((clone $query)->sum('amount')),
+            'total_amount' => $totalAmount,
+            'total_amount_locale' => currency_format_locale($totalAmount),
         ];
         
         return ProviderVoucherTransactionResource::queryCollection(VoucherTransactionQuery::order(

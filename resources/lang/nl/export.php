@@ -14,16 +14,17 @@ return [
     | as the size rules. Feel free to tweak each of these messages here.
     |
     */
-    
-    'providers'              => [
+
+    'providers' => [
         'fund' => 'Fondsnaam',
+        'implementation' => 'Implementatie',
         'fund_type' => 'Fonds type',
         'iban' => 'IBAN',
-        'provider_last_activity' => 'Laatste activiteit',
+        'provider_last_activity' => 'Laatst actief',
         'products_provider_count' => 'Totaal aanbiedingen beheer door aanbieder',
         'products_sponsor_count' => 'Totaal aanbiedingen beheert door sponsor',
         'products_active_count' => 'Totaal geaccepteerde aanbiedingen',
-        'products_count' => 'Totaal aanbiedingen',
+        'products_count' => 'Aantal aanbiedingen',
         'provider' => 'Aanbieder',
         'email' => 'E-mailadres',
         'phone' => 'Telefoonnummer',
@@ -34,8 +35,8 @@ return [
         'allow_products' => 'Geaccepteerd: aanbod',
         'allow_some_products' => 'Geaccepteerd: specifiek aanbod',
     ],
-    
-    'fund_requests'              => [
+
+    'fund_requests' => [
         'bsn' => 'Burgerservicenummer',
         'fund_name' => 'Fondsnaam',
         'status' => 'Status',
@@ -45,14 +46,14 @@ return [
             'approved' => 'Geaccepteerd',
             'approved_partly' => 'Aanvulling gevraagd',
         ],
-        'validator'         => 'Validator',
-        'created_at'        => 'Indien datum',
-        'resolved_at'       => 'Oplosdatum',
-        'lead_time_days'    => 'Doorlooptijd (dagen)',
-        'lead_time_locale'  => 'Doorlooptijd (leesbaar)',
-    ],    
+        'validator' => 'Validator',
+        'created_at' => 'Indien datum',
+        'resolved_at' => 'Oplosdatum',
+        'lead_time_days' => 'Doorlooptijd (dagen)',
+        'lead_time_locale' => 'Doorlooptijd (leesbaar)',
+    ],
 
-    'voucher_transactions'    => [
+    'voucher_transactions' => [
         'id' => 'ID',
         'amount' => 'bedrag',
         'date_transaction' => 'Datum betaling',
@@ -61,7 +62,7 @@ return [
         'provider' => 'aanbieder',
         'state' => 'status',
         'state-values' => [
-            'success' => 'voltooid', 
+            'success' => 'voltooid',
             'pending' => 'in afwachting',
             'canceled' => 'geannuleerd',
         ]
@@ -69,73 +70,74 @@ return [
 
     'voucher_transactions_bulks' => [
         'state-values' => [
-            'draft'    => 'Draft',
-            'error'    => 'Error',
-            'pending'  => 'In afwachting',
+            'draft' => 'Draft',
+            'error' => 'Error',
+            'pending' => 'In afwachting',
             'accepted' => 'Geaccepteerd',
             'rejected' => 'Geweigerd',
         ]
     ],
 
-    'prevalidations'   => [
-        'code'      => 'code',
-        'used'      => 'Geactiveerd',
-        'used_yes'  => 'Ja',
-        'used_no'   => 'Nee'
+    'prevalidations' => [
+        'code' => 'code',
+        'used' => 'Geactiveerd',
+        'used_no' => 'Nee',
+        'used_yes' => 'Ja',
     ],
 
-    'finances'      => [
-        'provider'            => 'Aanbieder',
-        'total_amount'        => 'Totaal uitgegeven bij',
-        'business_type'       => 'Organisatie type',
-        'nr_transactions'     => 'Aantal transacties',
+    'finances' => [
+        'provider' => 'Aanbieder',
+        'total_amount' => 'Totaal uitgegeven',
+        'business_type' => 'Organisatie type',
+        'nr_transactions' => 'Aantal transacties',
         'highest_transaction' => 'Hoogste aankoopbedrag',
     ],
 
     'funds' => [
-        'total'             => 'Totaal',
+        'total' => 'Totaal',
 
         // Overview funds
-        'name'              => 'Fondsnaam',
-        'total_top_up'      => 'Totaal gestort',
-        'balance'           => 'Huidig saldo',
-        'expenses'          => 'Uitgaven',
-        'transactions'      => 'Transactiekosten',
+        'name' => 'Fondsnaam',
+        'balance' => 'Huidig saldo',
+        'expenses' => 'Uitgaven',
+        'transactions' => 'Transactiekosten',
+        'total_top_up' => 'Totaal gestort',
 
         // Statistics funds
-        'active'                        => 'Actief',
-        'inactive'                      => 'Inactief',
-        'left'                          => 'Restant',
+        'left' => 'Restant',
+        'active' => 'Actief',
+        'inactive' => 'Inactief',
 
         // Budget vouchers
-        'budget_amount_per_voucher'             => 'Per tegoed €',
-        'budget_average_per_voucher'            => 'Gem per tegoed €',
-        'budget_vouchers_amount'                => 'Totaal tegoeden €',
-        'budget_vouchers_count'                 => 'Totaal tegoeden aantal',
-        'budget_vouchers_inactive_amount'       => 'Totaal tegoeden inactief €',
-        'budget_vouchers_inactive_percentage'   => 'Totaal tegoeden inactief %',
-        'budget_vouchers_inactive_count'        => 'Totaal tegoeden inactief aantal',
-        'budget_vouchers_active_amount'         => 'Totaal tegoeden actief €',
-        'budget_vouchers_active_percentage'     => 'Totaal percentage actief %',
-        'budget_vouchers_active_count'          => 'Totaalaantal actief',
-        'budget_total_spent_amount'             => 'Uitgaven €',
-        'budget_total_spent_percentage'         => 'Uitgaven %',
-        'budget_total_left_amount'              => 'Restant actieve tegoeden',
-        'budget_total_left_percentage'          => 'Totaal percentage restant',
-        'budget_vouchers_deactivated_amount'    => 'Totaal gedeactiveerd €',
-        'budget_vouchers_deactivated_count'     => 'Totaal gedeactiveerd aantal',
+        'budget_amount_per_voucher' => 'Per tegoed €',
+        'budget_average_per_voucher' => 'Gem per tegoed €',
+        'budget_vouchers_amount' => 'Totaal tegoeden €',
+        'budget_vouchers_count' => 'Totaal tegoeden aantal',
+        'budget_vouchers_inactive_amount' => 'Totaal tegoeden inactief €',
+        'budget_vouchers_inactive_percentage' => 'Totaal tegoeden inactief %',
+        'budget_vouchers_inactive_count' => 'Totaal tegoeden inactief aantal',
+        'budget_vouchers_active_amount' => 'Totaal tegoeden actief €',
+        'budget_vouchers_active_percentage' => 'Totaal percentage actief %',
+        'budget_vouchers_active_count' => 'Totaalaantal actief',
+        'budget_total_spent_amount' => 'Uitgaven €',
+        'budget_total_spent_percentage' => 'Uitgaven %',
+        'budget_total_left_amount' => 'Restant actieve tegoeden',
+        'budget_total_left_percentage' => 'Totaal percentage restant',
+        'budget_vouchers_deactivated_amount' => 'Totaal gedeactiveerd €',
+        'budget_vouchers_deactivated_count' => 'Totaal gedeactiveerd aantal',
 
         // Product vouchers
-        'product_vouchers_amount'               => 'Totaal aanbiedingsvouchers €',
-        'product_vouchers_active_amount'        => 'Totaal aanbiedingsvouchers actief €',
-        'product_vouchers_inactive_amount'      => 'Totaal aanbiedingsvouchers inactief €',
-        'product_vouchers_deactivated_amount'   => 'Totaal aanbiedingsvouchers gedeactiveerd €',
+        'product_vouchers_amount' => 'Totaal aanbiedingsvouchers €',
+        'product_vouchers_active_amount' => 'Totaal aanbiedingsvouchers actief €',
+        'product_vouchers_inactive_amount' => 'Totaal aanbiedingsvouchers inactief €',
+        'product_vouchers_deactivated_amount' => 'Totaal aanbiedingsvouchers gedeactiveerd €',
     ],
 
-    'employees'      => [
-        'email'         => 'E-mailadres',
-        'owner'         => 'Eigenaar',
-        'created_at'    => 'Created at',
-        'updated_at'    => 'Updated at',
+    'employees' => [
+        'owner' => 'Eigenaar',
+        'email' => 'E-mailadres',
+        'created_at' => 'Created at',
+        'updated_at' => 'Updated at',
+        'is_2fa_configured' => '2FA',
     ],
 ];
