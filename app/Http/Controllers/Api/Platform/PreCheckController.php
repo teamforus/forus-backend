@@ -6,13 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\PreChecks\CalculatePreCheckRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\ImplementationPreChecksResource;
-use App\Models\Implementation;
 use App\Models\PreCheck;
-use App\Models\Voucher;
-use App\Scopes\Builders\VoucherQuery;
-use App\Searches\FundSearch;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 class PreCheckController extends Controller
 {
@@ -34,23 +30,8 @@ class PreCheckController extends Controller
      */
     public function calculateTotals(CalculatePreCheckRequest $request): JsonResponse
     {
-        $identity = $request->identity();
         $records = array_pluck($request->input('records', []), 'value', 'key');
-        $fundsQuery = Implementation::queryFundsByState('active');
-
-        if ($identity) {
-            $fundsQuery->whereDoesntHave('vouchers', fn (
-                Builder|Voucher $builder
-            ) => VoucherQuery::whereActive($builder->where([
-                'identity_address' => $identity->address,
-            ])));
-        }
-
-        $availableFunds = (new FundSearch(array_merge($request->only([
-            'q', 'tag', 'tag_id', 'organization_id',
-        ]), [
-            'with_external' => true,
-        ]), $fundsQuery))->query()->get();
+        $availableFunds = PreCheck::getAvailableFunds($request);
 
         $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
         $fundsValid = array_where($funds, fn ($fund) => $fund['is_valid']);
@@ -66,5 +47,26 @@ class PreCheckController extends Controller
             'amount_total_valid' => $amountTotalValid,
             'amount_total_valid_locale' => currency_format_locale($amountTotalValid),
         ]);
+    }
+
+    /**
+     * @param CalculatePreCheckRequest $request
+     * @return \Illuminate\Http\Response
+     * @noinspection PhpUnused
+     */
+    public function downloadPDF(CalculatePreCheckRequest $request): Response
+    {
+        $records = array_pluck($request->input('records', []), 'value', 'key');
+        $availableFunds = PreCheck::getAvailableFunds($request);
+
+        $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
+
+        $domPdfFile = resolve('dompdf.wrapper')->loadView('pdf.pre_check_totals', [
+            'funds' => $funds,
+            'date_locale' => format_date_locale(now()),
+            'implementation_key' => $request->implementation()->key,
+        ]);
+
+        return $domPdfFile->download('pre-check-totals.pdf');
     }
 }

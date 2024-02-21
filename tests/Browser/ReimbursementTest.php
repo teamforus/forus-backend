@@ -715,6 +715,8 @@ class ReimbursementTest extends DuskTestCase
         Browser $browser,
         Reimbursement $reimbursement,
     ): void {
+        $browser->pause(500);
+
         if ($reimbursement->expired) {
             $browser->waitFor('@reimbursementsFilterArchived', 10);
             $browser->press('@reimbursementsFilterArchived');
