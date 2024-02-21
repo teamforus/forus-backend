@@ -93,7 +93,7 @@ class ProviderProductReservationBatchRule extends BaseRule
 
         return $data->map(function($item) use ($groupedData) {
             return array_merge($item, [
-                'product' => $groupedData[$item['voucher_id']][$item['product_id']][0] ?? null,
+                'product' => $groupedData[$item['voucher_id'] ?? null][$item['product_id'] ?? null][0] ?? null,
                 'is_valid' => null,
             ]);
         })->toArray();

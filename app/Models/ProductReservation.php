@@ -227,9 +227,9 @@ class ProductReservation extends BaseModel
      */
     public function getAddressAttribute($value): string
     {
-        return $value ?: sprintf("%s %s", $this->street ?: '', implode(', ', array_filter([
+        return trim($value ?: sprintf("%s %s", $this->street ?: '', implode(', ', array_filter([
             $this->house_nr, $this->house_nr_addition, $this->postal_code, $this->city,
-        ])));
+        ]))));
     }
 
     /**
@@ -373,7 +373,7 @@ class ProductReservation extends BaseModel
      */
     public function acceptProvider(?Employee $employee = null): self
     {
-        DB::transaction(function() use ($employee) {
+        DB::transaction(function () use ($employee) {
             return $this->setAccepted($this->makeTransaction($employee));
         });
 
@@ -469,7 +469,7 @@ class ProductReservation extends BaseModel
      */
     public function rejectOrCancelProvider(?Employee $employee = null): self
     {
-        DB::transaction(function() use ($employee) {
+        DB::transaction(function () use ($employee) {
             $isRefund = $this->isAccepted();
 
             $this->update($isRefund ? [
@@ -584,7 +584,7 @@ class ProductReservation extends BaseModel
      */
     public function cancelByClient(): ?bool
     {
-        DB::transaction(function() {
+        DB::transaction(function () {
             if ($this->product_voucher) {
                 $this->product_voucher->delete();
             }
@@ -607,7 +607,7 @@ class ProductReservation extends BaseModel
      */
     public function cancelByState(string $state): bool
     {
-        DB::transaction(function() use ($state) {
+        DB::transaction(function () use ($state) {
             $this->product_voucher?->delete();
 
             $this->update([

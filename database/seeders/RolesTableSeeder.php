@@ -32,14 +32,6 @@ class RolesTableSeeder extends Seeder
             'en' => 'Operation manager',
             'nl' => 'Kassa',
         ],
-        'implementation_manager' => [
-            'en' => 'Implementation manager',
-            'nl' => 'Implementatie manager',
-        ],
-        'implementation_cms_manager' => [
-            'en' => 'Implementation CMS manager',
-            'nl' => 'CMS manager',
-        ],
         'implementation_communication_manager' => [
             'en' => 'Implementation communication manager',
             'nl' => 'Communicatie',
