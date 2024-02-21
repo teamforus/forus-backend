@@ -287,7 +287,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      */
     public function getChannels(): array
     {
-        $systemNotification = SystemNotification::getByKey(static::$key);
+        $systemNotification = SystemNotification::findByKey(static::$key);
 
         return $systemNotification ? $systemNotification->channels(
             $this->implementation->id ?? Implementation::general()?->id
@@ -369,11 +369,10 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      */
     public function toPush(Identity $identity): void
     {
-        $template = SystemNotification::findTemplate(
-            static::getKey(),
-            'push',
-            $this->implementation->key ?? Implementation::KEY_GENERAL,
+        $template = SystemNotification::findByKey(static::getKey())->findTemplate(
+            $this->implementation ?? Implementation::general(),
             $this->eventLog?->data['fund_id'] ?? null,
+            'push',
         );
 
         $this->getNotificationService()->sendPushNotification(

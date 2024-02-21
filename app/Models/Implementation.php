@@ -204,8 +204,6 @@ class Implementation extends BaseModel
     public const ME_APP_ANDROID = 'me_app-android';
     public const ME_APP_DEPRECATED = 'app-me_app';
 
-    public const DEPRECATED_FRONTEND_GENERAL = 'general';
-
     public const FRONTEND_KEYS = [
         self::FRONTEND_WEBSHOP,
         self::FRONTEND_SPONSOR_DASHBOARD,
@@ -214,8 +212,9 @@ class Implementation extends BaseModel
     ];
 
     protected $perPage = 20;
-    protected static ?Implementation $generalModel = null;
-    protected static ?Implementation $activeModel = null;
+
+    /** @var self[] */
+    protected static array $instances = [];
 
     /**
      * @var string[]
@@ -446,7 +445,7 @@ class Implementation extends BaseModel
      */
     public static function active(): ?Implementation
     {
-        return static::$activeModel ?: static::$activeModel = self::byKey(self::activeKey());
+        return self::findAndMemo(self::activeKey());
     }
 
     /**
@@ -454,7 +453,7 @@ class Implementation extends BaseModel
      */
     public static function general(): Implementation
     {
-        return static::$generalModel ?: static::$generalModel = self::byKey(self::KEY_GENERAL);
+        return self::findAndMemo(self::KEY_GENERAL);
     }
 
     /**
@@ -472,6 +471,23 @@ class Implementation extends BaseModel
     public static function byKey($key): ?Implementation
     {
         return self::where(compact('key'))->first();
+    }
+
+    /**
+     * @param string|null $key
+     * @return Implementation|null
+     */
+    public static function findAndMemo(?string $key): ?Implementation
+    {
+        return self::$instances[$key] ??= self::byKey($key);
+    }
+
+    /**
+     * @return void
+     */
+    public static function clearMemo(): void
+    {
+        self::$instances = [];
     }
 
     /**

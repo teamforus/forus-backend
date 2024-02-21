@@ -17,19 +17,18 @@ class DatabaseChannel extends IlluminateDatabaseChannel
      * @param  \Illuminate\Notifications\Notification  $notification
      * @return array
      */
-    protected function buildPayload($notifiable, Notification $notification)
+    protected function buildPayload($notifiable, Notification $notification): array
     {
         $data = $this->getData($notifiable, $notification);
-        $fillable = ['scope', 'key', 'event_id', 'organization_id'];
 
         return [
             'id' => $notification->id,
             'type' => method_exists($notification, 'databaseType')
                 ? $notification->databaseType($notifiable)
                 : get_class($notification),
-            'data' => Arr::except($data, $fillable),
+            'data' => $data,
             'read_at' => null,
-            ...Arr::only($data, $fillable),
+            ...Arr::only($data, ['scope', 'key', 'event_id', 'organization_id']),
         ];
     }
 }

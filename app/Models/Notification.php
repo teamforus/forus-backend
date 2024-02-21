@@ -4,9 +4,9 @@ namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Services\EventLogService\Models\EventLog;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Notifications\DatabaseNotification;
 
 /**
@@ -53,6 +53,7 @@ class Notification extends DatabaseNotification
 
     /**
      * @return BelongsTo
+     * @noinspection PhpUnused
      */
     public function system_notification(): BelongsTo
     {
@@ -61,6 +62,7 @@ class Notification extends DatabaseNotification
 
     /**
      * @return BelongsTo
+     * @noinspection PhpUnused
      */
     public function event(): BelongsTo
     {
@@ -71,9 +73,9 @@ class Notification extends DatabaseNotification
      * @param BaseFormRequest $request
      * @param bool|null $seen
      * @param null $query
-     * @return Builder
+     * @return Builder|Relation
      */
-    public static function search(BaseFormRequest $request, ?bool $seen, $query = null): Builder
+    public static function search(BaseFormRequest $request, ?bool $seen, $query = null): Builder|Relation
     {
         $query = $query ?: self::query();
         $scope = $request->client_type();
@@ -96,42 +98,10 @@ class Notification extends DatabaseNotification
     /**
      * @param BaseFormRequest $request
      * @param Identity $identity
-     * @return LengthAwarePaginator
-     */
-    public static function paginateFromRequest(
-        BaseFormRequest $request,
-        Identity $identity
-    ): LengthAwarePaginator {
-        $seen = $request->input('seen');
-        $per_page = $request->input('per_page', 15);
-
-        $notifications = self::search($request, $seen, $identity->notifications()
-            ->with('system_notification.templates', 'event')->getQuery())->paginate($per_page);
-
-        if ($request->input('mark_read', false)) {
-            self::whereKey(array_pluck($notifications->items(), 'id'))->whereNull('read_at')->update([
-                'read_at' => now()
-            ]);
-        }
-
-        return $notifications;
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param Identity $identity
      * @return int
      */
     public static function totalUnseenFromRequest(BaseFormRequest $request, Identity $identity): int
     {
         return self::search($request, false, $identity->notifications()->getQuery())->count();
-    }
-
-    /**
-     * @return EventLog|null
-     */
-    public function findEventLog(): ?EventLog
-    {
-        return $this->event;
     }
 }
