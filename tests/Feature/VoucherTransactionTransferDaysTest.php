@@ -1,6 +1,6 @@
 <?php
 
-namespace Feature;
+namespace Tests\Feature;
 
 use App\Models\Product;
 use App\Models\ProductReservation;
@@ -57,13 +57,10 @@ class VoucherTransactionTransferDaysTest extends TestCase
         $this->assertNotNull($transaction);
 
         $organization = $voucher->fund->organization;
+        $voucherEndpoint = sprintf($this->sponsorApiUrl, $organization->id, $transaction->address);
+        $sponsorAuthHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
-        $proxy = $this->makeIdentityProxy($organization->identity);
-        $headers = $this->makeApiHeaders($proxy);
-
-        $response = $this->get(sprintf(
-            $this->sponsorApiUrl, $organization->id, $transaction->address
-        ), $headers);
+        $response = $this->getJson($voucherEndpoint, $sponsorAuthHeaders);
         $response->assertSuccessful();
 
         $transactionIn = $response->json('data.transaction_in');
@@ -71,9 +68,7 @@ class VoucherTransactionTransferDaysTest extends TestCase
 
         Carbon::setTestNow(now()->addDays($transactionIn + 5));
 
-        $response = $this->get(sprintf(
-            $this->sponsorApiUrl, $organization->id, $transaction->address
-        ), $headers);
+        $response = $this->getJson($voucherEndpoint, $sponsorAuthHeaders);
         $response->assertSuccessful();
 
         $transactionIn = $response->json('data.transaction_in');
