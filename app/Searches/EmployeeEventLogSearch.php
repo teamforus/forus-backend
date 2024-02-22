@@ -27,7 +27,7 @@ class EmployeeEventLogSearch extends BaseSearch
     protected array $organizationRelationMap = [
         'fund' => 'organization',
         'voucher' => 'fund.organization',
-        'employee' => 'organization',
+        'employees' => 'organization',
         'bank_connection' => 'organization',
     ];
 
