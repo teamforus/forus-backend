@@ -383,7 +383,11 @@ class ImplementationMail extends Mailable implements ShouldQueue
      */
     protected function implementationNotificationTemplate(string $key): ?NotificationTemplate
     {
-        return SystemNotification::findTemplate($key, 'mail', $this->implementationKey(), $this->fundId());
+        return SystemNotification::findByKey($key)->findTemplate(
+            Implementation::byKey($this->implementationKey()),
+            $this->fundId(),
+            'mail',
+        );
     }
 
     /**
