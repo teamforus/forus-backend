@@ -15,6 +15,7 @@ return new class extends Migration
     public function up(): void
     {
         $eventLogService = resolve(EventLogService::class);
+
         $notifications = Notification::where([
             'type' => 'App\Notifications\Identities\PhysicalCardRequest\PhysicalCardRequestCreatedNotification',
             'data->key' => 'notifications_identities.physical_card_request_created',
@@ -31,14 +32,14 @@ return new class extends Migration
      */
     protected function migrateNotification(
         EventLogService $eventLogService,
-        Notification $notification
+        Notification $notification,
     ): void {
         $notification->update([
             'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherPhysicalCardRequestedNotification',
             'data->key' => 'notifications_identities.voucher_physical_card_requested',
         ]);
 
-        $eventLog = $notification->findEventLog();
+        $eventLog = $notification->event;
         $implementation = Implementation::byKey($eventLog->data['implementation_key'] ?? null);
 
         if ($eventLog && $implementation) {
