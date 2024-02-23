@@ -36,7 +36,7 @@ class RolePermissionsTableSeeder extends Seeder
         ],
         "policy_officer" => [
             "view_funds", 'manage_providers', 'manage_products',
-            "manage_offices", "manage_provider_funds",
+            "manage_offices", "manage_provider_funds", "view_implementations"
         ],
         "operation_officer" => [
             "scan_vouchers",
@@ -49,7 +49,7 @@ class RolePermissionsTableSeeder extends Seeder
             "view_funds", "manage_implementation_cms", "manage_implementation_notifications", "manage_fund_texts",
         ],
         "bank_manager" => [
-            "manage_bank_connections", "manage_transaction_bulks", "view_funds", "view_finances",
+            "manage_bank_connections", "manage_transaction_bulks", "view_funds", "view_finances", "view_implementations"
         ],
         "finance_reader" => [
             "view_finances",
