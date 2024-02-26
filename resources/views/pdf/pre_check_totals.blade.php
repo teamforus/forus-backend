@@ -231,6 +231,7 @@ $baseColor = $borderColors[0] ?? '#cecece';
     table {
         border-spacing: 3px;
         margin-bottom: 10px;
+        width: 100%;
 
         tr {
             th, td {
