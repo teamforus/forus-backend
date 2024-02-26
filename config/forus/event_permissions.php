@@ -41,7 +41,7 @@ return [
         ],
     ],
 
-    'employee' => [
+    'employees' => [
         'permissions' => [
             'manage_employees'
         ],
