@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\PreCheckRecord
@@ -20,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read \App\Models\Implementation $implementation
  * @property-read \App\Models\PreCheck|null $pre_check
  * @property-read \App\Models\RecordType|null $record_type
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PreCheckRecordSetting[] $settings
+ * @property-read int|null $settings_count
  * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord query()
@@ -68,5 +71,14 @@ class PreCheckRecord extends BaseModel
     public function implementation(): BelongsTo
     {
         return $this->belongsTo(Implementation::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function settings(): HasMany
+    {
+        return $this->hasMany(PreCheckRecordSetting::class);
     }
 }
