@@ -69,7 +69,11 @@ class SyncPreCheckRequest extends BaseFormRequest
             'pre_checks.*.record_types.*.title' => 'required|string|max:100',
             'pre_checks.*.record_types.*.title_short' => 'required|string|max:40',
             'pre_checks.*.record_types.*.description' => 'nullable|string|max:1000',
-            'pre_checks.*.record_types.*.record_type_key' => 'required|string|exists:record_types,key',
+            'pre_checks.*.record_types.*.record_type_key' => [
+                'required',
+                'string',
+                Rule::exists('record_types', 'key')->where('pre_check', true),
+            ],
         ];
     }
 
