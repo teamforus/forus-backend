@@ -105,7 +105,11 @@ class PreCheck extends BaseModel
         ]);
 
         return $funds->map(function (Fund $fund) use ($records) {
-            $criteria = $fund->criteria->where('optional', false)->values();
+            $criteria = $fund->criteria
+                ->where('optional', false)
+                ->where('record_type.pre_check', true)
+                ->values();
+
             $multiplier = $fund->multiplierForIdentity(null, $records);
             $amountIdentity = $fund->amountForIdentity(null, $records);
             $amountIdentityTotal = $multiplier * $amountIdentity;
