@@ -328,7 +328,7 @@ $baseColor = $borderColors[0] ?? '#cecece';
         </div>
 
         <div class="header-content-date">
-            <div class="header-content-date-title">Forus PreCheck</div>
+            <div class="header-content-date-title">Regelcheck</div>
             <div class="header-content-date-description">{{ $date_locale }}</div>
         </div>
 
