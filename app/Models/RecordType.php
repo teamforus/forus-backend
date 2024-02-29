@@ -20,7 +20,7 @@ use Illuminate\Support\Arr;
  * @property bool $system
  * @property bool $criteria
  * @property bool $vouchers
- * @property int $pre_check
+ * @property bool $pre_check
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\FundCriterion[] $fund_criteria
@@ -105,6 +105,7 @@ class RecordType extends BaseModel
         'system' => 'bool',
         'criteria' => 'bool',
         'vouchers' => 'bool',
+        'pre_check' => 'bool',
     ];
 
     /**
