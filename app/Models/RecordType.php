@@ -20,6 +20,7 @@ use Illuminate\Support\Arr;
  * @property bool $system
  * @property bool $criteria
  * @property bool $vouchers
+ * @property bool $pre_check
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\FundCriterion[] $fund_criteria
@@ -47,6 +48,7 @@ use Illuminate\Support\Arr;
  * @method static Builder|RecordType whereId($value)
  * @method static Builder|RecordType whereKey($value)
  * @method static Builder|RecordType whereOrganizationId($value)
+ * @method static Builder|RecordType wherePreCheck($value)
  * @method static Builder|RecordType whereSystem($value)
  * @method static Builder|RecordType whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
  * @method static Builder|RecordType whereTranslationLike(string $translationField, $value, ?string $locale = null)
@@ -103,6 +105,7 @@ class RecordType extends BaseModel
         'system' => 'bool',
         'criteria' => 'bool',
         'vouchers' => 'bool',
+        'pre_check' => 'bool',
     ];
 
     /**
