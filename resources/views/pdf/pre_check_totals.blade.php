@@ -392,7 +392,7 @@ $baseColor = $borderColors[0] ?? '#cecece';
                     </td>
                     <td>
                         @if ($fund['is_valid'])
-                            De regeling moet u zelf aanvragen
+                            De regeling kunt u zelf aanvragen
 
                             @if ($fund['is_external'] && $fund['external_link_url'])
                                 via
