@@ -32,6 +32,7 @@ class StoreEmployeeRequest extends BaseFormRequest
         $employees = $this->organization->employees->load('identity.primary_email');
         $emails = $employees->pluck('identity.primary_email.email');
         $emails->push($this->organization->identity?->email);
+        $offices = $this->organization->offices()->pluck('id');
 
         return [
             'email' => [
@@ -39,6 +40,7 @@ class StoreEmployeeRequest extends BaseFormRequest
                 'not_in:' . $emails->filter()->join(','),
                 ...$this->emailRules(),
             ],
+            'office_id' => 'nullable|exists:offices,id|in:' . $offices->join(','),
             'roles' => 'present|array',
             'roles.*' => 'exists:roles,id',
             'target' => 'nullable|alpha_dash',

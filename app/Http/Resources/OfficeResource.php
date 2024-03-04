@@ -36,6 +36,7 @@ class OfficeResource extends BaseJsonResource
         return array_merge($office->only([
             'id', 'organization_id', 'address', 'phone', 'lon', 'lat',
             'postcode', 'postcode_number', 'postcode_addition',
+            'branch_id', 'branch_name', 'branch_number',
         ]), [
             'photo' => new MediaResource($office->photo),
             'organization' => new OrganizationBasicResource($organization),

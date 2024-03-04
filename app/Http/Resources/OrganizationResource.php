@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Identity;
+use App\Models\Office;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Fund;
@@ -38,6 +39,7 @@ class OrganizationResource extends JsonResource
             'tags',
             'offices',
             'contacts',
+            'offices',
             'business_type',
             'reservation_fields',
             'bank_connection_active',
@@ -86,7 +88,9 @@ class OrganizationResource extends JsonResource
             'id', 'identity_address', 'name', 'kvk', 'business_type_id',
             'email_public', 'phone_public', 'website_public',
             'description', 'description_html', 'reservation_phone',
-            'reservation_address', 'reservation_birth_date'
+            'reservation_address', 'reservation_birth_date',
+            'bank_transaction_id', 'bank_transaction_date', 'bank_branch_number', 'bank_branch_id',
+            'bank_branch_name', 'bank_fund_name', 'bank_note',
         ]), $privateData, $ownerData, $biConnectionData, $employeeOnlyData, $funds2FAOnlyData, $extraPaymentsData, [
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),
@@ -95,6 +99,12 @@ class OrganizationResource extends JsonResource
             'funds_count' => $fundsCountDep ? $organization->funds_count : '_null_',
             'permissions' => is_array($permissionsData) ? $permissionsData : '_null_',
             'offices_count' => $organization->offices->count(),
+            'branches' => $organization->offices->map(static function (Office $office) {
+                return array_merge([
+                    'id' => $office->id,
+                    'branch_full_name' => $office->branch_full_name,
+                ], $office->only('branch_name', 'branch_number', 'branch_id'));
+            }),
         ]), static function($item) {
             return $item !== '_null_';
         });

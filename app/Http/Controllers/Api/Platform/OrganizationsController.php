@@ -7,6 +7,7 @@ use App\Events\Organizations\OrganizationUpdated;
 use App\Http\Requests\Api\Platform\Organizations\TransferOrganizationOwnershipRequest;
 use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
+use App\Http\Requests\Api\Platform\Organizations\UpdateBankStatementFieldsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationAcceptReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBIConnectionRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
@@ -164,6 +165,27 @@ class OrganizationsController extends Controller
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'is_sponsor', 'is_provider', 'is_validator',
             'validator_auto_accept_funds'
+        ])));
+
+        return new OrganizationResource($organization);
+    }
+
+    /**
+     * @param UpdateBankStatementFieldsRequest $request
+     * @param Organization $organization
+     * @return OrganizationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function updateBankStatementFields(
+        UpdateBankStatementFieldsRequest $request,
+        Organization $organization
+    ): OrganizationResource {
+        $this->authorize('update', $organization);
+
+        OrganizationUpdated::dispatch($organization->updateModel($request->only([
+            'bank_transaction_id', 'bank_transaction_date', 'bank_branch_number',
+            'bank_branch_id', 'bank_branch_name', 'bank_fund_name', 'bank_note',
         ])));
 
         return new OrganizationResource($organization);

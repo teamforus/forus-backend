@@ -70,9 +70,10 @@ class EmployeesController extends Controller
 
         $email = $request->input('email');
         $roles = $request->input('roles');
+        $office_id = $request->input('office_id');
 
         $identity = Identity::findByEmail($email) ?: Identity::make($email);
-        $employee = $organization->addEmployee($identity, $roles);
+        $employee = $organization->addEmployee($identity, $roles, $office_id);
 
         return EmployeeResource::create($employee);
     }

@@ -19,6 +19,10 @@ use Illuminate\Http\Request;
  * @property int $organization_id
  * @property string $address
  * @property string|null $phone
+ * @property string|null $branch_name
+ * @property string|null $branch_number
+ * @property string|null $branch_id
+ * @property string $branch_full_name
  * @property string|null $lon
  * @property string|null $lat
  * @property string|null $postcode
@@ -37,6 +41,9 @@ use Illuminate\Http\Request;
  * @method static Builder|Office newQuery()
  * @method static Builder|Office query()
  * @method static Builder|Office whereAddress($value)
+ * @method static Builder|Office whereBranchId($value)
+ * @method static Builder|Office whereBranchName($value)
+ * @method static Builder|Office whereBranchNumber($value)
  * @method static Builder|Office whereCreatedAt($value)
  * @method static Builder|Office whereId($value)
  * @method static Builder|Office whereLat($value)
@@ -61,7 +68,8 @@ class Office extends BaseModel
      */
     protected $fillable = [
         'organization_id', 'address', 'phone', 'lon', 'lat', 'parsed',
-        'postcode', 'postcode_number', 'postcode_addition'
+        'postcode', 'postcode_number', 'postcode_addition',
+        'branch_name', 'branch_number', 'branch_id',
     ];
 
     /**
@@ -75,6 +83,17 @@ class Office extends BaseModel
      * @var int
      */
     protected $perPage = 100;
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getBranchFullNameAttribute(): string
+    {
+        return trim(implode(', ', array_filter([
+            $this->branch_name, $this->branch_number, $this->branch_id,
+        ])));
+    }
 
     /**
      * @param Request $request

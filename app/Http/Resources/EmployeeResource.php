@@ -36,6 +36,10 @@ class EmployeeResource extends BaseJsonResource
             'email' => $employee->identity?->email,
             'organization' => $employee->organization->only('id', 'name'),
             'is_2fa_configured' => $employee->identity->is2FAConfigured(),
+            'branch_full_name' => $employee->office?->branch_full_name ?? '',
+            'branch_name' => $employee->office?->branch_name,
+            'branch_number' => $employee->office?->branch_number,
+            'branch_id' => $employee->office?->branch_id,
         ]);
     }
 }

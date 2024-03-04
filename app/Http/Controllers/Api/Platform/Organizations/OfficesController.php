@@ -118,7 +118,10 @@ class OfficesController extends Controller
             $this->authorize('destroy', $media);
         }
 
-        $office->update($request->only(['name', 'address', 'phone', 'email']));
+        $office->update($request->only([
+            'name', 'address', 'phone', 'email',
+            'branch_id', 'branch_name', 'branch_number'
+        ]));
         $office->updateSchedule($request->input('schedule', []));
         $office->updateGeoData();
 

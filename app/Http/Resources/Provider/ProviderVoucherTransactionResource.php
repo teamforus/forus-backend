@@ -26,6 +26,7 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
         'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
         'product',
         'notes_provider',
+        'employee.office',
     ];
 
     /**
@@ -52,6 +53,9 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
             "product" => new ProductResource($transaction->product),
             'reservation' => new ProductReservationResource($transaction->product_reservation),
             "organization" => new OrganizationTinyResource($transaction->provider),
+            "branch_name" => $transaction->employee?->office?->branch_name,
+            "branch_number" => $transaction->employee?->office?->branch_number,
+            "branch_id" => $transaction->employee?->office?->branch_id,
         ], $this->timestamps($transaction, 'created_at', 'updated_at'));
     }
 

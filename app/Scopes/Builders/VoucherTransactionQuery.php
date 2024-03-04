@@ -156,6 +156,9 @@ class VoucherTransactionQuery
             $query->orWhereHas('voucher.fund', fn (Builder $b) => $b->where('name', 'LIKE', "%$q%"));
             $query->orWhereRelation('product', 'name', 'LIKE', "%$q%");
             $query->orWhereRelation('provider', 'name', 'LIKE', "%$q%");
+            $query->orWhereRelation('employee.office', 'branch_name', 'LIKE', "%$q%");
+            $query->orWhereRelation('employee.office', 'branch_number', 'LIKE', "%$q%");
+            $query->orWhereRelation('employee.office', 'branch_id', 'LIKE', "%$q%");
 
             if (is_numeric($q)) {
                 $query->orWhere('voucher_transactions.id', '=', $q);
