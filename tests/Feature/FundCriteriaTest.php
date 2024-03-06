@@ -314,6 +314,7 @@ class FundCriteriaTest extends TestCase
             $this->makeRequestCriterionValue($fund, "test_string_any", 'ipsum_lorem'),
             $this->makeRequestCriterionValue($fund, "test_number", 7),
             $this->makeRequestCriterionValue($fund, "test_select", 'foo'),
+            $this->makeRequestCriterionValue($fund, "test_select_number", 2),
         ], false);
 
         $response->assertSuccessful();
@@ -358,6 +359,7 @@ class FundCriteriaTest extends TestCase
             $this->makeRequestCriterionValue($fund, "test_string_any", 'ipsum_lorem'),
             $this->makeRequestCriterionValue($fund, "test_number", 7),
             $this->makeRequestCriterionValue($fund, "test_select", 'foo'),
+            $this->makeRequestCriterionValue($fund, "test_select_number", 2),
         ], [
             'uid' => token_generator()->generate(32),
         ]);
@@ -393,6 +395,7 @@ class FundCriteriaTest extends TestCase
             $this->makeRequestCriterionValue($fund, "test_string", 'ipsum_lorem'),
             $this->makeRequestCriterionValue($fund, "test_number", 5),
             $this->makeRequestCriterionValue($fund, "test_select", 'bar'),
+            $this->makeRequestCriterionValue($fund, "test_select_number", 1),
         ];
 
         $errors = array_map(fn ($index) => "records.$index.value", range(0, count($records) - 1));
@@ -469,6 +472,7 @@ class FundCriteriaTest extends TestCase
             $this->makeRequestCriterionValue($fund, "test_string_any", null),
             $this->makeRequestCriterionValue($fund, "test_number", null),
             $this->makeRequestCriterionValue($fund, "test_select", null),
+            $this->makeRequestCriterionValue($fund, "test_select_number", null),
         ];
 
         $response = $this->makeFundRequest($identity, $fund, $records, false);
@@ -520,6 +524,7 @@ class FundCriteriaTest extends TestCase
         $this->makeRecordType($fund->organization, RecordType::TYPE_STRING, "test_string_any");
         $this->makeRecordType($fund->organization, RecordType::TYPE_NUMBER, "test_number");
         $this->makeRecordType($fund->organization, RecordType::TYPE_SELECT, "test_select");
+        $this->makeRecordType($fund->organization, RecordType::TYPE_SELECT_NUMBER, "test_select_number");
 
         $response = $this->updateCriteriaRequest([
             $this->makeCriterion("test_bool", 'Ja', '='),
@@ -530,6 +535,7 @@ class FundCriteriaTest extends TestCase
             $this->makeCriterion("test_string_any", null, '*', 5, 20),
             $this->makeCriterion("test_number", '7', '>=', 5, 10),
             $this->makeCriterion("test_select", 'foo', '='),
+            $this->makeCriterion("test_select_number", 2, '>='),
         ], $fund);
 
         $fund->organization->forceFill([
@@ -566,6 +572,16 @@ class FundCriteriaTest extends TestCase
                  'name' => 'Bar',
              ]]);
          }
+
+        if ($type === $recordType::TYPE_SELECT_NUMBER) {
+            $recordType->record_type_options()->createMany([[
+                'value' => 1,
+                'name' => 'Foo',
+            ], [
+                'value' => 2,
+                'name' => 'Bar',
+            ]]);
+        }
 
          return $recordType;
     }
@@ -630,7 +646,8 @@ class FundCriteriaTest extends TestCase
                 $recordType::TYPE_BOOL => random_int(0, 1) ? 'Ja' : 'Nee',
                 $recordType::TYPE_IBAN => $this->faker->iban('NL'),
                 $recordType::TYPE_EMAIL => $this->faker->email(),
-                $recordType::TYPE_SELECT => !empty($options) ? array_first($options) : null,
+                $recordType::TYPE_SELECT,
+                $recordType::TYPE_SELECT_NUMBER => !empty($options) ? array_first($options) : null,
                 $recordType::TYPE_STRING => token_generator()->generate(10),
                 default => token_generator()->generate(5),
             };
