@@ -69,6 +69,7 @@ class RecordType extends BaseModel
     public const TYPE_STRING = 'string';
     public const TYPE_NUMBER = 'number';
     public const TYPE_SELECT = 'select';
+    public const TYPE_SELECT_NUMBER = 'select_number';
 
     public const TYPES = [
         self::TYPE_BOOL,
@@ -78,6 +79,7 @@ class RecordType extends BaseModel
         self::TYPE_STRING,
         self::TYPE_NUMBER,
         self::TYPE_SELECT,
+        self::TYPE_SELECT_NUMBER,
     ];
 
     /**
@@ -212,19 +214,17 @@ class RecordType extends BaseModel
      */
     public function getOperators(): array
     {
-        if (in_array($this->type, ['number', 'date'], true)) {
-            return ['<', '<=', '=', '>=', '>', '*'];
-        }
-
-        if (in_array($this->type, ['string', 'select', 'bool'], true)) {
-            return ['=', '*'];
-        }
-
-        if (in_array($this->type, ['iban', 'email'], true)) {
-            return ['*'];
-        }
-
-        return [];
+        return match ($this->type) {
+            self::TYPE_DATE,
+            self::TYPE_NUMBER => ['<', '<=', '=', '>=', '>', '*'],
+            self::TYPE_SELECT_NUMBER => ['<=', '=', '>=', '*'],
+            self::TYPE_BOOL,
+            self::TYPE_STRING,
+            self::TYPE_SELECT => ['=', '*'],
+            self::TYPE_IBAN,
+            self::TYPE_EMAIL => ['*'],
+            default => [],
+        };
     }
 
     /**
