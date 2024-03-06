@@ -43,7 +43,8 @@ class FundCriteriaValueRule extends BaseFundCriteriaRule
                 is_numeric($min) ? "|min:$min" : "",
                 is_numeric($max) ? "|max:$max" : "",
             ])),
-            $recordType::TYPE_SELECT => Validation::check($value, [
+            $recordType::TYPE_SELECT,
+            $recordType::TYPE_SELECT_NUMBER => Validation::check($value, [
                 'nullable',
                 Rule::in(Arr::pluck($recordType->getOptions(), 'value')),
             ]),
