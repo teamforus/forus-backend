@@ -14,27 +14,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
-            $table->boolean('bank_transaction_id')->default(true)->after(
-                'show_provider_transactions'
-            );
-            $table->boolean('bank_transaction_date')->default(true)->after(
-                'bank_transaction_id'
-            );
-            $table->boolean('bank_branch_number')->default(true)->after(
-                'bank_transaction_date'
-            );
-            $table->boolean('bank_branch_id')->default(true)->after(
-                'bank_branch_number'
-            );
-            $table->boolean('bank_branch_name')->default(true)->after(
-                'bank_branch_id'
-            );
-            $table->boolean('bank_fund_name')->default(true)->after(
-                'bank_branch_name'
-            );
-            $table->boolean('bank_note')->default(true)->after(
-                'bank_fund_name'
-            );
+            $table->boolean('bank_transaction_id')->default(true)->after('show_provider_transactions');
+            $table->boolean('bank_transaction_date')->default(true)->after('bank_transaction_id');
+            $table->boolean('bank_branch_number')->default(true)->after('bank_transaction_date');
+            $table->boolean('bank_branch_id')->default(true)->after('bank_branch_number');
+            $table->boolean('bank_branch_name')->default(true)->after('bank_branch_id');
+            $table->boolean('bank_fund_name')->default(true)->after('bank_branch_name');
+            $table->boolean('bank_note')->default(true)->after('bank_fund_name');
         });
     }
 

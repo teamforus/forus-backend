@@ -106,7 +106,7 @@ class OfficesController extends Controller
     public function update(
         UpdateOfficeRequest $request,
         Organization $organization,
-        Office $office
+        Office $office,
     ): OfficeResource {
         $this->authorize('show', $organization);
         $this->authorize('update', [$office, $organization]);
@@ -122,6 +122,7 @@ class OfficesController extends Controller
             'name', 'address', 'phone', 'email',
             'branch_id', 'branch_name', 'branch_number'
         ]));
+
         $office->updateSchedule($request->input('schedule', []));
         $office->updateGeoData();
 

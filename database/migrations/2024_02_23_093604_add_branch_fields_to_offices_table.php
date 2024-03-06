@@ -14,9 +14,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('offices', function (Blueprint $table) {
-            $table->string('branch_name', 100)->nullable()->after('phone');
-            $table->string('branch_number', 100)->nullable()->after('branch_name');
-            $table->string('branch_id', 100)->nullable()->after('branch_number');
+            $table->string('branch_id', 20)->nullable()->after('phone');
+            $table->string('branch_name', 100)->nullable()->after('branch_id');
+            $table->decimal('branch_number', 12, 0)->nullable()->after('branch_name');
         });
     }
 
@@ -28,9 +28,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('offices', function (Blueprint $table) {
+            $table->dropColumn('branch_id');
             $table->dropColumn('branch_name');
             $table->dropColumn('branch_number');
-            $table->dropColumn('branch_id');
         });
     }
 };

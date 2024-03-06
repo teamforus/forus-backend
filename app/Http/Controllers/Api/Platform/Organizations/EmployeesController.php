@@ -61,7 +61,7 @@ class EmployeesController extends Controller
      */
     public function store(
         StoreEmployeeRequest $request,
-        Organization $organization
+        Organization $organization,
     ): EmployeeResource {
         $this->throttleWithKey('to_many_attempts', $request, 'invite_employee');
 
@@ -113,6 +113,10 @@ class EmployeesController extends Controller
 
         $previousRoles = $employee->roles()->pluck('key');
         $employee->roles()->sync($request->input('roles', []));
+
+        if ($request->input('office_id')) {
+            $employee->update($request->only('office_id'));
+        }
 
         EmployeeUpdated::dispatch($employee, $previousRoles->toArray());
 

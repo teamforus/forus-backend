@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Identity;
-use App\Models\Office;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Fund;
@@ -64,7 +63,7 @@ class OrganizationResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      */
     public function toArray($request): array
@@ -83,29 +82,21 @@ class OrganizationResource extends JsonResource
         $employeeOnlyData = $baseRequest->isDashboard() ? $this->employeeOnlyData($baseRequest, $organization) : [];
         $funds2FAOnlyData = $baseRequest->isDashboard() ? $this->funds2FAOnlyData($organization) : [];
         $permissionsData = $permissionsCountDep ? $this->getIdentityPermissions($organization, $baseRequest->identity()) : null;
-        
+
         return array_filter(array_merge($organization->only([
             'id', 'identity_address', 'name', 'kvk', 'business_type_id',
             'email_public', 'phone_public', 'website_public',
             'description', 'description_html', 'reservation_phone',
             'reservation_address', 'reservation_birth_date',
-            'bank_transaction_id', 'bank_transaction_date', 'bank_branch_number', 'bank_branch_id',
-            'bank_branch_name', 'bank_fund_name', 'bank_note',
         ]), $privateData, $ownerData, $biConnectionData, $employeeOnlyData, $funds2FAOnlyData, $extraPaymentsData, [
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),
             'business_type' => new BusinessTypeResource($organization->business_type),
-            'funds' => $fundsDep ? $organization->funds->map(fn (Fund $fund) => $fund->only('id', 'name')) : '_null_',
+            'funds' => $fundsDep ? $organization->funds->map(fn(Fund $fund) => $fund->only('id', 'name')) : '_null_',
             'funds_count' => $fundsCountDep ? $organization->funds_count : '_null_',
             'permissions' => is_array($permissionsData) ? $permissionsData : '_null_',
             'offices_count' => $organization->offices->count(),
-            'branches' => $organization->offices->map(static function (Office $office) {
-                return array_merge([
-                    'id' => $office->id,
-                    'branch_full_name' => $office->branch_full_name,
-                ], $office->only('branch_name', 'branch_number', 'branch_id'));
-            }),
-        ]), static function($item) {
+        ]), static function ($item) {
             return $item !== '_null_';
         });
     }
@@ -156,6 +147,10 @@ class OrganizationResource extends JsonResource
                 'can_receive_extra_payments' => $organization->canReceiveExtraPayments(),
                 'can_view_provider_extra_payments' => $organization->canViewExtraPaymentsAsProvider(),
             ] : [],
+            'bank_statement_details' => $organization->only([
+                'bank_transaction_id', 'bank_transaction_date', 'bank_branch_number', 'bank_branch_id',
+                'bank_branch_name', 'bank_fund_name', 'bank_note',
+            ]),
         ] : [];
     }
 
@@ -178,9 +173,9 @@ class OrganizationResource extends JsonResource
     protected function privateData(Organization $organization): array
     {
         return [
-            'email' => $organization->email_public ? $organization->email ?? null: null,
-            'phone' => $organization->phone_public ? $organization->phone ?? null: null,
-            'website' => $organization->website_public ? $organization->website ?? null: null,
+            'email' => $organization->email_public ? $organization->email ?? null : null,
+            'phone' => $organization->phone_public ? $organization->phone ?? null : null,
+            'website' => $organization->website_public ? $organization->website ?? null : null,
         ];
     }
 

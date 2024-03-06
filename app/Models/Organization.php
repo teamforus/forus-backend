@@ -89,14 +89,14 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $auth_2fa_funds_restrict_emails
  * @property bool $auth_2fa_funds_restrict_auth_sessions
  * @property bool $auth_2fa_funds_restrict_reimbursements
- * @property int $show_provider_transactions
- * @property int $bank_transaction_id
- * @property int $bank_transaction_date
- * @property int $bank_branch_number
- * @property int $bank_branch_id
- * @property int $bank_branch_name
- * @property int $bank_fund_name
- * @property int $bank_note
+ * @property bool $show_provider_transactions
+ * @property bool $bank_transaction_id
+ * @property bool $bank_transaction_date
+ * @property bool $bank_branch_number
+ * @property bool $bank_branch_id
+ * @property bool $bank_branch_name
+ * @property bool $bank_fund_name
+ * @property bool $bank_note
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -318,6 +318,14 @@ class Organization extends BaseModel
         'allow_provider_extra_payments'             => 'boolean',
         'allow_pre_checks'                          => 'boolean',
         'reservation_allow_extra_payments'          => 'boolean',
+        'show_provider_transactions'                => 'boolean',
+        'bank_transaction_id'                       => 'boolean',
+        'bank_transaction_date'                     => 'boolean',
+        'bank_branch_number'                        => 'boolean',
+        'bank_branch_id'                            => 'boolean',
+        'bank_branch_name'                          => 'boolean',
+        'bank_fund_name'                            => 'boolean',
+        'bank_note'                                 => 'boolean',
     ];
 
     /**

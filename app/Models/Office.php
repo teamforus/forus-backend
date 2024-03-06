@@ -19,10 +19,9 @@ use Illuminate\Http\Request;
  * @property int $organization_id
  * @property string $address
  * @property string|null $phone
- * @property string|null $branch_name
- * @property string|null $branch_number
  * @property string|null $branch_id
- * @property string $branch_full_name
+ * @property string|null $branch_name
+ * @property int|null $branch_number
  * @property string|null $lon
  * @property string|null $lat
  * @property string|null $postcode
@@ -31,6 +30,7 @@ use Illuminate\Http\Request;
  * @property int $parsed
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string $branch_full_name
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
@@ -70,6 +70,10 @@ class Office extends BaseModel
         'organization_id', 'address', 'phone', 'lon', 'lat', 'parsed',
         'postcode', 'postcode_number', 'postcode_addition',
         'branch_name', 'branch_number', 'branch_id',
+    ];
+
+    protected $casts = [
+        'branch_number' => 'integer',
     ];
 
     /**
@@ -130,6 +134,14 @@ class Office extends BaseModel
     public function schedules(): HasMany
     {
         return $this->hasMany(OfficeSchedule::class)->orderBy('week_day');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class);
     }
 
     /**
