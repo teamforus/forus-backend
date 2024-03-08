@@ -407,7 +407,7 @@ class Reimbursement extends Model
         }
 
         if ($note) {
-            $note = sprintf("%s: $note", $approved ? "Geaccepteerd" : "Afgewezen");
+            $note = ($approved ? "Geaccepteerd: " : "Afgewezen: ") . $note;
             $this->addNote($note, $this->employee);
         }
 
