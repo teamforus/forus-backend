@@ -561,12 +561,23 @@ class VoucherTransaction extends BaseModel
      */
     public function makePaymentDescription(int $maxLength = 2000): string
     {
+        $organization = $this->voucher->fund->organization;
         $note = $this->notes_provider->first()?->message;
 
-        return str_limit(trans('bunq.transaction.from_fund', [
-            'fund_name' => $this->voucher->fund->name,
-            'transaction_id' => $this->id
-        ]) . ($note ? ": $note" : ''), $maxLength);
+        $bankStatementFlags = $organization->only(
+            'bank_transaction_id', 'bank_transaction_date', 'bank_branch_number',
+            'bank_branch_id', 'bank_branch_name', 'bank_fund_name', 'bank_note',
+        );
+
+        return str_limit(trim(implode(' - ', array_filter([
+            $bankStatementFlags['bank_transaction_id'] ? $this->id : false,
+            $bankStatementFlags['bank_transaction_date'] ? $this->transfer_at : false,
+            $bankStatementFlags['bank_branch_number'] ? $this->employee?->office?->branch_number : false,
+            $bankStatementFlags['bank_branch_id'] ? $this->employee?->office?->branch_id : false,
+            $bankStatementFlags['bank_branch_name'] ? $this->employee?->office?->branch_name : false,
+            $bankStatementFlags['bank_fund_name'] ? $this->voucher->fund->name : false,
+            $bankStatementFlags['bank_note'] ? $note : false,
+        ]))), $maxLength);
     }
 
     /**
