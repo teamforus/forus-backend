@@ -183,23 +183,33 @@ class Prevalidation extends BaseModel
     {
         $identity_address = $request->auth_address();
 
-        $prevalidations = static::where(function(Builder|Prevalidation $builder) use ($identity_address) {
+        // list of funds where you can manage funds
+        $managedFunds = Fund::whereRelation('organization', function(Builder $builder) use ($identity_address) {
+            OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');
+        })->pluck('id')->toArray();
+
+        // list of identities who can validate records for funds where you can manage funds
+        $relatedIdentities = Identity::whereHas('employees', function(Builder $builder) use ($identity_address) {
+            EmployeeQuery::whereHasPermissionFilter($builder, 'validate_records');
+
+            $builder->whereHas('organization', function(Builder $builder) use ($identity_address) {
+                OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');
+            });
+        })->pluck('address')->toArray();
+
+        $prevalidations = static::where(function(Builder|Prevalidation $builder) use (
+            $identity_address, $managedFunds, $relatedIdentities
+        ) {
             $builder->where('identity_address', $identity_address);
 
-            $builder->orWhere(function(Builder $builder) use ($identity_address) {
+            $builder->orWhere(function(Builder $builder) use (
+                $identity_address, $managedFunds, $relatedIdentities
+            ) {
                 // created for fund where you can manage funds
-                $builder->whereHas('fund.organization', function (Builder $builder) use ($identity_address) {
-                    OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');
-                });
+                $builder->whereIn('fund_id', $managedFunds);
 
                 // created by identity who can validate records on funds where you can manage funds
-                $builder->whereHas('identity.employees', function(Builder $builder) use ($identity_address) {
-                    EmployeeQuery::whereHasPermissionFilter($builder, 'validate_records');
-
-                    $builder->whereHas('organization', function(Builder $builder) use ($identity_address) {
-                        OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');
-                    });
-                });
+                $builder->whereIn('identity_address', $relatedIdentities);
             });
         });
 
