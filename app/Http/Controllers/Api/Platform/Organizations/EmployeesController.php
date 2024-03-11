@@ -112,11 +112,11 @@ class EmployeesController extends Controller
         $this->authorize('update', [$employee, $organization]);
 
         $previousRoles = $employee->roles()->pluck('key');
-        $employee->roles()->sync($request->input('roles', []));
-
-        if ($request->input('office_id')) {
-            $employee->update($request->only('office_id'));
+        if ($employee->identity_address != $organization->identity_address) {
+            $employee->roles()->sync($request->input('roles', []));
         }
+
+        $employee->update($request->only('office_id'));
 
         EmployeeUpdated::dispatch($employee, $previousRoles->toArray());
 

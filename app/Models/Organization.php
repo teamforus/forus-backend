@@ -92,6 +92,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $show_provider_transactions
  * @property bool $bank_transaction_id
  * @property bool $bank_transaction_date
+ * @property int $bank_reservation_number
  * @property bool $bank_branch_number
  * @property bool $bank_branch_id
  * @property bool $bank_branch_name
@@ -192,6 +193,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereBankCronTime($value)
  * @method static EloquentBuilder|Organization whereBankFundName($value)
  * @method static EloquentBuilder|Organization whereBankNote($value)
+ * @method static EloquentBuilder|Organization whereBankReservationNumber($value)
  * @method static EloquentBuilder|Organization whereBankTransactionDate($value)
  * @method static EloquentBuilder|Organization whereBankTransactionId($value)
  * @method static EloquentBuilder|Organization whereBiConnectionAuthType($value)
@@ -281,7 +283,7 @@ class Organization extends BaseModel
         'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
         'reservation_allow_extra_payments', 'allow_provider_extra_payments',
         'bank_transaction_id', 'bank_transaction_date', 'bank_branch_number', 'bank_branch_id',
-        'bank_branch_name', 'bank_fund_name', 'bank_note',
+        'bank_branch_name', 'bank_fund_name', 'bank_note', 'bank_reservation_number',
     ];
 
     /**
@@ -321,6 +323,7 @@ class Organization extends BaseModel
         'show_provider_transactions'                => 'boolean',
         'bank_transaction_id'                       => 'boolean',
         'bank_transaction_date'                     => 'boolean',
+        'bank_reservation_number'                   => 'boolean',
         'bank_branch_number'                        => 'boolean',
         'bank_branch_id'                            => 'boolean',
         'bank_branch_name'                          => 'boolean',

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\OfficeQuery;
 use App\Services\MediaService\Models\Media;
@@ -101,12 +102,17 @@ class Office extends BaseModel
 
     /**
      * @param Request $request
+     * @param Organization|null $organization
      * @return Builder
      */
-    public static function search(Request $request): Builder
+    public static function search(Request $request, Organization $organization = null): Builder
     {
         /** @var Builder $query */
         $query = self::query();
+
+        if ($organization) {
+            $query->where('organization_id', $organization->id);
+        }
 
         // approved only
         if ($request->input('approved', false)) {
@@ -122,7 +128,9 @@ class Office extends BaseModel
 
         // full text search
         if ($request->has('q') && !empty($q = $request->input('q'))) {
-            return OfficeQuery::queryDeepFilter($query, $q);
+            $isProviderDashboard = BaseFormRequest::createFromGlobals()->isProviderDashboard();
+            
+            return OfficeQuery::queryDeepFilter($query, $q, $isProviderDashboard);
         }
 
         return $query;

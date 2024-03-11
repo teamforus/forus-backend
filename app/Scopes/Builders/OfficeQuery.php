@@ -12,9 +12,9 @@ class OfficeQuery
      * @param string $q
      * @return Builder
      */
-    public static function queryDeepFilter(Builder $query, string $q = ''): Builder
+    public static function queryDeepFilter(Builder $query, string $q = '', $isProvider = false): Builder
     {
-        return $query->where(function (Builder $query) use ($q) {
+        return $query->where(function (Builder $query) use ($q, $isProvider) {
             $like = '%' . $q . '%';
 
             $query->where(
@@ -35,6 +35,14 @@ class OfficeQuery
                 $builder->where('organizations.website_public', true);
                 $builder->where('organizations.website', 'LIKE', $like);
             });
+
+            if ($isProvider) {
+                $query->orWhere(function (Builder $builder) use ($like) {
+                    return $builder->where('branch_id', 'LIKE', $like)
+                        ->orWhere('branch_name', 'LIKE', $like)
+                        ->orWhere('branch_number', 'LIKE', $like);
+                });
+            }
         });
     }
 

@@ -48,7 +48,7 @@ class TransactionsController extends Controller
      * @param StoreVoucherTransactionRequest $request
      * @param VoucherToken $voucherToken
      * @return VoucherTransactionResource
-     * @throws AuthorizationException
+     * @throws AuthorizationException|\Throwable
      */
     public function store(
         StoreVoucherTransactionRequest $request,
@@ -116,10 +116,14 @@ class TransactionsController extends Controller
             }
         }
 
+        $employee = $organization->findEmployee($request->auth_address());
         $transaction = $voucher->makeTransaction([
             'amount' => $amount,
             'product_id' => $product->id ?? null,
-            'employee_id' => $organization->findEmployee($request->auth_address())->id,
+            'employee_id' => $employee->id,
+            'branch_id' => $employee?->office?->branch_id,
+            'branch_number' => $employee?->office?->branch_number,
+            'branch_name' => $employee?->office?->branch_name,
             'state' => $transactionState,
             'fund_provider_product_id' => $fundProviderProduct?->id ?? null,
             'target' => VoucherTransaction::TARGET_PROVIDER,

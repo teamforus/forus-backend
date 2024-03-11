@@ -42,7 +42,7 @@ class OfficesController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', [Office::class, $organization]);
 
-        return OfficeResource::queryCollection($organization->offices(), $request);
+        return OfficeResource::queryCollection(Office::search($request, $organization), $request);
     }
 
     /**

@@ -24,6 +24,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property int $voucher_id
  * @property int|null $organization_id
  * @property int|null $employee_id
+ * @property string|null $branch_id
+ * @property string|null $branch_name
+ * @property string|null $branch_number
  * @property int|null $reimbursement_id
  * @property int|null $product_id
  * @property int|null $fund_provider_product_id
@@ -75,6 +78,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static Builder|VoucherTransaction whereAddress($value)
  * @method static Builder|VoucherTransaction whereAmount($value)
  * @method static Builder|VoucherTransaction whereAttempts($value)
+ * @method static Builder|VoucherTransaction whereBranchId($value)
+ * @method static Builder|VoucherTransaction whereBranchName($value)
+ * @method static Builder|VoucherTransaction whereBranchNumber($value)
  * @method static Builder|VoucherTransaction whereCanceledAt($value)
  * @method static Builder|VoucherTransaction whereCreatedAt($value)
  * @method static Builder|VoucherTransaction whereEmployeeId($value)
@@ -169,6 +175,7 @@ class VoucherTransaction extends BaseModel
         'iban_from', 'iban_to', 'iban_to_name', 'payment_time', 'employee_id', 'transfer_at',
         'voucher_transaction_bulk_id', 'payment_description', 'initiator', 'reimbursement_id',
         'target', 'target_iban', 'target_name', 'target_reimbursement_id', 'uid',
+        'branch_id', 'branch_name', 'branch_number',
     ];
 
     protected $hidden = [
@@ -567,11 +574,13 @@ class VoucherTransaction extends BaseModel
         $bankStatementFlags = $organization->only(
             'bank_transaction_id', 'bank_transaction_date', 'bank_branch_number',
             'bank_branch_id', 'bank_branch_name', 'bank_fund_name', 'bank_note',
+            'bank_reservation_number',
         );
 
         return str_limit(trim(implode(' - ', array_filter([
             $bankStatementFlags['bank_transaction_id'] ? $this->id : false,
             $bankStatementFlags['bank_transaction_date'] ? $this->transfer_at : false,
+            $bankStatementFlags['bank_reservation_number'] ? $this->product_reservation?->code : false,
             $bankStatementFlags['bank_branch_number'] ? $this->employee?->office?->branch_number : false,
             $bankStatementFlags['bank_branch_id'] ? $this->employee?->office?->branch_id : false,
             $bankStatementFlags['bank_branch_name'] ? $this->employee?->office?->branch_name : false,
