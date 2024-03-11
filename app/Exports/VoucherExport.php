@@ -16,7 +16,7 @@ class VoucherExport extends BaseFieldedExport
         'granted' => 'Toegekend',
         'identity_email' => 'E-mailadres',
         'in_use' => 'In gebruik',
-        'has_payouts' => 'Has payouts',
+        'has_payouts' => 'Heeft uitbetalingen',
         'has_transactions' => 'Transactie gemaakt',
         'has_reservations' => 'Reservering gemaakt',
         'state' => 'Status',
