@@ -4,6 +4,7 @@ use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -18,7 +19,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $enabled = \Illuminate\Support\Facades\DB::table('bi_connections')
+        $enabled = DB::table('bi_connections')
             ->where('auth_type', '!=', 'disabled')
             ->pluck('id')
             ->all();
@@ -28,9 +29,9 @@ return new class extends Migration
             $table->boolean('enabled')->after('organization_id')->default(false);
         });
 
-        \Illuminate\Support\Facades\DB::table('bi_connections')
-            ->whereIn('id', $enabled)
-            ->update(['enabled' => true]);
+        DB::table('bi_connections')->whereIn('id', $enabled)->update([
+            'enabled' => true,
+        ]);
 
         foreach ($this->keysToMigrate as $type => $className) {
             /** @var EventLog[] $eventLogs */

@@ -16,7 +16,6 @@ use App\Models\Organization;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 use App\Services\BIConnectionService\Models\BIConnection;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Throwable;
 
@@ -42,50 +41,16 @@ class BIConnectionService
      */
     public static function getBIConnectionFromRequest(Request $request): ?static
     {
-        return static::getBIConnection(
-            $request->ip(),
-            $request->header(BIConnection::AUTH_TYPE_HEADER_NAME),
-        );
-    }
+        $organization = Organization::whereHas('bi_connection', function(Builder $builder) use ($request) {
+            $accessToken = $request->header(BIConnection::AUTH_TYPE_HEADER_NAME);
 
-    /**
-     * @param string $ip
-     * @param string|null $token
-     * @return BIConnectionService|null
-     */
-    public static function getBIConnection(
-        string $ip,
-        ?string $token,
-    ): ?static {
-        $organization = Organization::whereHas('bi_connection', function(Builder $builder) use (
-            $ip, $token
-        ) {
-            $builder->where(fn (Builder $q) => static::whereEnabledAndValidToken($q, $token, $ip));
+            $builder->where('enabled', true);
+            $builder->where('access_token', is_string($accessToken) ? $accessToken : null);
+            $builder->where('expire_at', '>', now());
+            $builder->whereJsonContains('ips', $request->ip());
         })->first();
 
-        if ($organization) {
-            return static::create($organization);
-        }
-
-        return null;
-    }
-
-    /**
-     * @param BIConnection|Builder|Relation $query
-     * @param string|null $access_token
-     * @param string|null $ip
-     * @return Builder|Relation
-     */
-    protected static function whereEnabledAndValidToken(
-        BIConnection|Builder|Relation $query,
-        ?string $access_token,
-        ?string $ip,
-    ): Builder|Relation {
-        $query->where('enabled', true);
-        $query->whereJsonContains('ips', $ip);
-        $query->where('expire_at', '>', now());
-
-        return $query->where(compact('access_token'));
+        return $organization ? static::create($organization) : null;
     }
 
     /**
