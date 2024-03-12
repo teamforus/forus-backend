@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Config;
+use Throwable;
 
 class TransactionsController extends Controller
 {
@@ -48,7 +49,7 @@ class TransactionsController extends Controller
      * @param StoreVoucherTransactionRequest $request
      * @param VoucherToken $voucherToken
      * @return VoucherTransactionResource
-     * @throws AuthorizationException|\Throwable
+     * @throws AuthorizationException|Throwable
      */
     public function store(
         StoreVoucherTransactionRequest $request,
@@ -117,10 +118,11 @@ class TransactionsController extends Controller
         }
 
         $employee = $organization->findEmployee($request->auth_address());
+
         $transaction = $voucher->makeTransaction([
             'amount' => $amount,
             'product_id' => $product->id ?? null,
-            'employee_id' => $employee->id,
+            'employee_id' => $employee?->id,
             'branch_id' => $employee?->office?->branch_id,
             'branch_number' => $employee?->office?->branch_number,
             'branch_name' => $employee?->office?->branch_name,

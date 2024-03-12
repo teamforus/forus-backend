@@ -112,6 +112,7 @@ class EmployeesController extends Controller
         $this->authorize('update', [$employee, $organization]);
 
         $previousRoles = $employee->roles()->pluck('key');
+
         if ($employee->identity_address != $organization->identity_address) {
             $employee->roles()->sync($request->input('roles', []));
         }

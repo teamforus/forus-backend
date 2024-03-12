@@ -1585,8 +1585,8 @@ class Voucher extends BaseModel
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
             'employee_id' => $employee->id,
             'branch_id' => $employee->office?->branch_id,
-            'branch_number' => $employee->office?->branch_number,
             'branch_name' => $employee->office?->branch_name,
+            'branch_number' => $employee->office?->branch_number,
             'payment_time' => $isTopUp ? now() : null,
             'state' => $state,
         ]));

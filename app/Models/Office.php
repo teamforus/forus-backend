@@ -2,16 +2,12 @@
 
 namespace App\Models;
 
-use App\Http\Requests\BaseFormRequest;
-use App\Scopes\Builders\FundProviderQuery;
-use App\Scopes\Builders\OfficeQuery;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Http\Request;
 
 /**
  * App\Models\Office
@@ -101,42 +97,6 @@ class Office extends BaseModel
     }
 
     /**
-     * @param Request $request
-     * @param Organization|null $organization
-     * @return Builder
-     */
-    public static function search(Request $request, Organization $organization = null): Builder
-    {
-        /** @var Builder $query */
-        $query = self::query();
-
-        if ($organization) {
-            $query->where('organization_id', $organization->id);
-        }
-
-        // approved only
-        if ($request->input('approved', false)) {
-            $query->whereHas('organization.fund_providers', static function(
-                Builder $builder
-            ) {
-                return FundProviderQuery::whereApprovedForFundsFilter(
-                    $builder,
-                    Implementation::activeFundsQuery()->pluck('id')->toArray()
-                );
-            });
-        }
-
-        // full text search
-        if ($request->has('q') && !empty($q = $request->input('q'))) {
-            $isProviderDashboard = BaseFormRequest::createFromGlobals()->isProviderDashboard();
-            
-            return OfficeQuery::queryDeepFilter($query, $q, $isProviderDashboard);
-        }
-
-        return $query;
-    }
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function schedules(): HasMany
@@ -195,7 +155,7 @@ class Office extends BaseModel
     /**
      * Update postcode and coordinates by google api
      */
-    public function updateGeoData()
+    public function updateGeoData(): void
     {
         $geocodeService = resolve('geocode_api');
         $location = $geocodeService->getLocation($this->address);

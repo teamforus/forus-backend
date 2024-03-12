@@ -144,13 +144,12 @@ class TransactionBulksController extends Controller
     }
 
     /**
-     *
-     * @noinspection PhpUnused
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param VoucherTransactionBulk $transactionBulk
      * @return string
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function exportSEPA(
         BaseFormRequest $request,
