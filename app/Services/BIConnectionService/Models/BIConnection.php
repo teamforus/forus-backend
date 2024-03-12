@@ -15,14 +15,14 @@ use Illuminate\Support\Carbon;
  *
  * @property int $id
  * @property int $organization_id
- * @property string $auth_type
+ * @property bool $enabled
  * @property string $access_token
- * @property string $expiration_period
+ * @property int $expiration_period
  * @property array|null $data_types
  * @property array|null $ips
- * @property \Illuminate\Support\Carbon $expire_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon $expire_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read Organization $organization
@@ -30,9 +30,9 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder|BIConnection newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BIConnection query()
  * @method static \Illuminate\Database\Eloquent\Builder|BIConnection whereAccessToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BIConnection whereAuthType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BIConnection whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BIConnection whereDataTypes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BIConnection whereEnabled($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BIConnection whereExpirationPeriod($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BIConnection whereExpireAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BIConnection whereId($value)
@@ -47,18 +47,7 @@ class BIConnection extends Model
 
     protected $table = 'bi_connections';
 
-    public const AUTH_TYPE_HEADER = 'header';
-    public const AUTH_TYPE_DISABLED = 'disabled';
-    public const AUTH_TYPE_PARAMETER = 'parameter';
-
     public const AUTH_TYPE_HEADER_NAME = 'X-API-KEY';
-    public const AUTH_TYPE_PARAMETER_NAME = 'api_key';
-
-    public const AUTH_TYPES = [
-        self::AUTH_TYPE_HEADER,
-        self::AUTH_TYPE_DISABLED,
-        self::AUTH_TYPE_PARAMETER,
-    ];
 
     public const EXPIRATION_PERIODS = [1, 7, 30];
 
@@ -69,7 +58,7 @@ class BIConnection extends Model
      * @var string[]
      */
     protected $fillable = [
-        'auth_type', 'access_token', 'expiration_period', 'data_types', 'ips', 'organization_id',
+        'enabled', 'access_token', 'expiration_period', 'data_types', 'ips', 'organization_id',
         'expire_at',
     ];
 
@@ -85,6 +74,7 @@ class BIConnection extends Model
      */
     protected $casts = [
         'ips' => 'array',
+        'enabled' => 'boolean',
         'data_types' => 'array',
         'expiration_period' => 'integer',
     ];
@@ -121,7 +111,7 @@ class BIConnection extends Model
     {
         /** @var BIConnection $connection */
         $connection = $organization->bi_connection()->create([
-            ...Arr::only($config, ['auth_type', 'expiration_period', 'data_types', 'ips']),
+            ...Arr::only($config, ['enabled', 'expiration_period', 'data_types', 'ips']),
             'access_token' => BIConnection::makeToken(),
             'expire_at' => Carbon::now()->addDays(Arr::get($config, 'expiration_period', 0)),
         ]);
@@ -142,13 +132,13 @@ class BIConnection extends Model
      */
     public function updateConnection(array $config): BIConnection
     {
-        $disable = Arr::get($config, 'auth_type') === self::AUTH_TYPE_DISABLED;
+        $enable = Arr::get($config, 'enabled');
 
-        $this->update($disable ? [
-            'auth_type' => self::AUTH_TYPE_DISABLED,
-        ]: Arr::only($config, [
-            'auth_type', 'expiration_period', 'data_types', 'ips',
-        ]));
+        $this->update($enable ? Arr::only($config, [
+            'enabled', 'expiration_period', 'data_types', 'ips',
+        ]): [
+            'enabled' => false,
+        ]);
 
         $this->log(self::EVENT_UPDATED, [
             'bi_connection' => $this,
@@ -162,7 +152,7 @@ class BIConnection extends Model
      */
     public function resetToken(): static
     {
-        if ($this->auth_type !== self::AUTH_TYPE_DISABLED) {
+        if ($this->enabled) {
             $connectionToken = $this->access_token;
 
             $this->update([

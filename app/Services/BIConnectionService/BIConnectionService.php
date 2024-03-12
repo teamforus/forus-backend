@@ -45,31 +45,22 @@ class BIConnectionService
         return static::getBIConnection(
             $request->ip(),
             $request->header(BIConnection::AUTH_TYPE_HEADER_NAME),
-            $request->get(BIConnection::AUTH_TYPE_PARAMETER_NAME),
         );
     }
 
     /**
      * @param string $ip
-     * @param string|null $tokenHeader
-     * @param string|null $tokenParameter
+     * @param string|null $token
      * @return BIConnectionService|null
      */
     public static function getBIConnection(
         string $ip,
-        ?string $tokenHeader,
-        ?string $tokenParameter,
+        ?string $token,
     ): ?static {
         $organization = Organization::whereHas('bi_connection', function(Builder $builder) use (
-            $ip, $tokenHeader, $tokenParameter
+            $ip, $token
         ) {
-            $builder->where(fn (Builder $q) => static::whereValidToken(
-                $q, $tokenParameter, BIConnection::AUTH_TYPE_PARAMETER, $ip,
-            ));
-
-            $builder->orWhere(fn (Builder $q) => static::whereValidToken(
-                $q, $tokenHeader, BIConnection::AUTH_TYPE_HEADER, $ip,
-            ));
+            $builder->where(fn (Builder $q) => static::whereEnabledAndValidToken($q, $token, $ip));
         })->first();
 
         if ($organization) {
@@ -82,23 +73,19 @@ class BIConnectionService
     /**
      * @param BIConnection|Builder|Relation $query
      * @param string|null $access_token
-     * @param string|null $auth_type
      * @param string|null $ip
      * @return Builder|Relation
      */
-    protected static function whereValidToken(
+    protected static function whereEnabledAndValidToken(
         BIConnection|Builder|Relation $query,
         ?string $access_token,
-        ?string $auth_type,
         ?string $ip,
     ): Builder|Relation {
+        $query->where('enabled', true);
         $query->whereJsonContains('ips', $ip);
         $query->where('expire_at', '>', now());
 
-        return $query->where([
-            'auth_type' => $auth_type,
-            'access_token' => $access_token,
-        ]);
+        return $query->where(compact('access_token'));
     }
 
     /**

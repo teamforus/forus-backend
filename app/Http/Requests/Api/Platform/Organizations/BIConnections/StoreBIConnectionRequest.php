@@ -32,15 +32,12 @@ class StoreBIConnectionRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $disable = $this->request->get('auth_type') === BIConnection::AUTH_TYPE_DISABLED;
+        $enable = $this->request->get('enabled');
         $dataTypes = BIConnectionService::create($this->organization)->getDataTypes();
 
         return [
-            'auth_type' => [
-                'required',
-                Rule::in(BIConnection::AUTH_TYPES),
-            ],
-            ...!$disable ? [
+            'enabled' => 'required|boolean',
+            ...$enable ? [
                 'expiration_period' => [
                     'required',
                     Rule::in(BIConnection::EXPIRATION_PERIODS),

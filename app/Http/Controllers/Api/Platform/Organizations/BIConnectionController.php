@@ -53,7 +53,7 @@ class BIConnectionController extends Controller
         ]);
 
         $connection = BIConnection::createConnection($organization, $request->only([
-            'auth_type', 'expiration_period', 'data_types', 'ips',
+            'enabled', 'expiration_period', 'data_types', 'ips',
         ]));
 
         return BIConnectionResource::create($connection);
@@ -76,7 +76,7 @@ class BIConnectionController extends Controller
         ]);
 
         $organization->bi_connection->updateConnection($request->only([
-            'auth_type', 'expiration_period', 'data_types', 'ips',
+            'enabled', 'expiration_period', 'data_types', 'ips',
         ]));
 
         return BIConnectionResource::create($organization->bi_connection);

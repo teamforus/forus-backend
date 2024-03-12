@@ -24,7 +24,7 @@ class BIConnectionResource extends BaseJsonResource
 
         return [
             ...$connection->only([
-                'id', 'auth_type', 'access_token', 'expiration_period', 'data_types', 'ips',
+                'id', 'enabled', 'access_token', 'expiration_period', 'data_types', 'ips',
                 'organization_id', 'created_at', 'expire_at',
             ]),
             'expire_after_locale' => $connection->expire_at->diffForHumans(
