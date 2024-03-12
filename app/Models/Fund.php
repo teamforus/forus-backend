@@ -999,9 +999,9 @@ class Fund extends BaseModel
     /**
      * @param string|null $identityAddress
      * @param array|null $records
-     * @return int
+     * @return float
      */
-    public function amountForIdentity(?string $identityAddress, array $records = null): int
+    public function amountForIdentity(?string $identityAddress, array $records = null): float
     {
         if ($this->fund_formulas->count() === 0 &&
             $this->fund_formula_products->pluck('price')->sum() === 0) {
