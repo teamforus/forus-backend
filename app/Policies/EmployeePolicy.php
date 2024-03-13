@@ -55,11 +55,6 @@ class EmployeePolicy
             return false;
         }
 
-        // organization owner employee can't be edited
-        if ($employee->identity_address == $organization->identity_address) {
-            return $this->deny("employees.cant_delete_organization_owner");
-        }
-
         return $employee->organization->identityCan($identity, 'manage_employees');
     }
 

@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Query\Builder as QBuilder;
@@ -145,17 +146,25 @@ class VoucherTransactionQuery
     }
 
     /**
-     * @param Builder|QBuilder $query
+     * @param Builder|Relation|VoucherTransaction $query
      * @param string $q
-     * @return Builder|QBuilder
+     * @return Builder|QBuilder|VoucherTransaction
      */
-    public static function whereQueryFilter(Builder|QBuilder $query, string $q = ''): Builder|QBuilder
-    {
+    public static function whereQueryFilter(
+        Builder|Relation|VoucherTransaction $query,
+        string $q = '',
+    ): Builder|Relation|VoucherTransaction {
         return $query->where(static function (Builder $query) use ($q) {
             $query->where('voucher_transactions.uid', '=', $q);
             $query->orWhereHas('voucher.fund', fn (Builder $b) => $b->where('name', 'LIKE', "%$q%"));
             $query->orWhereRelation('product', 'name', 'LIKE', "%$q%");
             $query->orWhereRelation('provider', 'name', 'LIKE', "%$q%");
+
+            $query->orWhereHas('employee.office', function (Builder $builder) use ($q) {
+                $builder->where('branch_name', 'LIKE', "%$q%");
+                $builder->orWhere('branch_number', 'LIKE', "%$q%");
+                $builder->orWhere('branch_id', 'LIKE', "%$q%");
+            });
 
             if (is_numeric($q)) {
                 $query->orWhere('voucher_transactions.id', '=', $q);

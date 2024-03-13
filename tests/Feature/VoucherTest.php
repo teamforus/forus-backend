@@ -7,7 +7,9 @@ use App\Mail\Vouchers\ShareProductVoucherMail;
 use App\Models\Fund;
 use App\Models\FundConfig;
 use App\Models\FundProvider;
+use App\Models\Identity;
 use App\Models\PhysicalCard;
+use App\Models\RecordType;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundProviderQuery;
@@ -17,11 +19,13 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 use Tests\TestCases\VoucherTestCases;
+use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\VoucherTestTrait;
 
 class VoucherTest extends TestCase
 {
-    use VoucherTestTrait, DatabaseTransactions;
+    use VoucherTestTrait, DatabaseTransactions, MakesTestFunds, MakesTestOrganizations;
 
     /**
      * @var string
@@ -94,6 +98,84 @@ class VoucherTest extends TestCase
     public function testVoucherCase7(): void
     {
         $this->processVoucherTestCase(VoucherTestCases::$featureTestCase7);
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testVoucherFundFormulaProductMultiplier(): void
+    {
+        Cache::clear();
+
+        // create custom record type for vouchers
+        $recordType = RecordType::create([
+            'key' => 'test_number_record_type',
+            'type' => 'number',
+            'vouchers' => true,
+        ]);
+
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $fund = $this->makeTestFund($organization, [
+            'criteria' => [[
+                'value' => random_int(2, 6),
+                'operator' => '>',
+                'show_attachment' => false,
+                'record_type_key' => $recordType->key,
+            ]],
+        ], [
+            'limit_generator_amount' => 100,
+            'limit_voucher_total_amount' => 100,
+            'generator_ignore_fund_budget' => true,
+            'allow_prevalidations' => true,
+        ]);
+
+        $this->makeProviderAndProducts($fund, $recordType->key);
+
+        // make prevalidations and assign custom records
+        $this->makePrevalidation($fund, $identity);
+        $validator = $fund->organization->identity;
+        $this->makeRecords($identity, $validator);
+
+        $this->makeVoucherForFundFormulaProduct($fund, $identity);
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return void
+     * @throws \Throwable
+     */
+    protected function makeVoucherForFundFormulaProduct(Fund $fund, Identity $identity): void
+    {
+        $startDate = now();
+        $headers = $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity));
+
+        $amount = random_int(1, $fund->getMaxAmountPerVoucher());
+
+        $data = array_merge([
+            'fund_id' => $fund->id,
+            'assign_by_type' => 'email',
+            'email' => $identity->primary_email->email,
+            'activate' => true,
+            'limit_multiplier' => 1,
+            'expire_at' => now()->addDays(30)->format('Y-m-d'),
+            'note' => $this->faker()->sentence(),
+            'amount' => $amount,
+        ], $this->recordsFields());
+
+        $validateResponse = $this->postJson($this->getApiUrl($fund, '/validate'), $data, $headers);
+        $uploadResponse = $this->postJson($this->getApiUrl($fund), $data, $headers);
+
+        $validateResponse->assertSuccessful();
+        $uploadResponse->assertSuccessful();
+
+        /** @var Voucher $voucher */
+        $voucher = $this->getVouchersBuilder($fund, $startDate, 'budget')->first();
+
+        $this->assertNotNull($voucher);
+        $this->assertFundFormulaProducts($voucher, $startDate, 'email');
     }
 
     /**
