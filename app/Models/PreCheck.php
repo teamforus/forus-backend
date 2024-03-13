@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
-use App\Http\Resources\PreCheckRecordSettingResource;
+use App\Http\Resources\MediaResource;
 use App\Rules\FundRequests\BaseFundRequestRule;
 use App\Scopes\Builders\VoucherQuery;
 use App\Searches\FundSearch;
@@ -100,17 +100,32 @@ class PreCheck extends BaseModel
      */
     public static function calculateTotalsPerFund(Collection $funds, array $records): array
     {
+        $funds->load([
+            'logo.presets',
+            'criteria.record_type',
+            'fund_config.implementation.pre_checks_records.settings',
+        ]);
+
         return $funds->map(function (Fund $fund) use ($records) {
-            $criteria = $fund->criteria->where('optional', false)->values();
+            $criteria = $fund->criteria
+                ->where('optional', false)
+                ->where('record_type.pre_check', true)
+                ->values();
+
             $multiplier = $fund->multiplierForIdentity(null, $records);
             $amountIdentity = $fund->amountForIdentity(null, $records);
             $amountIdentityTotal = $multiplier * $amountIdentity;
 
             $criteria = $criteria->map(function (FundCriterion $criterion) use ($records, $fund) {
                 /** @var PreCheckRecordSetting|null $setting */
+                /** @var PreCheckRecord|null $preCheckRecord */
+                $preCheckRecord = $fund->fund_config
+                    ?->implementation
+                    ?->pre_checks_records
+                    ?->firstWhere('record_type_key', $criterion->record_type_key);
+
+                $setting = $preCheckRecord?->settings?->firstWhere('fund_id', $fund->id);
                 $value = $records[$criterion->record_type_key] ?? null;
-                $preCheckRecord = PreCheckRecord::where('record_type_key', $criterion->record_type_key)->first();
-                $setting = $preCheckRecord->settings->firstWhere('fund_id', $fund->id);
 
                 return [
                     'id' => $criterion->id,
@@ -128,6 +143,7 @@ class PreCheck extends BaseModel
                     'id', 'name', 'description', 'description_short',
                     'external_link_text', 'external_link_url', 'is_external',
                 ]),
+                'logo' => new MediaResource($fund->logo),
                 'parent' => $fund->parent ? new FundResource($fund->parent) : null,
                 'children' => $fund->children ? FundResource::collection($fund->children) : [],
                 'criteria' => $criteria,

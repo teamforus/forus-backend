@@ -95,31 +95,6 @@ $baseColor = $borderColors[0] ?? '#cecece';
         margin: 0 0;
     }
 
-    .header-content .header-content-powered-by {
-        height: 80px;
-        float: right;
-        width: 100px;
-        position: relative;
-    }
-
-    .header-content .header-content-powered-by .header-content-powered-by-title {
-        text-align: center;
-        font: 400 10px/20px{{ $fontFamily }};
-        margin-top: 10px;
-        margin-bottom: 5px;
-    }
-
-    .header-content .header-content-powered-by .header-content-powered-by-logo {
-        height: 35px;
-    }
-
-    .header-content .header-content-powered-by .header-content-powered-by-logo img {
-        max-width: 100%;
-        max-height: 100%;
-        display: block;
-        margin: auto;
-    }
-
     .header-separators {
         width: 100%;
         height: 2px;
@@ -353,16 +328,10 @@ $baseColor = $borderColors[0] ?? '#cecece';
         </div>
 
         <div class="header-content-date">
-            <div class="header-content-date-title">Forus PreCheck</div>
+            <div class="header-content-date-title">Regelcheck</div>
             <div class="header-content-date-description">{{ $date_locale }}</div>
         </div>
 
-        <div class="header-content-powered-by">
-            <div class="header-content-powered-by-title">POWERED BY</div>
-            <div class="header-content-powered-by-logo">
-                <img src="{{ storage_path('app/pre-check/logo-forus.png') }}" alt="forus-logo"/>
-            </div>
-        </div>
     </div>
 
     <div class="header-separators">
@@ -423,7 +392,7 @@ $baseColor = $borderColors[0] ?? '#cecece';
                     </td>
                     <td>
                         @if ($fund['is_valid'])
-                            De regeling moet u zelf aanvragen
+                            De regeling kunt u zelf aanvragen
 
                             @if ($fund['is_external'] && $fund['external_link_url'])
                                 via
