@@ -63,6 +63,9 @@ class EmployeesExport extends BaseFieldedExport
         return array_merge([
             trans("export.employees.email") => $employee->identity->email,
             trans("export.employees.owner") => $employeeIsOwner ? 'ja' : 'nee',
+            trans("export.employees.branch_number") => $employee->office?->branch_number ?: '-',
+            trans("export.employees.branch_name") => $employee->office?->branch_name ?: '-',
+            trans("export.employees.branch_id") => $employee->office?->branch_id ?: '-',
         ], $employeeRoles, [
             trans("export.employees.is_2fa_configured") => $employee->identity->is2FAConfigured() ? 'ja' : 'nee',
             trans("export.employees.created_at") => $employee->created_at?->format('Y-m-d H:i:s'),

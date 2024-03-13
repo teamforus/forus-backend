@@ -6,8 +6,10 @@ use App\Mail\Vouchers\VoucherAssignedBudgetMail;
 use App\Mail\Vouchers\VoucherAssignedProductMail;
 use App\Mail\Vouchers\VoucherAssignedSubsidyMail;
 use App\Models\Fund;
+use App\Models\FundCriterion;
 use App\Models\FundProvider;
 use App\Models\Identity;
+use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
@@ -18,6 +20,7 @@ use App\Traits\DoesTesting;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 
@@ -57,19 +60,20 @@ trait VoucherTestTrait
 
     /**
      * @param Fund $fund
+     * @param string|null $recordTypeKeyMultiplier
      * @return void
      */
-    protected function makeFundFormulaProducts(Fund $fund): void
+    protected function makeFundFormulaProducts(Fund $fund, ?string $recordTypeKeyMultiplier): void
     {
         if (!$fund->fund_formula_products->count()) {
-            array_map(function () use ($fund) {
+            array_map(function () use ($fund, $recordTypeKeyMultiplier) {
                 /** @var Product $product */
                 $product = array_random($this->approvedProducts);
                 $fund->fund_formula_products()->updateOrCreate([
                     'product_id' => $product->id,
                 ], [
                     'price' => $product->price,
-                    'record_type_key_multiplier' => null,
+                    'record_type_key_multiplier' => $recordTypeKeyMultiplier,
                 ]);
             }, range(0, 3));
 
@@ -238,9 +242,7 @@ trait VoucherTestTrait
             $this->assertFieldsEquals($voucher, $voucherArr);
             $this->assertActivationCode($voucher, $voucherArr);
 
-            if ($assert['assign_by'] === 'email') {
-                $this->assertFundFormulaProducts($voucher, $startDate);
-            }
+            $this->assertFundFormulaProducts($voucher, $startDate, $assert['assign_by']);
         }
 
         if ($sameAssignBy > 0) {
@@ -295,16 +297,18 @@ trait VoucherTestTrait
     /**
      * @param Voucher $voucher
      * @param Carbon $startDate
+     * @param string $type
      * @return void
      */
-    protected function assertFundFormulaProducts(Voucher $voucher, Carbon $startDate): void
+    protected function assertFundFormulaProducts(Voucher $voucher, Carbon $startDate, string $type): void
     {
-        if ($voucher->isBudgetType() && $voucher->identity) {
+        if ($voucher->isBudgetType()) {
             foreach ($voucher->fund->fund_formula_products as $formulaProduct) {
-                $multiplier = $formulaProduct->getIdentityMultiplier($voucher->identity_address);
+                $address = $voucher->identity_address;
+                $multiplier = $formulaProduct->getIdentityMultiplier($type === 'email' ? $address : null);
 
                 $productVoucherCount = Voucher::query()
-                    ->where('identity_address', $voucher->identity_address)
+                    ->where('identity_address', $address)
                     ->where('note', $voucher->note)
                     ->where('product_id', $formulaProduct->product_id)
                     ->where('created_at', '>=', $startDate)
@@ -528,17 +532,18 @@ trait VoucherTestTrait
 
     /**
      * @param Fund $fund
+     * @param string|null $recordTypeKeyMultiplier
      * @return void
      * @throws \Throwable
      */
-    protected function makeProviderAndProducts(Fund $fund): void
+    protected function makeProviderAndProducts(Fund $fund, ?string $recordTypeKeyMultiplier = null): void
     {
         $this->approvedProducts = $this->makeProducts($fund);
         $this->emptyStockProducts = $this->makeProducts($fund, 0, 'global');
         $this->unapprovedProducts = $this->makeProducts();
 
         if ($fund->isTypeBudget()) {
-            $this->makeFundFormulaProducts($fund);
+            $this->makeFundFormulaProducts($fund, $recordTypeKeyMultiplier);
         }
     }
 
@@ -636,5 +641,65 @@ trait VoucherTestTrait
     protected function randomFakeBsn(): int
     {
         return TestData::randomFakeBsn();
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Identity $validator
+     * @return void
+     */
+    public function makeRecords(Identity $identity, Identity $validator): void
+    {
+        $prevalidations = Prevalidation::where([
+            'state' => 'pending',
+            'identity_address' => $identity->address
+        ])->get()->groupBy('fund_id')->map(static function(SupportCollection $arr) {
+            return $arr->first();
+        });
+
+        foreach ($prevalidations as $prevalidation) {
+            foreach ($prevalidation->prevalidation_records as $record) {
+                if ($record->record_type->key === 'bsn') {
+                    continue;
+                }
+
+                $identity
+                    ->makeRecord($record->record_type, $record->value)
+                    ->makeValidationRequest()
+                    ->approve($validator);
+            }
+
+            $prevalidation->update([
+                'state' => 'used'
+            ]);
+        }
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return void
+     * @throws \Throwable
+     */
+    public function makePrevalidation(Fund $fund, Identity $identity): void
+    {
+        $testData = new TestData();
+
+        if ($fund->fund_config->allow_prevalidations) {
+            $records = $fund->criteria->reduce(function (array $list, FundCriterion $criterion) {
+                return array_merge($list, [
+                    $criterion->record_type_key => match($criterion->operator) {
+                        '=' => intval($criterion->value),
+                        '>' => intval($criterion->value) + 1,
+                        '<' => intval($criterion->value) - 1,
+                        default => '',
+                    }
+                ]);
+            }, []);
+
+            $testData->makePrevalidations(
+                $identity, $fund, $testData->generatePrevalidationData($fund, 10, $records)
+            );
+        }
     }
 }
