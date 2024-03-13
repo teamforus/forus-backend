@@ -41,6 +41,7 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
         return array_merge($transaction->only([
             "id", "organization_id", "product_id", "address",
             "state", 'state_locale', "payment_id", 'iban_final',
+            "branch_name", "branch_number", "branch_id",
         ]), $this->getIbanFields($transaction), [
             'amount' => currency_format($transaction->amount),
             'amount_locale' => currency_format_locale($transaction->amount),

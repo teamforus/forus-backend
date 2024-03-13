@@ -24,6 +24,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property int $voucher_id
  * @property int|null $organization_id
  * @property int|null $employee_id
+ * @property string|null $branch_id
+ * @property string|null $branch_name
+ * @property string|null $branch_number
  * @property int|null $reimbursement_id
  * @property int|null $product_id
  * @property int|null $fund_provider_product_id
@@ -75,6 +78,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static Builder|VoucherTransaction whereAddress($value)
  * @method static Builder|VoucherTransaction whereAmount($value)
  * @method static Builder|VoucherTransaction whereAttempts($value)
+ * @method static Builder|VoucherTransaction whereBranchId($value)
+ * @method static Builder|VoucherTransaction whereBranchName($value)
+ * @method static Builder|VoucherTransaction whereBranchNumber($value)
  * @method static Builder|VoucherTransaction whereCanceledAt($value)
  * @method static Builder|VoucherTransaction whereCreatedAt($value)
  * @method static Builder|VoucherTransaction whereEmployeeId($value)
@@ -169,6 +175,7 @@ class VoucherTransaction extends BaseModel
         'iban_from', 'iban_to', 'iban_to_name', 'payment_time', 'employee_id', 'transfer_at',
         'voucher_transaction_bulk_id', 'payment_description', 'initiator', 'reimbursement_id',
         'target', 'target_iban', 'target_name', 'target_reimbursement_id', 'uid',
+        'branch_id', 'branch_name', 'branch_number',
     ];
 
     protected $hidden = [
@@ -561,12 +568,18 @@ class VoucherTransaction extends BaseModel
      */
     public function makePaymentDescription(int $maxLength = 2000): string
     {
-        $note = $this->notes_provider->first()?->message;
+        $organization = $this->voucher->fund->organization;
 
-        return str_limit(trans('bunq.transaction.from_fund', [
-            'fund_name' => $this->voucher->fund->name,
-            'transaction_id' => $this->id
-        ]) . ($note ? ": $note" : ''), $maxLength);
+        return str_limit(trim(implode(' - ', array_filter([
+            $organization->bank_transaction_id ? $this->id : null,
+            $organization->bank_transaction_date ? $this->transfer_at : null,
+            $organization->bank_reservation_number ? $this->product_reservation?->code : null,
+            $organization->bank_branch_number ? $this->employee?->office?->branch_number : null,
+            $organization->bank_branch_id ? $this->employee?->office?->branch_id : null,
+            $organization->bank_branch_name ? $this->employee?->office?->branch_name : null,
+            $organization->bank_fund_name ? $this->voucher?->fund?->name : null,
+            $organization->bank_note ? $this->notes_provider[0]?->message : null,
+        ]))), $maxLength);
     }
 
     /**

@@ -1584,6 +1584,9 @@ class Voucher extends BaseModel
         $transaction = $this->makeTransaction(array_merge(Arr::except($attributes, 'note'), [
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
             'employee_id' => $employee->id,
+            'branch_id' => $employee->office?->branch_id,
+            'branch_name' => $employee->office?->branch_name,
+            'branch_number' => $employee->office?->branch_number,
             'payment_time' => $isTopUp ? now() : null,
             'state' => $state,
         ]));

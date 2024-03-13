@@ -14,29 +14,32 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property string $identity_address
  * @property int $organization_id
+ * @property int|null $office_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $fund_request_records
  * @property-read int|null $fund_request_records_count
- * @property-read \App\Models\Identity $identity
+ * @property-read \App\Models\Identity|null $identity
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
+ * @property-read \App\Models\Office|null $office
  * @property-read \App\Models\Organization $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[] $roles
  * @property-read int|null $roles_count
  * @method static \Illuminate\Database\Eloquent\Builder|Employee newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Employee newQuery()
- * @method static \Illuminate\Database\Query\Builder|Employee onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Employee onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|Employee query()
  * @method static \Illuminate\Database\Eloquent\Builder|Employee whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Employee whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Employee whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Employee whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Employee whereOfficeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Employee whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Employee whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|Employee withTrashed()
- * @method static \Illuminate\Database\Query\Builder|Employee withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Employee withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Employee withoutTrashed()
  * @mixin \Eloquent
  */
 class Employee extends BaseModel
@@ -50,7 +53,7 @@ class Employee extends BaseModel
     public const EVENT_FUND_REQUEST_ASSIGNED = 'fund_request_assigned';
 
     protected $fillable = [
-        'identity_address', 'organization_id'
+        'identity_address', 'organization_id', 'office_id',
     ];
 
     /**
@@ -68,6 +71,15 @@ class Employee extends BaseModel
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function office(): BelongsTo
+    {
+        return $this->belongsTo(Office::class);
     }
 
     /**
