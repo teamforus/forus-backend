@@ -193,7 +193,7 @@ class VoucherTransactionQuery
             $builder->whereRelation('voucher_transaction_bulk', function(
                 Builder|VoucherTransactionBulk $builder
             ) {
-                $builder->where('state', VoucherTransactionBulk::STATE_DRAFT);
+                $builder->where('state', VoucherTransactionBulk::STATE_ACCEPTED);
             });
         });
     }
