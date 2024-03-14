@@ -87,7 +87,7 @@ class PreCheck extends BaseModel
         }
 
         return (new FundSearch(array_merge($request->only([
-            'q', 'tag', 'tag_id', 'organization_id',
+            'q', 'tag_id', 'organization_id',
         ]), [
             'with_external' => true,
         ]), $fundsQuery))->query()->get();
