@@ -578,7 +578,7 @@ class VoucherTransaction extends BaseModel
             $organization->bank_branch_id ? $this->employee?->office?->branch_id : null,
             $organization->bank_branch_name ? $this->employee?->office?->branch_name : null,
             $organization->bank_fund_name ? $this->voucher?->fund?->name : null,
-            $organization->bank_note ? $this->notes_provider[0]?->message : null,
+            $organization->bank_note ? $this->notes_provider->first()?->message : null,
         ]))), $maxLength);
     }
 
