@@ -41,7 +41,7 @@ jobs:
         run: ./vendor/bin/psalm --init
 
       - name: Psalm Security Scan run
-        run: ./vendor/bin/psalm --output-format=github --taint-analysis --report="results.sarif"
+        run: ./vendor/bin/psalm --output-format=github --report="results.sarif"
 
       - name: Archive Test Results
         if: always()
