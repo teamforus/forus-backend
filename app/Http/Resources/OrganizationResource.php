@@ -130,7 +130,7 @@ class OrganizationResource extends JsonResource
      */
     protected function employeeOnlyData(BaseFormRequest $request, Organization $organization): array
     {
-        return $request->identity() && $organization->isEmployee($request->identity()) ? [
+        return $request->identity() && $organization->isEmployee($request->identity(), false) ? [
             'has_bank_connection' => !empty($organization->bank_connection_active),
             ...$organization->only([
                 'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
