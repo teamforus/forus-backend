@@ -37,8 +37,8 @@ jobs:
       - name: Install psalm dependency
         run: composer require --dev vimeo/psalm
 
-      - name: Psalm Security Scan init
-        run: ./vendor/bin/psalm --init
+#      - name: Psalm Security Scan init
+#        run: ./vendor/bin/psalm --init
 
       - name: Psalm Security Scan run
         run: ./vendor/bin/psalm --output-format=github --report="results.sarif"
