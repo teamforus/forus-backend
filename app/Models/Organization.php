@@ -852,10 +852,15 @@ class Organization extends BaseModel
     /**
      * Check if identity is organization employee
      * @param Identity $identity
+     * @param bool $fresh
      * @return bool
      */
-    public function isEmployee(Identity $identity): bool
+    public function isEmployee(Identity $identity, bool $fresh = true): bool
     {
+        if (!$fresh) {
+            return $this->employees->where('identity_address', $identity->address)->isNotEmpty();
+        }
+
         return $this->employees()->where('identity_address', $identity->address)->exists();
     }
 
