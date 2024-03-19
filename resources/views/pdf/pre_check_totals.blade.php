@@ -367,7 +367,7 @@ $baseColor = $borderColors[0] ?? '#cecece';
         <h1>Welke regelingen kan ik aanvragen?</h1>
 
         <p>
-            Er bestaan veel verschillende regelingen.
+            Er bestaan heel veel verschillende regelingen.
             Op de website heeft u een paar vragen ingevuld om te zien voor welke regelingen u mogelijk in aanmerking komt.
             Hieronder ziet u per regeling het resultaat.
         </p>
