@@ -11,7 +11,7 @@ class SendIdentityNotificationRequest extends IndexIdentitiesRequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
+     * @return true
      */
     public function authorize(): bool
     {

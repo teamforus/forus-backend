@@ -140,10 +140,9 @@ class FundRequest extends BaseModel
     }
 
     /**
-     * @return int|null
      * @noinspection PhpUnused
      */
-    public function getLeadTimeDaysAttribute(): ?int
+    public function getLeadTimeDaysAttribute(): int
     {
         return ($this->resolved_at ?: now())->diffInDays($this->created_at);
     }
@@ -243,12 +242,13 @@ class FundRequest extends BaseModel
 
     /**
      * Set all fund request records assigned to given employee as declined
+     *
      * @param Employee $employee
      * @param string|null $note
-     * @return FundRequest
+     *
      * @throws \Exception
      */
-    public function decline(Employee $employee, ?string $note = null): self
+    public function decline(Employee $employee, ?string $note = null): static
     {
         $this->update([
             'note' => $note ?: ''
@@ -310,9 +310,8 @@ class FundRequest extends BaseModel
      * @param Employee $employee
      * @param string|null $note
      * @param bool $notify
-     * @return FundRequest
      */
-    public function disregard(Employee $employee, ?string $note = null, bool $notify = false): self
+    public function disregard(Employee $employee, ?string $note = null, bool $notify = false): static
     {
         $this->update([
             'disregard_note' => $note ?: '',
@@ -330,10 +329,10 @@ class FundRequest extends BaseModel
 
     /**
      * Set all disregarded fund request records assigned to given employee as pending
+     *
      * @param Employee $employee
-     * @return FundRequest
      */
-    public function disregardUndo(Employee $employee): self
+    public function disregardUndo(Employee $employee): static
     {
         $this->records_disregarded()->where([
             'employee_id' => $employee->id
@@ -513,9 +512,10 @@ class FundRequest extends BaseModel
      * Prepare fund requests for exporting
      *
      * @param Builder $builder
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     *
+     * @psalm-return Collection<int, array<\Illuminate\Contracts\Translation\Translator|\Illuminate\Support\Carbon|array|null|string>>|\Illuminate\Support\Collection<int, array<\Illuminate\Contracts\Translation\Translator|\Illuminate\Support\Carbon|array|null|string>>
      */
-    private static function exportTransform(Builder $builder): mixed
+    private static function exportTransform(Builder $builder): Collection|\Illuminate\Support\Collection
     {
         $fundRequests = (clone $builder)->with([
             'identity.record_bsn',

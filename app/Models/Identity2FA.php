@@ -165,9 +165,8 @@ class Identity2FA extends Model
 
     /**
      * @param string $code
-     * @return bool
      */
-    public function deactivate(string $code): bool
+    public function deactivate(string $code): bool|null
     {
         $this->forceFill([
             'deactivation_code' => $code,

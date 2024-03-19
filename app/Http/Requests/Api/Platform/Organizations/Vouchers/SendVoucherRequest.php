@@ -13,23 +13,14 @@ use App\Rules\IdentityEmailExistsRule;
  */
 class SendVoucherRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return
-            $this->organization->identityCan($this->identity(), 'manage_vouchers') &&
-            $this->voucher->fund->organization_id === $this->organization->id &&
-            !$this->voucher->is_granted;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (IdentityEmailExistsRule|mixed|string)[][]
+     *
+     * @psalm-return array{email: array{0: 'required'|mixed, 1: IdentityEmailExistsRule|mixed,...}}
      */
     public function rules(): array
     {

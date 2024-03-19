@@ -24,7 +24,10 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 
     /**
      * @return array
+     *
      * @noinspection PhpUnused
+     *
+     * @psalm-return array<never, never>
      */
     public function rules(): array
     {
@@ -45,8 +48,10 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     /**
      * Handle a failed authorization attempt.
      *
-     * @return void
+     * @return never
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
      * @noinspection PhpUnused
      */
     protected function failedAuthorization(): void
@@ -122,6 +127,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 
     /**
      * @return string
+     *
+     * @psalm-return 'nullable|string'
      */
     public function qRule(): string
     {
@@ -139,9 +146,14 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 
     /**
      * @param ...$columns
+     *
      * @return string[]
+     *
+     * @psalm-param 'created_at' $columns
+     *
+     * @psalm-return array{order_by: string, order_dir: 'nullable|string|in:asc,desc'}
      */
-    public function orderByRules(...$columns): array
+    public function orderByRules(string ...$columns): array
     {
         return [
             'order_by' => 'nullable|in:' . implode(',', $columns),
@@ -150,7 +162,9 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return list{'max:191', 'email:strict,filter_unicode'}
      */
     public function emailRules(): array
     {
@@ -163,7 +177,10 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     /**
      * @param int $perPage
      * @param array $columns
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{q: string, per_page: string,...}
      */
     public function sortableResourceRules(int $perPage = 100, array $columns = []): array
     {
@@ -175,7 +192,10 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 
     /**
      * @param array|string $types
-     * @return array
+     *
+     * @return (\Illuminate\Validation\Rules\In|string)[]
+     *
+     * @psalm-return list{'nullable', 'string', \Illuminate\Validation\Rules\In}
      */
     public function resourceTypeRule(array|string $types = 'default'): array
     {
@@ -187,11 +207,14 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     }
 
     /**
-     * @param $abilityOrRules
+     * @param ((Organization|string)[]|Organization)[] $abilityOrRules
      * @param array $arguments
+     *
      * @return bool
+     *
+     * @psalm-param array{show: Organization, viewAny: list{\App\Models\VoucherTransactionBulk::class, Organization}} $abilityOrRules
      */
-    public function gateAllows($abilityOrRules, array $arguments = []): bool
+    public function gateAllows(array $abilityOrRules, array $arguments = []): bool
     {
         if (is_array($abilityOrRules)) {
             foreach ($abilityOrRules as $ability => $arguments) {
@@ -240,9 +263,11 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     }
 
     /**
-     * @return IdentityProxy|Model|null
+     * @return Model|null
+     *
+     * @psalm-return TModel|null
      */
-    public function identityProxy(): IdentityProxy|Model|null
+    public function identityProxy()|Model|null
     {
         return $this->identity()?->proxies->where('access_token', $this->bearerToken())->first();
     }

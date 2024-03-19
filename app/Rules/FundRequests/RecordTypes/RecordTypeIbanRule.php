@@ -7,7 +7,9 @@ use App\Rules\Base\IbanRule;
 class RecordTypeIbanRule extends BaseRecordTypeRule
 {
     /**
-     * @return array
+     * @return (IbanRule|string)[]
+     *
+     * @psalm-return array{0?: string, 1: IbanRule}
      */
     public function rules(): array
     {

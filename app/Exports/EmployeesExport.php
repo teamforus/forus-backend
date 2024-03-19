@@ -43,7 +43,10 @@ class EmployeesExport extends BaseFieldedExport
 
     /**
      * @param Collection $employees
+     *
      * @return Collection
+     *
+     * @psalm-return Collection<array-key, array>
      */
     protected function exportTransform(Collection $employees): Collection
     {
@@ -52,7 +55,10 @@ class EmployeesExport extends BaseFieldedExport
 
     /**
      * @param Employee $employee
-     * @return array
+     *
+     * @return (int|mixed|null|string)[]
+     *
+     * @psalm-return array<int|mixed|null|string>
      */
     protected function getEmployeeRow(Employee $employee): array
     {

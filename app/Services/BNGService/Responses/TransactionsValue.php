@@ -42,13 +42,4 @@ class TransactionsValue extends Value
     {
         return $this->data['transactions'] ?? null;
     }
-
-    /**
-     * @return array|null
-     * @noinspection PhpUnused
-     */
-    public function getAccountIban(): ?string
-    {
-        return $this->getAccount()['iban'] ?? null;
-    }
 }

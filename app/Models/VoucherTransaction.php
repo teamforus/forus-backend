@@ -287,10 +287,13 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
-     * @return float
+     * @return float|int|null|string
+     *
      * @noinspection PhpUnused
+     *
+     * @psalm-return 0|float|null|string
      */
-    public function getTransactionCostAttribute(): float
+    public function getTransactionCostAttribute(): int|float|string|null
     {
         if (!$this->amount || !$this->isPaid() || !$this->isOutgoing()) {
             return 0;
@@ -326,10 +329,11 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
+     *
      * @noinspection PhpUnused
      */
-    public function getTargetLocaleAttribute(): string
+    public function getTargetLocaleAttribute(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return [
             self::TARGET_PROVIDER => trans("transaction.target.$this->target"),
@@ -392,9 +396,12 @@ class VoucherTransaction extends BaseModel
     /**
      * @param Builder $builder
      * @param array $fields
-     * @return SupportCollection
+     *
+     * @return Collection|SupportCollection
+     *
+     * @psalm-return Collection<int, array>|SupportCollection<int, array>
      */
-    private static function exportTransform(Builder $builder, array $fields): SupportCollection
+    private static function exportTransform(Builder $builder, array $fields): SupportCollection|Collection
     {
         $fieldLabels = array_pluck(array_merge(
             VoucherTransactionsSponsorExport::getExportFields(),
@@ -528,10 +535,7 @@ class VoucherTransaction extends BaseModel
             ($this->transfer_at && $this->transfer_at->isFuture());
     }
 
-    /**
-     * @return VoucherTransaction
-     */
-    public function cancelPending(): VoucherTransaction
+    public function cancelPending(): static
     {
         return $this->updateModel([
             'state' => self::STATE_CANCELED,
@@ -541,8 +545,10 @@ class VoucherTransaction extends BaseModel
 
     /**
      * @return int|null
+     *
+     * @psalm-return int<0, max>|null
      */
-    public function daysBeforeTransaction(): ?int
+    public function daysBeforeTransaction(): int|null
     {
         if (!$this->isPending() || !$this->transfer_at) {
             return null;

@@ -19,14 +19,4 @@ class UpdatePendingMollieConnectionsCommand extends BaseUpdateMollieConnectionsC
      * @var string
      */
     protected $description = 'Update pending onboarding molli connections.';
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        $this->updateConnections(MollieConnection::PENDING_ONBOARDING_STATES);
-    }
 }

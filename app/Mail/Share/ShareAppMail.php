@@ -23,7 +23,10 @@ class ShareAppMail extends ImplementationMail
 
     /**
      * @param array $data
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{download_link: string, download_button: string}
      */
     protected function getMailExtraData(array $data): array
     {

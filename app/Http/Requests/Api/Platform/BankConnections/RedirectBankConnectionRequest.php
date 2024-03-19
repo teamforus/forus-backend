@@ -10,22 +10,11 @@ class RedirectBankConnectionRequest extends BaseFormRequest
     protected $decayMinutes = 30;
 
     /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     * @throws \App\Exceptions\AuthorizationJsonException
-     */
-    public function authorize(): bool
-    {
-        $this->throttleWithKey('to_many_attempts', $this, 'bank_connection_redirect');
-
-        return true;
-    }
-
-    /**
      * Get the validation rules that apply to the request.
      *
      * @return array
+     *
+     * @psalm-return array<never, never>
      */
     public function rules(): array
     {

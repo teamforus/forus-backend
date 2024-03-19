@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Facade;
  */
 class EventLog extends Facade
 {
+    /**
+     * @return string
+     *
+     * @psalm-return 'forus.event_log'
+     */
     protected static function getFacadeAccessor(): string
     {
         return 'forus.event_log';

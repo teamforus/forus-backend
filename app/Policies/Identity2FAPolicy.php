@@ -32,9 +32,10 @@ class Identity2FAPolicy
     /**
      * @param Identity $identity
      * @param string $type
-     * @return Response|bool
+     *
+     * @return Response|true
      */
-    public function store(Identity $identity, string $type): Response|bool
+    public function store(Identity $identity, string $type): bool|Response|bool
     {
         if ($identity->auth_2fa_providers_active()->where('type', $type)->exists()) {
             return $this->deny('You already have a connection of the same type.');

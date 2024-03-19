@@ -32,7 +32,10 @@ abstract class ConsentValue extends Value
     /**
      * @param BNGService $BNGService
      * @param array $params
-     * @return array
+     *
+     * @return (mixed|string)[]
+     *
+     * @psalm-return array{scope: mixed, redirect_uri: mixed|string, response_type: 'code'|mixed, state: mixed|string, code_challenge: mixed|string, code_challenge_method: 'Plain'|mixed, client_id: mixed|string,...}
      */
     protected function getParams(BNGService $BNGService, array $params = []): array
     {

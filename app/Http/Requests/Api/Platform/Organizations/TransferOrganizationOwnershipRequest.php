@@ -14,20 +14,14 @@ use Illuminate\Validation\Rule;
  */
 class TransferOrganizationOwnershipRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->organization->identity_address === $this->auth_address();
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (\Illuminate\Validation\Rules\Exists|string)[][]
+     *
+     * @psalm-return array{employee_id: list{'required', \Illuminate\Validation\Rules\Exists}}
      */
     public function rules(): array
     {

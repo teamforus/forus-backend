@@ -39,7 +39,10 @@ class VoucherCollectionResource extends VoucherResource
 
     /**
      * @param Voucher $voucher
+     *
      * @return array
+     *
+     * @psalm-return array<never, never>
      */
     protected function getOptionalFields(Voucher $voucher): array
     {

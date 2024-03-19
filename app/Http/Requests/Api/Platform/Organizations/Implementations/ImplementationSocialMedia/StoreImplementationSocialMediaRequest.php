@@ -15,20 +15,14 @@ use Illuminate\Database\Query\Builder;
  */
 class StoreImplementationSocialMediaRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, mixed>
+     * @return ((\Illuminate\Validation\Rules\Unique|string)[]|string)[]
+     *
+     * @psalm-return array{type: list{'required', string, \Illuminate\Validation\Rules\Unique}, url: 'required|string|url|min:5|max:200', title: 'nullable|string|max:200'}
      */
     public function rules(): array
     {

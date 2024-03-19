@@ -13,7 +13,9 @@ class IndexProvidersRequest extends IndexFundProviderRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (array|mixed|string)[]
+     *
+     * @psalm-return array{from: 'nullable|date_format:Y-m-d', to: 'nullable|date_format:Y-m-d', fund_ids: 'nullable|array', 'fund_ids.*': string, postcodes: 'nullable|array', 'postcodes.*': 'nullable|string|max:100', provider_ids: 'nullable|array', 'provider_ids.*': 'nullable|exists:organizations,id', product_category_ids: 'nullable|array', 'product_category_ids.*': 'nullable|exists:product_categories,id', order_by: 'nullable|in:name,application_date', order_dir: 'nullable|in:asc,desc', per_page: string, resource_type: array, business_type_ids: 'nullable|array', 'business_type_ids.*': 'nullable|exists:business_types,id', implementation_id: string,...}
      */
     public function rules(): array
     {

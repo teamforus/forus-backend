@@ -15,20 +15,14 @@ use Illuminate\Support\Facades\Gate;
  */
 class UpdateVoucherRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return Gate::allows('update', [$this->voucher, $this->organization]);
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{limit_multiplier: 'nullable|numeric|min:1'}
      */
     public function rules(): array
     {

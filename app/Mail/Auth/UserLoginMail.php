@@ -25,7 +25,10 @@ class UserLoginMail extends ImplementationMail
 
     /**
      * @param array $data
-     * @return array
+     *
+     * @return (false|string)[]
+     *
+     * @psalm-return array{time: false|string, auth_button: string}
      */
     protected function getMailExtraData(array $data): array
     {

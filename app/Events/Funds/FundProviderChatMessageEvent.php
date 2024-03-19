@@ -15,19 +15,6 @@ class FundProviderChatMessageEvent extends BaseFundEvent
     protected $message;
 
     /**
-     * Create a new event instance.
-     *
-     * FundProviderReplied constructor.
-     * @param Fund $fund
-     * @param FundProviderChatMessage $message
-     */
-    public function __construct(Fund $fund, FundProviderChatMessage $message)
-    {
-        parent::__construct($fund);
-        $this->message = $message;
-    }
-
-    /**
      * @return FundProviderChat
      */
     public function getChat(): FundProviderChat

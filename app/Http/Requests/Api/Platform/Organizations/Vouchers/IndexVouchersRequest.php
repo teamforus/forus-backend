@@ -16,20 +16,14 @@ use Illuminate\Validation\Rule;
  */
 class IndexVouchersRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->organization->identityCan($this->identity(), 'manage_vouchers');
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\In|mixed|string)[]|string)[]
+     *
+     * @psalm-return array{per_page: 'numeric|between:1,100', fund_id: string, granted: 'nullable|boolean', amount_min: 'nullable|numeric', amount_max: 'nullable|numeric', from: 'nullable|date_format:Y-m-d', to: 'nullable|date_format:Y-m-d', type: 'required|in:fund_voucher,product_voucher,all', unassigned: 'nullable|boolean', source: 'required|in:all,user,employee', qr_format: 'nullable|in:pdf,png,data,all', data_format: 'nullable|in:csv,xls,all', sort_by: 'nullable|in:amount,expire_at,created_at', state: string, sort_order: 'nullable|in:asc,desc', q: 'nullable|string|max:100', email: array{0: 'nullable'|mixed,...}, bsn: 'nullable|string|max:100', in_use: 'nullable|boolean', expired: 'nullable|boolean', count_per_identity_min: 'nullable|numeric', count_per_identity_max: 'nullable|numeric', fields: 'nullable|array', 'fields.*': list{'nullable', \Illuminate\Validation\Rules\In}, identity_address: 'nullable|exists:identities,address', amount_available_min: 'nullable|numeric', amount_available_max: 'nullable|numeric', implementation_id: string}
      */
     public function rules(): array
     {
@@ -73,7 +67,9 @@ class IndexVouchersRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return list{'active', 'pending', 'deactivated', 'expired'}
      */
     private function statesList(): array
     {

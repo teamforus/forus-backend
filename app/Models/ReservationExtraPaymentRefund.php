@@ -78,10 +78,11 @@ class ReservationExtraPaymentRefund extends Model
     }
 
     /**
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
+     *
      * @noinspection PhpUnused
      */
-    public function getStateLocaleAttribute(): string
+    public function getStateLocaleAttribute(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans("states/reservation_extra_payment_refunds.$this->state");
     }

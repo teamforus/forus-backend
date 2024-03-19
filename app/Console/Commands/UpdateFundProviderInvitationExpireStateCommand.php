@@ -20,30 +20,4 @@ class UpdateFundProviderInvitationExpireStateCommand extends Command
      * @var string
      */
     protected $description = 'Update fund provider invitations state if expired.';
-
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
-     * Execute the console command.
-     */
-    public function handle()
-    {
-        FundProviderInvitation::where([
-            'state' => FundProviderInvitation::STATE_PENDING
-        ])->get()->each(function(FundProviderInvitation $invitation) {
-            if ($invitation->expired) {
-                $invitation->update([
-                    'state' => FundProviderInvitation::STATE_EXPIRED
-                ]);
-            }
-        });
-    }
 }

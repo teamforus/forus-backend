@@ -6,20 +6,14 @@ use App\Http\Requests\BaseFormRequest;
 
 class IndexFundRequestsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (mixed|string)[]
+     *
+     * @psalm-return array{fund_id: 'nullable|exists:funds,id'|mixed, archived: 'nullable|boolean'|mixed,...}
      */
     public function rules(): array
     {

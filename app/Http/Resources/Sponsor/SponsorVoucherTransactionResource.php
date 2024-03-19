@@ -27,8 +27,11 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (ProductTinyResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|array|float|int|mixed|null|string)[]
+     *
+     * @psalm-return array{amount: mixed|string, amount_locale: mixed|string, timestamp: float|int|mixed|null|string, transaction_in: int|mixed|null, organization: array|mixed|null, fund: array|mixed, notes: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed, bulk_status_locale: mixed|string, transaction_cost: mixed|string, transaction_cost_locale: mixed|string, product: ProductTinyResource|mixed, product_reservation: array|mixed|null,...}
      */
     public function toArray($request): array
     {

@@ -24,17 +24,6 @@ class BankConnectionsInspectCommand extends BaseCommand
     protected $description = 'Helper tool for bank connections inspection.';
 
     /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        $this->printHeader("BNG inspection", 2);
-        $this->showMainMenu();
-    }
-
-    /**
      * @return void
      */
     protected function showMainMenu(): void
@@ -229,7 +218,10 @@ class BankConnectionsInspectCommand extends BaseCommand
     /**
      * @param BankPayment $payment
      * @param int|null $nth
-     * @return array
+     *
+     * @return (int|string)[]
+     *
+     * @psalm-return array{nth?: int, id: string, amount: string, date: string, description: string}
      */
     protected function bankPaymentToRow(BankPayment $payment, ?int $nth = null): array
     {

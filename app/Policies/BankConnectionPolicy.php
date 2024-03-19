@@ -12,30 +12,6 @@ class BankConnectionPolicy
     use HandlesAuthorization;
 
     /**
-     * Determine whether the user can view any bank connection.
-     *
-     * @param Identity $identity
-     * @param Organization $organization
-     * @return bool
-     */
-    public function viewAny(Identity $identity, Organization $organization): bool
-    {
-        return $organization->identityCan($identity, 'manage_bank_connections');
-    }
-
-    /**
-     * Determine whether the user can add new bank connection.
-     *
-     * @param Identity $identity
-     * @param Organization $organization
-     * @return bool
-     */
-    public function store(Identity $identity, Organization $organization): bool
-    {
-        return $organization->identityCan($identity, 'manage_bank_connections');
-    }
-
-    /**
      * Determine whether the user can update the bank connection.
      *
      * @param Identity $identity
@@ -53,22 +29,6 @@ class BankConnectionPolicy
         }
 
         return $organization->identityCan($identity, 'manage_bank_connections');
-    }
-
-    /**
-     * Determine whether the user can view the connection.
-     *
-     * @param Identity $identity
-     * @param BankConnection $connection
-     * @param Organization $organization
-     * @return bool
-     */
-    public function view(
-        Identity $identity,
-        BankConnection $connection,
-        Organization $organization
-    ): bool {
-        return $this->update($identity, $connection, $organization);
     }
 
     /**

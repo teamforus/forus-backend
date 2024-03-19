@@ -41,7 +41,10 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
      * Execute the console command.
      *
      * @return int
+     *
      * @throws \Throwable
+     *
+     * @psalm-return 0|1
      */
     public function handle(): int
     {

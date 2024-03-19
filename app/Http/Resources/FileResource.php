@@ -11,8 +11,11 @@ class FileResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (MediaCompactResource|mixed|string)[]
+     *
+     * @psalm-return array{size: string, url: string, preview: MediaCompactResource,...}
      */
     public function toArray($request): array
     {

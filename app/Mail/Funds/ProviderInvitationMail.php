@@ -21,7 +21,10 @@ class ProviderInvitationMail extends ImplementationMail
 
     /**
      * @param array $data
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{invitation_link: string, invitation_button: string}
      */
     protected function getMailExtraData(array $data): array
     {

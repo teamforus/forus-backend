@@ -11,8 +11,12 @@ abstract class BaseIdentityNotification extends BaseNotification
 
     /**
      * @param Model $loggable
-     * @return array
+     *
+     * @return null[]
+     *
      * @throws \Exception
+     *
+     * @psalm-return array{organization_id: null}
      */
     public static function getMeta($loggable): array
     {

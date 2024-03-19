@@ -32,8 +32,9 @@ class TransactionsController extends Controller
      *
      * @param IndexTransactionsRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
      * @noinspection PhpUnused
      */
     public function index(

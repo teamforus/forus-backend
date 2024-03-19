@@ -21,7 +21,10 @@ class ImplementationPageResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param $request
-     * @return array
+     *
+     * @return (\Illuminate\Http\Resources\Json\AnonymousResourceCollection|array|mixed|null|string)[]
+     *
+     * @psalm-return array{blocks: \Illuminate\Http\Resources\Json\AnonymousResourceCollection, url_webshop: null|string, implementation: array, faq: \Illuminate\Http\Resources\Json\AnonymousResourceCollection,...}
      */
     public function toArray($request): array
     {
@@ -50,9 +53,8 @@ class ImplementationPageResource extends BaseJsonResource
 
     /**
      * @param ImplementationPage $page
-     * @return string|null
      */
-    public function webshopUrl(ImplementationPage $page): ?string
+    public function webshopUrl(ImplementationPage $page): string
     {
         return $page->implementation->urlWebshop(ImplementationPage::webshopUriByPageType(
             $page->page_type

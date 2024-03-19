@@ -13,8 +13,11 @@ class ExternalFundResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (MediaResource|\Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection|mixed)[]
+     *
+     * @psalm-return array{id: mixed, name: mixed, logo: MediaResource, organization: mixed, criteria: \Illuminate\Database\Eloquent\Collection<array-key, array{id: int, name: mixed, accepted: bool}>|\Illuminate\Support\Collection<array-key, array{id: int, name: mixed, accepted: bool}>}
      */
     public function toArray($request): array
     {

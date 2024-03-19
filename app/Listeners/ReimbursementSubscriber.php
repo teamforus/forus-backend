@@ -16,98 +16,15 @@ use Illuminate\Events\Dispatcher;
 
 class ReimbursementSubscriber
 {
-    /**
-     * @param ReimbursementCreated $reimbursementCreated
-     * @noinspection PhpUnused
-     */
-    public function onReimbursementCreated(ReimbursementCreated $reimbursementCreated): void
-    {
-        $reimbursement = $reimbursementCreated->getReimbursement();
 
-        $reimbursement->log(
-            $reimbursement::EVENT_CREATED,
-            $this->getReimbursementLogModels($reimbursement)
-        );
-    }
-
-    /**
-     * @param ReimbursementSubmitted $reimbursementSubmitted
-     * @throws \Exception
-     * @noinspection PhpUnused
-     */
-    public function onReimbursementSubmitted(ReimbursementSubmitted $reimbursementSubmitted): void
-    {
-        $reimbursement = $reimbursementSubmitted->getReimbursement();
-
-        IdentityReimbursementSubmittedNotification::send($reimbursement->log(
-            $reimbursement::EVENT_SUBMITTED,
-            $this->getReimbursementLogModels($reimbursement)
-        ));
-    }
-
-    /**
-     * @param ReimbursementResolved $fundCreated
-     * @noinspection PhpUnused
-     */
-    public function onReimbursementResolved(ReimbursementResolved $fundCreated): void
-    {
-        if (!$fundCreated->getReimbursement()->isResolved()) {
-            return;
-        }
-
-        $reimbursement = $fundCreated->getReimbursement();
-        $eventModels = $this->getReimbursementLogModels($reimbursement);
-        $eventLog = $reimbursement->log($reimbursement::EVENT_RESOLVED, $eventModels);
-
-        if ($reimbursement->isApproved()) {
-            $reimbursement->log($reimbursement::EVENT_APPROVED, $eventModels);
-            IdentityReimbursementApprovedNotification::send($eventLog);
-        } else {
-            $reimbursement->log($reimbursement::EVENT_DECLINED, $eventModels);
-            IdentityReimbursementDeclinedNotification::send($eventLog);
-        }
-    }
-
-    /**
-     * @param ReimbursementAssigned $event
-     * @noinspection PhpUnused
-     */
-    public function onReimbursementAssigned(ReimbursementAssigned $event): void
-    {
-        $reimbursement = $event->getReimbursement();
-        $supervisorEmployee = $event->getSupervisorEmployee();
-
-        $eventModels = $this->getReimbursementLogModels($reimbursement, [
-            'employee' => $event->getEmployee(),
-        ]);
-
-        $reimbursement->log($reimbursement::EVENT_ASSIGNED, $eventModels, array_merge(
-            $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [],
-        ));
-    }
-
-    /**
-     * @param ReimbursementResigned $event
-     * @noinspection PhpUnused
-     */
-    public function onReimbursementResigned(ReimbursementResigned $event): void
-    {
-        $reimbursement = $event->getReimbursement();
-        $supervisorEmployee = $event->getSupervisorEmployee();
-
-        $eventModels = $this->getReimbursementLogModels($reimbursement, [
-            'employee' => $event->getEmployee(),
-        ]);
-
-        $reimbursement->log($reimbursement::EVENT_RESIGNED, $eventModels, array_merge(
-            $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [],
-        ));
-    }
 
     /**
      * @param Reimbursement $reimbursement
      * @param array $extraModels
-     * @return array
+     *
+     * @return (Reimbursement|\App\Models\Fund|\App\Models\Implementation|\App\Models\Organization|mixed)[]
+     *
+     * @psalm-return array{fund: \App\Models\Fund|mixed, sponsor: \App\Models\Organization|mixed, reimbursement: Reimbursement|mixed, implementation: \App\Models\Implementation|mixed,...}
      */
     private function getReimbursementLogModels(
         Reimbursement $reimbursement,
@@ -123,7 +40,10 @@ class ReimbursementSubscriber
 
     /**
      * @param Employee|null $supervisor
-     * @return array
+     *
+     * @return (int|null|string)[]
+     *
+     * @psalm-return array{supervisor_employee_id: int|null, supervisor_employee_roles: string, supervisor_employee_email: null|string}
      */
     private function getSupervisorFields(?Employee $supervisor): array
     {
@@ -132,23 +52,5 @@ class ReimbursementSubscriber
             'supervisor_employee_roles' => $supervisor->roles->pluck('name')->join(', '),
             'supervisor_employee_email' => $supervisor->identity?->email,
         ];
-    }
-
-    /**
-     * The events dispatcher
-     *
-     * @param Dispatcher $events
-     * @noinspection PhpUnused
-     */
-    public function subscribe(Dispatcher $events): void
-    {
-        $class = '\\' . static::class;
-
-        $events->listen(ReimbursementCreated::class, "$class@onReimbursementCreated");
-        $events->listen(ReimbursementSubmitted::class, "$class@onReimbursementSubmitted");
-        $events->listen(ReimbursementResolved::class, "$class@onReimbursementResolved");
-
-        $events->listen(ReimbursementAssigned::class, "$class@onReimbursementAssigned");
-        $events->listen(ReimbursementResigned::class, "$class@onReimbursementResigned");
     }
 }

@@ -21,21 +21,16 @@ use Illuminate\Validation\Rule;
  */
 class StoreTransactionBatchRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
      * @param array|null $transactions
-     * @return array
+     *
+     * @return (array|string)[]
+     *
+     * @psalm-return array{transactions: 'present|array', 'transactions.*': 'bail|required|array', 'transactions.*.uid': 'nullable|string|max:20', 'transactions.*.note': 'nullable|string|max:280', 'transactions.*.amount': array, 'transactions.*.voucher_id': array, 'transactions.*.direct_payment_iban': list{'required', IbanRule}, 'transactions.*.direct_payment_name': 'required|string|min:3|max:200'}
      */
     public function rules(?array $transactions = null): array
     {
@@ -53,7 +48,10 @@ class StoreTransactionBatchRequest extends BaseFormRequest
 
     /**
      * @param array|null $transactions
-     * @return array
+     *
+     * @return (VoucherTransactionBatchItemAmountRule|string)[]
+     *
+     * @psalm-return list{'bail', 'required', 'numeric', 'min:.02', VoucherTransactionBatchItemAmountRule}
      */
     protected function amountRules(?array $transactions = null): array
     {
@@ -73,7 +71,9 @@ class StoreTransactionBatchRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Validation\Rules\Exists|string)[]
+     *
+     * @psalm-return list{'required', \Illuminate\Validation\Rules\Exists}
      */
     protected function voucherIdRules(): array
     {
@@ -96,7 +96,9 @@ class StoreTransactionBatchRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return (array|string)[]
+     *
+     * @psalm-return array<array|string>
      */
     public function attributes(): array
     {
@@ -117,7 +119,10 @@ class StoreTransactionBatchRequest extends BaseFormRequest
 
     /**
      * @param array $transactions
-     * @return array
+     *
+     * @return array[]
+     *
+     * @psalm-return array<array>
      */
     public function inflateReservationsData(array $transactions = []): array
     {

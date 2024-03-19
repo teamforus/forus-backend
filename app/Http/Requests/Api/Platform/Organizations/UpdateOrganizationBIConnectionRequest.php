@@ -10,20 +10,14 @@ use App\Services\BIConnectionService\BIConnection;
  */
 class UpdateOrganizationBIConnectionRequest extends BaseOrganizationRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->organization->allow_bi_connection;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{bi_connection_auth_type: string}
      */
     public function rules(): array
     {

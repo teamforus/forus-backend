@@ -27,7 +27,7 @@ class FundRequestSearch extends BaseSearch
     }
 
     /**
-     * @return FundRequest|Builder
+     * @return Builder
      */
     public function query(): ?Builder
     {
@@ -101,7 +101,6 @@ class FundRequestSearch extends BaseSearch
     /**
      * @param Builder|FundRequest $builder
      * @param string|null $orderBy
-     * @return Builder|FundRequest
      */
     public function appendSortableFields(
         Builder|FundRequest $builder,
@@ -145,7 +144,6 @@ class FundRequestSearch extends BaseSearch
 
     /**
      * @param Employee $employee
-     * @return FundRequestSearch
      */
     public function setEmployee(Employee $employee): static
     {

@@ -71,9 +71,12 @@ class PreCheck extends BaseModel
 
     /**
      * @param BaseFormRequest $request
-     * @return Collection
+     *
+     * @return Collection|\Illuminate\Database\Eloquent\Builder[]
+     *
+     * @psalm-return Collection<array-key, \Illuminate\Database\Eloquent\Model>|array<\Illuminate\Database\Eloquent\Builder>
      */
-    public static function getAvailableFunds(BaseFormRequest $request): Collection
+    public static function getAvailableFunds(BaseFormRequest $request): array|Collection
     {
         $identity = $request->identity();
         $fundsQuery = Implementation::queryFundsByState('active');

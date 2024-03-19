@@ -40,16 +40,6 @@ class FileService
     }
 
     /**
-     * Remove expired and missing from db files
-     */
-    public function clear(): void
-    {
-        $this->clearFilesWithDeletedFileable();
-        $this->clearExpiredFiles();
-        $this->clearStorage();
-    }
-
-    /**
      * Delete all files that were assigned, but objects no longer exists
      *
      * @return int
@@ -102,9 +92,8 @@ class FileService
      * Returns list of expired File Models
      *
      * @param string|null $identity_address
-     * @return Builder
      */
-    public function getExpiredQuery(string $identity_address = null): Builder
+    public function getExpiredQuery(string $identity_address = null): Builder|\Illuminate\Database\Query\Builder
     {
         $expiredFiles = $this->model
             ->newQuery()
@@ -139,7 +128,7 @@ class FileService
      * @param $ext
      * @return string
      */
-    protected function makeUniqueFileName($path, $ext): string
+    protected function makeUniqueFileName(string $path, string $ext): string
     {
         $tokenGenerator = resolve('token_generator');
 
@@ -220,15 +209,6 @@ class FileService
     public function download(string $path): StreamedResponse
     {
         return $this->storage()->download(ltrim($path, '/'));
-    }
-
-    /**
-     * @param string $path
-     * @return string|null
-     */
-    public function getContent(string $path): string|null
-    {
-        return $this->storage()->get(ltrim($path, '/'));
     }
 
     /**

@@ -23,8 +23,11 @@ class AgentData extends Parser
     /**
      * Return the input string prefixed with 'a' or 'an' depending on the first letter of the string
      *
-     * @param  string $s The string that will be prefixed
+     * @param string $s The string that will be prefixed
+     *
      * @return string
+     *
+     * @psalm-return 'een '
      */
     private function a($s): string
     {

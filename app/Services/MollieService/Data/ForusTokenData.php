@@ -17,7 +17,7 @@ class ForusTokenData implements MollieToken {
     }
 
     /**
-     * @return string|null
+     * @return null
      */
     public function getRefreshToken(): ?string
     {
@@ -36,7 +36,7 @@ class ForusTokenData implements MollieToken {
     public function deleteToken(): void {}
 
     /**
-     * @return bool
+     * @return false
      */
     public function isTokenExpired(): bool
     {

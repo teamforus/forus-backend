@@ -41,9 +41,10 @@ class BIConnection
 
     /**
      * @param Request $request
-     * @return BIConnection|null
+     *
+     * @return null|static
      */
-    public static function getBIConnectionFromRequest(Request $request): ?static
+    public static function getBIConnectionFromRequest(Request $request): static|null
     {
         $organization = Organization::where(function(Builder $builder) use ($request) {
             $builder->where(fn ($q) => $q->where([
@@ -73,14 +74,6 @@ class BIConnection
     }
 
     /**
-     * @return Organization
-     */
-    public function getOrganization(): Organization
-    {
-        return $this->organization;
-    }
-
-    /**
      * @return array
      * @throws \Exception
      */
@@ -94,8 +87,11 @@ class BIConnection
     }
 
     /**
-     * @return array
+     * @return (BIEmployeesExporter|BIFundIdentitiesExporter|BIFundProviderFinancesExporter|BIFundProvidersExporter|BIFundsDetailedExporter|BIFundsExporter|BIReimbursementsExporter|BIVoucherTransactionBulksExporter|BIVoucherTransactionsExporter|BIVouchersExporter)[]
+     *
      * @throws \Exception
+     *
+     * @psalm-return list{BIVouchersExporter, BIReimbursementsExporter, BIEmployeesExporter, BIFundsExporter, BIFundsDetailedExporter, BIFundProvidersExporter, BIFundIdentitiesExporter, BIFundProviderFinancesExporter, BIVoucherTransactionsExporter, BIVoucherTransactionBulksExporter}
      */
     private function getData(): array
     {

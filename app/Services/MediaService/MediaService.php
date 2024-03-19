@@ -90,28 +90,6 @@ class MediaService
     }
 
     /**
-     * @param Media $media
-     * @param $type
-     * @return PresetModel|Model|null
-     */
-    public function getSize(Media $media, $type): ?PresetModel
-    {
-        return $media->presets()->where('type', $type)->first();
-    }
-
-    /**
-     * Remove expired and missing from db files
-     *
-     * @throws \Exception
-     */
-    public function clear()
-    {
-        $this->clearMediasWithoutMediable();
-        $this->clearExpiredMedias();
-        $this->clearStorage();
-    }
-
-    /**
      * Delete all media with missing mediable
      *
      * @return int count media removed
@@ -131,9 +109,9 @@ class MediaService
     /**
      * Get all media with missing mediable
      *
-     * @return Media[]|Builder[]|Collection|\Illuminate\Database\Query\Builder[]|\Illuminate\Support\Collection
+     * @psalm-return Collection<array-key, Model>
      */
-    public function getMediaWithoutMediableList()
+    public function getMediaWithoutMediableList(): Collection
     {
         return $this->model->newQuery()->with('mediable')->whereNotNull(
             'mediable_id'
@@ -146,8 +124,12 @@ class MediaService
      * Clear media that are created but not assigned to any resource
      *
      * @param float|int $minutes_to_expire
+     *
      * @return int
+     *
      * @throws \Exception
+     *
+     * @psalm-return int<0, max>
      */
     public function clearExpiredMedias($minutes_to_expire = 5 * 60): int
     {
@@ -164,9 +146,12 @@ class MediaService
      * Returns list of all files uploaded to storage but not assigned to any entity
      *
      * @param float|int $minutes_to_expire
-     * @return Media[]|Builder[]|Collection
+     *
+     * @return Builder[]|Collection
+     *
+     * @psalm-return Collection<array-key, Model>|array<Builder>
      */
-    public function getExpiredList($minutes_to_expire = 5 * 60)
+    public function getExpiredList($minutes_to_expire = 5 * 60): array|Collection
     {
         $expiredMedias = $this->model->newQuery()->where(function(Builder $query) {
             $query->whereNull('mediable_type');
@@ -181,6 +166,8 @@ class MediaService
      * Delete all files which exists on storage but are not listed in db
      *
      * @return int count files deleted
+     *
+     * @psalm-return int<0, max>
      */
     public function clearStorage(): int
     {
@@ -355,21 +342,6 @@ class MediaService
         $tmpFile->close();
 
         return $media;
-    }
-
-    /**
-     * @return void
-     * @throws \Exception
-     * @noinspection PhpUnused
-     */
-    public function regenerateAllMedia(): void
-    {
-        foreach (self::getMediaConfigs() as $mediaConfig) {
-            if ($mediaConfig->getPresets()[
-                $mediaConfig->getRegenerationPresetName()] ?? false) {
-                $this->regenerateMedia($mediaConfig);
-            }
-        }
     }
 
     /**

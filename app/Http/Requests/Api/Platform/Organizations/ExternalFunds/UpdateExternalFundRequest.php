@@ -17,47 +17,5 @@ use Illuminate\Validation\Rule;
  */
 class UpdateExternalFundRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
-    public function rules(): array
-    {
-        if ($this->organization && $this->fund) {
-            $criteria = FundCriteriaQuery::whereHasExternalValidatorFilter(
-                FundCriterion::query(),
-                $this->organization->id
-            )->where([
-                'fund_id' => $this->fund->id
-            ])->pluck('fund_criteria.id')->toArray();
-        } else {
-            $criteria = [];
-        }
-
-        return [
-            'criteria' => [
-                'required',
-                'array'
-            ],
-            'criteria.*.id' => [
-                'required',
-                Rule::in($criteria)
-            ],
-            'criteria.*.accepted' => [
-                'nullable',
-                'boolean'
-            ]
-        ];
-    }
 }

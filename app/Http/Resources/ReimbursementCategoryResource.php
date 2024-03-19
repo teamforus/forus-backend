@@ -23,7 +23,10 @@ class ReimbursementCategoryResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param Request $request
-     * @return array
+     *
+     * @return (OrganizationTinyResource|mixed)[]
+     *
+     * @psalm-return array{organization: OrganizationTinyResource,...}
      */
     public function toArray($request): array
     {

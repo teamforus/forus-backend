@@ -22,7 +22,6 @@ class ProductQuery
     /**
      * @param Builder|Product $query
      * @param array|int $fund_id
-     * @return Builder|Product
      */
     public static function approvedForFundsFilter(Builder|Product $query, array|int $fund_id): Builder|Product
     {
@@ -68,7 +67,7 @@ class ProductQuery
      * @return Builder|Relation|Product
      */
     public static function whereFundNotExcluded(
-        Builder|Relation|Product $builder, $fund_id
+        Builder|Relation|Product $builder, array|int $fund_id
     ): Builder|Relation|Product {
         $builder->where(function(Builder $builder) use ($fund_id) {
             $builder->whereNull('sponsor_organization_id');
@@ -109,7 +108,7 @@ class ProductQuery
      * @param $fund_id
      * @return Builder
      */
-    public static function whereFundNotExcludedOrHasHistory(Builder $query, $fund_id): Builder
+    public static function whereFundNotExcludedOrHasHistory(Builder $query, array|int $fund_id): Builder
     {
         return $query->where(static function(Builder $builder) use ($fund_id) {
             $builder->where(static function(Builder $builder) use ($fund_id) {
@@ -220,9 +219,8 @@ class ProductQuery
     /**
      * @param Builder $query
      * @param $fund_id
-     * @return Builder
      */
-    public static function approvedForFundsAndActiveFilter(Builder $query, $fund_id): Builder
+    public static function approvedForFundsAndActiveFilter(Builder $query, array|int $fund_id): Builder|Product
     {
         return self::approvedForFundsFilter(self::inStockAndActiveFilter($query), $fund_id);
     }

@@ -5,7 +5,9 @@ namespace App\Rules\FundRequests\RecordTypes;
 class RecordTypeDateRule extends BaseRecordTypeRule
 {
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{0?: string, 1: 'date', 2?: string, 3?: string, 4?: string, 5?: string}
      */
     public function rules(): array
     {

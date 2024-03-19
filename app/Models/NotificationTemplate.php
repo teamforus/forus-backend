@@ -76,10 +76,9 @@ class NotificationTemplate extends Model
     }
 
     /**
-     * @return string|null
      * @throws CommonMarkException
      */
-    public function convertToHtml(): ?string
+    public function convertToHtml(): string
     {
         return Markdown::convert($this->content ?: '');
     }

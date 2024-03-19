@@ -13,7 +13,7 @@ class CloneMediaRequest extends StoreMediaRequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
+     * @return true
      */
     public function authorize(): bool
     {

@@ -12,20 +12,14 @@ use App\Rules\RecordTypeKeyExistsRule;
  */
 class RecordStoreRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((RecordCategoryIdRule|RecordTypeKeyExistsRule|mixed|string)[]|string)[]
+     *
+     * @psalm-return array{type: list{'required', RecordTypeKeyExistsRule}, value: array{0: 'required'|mixed,...}, order: 'nullable|numeric|min:0', record_category_id: list{'nullable', RecordCategoryIdRule}}
      */
     public function rules(): array
     {

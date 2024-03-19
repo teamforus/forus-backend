@@ -66,6 +66,8 @@ class Redirect extends Model
 
     /**
      * @return string
+     *
+     * @psalm-return '/redirect'
      */
     private function getTargetUri(): string
     {

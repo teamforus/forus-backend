@@ -24,10 +24,10 @@ abstract class DigidData
 
     /**
      * @param array $meta
-     * @return self
+     *
      * @noinspection PhpUnused
      */
-    public function setMeta(array $meta): self
+    public function setMeta(array $meta): static
     {
         return $this->tap(fn() => $this->meta = $meta);
     }

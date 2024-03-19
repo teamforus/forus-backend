@@ -13,7 +13,9 @@ class StoreVoucherRecordRequest extends BaseVoucherRecordRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, mixed>
+     * @return (array|string)[]
+     *
+     * @psalm-return array{note: string, value: array, record_type_key: array}
      */
     public function rules(): array
     {
@@ -25,7 +27,9 @@ class StoreVoucherRecordRequest extends BaseVoucherRecordRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Validation\Rules\Exists|string)[]
+     *
+     * @psalm-return list{'required', \Illuminate\Validation\Rules\Exists}
      */
     protected function recordTypeKeyRule(): array
     {

@@ -44,7 +44,6 @@ class ReservationExtraPaymentsSearch extends BaseSearch
 
     /**
      * @param Builder|ReservationExtraPayment $builder
-     * @return Builder|ReservationExtraPayment
      */
     protected function order(Builder|ReservationExtraPayment $builder): Builder|ReservationExtraPayment
     {
@@ -62,7 +61,6 @@ class ReservationExtraPaymentsSearch extends BaseSearch
     /**
      * @param Builder|ReservationExtraPayment $builder
      * @param string|null $orderBy
-     * @return Builder|ReservationExtraPayment
      */
     public function appendSortableFields(
         Builder|ReservationExtraPayment $builder,

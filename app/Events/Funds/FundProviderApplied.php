@@ -10,18 +10,6 @@ class FundProviderApplied extends BaseFundEvent
     private $fundProvider;
 
     /**
-     * Create a new event instance.
-     *
-     * @param Fund $fund
-     * @param FundProvider $fundProvider
-     */
-    public function __construct(Fund $fund, FundProvider $fundProvider)
-    {
-        parent::__construct($fund);
-        $this->fundProvider = $fundProvider;
-    }
-
-    /**
      * Get the voucher
      *
      * @return FundProvider

@@ -20,8 +20,11 @@ class OrganizationFeaturesResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return bool[][]
+     *
+     * @psalm-return array{statuses: array{bng: true, digid: bool, auth_2_fa: bool, bi_tools: bool, backoffice_api: bool, physical_cards: bool, reimbursements: bool, voucher_records: bool, iconnect_api: bool, fund_requests: bool, extra_payments: bool, email_connection: true}}
      */
     public function toArray($request): array
     {

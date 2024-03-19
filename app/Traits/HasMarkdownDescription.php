@@ -75,7 +75,9 @@ trait HasMarkdownDescription
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return list{0?: string,...}
      */
     protected function getDescriptionMarkdownMediaPaths(): array
     {
@@ -89,7 +91,6 @@ trait HasMarkdownDescription
         $images = $htmlDom->getElementsByTagName('img');
         $linksArray = [];
 
-        /** @var DOMElement $image */
         foreach ($images as $image) {
             $imageSrc = $image->getAttribute('src');
 
@@ -104,10 +105,7 @@ trait HasMarkdownDescription
         return $linksArray;
     }
 
-    /**
-     * @return Builder|MediaPreset
-     */
-    protected function getDescriptionMarkdownMediaPresetsQuery(): Builder|MediaPreset
+    protected function getDescriptionMarkdownMediaPresetsQuery(): \Illuminate\Database\Eloquent\Builder|MediaPreset
     {
         return MediaPreset::query()->whereIn('path', $this->getDescriptionMarkdownMediaPaths());
     }
@@ -124,11 +122,10 @@ trait HasMarkdownDescription
 
     /**
      * @param string $mediaType
-     * @return Builder|Media
      */
     public function getDescriptionMarkdownMediaPresetsValidQuery(
         string $mediaType
-    ): Builder|MediaPreset {
+    ): \Illuminate\Database\Eloquent\Builder|MediaPreset {
         $presets = $this->getDescriptionMarkdownMediaPresetsQuery();
 
         return $presets->whereHas('media', function (Builder|Media $builder) use ($mediaType) {
@@ -144,11 +141,10 @@ trait HasMarkdownDescription
 
     /**
      * @param string $mediaType
-     * @return Builder|Media
      */
     public function getDescriptionMarkdownMediaPresetsInValidQuery(
         string $mediaType,
-    ): Builder|MediaPreset {
+    ): \Illuminate\Database\Eloquent\Builder|MediaPreset {
         $presets = $this->getDescriptionMarkdownMediaPresetsQuery();
         $validPresets = $this->getDescriptionMarkdownMediaPresetsValidQuery($mediaType);
 

@@ -17,12 +17,4 @@ abstract class Value
         $this->data = $responseData->getData();
         $this->responseData = $responseData;
     }
-
-    /**
-     * @return array|\Psr\Http\Message\ResponseInterface|null
-     */
-    public function getData(): array|\Psr\Http\Message\ResponseInterface|null
-    {
-        return $this->data;
-    }
 }

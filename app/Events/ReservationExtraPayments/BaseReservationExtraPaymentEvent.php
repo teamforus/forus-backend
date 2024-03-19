@@ -25,14 +25,6 @@ class BaseReservationExtraPaymentEvent
     ) {}
 
     /**
-     * @return ProductReservation
-     */
-    public function getProductReservation(): ProductReservation
-    {
-        return $this->extraPayment->product_reservation;
-    }
-
-    /**
      * @return ReservationExtraPayment
      */
     public function getReservationExtraPayment(): ReservationExtraPayment

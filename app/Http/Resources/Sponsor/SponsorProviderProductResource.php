@@ -31,7 +31,10 @@ class SponsorProviderProductResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
+     *
+     * @return (MediaResource|OrganizationBasicResource|ProductCategoryResource|array|bool|int|mixed|null|string)[]
+     *
+     * @psalm-return array{description_html: mixed|string, organization: OrganizationBasicResource|mixed, sponsor_organization: OrganizationBasicResource|mixed, total_amount: int|mixed, unlimited_stock: bool|mixed, reserved_amount: int|mixed, sold_amount: int|mixed, stock_amount: int|mixed|null, price: mixed|string, price_locale: mixed|string, price_type: mixed|string, price_discount: mixed|null|string, expire_at: mixed|string, expire_at_locale: mixed|null|string, expired: bool|mixed, deleted_at: mixed|null|string, deleted_at_locale: mixed|null|string, deleted: bool|mixed, photo: MediaResource|mixed, product_category: ProductCategoryResource|mixed, is_available: bool|mixed, deals_history: array|mixed,...}
      */
     public function toArray($request): array
     {
@@ -112,7 +115,10 @@ class SponsorProviderProductResource extends BaseJsonResource
 
     /**
      * @param Product $product
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{reservation_phone: string, reservation_address: string, reservation_birth_date: string}
      */
     private function productReservationFieldSettings(Product $product): array
     {

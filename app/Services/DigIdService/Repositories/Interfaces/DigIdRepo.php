@@ -38,16 +38,6 @@ abstract class DigIdRepo
     ): DigidAuthResolveData;
 
     /**
-     * @param Request $request
-     * @param string $session_secret
-     * @return bool
-     */
-    abstract public function validateResolveResponse(
-        Request $request,
-        string $session_secret
-    ): bool;
-
-    /**
      * @param string $message
      * @param string|null $digidCode
      * @return DigIdException

@@ -12,21 +12,14 @@ use App\Models\Organization;
  */
 class UpdateOrganizationAcceptReservationsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->isAuthenticated() &&
-            $this->organization->identity_address === $this->auth_address();
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{reservations_auto_accept: 'boolean'}
      */
     public function rules(): array
     {

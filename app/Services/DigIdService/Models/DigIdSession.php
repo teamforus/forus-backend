@@ -226,9 +226,8 @@ class DigIdSession extends Model
     /**
      * @param $message
      * @param $errorCode
-     * @return DigIdSession
      */
-    private function setError($message, $errorCode): self
+    private function setError(string $message, $errorCode): static
     {
         Log::channel('digid')->error("Could not make digid auth request: $errorCode - $message");
 
@@ -363,9 +362,10 @@ class DigIdSession extends Model
     /**
      * @param array $data
      * @param string|null $url
-     * @return RedirectResponse
+     *
+     * @return RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function makeRedirectResponse(array $data, string $url = null): RedirectResponse
+    public function makeRedirectResponse(array $data, string $url = null): \Illuminate\Routing\Redirector|RedirectResponse
     {
         return redirect(url_extend_get_params($url ?: $this->session_final_url, $data));
     }
@@ -384,9 +384,8 @@ class DigIdSession extends Model
 
     /**
      * @param Identity $identity
-     * @return Model|$this
      */
-    public function setIdentity(Identity $identity): Model|DigIdSession
+    public function setIdentity(Identity $identity): static|DigIdSession
     {
         return $this->updateModel([
             'identity_address' => $identity->address,

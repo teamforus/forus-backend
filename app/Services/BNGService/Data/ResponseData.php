@@ -37,35 +37,11 @@ class ResponseData
     }
 
     /**
-     * @return bool
-     */
-    public function error(): bool
-    {
-        return !$this->success();
-    }
-
-    /**
-     * @return int
-     */
-    public function getCode(): int
-    {
-        return $this->code;
-    }
-
-    /**
      * @return array
      */
     public function getData(): ?array
     {
         return $this->data;
-    }
-
-    /**
-     * @return array
-     */
-    public function getHeaders(): array
-    {
-        return $this->headers;
     }
 
     /**
@@ -75,21 +51,5 @@ class ResponseData
     public function setData(array $data): void
     {
         $this->data = $data;
-    }
-
-    /**
-     * @param int $code
-     */
-    public function setCode(int $code): void
-    {
-        $this->code = $code;
-    }
-
-    /**
-     * @param array|\string[][] $headers
-     */
-    public function setHeaders(array $headers): void
-    {
-        $this->headers = $headers;
     }
 }

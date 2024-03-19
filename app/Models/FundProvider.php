@@ -138,7 +138,10 @@ class FundProvider extends BaseModel
 
     /**
      * @param Organization $organization
-     * @return array
+     *
+     * @return (int|mixed)[]
+     *
+     * @psalm-return array{active: int|mixed, pending: int|mixed, archived: int|mixed, available: int, invitations: int|mixed, unsubscriptions: int|mixed, invitations_archived: int|mixed}
      */
     public static function makeTotalsMeta(Organization $organization): array
     {
@@ -462,9 +465,10 @@ class FundProvider extends BaseModel
 
     /**
      * @param Builder $builder
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     *
+     * @psalm-return Collection<int, array<mixed|null|string>>|\Illuminate\Support\Collection<int, array<mixed|null|string>>
      */
-    private static function exportTransform(Builder $builder): mixed
+    private static function exportTransform(Builder $builder): Collection|\Illuminate\Support\Collection
     {
         return $builder->with([
             'fund.fund_config.implementation',
@@ -519,10 +523,11 @@ class FundProvider extends BaseModel
     }
 
     /**
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
+     *
      * @noinspection PhpUnused
      */
-    public function getStateLocaleAttribute(): string
+    public function getStateLocaleAttribute(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans('states/fund_providers.' . $this->state);
     }
@@ -758,11 +763,10 @@ class FundProvider extends BaseModel
      */
     public function setState(string $state): void
     {
-        $originalState = $this->state;
 
-        $approvedBefore = $this->isApproved();
+        $this->isApproved();
         $this->update(compact('state'));
-        $approvedAfter = $this->isApproved();
+        $this->isApproved();
 
         FundProviderStateUpdated::dispatch($this, compact([
             'originalState', 'approvedBefore', 'approvedAfter',

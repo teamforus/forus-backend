@@ -10,20 +10,14 @@ use App\Rules\Base\KvkRule;
 
 class StoreOrganizationRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((BtwRule|IbanRule|KvkRule|mixed|null|string)[]|string)[]
+     *
+     * @psalm-return array{name: 'required|between:2,64', description: 'nullable|string|max:4096', iban: list{'required', IbanRule}, email: array{0: 'required'|mixed,...}, email_public: 'boolean', phone: 'required|digits_between:4,20', phone_public: 'boolean', kvk: list{'required', 'digits:8', 'unique:organizations,kvk'|null, KvkRule|null}, btw: list{'nullable', 'string', BtwRule}, website: 'nullable|max:200|url', website_public: 'boolean', business_type_id: 'required|exists:business_types,id'}
      */
     public function rules(): array
     {

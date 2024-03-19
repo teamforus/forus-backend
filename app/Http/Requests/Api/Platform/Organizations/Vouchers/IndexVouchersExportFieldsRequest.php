@@ -12,20 +12,14 @@ use App\Models\Organization;
  */
 class IndexVouchersExportFieldsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->organization->identityCan($this->identity(), 'manage_vouchers');
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{type: 'nullable|in:budget,product'}
      */
     public function rules(): array
     {

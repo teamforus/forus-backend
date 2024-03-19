@@ -94,9 +94,10 @@ class File extends Model
 
     /**
      * @param $uid
-     * @return File|Model
+     *
+     * @return null|self
      */
-    public static function findByUid($uid): ?File
+    public static function findByUid(string $uid): self|null
     {
         return self::where(compact('uid'))->first();
     }
@@ -134,10 +135,7 @@ class File extends Model
         return self::makeUniqueToken('uid', '255');
     }
 
-    /**
-     * @return $this
-     */
-    public function updateModel(array $attributes = [], array $options = []): self
+    public function updateModel(array $attributes = [], array $options = []): bool
     {
         return tap($this)->update($attributes, $options);
     }

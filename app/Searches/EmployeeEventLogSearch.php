@@ -117,7 +117,6 @@ class EmployeeEventLogSearch extends BaseSearch
 
     /**
      * @param Model $model
-     * @return Builder|QBuilder
      */
     protected function makeMorphQuery(Model $model): Builder|QBuilder
     {

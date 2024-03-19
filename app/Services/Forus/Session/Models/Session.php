@@ -186,7 +186,7 @@ class Session extends Model
     /**
      * @return Carbon|null
      */
-    public function getExpireTime(): ?Carbon
+    public function getExpireTime(): Carbon|null
     {
         $lastActivityTime = $this->last_activity_at->clone();
 

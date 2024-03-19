@@ -30,7 +30,7 @@ class IdentitiesController extends Controller
      * @param IndexIdentitiesRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection|JsonResponse
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
@@ -134,15 +134,16 @@ class IdentitiesController extends Controller
      * @param SendIdentityNotificationRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection|JsonResponse
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
      * @noinspection PhpUnused
      */
     public function sendIdentityNotification(
         SendIdentityNotificationRequest $request,
         Organization $organization,
         Fund $fund
-    ): AnonymousResourceCollection|JsonResponse {
+    ): JsonResponse|JsonResponse {
         $this->authorize('show', [$organization]);
         $this->authorize('sendIdentityNotifications', [$fund, $organization]);
 

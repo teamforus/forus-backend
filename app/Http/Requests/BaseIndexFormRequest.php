@@ -5,7 +5,9 @@ namespace App\Http\Requests;
 class BaseIndexFormRequest extends BaseFormRequest
 {
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{per_page: string}
      */
     public function rules(): array
     {

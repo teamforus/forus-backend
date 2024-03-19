@@ -10,7 +10,9 @@ use Illuminate\Support\Arr;
 class IndexTransactionsRequest extends BaseIndexTransactionsRequest
 {
     /**
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\In|string)[]|mixed|string)[]
+     *
+     * @psalm-return array{fields: 'nullable|array', 'fields.*': list{'nullable', \Illuminate\Validation\Rules\In},...}
      */
     public function rules(): array
     {

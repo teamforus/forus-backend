@@ -35,6 +35,8 @@ class Account
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{iban: string, name: string}
      */
     public function toArray(): array
     {

@@ -14,21 +14,16 @@ use Illuminate\Validation\Rule;
  */
 class StoreFundProviderChatRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (\Illuminate\Validation\Rules\Exists|string)[][]
+     *
      * @throws \Exception
+     *
+     * @psalm-return array{product_id: list{'required', 'exists:products,id', \Illuminate\Validation\Rules\Exists}, message: list{'required', 'string', 'min:1', 'max:2000'}}
      */
     public function rules(): array
     {

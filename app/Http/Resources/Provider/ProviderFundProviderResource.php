@@ -26,8 +26,11 @@ class ProviderFundProviderResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (FundSmallResource|OrganizationTinyResource|\Illuminate\Support\Collection|bool|mixed)[]
+     *
+     * @psalm-return array{fund: FundSmallResource, products: \Illuminate\Support\Collection, organization: OrganizationTinyResource, can_cancel: bool, can_unsubscribe: bool,...}
      */
     public function toArray($request): array
     {

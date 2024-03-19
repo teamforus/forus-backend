@@ -12,5 +12,5 @@ interface MollieToken
     public function setAccessToken(AccessTokenInterface|AccessToken $token): void;
     public function deleteToken(): void;
     public function isTokenExpired(): bool;
-    public function hasToken(): bool;
+
 }

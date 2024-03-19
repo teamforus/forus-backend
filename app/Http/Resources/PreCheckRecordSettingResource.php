@@ -18,7 +18,10 @@ class PreCheckRecordSettingResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param $request
-     * @return array
+     *
+     * @return (MediaResource|mixed|string)[]
+     *
+     * @psalm-return array{fund_name: string, fund_logo: MediaResource, implementation_name: string, implementation_url_webshop: string,...}
      */
     public function toArray($request): array
     {

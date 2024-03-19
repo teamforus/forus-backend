@@ -10,20 +10,14 @@ use App\Rules\MediaUidRule;
  */
 class UpdateProductRequest extends BaseProductRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((MediaUidRule|null|string)[]|string)[]
+     *
+     * @psalm-return array{name: string, description: string, alternative_text: string, price: string, price_type: string, price_discount: array<never, never>|string, total_amount: list{'required'|null, 'numeric', null|string}|string, expire_at: string, product_category_id: string, media_uid: list{'nullable', MediaUidRule}|string,...}
      */
     public function rules(): array
     {
@@ -58,7 +52,9 @@ class UpdateProductRequest extends BaseProductRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Contracts\Translation\Translator|array|null|string)[]
+     *
+     * @psalm-return array{'price_discount.required_if': 'Het kortingsveld is verplicht.', 'expire_at.after': \Illuminate\Contracts\Translation\Translator|array|null|string}
      */
     public function messages(): array
     {

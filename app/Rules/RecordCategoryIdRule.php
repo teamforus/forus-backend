@@ -27,9 +27,9 @@ class RecordCategoryIdRule implements Rule
     /**
      * Get the validation error message.
      *
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
      */
-    public function message(): string
+    public function message(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans('validation.exists');
     }

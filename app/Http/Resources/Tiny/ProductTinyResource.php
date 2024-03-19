@@ -18,8 +18,11 @@ class ProductTinyResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (MediaResource|mixed)[]
+     *
+     * @psalm-return array{photo: MediaResource,...}
      */
     public function toArray($request): array
     {

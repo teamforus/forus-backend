@@ -21,20 +21,14 @@ use Illuminate\Validation\Rule;
  */
 class StoreTransactionRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\In|string)[]|mixed|string)[]
+     *
+     * @psalm-return array{voucher_id: list{'required', \Illuminate\Validation\Rules\In}|mixed, organization_id: list{'required_if:target,provider', \Illuminate\Validation\Rules\In}|mixed, note: 'nullable|string|max:255'|mixed, note_shared: 'nullable|boolean'|mixed, amount: mixed|string,...}
      */
     public function rules(): array
     {
@@ -57,7 +51,10 @@ class StoreTransactionRequest extends BaseFormRequest
 
     /**
      * @param Voucher|null $voucher
-     * @return array
+     *
+     * @return ((IbanRule|\Illuminate\Validation\Rules\Exists|\Illuminate\Validation\Rules\In|string)[]|string)[]
+     *
+     * @psalm-return array{target: list{'required', \Illuminate\Validation\Rules\In}, target_iban?: list{'required_without:target_reimbursement_id', IbanRule}, target_name?: 'required_without:target_reimbursement_id|string|min:3|max:200', target_reimbursement_id?: list{'required_without:target_iban', \Illuminate\Validation\Rules\Exists}}
      */
     protected function targetRules(?Voucher $voucher): array
     {
@@ -137,9 +134,12 @@ class StoreTransactionRequest extends BaseFormRequest
 
     /**
      * @param Voucher|null $voucher
+     *
      * @return Builder|array
+     *
+     * @psalm-return Builder|array<never, never>
      */
-    protected function reimbursementIds(?Voucher $voucher): Builder|array
+    protected function reimbursementIds(?Voucher $voucher): array|Builder|array
     {
         if (!$voucher) {
             return [];

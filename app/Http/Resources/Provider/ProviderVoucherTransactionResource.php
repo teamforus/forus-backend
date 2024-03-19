@@ -31,8 +31,11 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (FundTinyResource|OrganizationTinyResource|ProductReservationResource|ProductResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed|null|scalar)[]
+     *
+     * @psalm-return array{amount: mixed|string, amount_locale: mixed|string, timestamp: float|int|mixed|null|string, cancelable: bool|mixed, transaction_in: int|mixed|null, fund: FundTinyResource|mixed, notes: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed, product: ProductResource|mixed, reservation: ProductReservationResource|mixed, organization: OrganizationTinyResource|mixed,...}
      */
     public function toArray($request): array
     {

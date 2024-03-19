@@ -25,8 +25,11 @@ class ReservationExtraPaymentResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (ProductReservationResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|bool|mixed)[]
+     *
+     * @psalm-return array{is_paid: bool|mixed, is_pending: bool|mixed, is_fully_refunded: bool|mixed, refunds: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed, reservation: ProductReservationResource|mixed,...}
      */
     public function toArray($request): array
     {

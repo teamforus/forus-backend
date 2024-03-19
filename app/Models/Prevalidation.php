@@ -253,9 +253,12 @@ class Prevalidation extends BaseModel
 
     /**
      * @param BaseFormRequest $request
-     * @return Collection
+     *
+     * @return Collection|EloquentCollection
+     *
+     * @psalm-return Collection<int, array>|EloquentCollection<int, array>
      */
-    public static function export(BaseFormRequest $request): Collection
+    public static function export(BaseFormRequest $request): EloquentCollection|Collection
     {
         $transKey = "export.prevalidations";
 
@@ -281,9 +284,8 @@ class Prevalidation extends BaseModel
 
     /**
      * @param Identity $identity
-     * @return Prevalidation
      */
-    public function assignToIdentity(Identity $identity): Prevalidation
+    public function assignToIdentity(Identity $identity): static
     {
         foreach ($this->prevalidation_records as $record) {
             if ($record->record_type->key === 'bsn') {

@@ -20,7 +20,10 @@ class FinancialStatistic
     /**
      * @param Organization $sponsor
      * @param array $options
-     * @return array
+     *
+     * @return array[][]
+     *
+     * @psalm-return array{filters: array{product_categories: array, business_types: array, providers: array, postcodes: array, funds: array}}
      */
     public function getFilters(Organization $sponsor, array $options = []): array
     {
@@ -45,7 +48,10 @@ class FinancialStatistic
     /**
      * @param Organization $sponsor
      * @param array $options
-     * @return array
+     *
+     * @return (array|mixed|null)[]
+     *
+     * @psalm-return array{dates: array, totals: array{amount: mixed, count: mixed}, lowest_transaction: mixed|null, highest_transaction: mixed|null, highest_daily_transaction: mixed|null}
      */
     public function getStatistics(Organization $sponsor, array $options): array
     {
@@ -70,7 +76,10 @@ class FinancialStatistic
 
     /**
      * @param array $options
-     * @return array
+     *
+     * @return Carbon[][]
+     *
+     * @psalm-return list{0?: array{from: Carbon, to: Carbon},...}
      */
     protected function makeDates(array $options): array {
         $type = array_get($options, 'type');
@@ -151,9 +160,12 @@ class FinancialStatistic
 
     /**
      * @param VoucherTransaction|null $transaction
-     * @return array|null
+     *
+     * @return (mixed|null|string)[]|null
+     *
+     * @psalm-return array{provider: null|string,...}|null
      */
-    protected function getTransactionData(?VoucherTransaction $transaction) : ?array
+    protected function getTransactionData(?VoucherTransaction $transaction) : array|null
     {
         return $transaction ? array_merge($transaction->only('id', 'amount'), [
             'provider' => $transaction->provider?->name,
@@ -195,7 +207,10 @@ class FinancialStatistic
 
     /**
      * @param string $type
+     *
      * @return string
+     *
+     * @psalm-return '%B, %Y'|'%d %b'|'Week %U'
      */
     protected function dateFormatStr(string $type): string
     {

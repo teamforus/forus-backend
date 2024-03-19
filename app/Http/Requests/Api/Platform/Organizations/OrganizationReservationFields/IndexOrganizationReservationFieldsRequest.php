@@ -25,7 +25,9 @@ class IndexOrganizationReservationFieldsRequest extends BaseFormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{per_page: string}
      */
     public function rules(): array
     {

@@ -15,20 +15,14 @@ use Illuminate\Validation\Rule;
  */
 class UpdateSystemNotificationsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->system_notification->editable;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (array|string)[]
+     *
+     * @psalm-return array{enable_all: 'nullable|boolean', enable_mail: 'nullable|boolean', enable_push: 'nullable|boolean', enable_database: 'nullable|boolean', templates: 'nullable|array', 'templates.*.type': 'required|string|in:mail,push,database', 'templates.*.formal': 'required|boolean', 'templates.*.title': list{'required', 'string', SystemNotificationTemplateTitleRule}, 'templates.*.fund_id': array, 'templates.*.content': list{'required', 'string', SystemNotificationTemplateContentRule}, templates_remove: 'nullable|array', 'templates_remove.*.type': 'required|string|in:mail,push,database', 'templates_remove.*.formal': 'required|boolean', 'templates_remove.*.fund_id': array}
      */
     public function rules(): array
     {
@@ -54,7 +48,10 @@ class UpdateSystemNotificationsRequest extends BaseFormRequest
 
     /**
      * @param Implementation $implementation
-     * @return array
+     *
+     * @return (\Illuminate\Validation\Rules\Exists|string)[]
+     *
+     * @psalm-return list{'nullable', \Illuminate\Validation\Rules\Exists}
      */
     protected function fundIdRules(Implementation $implementation): array
     {

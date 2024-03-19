@@ -12,27 +12,11 @@ class BulkPaymentValue extends Value {
     }
 
     /**
-     * @return int
-     * @noinspection PhpUnused
+     * @return null|string
+     *
+     * @psalm-return 'accepted'|'pending'|'rejected'|null
      */
-    public function getNumberOfTransactions(): ?int
-    {
-        return $this->data['numberOfTransactions'] ?? null;
-    }
-
-    /**
-     * @return int
-     * @noinspection PhpUnused
-     */
-    public function getRequestedExecutionDate(): ?int
-    {
-        return $this->data['requestedExecutionDate'] ?? null;
-    }
-
-    /**
-     * @return string
-     */
-    public function getStatus(): ?string
+    public function getStatus(): string|null
     {
         switch ($this->getTransactionStatus()) {
             case 'RCVD':

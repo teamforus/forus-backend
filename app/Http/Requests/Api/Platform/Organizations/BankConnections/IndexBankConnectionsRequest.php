@@ -12,20 +12,14 @@ use Illuminate\Support\Facades\Gate;
  */
 class IndexBankConnectionsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return Gate::allows('viewAny', [BankConnection::class, $this->organization]);
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{per_page: string, state: string}
      */
     public function rules(): array
     {

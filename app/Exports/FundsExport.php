@@ -91,7 +91,9 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
     }
 
     /**
-     * @return array|array[]
+     * @return (null|string)[][]
+     *
+     * @psalm-return list{0?: array{name: null|string, total_top_up: string, balance: string, expenses: string, transactions: string}}
      */
     protected function getTotals(): array
     {
@@ -113,7 +115,9 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
     }
 
     /**
-     * @return array
+     * @return (int|string)[]
+     *
+     * @psalm-return list<array-key>
      */
     public function headings(): array
     {
@@ -122,7 +126,10 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
 
     /**
      * @param Collection $funds
+     *
      * @return Collection
+     *
+     * @psalm-return Collection<array-key, array>
      */
     protected function exportTransform(Collection $funds): Collection
     {
@@ -141,7 +148,10 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
 
     /**
      * @param Fund $fund
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{name: string, budget_amount_per_voucher?: string, budget_average_per_voucher?: string, budget_total_spent_amount?: string, budget_total_left_amount?: string, budget_total_spent_percentage?: string, budget_total_left_percentage?: string, budget_vouchers_count?: string, budget_vouchers_inactive_count?: string, budget_vouchers_inactive_percentage?: string, budget_vouchers_active_percentage?: string, budget_vouchers_active_count?: string, budget_vouchers_deactivated_count?: string,...}
      */
     protected function getVoucherData(Fund $fund): array
     {
@@ -202,9 +212,10 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
 
     /**
      * @param string $key
-     * @return string|null
+     *
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
      */
-    protected function trans(string $key): ?string
+    protected function trans(string $key): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans("export.funds.$key");
     }

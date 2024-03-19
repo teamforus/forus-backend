@@ -90,15 +90,6 @@ abstract class BaseCommand extends Command
      * @param string $text
      * @return string
      */
-    protected function blue(string $text): string
-    {
-        return "\e[0;34m$text\e[0m";
-    }
-
-    /**
-     * @param string $text
-     * @return string
-     */
     public function green(string $text): string
     {
         return "\e[0;32m$text\e[0m";
@@ -124,9 +115,15 @@ abstract class BaseCommand extends Command
 
     /**
      * @param ...$value
+     * @param \League\OAuth2\Client\Token\AccessTokenInterface|\League\OAuth2\Client\Token\AccessTokenInterface[]|\Mollie\Api\Resources\BaseCollection|\Mollie\Api\Resources\ClientLink|\Mollie\Api\Resources\Method|\Mollie\Api\Resources\Onboarding|\Mollie\Api\Resources\Organization|\Mollie\Api\Resources\Payment|\Mollie\Api\Resources\Profile|\Mollie\Api\Resources\Refund $value
+     *
      * @return string
+     *
+     * @psalm-param \League\OAuth2\Client\Token\AccessTokenInterface|\Mollie\Api\Resources\BaseCollection|\Mollie\Api\Resources\ClientLink|\Mollie\Api\Resources\Method|\Mollie\Api\Resources\Onboarding|\Mollie\Api\Resources\Organization|\Mollie\Api\Resources\Payment|\Mollie\Api\Resources\Profile|\Mollie\Api\Resources\Refund|array{accessToken: \League\OAuth2\Client\Token\AccessTokenInterface} $value
+     *
+     * @psalm-return ''
      */
-    public function jsonPretty(...$value): string
+    public function jsonPretty(array|\League\OAuth2\Client\Token\AccessTokenInterface|\Mollie\Api\Resources\ClientLink|\Mollie\Api\Resources\Organization|\Mollie\Api\Resources\Onboarding|\Mollie\Api\Resources\Profile|\Mollie\Api\Resources\BaseCollection|\Mollie\Api\Resources\Method|\Mollie\Api\Resources\Payment|\Mollie\Api\Resources\Refund ...$value): string
     {
         try {
             json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);

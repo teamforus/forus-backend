@@ -13,19 +13,14 @@ use Illuminate\Validation\Rule;
  */
 abstract class BaseVoucherRecordRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * @param VoucherRecord|null $record
-     * @return array
+     *
+     * @return (VoucherRecordValueRule|string)[]
+     *
+     * @psalm-return list{'required', 'string', 'max:2000', VoucherRecordValueRule}
      */
     protected function recordValueRule(VoucherRecord $record = null): array
     {
@@ -40,7 +35,9 @@ abstract class BaseVoucherRecordRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Validation\Rules\Exists|string)[]
+     *
+     * @psalm-return list{'required', \Illuminate\Validation\Rules\Exists}
      */
     protected function recordTypeKeyRule(): array
     {
@@ -52,6 +49,8 @@ abstract class BaseVoucherRecordRequest extends BaseFormRequest
 
     /**
      * @return string
+     *
+     * @psalm-return 'nullable|string|max:2000'
      */
     protected function recordNoteRule(): string
     {

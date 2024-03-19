@@ -13,8 +13,11 @@ class VoucherExportArrResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (mixed|string[])[]
+     *
+     * @psalm-return array{files: array<never, string>,...}
      */
     public function toArray($request): array
     {

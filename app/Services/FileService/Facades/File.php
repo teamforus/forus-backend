@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Facade;
  */
 class File extends Facade
 {
+    /**
+     * @return string
+     *
+     * @psalm-return 'file'
+     */
     protected static function getFacadeAccessor()
     {
         return 'file';

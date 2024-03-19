@@ -21,16 +21,4 @@ class UpdateNotificationTemplatesCommand extends Command
      */
     protected $description = 'Update notification templates.';
 
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     * @throws \Throwable
-     */
-    public function handle(): void
-    {
-        (new NotificationTemplatesTableSeeder())->run();
-        echo "Templates updated!\n";
-    }
 }

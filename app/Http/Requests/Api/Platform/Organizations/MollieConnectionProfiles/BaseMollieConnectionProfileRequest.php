@@ -12,22 +12,14 @@ use Illuminate\Support\Facades\Config;
  */
 abstract class BaseMollieConnectionProfileRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     * @throws AuthorizationJsonException
-     */
-    public function authorize(): bool
-    {
-        $this->throttle();
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((mixed|string)[]|string)[]
+     *
+     * @psalm-return array{name: 'required|string|max:191', email: array{0: 'required'|mixed, 1: 'max:191'|mixed,...}, website: 'required|url|max:191', phone: list{'required', 'string', 'regex:/^\+[1-9]\d{10,14}$/'}}
      */
     public function rules(): array
     {

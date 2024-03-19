@@ -27,29 +27,11 @@ class WebshopGenericSearch
     }
 
     /**
-     * @param array $filters
-     * @noinspection PhpUnused
-     */
-    public function setFilters(array $filters): void
-    {
-        $this->filters = $filters;
-    }
-
-    /**
-     * @return array
-     * @noinspection PhpUnused
-     */
-    public function getFilters(): array
-    {
-        return $this->filters;
-    }
-
-    /**
      * @param array|string $types
-     * @return Builder|null
+     *
      * @throws Exception
      */
-    public function query(array|string $types): ?Builder
+    public function query(array|string $types): Builder
     {
         $types = is_array($types) ? $types : func_get_args();
         $query = null;
@@ -98,9 +80,10 @@ class WebshopGenericSearch
 
     /**
      * @param array $options
-     * @return Builder
+     *
+     * @return Builder|\App\Models\FundRequest|null
      */
-    protected function queryFunds(array $options): Builder
+    protected function queryFunds(array $options): \App\Models\FundRequest|Builder|null
     {
         return (new FundSearch($options, Implementation::activeFundsQuery()))->query();
     }

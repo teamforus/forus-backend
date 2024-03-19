@@ -9,21 +9,13 @@ use Illuminate\Support\Facades\Schema;
 
 class BusinessTypesTableSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run(): void
-    {
-        self::seed(true);
-    }
+
 
     /**
      * @param $deleteExisting
      * @return void
      */
-    public static function seed($deleteExisting = false): void
+    public static function seed(bool $deleteExisting = false): void
     {
         if ($deleteExisting) {
             Schema::disableForeignKeyConstraints();

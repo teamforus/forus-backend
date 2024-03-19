@@ -15,10 +15,11 @@ use Illuminate\Database\Eloquent\Model;
 interface IEventLogService
 {
     /**
-     * @param HasLogs|Model $loggable
+     * @param Model $loggable
      * @param string $action
      * @param array $models
      * @param array $raw_meta
+     *
      * @return EventLog
      */
     public function log(

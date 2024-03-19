@@ -18,8 +18,11 @@ class MollieConnectionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|null
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (MollieConnectionProfileResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|array|mixed)[]|null
+     *
+     * @psalm-return array{organization: array|mixed, profile_active: MollieConnectionProfileResource|mixed, profile_pending: MollieConnectionProfileResource|mixed, profiles: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed,...}|null
      */
     public function toArray($request): ?array
     {

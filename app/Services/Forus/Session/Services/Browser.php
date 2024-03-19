@@ -17,9 +17,8 @@ class Browser
 
     /**
      * @param string $user_agent
-     * @return AgentData|null
      */
-    public static function getAgentData(string $user_agent) {
+    public static function getAgentData(string $user_agent): AgentData {
         return AgentData::parse($user_agent);
     }
 }

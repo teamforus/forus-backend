@@ -8,7 +8,9 @@ use Illuminate\Validation\Rule;
 class RecordTypeSelectNumberRule extends BaseRecordTypeRule
 {
     /**
-     * @return array
+     * @return (\Illuminate\Validation\Rules\In|string)[]
+     *
+     * @psalm-return array{0?: string, 1: 'numeric', 2: \Illuminate\Validation\Rules\In, 3?: \Illuminate\Validation\Rules\In|string}
      */
     public function rules(): array
     {

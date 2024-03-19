@@ -20,15 +20,4 @@ class BankVoucherTransactionProcessZeroAmountCommand extends Command
      * @var string
      */
     protected $description = 'Process voucher transactions with the amount of 0 (meant for reservations).';
-
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     * @throws \Throwable
-     */
-    public function handle(): void
-    {
-        VoucherTransaction::processZeroAmount();
-    }
 }

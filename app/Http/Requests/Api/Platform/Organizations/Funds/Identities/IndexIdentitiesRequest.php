@@ -6,20 +6,14 @@ use App\Http\Requests\BaseFormRequest;
 
 class IndexIdentitiesRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, mixed>
+     * @return string[]
+     *
+     * @psalm-return array{per_page: string, target: 'nullable|in:providers_all,providers_approved,providers_rejected,all,has_balance,self', has_email: 'nullable|boolean', order_by: string, order_dir: 'nullable|in:asc,desc', with_reservations: 'nullable|boolean'}
      */
     public function rules(): array
     {

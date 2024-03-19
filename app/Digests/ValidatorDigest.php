@@ -99,7 +99,8 @@ class ValidatorDigest extends BaseOrganizationDigest
 
     /**
      * @param MailBodyBuilder $emailBody
-     * @return BaseDigestMail
+     *
+     * @return DigestValidatorMail
      */
     protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
     {

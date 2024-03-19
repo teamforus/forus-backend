@@ -6,20 +6,14 @@ use App\Http\Requests\BaseFormRequest;
 
 class IndexEventLogRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{q: 'nullable|string|max:500', loggable: 'required_with:loggable_id|array'|'required_with:loggable_id|array|size:1', 'loggable.*': 'required|string', loggable_id: 'nullable|integer', per_page: string}
      */
     public function rules(): array
     {

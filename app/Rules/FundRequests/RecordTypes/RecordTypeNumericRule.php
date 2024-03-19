@@ -5,7 +5,9 @@ namespace App\Rules\FundRequests\RecordTypes;
 class RecordTypeNumericRule extends BaseRecordTypeRule
 {
     /**
-     * @return array
+     * @return (\Illuminate\Validation\Rules\In|string)[]
+     *
+     * @psalm-return array{0?: string, 1: 'numeric', 2?: string, 3?: string, 4?: \Illuminate\Validation\Rules\In|string}
      */
     public function rules(): array
     {

@@ -13,7 +13,9 @@ class UpdateVoucherRecordRequest extends BaseVoucherRecordRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, mixed>
+     * @return (array|string)[]
+     *
+     * @psalm-return array{note: string, value: array}
      */
     public function rules(): array
     {

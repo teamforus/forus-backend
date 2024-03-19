@@ -123,7 +123,10 @@ class IConnect
      * Make Guzzle request options
      *
      * @param array $data
-     * @return array
+     *
+     * @return ((mixed|string)[]|int)[]
+     *
+     * @psalm-return array{headers: array<string>, connect_timeout: 10, query: array}
      */
     private function makeRequestOptions(array $data): array {
         return [
@@ -136,7 +139,10 @@ class IConnect
     /**
      * @param array $with
      * @param array $fields
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{expand?: string, fields?: string}
      */
     private function buildQuery(array $with = [], array $fields = []): array
     {
@@ -153,7 +159,10 @@ class IConnect
 
     /**
      * @param Fund $fund
-     * @return array
+     *
+     * @return (null|string)[]
+     *
+     * @psalm-return array{env: null|string, api_oin: null|string, cert: null|string, cert_pass: null|string, cert_trust: null|string, key: null|string, key_pass: null|string, base_url: null|string, target_binding: null|string}
      */
     private function fundToConfigs(Fund $fund): array
     {

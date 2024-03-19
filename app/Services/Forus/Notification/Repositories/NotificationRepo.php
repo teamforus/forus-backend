@@ -269,9 +269,11 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
-     * @return Collection|SystemNotification[]
+     * @return Builder[]|Collection
+     *
+     * @psalm-return Collection<array-key, \Illuminate\Database\Eloquent\Model>|array<Builder>
      */
-    public function getSystemNotifications(bool $visibleOnly = false): Collection
+    public function getSystemNotifications(bool $visibleOnly = false): array|Collection
     {
         return $this->getSystemNotificationsQuery($visibleOnly)->get();
     }
@@ -354,22 +356,26 @@ class NotificationRepo implements INotificationRepo
 
     /**
      * Create new unsubscription from all emails link
+     *
      * @param string $email
      * @param string|null $token
-     * @return string
+     *
+     * @return \Illuminate\Contracts\Routing\UrlGenerator|string
      */
-    public function makeUnsubLink(string $email, string $token = null): string
+    public function makeUnsubLink(string $email, string $token = null): string|\Illuminate\Contracts\Routing\UrlGenerator
     {
         return url('/notifications/unsubscribe/' . $this->makeToken($email, $token));
     }
 
     /**
      * Create new unsubscription from all emails link
+     *
      * @param string $email
      * @param string|null $token
-     * @return string
+     *
+     * @return \Illuminate\Contracts\Routing\UrlGenerator|string
      */
-    public function makeReSubLink(string $email, string $token = null): string
+    public function makeReSubLink(string $email, string $token = null): string|\Illuminate\Contracts\Routing\UrlGenerator
     {
         return url('/notifications/subscribe/' . $this->makeToken($email, $token));
     }
@@ -418,7 +424,10 @@ class NotificationRepo implements INotificationRepo
 
     /**
      * @param string $identityAddress
-     * @return array
+     *
+     * @return (bool|mixed|string)[][]
+     *
+     * @psalm-return list<array{key: mixed, subscribed: bool, type: 'push'}>
      */
     public function getNotificationPreferences(string $identityAddress): array
     {
@@ -480,7 +489,9 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
-     * @return array
+     * @return (int|string)[]
+     *
+     * @psalm-return list<array-key>
      */
     public function mailTypeKeys(): array
     {

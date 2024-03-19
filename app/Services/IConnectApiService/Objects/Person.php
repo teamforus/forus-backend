@@ -26,6 +26,8 @@ class Person extends BasePerson
 
     /**
      * @return int
+     *
+     * @psalm-return 1
      */
     public function getIndex(): int
     {
@@ -49,7 +51,9 @@ class Person extends BasePerson
     }
 
     /**
-     * @return array
+     * @return (mixed|string)[]
+     *
+     * @psalm-return array{street: ''|mixed, house_number: ''|mixed, postcode: ''|mixed, function_address: ''|mixed, short_name: ''|mixed, date_start_address_attitude: ''|mixed, date_entry_validity: ''|mixed, date_registration_in_municipality: ''|mixed, municipality_of_registration: ''|mixed, address: string}
      */
     public function getResidence(): array
     {
@@ -88,7 +92,9 @@ class Person extends BasePerson
     }
 
     /**
-     * @return array|ParentPerson[]
+     * @return ParentPerson[]
+     *
+     * @psalm-return array<never, ParentPerson>
      */
     public function getParents(): array
     {
@@ -98,7 +104,9 @@ class Person extends BasePerson
     }
 
     /**
-     * @return array|Child[]
+     * @return Child[]
+     *
+     * @psalm-return array<never, Child>
      */
     public function getChildren(): array
     {
@@ -108,7 +116,9 @@ class Person extends BasePerson
     }
 
     /**
-     * @return array|Partner[]
+     * @return Partner[]
+     *
+     * @psalm-return array<never, Partner>
      */
     public function getPartners(): array
     {
@@ -118,7 +128,9 @@ class Person extends BasePerson
     }
 
     /**
-     * @return array
+     * @return (array|null|string)[]
+     *
+     * @psalm-return array{nationality: string, residence: array, address: string, decreased: 'Ja'|'Nee', decreased_date: null|string}
      */
     public function getCustomDataArray(): array
     {

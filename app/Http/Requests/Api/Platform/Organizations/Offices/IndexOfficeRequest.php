@@ -11,7 +11,7 @@ class IndexOfficeRequest extends BaseOfficeRequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
+     * @return true
      */
     public function authorize(): bool
     {
@@ -21,7 +21,9 @@ class IndexOfficeRequest extends BaseOfficeRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{q: 'nullable|string', per_page: 'nullable|numeric|between:0,100'}
      */
     public function rules(): array
     {

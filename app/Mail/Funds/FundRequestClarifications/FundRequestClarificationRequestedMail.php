@@ -14,17 +14,19 @@ class FundRequestClarificationRequestedMail extends ImplementationMail
     protected string $notificationTemplateKey = "notifications_identities.fund_request_feedback_requested";
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
      */
-    public function build(): Mailable
+    public function build(): Mailable|null
     {
         return $this->buildNotificationTemplatedMail();
     }
 
     /**
      * @param array $data
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{fund_request_clarification_question: string, webshop_clarification_link: string, webshop_clarification_button: string}
      */
     protected function getMailExtraData(array $data): array
     {

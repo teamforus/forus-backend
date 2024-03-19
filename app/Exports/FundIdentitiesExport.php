@@ -59,7 +59,9 @@ class FundIdentitiesExport extends BaseFieldedExport
     }
 
     /**
-     * @return array
+     * @return key-of<TArray>[]
+     *
+     * @psalm-return list<key-of<array>>
      */
     public function headings(): array
     {

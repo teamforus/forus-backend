@@ -13,18 +13,6 @@ class MollieConnectionPolicy
     /**
      * @param Identity $identity
      * @param Organization $organization
-     * @return bool
-     */
-    public function viewAny(Identity $identity, Organization $organization): bool
-    {
-        return
-            $organization->identityCan($identity, 'manage_payment_methods') &&
-            $organization->canViewExtraPaymentsAsProvider();
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Organization $organization
      * @return mixed
      */
     public function store(Identity $identity, Organization $organization): bool
@@ -43,39 +31,6 @@ class MollieConnectionPolicy
     {
         return
             $this->allowExtraPayments($identity, $organization) &&
-            $organization->mollie_connection()->exists();
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Organization $organization
-     * @return bool
-     */
-    public function connectMollieAccount(Identity $identity, Organization $organization): bool
-    {
-        return $this->store($identity, $organization);
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Organization $organization
-     * @return bool
-     */
-    public function fetchMollieAccount(Identity $identity, Organization $organization): bool
-    {
-        return
-            $organization->identityCan($identity, 'manage_payment_methods') &&
-            $organization->mollie_connection()->exists();
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Organization $organization
-     * @return bool
-     */
-    public function destroy(Identity $identity, Organization $organization): bool {
-        return
-            $organization->identityCan($identity, 'manage_payment_methods') &&
             $organization->mollie_connection()->exists();
     }
 

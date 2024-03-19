@@ -15,8 +15,11 @@ class FundProviderChatResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (int|mixed|null|string)[]
+     *
+     * @psalm-return array{fund_id: int|null, created_at: string, updated_at: string, created_at_locale: null|string, updated_at_locale: null|string, provider_unseen_messages: mixed, sponsor_unseen_messages: mixed,...}
      */
     public function toArray($request): array
     {

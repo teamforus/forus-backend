@@ -12,15 +12,7 @@ use Illuminate\Support\Facades\Gate;
 
 class StoreProductReservationRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->isAuthenticated() && Gate::allows('create', ProductReservation::class);
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -47,7 +39,10 @@ class StoreProductReservationRequest extends BaseFormRequest
 
     /**
      * @param Product|null $product
-     * @return array
+     *
+     * @return (array|mixed)[]
+     *
+     * @psalm-return array{voucher_address: array|mixed, product_id: array|mixed,...}
      */
     public function baseRules(?Product $product): array
     {
@@ -68,7 +63,10 @@ class StoreProductReservationRequest extends BaseFormRequest
 
     /**
      * @param Product|null $product
-     * @return array
+     *
+     * @return (mixed|string[])[]
+     *
+     * @psalm-return array{city: list{'nullable'|'required', 'city_name'}, street: list{'nullable'|'required', 'street_name'}, house_nr: list{'nullable'|'required', 'house_number'}, house_nr_addition: list{'nullable', 'house_addition'}, postal_code: list{'nullable'|'required', 'postcode'},...}
      */
     public function addressRules(?Product $product): array
     {
@@ -89,7 +87,10 @@ class StoreProductReservationRequest extends BaseFormRequest
 
     /**
      * @param Product|null $product
-     * @return array[]
+     *
+     * @return (string|string[])[]
+     *
+     * @psalm-return array{first_name: 'required|string|max:20', last_name: 'required|string|max:20', user_note: 'nullable|string|max:400', phone: list{'nullable'|'required', 'string', 'max:50'}, birth_date: list{'nullable'|'required', 'date_format:Y-m-d', 'before:today'}}
      */
     protected function fieldsRules(?Product $product): array
     {
@@ -146,7 +147,9 @@ class StoreProductReservationRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Contracts\Translation\Translator|array|null|string)[]
+     *
+     * @psalm-return array{'birth_date.date_format': \Illuminate\Contracts\Translation\Translator|array|null|string}
      */
     public function messages(): array
     {

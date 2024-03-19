@@ -16,23 +16,6 @@ class VoucherPhysicalCardRequestedEvent extends BaseVoucherEvent
     protected bool $shouldNotifyRequester;
 
     /**
-     * @param Voucher $voucher
-     * @param PhysicalCardRequest $cardRequest
-     * @param bool $shouldNotifyRequester
-     */
-    public function __construct(
-        Voucher $voucher,
-        PhysicalCardRequest $cardRequest,
-        bool $shouldNotifyRequester = false
-    ) {
-        parent::__construct($voucher);
-
-        $this->voucher = $voucher;
-        $this->cardRequest = $cardRequest;
-        $this->shouldNotifyRequester = $shouldNotifyRequester;
-    }
-
-    /**
      * @return PhysicalCardRequest
      */
     public function getCardRequest(): PhysicalCardRequest

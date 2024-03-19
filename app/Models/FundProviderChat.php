@@ -91,27 +91,30 @@ class FundProviderChat extends Model
     /**
      * @param string $message
      * @param string $identity_address
-     * @return FundProviderChatMessage
+     *
+     * @return BaseModel|FundProviderChatMessage
      */
-    public function addSponsorMessage(string $message, string $identity_address) {
+    public function addSponsorMessage(string $message, string $identity_address): FundProviderChatMessage|BaseModel {
         return $this->addMessage(self::TYPE_SPONSOR, $message, $identity_address);
     }
 
     /**
      * @param string $message
      * @param string $identity_address
-     * @return FundProviderChatMessage
+     *
+     * @return BaseModel|FundProviderChatMessage
      */
-    public function addProviderMessage(string $message, string $identity_address) {
+    public function addProviderMessage(string $message, string $identity_address): FundProviderChatMessage|BaseModel {
         return $this->addMessage(self::TYPE_PROVIDER, $message, $identity_address);
     }
 
     /**
      * @param string $message
      * @param string|null $identity_address
-     * @return FundProviderChatMessage
+     *
+     * @return BaseModel|FundProviderChatMessage
      */
-    public function addSystemMessage(string $message, ?string $identity_address = null) {
+    public function addSystemMessage(string $message, ?string $identity_address = null): FundProviderChatMessage|BaseModel {
         return $this->addMessage(self::TYPE_SYSTEM, $message, $identity_address);
     }
 }

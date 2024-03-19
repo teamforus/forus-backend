@@ -11,17 +11,19 @@ class VoucherAssignedSubsidyMail extends ImplementationMail
     protected string $notificationTemplateKey = 'notifications_identities.identity_voucher_assigned_subsidy';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
      */
-    public function build(): Mailable
+    public function build(): Mailable|null
     {
         return $this->buildNotificationTemplatedMail();
     }
 
     /**
      * @param array $data
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{qr_token: string, webshop_link: string, webshop_button: string}
      */
     protected function getMailExtraData(array $data): array
     {

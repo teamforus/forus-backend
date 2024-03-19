@@ -14,7 +14,10 @@ class ProviderProductResource extends ProductResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
+     *
+     * @return (OrganizationBasicResource|bool|int|mixed|null)[]
+     *
+     * @psalm-return array{sponsor_organization_id: int|mixed|null, sponsor_organization: OrganizationBasicResource|mixed, unseen_messages: bool|mixed, excluded_funds: mixed,...}
      */
     public function toArray($request): array
     {

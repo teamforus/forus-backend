@@ -12,19 +12,5 @@ use Illuminate\Support\Facades\Config;
  */
 class FetchExtraPaymentProductReservationsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     * @throws AuthorizationJsonException
-     */
-    public function authorize(): bool
-    {
-        $this->maxAttempts = Config::get('forus.throttles.mollie.fetch_payments.attempts');
-        $this->decayMinutes = Config::get('forus.throttles.mollie.fetch_payments.decay');
 
-        $this->throttleWithKey('to_many_attempts', $this, 'reservation_extra_payment');
-
-        return true;
-    }
 }

@@ -17,8 +17,11 @@ class SessionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (\Illuminate\Support\Collection|array|bool|mixed|null|string)[]
+     *
+     * @psalm-return array{active: bool, current: bool, started_at: string, started_at_locale: null|string, client_type: null|string, client_version: null|string, locations: \Illuminate\Support\Collection|null, first_request: array, last_request: array,...}
      */
     public function toArray($request): array
     {
@@ -45,7 +48,10 @@ class SessionResource extends BaseJsonResource
 
     /**
      * @param SessionRequest $request
-     * @return array
+     *
+     * @return (\App\Services\Forus\Session\Services\Data\LocationData|\Illuminate\Config\Repository|array|int|mixed|null|string)[]
+     *
+     * @psalm-return array{device: array|null, location: \App\Services\Forus\Session\Services\Data\LocationData|null, client_type: null|string, client_version: null|string, device_string: null|string, device_available: \Illuminate\Config\Repository|mixed, time_passed: int, time_passed_locale: string}
      */
     private function requestData(SessionRequest $request): array
     {

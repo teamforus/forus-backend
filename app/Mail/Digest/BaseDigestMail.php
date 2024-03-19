@@ -28,29 +28,6 @@ class BaseDigestMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * Build the message.
-     *
-     * @return $this
-     */
-    public function build(): self
-    {
-        return $this->view('emails.mail-builder-template');
-    }
-
-    /**
-     * Handle a job failure.
-     *
-     * @param \Throwable $e
-     * @return void
-     */
-    public function failed(\Throwable $e): void
-    {
-        if ($logger = logger()) {
-            $logger->error("Error sending digest: `" . $e->getMessage() . "`");
-        }
-    }
-
-    /**
      * @return ?string
      */
     protected function makePreferencesLink(): ?string

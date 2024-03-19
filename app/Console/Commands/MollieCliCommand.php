@@ -43,7 +43,9 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return list{'## oAuth', '[1] Mollie connect (oAuth).', '[2] Exchange oAuth code.', '[3] Refresh token.', '[4] Create client-link.', '## Organizations', '[5] Read organization.', '[6] Read onboarding state.', '## Profiles', '[7] Create profile.', '[8] Read profile.', '[9] Read all profiles.', '## Payment methods', '[10] All payment methods.', '[11] Get active payment methods.', '[12] Enable payment method.', '[13] Disable payment method.', '## Payments', '[14] Create payment.', '[15] Read payment.', '[16] Refund payment.', '[17] Read payment refund.', '## Other', '[18] Exit'}
      */
     protected function askActionList(): array
     {
@@ -520,7 +522,9 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return array
+     * @return (mixed|string)[]
+     *
+     * @psalm-return list{mixed|string, mixed|string, mixed|string}
      */
     protected function askMollieApp(): array
     {

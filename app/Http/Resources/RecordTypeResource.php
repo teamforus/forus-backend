@@ -19,7 +19,10 @@ class RecordTypeResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
+     *
+     * @return (((mixed|string)[]|mixed)[]|mixed|string)[]
+     *
+     * @psalm-return array{name: string, validations: array, operators: array<array{key: mixed, name: string}>, options: array,...}
      */
     public function toArray($request): array
     {

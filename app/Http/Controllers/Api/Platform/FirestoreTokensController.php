@@ -16,6 +16,10 @@ class FirestoreTokensController extends Controller
     /**
      * @throws AuthException
      * @throws FirebaseException
+     *
+     * @return string[]
+     *
+     * @psalm-return array{token: string}
      */
     public function store(StoreFirestoreTokenRequest $request): array
     {

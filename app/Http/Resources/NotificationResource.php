@@ -22,8 +22,12 @@ class NotificationResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
+     *
+     * @return (bool|mixed|string)[]
+     *
      * @throws Throwable
+     *
+     * @psalm-return array{id: mixed|string, type: mixed|string, seen: bool|mixed, title?: mixed|string, description?: mixed|string,...}
      */
     public function toArray($request): array
     {

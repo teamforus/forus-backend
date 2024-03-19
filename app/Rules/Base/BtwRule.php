@@ -19,9 +19,10 @@ class BtwRule implements Rule
     /**
      * Determine if the validation rule passes.
      *
-     * @param  string  $attribute
-     * @param  mixed  $value
-     * @return bool
+     * @param string  $attribute
+     * @param mixed  $value
+     *
+     * @return true
      */
     public function passes($attribute, $value)
     {
@@ -31,9 +32,9 @@ class BtwRule implements Rule
     /**
      * Get the validation error message.
      *
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
      */
-    public function message()
+    public function message(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans('validation.btw');
     }

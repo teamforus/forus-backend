@@ -24,7 +24,10 @@ class FundSponsorCustomNotificationMail extends ImplementationMail
 
     /**
      * @param array $data
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{webshop_link: string, webshop_button: string}
      */
     protected function getMailExtraData(array $data): array
     {

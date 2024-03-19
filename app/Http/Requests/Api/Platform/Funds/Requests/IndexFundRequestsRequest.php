@@ -11,20 +11,14 @@ use App\Models\FundRequest;
  */
 class IndexFundRequestsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{per_page: 'numeric|between:1,100', state: string, employee_id: 'nullable|exists:employees,id', assigned: 'nullable|boolean', from: 'nullable|date:Y-m-d', to: 'nullable|date:Y-m-d', order_by: 'nullable|in:id,fund_name,created_at,note,state,requester_email,assignee_email', order_dir: 'nullable|in:asc,desc', export_format: 'nullable|in:csv,xls'}
      */
     public function rules(): array
     {

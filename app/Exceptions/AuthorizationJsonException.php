@@ -16,18 +16,4 @@ class AuthorizationJsonException extends \Exception
         return gettype($this->message);
     }
 
-    /**
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function render(): JsonResponse
-    {
-        return new JsonResponse(array_merge(
-            json_decode($this->message, JSON_OBJECT_AS_ARRAY), config('app.debug', false) ? [
-                'file' => $this->getFile(),
-                'line' => $this->getLine(),
-                'trace' => array_map(fn ($trace) => Arr::except($trace, ['args']), $this->getTrace()),
-            ]: []
-        ), $this->getCode());
-    }
-
 }

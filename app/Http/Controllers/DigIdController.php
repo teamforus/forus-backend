@@ -12,8 +12,12 @@ class DigIdController extends Controller
 {
     /**
      * @param StartDigIdRequest $request
-     * @return array
+     *
+     * @return string[]
+     *
      * @throws \Throwable
+     *
+     * @psalm-return array{redirect_url: string}
      */
     public function start(StartDigIdRequest $request): array
     {
@@ -32,9 +36,10 @@ class DigIdController extends Controller
 
     /**
      * @param DigIdSession $session
-     * @return RedirectResponse
+     *
+     * @return RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function redirect(DigIdSession $session): RedirectResponse
+    public function redirect(DigIdSession $session): \Illuminate\Routing\Redirector|RedirectResponse
     {
         return redirect($session->digid_auth_redirect_url);
     }

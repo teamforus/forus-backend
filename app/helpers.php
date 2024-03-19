@@ -245,9 +245,10 @@ if (!function_exists('http_resolve_url')) {
     /**
      * @param string $url
      * @param string $uri
-     * @return string
+     *
+     * @return \Illuminate\Contracts\Routing\UrlGenerator|string
      */
-    function http_resolve_url(string $url, string $uri = ''): string {
+    function http_resolve_url(string $url, string $uri = ''): string|\Illuminate\Contracts\Routing\UrlGenerator {
         return url(sprintf('%s/%s', rtrim($url, '/'), ltrim($uri, '/')));
     }
 }
@@ -286,14 +287,15 @@ if (!function_exists('trans_fb')) {
      * @param string|array $fallback
      * @param array|null $parameters
      * @param string|null $locale
-     * @return string|array
+     *
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
      */
     function trans_fb(
         string $id,
         string|array $fallback,
         ?array $parameters = [],
         ?string $locale = null
-    ): string|array {
+    ): array|string|\Illuminate\Contracts\Translation\Translator|null|array {
         return ($id === ($translation = trans($id, $parameters, $locale))) ? $fallback : $translation;
     }
 }
@@ -318,9 +320,8 @@ if (!function_exists('str_var_replace')) {
 if (!function_exists('user_agent_data')) {
     /**
      * @param null $user_agent
-     * @return AgentData
      */
-    function user_agent_data($user_agent = null): AgentData
+    function user_agent_data($user_agent = null): AgentData|null
     {
         return Browser::getAgentData($user_agent ?: request()->userAgent());
     }

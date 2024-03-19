@@ -129,22 +129,10 @@ class FundQuery
 
     /**
      * @param Builder $query
-     * @param array|int $implementation_id
-     * @return Builder
-     */
-    public static function whereImplementationIdFilter(Builder $query, $implementation_id): Builder
-    {
-        return $query->whereHas('fund_config', static function(Builder $builder) use ($implementation_id) {
-            $builder->whereIn('implementation_id', (array) $implementation_id);
-        });
-    }
-
-    /**
-     * @param Builder $query
      * @param $organization_id
      * @return Builder
      */
-    public static function whereHasProviderFilter(Builder $query, $organization_id): Builder
+    public static function whereHasProviderFilter(Builder $query, int $organization_id): Builder
     {
         return $query->whereHas('providers.organization', static function(
             Builder $builder

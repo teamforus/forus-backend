@@ -20,15 +20,4 @@ class BankVoucherTransactionBulksBuildCommand extends Command
      * @var string
      */
     protected $description = 'Build voucher transaction bulks.';
-
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     * @throws \Throwable
-     */
-    public function handle(): void
-    {
-        VoucherTransactionBulk::buildBulks();
-    }
 }

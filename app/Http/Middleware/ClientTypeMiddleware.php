@@ -22,27 +22,6 @@ class ClientTypeMiddleware
     ];
 
     /**
-     * Handle an incoming request.
-     *
-     * @param Request $request
-     * @param Closure $next
-     * @return mixed
-     */
-    public function handle(Request $request, Closure $next): mixed
-    {
-        $excludedUrl = in_array($request->route()->getName(), static::EXCEPT, true);
-        $validType = in_array($this->activeType($request), $this->availableTypes(), true);
-
-        if (!$excludedUrl && !$validType) {
-            return new JsonResponse([
-                "message" => 'unknown_client_type',
-            ], 403);
-        }
-
-        return $next($request);
-    }
-
-    /**
      * @return array
      */
     private function availableTypes(): array
@@ -52,9 +31,10 @@ class ClientTypeMiddleware
 
     /**
      * @param Request $request
-     * @return string|null
+     *
+     * @return array|null|string
      */
-    private function activeType(Request $request): ?string
+    private function activeType(Request $request): array|string|null
     {
         return $request->header('Client-Type', config('forus.clients.default'));
     }

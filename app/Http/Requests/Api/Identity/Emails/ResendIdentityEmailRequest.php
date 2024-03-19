@@ -21,7 +21,10 @@ class ResendIdentityEmailRequest extends BaseIdentityEmailRequest
      * Get the validation rules that apply to the request.
      *
      * @return array
+     *
      * @throws \App\Exceptions\AuthorizationJsonException
+     *
+     * @psalm-return array<never, never>
      */
     public function rules(): array
     {

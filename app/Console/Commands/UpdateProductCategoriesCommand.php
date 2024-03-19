@@ -20,14 +20,4 @@ class UpdateProductCategoriesCommand extends Command
      * @var string
      */
     protected $description = 'Update product categories.';
-
-    /**
-     * Execute the console command.
-     */
-    public function handle(): void
-    {
-        ProductCategoriesTableSeeder::seedProducts(true);
-
-        $this->info('Product categories updated!');
-    }
 }

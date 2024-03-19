@@ -72,7 +72,7 @@ class IdentityEmail extends Model
     /**
      * Send/Resend verification link to the email
      */
-    public function sendVerificationEmail(array $params = []): IdentityEmail
+    public function sendVerificationEmail(array $params = []): static
     {
         $notificationService = resolve('forus.services.notification');
 
@@ -88,7 +88,7 @@ class IdentityEmail extends Model
     /**
      * Make this identity email as primary
      */
-    public function setPrimary(): IdentityEmail
+    public function setPrimary(): static
     {
         $this->identity->emails()->update([
             'primary' => false,
@@ -109,9 +109,8 @@ class IdentityEmail extends Model
 
     /**
      * Set this identity email as verified
-     * @return self
      */
-    public function setVerified(): IdentityEmail
+    public function setVerified(): static
     {
         $this->update([
             'verified' => true

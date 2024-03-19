@@ -20,8 +20,12 @@ class SearchResource extends JsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
+     *
+     * @return (JsonResource|MediaCompactResource|mixed|null|string)[]
+     *
      * @throws \Throwable
+     *
+     * @psalm-return array{name: string, description_text: null|string, price: null|string, price_locale: null|string, media: MediaCompactResource, resource: JsonResource,...}
      */
     public function toArray($request): array
     {
@@ -48,8 +52,10 @@ class SearchResource extends JsonResource
 
     /**
      * @throws \Throwable
+     *
+     * @return FundResource|ProductResource|ProviderResource
      */
-    public function makeResource(Model $model): JsonResource
+    public function makeResource(Model $model): ProviderResource|FundResource|ProductResource
     {
         switch (get_class($model)) {
             case Fund::class: return new FundResource($model);
@@ -57,29 +63,5 @@ class SearchResource extends JsonResource
             case Organization::class: return new ProviderResource($model->load(OrganizationResource::load()));
             default: throw new Exception('Unknown search type!');
         }
-    }
-
-    /**
-     * @param Model|Fund $model
-     * @return Fund
-     */
-    public function typeFund(Model $model): ?Fund {
-        return Fund::find($model->id);
-    }
-
-    /**
-     * @param Model|Organization $model
-     * @return Organization
-     */
-    public function typeOrganization(Model $model): ?Organization {
-        return Organization::find($model->id);
-    }
-
-    /**
-     * @param Model|Product $model
-     * @return Product
-     */
-    public function typeProduct(Model $model): ?Product {
-        return Product::find($model->id);
     }
 }

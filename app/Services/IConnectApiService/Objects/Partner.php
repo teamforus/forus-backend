@@ -25,7 +25,9 @@ class Partner extends BasePerson
     }
 
     /**
-     * @return array|string[]
+     * @return (mixed|string)[]
+     *
+     * @psalm-return array{country: ''|mixed, place: ''|mixed}
      */
     public function getPlaceStartMarriagePartnership(): array
     {
@@ -36,7 +38,9 @@ class Partner extends BasePerson
     }
 
     /**
-     * @return array
+     * @return ((mixed|string)[]|int|string)[]
+     *
+     * @psalm-return array{index: int, type_of_commitment: string, date_start_marriage_partnership: string, place_start_marriage_partnership: array<mixed|string>}
      */
     public function getCustomDataArray(): array
     {

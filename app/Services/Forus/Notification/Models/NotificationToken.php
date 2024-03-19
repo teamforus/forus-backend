@@ -43,9 +43,10 @@ class NotificationToken extends Model
     /**
      * @param string $title
      * @param string $body
-     * @return ApnBasicNotification|FcmBasicNotification|bool
+     *
+     * @return ApnBasicNotification|FcmBasicNotification|false
      */
-    public function makeBasicNotification(string $title, string $body)
+    public function makeBasicNotification(string $title, string $body): ApnBasicNotification|false|FcmBasicNotification
     {
         switch ($this->type) {
             case self::TYPE_PUSH_IOS: $notification = new ApnBasicNotification($title, $body); break;

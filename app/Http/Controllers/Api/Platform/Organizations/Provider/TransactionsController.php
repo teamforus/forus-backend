@@ -21,7 +21,7 @@ class TransactionsController extends Controller
      *
      * @param IndexTransactionsRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     *
      * @throws AuthorizationException
      */
     public function index(

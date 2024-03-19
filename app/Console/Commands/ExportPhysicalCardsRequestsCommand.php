@@ -24,30 +24,4 @@ class ExportPhysicalCardsRequestsCommand extends BaseCommand
      * @var string
      */
     protected $description = 'Export physical car requests to .csv file.';
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        $disc = $this->getOption('disc', 'local');
-
-        if ($disc === 'ftp_physical_cards' &&
-            !config('filesystems.disks.ftp_physical_cards.host')) {
-            $this->alert("Physical card request ftp not configured.");
-            exit();
-        }
-
-        $date = $this->getOption('date') ?: now()->subDay()->format('Y-m-d');
-        $path = $this->option('export_path') . $date . '.csv';
-        $exporter = new PhysicalCardRequestsExport($this->getOption('fund_id'), $date);
-
-        try {
-            resolve('excel')->store($exporter, $path, $disc);
-        } catch (Exception | \PhpOffice\PhpSpreadsheet\Exception $e) {
-            $this->error($e->getMessage());
-        }
-    }
 }

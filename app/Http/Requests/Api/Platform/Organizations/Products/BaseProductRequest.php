@@ -13,7 +13,9 @@ use Illuminate\Validation\Rule;
 abstract class BaseProductRequest extends BaseFormRequest
 {
     /**
-     * @return string[]
+     * @return ((\Illuminate\Validation\Rules\In|string)[]|string)[]
+     *
+     * @psalm-return array{reservation_enabled: 'nullable|boolean', reservation_fields: 'nullable|boolean', reservation_policy: string, reservation_phone: string, reservation_address: string, reservation_birth_date: string, reservation_extra_payments: list{'nullable'|\Illuminate\Validation\Rules\In,...}}
      */
     protected function reservationRules(): array
     {

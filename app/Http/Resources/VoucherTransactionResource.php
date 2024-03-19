@@ -12,8 +12,11 @@ class VoucherTransactionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return ((MediaResource|mixed)[]|ProductResource|mixed|null|scalar)[]
+     *
+     * @psalm-return array{cancelable: bool|mixed, transaction_in: int|mixed|null, amount: mixed|string, amount_locale: mixed|string, timestamp: float|int|mixed|null|string, organization: array{logo: MediaResource,...}|mixed|null, product: ProductResource|mixed, fund: array{logo: MediaResource,...}|mixed,...}
      */
     public function toArray($request): array
     {

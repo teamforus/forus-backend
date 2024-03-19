@@ -24,14 +24,4 @@ class SendSponsorDigestCommand extends Command
      * @var string
      */
     protected $description = 'Send sponsor digest.';
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        SponsorDigest::dispatchSync();
-    }
 }

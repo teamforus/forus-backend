@@ -10,22 +10,14 @@ use App\Models\Organization;
  */
 class IndexExtraPaymentsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return
-            $this->isAuthenticated() &&
-            $this->organization->identityCan($this->identity(), 'view_funds_extra_payments');
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (mixed|string)[]
+     *
+     * @psalm-return array{q: 'nullable|string'|mixed, fund_id: 'nullable|exists:funds,id'|mixed,...}
      */
     public function rules(): array
     {

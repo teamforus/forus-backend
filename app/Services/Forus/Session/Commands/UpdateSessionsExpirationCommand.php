@@ -35,46 +35,6 @@ class UpdateSessionsExpirationCommand extends BaseCommand
     private bool $dryRun;
 
     /**
-     * Execute the console command.
-     *
-     * @return int
-     * @throws \Throwable
-     */
-    public function handle(): int
-    {
-        $this->chunkSize = intval($this->option('chunk-size') ?: 1_000);
-        $this->progress = (bool) $this->option('progress');
-        $this->dryRun = (bool) $this->option('dry-run');
-
-        $verbose = (bool) $this->option('verbose');
-        $force = (bool) $this->option('force');
-
-        $query = $this->getIdentityProxiesQuery();
-        $total = (clone $query)->count();
-        $conformationMessage = "$total tokens with expired sessions found, are sure you want to continue?";
-
-        if (!$this->dryRun && !$force && !$this->confirm($conformationMessage)) {
-            return 0;
-        }
-
-        if (!$this->dryRun || $this->progress) {
-            $this->deactivateTokens(clone $query, $total);
-        }
-
-        if ($this->dryRun && $verbose) {
-            if ((clone $query)->count() === 0) {
-                $this->printText("No tokens have to be deactivated.");
-                return 0;
-            }
-
-            $this->printHeader("Deactivated tokens:", 2);
-            $this->printDeactivatedProxies((clone $query), $this->chunkSize);
-        }
-
-        return 0;
-    }
-
-    /**
      * @param Builder|IdentityProxy $query
      * @param int $total
      * @return void
@@ -200,9 +160,8 @@ class UpdateSessionsExpirationCommand extends BaseCommand
 
     /**
      * @param Builder|IdentityProxy $builder
-     * @return Builder
      */
-    private function queryActiveAndNoSessions(Builder|IdentityProxy $builder): Builder
+    private function queryActiveAndNoSessions(Builder|IdentityProxy $builder): Builder|IdentityProxy
     {
         $builder->where('state', IdentityProxy::STATE_ACTIVE);
         $builder->whereDoesntHave('sessions');

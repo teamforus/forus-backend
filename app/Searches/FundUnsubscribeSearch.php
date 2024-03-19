@@ -12,10 +12,7 @@ use Illuminate\Support\Carbon;
 
 class FundUnsubscribeSearch extends BaseSearch
 {
-    /**
-     * @return Builder|ProductCategory
-     */
-    public function query(): ?Builder
+    public function query(): Builder|null
     {
         /** @var Builder|Relation|FundProviderUnsubscribe $query */
         $query = parent::getBuilder();
@@ -52,6 +49,8 @@ class FundUnsubscribeSearch extends BaseSearch
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{q: 'nullable|string|max:100', fund_id: 'nullable|exists:funds,id', from: 'nullable|date:Y-m-d', to: 'nullable|date:Y-m-d', state: string, per_page: string}
      */
     public static function rules(BaseFormRequest $request = null): array
     {

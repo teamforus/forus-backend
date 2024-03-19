@@ -9,25 +9,16 @@ use Illuminate\Support\Facades\Config;
 
 class ExportBIConnectionRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return UnauthorizedResponse|bool
-     */
-    public function authorize(): UnauthorizedResponse|bool
-    {
-        if (!BIConnection::getBIConnectionFromRequest($this)) {
-            return new UnauthorizedResponse();
-        }
 
-        return true;
-    }
 
     /**
      * Get the validation rules that apply to the request.
      *
      * @return array
+     *
      * @throws \App\Exceptions\AuthorizationJsonException
+     *
+     * @psalm-return array<never, never>
      */
     public function rules(): array
     {

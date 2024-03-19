@@ -21,8 +21,11 @@ class FundCriterionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (array|bool|mixed|null)[]
+     *
+     * @psalm-return array{external_validators: array<TKey|array-key, mixed>, record_type: array{options: array,...}, is_valid: bool|null, has_record: bool|null,...}
      */
     public function toArray($request): array
     {
@@ -60,7 +63,7 @@ class FundCriterionResource extends BaseJsonResource
      * @param Identity|null $identity
      * @return bool|null
      */
-    private function isValid($request, Fund $fund, ?Identity $identity): ?bool
+    private function isValid(\Illuminate\Http\Request $request, Fund $fund, ?Identity $identity): ?bool
     {
         $checkCriteria = $request->get('check_criteria', false);
 
@@ -74,9 +77,8 @@ class FundCriterionResource extends BaseJsonResource
     /**
      * @param Fund $fund
      * @param Identity|null $identity
-     * @return bool|null
      */
-    private function hasTrustedRecord(Fund $fund, ?Identity $identity): ?bool
+    private function hasTrustedRecord(Fund $fund, ?Identity $identity): bool
     {
         return $identity && !empty($fund->getTrustedRecordOfType(
             $identity->address,

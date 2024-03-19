@@ -108,10 +108,11 @@ class FundProviderUnsubscribe extends BaseModel
     }
 
     /**
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
+     *
      * @noinspection PhpUnused
      */
-    public function getStateLocaleAttribute(): string
+    public function getStateLocaleAttribute(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans("fund-unsubscribes.states." . $this->state);
     }

@@ -11,17 +11,19 @@ class ProductReservationRejectedMail extends ImplementationMail
     protected string $notificationTemplateKey = 'notifications_identities.product_reservation_rejected';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
      */
-    public function build(): Mailable
+    public function build(): Mailable|null
     {
         return $this->buildNotificationTemplatedMail();
     }
 
     /**
      * @param array $data
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{webshop_link: string, webshop_button: string}
      */
     protected function getMailExtraData(array $data): array
     {

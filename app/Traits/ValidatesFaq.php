@@ -7,7 +7,9 @@ use Illuminate\Validation\Rule;
 trait ValidatesFaq
 {
     /**
-     * @return string[]
+     * @return ((\Illuminate\Validation\Rules\Exists|\Illuminate\Validation\Rules\In|string)[]|string)[]
+     *
+     * @psalm-return array{faq: 'nullable|array', 'faq.*': 'required|array', 'faq.*.title': 'required|string|max:200', 'faq.*.description': 'required|string|max:5000', 'faq.*.id'?: list{'nullable', \Illuminate\Validation\Rules\Exists, \Illuminate\Validation\Rules\In}}
      */
     protected function faqRules(?array $allowedIds = null): array
     {
@@ -26,7 +28,9 @@ trait ValidatesFaq
     }
 
     /**
-     * @return array
+     * @return (array|string)[]
+     *
+     * @psalm-return array<array|string>
      */
     protected function getFaqAttributes(): array
     {

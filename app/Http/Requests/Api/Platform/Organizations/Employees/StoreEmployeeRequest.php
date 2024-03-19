@@ -9,7 +9,9 @@ class StoreEmployeeRequest extends BaseEmployeeRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\NotIn|mixed|string)[]|mixed|string)[]
+     *
+     * @psalm-return array{email: array{0: 'required'|mixed, 1: \Illuminate\Validation\Rules\NotIn|mixed,...}|mixed, target: 'nullable|alpha_dash'|mixed,...}
      */
     public function rules(): array
     {
@@ -29,7 +31,9 @@ class StoreEmployeeRequest extends BaseEmployeeRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Contracts\Translation\Translator|array|null|string)[]
+     *
+     * @psalm-return array{'email.not_in': \Illuminate\Contracts\Translation\Translator|array|null|string}
      */
     public function messages(): array
     {

@@ -25,16 +25,6 @@ class Saml2User
     }
 
     /**
-     * Get the attributes retrieved from assertion processed this request
-     *
-     * @return array
-     */
-    public function getAttributes(): array
-    {
-        return $this->auth->getAttributes();
-    }
-
-    /**
      * Get user's name ID.
      *
      * @return string|null

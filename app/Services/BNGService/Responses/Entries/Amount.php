@@ -35,6 +35,8 @@ class Amount
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{currency: string, amount: string}
      */
     public function toArray(): array
     {

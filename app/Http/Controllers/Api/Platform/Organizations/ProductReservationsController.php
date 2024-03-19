@@ -96,9 +96,13 @@ class ProductReservationsController extends Controller
      *
      * @param StoreProductReservationBatchRequest $request
      * @param Organization $organization
-     * @return array
+     *
+     * @return (AnonymousResourceCollection|array)[]
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Throwable
+     *
+     * @psalm-return array{reserved: AnonymousResourceCollection, errors: array}
      */
     public function storeBatch(
         StoreProductReservationBatchRequest $request,
@@ -316,7 +320,7 @@ class ProductReservationsController extends Controller
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param ProductReservation $productReservation
-     * @return ProductReservationResource|JsonResponse
+     *
      * @throws \Throwable
      */
     public function refundExtraPayment(

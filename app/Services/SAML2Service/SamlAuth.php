@@ -19,7 +19,7 @@ class SamlAuth extends Auth
      * @return self
      * @throws Saml2Exception
      */
-    public static function make($config): self
+    public static function make(array $config): self
     {
         try {
             return new self($config);
@@ -62,31 +62,6 @@ class SamlAuth extends Auth
             return Settings::fromBase(parent::getSettings());
         } catch (Throwable $e) {
             throw new InvalidConfigsException($e);
-        }
-    }
-
-    /**
-     * Get metadata about the local SP. Use this to configure your Saml2 IdP.
-     *
-     * @return string
-     * @throws Saml2Exception
-     */
-    public function getMetadata(): string
-    {
-        try {
-            $settings = $this->getSettings();
-            $metadata = $settings->getSPMetadata();
-            $errors = $settings->validateMetadata($metadata);
-
-            if (!count($errors)) {
-                return $metadata;
-            }
-
-            throw new InvalidMetadataException('Invalid SP metadata: ' . implode(', ', $errors));
-        } catch (Saml2Exception $e) {
-            throw $e;
-        } catch (Throwable $e) {
-            throw new Saml2Exception($e);
         }
     }
 }

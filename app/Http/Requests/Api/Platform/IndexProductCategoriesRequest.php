@@ -7,20 +7,14 @@ use App\Models\Fund;
 
 class IndexProductCategoriesRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (string|string[])[]
+     *
+     * @psalm-return array{q: 'nullable|string', used: 'boolean', used_type: string, parent_id: array<string>, per_page: string}
      */
     public function rules(): array
     {
@@ -35,6 +29,8 @@ class IndexProductCategoriesRequest extends BaseFormRequest
 
     /**
      * @return string[]
+     *
+     * @psalm-return list{'nullable', ''|'exists:product_categories,id'}
      */
     protected function parentIdRule(): array
     {

@@ -33,11 +33,11 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class FundsController extends Controller
 {
     /**
-     *  Display a listing of the resource.
+     * Display a listing of the resource.
      *
      * @param IndexFundRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(

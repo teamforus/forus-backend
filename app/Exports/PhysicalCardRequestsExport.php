@@ -31,12 +31,15 @@ class PhysicalCardRequestsExport implements FromCollection, WithHeadings
     /**
      * @param null $fund_id
      * @param null $date
+     *
      * @return Builder[]|\Illuminate\Database\Eloquent\Collection
+     *
+     * @psalm-return \Illuminate\Database\Eloquent\Collection<array-key, \Illuminate\Database\Eloquent\Model>|array<Builder>
      */
     private function getRequests(
         $fund_id = null,
         $date = null
-    ) {
+    ): array|\Illuminate\Database\Eloquent\Collection {
         /** @var Builder $query */
         $query = PhysicalCardRequest::query();
 

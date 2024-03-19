@@ -34,18 +34,6 @@ class NotificationService
     protected Mailer $mailer;
 
     /**
-     * NotificationService constructor.
-     *
-     * @param Mailer $mailer
-     * @param INotificationRepo $notificationRepo
-     */
-    public function __construct(Mailer $mailer, INotificationRepo $notificationRepo)
-    {
-        $this->mailer = $mailer;
-        $this->notificationRepo = $notificationRepo;
-    }
-
-    /**
      * Add notification token for identity
      *
      * @param string $identity_address
@@ -223,9 +211,8 @@ class NotificationService
      *
      * @param string $email
      * @param BaseDigestMail $mailable
-     * @return bool|null
      */
-    public function sendDigest(string $email, BaseDigestMail $mailable): ?bool
+    public function sendDigest(string $email, BaseDigestMail $mailable): bool
     {
         return $this->sendMail($email, $mailable);
     }
@@ -237,7 +224,7 @@ class NotificationService
      * @param Mailable $mailable
      * @return bool
      */
-    private function sendMail($email, Mailable $mailable): bool
+    private function sendMail(string $email, Mailable $mailable): bool
     {
         if (!Config::get('mail.disable', false)) {
             try {

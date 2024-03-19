@@ -11,20 +11,14 @@ use App\Rules\BsnRule;
  */
 class StoreFundRequestRecordRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((BsnRule|string)[]|string)[]
+     *
+     * @psalm-return array{value: list{'required', BsnRule}, record_type_key: 'required|in:'|'required|in:partner_bsn'}
      */
     public function rules(): array
     {

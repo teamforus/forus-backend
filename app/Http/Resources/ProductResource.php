@@ -68,7 +68,10 @@ class ProductResource extends BaseJsonResource
 
     /**
      * @param Product $product
-     * @return array
+     *
+     * @return (MediaResource|OrganizationBasicResource|mixed|null|string)[]
+     *
+     * @psalm-return array{photo: MediaResource, price: null|string, price_locale: string, organization: OrganizationBasicResource,...}
      */
     protected function baseFields(Product $product): array
     {
@@ -85,7 +88,10 @@ class ProductResource extends BaseJsonResource
 
     /**
      * @param Product $product
-     * @return array
+     *
+     * @return (null|string)[]
+     *
+     * @psalm-return array{price_type: string, price_discount: null|string, price_discount_locale: string, price_min: string, price_min_locale: string, price_max: string, price_max_locale: string, lowest_price: null|string, lowest_price_locale: null|string}
      */
     protected function priceFields(Product $product): array {
         $price_min = $this->getProductSubsidyPrice($product, 'max');
@@ -105,10 +111,7 @@ class ProductResource extends BaseJsonResource
         ];
     }
 
-    /**
-     * @return Builder
-     */
-    protected function fundsQuery(): Builder
+    protected function fundsQuery(): Builder|Fund
     {
         return Fund::query();
     }
@@ -116,9 +119,12 @@ class ProductResource extends BaseJsonResource
     /**
      * @param BaseFormRequest $request
      * @param Product $product
-     * @return Collection
+     *
+     * @return Collection|\Illuminate\Database\Eloquent\Collection
+     *
+     * @psalm-return Collection<int, array>|\Illuminate\Database\Eloquent\Collection<int, array>
      */
-    private function getProductFunds(BaseFormRequest $request, Product $product): Collection
+    private function getProductFunds(BaseFormRequest $request, Product $product): \Illuminate\Database\Eloquent\Collection|Collection
     {
         $fundsQuery = FundQuery::whereProductsAreApprovedAndActiveFilter($this->fundsQuery(), $product);
         $fundsQuery->with([
@@ -173,7 +179,10 @@ class ProductResource extends BaseJsonResource
 
     /**
      * @param Product $product
-     * @return array
+     *
+     * @return ((\Illuminate\Http\Resources\Json\AnonymousResourceCollection|array|mixed|string)[]|bool|string)[]
+     *
+     * @psalm-return array{reservation_phone?: string, reservation_fields?: bool, reservation_address?: string, reservation_birth_date?: string, reservation?: array{phone: mixed|string, address: mixed|string, birth_date: mixed|string, fields: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|array<never, never>}}
      */
     private function productReservationFieldSettings(Product $product): array
     {

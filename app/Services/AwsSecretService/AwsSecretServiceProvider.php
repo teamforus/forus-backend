@@ -54,7 +54,6 @@ class AwsSecretServiceProvider extends ServiceProvider
                 $secretCollection = base64_decode($secretCollection['SecretBinary'], true);
             }
 
-            $secretCollection = json_decode($secretCollection, true);
 
             foreach ($collection as $secretKey => $configKey) {
                 Config::set($configKey, $secretCollection[$secretKey]);

@@ -45,8 +45,10 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
 
     /**
      * @param $file
+     *
+     * @psalm-param 'services-with-ids'|'taxonomy-with-ids' $file
      */
-    private static function seedFile($file): void
+    private static function seedFile(string $file): void
     {
         $taxonomies = self::loadTaxonomies($file, [
             'en' => 'en-US',
@@ -95,23 +97,10 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
     }
 
     /**
-     * @param $list
-     */
-    public static function migrateProducts($list): void
-    {
-        foreach ($list as $oldId => $newId) {
-            Product::withTrashed()->where('product_category_id', $oldId)->update([
-                'product_category_id' => $newId
-            ]);
-        }
-    }
-
-    /**
      * @param array $rows
      * @param int $depth
-     * @return array|bool
      */
-    public static function filterByDepth(array $rows, int $depth = 1): bool|array
+    public static function filterByDepth(array $rows, int $depth = 1): array|false|array
     {
         return array_filter($rows, static function ($row) use ($depth) {
             return $row['depth'] === $depth;

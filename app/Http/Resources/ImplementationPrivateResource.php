@@ -15,9 +15,14 @@ class ImplementationPrivateResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return ?array
+     *
+     * @return (MediaResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|array|int|mixed|null|string)[]|null
+     *
      * @throws CommonMarkException
+     *
      * @property Implementation $resource
+     *
+     * @psalm-return array{pre_check_url: mixed, communication_type: 'formal'|'informal'|mixed, overlay_opacity: int<0, 100>|mixed, banner: MediaResource|mixed, pre_check_banner: MediaResource|mixed, announcement: array|mixed|null, pages: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed, page_types: list{array{key: string, type: 'element'|'extra'|'static', blocks: bool, faq: bool, description_position_configurable: bool, webshop_url: string}, array{key: string, type: 'element'|'extra'|'static', blocks: bool, faq: bool, description_position_configurable: bool, webshop_url: string}, array{key: string, type: 'element'|'extra'|'static', blocks: bool, faq: bool, description_position_configurable: bool, webshop_url: string}, array{key: string, type: 'element'|'extra'|'static', blocks: bool, faq: bool, description_position_configurable: bool, webshop_url: string}, array{key: string, type: 'element'|'extra'|'static', blocks: bool, faq: bool, description_position_configurable: bool, webshop_url: string}, array{key: string, type: 'element'|'extra'|'static', blocks: bool, faq: bool, description_position_configurable: bool, webshop_url: string}, array{key: string, type: 'element'|'extra'|'static', blocks: bool, faq: bool, description_position_configurable: bool, webshop_url: string}, array{key: string, type: 'element'|'extra'|'static', blocks: bool, faq: bool, description_position_configurable: bool, webshop_url: string}, array{key: string, type: 'element'|'extra'|'static', blocks: bool, faq: bool, description_position_configurable: bool, webshop_url: string}, array{key: string, type: 'element'|'extra'|'static', blocks: bool, faq: bool, description_position_configurable: bool, webshop_url: string}, array{key: string, type: 'element'|'extra'|'static', blocks: bool, faq: bool, description_position_configurable: bool, webshop_url: string}, array{key: string, type: 'element'|'extra'|'static', blocks: bool, faq: bool, description_position_configurable: bool, webshop_url: string}}|mixed,...}|null
      */
     public function toArray($request): ?array
     {
@@ -86,8 +91,12 @@ class ImplementationPrivateResource extends BaseJsonResource
     /**
      * @param BaseFormRequest $request
      * @param Implementation $implementation
-     * @return array
+     *
+     * @return (MediaCompactResource|string)[]
+     *
      * @throws CommonMarkException
+     *
+     * @psalm-return array{email_logo?: MediaCompactResource, email_logo_default?: MediaCompactResource, email_color?: string, email_color_default?: string, email_signature?: string, email_signature_html?: string, email_signature_default?: string}
      */
     protected function managerCMSDetails(
         BaseFormRequest $request,

@@ -61,7 +61,9 @@ class DumpConfigCommand extends BaseCommand
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return list{'[1] Update all organizations owner.', '[2] Update implementations frontend urls.', '[3] Generate and replace all images.', '[4] Exit'}
      */
     protected function askActionList(): array
     {
@@ -74,7 +76,9 @@ class DumpConfigCommand extends BaseCommand
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return list{'[1] Webshop.', '[2] Sponsor dashboard.', '[3] Provider dashboard.', '[4] Validator dashboard.', '[5] Exit'}
      */
     protected function askFrontendTypeList(): array
     {

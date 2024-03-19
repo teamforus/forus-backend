@@ -12,22 +12,14 @@ use App\Scopes\Builders\TrashedQuery;
  */
 class IndexProductReservationsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return
-            $this->isAuthenticated() &&
-            $this->organization->identityCan($this->identity(), 'scan_vouchers');
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{q: 'nullable|string', to: 'date|date_format:Y-m-d', from: 'date|date_format:Y-m-d', state: string, fund_id: 'nullable|exists:funds,id', per_page: 'nullable|numeric|max:100', product_id: string, organization_id: 'nullable|exists:organizations,id', archived: 'nullable|boolean'}
      */
     public function rules(): array
     {

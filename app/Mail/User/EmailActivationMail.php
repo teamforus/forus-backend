@@ -30,7 +30,10 @@ class EmailActivationMail extends ImplementationMail
 
     /**
      * @param array $data
-     * @return array
+     *
+     * @return (mixed|string)[]
+     *
+     * @psalm-return array{link: string, button: string, platform: ''|mixed}
      */
     protected function getMailExtraData(array $data): array
     {

@@ -23,7 +23,10 @@ class FundProviderUnsubscribeResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param $request
-     * @return array
+     *
+     * @return (FundProviderResource|FundSmallResource|bool|int|mixed|null|string)[]
+     *
+     * @psalm-return array{fund: FundSmallResource|mixed, is_expired: bool|mixed, can_cancel: bool|mixed, fund_provider: FundProviderResource|mixed, unsubscribe_at: mixed|null|string, unsubscribe_at_locale: mixed|null|string, unsubscribe_days_left: int|mixed,...}
      */
     public function toArray($request): array
     {

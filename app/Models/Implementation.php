@@ -449,9 +449,9 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return Implementation
+     * @return null|self
      */
-    public static function general(): Implementation
+    public static function general(): self|null
     {
         return self::findAndMemo(self::KEY_GENERAL);
     }
@@ -465,10 +465,11 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @param $key
+     * @param null|string $key
+     *
      * @return Implementation|null
      */
-    public static function byKey($key): ?Implementation
+    public static function byKey(string|null $key): ?Implementation
     {
         return self::where(compact('key'))->first();
     }
@@ -491,10 +492,11 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @param $key
+     * @param array|null|string $key
+     *
      * @return bool
      */
-    public static function isValidKey($key): bool
+    public static function isValidKey(array|string|null $key): bool
     {
         return self::implementationKeysAvailable()->search($key) !== false;
     }
@@ -525,17 +527,21 @@ class Implementation extends BaseModel
 
     /**
      * @param ...$states
+     * @param string|string[] $states
+     *
      * @return Builder
+     *
+     * @psalm-param 'active'|list{'closed', 'paused', 'active'} $states
      */
-    public static function queryFundsByState(...$states): Builder
+    public static function queryFundsByState(array|string ...$states): Builder
     {
         return self::queryFunds()->whereIn('state', is_array($states[0] ?? null) ? $states[0] : $states);
     }
 
     /**
-     * @return Builder|Fund
+     * @return Builder|Fund|\Illuminate\Database\Eloquent\Relations\Relation
      */
-    public static function queryFunds(): Builder|Fund
+    public static function queryFunds(): Builder|\Illuminate\Database\Eloquent\Relations\Relation|Fund|Fund
     {
         $query = FundQuery::whereIsConfiguredByForus(Fund::query());
 
@@ -547,9 +553,11 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return Collection|Fund[]
+     * @return Builder[]|\Illuminate\Database\Eloquent\Collection
+     *
+     * @psalm-return \Illuminate\Database\Eloquent\Collection<array-key, \Illuminate\Database\Eloquent\Model>|array<Builder>
      */
-    public static function activeFunds(): Collection|Arrayable
+    public static function activeFunds(): array|\Illuminate\Database\Eloquent\Collection|Arrayable
     {
         return self::activeFundsQuery()->get();
     }
@@ -595,10 +603,11 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return DigIdRepo|null
+     * @return DigIdCgiRepo|DigIdSamlRepo|null
+     *
      * @throws DigIdException
      */
-    public function getDigid(): ?DigIdRepo
+    public function getDigid(): DigIdSamlRepo|DigIdCgiRepo|null
     {
         return match ($this->digid_connection_type) {
             DigIdSession::CONNECTION_TYPE_SAML => (new DigIdSamlRepo($this->getDigidSamlContext())),
@@ -688,6 +697,8 @@ class Implementation extends BaseModel
 
     /**
      * @return string
+     *
+     * @psalm-return 'formal'|'informal'
      */
     public function communicationType(): string
     {
@@ -785,7 +796,9 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return array
+     * @return ((bool|int)[][]|float|null)[][]
+     *
+     * @psalm-return array<array{aspect_ratio: float|null, size: array<list{int, int, bool}>}>
      */
     private static function getPlatformMediaConfig(): array
     {
@@ -912,10 +925,7 @@ class Implementation extends BaseModel
         return new EmailFrom($this);
     }
 
-    /**
-     * @return ?string
-     */
-    private function getBannerTextColor(): ?string
+    private function getBannerTextColor(): string
     {
         if ($this->header_text_color == 'auto') {
             return $this->banner ? ($this->banner->is_dark ? 'bright' : 'dark') : 'dark';
@@ -991,7 +1001,9 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return array
+     * @return (MediaResource|mixed)[]
+     *
+     * @psalm-return array{pre_check_banner: MediaResource|mixed,...}
      */
     private function getPreCheckFields(): array
     {

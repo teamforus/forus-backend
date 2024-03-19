@@ -47,30 +47,9 @@ class MigratePhysicalCardsCommand extends BaseCommand
     public const SOURCE_IDENTITY = 'voucher_identity';
 
     /**
-     * Execute the console command.
+     * @return string[]
      *
-     * @return void
-     */
-    public function handle(): void
-    {
-        $this->printHeader("Physical cards migration", 2);
-        $this->askMigrationSource();
-        $fund = $this->selectFund();
-
-        $this->printHeader("$fund->name selected!");
-        $this->printList($this->buildPhysicalCardStats($fund));
-
-        if (!$this->buildPhysicalCardsQuery($fund)->exists()) {
-            $this->printText($this->green("\nNo eligible physical cards found!"));
-            $this->exit();
-        }
-
-        $this->printText();
-        $this->askNextAction($fund);
-    }
-
-    /**
-     * @return array
+     * @psalm-return list{'[1] Use vouchers.identity_address column to find the new voucher.', '[2] Use voucher_relations table to find the new voucher.', '[3] Exit'}
      */
     protected function askMigrationSourceList(): array
     {
@@ -103,7 +82,10 @@ class MigratePhysicalCardsCommand extends BaseCommand
 
     /**
      * @param Fund $fund
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return list{string, string, string, string, string, '[6] Exit'}
      */
     protected function askNextActionList(Fund $fund): array
     {
@@ -144,9 +126,6 @@ class MigratePhysicalCardsCommand extends BaseCommand
         $this->askNextAction($fund);
     }
 
-    /**
-     * @return Builder|PhysicalCard
-     */
     protected function buildPhysicalCardsQuery(Fund $fund): Builder
     {
         $builder = PhysicalCard::where(function(Builder $builder) use ($fund) {
@@ -201,9 +180,6 @@ class MigratePhysicalCardsCommand extends BaseCommand
         })->select('bsn');
     }
 
-    /**
-     * @return Builder|PhysicalCard
-     */
     protected function buildEligiblePhysicalCardsQuery(Fund $fund): Builder
     {
         return $this->buildPhysicalCardsQuery($fund)->where(function(Builder $builder) use ($fund) {
@@ -278,7 +254,10 @@ class MigratePhysicalCardsCommand extends BaseCommand
 
     /**
      * @param Fund $fund
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return list{string, string, string}
      */
     protected function buildPhysicalCardStats(Fund $fund): array
     {
@@ -289,9 +268,6 @@ class MigratePhysicalCardsCommand extends BaseCommand
         ];
     }
 
-    /**
-     * @return Fund[]|Collection
-     */
     protected function printFundsList(): Collection
     {
         $funds = Fund::whereHas('fund_config', function(Builder $builder) {
@@ -376,9 +352,12 @@ class MigratePhysicalCardsCommand extends BaseCommand
      * @param PhysicalCard $card
      * @param Fund $fund
      * @param bool $dryRun
-     * @return array|null
+     *
+     * @return (Collection|Voucher[]|null|string)[]|null
+     *
+     * @psalm-return array{error: null|string, vouchers: Collection<array-key, \Illuminate\Database\Eloquent\Model>|array<Voucher>}|null
      */
-    protected function migratePhysicalCard(PhysicalCard $card, Fund $fund, bool $dryRun = false): ?array
+    protected function migratePhysicalCard(PhysicalCard $card, Fund $fund, bool $dryRun = false): array|null
     {
         $cardSiblings = $this->getCardSiblings($card, $fund);
         $vouchers = $this->getCardReplacementVouchers($card, $fund);
@@ -454,7 +433,6 @@ class MigratePhysicalCardsCommand extends BaseCommand
     /**
      * @param PhysicalCard $card
      * @param Fund $fund
-     * @return Collection|Voucher[]
      */
     protected function getCardReplacementVouchers(PhysicalCard $card, Fund $fund): Collection
     {
@@ -506,9 +484,10 @@ class MigratePhysicalCardsCommand extends BaseCommand
     }
 
     /**
-     * @param Collection|PhysicalCard[] $cards
+     * @param Collection $cards
      * @param string $header
      * @param bool $validate
+     *
      * @return void
      */
     protected function printCards(

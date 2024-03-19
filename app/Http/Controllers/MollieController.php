@@ -16,9 +16,10 @@ class MollieController extends Controller
 {
     /**
      * @param BaseFormRequest $request
-     * @return RedirectResponse
+     *
+     * @return RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function processCallback(BaseFormRequest $request): RedirectResponse
+    public function processCallback(BaseFormRequest $request): \Illuminate\Routing\Redirector|RedirectResponse
     {
         if (!$request->get('code') || !$request->get('state')) {
             return redirect(Implementation::general()->urlProviderDashboard());

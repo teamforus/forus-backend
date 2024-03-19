@@ -27,7 +27,10 @@ class ProviderSubsidyProductResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request|any $request
-     * @return array
+     *
+     * @return (MediaResource|OrganizationBasicResource|ProductCategoryResource|mixed|null|string)[]
+     *
+     * @psalm-return array{price: string, price_locale: string, price_user: string, price_user_locale: string, sponsor_subsidy: string, sponsor_subsidy_locale: string, expire_at: string, expire_at_locale: null|string, photo: MediaResource, sponsor: OrganizationBasicResource, organization: OrganizationBasicResource, product_category: ProductCategoryResource,...}
      */
     public function toArray($request): array
     {

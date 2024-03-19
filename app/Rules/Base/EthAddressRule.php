@@ -19,11 +19,14 @@ class EthAddressRule implements Rule
     /**
      * Determine if the validation rule passes.
      *
-     * @param  string  $attribute
-     * @param  mixed  $value
-     * @return bool
+     * @param string  $attribute
+     * @param mixed  $value
+     *
+     * @return false|int
+     *
+     * @psalm-return 0|1|false
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): int|false
     {
         return preg_match('/^(0x)?[0-9a-f]{40}$/i', $value);
     }
@@ -31,9 +34,9 @@ class EthAddressRule implements Rule
     /**
      * Get the validation error message.
      *
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
      */
-    public function message()
+    public function message(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans('validation.eth_address');
     }

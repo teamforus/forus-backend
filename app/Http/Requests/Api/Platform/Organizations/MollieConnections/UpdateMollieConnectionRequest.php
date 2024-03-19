@@ -16,7 +16,9 @@ class UpdateMollieConnectionRequest extends BaseFormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (\Illuminate\Validation\Rules\Exists|string)[][]
+     *
+     * @psalm-return array{mollie_connection_profile_id: list{'required', \Illuminate\Validation\Rules\Exists}}
      */
     public function rules(): array
     {

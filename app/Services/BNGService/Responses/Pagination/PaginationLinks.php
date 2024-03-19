@@ -29,35 +29,8 @@ class PaginationLinks extends Value
      * @return PaginationLink|null
      * @noinspection PhpUnused
      */
-    public function getFirst(): ?PaginationLink
-    {
-        return $this->data['first'] ? new PaginationLink(new ResponseData($this->data['first'])) : null;
-    }
-
-    /**
-     * @return PaginationLink|null
-     * @noinspection PhpUnused
-     */
     public function getLast(): ?PaginationLink
     {
         return $this->data['last'] ? new PaginationLink(new ResponseData($this->data['last'])) : null;
-    }
-
-    /**
-     * @return PaginationLink|null
-     * @noinspection PhpUnused
-     */
-    public function getNext(): ?PaginationLink
-    {
-        return $this->data['next'] ? new PaginationLink(new ResponseData($this->data['next'])) : null;
-    }
-
-    /**
-     * @return PaginationLink|null
-     * @noinspection PhpUnused
-     */
-    public function getPrevious(): ?PaginationLink
-    {
-        return $this->data['previous'] ? new PaginationLink(new ResponseData($this->data['previous'])) : null;
     }
 }

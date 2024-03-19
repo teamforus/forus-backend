@@ -210,6 +210,8 @@ class ProductReservation extends BaseModel
 
     /**
      * @throws \Exception
+     *
+     * @psalm-return int<11111111, 99999999>
      */
     public static function makeCode(): int
     {
@@ -304,10 +306,11 @@ class ProductReservation extends BaseModel
     }
 
     /**
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
+     *
      * @noinspection PhpUnused
      */
-    public function getStateLocaleAttribute(): string
+    public function getStateLocaleAttribute(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans('states/product_reservations.' . $this->state);
     }
@@ -531,10 +534,7 @@ class ProductReservation extends BaseModel
         return $this->state === self::STATE_REJECTED;
     }
 
-    /**
-     * @return bool
-     */
-    public function isCancelableByProvider(): bool
+    public function isCancelableByProvider(): bool|null
     {
         if ($this->isCancelableByRequester()) {
             return true;
@@ -582,10 +582,11 @@ class ProductReservation extends BaseModel
     }
 
     /**
-     * @return bool|null
+     * @return true
+     *
      * @throws \Throwable
      */
-    public function cancelByClient(): ?bool
+    public function cancelByClient(): bool
     {
         DB::transaction(function () {
             if ($this->product_voucher) {
@@ -605,7 +606,9 @@ class ProductReservation extends BaseModel
 
     /**
      * @param string $state
-     * @return bool
+     *
+     * @return true
+     *
      * @throws \Throwable
      */
     public function cancelByState(string $state): bool
@@ -627,10 +630,10 @@ class ProductReservation extends BaseModel
     /**
      * @param string|null $identity_address
      * @param string|null $note
-     * @return VoucherTransaction
+     *
      * @throws \Throwable
      */
-    public function acceptByApp(?string $identity_address, ?string $note = null): VoucherTransaction
+    public function acceptByApp(?string $identity_address, ?string $note = null): VoucherTransaction|null
     {
         $voucher = $this->product_voucher;
         $needsReview = $voucher->needsTransactionReview();
@@ -648,7 +651,10 @@ class ProductReservation extends BaseModel
     /**
      * @param Employee|null $employee
      * @param array $extraModels
-     * @return array
+     *
+     * @return (Employee|Organization|mixed|null|static)[]
+     *
+     * @psalm-return array{provider: Organization|mixed, employee: Employee|mixed|null, product_reservation: mixed|static,...}
      */
     protected function getLogModels(?Employee $employee = null, array $extraModels = []): array
     {
@@ -743,8 +749,10 @@ class ProductReservation extends BaseModel
 
     /**
      * @return int|null
+     *
+     * @psalm-return int<1, max>|null
      */
-    public function expiresIn(): ?int
+    public function expiresIn(): int|null
     {
         if ($this->created_at && $this->isWaiting()) {
             $timeOffset = Config::get('forus.reservations.extra_payment_waiting_time');

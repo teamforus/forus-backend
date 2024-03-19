@@ -8,21 +8,16 @@ use Illuminate\Validation\Rule;
 
 class IdentityStoreRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\Unique|mixed|string)[]|string)[]
+     *
      * @throws \App\Exceptions\AuthorizationJsonException
+     *
+     * @psalm-return array{email: array{0: 'required'|mixed, 1: \Illuminate\Validation\Rules\Unique|mixed,...}, target: 'nullable|alpha_dash'}
      */
     public function rules(): array
     {

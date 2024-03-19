@@ -20,13 +20,4 @@ class UpdateSystemNotificationsCommand extends Command
      * @var string
      */
     protected $description = 'Update system notification list.';
-
-    /**
-     * Execute the console command.
-     */
-    public function handle(): void
-    {
-        (new SystemNotificationsTableSeeder())->run();
-        echo "System notifications updated!\n";
-    }
 }

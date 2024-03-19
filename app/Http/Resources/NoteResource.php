@@ -14,7 +14,10 @@ class NoteResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param Request $request
-     * @return array
+     *
+     * @return ((int|null|string)[]|mixed|null)[]
+     *
+     * @psalm-return array{employee: array{id: int, email: null|string, identity_address: string}|mixed|null,...}
      */
     public function toArray($request): array
     {

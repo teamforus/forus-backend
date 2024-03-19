@@ -64,8 +64,12 @@ class VoucherResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
+     *
+     * @return ((Voucher|mixed)[]|\Illuminate\Support\Collection|false|float|int|mixed|null|string)[]
+     *
      * @throws \Exception
+     *
+     * @psalm-return array{deactivated_at: mixed|null|string, deactivated_at_locale: mixed|null|string, history: \Illuminate\Support\Collection|mixed, expire_at: array{date: string, timeZone: string}|mixed, expire_at_locale: mixed|null|string, last_active_day: mixed|string, last_active_day_locale: mixed|null|string, last_transaction_at: mixed|string, last_transaction_at_locale: mixed|null|string, address: mixed|null|string, address_printable: mixed|null|string, timestamp: float|int|mixed|null|string, fund: array|mixed, parent: array{created_at: null|string,...}|mixed|null, physical_card: false|mixed, product_vouchers: \Illuminate\Support\Collection|array<Voucher>|mixed|null, query_product: array|mixed|null,...}
      */
     public function toArray($request): array
     {
@@ -109,7 +113,10 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Voucher $voucher
-     * @return array
+     *
+     * @return (AnonymousResourceCollection|null|string)[]
+     *
+     * @psalm-return array{records?: AnonymousResourceCollection, records_title?: null|string}
      */
     protected function getRecords(Voucher $voucher): array
     {
@@ -127,18 +134,18 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Voucher $voucher
-     * @return Carbon|null
      */
-    protected function getDeactivationDate(Voucher $voucher): ?Carbon
+    protected function getDeactivationDate(Voucher $voucher): \Illuminate\Support\Carbon|null
     {
         return $voucher->last_deactivation_log?->created_at;
     }
 
     /**
      * @param Voucher $voucher
-     * @return \Illuminate\Support\Collection
+     *
+     * @psalm-return Collection<int, array{event_locale: null|string, created_at: string, created_at_locale: null|string,...}>|\Illuminate\Support\Collection<int, array{event_locale: null|string, created_at: string, created_at_locale: null|string,...}>
      */
-    protected function getStateHistory(Voucher $voucher): \Illuminate\Support\Collection
+    protected function getStateHistory(Voucher $voucher): Collection|\Illuminate\Support\Collection
     {
         $logs = $voucher->requesterHistoryLogs();
 
@@ -153,7 +160,10 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Voucher $voucher
-     * @return array
+     *
+     * @return ((MediaResource|OrganizationBasicWithPrivateResource|\App\Models\ProductCategory|mixed|null|string)[]|bool|null|string)[]
+     *
+     * @psalm-return array{used: bool|null, amount: string, amount_locale: string, product: array{price_locale: string, product_category: \App\Models\ProductCategory, expire_at: string, expire_at_locale: null|string, photo: MediaResource, organization: OrganizationBasicWithPrivateResource,...}|null}
      */
     protected function getBaseFields(Voucher $voucher): array
     {
@@ -190,7 +200,10 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Voucher $voucher
-     * @return array
+     *
+     * @return AnonymousResourceCollection[]
+     *
+     * @psalm-return array{transactions: AnonymousResourceCollection, offices: AnonymousResourceCollection}
      */
     protected function getOptionalFields(Voucher $voucher): array
     {
@@ -203,10 +216,14 @@ class VoucherResource extends BaseJsonResource
     /**
      * @param Voucher $voucher
      * @param int|null $product_id
-     * @return array|null
+     *
+     * @return (bool|int|null|string)[]|null
+     *
      * @throws \Exception
+     *
+     * @psalm-return array{reservable: bool, reservable_count: int|null, reservable_enabled: bool, reservable_expire_at: null|string, reservable_expire_at_locale: null|string}|null
      */
-    public function queryProduct(Voucher $voucher, ?int $product_id = null): ?array
+    public function queryProduct(Voucher $voucher, ?int $product_id = null): array|null
     {
         /** @var Product|null $product */
         $product = $product_id ? ProductSubQuery::appendReservationStats([
@@ -249,7 +266,10 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Fund $fund
-     * @return array
+     *
+     * @return (MediaCompactResource|OrganizationBasicWithPrivateResource|bool|mixed|null|string)[]
+     *
+     * @psalm-return array{url_webshop: mixed|null|string, logo: MediaCompactResource|mixed, start_date: mixed|string, start_date_locale: mixed|null|string, end_date: mixed|string, end_date_locale: mixed|null|string, organization: OrganizationBasicWithPrivateResource|mixed, allow_physical_cards: bool|mixed|null, allow_blocking_vouchers: bool|mixed|null,...}
      */
     protected function getFundResource(Fund $fund): array
     {
@@ -270,11 +290,12 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Collection|Voucher[]|null $product_vouchers
-     * @return Voucher[]|\Illuminate\Support\Collection|null
+     *
+     * @psalm-return Collection<int, array{address: mixed|null|string, amount: mixed|string, amount_locale: mixed|string, date: mixed|string, date_time: mixed|string, timestamp: float|int|mixed|string, product: array|mixed, product_reservation: array|mixed|null,...}>|\Illuminate\Support\Collection<int, array{address: mixed|null|string, amount: mixed|string, amount_locale: mixed|string, date: mixed|string, date_time: mixed|string, timestamp: float|int|mixed|string, product: array|mixed, product_reservation: array|mixed|null,...}>
      */
     protected function getProductVouchers(
         Collection|array|null $product_vouchers
-    ): \Illuminate\Support\Collection|array|null {
+    ): Collection|\Illuminate\Support\Collection|array|null {
         return $product_vouchers?->map(function (Voucher $product_voucher) {
             return array_merge($product_voucher->only([
                 'identity_address', 'fund_id', 'returnable',
@@ -296,7 +317,10 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Voucher $product_voucher
-     * @return array
+     *
+     * @return (mixed|string)[]
+     *
+     * @psalm-return array{price?: string,...}
      */
     protected static function getProductDetails(Voucher $product_voucher): array
     {

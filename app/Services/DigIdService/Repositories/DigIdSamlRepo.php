@@ -88,16 +88,6 @@ class DigIdSamlRepo extends DigIdRepo
     }
 
     /**
-     * @param Request $request
-     * @param string $session_secret
-     * @return bool
-     */
-    public function validateResolveResponse(Request $request, string $session_secret): bool
-    {
-        return $request->get('session_secret') !== $session_secret;
-    }
-
-    /**
      * @param array $replace
      * @return array
      */

@@ -29,9 +29,8 @@ class Locker
 
     /**
      * @param string $key
-     * @return Locker
      */
-    public static function make(string $key): Locker
+    public static function make(string $key): static
     {
         return new static($key);
     }
@@ -43,15 +42,6 @@ class Locker
     public function lock(): void
     {
         Cache::set($this->lockString, $this->lockValue, $this->lockTime);
-    }
-
-    /**
-     * @return void
-     * @noinspection PhpUnused
-     */
-    public function unlock(): void
-    {
-        Cache::forget($this->lockString);
     }
 
     /**

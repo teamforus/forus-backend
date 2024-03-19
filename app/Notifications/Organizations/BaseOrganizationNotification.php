@@ -58,8 +58,12 @@ abstract class BaseOrganizationNotification extends BaseNotification
 
     /**
      * @param Model $loggable
-     * @return array
+     *
+     * @return int[]
+     *
      * @throws \Exception
+     *
+     * @psalm-return array{organization_id: int}
      */
     public static function getMeta($loggable): array
     {

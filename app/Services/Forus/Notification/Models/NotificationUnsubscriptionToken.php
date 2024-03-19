@@ -47,9 +47,10 @@ class NotificationUnsubscriptionToken extends Model
      *
      * @param string $token
      * @param bool $onlyActive
-     * @return null|self|Model
+     *
+     * @return null|self
      */
-    public static function findByToken(string $token, bool $onlyActive = true): ?self
+    public static function findByToken(string $token, bool $onlyActive = true): self|null
     {
         $token = self::query()->where(compact('token'));
 

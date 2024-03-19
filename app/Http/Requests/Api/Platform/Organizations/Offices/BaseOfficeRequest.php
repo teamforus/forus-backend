@@ -10,15 +10,7 @@ use App\Http\Requests\BaseFormRequest;
  */
 abstract class BaseOfficeRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->isAuthenticated();
-    }
+
 
     /**
      * @return array|mixed
@@ -58,7 +50,9 @@ abstract class BaseOfficeRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return ((mixed|string)[]|string)[]
+     *
+     * @psalm-return array{name: '', phone: '', email: array{0: 'nullable'|mixed,...}, address: 'required', branch_name: 'nullable|string|min:3|max:100', branch_id: 'nullable|string|min:3|max:20', branch_number: 'nullable|digits:12', schedule: 'present|array', 'schedule.*': 'required|array', 'schedule.*.week_day': 'required|numeric:between:0,6', 'schedule.*.start_time': list{'required_with:schedule.*.end_time', 'date_format:H:i'}, 'schedule.*.end_time': list{'required_with:schedule.*.start_time', 'date_format:H:i', 'after:schedule.*.start_time'}, 'schedule.*.break_start_time': list{'required_with:schedule.*.break_end_time', 'date_format:H:i'}, 'schedule.*.break_end_time': list{'required_with:schedule.*.break_start_time', 'date_format:H:i', 'after:schedule.*.break_start_time'}}
      */
     protected function updateRules(): array
     {

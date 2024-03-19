@@ -378,10 +378,11 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * @return string
+     * @return null|string
+     *
      * @noinspection PhpUnused
      */
-    public function routeNotificationForMail(): string
+    public function routeNotificationForMail(): string|null
     {
         return $this->email;
     }
@@ -389,7 +390,6 @@ class Identity extends Model implements Authenticatable
     /**
      * @param string|null $primaryEmail
      * @param array $records
-     * @return Identity
      */
     public static function make(?string $primaryEmail = null, array $records = []): static
     {
@@ -411,7 +411,6 @@ class Identity extends Model implements Authenticatable
     /**
      * @param string|null $primaryEmail
      * @param array $records
-     * @return Identity
      */
     public static function findOrMake(string $primaryEmail = null, array $records = []): static
     {
@@ -517,7 +516,7 @@ class Identity extends Model implements Authenticatable
      * @return string
      * @throws \Throwable
      */
-    private static function uniqExchangeToken($type): string
+    private static function uniqExchangeToken(string $type): string
     {
         do {
             $token = match ($type) {
@@ -671,10 +670,10 @@ class Identity extends Model implements Authenticatable
 
     /**
      * Authorize proxy identity by token
+     *
      * @param string $token
-     * @return IdentityProxy
      */
-    public static function exchangeAuthorizationShortTokenProxy(string $token): IdentityProxy
+    public static function exchangeAuthorizationShortTokenProxy(string $token): IdentityProxy|null
     {
         $proxy = static::proxyByExchangeToken($token, 'short_token');
 
@@ -692,9 +691,12 @@ class Identity extends Model implements Authenticatable
     /**
      * @param $exchange_token
      * @param $type
+     *
      * @return IdentityProxy|null
+     *
+     * @psalm-param 'short_token' $type
      */
-    private static function proxyByExchangeToken($exchange_token, $type): ?IdentityProxy
+    private static function proxyByExchangeToken(string $exchange_token, string $type): ?IdentityProxy
     {
         return IdentityProxy::where([
             'exchange_token'    => $exchange_token,
@@ -704,22 +706,26 @@ class Identity extends Model implements Authenticatable
 
     /**
      * Authorize proxy identity by email token
+     *
      * @param string $token
      * @param string|null $ip
-     * @return string
+     *
+     * @return null|string
      */
-    public static function activateAuthorizationEmailProxy(string $token, ?string $ip = null): string
+    public static function activateAuthorizationEmailProxy(string $token, ?string $ip = null): string|null
     {
         return static::exchangeToken('email_code', $token, null, $ip)->access_token;
     }
 
     /**
      * Authorize proxy identity by email token
+     *
      * @param string $token
      * @param string|null $ip
-     * @return string
+     *
+     * @return null|string
      */
-    public static function exchangeEmailConfirmationToken(string $token, ?string $ip = null): string
+    public static function exchangeEmailConfirmationToken(string $token, ?string $ip = null): string|null
     {
         return static::exchangeToken('confirmation_code', $token, null, $ip)->access_token;
     }
@@ -738,14 +744,13 @@ class Identity extends Model implements Authenticatable
      * @param string $value
      * @param int|null $recordCategoryId
      * @param int|null $order
-     * @return array|null
      */
     public function makeRecord(
         RecordType $recordType,
         string $value,
         ?int $recordCategoryId = null,
         ?int $order = null
-    ): ?Record {
+    ): Record|null {
         $hasRecordOfSameType = $this->records()->where([
             'record_type_id' => $recordType->id,
         ])->exists();
@@ -797,6 +802,8 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @return string
+     *
+     * @psalm-return 'address'
      */
     public function getAuthIdentifierName(): string
     {
@@ -931,9 +938,8 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @param string $feature
-     * @return SupportCollection
      */
-    public function getRestricting2FAFunds(string $feature): SupportCollection
+    public function getRestricting2FAFunds(string $feature): Collection
     {
         return $this->funds->filter(function (Fund $fund) use ($feature) {
             if ($fund->fund_config->auth_2fa_policy != FundConfig::AUTH_2FA_POLICY_GLOBAL) {

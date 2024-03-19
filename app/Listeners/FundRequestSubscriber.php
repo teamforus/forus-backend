@@ -32,253 +32,15 @@ use Illuminate\Support\Facades\Gate;
 
 class FundRequestSubscriber
 {
-    /**
-     * @param FundRequestCreated $fundRequestCreated
-     * @throws \Exception
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestCreated(FundRequestCreated $fundRequestCreated): void
-    {
-        $fund = $fundRequestCreated->getFund();
-        $fundRequest = $fundRequestCreated->getFundRequest();
-        $identityBsn = $fundRequest->identity?->bsn;
 
-        // assign fund request to default validator
-        if ($fund->default_validator_employee) {
-            $fundRequest->assignEmployee($fund->default_validator_employee);
-        }
-
-        // auto approve request if required
-        if (!empty($identityBsn) && $fund->isAutoValidatingRequests()) {
-            $fundRequest->approve($fund->default_validator_employee);
-        }
-
-        $event = $fundRequest->log(
-            $fundRequest::EVENT_CREATED,
-            $this->getFundRequestLogModels($fundRequest)
-        );
-
-        FundRequestCreatedValidatorNotification::send($event);
-        IdentityFundRequestCreatedNotification::send($event);
-    }
-
-    /**
-     * @param FundRequestResolved $fundCreated
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestResolved(FundRequestResolved $fundCreated): void
-    {
-        if (!$fundCreated->getFundRequest()->isResolved()) {
-            return;
-        }
-
-        $fundRequest = $fundCreated->getFundRequest();
-        $eventModels = $this->getFundRequestLogModels($fundRequest);
-
-        $eventsList = [
-            $fundRequest::EVENT_DECLINED,
-            $fundRequest::EVENT_APPROVED,
-            $fundRequest::EVENT_DISREGARDED,
-            $fundRequest::EVENT_APPROVED_PARTLY,
-        ];
-
-        if (in_array($fundRequest::EVENTS, $eventsList)) {
-            $fundRequest->log(array_combine($eventsList, $eventsList)[$fundRequest->state], $eventModels);
-        }
-
-        $eventLog = $fundRequest->log($fundRequest::EVENT_RESOLVED, $eventModels);
-
-        if ($fundRequest->isDisregarded() && $fundRequest->disregard_notify) {
-            IdentityFundRequestDisregardedNotification::send($eventLog);
-        }
-
-        if ($fundRequest->isApproved()) {
-            /** @var Fund[] $funds */
-            $funds = [];
-            $logScope = 'fund_request@' . $fundRequest->id;
-            $sponsor = $fundRequest->fund->organization;
-            $resolvePolicy = $sponsor->fund_request_resolve_policy;
-            $sponsorFundsQuery = FundQuery::whereIsInternalConfiguredAndActive($sponsor->funds()->getQuery());
-
-            if ($resolvePolicy == $sponsor::FUND_REQUEST_POLICY_AUTO_REQUESTED) {
-                $funds = $sponsorFundsQuery->where('funds.id', $fundRequest->fund_id)->get();
-            } else if ($resolvePolicy == $sponsor::FUND_REQUEST_POLICY_AUTO_AVAILABLE) {
-                $funds = $sponsorFundsQuery->get();
-            }
-
-            foreach ($funds as $fund) {
-                if (Gate::forUser($fundRequest->identity)->allows('apply', [$fund, $logScope])) {
-                    $fund->makeVoucher($fundRequest->identity_address);
-                    $fund->makeFundFormulaProductVouchers($fundRequest->identity_address);
-                }
-            }
-
-            IdentityFundRequestApprovedNotification::send($eventLog);
-        } elseif (!$fundRequest->isDisregarded()) {
-            IdentityFundRequestDeniedNotification::send($eventLog);
-        }
-    }
-
-    /**
-     * @param FundRequestAssigned $event
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestAssigned(FundRequestAssigned $event): void
-    {
-        $employee = $event->getEmployee();
-        $fundRequest = $event->getFundRequest();
-        $supervisorEmployee = $event->getSupervisorEmployee();
-        $eventModels = $this->getFundRequestLogModels($fundRequest, compact('employee'));
-
-        $rawMeta = $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [];
-        $eventLog = $employee->log($employee::EVENT_FUND_REQUEST_ASSIGNED, $eventModels, $rawMeta);
-        $fundRequest->log($fundRequest::EVENT_ASSIGNED, $eventModels, $rawMeta);
-
-        if ($supervisorEmployee) {
-            IdentityAssignedToFundRequestBySupervisorNotification::send($eventLog);
-        }
-    }
-
-    /**
-     * @param FundRequestResigned $event
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestResigned(FundRequestResigned $event): void
-    {
-        $fundRequest = $event->getFundRequest();
-        $supervisorEmployee = $event->getSupervisorEmployee();
-
-        $eventModels = $this->getFundRequestLogModels($fundRequest, [
-            'employee' => $event->getEmployee(),
-        ]);
-
-        $fundRequest->log($fundRequest::EVENT_RESIGNED, $eventModels, array_merge(
-            $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [],
-        ));
-    }
-
-    /**
-     * @param FundRequestRecordApproved $requestRecordEvent
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestRecordApproved(FundRequestRecordApproved $requestRecordEvent): void
-    {
-        $fundRequestRecord = $requestRecordEvent->getFundRequestRecord();
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
-
-        $fundRequestRecord->log($fundRequestRecord::EVENT_APPROVED, $eventModels);
-    }
-
-    /**
-     * @param FundRequestRecordDeclined $requestRecordEvent
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestRecordDeclined(FundRequestRecordDeclined $requestRecordEvent): void
-    {
-        $fundRequestRecord = $requestRecordEvent->getFundRequestRecord();
-        $notifyRequester = $requestRecordEvent->getNotifyRequester();
-
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
-
-        $event = $fundRequestRecord->log($fundRequestRecord::EVENT_DECLINED, $eventModels, [
-            'rejection_note' => $fundRequestRecord->note,
-        ]);
-
-        if ($notifyRequester) {
-            IdentityFundRequestRecordDeclinedNotification::send($event);
-        }
-    }
-
-    /**
-     * @param FundRequestRecordAssigned $event
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestRecordAssigned(FundRequestRecordAssigned $event): void
-    {
-        $fundRequestRecord = $event->getFundRequestRecord();
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
-        $supervisorEmployee = $event->getSupervisorEmployee();
-
-        $fundRequestRecord->log($fundRequestRecord::EVENT_ASSIGNED, $eventModels, array_merge(
-            $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [],
-        ));
-    }
-
-    /**
-     * @param FundRequestRecordResigned $event
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestRecordResigned(FundRequestRecordResigned $event): void
-    {
-        $fundRequestRecord = $event->getFundRequestRecord();
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
-        $supervisorEmployee = $event->getSupervisorEmployee();
-
-        $fundRequestRecord->log($fundRequestRecord::EVENT_RESIGNED, $eventModels, array_merge(
-            $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [],
-        ));
-    }
-
-    /**
-     * @param FundRequestRecordUpdated $event
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestRecordUpdated(FundRequestRecordUpdated $event): void
-    {
-        $fundRequestRecord = $event->getFundRequestRecord();
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord, [
-            'employee' => $event->getEmployee(),
-        ]);
-
-        $fundRequestRecord->log($fundRequestRecord::EVENT_UPDATED, $eventModels, [
-            'fund_request_record_previous_value' => $event->getPreviousValue(),
-        ]);
-    }
-
-    /**
-     * @param FundRequestClarificationRequested $clarificationCreated
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestClarificationRequested(
-        FundRequestClarificationRequested $clarificationCreated
-    ): void {
-        $clarification = $clarificationCreated->getFundRequestClarification();
-        $fundRequestRecord = $clarification->fund_request_record;
-
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord, [
-            'fund_request_clarification' => $clarification,
-        ]);
-
-        IdentityFundRequestRecordFeedbackRequestedNotification::send($fundRequestRecord->log(
-            $fundRequestRecord::EVENT_CLARIFICATION_REQUESTED,
-            $eventModels
-        ));
-    }
-
-    /**
-     * @param FundRequestClarificationReceived $clarificationReceived
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestClarificationReceived(
-        FundRequestClarificationReceived $clarificationReceived
-    ): void {
-        $clarification = $clarificationReceived->getFundRequestClarification();
-        $fundRequestRecord = $clarification->fund_request_record;
-
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord, [
-            'fund_request_clarification' => $clarification,
-        ]);
-
-        FundRequestRecordFeedbackReceivedNotification::send($fundRequestRecord->log(
-            $fundRequestRecord::EVENT_CLARIFICATION_RECEIVED,
-            $eventModels
-        ));
-    }
 
     /**
      * @param FundRequest $fundRequest
      * @param array $extraModels
-     * @return array
+     *
+     * @return (Fund|FundRequest|\App\Models\Implementation|\App\Models\Organization|mixed)[]
+     *
+     * @psalm-return array{fund: Fund|mixed, sponsor: \App\Models\Organization|mixed, fund_request: FundRequest|mixed, implementation: \App\Models\Implementation|mixed,...}
      */
     private function getFundRequestLogModels(
         FundRequest $fundRequest,
@@ -295,7 +57,10 @@ class FundRequestSubscriber
     /**
      * @param FundRequestRecord $fundRequestRecord
      * @param array $extraModels
-     * @return array
+     *
+     * @return (FundRequestRecord|mixed)[]
+     *
+     * @psalm-return array{fund_request_record: FundRequestRecord|mixed,...}
      */
     private function getFundRequestRecordLogModels(
         FundRequestRecord $fundRequestRecord,
@@ -308,7 +73,10 @@ class FundRequestSubscriber
 
     /**
      * @param Employee $supervisor
-     * @return array
+     *
+     * @return (int|null|string)[]
+     *
+     * @psalm-return array{supervisor_employee_id: int, supervisor_employee_roles: string, supervisor_employee_email: null|string}
      */
     private function getSupervisorFields(Employee $supervisor): array
     {
@@ -317,31 +85,5 @@ class FundRequestSubscriber
             'supervisor_employee_roles' => $supervisor->roles->pluck('name')->join(', '),
             'supervisor_employee_email' => $supervisor->identity?->email,
         ];
-    }
-
-    /**
-     * The events dispatcher
-     *
-     * @param Dispatcher $events
-     * @noinspection PhpUnused
-     */
-    public function subscribe(Dispatcher $events): void
-    {
-        $class = '\\' . static::class;
-
-        $events->listen(FundRequestCreated::class, "$class@onFundRequestCreated");
-        $events->listen(FundRequestResolved::class, "$class@onFundRequestResolved");
-
-        $events->listen(FundRequestAssigned::class, "$class@onFundRequestAssigned");
-        $events->listen(FundRequestResigned::class, "$class@onFundRequestResigned");
-
-        $events->listen(FundRequestRecordDeclined::class, "$class@onFundRequestRecordDeclined");
-        $events->listen(FundRequestRecordApproved::class, "$class@onFundRequestRecordApproved");
-        $events->listen(FundRequestRecordAssigned::class, "$class@onFundRequestRecordAssigned");
-        $events->listen(FundRequestRecordResigned::class, "$class@onFundRequestRecordResigned");
-        $events->listen(FundRequestRecordUpdated::class, "$class@onFundRequestRecordUpdated");
-
-        $events->listen(FundRequestClarificationRequested::class, "$class@onFundRequestClarificationRequested");
-        $events->listen(FundRequestClarificationReceived::class, "$class@onFundRequestClarificationReceived");
     }
 }

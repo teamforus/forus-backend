@@ -18,8 +18,11 @@ class BankConnectionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (BankConnectionAccountResource|BankResource|\Illuminate\Contracts\Translation\Translator|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|array|mixed|null|string)[]
+     *
+     * @psalm-return array{bank: BankResource|mixed, iban: mixed|null|string, account_default: BankConnectionAccountResource|mixed, accounts: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed, state_locale: \Illuminate\Contracts\Translation\Translator|array|mixed|null|string, auth_url?: mixed|string,...}
      */
     public function toArray($request): array
     {

@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Facade;
  */
 class TokenGenerator extends Facade
 {
+    /**
+     * @return string
+     *
+     * @psalm-return 'token_generator'
+     */
     protected static function getFacadeAccessor(): string
     {
         return 'token_generator';

@@ -25,27 +25,11 @@ class StoreProductReservationRequest extends BaseFormRequest
     protected $decayMinutes = 180;
 
     /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     * @throws \App\Exceptions\AuthorizationJsonException
-     */
-    public function authorize(): bool
-    {
-        $this->throttleKeyPrefix = 'provider_reservations';
-        $this->maxAttempts = $this->organization->provider_throttling_value;
-
-        $this->throttleWithKey('to_many_attempts', $this, 'provider_reservation_store');
-
-        return
-            $this->isAuthenticated() &&
-            $this->organization->identityCan($this->identity(), 'scan_vouchers');
-    }
-
-    /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((ProductIdToReservationRule|null|string)[]|string)[]
+     *
+     * @psalm-return array{number: list{'required', 'exists:physical_cards,code', 'in:'|null}, product_id: list{'required', 'exists:products,id', ProductIdToReservationRule}, note: 'nullable|string|max:2000'}
      */
     public function rules(): array
     {

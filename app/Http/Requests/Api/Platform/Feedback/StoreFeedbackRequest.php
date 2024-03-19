@@ -6,20 +6,14 @@ use App\Http\Requests\BaseFormRequest;
 
 class StoreFeedbackRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->isAuthenticated();
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((mixed|string)[]|string)[]
+     *
+     * @psalm-return array{title: 'required|string|min:2|max:200', content: 'required|string|min:2|max:4000', urgency: 'nullable|in:low,medium,high', customer_email: array{0: 'nullable'|mixed,...}}
      */
     public function rules(): array
     {

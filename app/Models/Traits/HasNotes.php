@@ -11,10 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  */
 trait HasNotes
 {
-    /**
-     * @return MorphMany|Note
-     */
-    public function notes(): MorphMany|Note
+    public function notes(): \Illuminate\Database\Eloquent\Relations\MorphMany|Note
     {
         return $this->morphMany(Note::class, 'notable');
     }

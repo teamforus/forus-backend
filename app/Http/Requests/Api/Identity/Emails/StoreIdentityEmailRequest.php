@@ -23,8 +23,11 @@ class StoreIdentityEmailRequest extends BaseIdentityEmailRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((IdentityEmailUniqueRule|mixed|string)[]|string)[]
+     *
      * @throws \App\Exceptions\AuthorizationJsonException
+     *
+     * @psalm-return array{target: 'nullable|alpha_dash', email: array{0: 'required'|mixed, 1: IdentityEmailUniqueRule|mixed,...}}
      */
     public function rules(): array
     {

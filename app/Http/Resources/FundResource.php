@@ -43,7 +43,10 @@ class FundResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
+     *
+     * @return (ImplementationResource|MediaResource|OrganizationResource|\Illuminate\Database\Eloquent\Collection|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|\Illuminate\Support\Collection|array|bool|int|mixed|null|string)[]
+     *
+     * @psalm-return array{contact_info_message_default: bool|mixed|string, tags: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|bool|mixed, implementation: ImplementationResource|bool|mixed, auto_validation: bool|mixed, logo: MediaResource|bool|mixed, start_date: bool|mixed|string, end_date: bool|mixed|string, start_date_locale: bool|mixed|null|string, end_date_locale: bool|mixed|null|string, organization: OrganizationResource|bool|mixed, criteria: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|bool|mixed, formulas: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|bool|mixed, faq: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|bool|mixed, formula_products: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|bool|mixed, fund_amount: bool|mixed|null|string, fund_amount_locale: bool|mixed|null|string, has_pending_fund_requests: bool|mixed, organization_funds_2fa: array|bool|mixed, parent: array|bool|mixed|null, children: \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection<array-key, array>|bool|mixed, criteria_editable?: bool|mixed, requester_count?: bool|int|mixed, backoffice?: array|bool|mixed|null,...}
      */
     public function toArray($request): array
     {
@@ -131,7 +134,10 @@ class FundResource extends BaseJsonResource
 
     /**
      * @param Organization $organization
-     * @return array
+     *
+     * @return (bool|string)[]
+     *
+     * @psalm-return array{auth_2fa_policy: string, auth_2fa_remember_ip: bool, auth_2fa_restrict_emails: bool, auth_2fa_restrict_auth_sessions: bool, auth_2fa_restrict_reimbursements: bool}
      */
     protected function organizationFunds2FAData(Organization $organization): array
     {
@@ -159,7 +165,10 @@ class FundResource extends BaseJsonResource
 
     /**
      * @param Fund $fund
-     * @return array
+     *
+     * @return (float|mixed)[]
+     *
+     * @psalm-return array{limit_per_voucher?: float, limit_sum_vouchers?: float,...}
      */
     public function getVoucherGeneratorData(Fund $fund): array
     {
@@ -177,7 +186,10 @@ class FundResource extends BaseJsonResource
     /**
      * @param Fund $fund
      * @param string|null $stats
-     * @return array
+     *
+     * @return (array|int|mixed|null)[]
+     *
+     * @psalm-return array{sponsor_count?: int, provider_organizations_count?: int, provider_employees_count?: mixed, validators_count?: int, budget?: array|null, product_vouchers?: array|null}
      */
     public function getFinancialData(Fund $fund, ?string $stats = null): array
     {
@@ -225,7 +237,10 @@ class FundResource extends BaseJsonResource
     /**
      * @param Fund $fund
      * @param string $type
-     * @return array
+     *
+     * @return (mixed|string)[]
+     *
+     * @psalm-return array{total?: string, validated?: string, used?: string, used_active_vouchers?: string, left?: string, transaction_costs?: string, vouchers_amount: string, vouchers_count: mixed, active_vouchers_amount: string, active_vouchers_count: mixed, inactive_vouchers_amount: string, inactive_vouchers_count: mixed, deactivated_vouchers_amount: string, deactivated_vouchers_count: mixed}
      */
     public function getVoucherData(Fund $fund, string $type): array
     {
@@ -268,7 +283,10 @@ class FundResource extends BaseJsonResource
 
     /**
      * @param Fund $fund
-     * @return array
+     *
+     * @return (array|string)[]
+     *
+     * @psalm-return array{csv_primary_key: string, csv_required_keys: array}
      */
     protected function getPrevalidationCsvData(Fund $fund): array
     {
@@ -281,7 +299,10 @@ class FundResource extends BaseJsonResource
     /**
      * @param Fund $fund
      * @param BaseFormRequest $baseRequest
-     * @return array|bool[]
+     *
+     * @return bool[]
+     *
+     * @psalm-return array{taken_by_partner?: bool}
      */
     protected function getCriteriaData(Fund $fund, BaseFormRequest $baseRequest): array
     {

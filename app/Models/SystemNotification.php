@@ -159,7 +159,9 @@ class SystemNotification extends Model
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{0?: 'database', 1?: 'mail', 2?: 'push'}
      */
     public function baseChannels(): array
     {
@@ -172,7 +174,10 @@ class SystemNotification extends Model
 
     /**
      * @param int|null $implementationId
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{0?: 'database', 1?: 'mail', 2?: 'push'}
      */
     public function channels(int $implementationId = null): array
     {

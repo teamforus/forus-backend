@@ -15,23 +15,14 @@ use App\Rules\BsnRule;
  */
 class AssignVoucherRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return
-            $this->organization->identityCan($this->identity(), 'manage_vouchers') &&
-            $this->voucher->fund->organization_id === $this->organization->id &&
-            !$this->voucher->is_granted;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((BsnRule|mixed|string)[]|string)[]
+     *
+     * @psalm-return array{email: array{0: 'required'|'required_without:bsn'|mixed,...}, bsn: 'nullable|in:'|list{'required_without:email', BsnRule}}
      */
     public function rules(): array
     {

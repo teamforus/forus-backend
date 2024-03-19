@@ -21,7 +21,10 @@ class SendVoucherMail extends ImplementationMail
 
     /**
      * @param array $data
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{qr_token: string}
      */
     protected function getMailExtraData(array $data): array
     {

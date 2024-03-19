@@ -10,10 +10,7 @@ use Illuminate\Support\ServiceProvider;
  */
 class SmsNotificationServiceProvider extends ServiceProvider
 {
-    /**
-     *
-     */
-    public function boot() {}
+    public function boot(): void {}
 
     /**
      * Register the service provider.

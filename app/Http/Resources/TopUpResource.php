@@ -18,7 +18,10 @@ class TopUpResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param Request $request
-     * @return array
+     *
+     * @return (mixed|null|string)[]
+     *
+     * @psalm-return array{iban: mixed|null|string,...}
      */
     public function toArray($request): array
     {

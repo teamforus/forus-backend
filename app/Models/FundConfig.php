@@ -235,8 +235,12 @@ class FundConfig extends BaseModel
 
     /**
      * @param $value
+     *
      * @return array
+     *
      * @noinspection PhpUnused
+     *
+     * @psalm-return array<int<0, max>, mixed>
      */
     public function getBunqAllowedIpAttribute($value): array
     {
@@ -270,9 +274,9 @@ class FundConfig extends BaseModel
     }
 
     /**
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
      */
-    public function getDefaultContactInfoMessage(): string
+    public function getDefaultContactInfoMessage(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans('fund.default_contact_info_message');
     }

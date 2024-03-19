@@ -11,20 +11,14 @@ use Illuminate\Validation\Rule;
  */
 class SyncPreCheckRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{pre_check_title: string, pre_check_enabled: string, pre_check_description: string,...}
      */
     public function rules(): array
     {
@@ -39,7 +33,9 @@ class SyncPreCheckRequest extends BaseFormRequest
     }
 
     /**
-     * @return string[]
+     * @return ((\Illuminate\Validation\Rules\Exists|string)[]|string)[]
+     *
+     * @psalm-return array{'pre_checks.*': 'nullable|array', 'pre_checks.*.id': list{'nullable', \Illuminate\Validation\Rules\Exists}, 'pre_checks.*.title': 'required|string|max:100', 'pre_checks.*.title_short': 'required|string|max:30', 'pre_checks.*.default': 'nullable|boolean', 'pre_checks.*.description': 'nullable|string|max:1000'}
      */
     private function preCheckRules(): array
     {
@@ -60,7 +56,9 @@ class SyncPreCheckRequest extends BaseFormRequest
     }
 
     /**
-     * @return string[]
+     * @return ((\Illuminate\Validation\Rules\Exists|string)[]|string)[]
+     *
+     * @psalm-return array{'pre_checks.*.record_types.*': 'nullable|array', 'pre_checks.*.record_types.*.title': 'required|string|max:100', 'pre_checks.*.record_types.*.title_short': 'required|string|max:40', 'pre_checks.*.record_types.*.description': 'nullable|string|max:1000', 'pre_checks.*.record_types.*.record_type_key': list{'required', 'string', \Illuminate\Validation\Rules\Exists}}
      */
     private function preCheckRecordRules(): array
     {
@@ -78,7 +76,9 @@ class SyncPreCheckRequest extends BaseFormRequest
     }
 
     /**
-     * @return string[]
+     * @return ((\Illuminate\Validation\Rules\Exists|string)[]|string)[]
+     *
+     * @psalm-return array{'pre_checks.*.record_types.*.record_settings.*': 'nullable|array', 'pre_checks.*.record_types.*.record_settings.*.fund_id': list{'nullable', \Illuminate\Validation\Rules\Exists}, 'pre_checks.*.record_types.*.record_settings.*.is_knock_out': 'required|boolean', 'pre_checks.*.record_types.*.record_settings.*.description': 'nullable|string|max:1000', 'pre_checks.*.record_types.*.record_settings.*.impact_level': 'required|int|min:0|max:100'}
      */
     private function preCheckRecordSettingRules(): array
     {
@@ -96,6 +96,8 @@ class SyncPreCheckRequest extends BaseFormRequest
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{'pre_checks.*.title': 'title', 'pre_checks.*.title_short': 'short title', 'pre_checks.*.description': 'description', 'pre_checks.*.record_types.*.title': 'title', 'pre_checks.*.record_types.*.title_short': 'short title', 'pre_checks.*.record_types.*.record_type_key': 'key'}
      */
     public function attributes(): array
     {

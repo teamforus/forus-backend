@@ -16,20 +16,14 @@ use Illuminate\Validation\Rule;
 
 class StorePrevalidationsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return Gate::allows('store', Prevalidation::class);
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((PrevalidationItemHasRequiredKeysRule|PrevalidationItemRule|\Illuminate\Validation\Rules\In|string)[]|string)[]
+     *
+     * @psalm-return array{fund_id: list{'required', PrevalidationItemRule|\Illuminate\Validation\Rules\In}, data: list{0: 'required', 1: 'array'|PrevalidationItemRule, 2?: PrevalidationItemHasRequiredKeysRule}, 'data.*': 'required'|list{'required', PrevalidationItemRule},...}
      */
     public function rules(): array
     {
@@ -60,7 +54,10 @@ class StorePrevalidationsRequest extends BaseFormRequest
     /**
      * @param Fund|null $fund
      * @param array $extraKeys
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array<string>
      */
     private function getRequiredKeysRules(?Fund $fund, array $extraKeys = []): array
     {

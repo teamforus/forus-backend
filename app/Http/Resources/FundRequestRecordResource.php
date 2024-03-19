@@ -12,8 +12,11 @@ class FundRequestRecordResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return ((array|mixed)[]|mixed)[]
+     *
+     * @psalm-return array{record_type: array{options: array,...}|mixed,...}
      */
     public function toArray($request): array
     {

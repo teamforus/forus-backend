@@ -23,8 +23,11 @@ class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (((MediaResource|mixed)[]|MediaResource|mixed)[]|bool|int|mixed|null|string)[]
+     *
+     * @psalm-return array{note: mixed|null, created_at: null|string, updated_at: null|string, created_at_locale: null|string, updated_at_locale: null|string, amount: string, product_price: null|string, cancelable: bool, transaction_in: int|null, organization: array{logo: MediaResource,...}, product: array{photo: MediaResource,...}|null, fund: array{logo: MediaResource, organization: array{logo: MediaResource,...},...},...}
      */
     public function toArray($request): array
     {

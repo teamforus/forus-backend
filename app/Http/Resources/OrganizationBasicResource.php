@@ -16,8 +16,11 @@ class OrganizationBasicResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|Collection
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (BusinessTypeResource|MediaCompactResource|mixed|null|string)[]|null
+     *
+     * @psalm-return array{email: null|string, phone: null|string, website: null|string, logo: MediaCompactResource, business_type: BusinessTypeResource,...}|null
      */
     public function toArray($request): ?array
     {

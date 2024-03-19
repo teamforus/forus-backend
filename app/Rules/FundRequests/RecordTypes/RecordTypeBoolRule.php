@@ -8,7 +8,9 @@ use Illuminate\Validation\Rule;
 class RecordTypeBoolRule extends BaseRecordTypeRule
 {
     /**
-     * @return array
+     * @return (\Illuminate\Validation\Rules\In|string)[]
+     *
+     * @psalm-return array{0?: string, 1: \Illuminate\Validation\Rules\In, 2: \Illuminate\Validation\Rules\In}
      */
     public function rules(): array
     {

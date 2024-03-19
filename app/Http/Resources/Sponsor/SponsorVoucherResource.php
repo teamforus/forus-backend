@@ -34,8 +34,11 @@ class SponsorVoucherResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (\Illuminate\Contracts\Translation\Translator|array|false|mixed|null|string)[]
+     *
+     * @psalm-return array{amount_available: string, source_locale: \Illuminate\Contracts\Translation\Translator|array|null|string, identity_bsn: mixed|null, identity_email: mixed|null, relation_bsn: null|string, address: null|string, fund: array{url_webshop: null|string, allow_physical_cards: bool, allow_voucher_records: bool, implementation: array|null,...}, physical_card: array|false, product: array|null, first_use_date: null|string, first_use_date_locale: null|string, created_at: string, created_at_locale: null|string, expire_at: string, expire_at_locale: null|string,...}
      */
     public function toArray($request): array
     {
@@ -83,7 +86,10 @@ class SponsorVoucherResource extends BaseJsonResource
 
     /**
      * @param Voucher $voucher
-     * @return array
+     *
+     * @return (MediaResource|OrganizationBasicResource|\App\Models\ProductCategory|mixed|null|string)[]
+     *
+     * @psalm-return array{product_category: \App\Models\ProductCategory, expire_at: null|string, expire_at_locale: null|string, photo: MediaResource, organization: OrganizationBasicResource,...}
      */
     private function getProductDetails(Voucher $voucher): array
     {

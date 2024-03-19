@@ -12,20 +12,14 @@ use Illuminate\Validation\Rule;
  */
 class IndexReimbursementsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, mixed>
+     * @return (array|string)[]
+     *
+     * @psalm-return array{fund_id: array, expired: 'nullable|boolean', archived: 'nullable|boolean', deactivated: 'nullable|boolean', identity_address: 'nullable|exists:identities,address', implementation_id: string, per_page: string}
      */
     public function rules(): array
     {
@@ -43,7 +37,9 @@ class IndexReimbursementsRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Validation\Rules\In|string)[]
+     *
+     * @psalm-return list{'nullable', \Illuminate\Validation\Rules\In}
      */
     protected function fundIdRule(): array
     {

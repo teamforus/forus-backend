@@ -8,20 +8,14 @@ use Illuminate\Validation\Rule;
 
 class SortRecordsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->isAuthenticated();
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\Exists|string)[]|string)[]
+     *
+     * @psalm-return array{records: 'nullable|array', 'records.*': list{'nullable', 'numeric', \Illuminate\Validation\Rules\Exists}}
      */
     public function rules(): array
     {

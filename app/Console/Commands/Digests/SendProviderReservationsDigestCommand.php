@@ -24,14 +24,4 @@ class SendProviderReservationsDigestCommand extends Command
      * @var string
      */
     protected $description = 'Send provider reservations digest.';
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        ProviderReservationsDigest::dispatchSync();
-    }
 }

@@ -137,9 +137,8 @@ class FundRequestRecord extends BaseModel
      * @param string $state
      * @param string|null $note
      * @param bool $notifyRequester
-     * @return FundRequestRecord
      */
-    private function setStateAndResolve(string $state, ?string $note = null, bool $notifyRequester = true): FundRequestRecord
+    private function setStateAndResolve(string $state, ?string $note = null, bool $notifyRequester = true): static
     {
         $this->updateModel(compact('state', 'note'));
 
@@ -227,9 +226,8 @@ class FundRequestRecord extends BaseModel
     /**
      * @param string $value
      * @param Employee $employee
-     * @return self
      */
-    public function updateAsValidator(string $value, Employee $employee): self
+    public function updateAsValidator(string $value, Employee $employee): static
     {
         $previousValue = $this->value;
         $this->update(compact('value'));
@@ -242,12 +240,11 @@ class FundRequestRecord extends BaseModel
     /**
      * @param string $recordTypeKey
      * @param string $value
-     * @return FundRequestRecord
      */
     private function applyRecordAndValidation(
         string $recordTypeKey,
         string $value
-    ): FundRequestRecord {
+    ): static {
         $fundRequest = $this->fund_request;
         $requestIdentity = $fundRequest->identity;
 

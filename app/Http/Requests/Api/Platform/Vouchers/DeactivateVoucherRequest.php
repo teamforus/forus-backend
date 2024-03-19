@@ -13,25 +13,5 @@ use Illuminate\Support\Facades\Gate;
  */
 class DeactivateVoucherRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return Gate::allows('deactivateRequester', $this->voucher_token_address->voucher);
-    }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
-    public function rules(): array
-    {
-        return [
-            'note' => 'required|string|min:2|max:140',
-        ];
-    }
 }

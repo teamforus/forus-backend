@@ -11,18 +11,12 @@ use App\Rules\VoucherRecordsRule;
  */
 abstract class BaseStoreVouchersRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->organization->identityCan($this->identity(), 'manage_vouchers');
-    }
+
 
     /**
-     * @return array
+     * @return (VoucherRecordsRule|string)[]
+     *
+     * @psalm-return list{'nullable', 'array', VoucherRecordsRule}
      */
     protected function recordsRule(): array
     {

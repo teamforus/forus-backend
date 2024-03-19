@@ -24,14 +24,4 @@ class SendProviderProductsDigestCommand extends Command
      * @var string
      */
     protected $description = 'Send provider products digest.';
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        ProviderProductsDigest::dispatchSync();
-    }
 }

@@ -28,7 +28,10 @@ class EventLogResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param $request
-     * @return array
+     *
+     * @return (mixed|null|string)[]
+     *
+     * @psalm-return array{identity_email: mixed|null|string, loggable_locale: mixed|null|string, event_locale: mixed|null|string, note: mixed|null|string,...}
      */
     public function toArray($request): array
     {

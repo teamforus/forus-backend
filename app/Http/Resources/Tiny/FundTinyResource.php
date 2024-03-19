@@ -14,8 +14,11 @@ class FundTinyResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (MediaResource|mixed|string)[]
+     *
+     * @psalm-return array{logo: MediaResource, organization_name: string,...}
      */
     public function toArray($request): array
     {

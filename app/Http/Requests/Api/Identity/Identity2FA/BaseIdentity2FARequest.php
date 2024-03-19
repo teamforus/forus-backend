@@ -31,10 +31,13 @@ abstract class BaseIdentity2FARequest extends BaseFormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
      * @throws IncompatibleWithGoogleAuthenticatorException
      * @throws InvalidCharactersException
      * @throws SecretKeyTooShortException
+     *
+     * @psalm-return array<string>
      */
     public function codeRules(): array
     {
@@ -55,6 +58,8 @@ abstract class BaseIdentity2FARequest extends BaseFormRequest
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{code: 'required|string|size:6'|'required|string|size:6|in:'}
      */
     public function rulesPhone(string $code, Identity2FA $identity2FA): array
     {
@@ -72,9 +77,12 @@ abstract class BaseIdentity2FARequest extends BaseFormRequest
 
     /**
      * @return string[]
+     *
      * @throws IncompatibleWithGoogleAuthenticatorException
      * @throws InvalidCharactersException
      * @throws SecretKeyTooShortException
+     *
+     * @psalm-return array{code: 'required|string|size:6'|'required|string|size:6|in:'}
      */
     public function rulesAuthenticator(string $code, Identity2FA $identity2FA): array
     {

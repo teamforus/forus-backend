@@ -117,7 +117,7 @@ class VoucherTransactionQuery
      * @param Builder|QBuilder $builder
      * @return Builder|QBuilder
      */
-    public static function whereOutgoing(Builder|QBuilder $builder): Builder|QBuilder
+    public static function whereOutgoing(Builder|QBuilder $builder): QBuilder|Builder|QBuilder
     {
         return $builder->whereIn('target', VoucherTransaction::TARGETS_OUTGOING);
     }
@@ -126,7 +126,7 @@ class VoucherTransactionQuery
      * @param Builder|QBuilder $builder
      * @return Builder|QBuilder
      */
-    public static function whereIncoming(Builder|QBuilder $builder): Builder|QBuilder
+    public static function whereIncoming(Builder|QBuilder $builder): QBuilder|Builder|QBuilder
     {
         return $builder->whereIn('target', VoucherTransaction::TARGETS_INCOMING);
     }
@@ -148,12 +148,13 @@ class VoucherTransactionQuery
     /**
      * @param Builder|Relation|VoucherTransaction $query
      * @param string $q
-     * @return Builder|QBuilder|VoucherTransaction
+     *
+     * @return Builder|Relation|VoucherTransaction
      */
     public static function whereQueryFilter(
         Builder|Relation|VoucherTransaction $query,
         string $q = '',
-    ): Builder|Relation|VoucherTransaction {
+    ): VoucherTransaction|Relation|Builder|Relation|VoucherTransaction {
         return $query->where(static function (Builder $query) use ($q) {
             $query->where('voucher_transactions.uid', '=', $q);
             $query->orWhereHas('voucher.fund', fn (Builder $b) => $b->where('name', 'LIKE', "%$q%"));

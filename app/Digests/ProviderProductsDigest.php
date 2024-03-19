@@ -98,7 +98,8 @@ class ProviderProductsDigest extends BaseOrganizationDigest
 
     /**
      * @param MailBodyBuilder $emailBody
-     * @return BaseDigestMail
+     *
+     * @return DigestProviderProductsMail
      */
     protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
     {

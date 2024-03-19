@@ -555,8 +555,9 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param bool|null $withBalance
+     * @param bool $withBalance
      * @param bool|null $withEmail
+     *
      * @return Builder|Identity
      */
     public function activeIdentityQuery(
@@ -672,19 +673,19 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return float
      * @noinspection PhpUnused
      */
-    public function getBudgetValidatedAttribute(): float
+    public function getBudgetValidatedAttribute(): int
     {
         return 0;
     }
 
     /**
-     * @return string
+     * @return null|string
+     *
      * @noinspection PhpUnused
      */
-    public function getTypeLocaleAttribute(): string
+    public function getTypeLocaleAttribute(): string|null
     {
         return [
             self::TYPE_SUBSIDIES => 'Acties',
@@ -1079,7 +1080,10 @@ class Fund extends BaseModel
 
     /**
      * @param bool $withOptional
-     * @return array
+     *
+     * @return (mixed|string)[]
+     *
+     * @psalm-return array<mixed|string>
      */
     public function requiredPrevalidationKeys(bool $withOptional = false): array
     {
@@ -1224,7 +1228,10 @@ class Fund extends BaseModel
      * @param string|null $identityAddress
      * @param array $extraFields
      * @param Carbon|null $expireAt
+     *
      * @return Voucher[]
+     *
+     * @psalm-return list<App\Models\Voucher>
      */
     public function makeFundFormulaProductVouchers(
         string $identityAddress = null,
@@ -1514,7 +1521,8 @@ class Fund extends BaseModel
 
     /**
      * Resign fund request record employees be criterion validator
-     * @param FundCriterionValidator[]|Collection $criterionValidators
+     *
+     * @param Arrayable $criterionValidators
      */
     protected function resignCriterionValidators(Collection|Arrayable $criterionValidators): void
     {
@@ -1665,7 +1673,10 @@ class Fund extends BaseModel
 
     /**
      * @param Builder $vouchersQuery
-     * @return array
+     *
+     * @return (int|mixed|string)[]
+     *
+     * @psalm-return array{reserved: mixed, vouchers_amount: mixed, vouchers_count: int|mixed, active_amount: mixed, active_count: int|mixed, inactive_amount: mixed, inactive_count: int, inactive_percentage: string, deactivated_amount: mixed, deactivated_count: int}
      */
     public static function getFundDetails(Builder $vouchersQuery) : array
     {
@@ -1695,8 +1706,11 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param Collection|Fund[] $funds
-     * @return array
+     * @param Arrayable $funds
+     *
+     * @return (int|mixed|string)[]
+     *
+     * @psalm-return array{budget: mixed, budget_left: mixed, budget_used: mixed, budget_used_active_vouchers: mixed, transaction_costs: mixed, vouchers_amount: string, vouchers_count: int|mixed, active_vouchers_amount: string, active_vouchers_count: int|mixed, inactive_vouchers_amount: string, inactive_vouchers_count: int, deactivated_vouchers_amount: string, deactivated_vouchers_count: int}
      */
     public static function getFundTotals(Collection|Arrayable $funds) : array
     {
@@ -1761,18 +1775,16 @@ class Fund extends BaseModel
         return $this->type === $this::TYPE_BUDGET;
     }
 
-    /**
-     * @return bool
-     */
-    public function isHashingBsn(): bool {
+    public function isHashingBsn(): bool|null {
         return $this->fund_config->hash_bsn;
     }
 
     /**
      * @param $value
-     * @return string|null
+     *
+     * @return null|string
      */
-    public function getHashedValue($value): ?string {
+    public function getHashedValue(string $value): string|null {
         if (!$this->isHashingBsn()) {
             return null;
         }
@@ -1830,9 +1842,11 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return float
+     * @return float|int|null|string
+     *
+     * @psalm-return 1000000|float|null|string
      */
-    public function getMaxAmountPerVoucher(): float
+    public function getMaxAmountPerVoucher(): int|string|float|null
     {
         return min(
             $this->fund_config->limit_generator_amount,
@@ -1955,7 +1969,10 @@ class Fund extends BaseModel
     /**
      * @param string $error_key
      * @param bool $fallback
-     * @return array
+     *
+     * @return (int|string)[]
+     *
+     * @psalm-return array{backoffice_error: 1, backoffice_error_key: string, backoffice_fallback: 0|1}
      */
     protected function backofficeError(string $error_key, bool $fallback = false): array
     {

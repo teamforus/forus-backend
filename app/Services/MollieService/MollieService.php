@@ -79,7 +79,9 @@ class MollieService
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return list{'organizations.read', 'profiles.read', 'profiles.write', 'payments.read', 'payments.write', 'onboarding.read', 'onboarding.write', 'refunds.read', 'refunds.write', 'balances.read'}
      */
     protected function getRequiredScopes(): array
     {
@@ -233,21 +235,6 @@ class MollieService
 
     /**
      * @param string $profileId
-     * @return CurrentProfile|Profile
-     * @noinspection PhpUnused
-     * @throws MollieException
-     */
-    public function readProfile(string $profileId): Profile|CurrentProfile
-    {
-        try {
-            return $this->getMollie()->profiles->get($profileId);
-        } catch (ApiException $e) {
-            $this->processApiException($e, 'readProfile');
-        }
-    }
-
-    /**
-     * @param string $profileId
      * @param array $attributes
      * @return Profile
      * @noinspection PhpUnused
@@ -278,42 +265,6 @@ class MollieService
 
     /**
      * @param string $profileId
-     * @return BaseCollection|MethodCollection
-     * @noinspection PhpUnused
-     * @throws MollieException
-     */
-    public function readAllPaymentMethods(string $profileId): BaseCollection|MethodCollection
-    {
-        try {
-            return $this->getMollie()->methods->allAvailable([
-                'profileId' => $profileId,
-                'testmode' => $this->testMode,
-            ]);
-        } catch (ApiException $e) {
-            $this->processApiException($e, 'readAllPaymentMethods');
-        }
-    }
-
-    /**
-     * @param string $profileId
-     * @return BaseCollection|MethodCollection
-     * @noinspection PhpUnused
-     * @throws MollieException
-     */
-    public function readActivePaymentMethods(string $profileId): BaseCollection|MethodCollection
-    {
-        try {
-            return $this->getMollie()->methods->allActive([
-                'profileId' => $profileId,
-                'testmode' => $this->testMode
-            ]);
-        } catch (ApiException $e) {
-            $this->processApiException($e, 'readActivePaymentMethods');
-        }
-    }
-
-    /**
-     * @param string $profileId
      * @param string $method
      * @return Method
      * @noinspection PhpUnused
@@ -325,22 +276,6 @@ class MollieService
             return $this->getMollie()->profiles->get($profileId)->enableMethod($method);
         } catch (ApiException $e) {
             $this->processApiException($e, 'enablePaymentMethod');
-        }
-    }
-
-    /**
-     * @param string $profileId
-     * @param string $method
-     * @return Method
-     * @noinspection PhpUnused
-     * @throws MollieException
-     */
-    public function disablePaymentMethod(string $profileId, string $method): Method
-    {
-        try {
-            return $this->getMollie()->profiles->get($profileId)->disableMethod($method);
-        } catch (ApiException $e) {
-            $this->processApiException($e, 'disablePaymentMethod');
         }
     }
 
@@ -391,23 +326,6 @@ class MollieService
 
     /**
      * @param string $paymentId
-     * @return Payment
-     * @noinspection PhpUnused
-     * @throws MollieException
-     */
-    public function cancelPayment(string $paymentId): Payment
-    {
-        try {
-            return $this->getMollie()->payments->cancel($paymentId, [
-                'testmode' => $this->testMode,
-            ]);
-        } catch (ApiException $e) {
-            $this->processApiException($e, 'cancelPayment');
-        }
-    }
-
-    /**
-     * @param string $paymentId
      * @param array $attributes
      * @return Refund
      * @noinspection PhpUnused
@@ -444,38 +362,6 @@ class MollieService
     }
 
     /**
-     * @param string $paymentId
-     * @param string $refundId
-     * @return Refund
-     * @noinspection PhpUnused
-     * @throws MollieException
-     */
-    public function readPaymentRefund(string $paymentId, string $refundId): Refund
-    {
-        try {
-            return $this->getPayment($paymentId)->getRefund($refundId, [
-                'testmode' => $this->testMode,
-            ]);
-        } catch (ApiException $e) {
-            $this->processApiException($e, 'readPaymentRefund');
-        }
-    }
-
-    /**
-     * @return BalanceTransactionCollection|BaseCollection
-     * @noinspection PhpUnused
-     * @throws MollieException
-     */
-    public function readBalanceTransactions(): BalanceTransactionCollection|BaseCollection
-    {
-        try {
-            return $this->getMollie()->balanceTransactions->listForPrimary();
-        } catch (ApiException $e) {
-            $this->processApiException($e, 'readBalanceTransactions');
-        }
-    }
-
-    /**
      * @return bool
      */
     public function revokeToken(): bool
@@ -507,10 +393,12 @@ class MollieService
     /**
      * @param ApiException $e
      * @param string $key
-     * @return void
+     *
+     * @return never
+     *
      * @throws MollieException
      */
-    private function processApiException(ApiException $e, string $key): void
+    private function processApiException(ApiException $e, string $key)
     {
         $body = static::parseResponseBody($e->getResponse());
 
@@ -527,10 +415,12 @@ class MollieService
     /**
      * @param ApiException $e
      * @param string $key
-     * @return void
+     *
+     * @return never
+     *
      * @throws MollieException
      */
-    private function processException(Throwable $e, string $key): void
+    private function processException(Throwable $e, string $key)
     {
         try {
             static::logError("$key error.\n", $e);

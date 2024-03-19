@@ -70,13 +70,14 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
      * @param Voucher $voucher
      * @param Product $product
      * @param array $prevReservations
-     * @return bool|string
+     *
+     * @return string|true
      */
     protected function isValidProductStock(
         Voucher $voucher,
         Product $product,
         array $prevReservations = []
-    ): bool|string {
+    ): bool|string|string {
         // total amount of reservations of the target product
         $target_products_count = count(array_filter($prevReservations, function($reservation) use ($product) {
             return $reservation['product_id'] == $product->id;
@@ -108,12 +109,15 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
     /**
      * @param Voucher $voucher
      * @param array $prevReservations
-     * @return bool|string
+     *
+     * @return string|true
+     *
+     * @psalm-return 'Onvoldoende tegoed.'|true
      */
     protected function isValidProductAmount(
         Voucher $voucher,
         array $prevReservations = []
-    ): bool|string {
+    ): string|bool|string {
         // filter reservations by voucher
         $reservationsProducts = array_filter($prevReservations, function($reservation) use ($voucher) {
             return $reservation['voucher_id'] == $voucher->id;

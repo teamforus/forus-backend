@@ -11,17 +11,19 @@ class ProductReservedRequesterMail extends ImplementationMail
     protected string $notificationTemplateKey = 'notifications_identities.product_voucher_reserved';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
      */
-    public function build(): Mailable
+    public function build(): Mailable|null
     {
         return $this->buildNotificationTemplatedMail();
     }
 
     /**
      * @param array $data
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{qr_token: string}
      */
     protected function getMailExtraData(array $data): array
     {

@@ -21,8 +21,11 @@ class SystemNotificationResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (\Illuminate\Http\Resources\Json\AnonymousResourceCollection|array|mixed|true)[]
+     *
+     * @psalm-return array{enable_all: mixed|true, enable_mail: mixed|true, enable_push: mixed|true, enable_database: mixed|true, variables: array, channels: array, templates: \Illuminate\Http\Resources\Json\AnonymousResourceCollection, templates_default: \Illuminate\Http\Resources\Json\AnonymousResourceCollection,...}
      */
     public function toArray($request): array
     {
@@ -58,7 +61,10 @@ class SystemNotificationResource extends BaseJsonResource
      * @param Collection $templates
      * @param Implementation $implementation
      * @param bool $formalCommunication
+     *
      * @return Collection
+     *
+     * @psalm-return Collection<int, \Illuminate\Database\Eloquent\Model>
      */
     public function getTemplates(
         Collection $templates,

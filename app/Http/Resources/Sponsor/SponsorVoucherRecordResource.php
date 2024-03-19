@@ -30,7 +30,10 @@ class SponsorVoucherRecordResource extends BaseJsonResource
     /**
      * @param VoucherRecord $voucherRecord
      * @param bool $forSponsor
-     * @return array
+     *
+     * @return (RecordTypeResource|mixed|null|string)[]
+     *
+     * @psalm-return array{record_type_key: null|string, record_type_name: null|string, record_type?: RecordTypeResource|mixed,...}
      */
     protected function makeResource(VoucherRecord $voucherRecord, bool $forSponsor = false): array
     {

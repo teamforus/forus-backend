@@ -13,20 +13,14 @@ use Illuminate\Validation\Rule;
  */
 class StoreFundUnsubscribeRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (array|string)[]
+     *
+     * @psalm-return array{note: 'nullable|string|max:2000', unsubscribe_at: 'required|date_format:Y-m-d|after:today', fund_provider_id: array}
      */
     public function rules(): array
     {
@@ -38,7 +32,9 @@ class StoreFundUnsubscribeRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Validation\Rules\In|string)[]
+     *
+     * @psalm-return list{'required', \Illuminate\Validation\Rules\In}
      */
     public function fundProviderIdRule(): array
     {

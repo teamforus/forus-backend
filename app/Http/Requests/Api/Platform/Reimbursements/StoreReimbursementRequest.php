@@ -18,20 +18,14 @@ use Illuminate\Validation\Rule;
  */
 class StoreReimbursementRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, mixed>
+     * @return (array|string)[]
+     *
+     * @psalm-return array{title: 'required|string|max:200', description: 'nullable|string|min:5|max:2000', amount: string, email: array{0: 'nullable'|mixed,...}, iban: list{'required', 'string', IbanRule}, iban_name: 'required|string|min:5|max:100', voucher_id: array, state: string, files: 'required|array', 'files.*': list{'required', 'string', FileUidRule}}
      */
     public function rules(): array
     {
@@ -83,7 +77,10 @@ class StoreReimbursementRequest extends BaseFormRequest
 
     /**
      * @param Reimbursement|null $reimbursement
-     * @return array
+     *
+     * @return (\Illuminate\Validation\Rules\In|string)[]
+     *
+     * @psalm-return list{'required', \Illuminate\Validation\Rules\In}
      */
     protected function voucherIdRule(?Reimbursement $reimbursement = null): array
     {
@@ -96,7 +93,9 @@ class StoreReimbursementRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Contracts\Translation\Translator|array|null|string)[]
+     *
+     * @psalm-return array{voucher_address: 'tegoeden', 'files.*': \Illuminate\Contracts\Translation\Translator|array|null|string}
      */
     public function attributes(): array
     {
@@ -107,7 +106,9 @@ class StoreReimbursementRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Contracts\Translation\Translator|array|null|string)[]
+     *
+     * @psalm-return array{'files.required': \Illuminate\Contracts\Translation\Translator|array|null|string}
      */
     public function messages(): array
     {

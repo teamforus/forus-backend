@@ -85,9 +85,8 @@ class TestData
     /**
      * @param string|null $email
      * @param bool $print
-     * @return Identity|null
      */
-    public function makeIdentity(?string $email = null, bool $print = false): ?Identity
+    public function makeIdentity(?string $email = null, bool $print = false): Identity
     {
         $emailPattern = $this->config('fund_request_email_pattern');
         $emailSlug = Str::kebab(substr($this->faker->text(rand(15, 30)), 0, -1));
@@ -122,8 +121,12 @@ class TestData
 
     /**
      * @param string $identity_address
-     * @return array
+     *
+     * @return Organization[]
+     *
      * @throws \Throwable
+     *
+     * @psalm-return array<Organization>
      */
     public function makeSponsors(string $identity_address): array
     {
@@ -329,10 +332,14 @@ class TestData
      * @param string $identity_address
      * @param int $count
      * @param array $fields
-     * @return Organization[]
      * @param int $offices_count
+     *
+     * @return Organization[]
      * @return array
+     *
      * @throws \Throwable
+     *
+     * @psalm-return non-empty-list<App\Models\Organization>
      */
     public function makeOrganizations(
         string $prefix,
@@ -543,7 +550,10 @@ class TestData
 
     /**
      * @param string $key
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{url_webshop: string, url_sponsor: string, url_provider: string, url_validator: string, url_app: string}
      */
     protected function makeImplementationUrlData(string $key): array
     {
@@ -557,7 +567,9 @@ class TestData
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed|string|true)[]
+     *
+     * @psalm-return array{digid_enabled: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, digid_required: true, digid_sign_up_allowed: true, digid_app_id: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, digid_shared_secret: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, digid_a_select_server: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, digid_trusted_cert: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, digid_connection_type: 'cgi'}
      */
     protected function makeImplementationSamlData(): array
     {
@@ -574,7 +586,9 @@ class TestData
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed)[]
+     *
+     * @psalm-return array{digid_cgi_tls_key: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, digid_cgi_tls_cert: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed}
      */
     protected function makeImplementationCgiCertData(): array
     {
@@ -685,7 +699,9 @@ class TestData
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed|true)[]
+     *
+     * @psalm-return array{backoffice_enabled?: mixed|true, backoffice_check_partner?: mixed|true, backoffice_url?: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, backoffice_key?: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, backoffice_certificate?: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed,...}
      */
     public function getBackofficeConfigs (): array
     {
@@ -705,7 +721,9 @@ class TestData
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed)[]
+     *
+     * @psalm-return array{iconnect_api_oin: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, iconnect_base_url: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, iconnect_target_binding: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, iconnect_cert: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, iconnect_cert_pass: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, iconnect_key: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, iconnect_key_pass: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed, iconnect_cert_trust: \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed}
      */
     public function getIConnectConfigs(): array {
         return [
@@ -764,8 +782,12 @@ class TestData
      * @param Fund $fund
      * @param int $count
      * @param array $records
-     * @return array
+     *
+     * @return (int|mixed|null|string)[][]
+     *
      * @throws \Throwable
+     *
+     * @psalm-return list{0?: array{gender: int<3, 600>|mixed|null|string, net_worth: int<3, 600>|mixed|null|string, children_nth: int<3, 600>|mixed|null|string, municipality: int<3, 600>|mixed|null|string, birth_date: int<3, 600>|mixed|null|string, email: int<3, 600>|mixed|null|string, iban: int<3, 600>|mixed|null|string, civil_status: int<3, 600>|mixed|null|string, single_parent: int<3, 600>|mixed|null|string,...},...}
      */
     public function generatePrevalidationData(
         Fund $fund,
@@ -821,8 +843,12 @@ class TestData
      * @param Organization $provider
      * @param int $count
      * @param array $data
-     * @return array
+     *
+     * @return Product[]
+     *
      * @throws \Throwable
+     *
+     * @psalm-return non-empty-list<App\Models\Product>
      */
     public function makeProducts(Organization $provider, int $count = 10, array $data = []): array
     {
@@ -889,10 +915,13 @@ class TestData
     }
 
     /**
-     * @return int
+     * @return false|int
+     *
      * @throws \Throwable
+     *
+     * @psalm-return false|int<100000000, 900000000>
      */
-    public static function randomFakeBsn(): int
+    public static function randomFakeBsn(): int|false
     {
         static $randomBsn = [];
 
@@ -1020,17 +1049,20 @@ class TestData
      * @param null $default
      * @return \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed
      */
-    public function config($key, $default = null): mixed
+    public function config(string $key, $default = null): mixed
     {
         return Arr::get($this->getConfigData(), $key, $default);
     }
 
     /**
-     * @param $keys
+     * @param string[] $keys
      * @param null $default
+     *
      * @return array
+     *
+     * @psalm-param list{'backoffice_fallback', 'backoffice_client_cert', 'backoffice_client_cert_key'} $keys
      */
-    public function configOnly($keys, $default = null): array
+    public function configOnly(array $keys, $default = null): array
     {
         return array_merge(array_fill_keys($keys, $default), Arr::only($this->getConfigData(), $keys));
     }
@@ -1059,15 +1091,6 @@ class TestData
     public function success(string $msg, bool $timestamp = true): void
     {
         echo ($timestamp ? $this->timestamp() : null) . "\e[0;32m$msg\e[0m\n";
-    }
-
-    /**
-     * @param string $msg
-     * @param bool $timestamp
-     */
-    public function error(string $msg, bool $timestamp = true): void
-    {
-        echo ($timestamp ? $this->timestamp() : null) . "\e[0;31m$msg\e[0m\n";
     }
 
     /**
@@ -1169,15 +1192,6 @@ class TestData
                 $fund->makeFundFormulaProductVouchers($identity_address, compact('note'));
             }
         }
-    }
-
-    /**
-     * @param string $configKey
-     * @noinspection PhpUnused
-     */
-    public function setConfigKey(string $configKey): void
-    {
-        $this->configKey = $configKey;
     }
 
     /**

@@ -22,7 +22,9 @@ abstract class BaseFundRequest extends BaseFormRequest
     use ValidatesFaq;
 
     /**
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\Exists|string)[]|string)[]
+     *
+     * @psalm-return array{formula_products?: 'nullable|array', 'formula_products.*'?: 'required|array', 'formula_products.*.product_id'?: list{'required', \Illuminate\Validation\Rules\Exists}, 'formula_products.*.record_type_key_multiplier'?: 'nullable|exists:record_types,key'}
      */
     protected function fundFormulaProductsRule(): array
     {
@@ -41,6 +43,8 @@ abstract class BaseFundRequest extends BaseFormRequest
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{hide_meta: 'nullable|boolean', email_required: 'nullable|boolean', allow_fund_requests: 'nullable|boolean', allow_prevalidations: 'nullable|boolean', allow_direct_requests: 'nullable|boolean', contact_info_enabled: 'nullable|boolean', contact_info_required: 'nullable|boolean', contact_info_message_custom: 'nullable|boolean', contact_info_message_text: 'nullable|string|max:8000', auth_2fa_policy: string, auth_2fa_remember_ip: 'nullable|boolean', auth_2fa_restrict_emails: 'nullable|boolean', auth_2fa_restrict_auth_sessions: 'nullable|boolean', auth_2fa_restrict_reimbursements: 'nullable|boolean'}
      */
     protected function funConfigsRules(): array
     {
@@ -68,7 +72,10 @@ abstract class BaseFundRequest extends BaseFormRequest
 
     /**
      * @param array $criteriaIds
-     * @return array
+     *
+     * @return ((FundCriteriaKeyRule|FundCriteriaMaxRule|FundCriteriaMinRule|FundCriteriaOperatorRule|FundCriteriaValueRule|\Illuminate\Validation\Rules\In|string)[]|\Illuminate\Validation\Rules\In|string)[]
+     *
+     * @psalm-return array{criteria?: 'nullable|array', 'criteria.*'?: 'required|array', 'criteria.*.id'?: list{'nullable', \Illuminate\Validation\Rules\In}, 'criteria.*.operator'?: list{'present', FundCriteriaOperatorRule}, 'criteria.*.record_type_key'?: list{'required', FundCriteriaKeyRule}, 'criteria.*.value'?: list{'nullable', FundCriteriaValueRule}, 'criteria.*.optional'?: 'nullable|boolean', 'criteria.*.show_attachment'?: 'nullable|boolean', 'criteria.*.min'?: list{'nullable', FundCriteriaMinRule}, 'criteria.*.max'?: list{'nullable', FundCriteriaMaxRule}, 'criteria.*.title'?: 'nullable|string|max:100', 'criteria.*.description'?: 'nullable|string|max:4000', 'criteria.*.validators'?: 'nullable|array', 'criteria.*.validators.*'?: \Illuminate\Validation\Rules\In}
      */
     protected function criteriaRule(array $criteriaIds = []): array
     {
@@ -110,7 +117,9 @@ abstract class BaseFundRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{'external_page_url.required_if': 'Het external URL veld is verplicht'}
      */
     public function messages(): array
     {

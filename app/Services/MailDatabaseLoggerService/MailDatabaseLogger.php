@@ -9,27 +9,7 @@ use Illuminate\Mail\Events\MessageSending;
 
 class MailDatabaseLogger
 {
-    /**
-     * Handle the actual logging.
-     *
-     * @param MessageSending $event
-     * @return void
-     */
-    public function handle(MessageSending $event): void
-    {
-        EmailLog::create([
-            'from' => $this->formatAddressField($event->message, 'From'),
-            'to' => $this->formatAddressField($event->message, 'To'),
-            'cc' => $this->formatAddressField($event->message, 'Cc'),
-            'bcc' => $this->formatAddressField($event->message, 'Bcc'),
-            'subject' => $event->message->getSubject(),
-            'body' => $event->message->toString(),
-            'content' => $event->message->getHtmlBody() ?: $event->message->getTextBody(),
-            'headers' => $event->message->getHeaders()->toString(),
-            'mailable' => $event->data['mailable'] ?? null,
-            'attachments' => $this->saveAttachments($event->message),
-        ]);
-    }
+
 
     /**
      * Format address strings for sender, to, cc, bcc.

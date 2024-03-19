@@ -175,10 +175,11 @@ class ReservationExtraPayment extends Model
     }
 
     /**
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
+     *
      * @noinspection PhpUnused
      */
-    public function getStateLocaleAttribute(): string
+    public function getStateLocaleAttribute(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans("states/reservation_extra_payments.$this->state");
     }
@@ -204,7 +205,10 @@ class ReservationExtraPayment extends Model
     /**
      * @param Employee|null $employee
      * @param array $extraModels
-     * @return array
+     *
+     * @return (Employee|ProductReservation|mixed|null|static)[]
+     *
+     * @psalm-return array{employee: Employee|mixed|null, product_reservation: ProductReservation|mixed, reservation_extra_payment: mixed|static,...}
      */
     public function getLogModels(?Employee $employee = null, array $extraModels = []): array
     {
@@ -217,11 +221,13 @@ class ReservationExtraPayment extends Model
 
     /**
      * @param Employee|null $employee
-     * @return ReservationExtraPayment|null
+     *
+     * @return null|static
+     *
      * @throws MollieException
      * @throws \Throwable
      */
-    public function fetchAndUpdateMolliePayment(?Employee $employee): ?ReservationExtraPayment
+    public function fetchAndUpdateMolliePayment(?Employee $employee): static|null
     {
         if (!$this->payment_id || !$this->getMollieConnection()?->onboardingComplete()) {
             return null;
@@ -415,8 +421,10 @@ class ReservationExtraPayment extends Model
 
     /**
      * @return int|null
+     *
+     * @psalm-return int<0, max>|null
      */
-    public function expiresIn(): ?int
+    public function expiresIn(): int|null
     {
         return $this->expires_at ? max(now()->diffInSeconds($this->expires_at, false), 0) : null;
     }
@@ -462,7 +470,7 @@ class ReservationExtraPayment extends Model
     }
 
     /**
-     * @return bool
+     * @return false
      */
     public function checkCancelableMollie(): bool
     {

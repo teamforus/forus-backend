@@ -6,20 +6,14 @@ use App\Http\Requests\BaseFormRequest;
 
 class SearchBusinessTypesRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{q: 'string|min:1|max:10000', used: 'boolean', per_page: 'nullable|numeric|min:1|max:10000'}
      */
     public function rules(): array
     {

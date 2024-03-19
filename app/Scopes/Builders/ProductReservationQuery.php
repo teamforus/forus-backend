@@ -75,24 +75,6 @@ class ProductReservationQuery
      * @param Builder $builder
      * @return Builder
      */
-    public static function whereNotExpiredAndAccepted(Builder $builder): Builder
-    {
-        return self::whereNotExpired($builder)->where('state', ProductReservation::STATE_ACCEPTED);
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    public static function whereNotExpiredAndPending(Builder $builder): Builder
-    {
-        return self::whereNotExpired($builder)->where('state', ProductReservation::STATE_PENDING);
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
     public static function whereExpiredAndPending(Builder $builder): Builder
     {
         return self::whereExpired($builder)->where('state', ProductReservation::STATE_PENDING);
@@ -124,7 +106,6 @@ class ProductReservationQuery
     /**
      * @param Builder|ProductReservation $builder
      * @param int $waitingTime
-     * @return Builder|ProductReservation
      */
     public static function whereExtraPaymentExpired(
         Builder|ProductReservation $builder,

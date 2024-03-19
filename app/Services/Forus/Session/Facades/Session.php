@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Facade;
  */
 class Session extends Facade
 {
+    /**
+     * @return string
+     *
+     * @psalm-return 'forus.session'
+     */
     protected static function getFacadeAccessor()
     {
         return 'forus.session';

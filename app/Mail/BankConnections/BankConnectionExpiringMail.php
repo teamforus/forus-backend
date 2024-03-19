@@ -12,10 +12,9 @@ class BankConnectionExpiringMail extends ImplementationMail
     protected string $notificationTemplateKey = "notifications_bank_connections.expiring";
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
      */
-    public function build(): Mailable
+    public function build(): Mailable|null
     {
         return $this->buildNotificationTemplatedMail();
     }

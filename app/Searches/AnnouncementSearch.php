@@ -31,7 +31,7 @@ class AnnouncementSearch extends BaseSearch
     }
 
     /**
-     * @return Builder|null
+     * @return Builder
      */
     public function query(): ?Builder
     {
@@ -73,7 +73,6 @@ class AnnouncementSearch extends BaseSearch
 
     /**
      * @param Builder|Announcement $builder
-     * @return Builder|Announcement
      */
     protected function whereBankConnection(Builder|Announcement $builder): Builder|Announcement
     {

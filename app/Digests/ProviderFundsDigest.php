@@ -68,13 +68,12 @@ class ProviderFundsDigest extends BaseOrganizationDigest
      * @param Organization $organization
      * @param string $targetEvent
      * @param array $otherEvents
-     * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|Collection
      */
     protected function getEvents(
         Organization $organization,
         string $targetEvent,
         array $otherEvents
-    ): mixed {
+    ): Collection {
         $logsApprovedBudget = EventLog::eventsOfTypeQuery(
             FundProvider::class,
             $organization->fund_providers(),
@@ -327,7 +326,8 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
     /**
      * @param MailBodyBuilder $emailBody
-     * @return BaseDigestMail
+     *
+     * @return DigestProviderFundsMail
      */
     protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
     {

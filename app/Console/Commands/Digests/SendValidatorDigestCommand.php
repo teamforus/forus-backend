@@ -24,14 +24,4 @@ class SendValidatorDigestCommand extends Command
      * @var string
      */
     protected $description = 'Send validator digest.';
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        ValidatorDigest::dispatchSync();
-    }
 }

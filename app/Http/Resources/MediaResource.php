@@ -18,7 +18,10 @@ class MediaResource extends JsonResource
      * Transform the resource into an array.
      *
      * @param Request $request
-     * @return array|null
+     *
+     * @return (\Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection|mixed)[]|null
+     *
+     * @psalm-return array{sizes: \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection<array-key, string>,...}|null
      */
     public function toArray($request): ?array
     {

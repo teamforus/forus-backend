@@ -18,8 +18,11 @@ class VoucherTransactionBulkResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (BankResource|int|mixed|null|string)[]
+     *
+     * @psalm-return array{auth_url: mixed|null|string, bank: BankResource|mixed, execution_date: mixed|null|string, execution_date_locale: mixed|null|string, voucher_transactions_cost: mixed, voucher_transactions_count: int|mixed, voucher_transactions_amount: mixed, voucher_transactions_amount_locale: mixed|string,...}
      */
     public function toArray($request): array
     {

@@ -17,16 +17,6 @@ class StoreFundRequestRequest extends BaseFormRequest
     protected bool $isValidationRequest = false;
 
     /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->fund->state === Fund::STATE_ACTIVE;
-    }
-
-    /**
      * Get the validation rules that apply to the request.
      *
      * @return array
@@ -41,7 +31,10 @@ class StoreFundRequestRequest extends BaseFormRequest
 
     /**
      * @param Fund $fund
-     * @return array
+     *
+     * @return string[][]
+     *
+     * @psalm-return array{contact_information: list{0?: 'nullable'|'required', 1?: 'string', 2?: 'min:5', 3?: 'max:2000'}}
      */
     protected function contactInformationRule(Fund $fund): array
     {
@@ -61,7 +54,10 @@ class StoreFundRequestRequest extends BaseFormRequest
 
     /**
      * @param Fund $fund
-     * @return array
+     *
+     * @return ((FundRequestRecordCriterionIdRule|FundRequestRecordFilesRule|FundRequestRecordValueRule|string)[]|string)[]
+     *
+     * @psalm-return array{records: 'present|array'|'present|array|min:1', 'records.*': 'required|array', 'records.*.value': list{'present', FundRequestRecordValueRule}, 'records.*.files': list{'present', FundRequestRecordFilesRule}, 'records.*.fund_criterion_id': list{'present', FundRequestRecordCriterionIdRule}}
      */
     protected function recordsRule(Fund $fund): array
     {
@@ -84,7 +80,9 @@ class StoreFundRequestRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Contracts\Translation\Translator|array|null|string)[]
+     *
+     * @psalm-return array{'records.*.value.required'?: \Illuminate\Contracts\Translation\Translator|array|null|string}
      */
     public function messages(): array
     {

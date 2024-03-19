@@ -32,7 +32,10 @@ class ReimbursementResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param Request $request
-     * @return array
+     *
+     * @return (VoucherTransactionResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|array|bool|mixed|null|string)[]
+     *
+     * @psalm-return array{resolved: bool|mixed, fund: array|mixed, files: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed, voucher_transaction: VoucherTransactionResource|mixed, resolved_at: mixed|null|string, resolved_at_locale: mixed|null|string, submitted_at: mixed|null|string, submitted_at_locale: mixed|null|string, expire_at: mixed|null|string, expire_at_locale: mixed|null|string,...}
      */
     public function toArray($request): array
     {
@@ -59,7 +62,10 @@ class ReimbursementResource extends BaseJsonResource
     /**
      * @param Fund $fund
      * @param Request $request
-     * @return array
+     *
+     * @return (OrganizationTinyResource|mixed)[]
+     *
+     * @psalm-return array{organization: OrganizationTinyResource,...}
      */
     protected function fundResource(Fund $fund, Request $request): array
     {

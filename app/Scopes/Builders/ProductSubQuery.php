@@ -74,9 +74,8 @@ class ProductSubQuery
 
     /**
      * @param array $options
-     * @return Builder
      */
-    public static function limitMultiplierQuery(array $options = []): Builder
+    public static function limitMultiplierQuery(array $options = []): Builder|\Illuminate\Database\Eloquent\Relations\Relation
     {
         /** @var int|null $fund_id */
         $fund_id = array_get($options, 'fund_id');

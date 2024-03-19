@@ -24,48 +24,14 @@ use Psr\SimpleCache\InvalidArgumentException;
  */
 class StoreVoucherTransactionRequest extends BaseFormRequest
 {
-    public function __construct()
-    {
-        parent::__construct();
-        $this->maxAttempts = 1;
-        $this->decayMinutes = Config::get('forus.transactions.hard_limit') / 60;
-    }
 
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     * @throws AuthorizationException
-     * @throws InvalidArgumentException|AuthorizationJsonException
-     */
-    public function authorize(): bool
-    {
-        $this->throttleWithKey('to_many_attempts', $this, 'make_transaction', null, 403);
-
-        $voucher = $this->voucher_address_or_physical_code->voucher;
-        $locker = new Locker("store_transactions.$voucher->id");
-
-        if (!$locker->waitForUnlockAndLock()) {
-            abort(429, 'To many requests, please try again later.');
-        }
-
-        if ($this->has('product_id') && $this->has('amount')) {
-            abort(422, 'Je kan alleen `product_id` of `amount` indienen maar niet beide tegelijkertijd.');
-        }
-
-        $authorized = $this->has('product_id') ?
-            Gate::allows('useAsProviderWithProducts', [$voucher, $this->input('product_id')]) :
-            Gate::allows('useAsProvider', $voucher);
-
-        Gate::authorize('makeTransactionThrottle', $voucher);
-
-        return $authorized;
-    }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (string|string[])[]
+     *
+     * @psalm-return array<array<string>|string>
      */
     public function rules(): array
     {
@@ -89,6 +55,8 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{note: 'nullable|string|between:2,255'}
      */
     private function commonRules(): array
     {
@@ -99,7 +67,10 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
 
     /**
      * @param Voucher $voucher
-     * @return \string[][]
+     *
+     * @return string[][]
+     *
+     * @psalm-return array{product_id: list{'nullable'|'required', string}, amount: list{'nullable'|'required', 'numeric', 'min:.02', string}, organization_id: list{'nullable'|'required', 'exists:organizations,id', string}}
      */
     private function budgetVoucherRules(Voucher $voucher): array
     {
@@ -138,7 +109,10 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
 
     /**
      * @param Voucher $voucher
-     * @return \string[][]
+     *
+     * @return string[]
+     *
+     * @psalm-return array{product_id: string}
      */
     private function subsidyVoucherRules(Voucher $voucher): array
     {
@@ -194,7 +168,7 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
      * @param $voucher
      * @return array
      */
-    private function getAvailableSubsidyProductIds($voucher): array
+    private function getAvailableSubsidyProductIds(Voucher $voucher): array
     {
         return Product::whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {
             $organizations = $this->getValidOrganizations($voucher);
@@ -208,7 +182,9 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Contracts\Translation\Translator|array|null|string)[]
+     *
+     * @psalm-return array{'amount.max': \Illuminate\Contracts\Translation\Translator|array|null|string}
      */
     public function messages(): array
     {

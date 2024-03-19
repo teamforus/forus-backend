@@ -11,15 +11,7 @@ use Illuminate\Validation\Rule;
  */
 class UpdateOrganizationReservationSettingsRequest extends BaseOrganizationRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -35,7 +27,9 @@ class UpdateOrganizationReservationSettingsRequest extends BaseOrganizationReque
     }
 
     /**
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\In|string)[]|string)[]
+     *
+     * @psalm-return array{fields: 'nullable|array|max:10', 'fields.*': 'required|array', 'fields.*.type': list{'required', \Illuminate\Validation\Rules\In}, 'fields.*.label': 'required|string|max:200', 'fields.*.required': 'nullable|boolean', 'fields.*.description': 'nullable|string|max:1000'}
      */
     private function reservationCustomFieldRules(): array
     {
@@ -53,7 +47,9 @@ class UpdateOrganizationReservationSettingsRequest extends BaseOrganizationReque
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Contracts\Translation\Translator|array|null|string)[]
+     *
+     * @psalm-return array{'fields.*.type': \Illuminate\Contracts\Translation\Translator|array|null|string, 'fields.*.label': \Illuminate\Contracts\Translation\Translator|array|null|string, 'fields.*.description': \Illuminate\Contracts\Translation\Translator|array|null|string}
      */
     public function attributes(): array
     {

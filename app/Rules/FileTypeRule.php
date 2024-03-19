@@ -22,6 +22,8 @@ class FileTypeRule implements Rule
      * Get the validation error message.
      *
      * @return string
+     *
+     * @psalm-return 'Invalid media type.'
      */
     public function message(): string
     {

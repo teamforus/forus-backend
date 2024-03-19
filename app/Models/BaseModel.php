@@ -17,9 +17,8 @@ class BaseModel extends \Illuminate\Database\Eloquent\Model
     /**
      * @param array $attributes
      * @param array $options
-     * @return static
      */
-    public function updateModel(array $attributes = [], array $options = []): static
+    public function updateModel(array $attributes = [], array $options = []): bool
     {
         return tap($this)->update($attributes, $options);
     }
@@ -36,7 +35,8 @@ class BaseModel extends \Illuminate\Database\Eloquent\Model
     }
 
     /**
-     * @param Closure<static> $function
+     * @param Closure $function
+     *
      * @return $this
      */
     public function closure(Closure $function): static

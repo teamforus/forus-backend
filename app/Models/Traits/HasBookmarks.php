@@ -34,9 +34,8 @@ trait HasBookmarks
 
     /**
      * @param Identity $identity
-     * @return Product|HasBookmarks
      */
-    public function removeBookmark(Identity $identity): self
+    public function removeBookmark(Identity $identity): \App\Models\Product
     {
         $this->bookmarks()->where([
             'identity_address' => $identity->address,

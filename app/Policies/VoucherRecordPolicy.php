@@ -19,13 +19,12 @@ class VoucherRecordPolicy
      * @param Identity $identity
      * @param Organization $organization
      * @param Voucher $voucher
-     * @return Response|bool
      */
     public function viewAny(
         Identity $identity,
         Voucher $voucher,
         Organization $organization
-    ): Response|bool {
+    ): bool|bool {
         return $this->validateEndpoint($identity, $voucher, $organization);
     }
 
@@ -53,13 +52,12 @@ class VoucherRecordPolicy
      * @param Identity $identity
      * @param Organization $organization
      * @param Voucher $voucher
-     * @return Response|bool
      */
     public function create(
         Identity $identity,
         Voucher $voucher,
         Organization $organization
-    ): Response|bool {
+    ): bool|bool {
         return $this->validateEndpoint($identity, $voucher, $organization);
     }
 
@@ -70,14 +68,13 @@ class VoucherRecordPolicy
      * @param Organization $organization
      * @param Voucher $voucher
      * @param VoucherRecord $voucherRecord
-     * @return Response|bool
      */
     public function update(
         Identity $identity,
         VoucherRecord $voucherRecord,
         Voucher $voucher,
         Organization $organization
-    ): Response|bool {
+    ): bool|bool {
         if (!$this->validateEndpoint($identity, $voucher, $organization)) {
             return false;
         }

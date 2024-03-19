@@ -22,16 +22,6 @@ abstract class BaseOrganizationDigest
     protected array $employeePermissions = [];
 
     /**
-     * @param NotificationService $notificationService
-     */
-    public function handle(NotificationService $notificationService): void
-    {
-        foreach (Organization::whereHas($this->requiredRelation)->get() as $organization) {
-            $this->handleOrganizationDigest($organization, $notificationService);
-        }
-    }
-
-    /**
      * @param Organization $organization
      * @param NotificationService $notificationService
      * @return void
@@ -43,9 +33,8 @@ abstract class BaseOrganizationDigest
 
     /**
      * @param Organization $organization
-     * @return Carbon
      */
-    public function getLastOrganizationDigestTime(Organization $organization): Carbon
+    public function getLastOrganizationDigestTime(Organization $organization): \Illuminate\Support\Carbon
     {
         return $organization->lastDigestOfType($this->digestKey)->created_at ?? now()->subDay();
     }

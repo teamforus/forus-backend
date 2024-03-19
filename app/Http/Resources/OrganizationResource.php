@@ -30,7 +30,10 @@ class OrganizationResource extends JsonResource
 
     /**
      * @param null $request
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return list{'tags', 'offices', 'contacts', 'offices', 'business_type', 'reservation_fields', 'bank_connection_active', 'employees.roles.permissions',...}
      */
     public static function load($request = null): array
     {
@@ -126,7 +129,10 @@ class OrganizationResource extends JsonResource
     /**
      * @param BaseFormRequest $request
      * @param Organization $organization
-     * @return array
+     *
+     * @return (array|bool|mixed)[]
+     *
+     * @psalm-return array{has_bank_connection?: bool|mixed, bank_statement_details?: array,...}
      */
     protected function employeeOnlyData(BaseFormRequest $request, Organization $organization): array
     {
@@ -168,7 +174,10 @@ class OrganizationResource extends JsonResource
 
     /**
      * @param Organization $organization
-     * @return array
+     *
+     * @return (null|string)[]
+     *
+     * @psalm-return array{email: null|string, phone: null|string, website: null|string}
      */
     protected function privateData(Organization $organization): array
     {
@@ -181,7 +190,10 @@ class OrganizationResource extends JsonResource
 
     /**
      * @param Organization $organization
-     * @return array
+     *
+     * @return (\Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed)[]
+     *
+     * @psalm-return array{contacts?: \Illuminate\Http\Resources\Json\AnonymousResourceCollection, reservation_fields?: \Illuminate\Http\Resources\Json\AnonymousResourceCollection,...}
      */
     protected function ownerData(Organization $organization): array
     {
@@ -198,7 +210,10 @@ class OrganizationResource extends JsonResource
 
     /**
      * @param Organization $organization
-     * @return array
+     *
+     * @return (mixed|string)[]
+     *
+     * @psalm-return array{bi_connection_url?: string,...}
      */
     protected function getBIConnectionData(Organization $organization): array
     {

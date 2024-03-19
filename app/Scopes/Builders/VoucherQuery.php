@@ -21,12 +21,11 @@ class VoucherQuery
      * @param string $identity_address
      * @param $fund_id
      * @param null $organization_id Provider organization id
-     * @return Builder|Voucher
      */
     public static function whereProductVouchersCanBeScannedForFundBy(
         Builder|Voucher $builder,
         string $identity_address,
-        $fund_id,
+        int $fund_id,
         $organization_id = null
     ): Builder|Voucher {
         $builder->whereHas('product', static function(Builder $builder) use (
@@ -122,18 +121,16 @@ class VoucherQuery
 
     /**
      * @param Builder $builder
-     * @return Builder
      */
-    public static function whereNotExpiredAndPending(Builder $builder): Builder
+    public static function whereNotExpiredAndPending(Builder $builder): Builder|Relation
     {
         return self::whereNotExpired(self::wherePending($builder));
     }
 
     /**
      * @param Builder $builder
-     * @return Builder
      */
-    public static function whereNotExpiredAndDeactivated(Builder $builder): Builder
+    public static function whereNotExpiredAndDeactivated(Builder $builder): Builder|Relation
     {
         return self::whereNotExpired(self::whereDeactivated($builder));
     }
@@ -155,9 +152,8 @@ class VoucherQuery
 
     /**
      * @param Builder $builder
-     * @return Builder
      */
-    public static function whereExpiredButActive(Builder $builder): Builder
+    public static function whereExpiredButActive(Builder $builder): Builder|Relation|Voucher
     {
         return static::whereActive(static::whereExpired($builder));
     }
@@ -177,7 +173,6 @@ class VoucherQuery
     /**
      * @param Builder|Voucher $builder
      * @param string $q
-     * @return Builder|Voucher
      */
     public static function whereSearchSponsorQuery(Builder|Voucher $builder, string $q): Builder|Voucher
     {
@@ -207,7 +202,6 @@ class VoucherQuery
 
     /**
      * @param Builder|Voucher $builder
-     * @return Builder|Voucher
      */
     public static function whereVisibleToSponsor(Builder|Voucher $builder): Builder|Voucher
     {
@@ -254,13 +248,12 @@ class VoucherQuery
      * @param Builder|Relation $builder
      * @param Carbon|null $fromDate
      * @param Carbon|null $toDate
-     * @return Builder
      */
     public static function whereInUseDateQuery(
         Builder|Relation $builder,
         Carbon $fromDate = null,
         Carbon $toDate = null,
-    ): Builder {
+    ): Builder|Relation {
         if ($fromDate) {
             $builder->where("first_use_date", '>=', $fromDate);
         }

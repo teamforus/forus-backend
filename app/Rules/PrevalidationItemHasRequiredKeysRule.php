@@ -42,9 +42,8 @@ class PrevalidationItemHasRequiredKeysRule extends BaseRule
 
     /**
      * @param Fund|null $fund
-     * @return array
      */
-    protected function requiredKeys(?Fund $fund): array
+    protected function requiredKeys(?Fund $fund): array|null
     {
         return $fund?->requiredPrevalidationKeys();
     }

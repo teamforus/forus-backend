@@ -73,9 +73,8 @@ class Notification extends DatabaseNotification
      * @param BaseFormRequest $request
      * @param bool|null $seen
      * @param null $query
-     * @return Builder|Relation
      */
-    public static function search(BaseFormRequest $request, ?bool $seen, $query = null): Builder|Relation
+    public static function search(BaseFormRequest $request, ?bool $seen, $query = null): Builder|self|Relation
     {
         $query = $query ?: self::query();
         $scope = $request->client_type();

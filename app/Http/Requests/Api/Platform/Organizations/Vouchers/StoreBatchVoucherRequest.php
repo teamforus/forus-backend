@@ -14,7 +14,9 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((BsnRule|mixed|string)[]|mixed|string)[]
+     *
+     * @psalm-return array{fund_id: array|mixed|string, vouchers: mixed|string, 'vouchers.*': mixed|string, 'vouchers.*.amount': array<string>|mixed|string, 'vouchers.*.product_id': array<string>|mixed|string, 'vouchers.*.expire_at': array<string>|mixed|string, 'vouchers.*.note': mixed|string, 'vouchers.*.email': array{0: 'nullable'|mixed,...}|mixed|string, 'vouchers.*.bsn': list{'nullable', BsnRule}|mixed|string, 'vouchers.*.activate': mixed|string, 'vouchers.*.activation_code': mixed|string, 'vouchers.*.client_uid': mixed|string, 'vouchers.*.limit_multiplier': mixed|string, 'vouchers.*.records': array|mixed|string,...}
      */
     public function rules(): array
     {
@@ -45,7 +47,10 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
 
     /**
      * @param Fund $fund
-     * @return array|string[]
+     *
+     * @return ((IbanRule|string)[]|string)[]
+     *
+     * @psalm-return array{'vouchers.*.direct_payment_iban': 'nullable|in:'|list{'nullable', 'prohibits:vouchers.*.product_id', IbanRule}, 'vouchers.*.direct_payment_name': 'required_with:vouchers.*.direct_payment_iban|in:'|list{'required_with:vouchers.*.direct_payment_iban', 'string', 'min:3', 'max:280'}}
      */
     protected function directPaymentRules(Fund $fund): array
     {
@@ -72,7 +77,9 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Validation\Rules\Exists|string)[]
+     *
+     * @psalm-return list{'required', \Illuminate\Validation\Rules\Exists}
      */
     private function fundIdRule(): array
     {
@@ -86,7 +93,10 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
 
     /**
      * @param Fund $fund
+     *
      * @return string[]
+     *
+     * @psalm-return list{'nullable', 'date_format:Y-m-d', string, string}
      */
     private function expireAtRule(Fund $fund): array
     {
@@ -100,9 +110,12 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
 
     /**
      * @param Fund $fund
-     * @return string|string[]
+     *
+     * @return (VouchersArraySumAmountsRule|string)[]|string
+     *
+     * @psalm-return 'nullable'|list{'nullable', 'required_without:vouchers.*.product_id', 'numeric', string, VouchersArraySumAmountsRule}
      */
-    private function amountRule(Fund $fund): array|string
+    private function amountRule(Fund $fund): array|string|string
     {
         return $fund->isTypeBudget() ? [
             'nullable',
@@ -115,7 +128,10 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
 
     /**
      * @param Fund $fund
-     * @return string[]
+     *
+     * @return (ProductIdInStockRule|string)[]
+     *
+     * @psalm-return list{'nullable', 'exists:products,id', ProductIdInStockRule,...}
      */
     private function productIdRule(Fund $fund): array
     {
@@ -146,7 +162,9 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
     }
 
     /**
-     * @return array
+     * @return (mixed|string)[]
+     *
+     * @psalm-return array{'vouchers.*.direct_payment_iban.in': '[direct_payment_iban] - direct payments are not available for the target fund.', 'vouchers.*.direct_payment_name.in': '[direct_payment_name] - direct payments are not available for the target fund.',...}
      */
     public function messages(): array
     {
@@ -157,7 +175,9 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
     }
 
     /**
-     * @return array
+     * @return (array|string)[]
+     *
+     * @psalm-return array<array|string>
      */
     public function attributes(): array
     {

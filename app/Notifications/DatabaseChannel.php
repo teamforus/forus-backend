@@ -13,9 +13,12 @@ class DatabaseChannel extends IlluminateDatabaseChannel
     /**
      * Build an array payload for the DatabaseNotification Model.
      *
-     * @param  mixed  $notifiable
-     * @param  \Illuminate\Notifications\Notification  $notification
-     * @return array
+     * @param mixed  $notifiable
+     * @param \Illuminate\Notifications\Notification  $notification
+     *
+     * @return (array|mixed|null|string)[]
+     *
+     * @psalm-return array{id: mixed|string, type: get-class-of<$notification, Illuminate\Notifications\Notification>|mixed, data: array|mixed, read_at: mixed|null,...}
      */
     protected function buildPayload($notifiable, Notification $notification): array
     {

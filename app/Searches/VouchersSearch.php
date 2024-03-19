@@ -21,7 +21,7 @@ class VouchersSearch extends BaseSearch
     }
 
     /**
-     * @return Voucher|Builder
+     * @return Builder|Voucher
      */
     public function query(): ?Builder
     {
@@ -67,7 +67,6 @@ class VouchersSearch extends BaseSearch
 
     /**
      * @param Builder|Voucher $builder
-     * @return Builder|Voucher
      */
     protected function order(Builder|Voucher $builder): Builder|Voucher
     {

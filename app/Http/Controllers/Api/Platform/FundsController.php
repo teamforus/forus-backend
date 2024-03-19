@@ -107,10 +107,10 @@ class FundsController extends Controller
      *
      * @param BaseFormRequest $request
      * @param Fund $fund
-     * @return VoucherResource|null
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function apply(BaseFormRequest $request, Fund $fund): ?VoucherResource
+    public function apply(BaseFormRequest $request, Fund $fund): VoucherResource
     {
         $this->authorize('apply', [$fund, 'apply']);
 

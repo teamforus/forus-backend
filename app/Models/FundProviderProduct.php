@@ -148,9 +148,8 @@ class FundProviderProduct extends BaseModel
 
     /**
      * @param float $price
-     * @return float
      */
-    public function getUserPrice(float $price): float
+    public function getUserPrice(float $price): string
     {
         return currency_format(max(0, $price - $this->amount));
     }
@@ -197,10 +196,10 @@ class FundProviderProduct extends BaseModel
 
     /**
      * @param Voucher $voucher
-     * @return int|null
+     *
      * @throws \Exception
      */
-    public function stockAvailableForVoucher(Voucher $voucher): ?int
+    public function stockAvailableForVoucher(Voucher $voucher): int
     {
         return (int) max(ProductSubQuery::appendReservationStats([
             'voucher_id' => $voucher->id,

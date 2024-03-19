@@ -16,7 +16,7 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
+     * @return true
      */
     public function authorize(): bool
     {
@@ -48,7 +48,9 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
     }
 
     /**
-     * @return array
+     * @return (MediaUidRule|string)[]
+     *
+     * @psalm-return list{'required', 'string', 'exists:media,uid', MediaUidRule}
      */
     private function mediaRule(): array {
         return [

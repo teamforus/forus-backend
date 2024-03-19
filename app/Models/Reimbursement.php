@@ -200,10 +200,9 @@ class Reimbursement extends Model
     }
 
     /**
-     * @return Carbon|null
      * @noinspection PhpUnused
      */
-    public function getExpireAtAttribute(): ?Carbon
+    public function getExpireAtAttribute(): \Illuminate\Support\Carbon|null
     {
         if ($this->isResolved()) {
             return null;
@@ -217,10 +216,9 @@ class Reimbursement extends Model
     }
 
     /**
-     * @return int|null
      * @noinspection PhpUnused
      */
-    public function getLeadTimeDaysAttribute(): ?int
+    public function getLeadTimeDaysAttribute(): int
     {
         return ($this->resolved_at ?: now())->diffInDays($this->created_at);
     }
@@ -249,10 +247,9 @@ class Reimbursement extends Model
     }
 
     /**
-     * @return string|null
      * @noinspection PhpUnused
      */
-    public function getAmountLocaleAttribute(): ?string
+    public function getAmountLocaleAttribute(): string
     {
         return currency_format_locale($this->amount, $this->voucher->fund->getImplementation());
     }
@@ -286,6 +283,8 @@ class Reimbursement extends Model
 
     /**
      * @throws \Exception
+     *
+     * @psalm-return int<11111111, 99999999>
      */
     public static function makeCode(): int
     {
@@ -448,9 +447,12 @@ class Reimbursement extends Model
     /**
      * @param Builder $builder
      * @param array $fields
-     * @return SupportCollection
+     *
+     * @return SupportCollection|\Illuminate\Database\Eloquent\Collection
+     *
+     * @psalm-return SupportCollection<int, array{id: int, email: null|string, amount: string, submitted_at: null|string, lead_time: string, employee: string, expired: 'Ja'|'Nee', state: string, code: string, fund_name: string, implementation_name: null|string, bsn: string, iban: string, iban_name: string, provider_name: string, category: string, title: string, description: null|string, files_count: int|null, resolved_at: null|string}>|\Illuminate\Database\Eloquent\Collection<int, array{id: int, email: null|string, amount: string, submitted_at: null|string, lead_time: string, employee: string, expired: 'Ja'|'Nee', state: string, code: string, fund_name: string, implementation_name: null|string, bsn: string, iban: string, iban_name: string, provider_name: string, category: string, title: string, description: null|string, files_count: int|null, resolved_at: null|string}>
      */
-    private static function exportTransform(Builder $builder, array $fields): SupportCollection
+    private static function exportTransform(Builder $builder, array $fields): \Illuminate\Database\Eloquent\Collection|SupportCollection
     {
         $data = $builder->with([
             'reimbursement_category',

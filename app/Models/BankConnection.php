@@ -345,10 +345,10 @@ class BankConnection extends BaseModel
 
     /**
      * @param ApiContext $apiContext
-     * @return BankConnection
+     *
      * @throws \bunq\Exception\BunqException
      */
-    public function updateContext(ApiContext $apiContext): self
+    public function updateContext(ApiContext $apiContext): bool
     {
         return tap($this)->update([
             'context' => json_decode($apiContext->toJson()),
@@ -358,9 +358,8 @@ class BankConnection extends BaseModel
 
     /**
      * @param BankMonetaryAccount[] $bankMonetaryAccounts
-     * @return BankConnection
      */
-    public function setMonetaryAccounts(array $bankMonetaryAccounts): self
+    public function setMonetaryAccounts(array $bankMonetaryAccounts): static
     {
         foreach ($bankMonetaryAccounts as $index => $bankMonetaryAccount) {
             /** @var BankConnectionAccount $account */
@@ -380,10 +379,7 @@ class BankConnection extends BaseModel
         return $this;
     }
 
-    /**
-     * @return BankConnection
-     */
-    public function setActive(): self
+    public function setActive(): static
     {
         /** @var BankConnection[] $activeConnections */
         $activeConnections = $this->organization->bank_connections()->where([
@@ -465,8 +461,11 @@ class BankConnection extends BaseModel
     }
 
     /**
-     * @return array
+     * @return BankMonetaryAccount[]
+     *
      * @throws ApiException
+     *
+     * @psalm-return array<BankMonetaryAccount>
      */
     protected function fetchConnectionMonetaryAccountsBNG(): array
     {
@@ -482,9 +481,11 @@ class BankConnection extends BaseModel
     }
 
     /**
-     * @return null|array
+     * @return BankMonetaryAccount[]|null
+     *
+     * @psalm-return array<BankMonetaryAccount>|null
      */
-    protected function fetchConnectionMonetaryAccountsBunq(): ?array
+    protected function fetchConnectionMonetaryAccountsBunq(): array|null
     {
         if (!$this->useContext()) {
             return null;
@@ -718,9 +719,8 @@ class BankConnection extends BaseModel
     /**
      * @param string $monetary_account_id
      * @param string $payment_id
-     * @return BankPayment|null
      */
-    protected function fetchPaymentBunq(string $monetary_account_id, string $payment_id): ?array
+    protected function fetchPaymentBunq(string $monetary_account_id, string $payment_id): array|null
     {
         if (!$this->useContext()) {
             return null;
@@ -770,7 +770,10 @@ class BankConnection extends BaseModel
     /**
      * @param Employee|null $employee
      * @param array $extraModels
-     * @return array
+     *
+     * @return (Bank|BankConnectionAccount|Employee|Organization|mixed|null|static)[]
+     *
+     * @psalm-return array{bank: Bank|mixed, employee: Employee|mixed|null, organization: Organization|mixed, bank_connection: mixed|static, bank_connection_account: BankConnectionAccount|mixed|null,...}
      */
     public function getLogModels(?Employee $employee = null, array $extraModels = []): array
     {

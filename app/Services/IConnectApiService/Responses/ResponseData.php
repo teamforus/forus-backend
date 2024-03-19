@@ -47,12 +47,4 @@ class ResponseData
     {
         return json_decode($this->response->getBody()->getContents(), true);
     }
-
-    /**
-     * @return array
-     */
-    public function getHeaders(): array
-    {
-        return $this->response->getHeaders();
-    }
 }

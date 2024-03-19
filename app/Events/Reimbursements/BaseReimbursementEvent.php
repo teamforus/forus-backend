@@ -61,14 +61,4 @@ abstract class BaseReimbursementEvent
     {
         return $this->supervisorEmployee;
     }
-
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return \Illuminate\Broadcasting\Channel
-     */
-    public function broadcastOn(): Channel
-    {
-        return new PrivateChannel('channel-name');
-    }
 }

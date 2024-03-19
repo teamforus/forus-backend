@@ -84,16 +84,6 @@ class Settings extends OneLoginSettings
     }
 
     /**
-     * @return XMLSecurityKey
-     * @throws Saml2Exception
-     * @noinspection PhpUnused
-     */
-    public function getSPXmlSecurityCertKey(): XMLSecurityKey
-    {
-        return $this->getXmlSecurityKey($this->getSPcert(), 'public');
-    }
-
-    /**
      * @param string|null $certOrKey
      * @param string $type
      * @return XMLSecurityKey

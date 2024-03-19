@@ -54,14 +54,6 @@ class BankPayment
     }
 
     /**
-     * @param string $id
-     */
-    public function setId(string $id): void
-    {
-        $this->id = $id;
-    }
-
-    /**
      * @return string
      */
     public function getDate(): string
@@ -71,22 +63,10 @@ class BankPayment
 
     /**
      * @param string $date
-     * @return BankPayment
      */
-    public function setDate(string $date): self
+    public function setDate(string $date): static
     {
         $this->date = $date;
-
-        return $this;
-    }
-
-    /**
-     * @param string $amount
-     * @return BankPayment
-     */
-    public function setAmount(string $amount): self
-    {
-        $this->amount = $amount;
 
         return $this;
     }
@@ -101,9 +81,8 @@ class BankPayment
 
     /**
      * @param string $currency
-     * @return BankPayment
      */
-    public function setCurrency(string $currency): self
+    public function setCurrency(string $currency): static
     {
         $this->currency = $currency;
 
@@ -120,9 +99,8 @@ class BankPayment
 
     /**
      * @param string $description
-     * @return BankPayment
      */
-    public function setDescription(string $description): self
+    public function setDescription(string $description): static
     {
         $this->description = $description;
 
@@ -139,10 +117,10 @@ class BankPayment
 
     /**
      * @param array $raw
-     * @return BankPayment
+     *
      * @noinspection PhpUnused
      */
-    public function setRaw(array $raw): self
+    public function setRaw(array $raw): static
     {
         $this->raw = $raw;
 
@@ -150,10 +128,9 @@ class BankPayment
     }
 
     /**
-     * @return array
      * @noinspection PhpUnused
      */
-    public function getRaw(): array
+    public function getRaw(): array|null
     {
         return $this->raw;
     }

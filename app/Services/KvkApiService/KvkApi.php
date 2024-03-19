@@ -51,9 +51,10 @@ class KvkApi
     /**
      * @param string $kvk_number
      * @param bool $detailed
-     * @return bool|mixed
+     *
+     * @return null|object
      */
-    public function kvkNumberData(string $kvk_number, bool $detailed = false): ?object
+    public function kvkNumberData(string $kvk_number, bool $detailed = false): object|null
     {
         try {
             $response = json_decode($this->makeApiCall($kvk_number, $detailed), false);
@@ -68,9 +69,8 @@ class KvkApi
     /**
      * @param string $kvk_number
      * @param bool $detailed
-     * @return string|null
      */
-    private function makeApiCall(string $kvk_number, bool $detailed): ?string
+    private function makeApiCall(string $kvk_number, bool $detailed): string
     {
         $cacheKey = $this->cache_prefix . $kvk_number . ($detailed ? '.detailed' : '');
         $cacheDuration = $this->cache_time * 60;
@@ -87,7 +87,10 @@ class KvkApi
 
     /**
      * @param string $kvk_number
-     * @return array
+     *
+     * @return (mixed|null|string)[][]
+     *
+     * @psalm-return array<never, array{address: string, lon?: mixed|null, lat?: mixed|null}>
      */
     public function getOffices(string $kvk_number): array
     {

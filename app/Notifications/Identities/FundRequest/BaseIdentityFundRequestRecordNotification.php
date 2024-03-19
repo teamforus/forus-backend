@@ -15,9 +15,12 @@ abstract class BaseIdentityFundRequestRecordNotification extends BaseIdentityNot
      *
      * @param FundRequestRecord $loggable
      * @param EventLog $eventLog
-     * @return \Illuminate\Support\Collection
+     *
+     * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection
+     *
+     * @psalm-return \Illuminate\Database\Eloquent\Collection<array-key, \Illuminate\Database\Eloquent\Model>|array<\Illuminate\Database\Eloquent\Builder>
      */
-    public static function eligibleIdentities($loggable, EventLog $eventLog): Collection
+    public static function eligibleIdentities($loggable, EventLog $eventLog): array|\Illuminate\Database\Eloquent\Collection
     {
         return Identity::whereAddress($loggable->fund_request->identity)->get();
     }

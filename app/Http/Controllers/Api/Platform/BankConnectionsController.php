@@ -14,10 +14,10 @@ class BankConnectionsController extends Controller
      * Redirect user to the sponsor dashboard after bank authorization approval
      *
      * @param RedirectBankConnectionRequest $request
+     *
      * @throws BunqException
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function redirect(RedirectBankConnectionRequest $request)
+    public function redirect(RedirectBankConnectionRequest $request): \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
     {
         $bankConnection = BankConnection::whereRedirectToken($request->input('state'))->firstOrFail();
         $dashboardUrl = "/organizations/$bankConnection->organization_id/bank-connections";
@@ -58,13 +58,14 @@ class BankConnectionsController extends Controller
      * @param BankConnection $bankConnection
      * @param string $dashboardUrl
      * @param array $params
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     *
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
     protected function redirectWithQuery(
         BankConnection $bankConnection,
         string $dashboardUrl,
         array $params = []
-    ) {
+    ): \Illuminate\Routing\Redirector|\Illuminate\Http\RedirectResponse {
         return redirect($bankConnection->implementation->urlSponsorDashboard($dashboardUrl, array_merge([
             'connection_id' => $bankConnection->id,
         ], $params)));

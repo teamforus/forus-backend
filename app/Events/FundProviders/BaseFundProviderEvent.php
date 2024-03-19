@@ -32,14 +32,4 @@ abstract class BaseFundProviderEvent
     {
         return $this->fundProvider;
     }
-
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return \Illuminate\Broadcasting\Channel
-     */
-    public function broadcastOn()
-    {
-        return new PrivateChannel('channel-name');
-    }
 }

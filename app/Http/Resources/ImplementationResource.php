@@ -10,9 +10,13 @@ class ImplementationResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request  $request
+     *
      * @property Implementation $resource
-     * @return ?array
+     *
+     * @return (mixed|null)[]|null
+     *
+     * @psalm-return array{url_provider_terms_page: mixed|null,...}|null
      */
     public function toArray($request): ?array
     {

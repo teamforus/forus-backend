@@ -16,12 +16,13 @@ class BNGController extends Controller
     /**
      * @param RedirectBNGBankConnectionRequest $request
      * @param BankConnection $connection
-     * @return RedirectResponse
+     *
+     * @return RedirectResponse|\Illuminate\Routing\Redirector
      */
     public function bankConnectionRedirect(
         RedirectBNGBankConnectionRequest $request,
         BankConnection $connection
-    ): RedirectResponse {
+    ): \Illuminate\Routing\Redirector|RedirectResponse {
         $code = $request->get('code');
         /** @var BNGService $bngService */
         $bngService = resolve('bng_service');
@@ -53,12 +54,13 @@ class BNGController extends Controller
     /**
      * @param RedirectBNGVoucherTransactionBulkRequest $request
      * @param VoucherTransactionBulk $bulk
-     * @return RedirectResponse
+     *
+     * @return RedirectResponse|\Illuminate\Routing\Redirector
      */
     public function voucherTransactionBulkRedirect(
         RedirectBNGVoucherTransactionBulkRequest $request,
         VoucherTransactionBulk $bulk
-    ): RedirectResponse {
+    ): \Illuminate\Routing\Redirector|RedirectResponse {
         $code = $request->get('code');
         /** @var BNGService $bngService */
         $bngService = resolve('bng_service');

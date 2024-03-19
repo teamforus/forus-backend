@@ -69,7 +69,10 @@ class ProviderVoucherResource extends BaseJsonResource
      * @param string $identityAddress
      * @param VoucherToken $voucherToken
      * @param bool $useAsProvider
-     * @return array
+     *
+     * @return (Collection|array|mixed|string)[]
+     *
+     * @psalm-return array{type: 'regular'|mixed, fund: array|mixed, address: mixed|string, allowed_organizations: Collection|mixed, allowed_product_organizations: Collection|mixed, amount?: mixed|string, amount_locale?: mixed|string,...}
      */
     protected function regularVoucher(
         string $identityAddress,
@@ -96,7 +99,10 @@ class ProviderVoucherResource extends BaseJsonResource
      *
      * @param VoucherToken $voucherToken
      * @param string $identityAddress
-     * @return array
+     *
+     * @return (Collection|ProviderProductAppResource|array|mixed|string)[]
+     *
+     * @psalm-return array{type: 'product'|mixed, address: mixed|string, fund: array|mixed, allowed_organizations: Collection|mixed, product: ProviderProductAppResource|array|mixed,...}
      */
     protected function productVoucher(VoucherToken $voucherToken, string $identityAddress): array
     {
@@ -120,7 +126,10 @@ class ProviderVoucherResource extends BaseJsonResource
 
     /**
      * @param Fund $fund
-     * @return array
+     *
+     * @return (Collection|array|mixed|null)[]
+     *
+     * @psalm-return array{organization: Collection|array|null, logo: array|null,...}
      */
     protected function fundDetails(Fund $fund): array
     {
@@ -187,9 +196,10 @@ class ProviderVoucherResource extends BaseJsonResource
 
     /**
      * @param Builder $builder
-     * @return Collection
+     *
+     * @psalm-return Collection<array-key, array{logo: array|null,...}>|\Illuminate\Database\Eloquent\Collection<array-key, array{logo: array|null,...}>
      */
-    protected function organizationsQueryToList(Builder $builder): Collection
+    protected function organizationsQueryToList(Builder $builder): Collection|\Illuminate\Database\Eloquent\Collection
     {
         $organizations = $builder->orderBy('name')->get();
 

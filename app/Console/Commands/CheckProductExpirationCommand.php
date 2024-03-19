@@ -26,21 +26,4 @@ class CheckProductExpirationCommand extends Command
      * @var string
      */
     protected $description = 'Command description';
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        $products = Product::whereDate('expire_at', '<', now());
-        $products->whereDoesntHave('logs', function(Builder $builder) {
-            $builder->where('event', 'expired');
-        });
-
-        foreach ($products->get() as $product) {
-            ProductExpired::dispatch($product);
-        }
-    }
 }

@@ -6,7 +6,7 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 
 class TestDataProvider extends ServiceProvider
 {
-    public function boot() {}
+    public function boot(): void {}
 
     /**
      * Register the service provider.

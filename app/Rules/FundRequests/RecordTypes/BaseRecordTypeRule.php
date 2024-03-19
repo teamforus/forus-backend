@@ -42,6 +42,8 @@ abstract class BaseRecordTypeRule extends BaseRule
 
     /**
      * @return string
+     *
+     * @psalm-return 'nullable'|'required'
      */
     protected function isRequiredRule(): string
     {
@@ -49,9 +51,9 @@ abstract class BaseRecordTypeRule extends BaseRule
     }
 
     /**
-     * @return \Illuminate\Validation\Rules\In|string|null
+     * @return \Illuminate\Validation\Rules\In|null|string
      */
-    protected function getLengthRule(): \Illuminate\Validation\Rules\In|string|null
+    protected function getLengthRule(): string|\Illuminate\Validation\Rules\In|null|string|null
     {
         return match($this->criterion->operator) {
             '=' => Rule::in([$this->criterion->value]),

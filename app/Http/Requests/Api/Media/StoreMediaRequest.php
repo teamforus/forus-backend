@@ -11,20 +11,14 @@ use Illuminate\Validation\Rule;
 
 class StoreMediaRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((FileMimeTypeRule|\Illuminate\Validation\Rules\In|string)[]|mixed)[]
+     *
+     * @psalm-return array{file: list{'required', 'file', 'image',...}|mixed, type: list{'required', \Illuminate\Validation\Rules\In}|mixed,...}
      */
     public function rules(): array
     {
@@ -49,7 +43,10 @@ class StoreMediaRequest extends BaseFormRequest
 
     /**
      * @param MediaConfig|null $type
-     * @return array
+     *
+     * @return (\Illuminate\Validation\Rules\In|array|string)[][]
+     *
+     * @psalm-return array{sync_presets: list{'nullable', 'array'}, 'sync_presets.*': list{'nullable', \Illuminate\Validation\Rules\In|array<never, never>}}
      */
     protected function syncPresetsRule(?MediaConfig $type): array
     {

@@ -12,23 +12,14 @@ use App\Models\ProductReservation;
  */
 class RejectProductReservationRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return
-            $this->isAuthenticated() &&
-            $this->organization->identityCan($this->identity(), 'scan_vouchers') &&
-            $this->organization->id === $this->product_reservation->product->organization_id;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
      * @return array
+     *
+     * @psalm-return array<never, never>
      */
     public function rules(): array
     {

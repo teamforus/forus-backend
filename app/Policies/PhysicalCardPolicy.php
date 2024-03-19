@@ -31,29 +31,6 @@ class PhysicalCardPolicy
     }
 
     /**
-     * Determine whether the user can create physical cards.
-     *
-     * @param Identity $identity
-     * @param Voucher $voucher
-     * @param Organization $organization
-     * @return Response|bool
-     * @noinspection PhpUnused
-     */
-    public function createSponsor(
-        Identity $identity,
-        Voucher $voucher,
-        Organization $organization
-    ): Response|bool {
-        if (($result = $this->baseCreatePolicy($voucher)) !== true) {
-            return $result;
-        }
-
-        return
-            $voucher->fund->organization_id == $organization->id &&
-            $organization->identityCan($identity, 'manage_vouchers');
-    }
-
-    /**
      * Determine whether the user can delete the physical card.
      *
      * @param Identity $identity
@@ -70,32 +47,11 @@ class PhysicalCardPolicy
     }
 
     /**
-     * Determine whether the user can delete the physical card.
+     * @param Voucher $voucher
      *
-     * @param Identity $identity
-     * @param \App\Models\PhysicalCard $physicalCard
-     * @param Voucher $voucher
-     * @param Organization $organization
-     * @return bool
-     * @noinspection PhpUnused
+     * @return Response|true
      */
-    public function deleteSponsor(
-        Identity $identity,
-        PhysicalCard $physicalCard,
-        Voucher $voucher,
-        Organization $organization
-    ): bool {
-        return
-            $physicalCard->voucher_id === $voucher->id &&
-            $voucher->fund->organization_id === $organization->id &&
-            $organization->identityCan($identity, 'manage_vouchers');
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @return Response|bool
-     */
-    protected function baseCreatePolicy(Voucher $voucher): Response|bool
+    protected function baseCreatePolicy(Voucher $voucher): bool|Response|bool
     {
         if (!$voucher->fund->fund_config->allow_physical_cards) {
             return $this->deny("physical_cards_not_allowed");

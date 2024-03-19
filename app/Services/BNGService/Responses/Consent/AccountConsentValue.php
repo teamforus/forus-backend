@@ -25,25 +25,9 @@ class AccountConsentValue extends ConsentValue
     /**
      * @return string
      */
-    public function getBulkInitiationPaymentId(): string
-    {
-        return $this->data['paymentInitiationBatchGroupId'];
-    }
-
-    /**
-     * @return string
-     */
     public function getPaymentId(): string
     {
         return $this->data['paymentId'];
-    }
-
-    /**
-     * @return string
-     */
-    public function getConsentStatus(): ?string
-    {
-        return $this->data['consentStatus'] ?? null;
     }
     /**
      * @return string

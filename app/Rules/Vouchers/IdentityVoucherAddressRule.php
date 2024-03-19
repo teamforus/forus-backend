@@ -64,6 +64,8 @@ class IdentityVoucherAddressRule implements Rule
      * Get the validation error message.
      *
      * @return string
+     *
+     * @psalm-return 'The validation error message.'
      */
     public function message(): string
     {

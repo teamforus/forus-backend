@@ -13,20 +13,14 @@ use Illuminate\Support\Facades\Gate;
 
 class UploadPrevalidationsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return Gate::allows('store', Prevalidation::class);
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((PrevalidationDataRule|string)[]|string)[]
+     *
+     * @psalm-return array{fund_id: string, data: list{'required', 'array', PrevalidationDataRule}, overwrite: 'nullable|array', 'overwrite.*': 'required'}
      */
     public function rules(): array {
         $fundsAvailable = $this->getAvailableFunds()->pluck('id');

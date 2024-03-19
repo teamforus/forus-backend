@@ -14,20 +14,14 @@ use Illuminate\Validation\Rule;
  */
 class UpdateBankConnectionsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return Gate::allows('update', [$this->bankConnection, $this->organization]);
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (\Illuminate\Validation\Rules\In|string)[][]
+     *
+     * @psalm-return array{state: list{'nullable', \Illuminate\Validation\Rules\In}, bank_connection_account_id: list{'nullable', \Illuminate\Validation\Rules\In}}
      */
     public function rules(): array
     {

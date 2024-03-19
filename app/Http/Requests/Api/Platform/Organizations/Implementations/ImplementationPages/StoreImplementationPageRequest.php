@@ -19,7 +19,7 @@ class StoreImplementationPageRequest extends ValidateImplementationPageBlocksReq
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
+     * @return true
      */
     public function authorize(): bool
     {
@@ -52,7 +52,9 @@ class StoreImplementationPageRequest extends ValidateImplementationPageBlocksReq
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Validation\Rules\In|\Illuminate\Validation\Rules\NotIn|string)[]
+     *
+     * @psalm-return list{'required', \Illuminate\Validation\Rules\In, \Illuminate\Validation\Rules\NotIn}
      */
     private function pageTypeRule(): array
     {
@@ -64,7 +66,9 @@ class StoreImplementationPageRequest extends ValidateImplementationPageBlocksReq
     }
 
     /**
-     * @return array
+     * @return (MediaUidRule|string)[]
+     *
+     * @psalm-return list{'required', 'string', 'exists:media,uid', MediaUidRule}
      */
     private function mediaRule(): array {
         return [

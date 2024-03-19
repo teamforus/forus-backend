@@ -12,8 +12,11 @@ class OrganizationWithPrivateResource extends OrganizationResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (mixed|null|string)[]
+     *
+     * @psalm-return array{email: null|string, phone: null|string, website: null|string,...}
      */
     public function toArray($request): array
     {

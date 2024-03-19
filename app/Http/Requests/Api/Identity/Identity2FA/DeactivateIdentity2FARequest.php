@@ -9,18 +9,7 @@ use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
 
 class DeactivateIdentity2FARequest extends BaseIdentity2FARequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     * @throws AuthorizationJsonException
-     */
-    public function authorize(): bool
-    {
-        $this->throttleRequest('deactivate');
 
-        return $this->isAuthenticated();
-    }
 
     /**
      * Get the validation rules that apply to the request.

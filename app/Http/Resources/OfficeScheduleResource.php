@@ -15,8 +15,11 @@ class OfficeScheduleResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request|any  $request
-     * @return array
+     * @param \Illuminate\Http\Request|any  $request
+     *
+     * @return (mixed|string)[]
+     *
+     * @psalm-return array{start_time: string, end_time: string, break_start_time: string, break_end_time: string,...}
      */
     public function toArray($request): array
     {

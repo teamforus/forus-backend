@@ -23,8 +23,11 @@ class FundSmallResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (ImplementationResource|MediaResource|OrganizationTinyResource|mixed|null|string)[]
+     *
+     * @psalm-return array{logo: MediaResource|mixed, organization: OrganizationTinyResource|mixed, fund_amount: mixed|null|string, fund_amount_locale: mixed|null|string, implementation: ImplementationResource|mixed,...}
      */
     public function toArray($request): array
     {

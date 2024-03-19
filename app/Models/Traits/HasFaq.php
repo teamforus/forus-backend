@@ -51,10 +51,10 @@ trait HasFaq
      * Update faq question or create new fund question
      *
      * @param array $question
-     * @return HasFaq|Model
+     *
      * @throws Throwable
      */
-    protected function syncQuestion(array $question): Faq|Model
+    protected function syncQuestion(array $question): \App\Models\Faq|Model
     {
         /** @var Faq $faq */
         $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();

@@ -87,7 +87,10 @@ class DigIdCgiRepo extends DigIdRepo
 
     /**
      * @return string
+     *
      * @throws DigIdException
+     *
+     * @psalm-return 'https://was-preprod1.digid.nl/was/server'|'https://was.digid.nl/was/server'
      */
     private function getApiUrl(): string
     {
@@ -101,7 +104,9 @@ class DigIdCgiRepo extends DigIdRepo
     }
 
     /**
-     * @return array
+     * @return (null|string)[]
+     *
+     * @psalm-return array{app_id: null|string, shared_secret: null|string, 'a-select-server': null|string}
      */
     private function getAuthParams(): array
     {
@@ -135,7 +140,7 @@ class DigIdCgiRepo extends DigIdRepo
      * @param $response
      * @return array
      */
-    private function parseResponseBody($response): array
+    private function parseResponseBody(\Psr\Http\Message\StreamInterface $response): array
     {
         $result = [];
         parse_str($response, $result);
@@ -146,7 +151,7 @@ class DigIdCgiRepo extends DigIdRepo
      * @param $result
      * @return bool
      */
-    private function validateAuthRequestResponse($result): bool
+    private function validateAuthRequestResponse(array $result): bool
     {
         // Should be alphanumeric.
         $check = isset($result['rid']) && ctype_alnum($result['rid']);
@@ -162,10 +167,13 @@ class DigIdCgiRepo extends DigIdRepo
     }
 
     /**
-     * @param $result
+     * @param ((mixed|string)[]|mixed)[] $result
+     *
      * @return bool
+     *
+     * @psalm-param array{resolveParams: array{request: 'verify_credentials', rid: mixed, 'a-select-server': mixed, aselect_credentials: mixed}, result_code?: mixed,...} $result
      */
-    private function validateVerifyCredentialsResponse($result): bool
+    private function validateVerifyCredentialsResponse(array $result): bool
     {
         // Should be numeric.
         $check = isset($result['uid']) && ctype_digit($result['uid']);
@@ -291,14 +299,14 @@ class DigIdCgiRepo extends DigIdRepo
      * @param string $uri
      * @param string $method
      * @param ClientTls|null $clientTls
-     * @return ResponseInterface|null
+     *
      * @throws DigIdException
      */
     protected function makeCall(
         string $uri,
         string $method = 'get',
         ?ClientTls $clientTls = null,
-    ): ?ResponseInterface {
+    ): ResponseInterface {
         $tlsCert = $clientTls ? new TmpFile($clientTls->getCert()) : null;
         $tlsKey = $clientTls ? new TmpFile($clientTls->getKey()) : null;
 
@@ -323,10 +331,13 @@ class DigIdCgiRepo extends DigIdRepo
     }
 
     /**
-     * @param TmpFile|bool|null $cert
+     * @param TmpFile|false|null $cert
      * @param TmpFile|null $clientTlsCert
      * @param TmpFile|null $clientTlsKey
-     * @return array
+     *
+     * @return (false|null|string)[]
+     *
+     * @psalm-return array{verify?: false|null|string, cert?: null|string, ssl_key?: null|string}
      */
     private function makeRequestOptions(
         TmpFile|false|null $cert,
@@ -361,9 +372,8 @@ class DigIdCgiRepo extends DigIdRepo
 
     /**
      * @param string|null $app_id
-     * @return DigIdCgiRepo
      */
-    public function setAppId(?string $app_id): self
+    public function setAppId(?string $app_id): static
     {
         $this->app_id = $app_id;
         return $this;
@@ -381,9 +391,8 @@ class DigIdCgiRepo extends DigIdRepo
 
     /**
      * @param string|null $shared_secret
-     * @return DigIdCgiRepo
      */
-    public function setSharedSecret(?string $shared_secret): self
+    public function setSharedSecret(?string $shared_secret): static
     {
         $this->shared_secret = $shared_secret;
         return $this;
@@ -391,21 +400,10 @@ class DigIdCgiRepo extends DigIdRepo
 
     /**
      * @param string|null $trusted_certificate
-     * @return DigIdCgiRepo
      */
-    public function setTrustedCertificate(?string $trusted_certificate): self
+    public function setTrustedCertificate(?string $trusted_certificate): static
     {
         $this->trusted_certificate = $trusted_certificate;
         return $this;
-    }
-
-    /**
-     * @param Request $request
-     * @param string $session_secret
-     * @return bool
-     */
-    public function validateResolveResponse(Request $request, string $session_secret): bool
-    {
-        return $request->get('session_secret') !== $session_secret;
     }
 }

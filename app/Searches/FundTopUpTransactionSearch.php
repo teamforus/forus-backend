@@ -20,7 +20,7 @@ class FundTopUpTransactionSearch extends BaseSearch
     }
 
     /**
-     * @return Builder|null
+     * @return Builder
      */
     public function query(): ?Builder
     {
@@ -70,7 +70,6 @@ class FundTopUpTransactionSearch extends BaseSearch
     /**
      * @param Builder|FundTopUpTransaction $builder
      * @param string|null $orderBy
-     * @return Builder|FundTopUpTransaction
      */
     public function appendSortableFields(
         Builder|FundTopUpTransaction $builder,

@@ -12,19 +12,6 @@ class FundProviderStateUpdated extends BaseFundProviderEvent
     protected $originalState;
 
     /**
-     * @param FundProvider $fundProvider
-     * @param array $eventData
-     */
-    public function __construct(FundProvider $fundProvider, array $eventData)
-    {
-        parent::__construct($fundProvider);
-
-        $this->approvedBefore = Arr::get($eventData, 'approvedBefore');
-        $this->approvedAfter = Arr::get($eventData, 'approvedAfter');
-        $this->originalState = Arr::get($eventData, 'originalState');
-    }
-
-    /**
      * @return string
      */
     public function getOriginalState(): string

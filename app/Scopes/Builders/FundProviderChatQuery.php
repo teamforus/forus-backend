@@ -12,7 +12,7 @@ class FundProviderChatQuery
      * @param array|string|int $products
      * @return Builder
      */
-    public static function whereProductFilter(Builder $query, $products) {
+    public static function whereProductFilter(Builder $query, $products): Builder {
         return $query->whereIn('product_id', (array) $products);
     }
 

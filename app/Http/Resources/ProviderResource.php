@@ -23,8 +23,11 @@ class ProviderResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (BusinessTypeResource|MediaCompactResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed|string)[]
+     *
+     * @psalm-return array{description_html: string, business_type: BusinessTypeResource, offices: \Illuminate\Http\Resources\Json\AnonymousResourceCollection, logo: MediaCompactResource,...}
      */
     public function toArray($request): array
     {

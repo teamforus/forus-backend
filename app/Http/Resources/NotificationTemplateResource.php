@@ -15,8 +15,12 @@ class NotificationTemplateResource extends JsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
+     *
+     * @return (mixed|null|string)[]
+     *
      * @throws CommonMarkException
+     *
+     * @psalm-return array{content_html?: null|string,...}
      */
     public function toArray($request): array
     {

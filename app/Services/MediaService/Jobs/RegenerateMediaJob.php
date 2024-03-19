@@ -45,19 +45,4 @@ class RegenerateMediaJob implements ShouldQueue
         $this->media = $media;
         $this->keepPresets = $keepPresets;
     }
-
-    /**
-     * Execute the job.
-     *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     */
-    public function handle(): void
-    {
-        resolve('media')->regenerateMedia(
-            $this->mediaConfig,
-            $this->media,
-            true,
-            $this->keepPresets
-        );
-    }
 }

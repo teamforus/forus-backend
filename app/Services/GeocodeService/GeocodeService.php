@@ -37,9 +37,8 @@ class GeocodeService
      * Get address geocode
      *
      * @param $address
-     * @return array|bool
      */
-    public function getLocation($address)
+    public function getLocation(string $address): array|false
     {
         try {
             $client = new Client();
@@ -60,7 +59,10 @@ class GeocodeService
 
     /**
      * @param array $address_components
-     * @return array
+     *
+     * @return (mixed|null|string)[]
+     *
+     * @psalm-return array{postcode: mixed|null, postcode_number: null|string, postcode_addition: null|string}
      */
     protected function addressComponentsToPostcode(array $address_components): array
     {

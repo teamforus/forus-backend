@@ -20,46 +20,4 @@ class PhysicalCardsController extends Controller
 
     private $maxAttempts = 5;
     private $decayMinutes = 60 * 24;
-
-    /**
-     * Link existing physical card to existing voucher
-     * @param StorePhysicalCardRequest $request
-     * @param VoucherToken $voucherToken
-     * @return PhysicalCardResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \App\Exceptions\AuthorizationJsonException
-     */
-    public function store(
-        StorePhysicalCardRequest $request,
-        VoucherToken $voucherToken
-    ): PhysicalCardResource {
-        $this->throttleWithKey('to_many_attempts', $request, 'physical_cards');
-        $this->authorize('create', [PhysicalCard::class, $voucherToken->voucher]);
-
-        return new PhysicalCardResource($voucherToken->voucher->addPhysicalCard(
-            $request->input('code')
-        ));
-    }
-
-    /**
-     * Unlink physical card from voucher
-     *
-     * @param VoucherToken $voucherToken
-     * @param PhysicalCard $physicalCard
-     * @return Response
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function destroy(
-        VoucherToken $voucherToken,
-        PhysicalCard $physicalCard
-    ): Response {
-        $this->authorize('show', $voucherToken->voucher);
-        $this->authorize('delete', [$physicalCard, $voucherToken->voucher]);
-
-        $voucherToken->voucher->physical_cards()->where([
-            'physical_cards.id' => $physicalCard->id
-        ])->delete();
-
-        return new Response('', 200);
-    }
 }

@@ -27,17 +27,6 @@ class BankConnectionExpirationNotifyCommand extends Command
     protected $description = 'Notify about bank connection context expiration';
 
     /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        $this->makeNotifications();
-        $this->makeAnnouncements();
-    }
-
-    /**
      * @return void
      */
     private function makeNotifications(): void

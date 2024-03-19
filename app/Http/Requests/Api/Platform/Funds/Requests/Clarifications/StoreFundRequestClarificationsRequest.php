@@ -11,20 +11,14 @@ use Illuminate\Validation\Rule;
  */
 class StoreFundRequestClarificationsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->isAuthenticated();
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\In|string)[]|string)[]
+     *
+     * @psalm-return array{fund_request_record_id: list{'required', \Illuminate\Validation\Rules\In}, question: 'required|string|between:2,2000'}
      */
     public function rules(): array
     {

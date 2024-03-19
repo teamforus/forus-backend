@@ -19,7 +19,10 @@ class ImplementationPageResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param $request
-     * @return array
+     *
+     * @return (\Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed|null|string)[]
+     *
+     * @psalm-return array{description_html: string, external_url: null|string, blocks: \Illuminate\Http\Resources\Json\AnonymousResourceCollection, faq: \Illuminate\Http\Resources\Json\AnonymousResourceCollection,...}
      */
     public function toArray($request): array
     {

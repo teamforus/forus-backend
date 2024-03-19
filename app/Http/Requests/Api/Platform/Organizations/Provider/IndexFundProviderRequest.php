@@ -14,20 +14,14 @@ use App\Models\Organization;
  */
 class IndexFundProviderRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{q: 'nullable|string', state: string, allow_budget: 'nullable|boolean', allow_products: 'nullable|in:1,0,some', allow_extra_payments: 'nullable|boolean', has_products: 'nullable|boolean', per_page: 'nullable|numeric|min:1|max:1000', fund_id: string, organization_id: string, export_format: 'nullable|in:csv,xls'}
      */
     public function rules(): array
     {

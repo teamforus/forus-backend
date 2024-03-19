@@ -25,24 +25,6 @@ class NotifyAboutReachedNotificationFundAmount extends Command
     protected $description = 'Check if budget left reached notification amount';
 
     /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        try {
-            foreach ($this->getLowBalanceFunds() as $fund) {
-                $transactionCosts = $fund->getTransactionCosts();
-
-                if ($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
-                    FundBalanceLowEvent::dispatch($fund);
-                }
-            }
-        } catch (\Throwable) {}
-    }
-
-    /**
      * @param int $notificationInterval
      * @return Fund[]|Builder[]|\Illuminate\Database\Eloquent\Collection
      */

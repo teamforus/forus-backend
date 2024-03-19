@@ -55,9 +55,9 @@ class ImplementationMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * @return string|null
+     * @return null|string
      */
-    public function getPreferencesLink(): ?string
+    public function getPreferencesLink(): string|null
     {
         return $this->preferencesLink ?: null;
     }
@@ -103,10 +103,9 @@ class ImplementationMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
      */
-    public function buildBase(): Mailable
+    public function buildBase(): static
     {
         $data = $this->getTransData();
         $subject = $this->getSubject(trans($this->subjectKey, $data));
@@ -163,15 +162,6 @@ class ImplementationMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * @return Mailable
-     * @throws CommonMarkException
-     */
-    public function build(): Mailable
-    {
-        return $this->buildBase();
-    }
-
-    /**
      * @param array $data
      * @return array
      */
@@ -183,10 +173,11 @@ class ImplementationMail extends Mailable implements ShouldQueue
     /**
      * Build the message.
      *
-     * @return Mailable|null
+     * @return null|static
+     *
      * @throws CommonMarkException
      */
-    public function buildNotificationTemplatedMail(): ?Mailable
+    public function buildNotificationTemplatedMail(): static|null
     {
         $template = $this->implementationNotificationTemplate($this->notificationTemplateKey);
 
@@ -213,10 +204,10 @@ class ImplementationMail extends Mailable implements ShouldQueue
 
     /**
      * @param string $template
-     * @return Mailable
+     *
      * @throws CommonMarkException
      */
-    protected function buildSystemMail(string $template): Mailable
+    protected function buildSystemMail(string $template): static
     {
         $data = $this->getTransData();
         $data = array_merge($data, $this->getMailExtraData($data));
@@ -237,10 +228,10 @@ class ImplementationMail extends Mailable implements ShouldQueue
     /**
      * @param string $subject
      * @param string $content
-     * @return Mailable
+     *
      * @throws CommonMarkException
      */
-    protected function buildCustomMail(string $subject, string $content): Mailable
+    protected function buildCustomMail(string $subject, string $content): static
     {
         $data = $this->getTransData();
         $data = array_merge($data, $this->getMailExtraData($data));
@@ -331,9 +322,9 @@ class ImplementationMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * @return string
+     * @return null|string
      */
-    protected function implementationLogoUrl(): string
+    protected function implementationLogoUrl(): string|null
     {
         $generalLogo = Implementation::general()->email_logo;
         $implementationLogo = Implementation::byKey($this->implementationKey())->email_logo;
@@ -355,9 +346,9 @@ class ImplementationMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * @return string
+     * @return null|string
      */
-    protected function implementationColor(): string
+    protected function implementationColor(): string|null
     {
         $generalColor = Implementation::general()->email_color;
         $implementationColor = Implementation::byKey($this->implementationKey())->email_color;
@@ -388,18 +379,5 @@ class ImplementationMail extends Mailable implements ShouldQueue
             $this->fundId(),
             'mail',
         );
-    }
-
-    /**
-     * Handle a job failure.
-     *
-     * @param \Throwable $e
-     * @return void
-     */
-    public function failed(\Throwable $e): void
-    {
-        if ($logger = logger()) {
-            $logger->error("Error sending digest: `" . $e->getMessage() . "`");
-        }
     }
 }

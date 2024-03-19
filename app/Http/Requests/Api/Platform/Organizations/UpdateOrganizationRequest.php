@@ -17,20 +17,14 @@ use Illuminate\Validation\Rule;
  */
 class UpdateOrganizationRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((BtwRule|IbanRule|KvkRule|\Illuminate\Validation\Rules\Unique|mixed|null|string)[]|string)[]
+     *
+     * @psalm-return array{name: string, description: string, iban: list{'nullable', IbanRule}|string, email: array{0: 'nullable'|mixed,...}|string, email_public: string, phone: string, phone_public: string, kvk: list{'nullable', 'digits:8', \Illuminate\Validation\Rules\Unique|null, KvkRule|null}|string, btw: list{'nullable', BtwRule}|string, website: string, website_public: string, business_type_id: string,...}
      */
     public function rules(): array
     {
@@ -70,6 +64,8 @@ class UpdateOrganizationRequest extends BaseFormRequest
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{auth_2fa_policy: string, auth_2fa_remember_ip: 'nullable|boolean', auth_2fa_funds_policy: string, auth_2fa_funds_remember_ip: 'nullable|boolean', auth_2fa_funds_restrict_emails: 'nullable|boolean', auth_2fa_funds_restrict_auth_sessions: 'nullable|boolean', auth_2fa_funds_restrict_reimbursements: 'nullable|boolean'}
      */
     public function auth2FARules(): array
     {
@@ -88,7 +84,9 @@ class UpdateOrganizationRequest extends BaseFormRequest
     }
 
     /**
-     * @return string[]
+     * @return ((mixed|string)[]|string)[]
+     *
+     * @psalm-return array{contacts: 'nullable|array', 'contacts.*': 'required|array', 'contacts.*.key': string, 'contacts.*.value': array{0: 'nullable'|mixed,...}}
      */
     public function contactsRules(): array
     {
@@ -107,6 +105,8 @@ class UpdateOrganizationRequest extends BaseFormRequest
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{'contacts.*.value': 'Contact'}
      */
     public function attributes(): array
     {

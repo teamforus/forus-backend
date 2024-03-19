@@ -11,9 +11,10 @@ class Balances extends Value
 
     /**
      * @param string|null $type
-     * @return array|null
+     *
+     * @psalm-return array<never, never>
      */
-    public function getBalances(string $type = null): ?array
+    public function getBalances(string $type = null): array
     {
         $balances = $this->data['balances'] ?? [];
 
@@ -23,21 +24,9 @@ class Balances extends Value
     }
 
     /**
-     * @return TransactionValue[]|null
      * @noinspection PhpUnused
      */
-    public function getExpectedBalance(): ?BalanceValue
-    {
-        $balance = $this->getBalances(static::BALANCE_TYPE_EXPECTED)[0] ?? null;
-
-        return $balance ? new BalanceValue(new ResponseData($balance)) : null;
-    }
-
-    /**
-     * @return TransactionValue[]|null
-     * @noinspection PhpUnused
-     */
-    public function getClosingBookedBalance(): ?BalanceValue
+    public function getClosingBookedBalance(): BalanceValue|null
     {
         $balance = $this->getBalances(static::BALANCE_TYPE_CLOSING_BOOKING)[0] ?? null;
 
@@ -50,23 +39,5 @@ class Balances extends Value
     public function getAccount(): ?array
     {
         return $this->data['account'] ?? null;
-    }
-
-    /**
-     * @return array|null
-     * @noinspection PhpUnused
-     */
-    public function getAccountIban(): ?string
-    {
-        return $this->getAccount()['iban'] ?? null;
-    }
-
-    /**
-     * @return array|null
-     * @noinspection PhpUnused
-     */
-    public function getAccountCurrency(): ?string
-    {
-        return $this->getAccount()['currency'] ?? null;
     }
 }

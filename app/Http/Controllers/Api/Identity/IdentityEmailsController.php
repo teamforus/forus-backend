@@ -137,10 +137,12 @@ class IdentityEmailsController extends Controller
 
     /**
      * @param IdentityEmail $identityEmail
-     * @return View|RedirectResponse
+     *
+     * @return RedirectResponse|View|\Illuminate\Contracts\View\Factory|\Illuminate\Routing\Redirector
+     *
      * @noinspection PhpUnused
      */
-    public function emailVerificationToken(IdentityEmail $identityEmail): View|RedirectResponse
+    public function emailVerificationToken(IdentityEmail $identityEmail): \Illuminate\Routing\Redirector|RedirectResponse|View|\Illuminate\Contracts\View\Factory|RedirectResponse
     {
         $this->authorize('verifyToken', $identityEmail);
 

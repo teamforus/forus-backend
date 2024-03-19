@@ -455,7 +455,10 @@ class Voucher extends BaseModel
 
     /**
      * @return string
+     *
      * @noinspection PhpUnused
+     *
+     * @psalm-return 'product'|'regular'
      */
     public function getTypeAttribute(): string
     {
@@ -632,19 +635,21 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
+     *
      * @noinspection PhpUnused
      */
-    public function getStateLocaleAttribute(): string
+    public function getStateLocaleAttribute(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans('states/vouchers.' . $this->state);
     }
 
     /**
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
+     *
      * @noinspection PhpUnused
      */
-    public function getSourceLocaleAttribute(): string
+    public function getSourceLocaleAttribute(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans('vouchers.source.' . ($this->employee_id ? 'employee' : 'user'));
     }
@@ -703,7 +708,6 @@ class Voucher extends BaseModel
      */
     public static function search(Request $request): Builder|Voucher
     {
-        /** @var Builder|Voucher $query */
         $query = self::query();
         $granted = $request->input('granted');
 
@@ -884,19 +888,17 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @return bool
      * @noinspection PhpUnused
      */
-    public function getHasTransactionsAttribute(): bool
+    public function getHasTransactionsAttribute(): int
     {
         return $this->usedCount('transactions', false);
     }
 
     /**
-     * @return bool
      * @noinspection PhpUnused
      */
-    public function getHasReservationsAttribute(): bool
+    public function getHasReservationsAttribute(): int
     {
         return $this->usedCount('reservations', false);
     }
@@ -1095,10 +1097,10 @@ class Voucher extends BaseModel
 
     /**
      * Calculate expiration date for product when bought using this voucher.
+     *
      * @param Product $product
-     * @return Carbon|null
      */
-    public function calcExpireDateForProduct(Product $product): ?Carbon
+    public function calcExpireDateForProduct(Product $product): Carbon
     {
         return array_first(array_sort(array_filter([
             $product->expire_at,
@@ -1108,11 +1110,14 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @param Collection|Voucher[] $vouchers
+     * @param Arrayable $vouchers
      * @param array $fields
      * @param string $dataFormat
      * @param string|null $qrFormat
-     * @return array
+     *
+     * @return (((VoucherExportData|array|mixed|null|string)[]|false|string)[]|string)[]
+     *
+     * @psalm-return array{files: array{xls?: string, csv?: string, zip: false|string}, data: list<array{name: null|string, value: null|string, values: array, voucherData: App\Models\Data\VoucherExportData, ...}>, date: string, name: string}
      */
     public static function exportData(
         Collection|Arrayable $vouchers,
@@ -1192,8 +1197,9 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @param Collection|Voucher[] $vouchers
+     * @param Arrayable $vouchers
      * @param array $fields
+     *
      * @return array
      */
     public static function exportOnlyDataArray(Collection|Arrayable $vouchers, array $fields): array
@@ -1277,10 +1283,11 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @param $value
+     * @param null|string $value
+     *
      * @return Voucher|null
      */
-    public static function findByAddressOrPhysicalCard($value): ?Voucher
+    public static function findByAddressOrPhysicalCard(string|null $value): ?Voucher
     {
         return self::findByPhysicalCard($value) ?: self::findByAddress($value);
     }
@@ -1398,12 +1405,11 @@ class Voucher extends BaseModel
     /**
      * @param string $note
      * @param Employee $employee
-     * @return Voucher
      */
     public function activateAsSponsor(
         string $note,
         Employee $employee
-    ): Voucher {
+    ): static {
         $this->update([
             'state' => self::STATE_ACTIVE,
         ]);
@@ -1626,7 +1632,10 @@ class Voucher extends BaseModel
 
     /**
      * @param array $records
+     *
      * @return Collection
+     *
+     * @psalm-return Collection<int<0, max>, null>
      */
     public function appendRecords(array $records): Collection
     {
@@ -1655,9 +1664,9 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @return string|null
+     * @return null|string
      */
-    public function getRecordsTitle(): ?string
+    public function getRecordsTitle(): string|null
     {
         $records = $this->voucher_records->sortBy(['record_type_id']);
         $recordsMap = $records->pluck('value', 'record_type.key');

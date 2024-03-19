@@ -10,20 +10,14 @@ use App\Http\Requests\BaseFormRequest;
  */
 class StorePhysicalCardRequestRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{address: 'required|string|between:3,100', house: 'required|numeric|between:1,20000', house_addition: 'nullable|string|between:0,20', postcode: 'required|string|between:0,20', city: 'required|string|between:1,20'}
      */
     public function rules(): array
     {

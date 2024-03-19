@@ -52,9 +52,9 @@ class ScheduleRule implements Rule
     /**
      * Get the validation error message.
      *
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
      */
-    public function message()
+    public function message(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans('validation.schedule');
     }

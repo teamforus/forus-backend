@@ -14,7 +14,9 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((mixed|string)[]|string)[]
+     *
+     * @psalm-return array{bsn: array<string>, note: 'nullable|string|max:280', email: array{0: 'nullable'|mixed, 1: 'required_if:assign_by_type,email'|mixed,...}, amount: array<string>|string, records: array, fund_id: array, activate: 'boolean', expire_at: array<string>, client_uid: 'nullable|string|max:20', product_id: array<string>, assign_by_type: string, activation_code: 'boolean', limit_multiplier: 'nullable|numeric|min:1|max:1000'}
      */
     public function rules(): array
     {
@@ -43,7 +45,9 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Validation\Rules\Exists|string)[]
+     *
+     * @psalm-return list{'required', \Illuminate\Validation\Rules\Exists}
      */
     private function fundIdRule(): array
     {
@@ -60,9 +64,12 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
 
     /**
      * @param Fund $fund
+     *
      * @return string|string[]
+     *
+     * @psalm-return 'nullable'|list{'nullable', 'required_without:product_id', 'numeric', string}
      */
-    private function amountRule(Fund $fund): array|string
+    private function amountRule(Fund $fund): array|string|string
     {
         return $fund->isTypeBudget() ? [
             'nullable',
@@ -74,7 +81,10 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
 
     /**
      * @param Fund $fund
-     * @return string[]
+     *
+     * @return (ProductIdInStockRule|string)[]
+     *
+     * @psalm-return list{'nullable', 'exists:products,id', ProductIdInStockRule,...}
      */
     private function productIdRule(Fund $fund): array
     {
@@ -92,7 +102,10 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
 
     /**
      * @param Fund $fund
+     *
      * @return string[]
+     *
+     * @psalm-return list{'nullable', 'date_format:Y-m-d', string, string}
      */
     private function expireAtRule(Fund $fund): array
     {
@@ -106,7 +119,10 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
 
     /**
      * @param bool $bsn_enabled
-     * @return string[]
+     *
+     * @return (BsnRule|string)[]
+     *
+     * @psalm-return list{0: 'nullable', 1: 'in:'|'required_if:assign_by_type,bsn', 2?: BsnRule}
      */
     private function bsnRule(bool $bsn_enabled): array
     {
@@ -141,6 +157,8 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{assign_by_type: 'methode'}
      */
     public function attributes(): array
     {
@@ -150,7 +168,9 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{'amount.between': 'Er staat niet genoeg budget op het fonds. Het maximale tegoed van een voucher is €:max. Vul het fonds aan om deze voucher aan te maken.'}
      */
     public function messages(): array {
         return [

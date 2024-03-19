@@ -25,9 +25,9 @@ class OfficeSearch extends BaseSearch
     }
 
     /**
-     * @return Relation|Builder
+     * @return Builder|Office
      */
-    public function query(): Relation|Builder
+    public function query(): Office|Builder|Builder
     {
         /** @var Office|Builder $builder */
         $builder = parent::query();

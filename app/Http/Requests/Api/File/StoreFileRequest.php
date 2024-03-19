@@ -12,7 +12,7 @@ class StoreFileRequest extends BaseFormRequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
+     * @return true
      */
     public function authorize(): bool
     {
@@ -22,7 +22,9 @@ class StoreFileRequest extends BaseFormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return array[]
+     *
+     * @psalm-return array{type: array, file: array, file_preview: array}
      */
     public function rules(): array
     {
@@ -34,7 +36,9 @@ class StoreFileRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Validation\Rules\In|string)[]
+     *
+     * @psalm-return list{0: 'required', 1: 'file', 2: \Illuminate\Validation\Rules\In|string, 3?: string}
      */
     public function fileRule(): array
     {
@@ -58,7 +62,9 @@ class StoreFileRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return list{'nullable', 'file', 'image', 'dimensions:max_width=1000,max_height=1000'}
      */
     public function filePreviewRule(): array
     {
@@ -71,7 +77,9 @@ class StoreFileRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return (FileTypeRule|string)[]
+     *
+     * @psalm-return list{'required', FileTypeRule}
      */
     public function typeRule(): array
     {

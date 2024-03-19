@@ -15,8 +15,11 @@ class FundProviderChatMessageResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (bool|mixed|null|string)[]
+     *
+     * @psalm-return array{is_today: bool, time: string, date: null|string, created_at: string, updated_at: string, created_at_locale: null|string, updated_at_locale: null|string,...}
      */
     public function toArray($request): array
     {

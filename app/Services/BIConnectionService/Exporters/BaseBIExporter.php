@@ -31,7 +31,10 @@ abstract class BaseBIExporter
     /**
      * @param array $data
      * @param array $fields
-     * @return array
+     *
+     * @return array[]
+     *
+     * @psalm-return array<array>
      */
     protected function transformKeys(array $data, array $fields): array
     {

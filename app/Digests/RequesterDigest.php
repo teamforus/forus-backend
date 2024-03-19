@@ -21,77 +21,15 @@ class RequesterDigest
     use Dispatchable;
 
     /**
-     * @param NotificationService $notificationService
-     */
-    public function handle(NotificationService $notificationService): void
-    {
-        $funds = Fund::whereState(Fund::STATE_ACTIVE)->get()->keyBy('id');
-
-        $fundsProvidersBody = collect($this->buildFundProvidersMailBody($funds));
-        $fundsProductsBody = collect($this->buildFundProductsMailBody($funds));
-
-        foreach ($funds as $fund) {
-            $this->updateLastDigest($fund);
-        }
-
-        foreach ($this->getIdentitiesWithFunds() as $identityFunds) {
-            /** @var Identity $identity */
-            $identity = $identityFunds['identity'];
-
-            $emailBody = new MailBodyBuilder();
-            $emailBody->h1(trans('digests/requester.title'));
-
-            foreach ($identityFunds['funds'] as $fundId) {
-                if (isset($fundsProvidersBody[$fundId])) {
-                    $emailBody = $emailBody->merge($fundsProvidersBody[$fundId]);
-
-                    if (isset($funds[$fundId]->fund_config->implementation)) {
-                        $emailBody->button_primary(
-                            $funds[$fundId]->fund_config->implementation->urlWebshop(),
-                            trans('digests/requester.button_webshop')
-                        )->space();
-                    }
-                }
-            }
-
-            if ($emailBody->count() > 1) {
-                $emailBody->separator();
-            }
-
-            foreach ($identityFunds['funds'] as $fundId) {
-                if (isset($fundsProductsBody[$fundId])) {
-                    $emailBody = $emailBody->merge($fundsProductsBody[$fundId]);
-
-                    if (isset($funds[$fundId]->fund_config->implementation)) {
-                        $emailBody->button_primary(
-                            $funds[$fundId]->fund_config->implementation->urlWebshop(),
-                            trans('digests/requester.button_webshop')
-                        )->space();
-                    }
-                }
-            }
-
-            if ($emailBody->count() > 1) {
-                $emailBody->pop();
-                $notificationService->sendDigest(
-                    $identity->email,
-                    new DigestRequesterMail(compact('emailBody'))
-                );
-            }
-        }
-    }
-
-    /**
      * @param Fund $fund
      * @param string $targetEvent
      * @param array $otherEvents
-     * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|Collection
      */
     protected function getEvents(
         Fund $fund,
         string $targetEvent,
         array $otherEvents
-    ): mixed {
+    ): Collection {
         $query = EventLog::eventsOfTypeQuery(Fund::class, $fund->id);
 
         $logsApprovedBudget = $query->whereIn('event', $otherEvents)->where(
@@ -110,7 +48,8 @@ class RequesterDigest
     }
 
     /**
-     * @param EloquentCollection|Fund[] $funds
+     * @param Arrayable $funds
+     *
      * @return MailBodyBuilder[]
      */
     public function buildFundProvidersMailBody(EloquentCollection|Arrayable $funds): array
@@ -141,7 +80,8 @@ class RequesterDigest
     }
 
     /**
-     * @param EloquentCollection|Fund[] $funds
+     * @param Arrayable $funds
+     *
      * @return MailBodyBuilder[]
      */
     private function buildFundProductsMailBody(EloquentCollection|Arrayable $funds): array
@@ -179,7 +119,9 @@ class RequesterDigest
     }
 
     /**
-     * @return array
+     * @return (Identity|\App\Models\BaseModel|mixed)[][]
+     *
+     * @psalm-return list{0?: array{identity: Identity|\App\Models\BaseModel, funds: mixed},...}
      */
     private function getIdentitiesWithFunds(): array
     {
@@ -210,9 +152,8 @@ class RequesterDigest
 
     /**
      * @param Fund $fund
-     * @return Carbon
      */
-    public function getFundDigestTime(Fund $fund): Carbon
+    public function getFundDigestTime(Fund $fund): \Illuminate\Support\Carbon
     {
         return $fund->lastDigestOfType('requester')->created_at ?? now()->subWeek();
     }

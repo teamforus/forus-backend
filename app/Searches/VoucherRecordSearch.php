@@ -33,7 +33,6 @@ class VoucherRecordSearch extends BaseSearch
 
     /**
      * @param Builder|Relation $builder
-     * @return Builder|Relation|VoucherRecord
      */
     protected function appendSortColumns(Builder|Relation $builder): Builder|Relation|VoucherRecord
     {

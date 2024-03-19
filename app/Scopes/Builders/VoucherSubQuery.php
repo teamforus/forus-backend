@@ -12,7 +12,6 @@ class VoucherSubQuery
 {
     /**
      * @param Builder|Relation|Voucher $builder
-     * @return Builder|Relation|Voucher
      */
     public static function appendFirstUseFields(Builder|Relation|Voucher $builder): Builder|Relation|Voucher
     {
@@ -40,7 +39,7 @@ class VoucherSubQuery
      * @param Builder|QBuilder $builder
      * @return Builder|QBuilder
      */
-    private static function limitFirst(Builder|QBuilder $builder): Builder|QBuilder
+    private static function limitFirst(Builder|QBuilder $builder): QBuilder|Builder|QBuilder
     {
         return $builder->orderBy('created_at')->select('created_at')->limit(1);
     }
@@ -57,7 +56,6 @@ class VoucherSubQuery
 
     /**
      * Product vouchers and product vouchers from reservations
-     * @return Builder|QBuilder
      */
     private static function getFirstReservationOrProductVoucherSubQuery(): Builder|QBuilder
     {

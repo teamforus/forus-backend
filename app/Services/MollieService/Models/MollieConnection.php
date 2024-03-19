@@ -188,10 +188,11 @@ class MollieConnection extends Model
     }
 
     /**
-     * @return string
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
+     *
      * @noinspection PhpUnused
      */
-    public function getOnboardingStateLocaleAttribute(): string
+    public function getOnboardingStateLocaleAttribute(): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans("states/mollie_connection.$this->onboarding_state");
     }
@@ -199,7 +200,10 @@ class MollieConnection extends Model
     /**
      * @param Employee|null $employee
      * @param array $extraModels
-     * @return array
+     *
+     * @return (Employee|Organization|mixed|null|static)[]
+     *
+     * @psalm-return array{employee: Employee|mixed|null, organization: Organization|mixed, mollie_connection: mixed|static,...}
      */
     public function getLogModels(?Employee $employee = null, array $extraModels = []): array
     {
@@ -284,10 +288,10 @@ class MollieConnection extends Model
 
     /**
      * @param Employee|null $employee
-     * @return MollieConnection
+     *
      * @throws MollieException
      */
-    public function fetchAndUpdateConnection(?Employee $employee = null): MollieConnection
+    public function fetchAndUpdateConnection(?Employee $employee = null): static
     {
         $service = $this->getMollieService();
         $state = $service->getOnboardingState();
@@ -369,9 +373,8 @@ class MollieConnection extends Model
     /**
      * @param AccessToken $token
      * @param array $attributes
-     * @return MollieConnection
      */
-    public function updateConnectionByToken(AccessToken $token, array $attributes): MollieConnection
+    public function updateConnectionByToken(AccessToken $token, array $attributes): static
     {
         self::query()
             ->where('organization_id', $this->organization_id)
@@ -496,12 +499,11 @@ class MollieConnection extends Model
     /**
      * @param MollieConnectionProfile $profile
      * @param Employee|null $employee
-     * @return MollieConnection
      */
     public function changeCurrentProfile(
         MollieConnectionProfile $profile,
         ?Employee $employee,
-    ): MollieConnection {
+    ): static {
         /** @var MollieConnectionProfile|null $previous */
         $previous = $this->profiles()->where('current', true)->first();
 

@@ -14,20 +14,14 @@ use Illuminate\Validation\Rule;
  */
 class UpdateFundRequest extends BaseFundRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return Gate::any(['update', 'updateTexts'], [$this->fund, $this->organization]);
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((MediaUidRule|\Illuminate\Validation\Rules\In|string)[]|mixed|string)[]
+     *
+     * @psalm-return array{name: mixed|string, media_uid: list{'nullable', MediaUidRule}|mixed|string, description: mixed|string, description_short: mixed|string, description_position: mixed|string, notification_amount: mixed|string, faq_title: mixed|string, tag_ids: mixed|string, 'tag_ids.*': mixed|string, request_btn_text: mixed|string, external_link_text: mixed|string, external_link_url: mixed|string, external_page: mixed|string, external_page_url: mixed|string, auto_requests_validation: mixed|string, default_validator_employee_id: list{'nullable', \Illuminate\Validation\Rules\In}|mixed|string, start_date?: list{'required', 'date_format:Y-m-d', string}|mixed|string, end_date?: list{'required', 'date_format:Y-m-d', 'after:start_date'}|mixed|string,...}
      */
     public function rules(): array
     {

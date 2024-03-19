@@ -31,30 +31,6 @@ class ReservationExtraPaymentExpireCommand extends Command
      */
     private int $waitingTime;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->waitingTime = Config::get('forus.reservations.extra_payment_waiting_time', 60);
-    }
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     * @throws Throwable
-     */
-    public function handle(): void
-    {
-        foreach ($this->getReservationsWithExpiredExtraPaymentsQuery()->get() as $reservation) {
-            try {
-                $reservation->cancelByState($reservation::STATE_CANCELED_PAYMENT_EXPIRED);
-            } catch (Throwable) {}
-        }
-    }
-
-    /**
-     * @return Collection|ProductReservation
-     */
     public function getReservationsWithExpiredExtraPaymentsQuery(): Builder|ProductReservation
     {
         return ProductReservation::query()

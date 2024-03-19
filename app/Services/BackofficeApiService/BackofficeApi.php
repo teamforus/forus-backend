@@ -83,9 +83,8 @@ class BackofficeApi
      *
      * @param string $bsn
      * @param string|null $requestId
-     * @return FundBackofficeLog
      */
-    public function reportReceived(string $bsn, ?string $requestId = null): FundBackofficeLog
+    public function reportReceived(string $bsn, ?string $requestId = null): FundBackofficeLog|null
     {
         return $this->makeLog(self::ACTION_REPORT_RECEIVED, $bsn, $requestId);
     }
@@ -95,9 +94,8 @@ class BackofficeApi
      *
      * @param string $bsn
      * @param string|null $requestId
-     * @return FundBackofficeLog
      */
-    public function reportFirstUse(string $bsn, ?string $requestId = null): FundBackofficeLog
+    public function reportFirstUse(string $bsn, ?string $requestId = null): FundBackofficeLog|null
     {
         return $this->makeLog(self::ACTION_REPORT_FIRST_USE, $bsn, $requestId);
     }
@@ -262,7 +260,10 @@ class BackofficeApi
      * @param string $method
      * @param string $url
      * @param array $data
-     * @return array
+     *
+     * @return (bool|int|mixed|null|string)[]
+     *
+     * @psalm-return array{success: bool, response_code: int|string, response_error?: string, response_body: mixed|null|string}
      */
     public function request(string $method, string $url, array $data = []): array
     {
@@ -325,6 +326,8 @@ class BackofficeApi
      * Make request headers
      *
      * @return string[]
+     *
+     * @psalm-return array{Authorization: string, 'Content-Type': 'application/json', Accept: 'application/json'}
      */
     public function makeRequestHeaders(): array
     {
@@ -339,7 +342,10 @@ class BackofficeApi
      * Make request body
      *
      * @param string $action
-     * @return array
+     *
+     * @return (null|string)[]
+     *
+     * @psalm-return array{action?: string, fund_key?: null|string}
      */
     protected function makeRequestBody(string $action): array
     {
@@ -359,7 +365,10 @@ class BackofficeApi
      * @param string $method
      * @param array $data
      * @param array $options
-     * @return array
+     *
+     * @return ((mixed|string)[]|int|mixed)[]
+     *
+     * @psalm-return array{headers: array<string>|mixed, connect_timeout: 10|mixed,...}
      */
     protected function makeOptions(string $method, array $data, array $options = []): array
     {

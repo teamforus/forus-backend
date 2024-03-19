@@ -10,7 +10,7 @@ class PaymentInfoData
 
     /**
      * @param string $paymentId
-     * @param string|null $executionDate
+     * @param string $executionDate
      * @param string|null $redirectToken
      */
     public function __construct(
@@ -32,9 +32,9 @@ class PaymentInfoData
     }
 
     /**
-     * @return string
+     * @return null|string
      */
-    public function getRedirectToken(): string
+    public function getRedirectToken(): string|null
     {
         return $this->redirectToken;
     }

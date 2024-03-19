@@ -35,7 +35,7 @@ class SamlArtifactResponse
     /**
      * @throws Throwable
      */
-    public function getAssertions(): array
+    public function getAssertions(): Assertion|null
     {
         return $this->processArtifactResponseBody();
     }
@@ -50,10 +50,11 @@ class SamlArtifactResponse
     }
 
     /**
-     * @return string
+     * @return null|string
+     *
      * @noinspection PhpUnused
      */
-    public function getInResponseTo(): string
+    public function getInResponseTo(): string|null
     {
         return $this->response->getInResponseTo();
     }
@@ -65,24 +66,6 @@ class SamlArtifactResponse
     public function isSuccess(): bool
     {
         return $this->response->isSuccess();
-    }
-
-    /**
-     * @return string|null
-     * @noinspection PhpUnused
-     */
-    public function getStatusMessage(): ?string
-    {
-        return $this->response->getStatus()['Message'] ?? null;
-    }
-
-    /**
-     * @param bool $truncate
-     * @return string|null
-     */
-    public function getStatusCode(bool $truncate = true): ?string
-    {
-        return $this->truncateStatus($this->response->getStatus()['Code'] ?? null, $truncate);
     }
 
     /**
@@ -109,11 +92,14 @@ class SamlArtifactResponse
     }
 
     /**
-     * @return Assertion|null
+     * @return (Assertion|\SAML2\EncryptedAssertion)[]|null
+     *
      * @throws Saml2Exception
      * @throws Throwable
+     *
+     * @psalm-return array<Assertion|\SAML2\EncryptedAssertion>|null
      */
-    protected function processArtifactResponseBody(): ?array
+    protected function processArtifactResponseBody(): array|null
     {
         if (!$this->isSuccess()) {
             return null;
@@ -148,7 +134,9 @@ class SamlArtifactResponse
      *
      * @param XMLSecurityKey $key
      * @param SignedElement $element
-     * @return bool
+     *
+     * @return true
+     *
      * @throws Saml2Exception
      */
     protected function checkSign(XMLSecurityKey $key, SignedElement $element): bool

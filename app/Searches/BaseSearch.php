@@ -28,15 +28,6 @@ class BaseSearch
     }
 
     /**
-     * @param array $filters
-     * @noinspection PhpUnused
-     */
-    public function setFilters(array $filters): void
-    {
-        $this->filters = $filters;
-    }
-
-    /**
      * @return array
      * @noinspection PhpUnused
      */
@@ -46,19 +37,11 @@ class BaseSearch
     }
 
     /**
-     * @param Builder|Relation $builder
+     * @return Builder|Relation|null
+     *
      * @noinspection PhpUnused
      */
-    public function setBuilder(Builder|Relation $builder): void
-    {
-        $this->builder = $builder;
-    }
-
-    /**
-     * @return Builder|Relation
-     * @noinspection PhpUnused
-     */
-    public function getBuilder(): Builder|Relation
+    public function getBuilder(): Relation|Builder|null|Relation
     {
         return $this->builder;
     }
@@ -85,9 +68,8 @@ class BaseSearch
     /**
      * @param string $key
      * @param string $format
-     * @return Carbon|null
      */
-    public function getFilterDate(string $key, string $format = 'Y-m-d'): ?Carbon
+    public function getFilterDate(string $key, string $format = 'Y-m-d'): Carbon|false|null
     {
         if ($this->hasFilter($key)) {
             return Carbon::createFromFormat($format, $this->getFilter($key));
@@ -97,7 +79,7 @@ class BaseSearch
     }
 
     /**
-     * @return Builder|Relation|null
+     * @return Builder|Relation
      */
     public function query(): Builder|Relation|null
     {
@@ -106,15 +88,17 @@ class BaseSearch
 
     /**
      * @param string[] $columns
-     * @return Collection
+     *
+     * @return Builder[]|Collection
+     *
+     * @psalm-return Collection<array-key, \Illuminate\Database\Eloquent\Model>|array<Builder>
      */
-    public function get(array $columns = ['*']): Collection
+    public function get(array $columns = ['*']): array|Collection
     {
         return $this->query()->get($columns);
     }
 
     /**
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      * @throws Exception
      */
     public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null): LengthAwarePaginator
@@ -124,6 +108,8 @@ class BaseSearch
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{per_page: string}
      */
     public static function rules(?BaseFormRequest $request = null): array
     {

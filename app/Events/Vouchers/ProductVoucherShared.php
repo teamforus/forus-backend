@@ -10,22 +10,6 @@ class ProductVoucherShared extends BaseVoucherEvent
     protected $sendCopyToUser;
 
     /**
-     * Create a new event instance.
-     *
-     * ProductVoucherShared constructor.
-     * @param Voucher $voucher
-     * @param string $message
-     * @param bool $sendCopyToUser
-     */
-    public function __construct(Voucher $voucher, string $message, bool $sendCopyToUser)
-    {
-        parent::__construct($voucher);
-
-        $this->message = $message;
-        $this->sendCopyToUser = $sendCopyToUser;
-    }
-
-    /**
      * Get the share message product
      *
      * @return string

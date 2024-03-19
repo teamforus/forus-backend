@@ -73,10 +73,11 @@ class VoucherRecord extends Model
     }
 
     /**
-     * @return string
+     * @return null|string
+     *
      * @noinspection PhpUnused
      */
-    public function getValueLocaleAttribute(): string
+    public function getValueLocaleAttribute(): string|null
     {
         if ($this->record_type->key == 'birth_date') {
             return format_date_locale($this->value);

@@ -26,7 +26,10 @@ class OfficeResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request|any $request
-     * @return array|null
+     *
+     * @return (MediaResource|OrganizationBasicResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed)[]|null
+     *
+     * @psalm-return array{photo: MediaResource, organization: OrganizationBasicResource, schedule: \Illuminate\Http\Resources\Json\AnonymousResourceCollection,...}|null
      */
     public function toArray($request): ?array
     {

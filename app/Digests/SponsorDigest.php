@@ -109,7 +109,6 @@ class SponsorDigest extends BaseOrganizationDigest
 
         /** @var Fund $fund */
         /** @var int $count */
-        /** @var Collection|FundProvider $fundProviders */
         foreach ($fundProvidersList as [$fund, $count, $fundProviders]) {
             if ($count < 1) {
                 continue;
@@ -159,7 +158,6 @@ class SponsorDigest extends BaseOrganizationDigest
 
         /** @var Fund $fund */
         /** @var int $count */
-        /** @var Collection|FundProvider $fundProviders */
         foreach ($fundProvidersList as [$fund, $count, $fundProviders]) {
             if ($count < 1) {
                 continue;
@@ -316,7 +314,6 @@ class SponsorDigest extends BaseOrganizationDigest
 
             /** @var Fund $fund */
             /** @var int $countEvents */
-            /** @var EventLog[]|Collection $eventLogs */
             foreach ($events as [$fund, $countEvents, $eventLogs]) {
                 if ($countEvents < 1) {
                     continue;
@@ -355,7 +352,8 @@ class SponsorDigest extends BaseOrganizationDigest
 
     /**
      * @param MailBodyBuilder $emailBody
-     * @return BaseDigestMail
+     *
+     * @return DigestSponsorMail
      */
     protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
     {

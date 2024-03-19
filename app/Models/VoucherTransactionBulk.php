@@ -239,7 +239,7 @@ class VoucherTransactionBulk extends BaseModel
         VoucherTransaction $transaction,
         DraftPayment $draftPayment
     ): ?Payment {
-        $filter = function(Payment $payment) use ($transaction) {
+        $filter = function(Payment $payment) use ($transaction): bool {
             return strtolower($payment->getDescription()) == strtolower($transaction->payment_description);
         };
 
@@ -283,10 +283,12 @@ class VoucherTransactionBulk extends BaseModel
 
     /**
      * @param DraftPayment $draftPayment
-     * @return VoucherTransactionBulk
+     *
+     * @return null|static
+     *
      * @throws Throwable
      */
-    public function setAccepted(DraftPayment $draftPayment): self
+    public function setAccepted(DraftPayment $draftPayment): static|null
     {
         DB::transaction(function() use ($draftPayment) {
             $this->update([
@@ -317,10 +319,12 @@ class VoucherTransactionBulk extends BaseModel
 
     /**
      * @param Employee|null $employee
-     * @return self
+     *
+     * @return null|static
+     *
      * @throws Throwable
      */
-    public function setAcceptedBNG(?Employee $employee = null): self
+    public function setAcceptedBNG(?Employee $employee = null): static|null
     {
         DB::transaction(function() use ($employee) {
             $this->update([
@@ -652,7 +656,10 @@ class VoucherTransactionBulk extends BaseModel
     /**
      * @param Employee|null $employee
      * @param array $extraModels
-     * @return array
+     *
+     * @return (BankConnection|Employee|Organization|mixed|null|static)[]
+     *
+     * @psalm-return array{sponsor: Organization|mixed|null, employee: Employee|mixed|null, bank_connection: BankConnection|mixed|null, voucher_transaction_bulk: mixed|static,...}
      */
     protected function getLogModels(?Employee $employee = null, array $extraModels = []): array
     {
@@ -778,9 +785,12 @@ class VoucherTransactionBulk extends BaseModel
     /**
      * @param Builder $builder
      * @param array $fields
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     *
+     * @return Collection|\Illuminate\Support\Collection
+     *
+     * @psalm-return Collection<int, array>|\Illuminate\Support\Collection<int, array>
      */
-    private static function exportTransform(Builder $builder, array $fields): mixed
+    private static function exportTransform(Builder $builder, array $fields): \Illuminate\Support\Collection|Collection
     {
         $fieldLabels = array_pluck(VoucherTransactionBulksExport::getExportFields(), 'name', 'key');
 

@@ -46,8 +46,11 @@ class ValidatorFundRequestResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (array|bool|mixed|null|string)[]
+     *
+     * @psalm-return array{bsn: mixed|null|string, fund: array|mixed, email: mixed|null|string, records: array|mixed, replaced: bool|mixed, allowed_employees: array|mixed,...}
      */
     public function toArray($request): array
     {
@@ -58,7 +61,6 @@ class ValidatorFundRequestResource extends BaseJsonResource
         $organization = $request->route('organization') or abort(403);
         $allowedEmployees = $this->getAllowedRequestEmployeesQuery($baseFormRequest, $fundRequest, $organization)->get();
 
-        /** @var Organization $organization */
         $organization = $request->route('organization') or abort(403);
         $bsn_enabled = $organization->bsn_enabled;
 
@@ -108,7 +110,10 @@ class ValidatorFundRequestResource extends BaseJsonResource
 
     /**
      * @param FundRequest $request
-     * @return array
+     *
+     * @return (\Illuminate\Http\Resources\Json\AnonymousResourceCollection|bool|mixed)[]
+     *
+     * @psalm-return array{criteria: \Illuminate\Http\Resources\Json\AnonymousResourceCollection, tags: \Illuminate\Http\Resources\Json\AnonymousResourceCollection, has_person_bsn_api: bool,...}
      */
     protected function fundDetails(FundRequest $request): array
     {
@@ -164,7 +169,10 @@ class ValidatorFundRequestResource extends BaseJsonResource
      * @param FundRequestRecord $record
      * @param Employee $employee
      * @param bool $isRecordAssignable
-     * @return array
+     *
+     * @return ((array|mixed)[]|Collection|EmployeeResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|bool|mixed|null|string)[]
+     *
+     * @psalm-return array{value: mixed|null|string, files: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed, history: Collection|array<never, never>|mixed, clarifications: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed, employee: EmployeeResource|mixed, record_type: array{options: array,...}|mixed, is_assigned: bool|mixed, is_assignable: bool|mixed,...}
      */
     static function recordToArray(
         FundRequestRecord $record,
@@ -199,9 +207,10 @@ class ValidatorFundRequestResource extends BaseJsonResource
 
     /**
      * @param FundRequestRecord $record
-     * @return \Illuminate\Support\Collection
+     *
+     * @psalm-return Collection<array-key, array{id: int|mixed, new_value: ''|mixed, old_value: ''|mixed, employee_email: ''|mixed,...}>|\Illuminate\Database\Eloquent\Collection<array-key, array{id: int|mixed, new_value: ''|mixed, old_value: ''|mixed, employee_email: ''|mixed,...}>
      */
-    static function getHistory(FundRequestRecord $record): Collection
+    static function getHistory(FundRequestRecord $record): Collection|\Illuminate\Database\Eloquent\Collection
     {
         return $record->historyLogs()->map(fn (EventLog $eventLog) => array_merge([
             'id' => $eventLog->id,

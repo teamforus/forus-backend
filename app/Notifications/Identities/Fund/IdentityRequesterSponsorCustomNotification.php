@@ -38,9 +38,12 @@ class IdentityRequesterSponsorCustomNotification extends BaseIdentityFundNotific
      *
      * @param Fund $loggable
      * @param EventLog $eventLog
-     * @return \Illuminate\Support\Collection
+     *
+     * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection
+     *
+     * @psalm-return \Illuminate\Database\Eloquent\Collection<array-key, \Illuminate\Database\Eloquent\Model>|array<\Illuminate\Database\Eloquent\Builder>
      */
-    public static function eligibleIdentities($loggable, EventLog $eventLog): \Illuminate\Support\Collection
+    public static function eligibleIdentities($loggable, EventLog $eventLog): array|\Illuminate\Database\Eloquent\Collection
     {
         return Identity::query()
             ->whereIn('id', Arr::get($eventLog->data, 'notification_target_identities', []))

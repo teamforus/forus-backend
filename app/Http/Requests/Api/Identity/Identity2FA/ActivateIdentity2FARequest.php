@@ -11,26 +11,18 @@ use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
 
 class ActivateIdentity2FARequest extends BaseIdentity2FARequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     * @throws AuthorizationJsonException
-     */
-    public function authorize(): bool
-    {
-        $this->throttleRequest('active');
 
-        return $this->isAuthenticated() && $this->identity2fa->identity_address == $this->auth_address();
-    }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\Exists|string)[]|mixed)[]
+     *
      * @throws IncompatibleWithGoogleAuthenticatorException
      * @throws InvalidCharactersException
      * @throws SecretKeyTooShortException
+     *
+     * @psalm-return array{key: list{'required', \Illuminate\Validation\Rules\Exists},...}
      */
     public function rules(): array
     {

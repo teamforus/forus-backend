@@ -19,14 +19,4 @@ class UpdateCompletedMollieConnectionsCommand extends BaseUpdateMollieConnection
      * @var string
      */
     protected $description = 'Update completed mollie connections.';
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        $this->updateConnections(MollieConnection::ONBOARDING_STATE_COMPLETED);
-    }
 }

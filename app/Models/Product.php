@@ -504,9 +504,8 @@ class Product extends BaseModel
 
     /**
      * @param array $fundFilters
-     * @return Builder
      */
-    public static function searchQuery(array $fundFilters = []): Builder
+    public static function searchQuery(array $fundFilters = []): Builder|self
     {
         $query = self::query();
         $activeFunds = Implementation::activeFundsQuery()->where($fundFilters)->pluck('id')->toArray();
@@ -536,11 +535,9 @@ class Product extends BaseModel
     /**
      * @param array $options
      * @param Builder|Product|null $builder
-     * @return Builder|Product
      */
     public static function search(array $options, Builder|Product $builder = null): Builder|Product
     {
-        /** @var Builder|Product $query */
         $query = $builder ?: self::searchQuery();
 
         if ($fund_type = Arr::get($options, 'fund_type')) {

@@ -23,7 +23,7 @@ class FundSearch extends BaseSearch
     }
 
     /**
-     * @return FundRequest|Builder
+     * @return Builder
      */
     public function query(): ?Builder
     {

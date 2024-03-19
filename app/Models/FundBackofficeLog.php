@@ -75,10 +75,7 @@ class FundBackofficeLog extends BaseModel
         return $this->belongsTo(Voucher::class);
     }
 
-    /**
-     * @return FundBackofficeLog|bool
-     */
-    public function increaseAttempts()
+    public function increaseAttempts(): static
     {
         return $this->updateModel([
             'attempts' => ++$this->attempts,

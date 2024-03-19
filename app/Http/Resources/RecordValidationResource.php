@@ -13,7 +13,10 @@ class RecordValidationResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
+     *
+     * @return (mixed|null|string)[]
+     *
+     * @psalm-return array{email: mixed|null|string,...}
      */
     public function toArray($request): array
     {

@@ -13,7 +13,10 @@ class ImplementationBlockResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param $request
-     * @return array
+     *
+     * @return (MediaResource|mixed)[]
+     *
+     * @psalm-return array{media: MediaResource,...}
      */
     public function toArray($request): array
     {

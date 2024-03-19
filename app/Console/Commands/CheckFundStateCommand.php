@@ -20,17 +20,4 @@ class CheckFundStateCommand extends Command
      * @var string
      */
     protected $description = 'Update fund state by the start/end date';
-
-    /**
-     * Execute the console command.
-     *
-     * @param Fund $fund
-     * @return void
-     */
-    public function handle(Fund $fund): void
-    {
-        try {
-            $fund::checkStateQueue();
-        } catch (\Throwable $e) {}
-    }
 }

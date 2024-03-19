@@ -13,6 +13,8 @@ abstract class BaseOrganizationRequest extends BaseFormRequest
 {
     /**
      * @return string[]
+     *
+     * @psalm-return array{reservation_phone: string, reservation_address: string, reservation_birth_date: string, reservation_allow_extra_payments: 'nullable|boolean'}
      */
     protected function reservationRules(): array
     {

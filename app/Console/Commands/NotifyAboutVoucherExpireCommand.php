@@ -29,38 +29,14 @@ class NotifyAboutVoucherExpireCommand extends Command
     protected $description = 'Send vouchers expiration warning email 4 weeks before expiration.';
 
     /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        $interval3Weeks = [now(), now()->addWeeks(3)];
-        $interval6Weeks = [now()->addWeeks(3)->addDay(), now()->addWeeks(6)];
-
-        $expiredVouchers = $this->getExpiredVouchers();
-        $expiringVouchers3Weeks = $this->getExpiringVouchers($interval3Weeks[0], $interval3Weeks[1]);
-        $expiringVouchers6Weeks = $this->getExpiringVouchers($interval6Weeks[0], $interval6Weeks[1]);
-
-        foreach ($expiringVouchers3Weeks as $voucher) {
-            VoucherExpireSoon::dispatch($voucher);
-        }
-
-        foreach ($expiringVouchers6Weeks as $voucher) {
-            VoucherExpireSoon::dispatch($voucher);
-        }
-
-        foreach ($expiredVouchers as $voucher) {
-            VoucherExpired::dispatch($voucher);
-        }
-    }
-
-    /**
      * @param Carbon $startDate
      * @param Carbon $endDate
-     * @return Collection
+     *
+     * @return Builder[]|Collection
+     *
+     * @psalm-return Collection<array-key, \Illuminate\Database\Eloquent\Model>|array<Builder>
      */
-    public function getExpiringVouchers(Carbon $startDate, Carbon $endDate): Collection
+    public function getExpiringVouchers(Carbon $startDate, Carbon $endDate): array|Collection
     {
         $builder = $this->queryVouchers(
             VoucherQuery::whereNotExpiredAndActive(Voucher::query()),
@@ -75,9 +51,11 @@ class NotifyAboutVoucherExpireCommand extends Command
     }
 
     /**
-     * @return Collection
+     * @return Builder[]|Collection
+     *
+     * @psalm-return Collection<array-key, \Illuminate\Database\Eloquent\Model>|array<Builder>
      */
-    private function getExpiredVouchers(): Collection
+    private function getExpiredVouchers(): array|Collection
     {
         $builder = $this->queryVouchers(
             Voucher::query(),

@@ -23,39 +23,6 @@ class MediaCleanupCommand extends Command
     protected $description = 'Clean media files';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
-     * Execute the console command.
-     *
-     * @throws \Exception
-     */
-    public function handle(): void
-    {
-        $minutes = null;
-
-        if ($this->hasOption('minutes')) {
-            if (!is_numeric($this->option('minutes'))) {
-                $this->error("Invalid argument `minutes`.\n");
-                exit();
-            }
-
-            $minutes = intval($this->option('minutes'));
-        }
-
-        $this->mediaWithoutMediable();
-        $this->expiredMedia($minutes);
-        $this->unusedMediaFiles();
-    }
-
-    /**
      * @throws \Exception
      */
     public function mediaWithoutMediable(): void

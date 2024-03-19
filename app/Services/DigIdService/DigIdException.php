@@ -21,7 +21,7 @@ class DigIdException extends Exception
      * @param $errorCode
      * @return $this
      */
-    public function setDigIdCode($errorCode): DigIdException
+    public function setDigIdCode(string $errorCode): DigIdException
     {
         $this->digIdErrorCode = $errorCode;
 

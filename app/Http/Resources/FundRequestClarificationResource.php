@@ -17,8 +17,11 @@ class FundRequestClarificationResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (\Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed|string)[]
+     *
+     * @psalm-return array{files: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed, fund_request_record_name: mixed|string,...}
      */
     public function toArray($request): array
     {

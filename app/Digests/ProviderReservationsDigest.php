@@ -155,7 +155,8 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
 
     /**
      * @param MailBodyBuilder $emailBody
-     * @return BaseDigestMail
+     *
+     * @return DigestProviderFundsMail
      */
     protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
     {

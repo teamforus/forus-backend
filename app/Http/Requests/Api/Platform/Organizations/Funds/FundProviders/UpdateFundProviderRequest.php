@@ -12,33 +12,12 @@ use Illuminate\Validation\Rule;
  */
 class UpdateFundProviderRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
-     * Get the validation rules that apply to the request.
+     * @return string[]
      *
-     * @return array
-     */
-    public function rules(): array
-    {
-        return array_merge(
-            $this->baseRules(),
-            $this->resetProductsRules(),
-            $this->enableProductsRules(),
-            $this->disableProductsRules(),
-        );
-    }
-
-    /**
-     * @return array
+     * @psalm-return array{state: string, excluded: 'nullable|boolean', allow_budget: 'nullable|boolean', allow_products: 'nullable|boolean', allow_extra_payments: 'nullable|boolean'}
      */
     private function baseRules(): array
     {
@@ -57,7 +36,9 @@ class UpdateFundProviderRequest extends FormRequest
     }
 
     /**
-     * @return array[]
+     * @return ((\Illuminate\Validation\Rules\Exists|\Illuminate\Validation\Rules\In|string)[]|string)[]
+     *
+     * @psalm-return array{reset_products: 'nullable|array', 'reset_products.*.id': list{'required', 'numeric', \Illuminate\Validation\Rules\Exists|\Illuminate\Validation\Rules\In}}
      */
     private function resetProductsRules(): array
     {
@@ -74,7 +55,9 @@ class UpdateFundProviderRequest extends FormRequest
     }
 
     /**
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\Exists|string)[]|FundProviderProductAvailableRule|string)[]
+     *
+     * @psalm-return array{enable_products: 'nullable|array', 'enable_products.*.id': list{'required', 'numeric', \Illuminate\Validation\Rules\Exists}, 'enable_products.*.expire_at': 'nullable|date_format:Y-m-d', 'enable_products.*.limit_total': 'nullable|numeric|min:0', 'enable_products.*.limit_total_unlimited': 'nullable|boolean', 'enable_products.*.limit_per_identity': 'nullable|numeric|min:0', 'enable_products.*.amount'?: 'required|numeric|min:0', 'enable_products.*': FundProviderProductAvailableRule}
      */
     private function enableProductsRules(): array
     {
@@ -95,7 +78,9 @@ class UpdateFundProviderRequest extends FormRequest
     }
 
     /**
-     * @return array[]
+     * @return ((\Illuminate\Validation\Rules\Exists|string)[]|string)[]
+     *
+     * @psalm-return array{disable_products: 'nullable|array', 'disable_products.*': list{'required', 'numeric', \Illuminate\Validation\Rules\Exists}}
      */
     private function disableProductsRules(): array
     {
@@ -108,7 +93,9 @@ class UpdateFundProviderRequest extends FormRequest
     }
 
     /**
-     * @return array
+     * @return (\Illuminate\Contracts\Translation\Translator|array|null|string)[]
+     *
+     * @psalm-return array{'enable_products.*.amount': \Illuminate\Contracts\Translation\Translator|array|null|string, 'enable_products.*.limit_total': \Illuminate\Contracts\Translation\Translator|array|null|string, 'enable_products.*.limit_per_identity': \Illuminate\Contracts\Translation\Translator|array|null|string}
      */
     public function attributes(): array
     {

@@ -143,18 +143,14 @@ class FundProviderInvitation extends BaseModel
     /**
      * Date when invitation will expire
      *
-     * @return \Carbon\Carbon
      * @noinspection PhpUnused
      */
-    public function getExpireAtAttribute(): Carbon
+    public function getExpireAtAttribute(): \Illuminate\Support\Carbon
     {
         return $this->created_at->addMinutes(self::VALIDITY_IN_MINUTES);
     }
 
-    /**
-     * @return FundProviderInvitation
-     */
-    public function accept(): FundProviderInvitation
+    public function accept(): static
     {
         $this->fund->providers()->firstOrCreate([
             'organization_id' => $this->organization_id,

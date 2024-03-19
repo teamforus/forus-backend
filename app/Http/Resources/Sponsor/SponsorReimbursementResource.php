@@ -11,8 +11,11 @@ class SponsorReimbursementResource extends ReimbursementResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (EmployeeResource|ReimbursementCategoryResource|mixed|null|string)[]
+     *
+     * @psalm-return array{identity_email: null|string, identity_bsn: null|string, provider_name: null|string, employee: EmployeeResource, reimbursement_category: ReimbursementCategoryResource, implementation_name: null|string,...}
      */
     public function toArray($request): array
     {

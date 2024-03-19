@@ -24,14 +24,4 @@ class SendProviderFundsDigestCommand extends Command
      * @var string
      */
     protected $description = 'Send provider funds digest.';
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        ProviderFundsDigest::dispatchSync();
-    }
 }

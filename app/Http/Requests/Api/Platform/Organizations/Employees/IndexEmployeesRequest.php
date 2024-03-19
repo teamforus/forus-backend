@@ -6,20 +6,14 @@ use App\Http\Requests\BaseFormRequest;
 
 class IndexEmployeesRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{q: 'nullable|string|max:500', role: 'nullable|string|exists:roles,key', roles: 'nullable|array', 'roles.*': 'nullable|string|exists:roles,key', permission: 'nullable|string|exists:permissions,key', permissions: 'nullable|array', 'permissions.*': 'nullable|exists:permissions,key', export_type: 'nullable|in:xls,csv', per_page: string}
      */
     public function rules(): array
     {

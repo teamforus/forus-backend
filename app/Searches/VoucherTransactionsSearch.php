@@ -20,10 +20,7 @@ class VoucherTransactionsSearch extends BaseSearch
         parent::__construct($filters, $builder);
     }
 
-    /**
-     * @return VoucherTransaction|Builder
-     */
-    public function query(): ?Builder
+    public function query(): Builder|null
     {
         /** @var Builder|VoucherTransaction $builder */
         $builder = parent::query();
@@ -128,10 +125,7 @@ class VoucherTransactionsSearch extends BaseSearch
         return $builder;
     }
 
-    /**
-     * @return Builder
-     */
-    public function searchProvider(): Builder
+    public function searchProvider(): Builder|\Illuminate\Database\Query\Builder
     {
         $builder = $this->query();
 

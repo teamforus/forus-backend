@@ -29,8 +29,11 @@ class ProductFundResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (ImplementationResource|MediaResource|OrganizationResource|bool|mixed|null|string)[]
+     *
+     * @psalm-return array{key: string, logo: MediaResource, start_date: string, end_date: string, start_date_locale: null|string, end_date_locale: null|string, organization: OrganizationResource, implementation: ImplementationResource, approved: bool, provider_excluded: mixed|null,...}
      */
     public function toArray($request): array
     {

@@ -202,7 +202,7 @@ class IdentityProxy extends Model
 
     /**
      * @param bool $expired
-     * @return IdentityProxy
+     *
      * @throws \Throwable
      */
     public function deactivateBySession(bool $expired = true): static
@@ -293,7 +293,8 @@ class IdentityProxy extends Model
     /**
      * @param string $ip
      * @param int $timeout
-     * @return bool
+     *
+     * @return false
      */
     public function inherit2FAState(string $ip, int $timeout): bool
     {

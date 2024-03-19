@@ -69,7 +69,10 @@ class SponsorProviderResource extends BaseJsonResource
 
     /**
      * @param Organization $provider
-     * @return array
+     *
+     * @return (Collection|int)[]
+     *
+     * @psalm-return array{funds: Collection, products_count: int}
      */
     protected function fundApprovalDetails(Organization $provider): array
     {
@@ -85,12 +88,13 @@ class SponsorProviderResource extends BaseJsonResource
     /**
      * @param Organization $sponsorOrganization
      * @param Organization $providerOrganization
-     * @return Collection
+     *
+     * @psalm-return Collection<int, array{fund_provider_id: int, fund_provider_state: string, fund_provider_state_locale: string,...}>|\Illuminate\Database\Eloquent\Collection
      */
     protected function getProviderFunds(
         Organization $sponsorOrganization,
         Organization $providerOrganization
-    ): Collection {
+    ): Collection|\Illuminate\Database\Eloquent\Collection {
         $fund_providers = $providerOrganization->fund_providers
             ->filter(fn(FundProvider $provider) => $provider->fund->organization_id == $sponsorOrganization->id)
             ->filter(fn(FundProvider $provider) => $provider->fund->archived == false)

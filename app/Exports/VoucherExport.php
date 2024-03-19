@@ -68,7 +68,9 @@ class VoucherExport extends BaseFieldedExport
     }
 
     /**
-     * @return array
+     * @return (mixed|true)[][]
+     *
+     * @psalm-return array<array{key: mixed, name: mixed, is_record_field: true}>
      */
     private static function addRecordFields() : array
     {

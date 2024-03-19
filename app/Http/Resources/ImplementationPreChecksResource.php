@@ -26,8 +26,11 @@ class ImplementationPreChecksResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (array|mixed)[][]
+     *
+     * @psalm-return array<array{record_types: list<mixed>,...}>
      */
     public function toArray($request): array
     {

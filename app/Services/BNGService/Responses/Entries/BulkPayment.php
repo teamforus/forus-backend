@@ -48,24 +48,6 @@ class BulkPayment
     }
 
     /**
-     * @return PaymentInitiator
-     * @noinspection PhpUnused
-     */
-    public function getPaymentInitiator(): PaymentInitiator
-    {
-        return $this->paymentInitiator;
-    }
-
-    /**
-     * @return array
-     * @noinspection PhpUnused
-     */
-    public function getPayments(): array
-    {
-        return $this->payments;
-    }
-
-    /**
      * @return string|null
      */
     public function getBulkPaymentId(): ?string

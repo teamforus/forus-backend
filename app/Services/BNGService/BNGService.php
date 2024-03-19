@@ -69,40 +69,6 @@ class BNGService
     }
 
     /**
-     * @param Payment $payment
-     * @return PaymentValue
-     * @throws ApiException
-     * @noinspection PhpUnused
-     */
-    public function payment(Payment $payment): PaymentValue
-    {
-        $url = $this->getEndpoint('payment');
-        $res = new ResponseData($this->requestJson('post', $url, [
-            'debtorAccount' => $payment->getDebtor()->toArray(),
-            'instructedAmount' => $payment->getAmount()->toArray(),
-            'creditorAccount' => $payment->getCreditor()->toArray(),
-            'creditorName'=> $payment->getCreditor()->getName(),
-            'requestedExecutionDate'=> $payment->getRequestedExecutionDate(),
-            'remittanceInformationUnstructured' => $payment->getDescription(),
-        ]));
-
-        return new PaymentValue($res);
-    }
-
-    /**
-     * @param BulkPayment $bulkPayment
-     * @return BulkPaymentConsentValue
-     * @throws ApiException
-     */
-    public function bulkPayment(BulkPayment $bulkPayment): BulkPaymentConsentValue
-    {
-        $url = $this->getEndpoint('payment_bulk');
-        $res = new ResponseData($this->requestXml('post', $url, $bulkPayment->toXml()));
-
-        return new BulkPaymentConsentValue($res, $bulkPayment->getRedirectToken(), $this);
-    }
-
-    /**
      * @param string $code
      * @param AuthData $data
      * @return AccessTokenResponseValue
@@ -360,7 +326,10 @@ class BNGService
      * @param string $bodyString
      * @param string $contentType
      * @param array $cHeaders
-     * @return array
+     *
+     * @return (mixed|null|string)[]
+     *
+     * @psalm-return array{'request-target': mixed|string, Accept: 'application/json'|mixed, 'Content-Type': mixed|string, Date: mixed|string, Digest: mixed|string, 'X-Request-ID': mixed|string, 'PSU-IP-Address': mixed|null|string, Signature: string, 'TPP-Signature-Certificate': string,...}
      */
     protected function makeHeaders(
         string $method,
@@ -449,9 +418,9 @@ class BNGService
     }
 
     /**
-     * @return string
+     * @return null|string
      */
-    protected function getKeyId(): string
+    protected function getKeyId(): string|null
     {
         return $this->keyId;
     }
@@ -461,7 +430,7 @@ class BNGService
      * @param $privateKeyId
      * @return string|null
      */
-    protected function encrypt_RSA($plainData, $privateKeyId): ?string
+    protected function encrypt_RSA(string $plainData, \OpenSSLAsymmetricKey|false $privateKeyId): ?string
     {
         $encrypted = '';
         $encryptionOk = openssl_sign($plainData, $encrypted, $privateKeyId, 'RSA-SHA256');
@@ -509,10 +478,7 @@ class BNGService
         ]));
     }
 
-    /**
-     * @return string
-     */
-    protected function makeRequestId(): string
+    protected function makeRequestId(): \Ramsey\Uuid\UuidInterface
     {
         return Str::uuid();
     }
@@ -531,9 +497,9 @@ class BNGService
     }
 
     /**
-     * @return string
+     * @return null|string
      */
-    public function clientId(): string
+    public function clientId(): string|null
     {
         return $this->clientId;
     }

@@ -13,18 +13,7 @@ use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
  */
 class AuthenticateIdentity2FARequest extends BaseIdentity2FARequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     * @throws AuthorizationJsonException
-     */
-    public function authorize(): bool
-    {
-        $this->throttleRequest('authenticate');
 
-        return $this->isAuthenticated() && !$this->identityProxy()->is2FAConfirmed();
-    }
 
     /**
      * Get the validation rules that apply to the request.

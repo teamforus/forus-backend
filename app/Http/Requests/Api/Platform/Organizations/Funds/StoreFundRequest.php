@@ -13,20 +13,14 @@ use Illuminate\Validation\Rule;
  */
 class StoreFundRequest extends BaseFundRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return Gate::allows('store', [Fund::class, $this->organization]);
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((MediaUidRule|\Illuminate\Validation\Rules\In|string)[]|mixed|string)[]
+     *
+     * @psalm-return array{type: list{'required', \Illuminate\Validation\Rules\In}|mixed|string, name: mixed|string, media_uid: list{'nullable', MediaUidRule}|mixed|string, description: mixed|string, description_position: mixed|string, description_short: mixed|string, start_date: mixed|string, end_date: mixed|string, notification_amount: mixed|string, faq_title: mixed|string, tag_ids: mixed|string, 'tag_ids.*': mixed|string, allow_fund_requests: mixed|string, allow_prevalidations: mixed|string, allow_direct_requests: mixed|string, request_btn_text: mixed|string, external_link_text: mixed|string, external_link_url: mixed|string, external_page: mixed|string, external_page_url: mixed|string, auto_requests_validation: mixed|string, default_validator_employee_id: mixed|string,...}
      */
     public function rules(): array
     {

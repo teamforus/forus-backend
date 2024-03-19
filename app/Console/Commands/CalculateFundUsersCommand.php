@@ -22,30 +22,4 @@ class CalculateFundUsersCommand extends Command
      * @var string
      */
     protected $description = 'Send users statistic report.';
-
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        if (!$email = Config::get('forus.notification_mails.fund_calc', false)) {
-            return;
-        }
-
-        try {
-            Fund::sendUserStatisticsReport($email);
-        } catch (Throwable) {}
-    }
 }

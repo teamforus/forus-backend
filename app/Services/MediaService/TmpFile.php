@@ -36,15 +36,6 @@ class TmpFile
     }
 
     /**
-     * @param string $path
-     * @return TmpFile
-     */
-    public static function fromFile(string $path): TmpFile
-    {
-        return new self(file_get_contents($path));
-    }
-
-    /**
      * @return string|null
      */
     public function path(): ?string

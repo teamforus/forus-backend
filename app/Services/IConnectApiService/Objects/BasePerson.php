@@ -45,10 +45,7 @@ abstract class BasePerson
         return (int) end($array);
     }
 
-    /**
-     * @return string|null
-     */
-    public function getName(): ?string
+    public function getName(): string
     {
         return ($this->getFirstName() . ' ' . $this->getLastName()) ?: null;
     }
@@ -102,7 +99,9 @@ abstract class BasePerson
     }
 
     /**
-     * @return array|string[]|null[]
+     * @return (mixed|null)[]
+     *
+     * @psalm-return array{country: mixed|null, place: mixed|null}
      */
     public function getBirthplace(): array
     {
@@ -113,7 +112,9 @@ abstract class BasePerson
     }
 
     /**
-     * @return array|string[]|null[]
+     * @return (mixed|null|string)[]
+     *
+     * @psalm-return array{name: mixed|null|string, first_name: mixed|null|string, last_name: mixed|null|string, birth_date: mixed|null|string, birth_place: mixed|string, gender: mixed|null|string, bsn: mixed|null|string, age: mixed|null|string,...}
      */
     public function toArray(): array
     {
@@ -131,7 +132,10 @@ abstract class BasePerson
 
     /**
      * @param string $scope
+     *
      * @return array
+     *
+     * @psalm-return array<never, never>
      */
     public function geRelated(string $scope): array
     {

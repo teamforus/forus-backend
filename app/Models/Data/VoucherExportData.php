@@ -28,25 +28,15 @@ class VoucherExportData
         $this->onlyData = $onlyData;
     }
 
-    /**
-     * @return string|null
-     */
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
 
     /**
-     * @return Voucher
-     * @noinspection PhpUnused
-     */
-    public function getVoucher(): Voucher
-    {
-        return $this->voucher;
-    }
-
-    /**
-     * @return array
+     * @return (int|mixed|null|string)[]
+     *
+     * @psalm-return array{name?: mixed|string, id: int|mixed, identity_email: mixed|null|string, activation_code: mixed|null|string, client_uid: mixed|null|string, source: mixed|string, amount: mixed|string, amount_available: mixed|string, note: mixed|null|string, fund_name: mixed|string, implementation_name: mixed|null|string, product_name: mixed|null|string, granted: 'Ja'|'Nee'|mixed, created_at: mixed|null|string, expire_at: mixed|null|string, in_use: 'Ja'|'Nee'|mixed, in_use_date: mixed|null|string, state: mixed|null|string, has_transactions: 'Ja'|'Nee'|mixed, has_reservations: 'Ja'|'Nee'|mixed,...}
      */
     public function toArray(): array
     {

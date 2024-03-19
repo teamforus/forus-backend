@@ -35,10 +35,9 @@ class FundFormula extends BaseModel
     ];
 
     /**
-     * @return string|null
      * @noinspection PhpUnused
      */
-    public function getAmountLocaleAttribute(): ?string
+    public function getAmountLocaleAttribute(): string
     {
         return currency_format_locale($this->amount, $this->fund->getImplementation());
     }

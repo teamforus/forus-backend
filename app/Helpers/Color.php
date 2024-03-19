@@ -32,19 +32,9 @@ class Color
     }
 
     /**
-     * @return string
      * @noinspection PhpUnused
      */
-    public function toHex(): string
-    {
-        return self::rgb2hex($this->red, $this->green, $this->blue);
-    }
-
-    /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function isDark(): string
+    public function isDark(): bool
     {
         return $this->toLuma() < self::LUMA_THRESHOLD;
     }
@@ -59,24 +49,6 @@ class Color
         $color = self::hex2rgb($hex);
 
         return new self($color['red'], $color['green'], $color['blue']);
-    }
-
-    /**
-     * @param int $paddingLight
-     * @param int|null $paddingDark
-     * @return Color
-     */
-    public static function createRandom(int $paddingLight = 0, int $paddingDark = null): Color
-    {
-        if (is_null($paddingDark)) {
-            $paddingDark = $paddingLight;
-        }
-
-        return new self(
-            rand($paddingLight, 255 - $paddingDark),
-            rand($paddingLight, 255 - $paddingDark),
-            rand($paddingLight, 255 - $paddingDark)
-        );
     }
 
     /**
@@ -107,9 +79,12 @@ class Color
      * @param string $hexStr (hexadecimal color value)
      * @param boolean $returnAsString (if set true, returns the value separated by the separator character. Otherwise, returns associative array)
      * @param string $separator (to separate RGB values. Applicable only if second parameter is true.)
-     * @return array|string (depending on second parameter. Returns False if invalid hex color value)
+     *
+     * @return int[]|null|string (depending on second parameter. Returns False if invalid hex color value)
+     *
+     * @psalm-return array{red: int, green: int, blue: int}|null|string
      */
-    public static function hex2rgb($hexStr, $returnAsString = false, $separator = ',')
+    public static function hex2rgb($hexStr, $returnAsString = false, $separator = ','): array|string|null
     {
         // Gets a proper hex string
         $hexStr = preg_replace("/[^0-9A-Fa-f]/", '', $hexStr);

@@ -131,9 +131,8 @@ class RecordType extends BaseModel
     /**
      * @param bool $withSystem
      * @param array $filters
-     * @return RecordType|Builder
      */
-    public static function searchQuery(array $filters = [], bool $withSystem = true): RecordType|Builder
+    public static function searchQuery(array $filters = [], bool $withSystem = true): self|Builder
     {
         /** @var RecordType $query */
         $query = static::where(fn(Builder $builder) => $builder->where($withSystem ? [] : [
@@ -161,9 +160,12 @@ class RecordType extends BaseModel
     /**
      * @param bool $withSystem
      * @param array $filters
-     * @return Collection|RecordType
+     *
+     * @return Builder[]|Collection
+     *
+     * @psalm-return Collection<array-key, \Illuminate\Database\Eloquent\Model>|array<Builder>
      */
-    public static function search(bool $withSystem = true, array $filters = []): Collection|array
+    public static function search(bool $withSystem = true, array $filters = []): array|Collection|array
     {
         return static::searchQuery($filters, $withSystem)->get();
     }
@@ -196,7 +198,9 @@ class RecordType extends BaseModel
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return list<'date'|'email'|'iban'|'max'|'min'>
      */
     public function getValidations(): array
     {
@@ -210,7 +214,9 @@ class RecordType extends BaseModel
     }
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return list{0?: string, 1?: '*'|'<='|'=', 2?: '='|'>=', 3?: '*'|'>=', 4?: '>', 5?: '*'}
      */
     public function getOperators(): array
     {

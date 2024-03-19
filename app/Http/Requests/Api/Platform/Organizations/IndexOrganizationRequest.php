@@ -12,20 +12,14 @@ use App\Rules\DependencyRule;
  */
 class IndexOrganizationRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((DependencyRule|string)[]|mixed|string)[]
+     *
+     * @psalm-return array{role: 'nullable|string|exists:roles,key'|mixed, dependency: list{'nullable', DependencyRule}|mixed, is_employee: 'nullable|boolean'|mixed, is_sponsor: 'nullable|boolean'|mixed, is_provider: 'nullable|boolean'|mixed, is_validator: 'nullable|boolean'|mixed, implementation: 'nullable|boolean'|mixed, has_products: 'nullable|boolean'|mixed, has_reservations: 'nullable|boolean'|mixed, fund_type: mixed|string,...}
      */
     public function rules(): array
     {

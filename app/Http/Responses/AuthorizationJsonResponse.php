@@ -27,7 +27,7 @@ class AuthorizationJsonResponse extends Response
     /**
      * Throw authorization exception if response was denied.
      *
-     * @return \Illuminate\Auth\Access\Response
+     * @return static
      *
      * @throws AuthorizationJsonException
      */

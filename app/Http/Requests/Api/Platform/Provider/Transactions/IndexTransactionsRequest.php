@@ -11,20 +11,14 @@ use Illuminate\Validation\Rule;
 
 class IndexTransactionsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return !empty($this->auth_address());
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\In|string)[]|\Illuminate\Validation\Rules\In|string)[]
+     *
+     * @psalm-return array{organization_id: list{'nullable', \Illuminate\Validation\Rules\In}, q: 'nullable|string', state: \Illuminate\Validation\Rules\In, fund_state: \Illuminate\Validation\Rules\In, from: 'date:Y-m-d', to: 'date:Y-m-d', amount_min: 'numeric|min:0', amount_max: 'numeric|min:0', per_page: string}
      */
     public function rules(): array
     {

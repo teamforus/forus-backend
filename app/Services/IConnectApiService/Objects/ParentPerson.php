@@ -25,7 +25,9 @@ class ParentPerson extends BasePerson
     }
 
     /**
-     * @return array
+     * @return (int|string)[]
+     *
+     * @psalm-return array{index: int, parent_type: string, date_start_family_law_relationship: string}
      */
     public function getCustomDataArray(): array
     {

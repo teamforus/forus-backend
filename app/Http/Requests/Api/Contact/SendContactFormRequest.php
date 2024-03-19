@@ -12,25 +12,11 @@ class SendContactFormRequest extends BaseFormRequest
     use ThrottleWithMeta;
 
     /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     * @throws AuthorizationJsonException
-     */
-    public function authorize(): bool
-    {
-        $this->maxAttempts = Config::get('forus.throttles.contact_form.attempts');
-        $this->decayMinutes = Config::get('forus.throttles.contact_form.decay');
-
-        $this->throttleWithKey('to_many_attempts', $this, 'contact_form');
-
-        return true;
-    }
-
-    /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((mixed|string)[]|string)[]
+     *
+     * @psalm-return array{name: 'required|string', email: array{0: 'required'|mixed,...}, phone: 'nullable|string', organization: 'nullable|string', message: 'required|string'}
      */
     public function rules(): array
     {

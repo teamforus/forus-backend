@@ -26,8 +26,11 @@ class ProductReservationResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (\Illuminate\Http\Resources\Json\AnonymousResourceCollection|array|bool|mixed|null|string)[]
+     *
+     * @psalm-return array{price: mixed|null|string, price_locale: mixed|string, amount_locale: mixed|string, expired: bool|mixed, canceled: bool|mixed, cancelable: bool|mixed, acceptable: bool|mixed, rejectable: bool|mixed, archivable: bool|mixed, product: array{deleted: bool, organization: array, photo: MediaResource,...}|mixed, fund: array{organization: array,...}|mixed, voucher_transaction: array|mixed|null, custom_fields: \Illuminate\Http\Resources\Json\AnonymousResourceCollection|mixed, records_title: mixed|null|string,...}
      */
     public function toArray($request): array
     {
@@ -87,7 +90,10 @@ class ProductReservationResource extends BaseJsonResource
 
     /**
      * @param ProductReservation $reservation
-     * @return array
+     *
+     * @return (ReservationExtraPaymentResource|int|null|string)[]
+     *
+     * @psalm-return array{amount_extra: string, amount_extra_locale: string, extra_payment: ReservationExtraPaymentResource, extra_payment_expires_in: int|null}
      */
     protected function extraPaymentData(ProductReservation $reservation): array
     {
@@ -102,7 +108,10 @@ class ProductReservationResource extends BaseJsonResource
     /**
      * @param ProductReservation $reservation
      * @param Voucher $voucher
-     * @return array
+     *
+     * @return (mixed|null|string)[]
+     *
+     * @psalm-return array{identity_email?: null|string, identity_physical_card?: mixed|null}
      */
     protected function identityData(ProductReservation $reservation, Voucher $voucher): array
     {

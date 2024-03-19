@@ -31,7 +31,10 @@ class IdentityResource extends BaseJsonResource
     /**
      * @param BaseFormRequest $request
      * @param Identity $identity
-     * @return array
+     *
+     * @return (bool|int|null|string)[]
+     *
+     * @psalm-return array{bsn?: bool, bsn_time?: int|null, email?: null|string}
      */
     protected function privateFields(BaseFormRequest $request, Identity $identity): array
     {

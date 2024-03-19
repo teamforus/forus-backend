@@ -22,8 +22,11 @@ class FundRequestPersonArrResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (array[]|mixed)[]
+     *
+     * @psalm-return array{relations: array{parents: array, partners: array, children: array},...}
      */
     public function toArray($request): array
     {
@@ -40,7 +43,10 @@ class FundRequestPersonArrResource extends JsonResource
 
     /**
      * @param BasePerson $person
-     * @return array
+     *
+     * @return (int|mixed|null|string)[]
+     *
+     * @psalm-return array{bsn: null|string, name: null|string, index: int, fields: mixed}
      */
     public function baseFieldsToArray(BasePerson $person): array
     {
@@ -54,7 +60,10 @@ class FundRequestPersonArrResource extends JsonResource
 
     /**
      * @param array $relations
-     * @return array
+     *
+     * @return array[]
+     *
+     * @psalm-return array<array>
      */
     public function relationToArray(array $relations): array
     {

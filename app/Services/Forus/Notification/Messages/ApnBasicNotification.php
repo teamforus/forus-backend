@@ -32,23 +32,4 @@ class ApnBasicNotification extends Notification implements ShouldQueue
         $this->title = $title;
         $this->body = $body;
     }
-
-    /**
-     * @return array
-     */
-    public function via()
-    {
-        return [ApnChannel::class];
-    }
-
-    /**
-     * @return ApnMessage
-     */
-    public function toApn()
-    {
-        return ApnMessage::create(
-            $this->title,
-            $this->body
-        )->sound();
-    }
 }

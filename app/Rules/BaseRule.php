@@ -14,16 +14,17 @@ abstract class BaseRule implements Rule
      * @param array $replace
      * @return bool
      */
-    public function rejectTrans($messageKey, array $replace = []): bool
+    public function rejectTrans(string $messageKey, array $replace = []): bool
     {
         return $this->reject(trans($this->messageTransPrefix . $messageKey, $replace));
     }
 
     /**
-     * @param $message
-     * @return bool
+     * @param \Illuminate\Contracts\Translation\Translator|array|null|string $message
+     *
+     * @return false
      */
-    public function reject($message): bool
+    public function reject(array|string|\Illuminate\Contracts\Translation\Translator|null $message): bool
     {
         $this->messageText = $message;
 

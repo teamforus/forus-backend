@@ -98,10 +98,11 @@ class Media extends Model
     }
 
     /**
-     * @param $uid
+     * @param array|null|string $uid
+     *
      * @return Media|null
      */
-    public static function findByUid($uid): ?Media
+    public static function findByUid(array|string|null $uid): ?Media
     {
         return self::whereUid(compact('uid'))->first();
     }
@@ -141,10 +142,7 @@ class Media extends Model
         return $this->dominant_color ? Color::createFromHex($this->dominant_color)->isDark() : null;
     }
 
-    /**
-     * @return $this
-     */
-    public function updateModel(array $attributes = [], array $options = []): self
+    public function updateModel(array $attributes = [], array $options = []): bool
     {
         return tap($this)->update($attributes, $options);
     }

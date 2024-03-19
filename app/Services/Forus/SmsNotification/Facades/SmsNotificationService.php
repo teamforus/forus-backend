@@ -12,6 +12,8 @@ class SmsNotificationService extends Facade
 {
     /**
      * @return string
+     *
+     * @psalm-return 'forus.services.sms_notification'
      */
     protected static function getFacadeAccessor(): string
     {

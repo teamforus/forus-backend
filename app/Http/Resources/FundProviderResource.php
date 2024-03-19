@@ -42,8 +42,11 @@ class FundProviderResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (FundResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|array|bool|mixed|null|string)[]
+     *
+     * @psalm-return array{fund: FundResource, offices: \Illuminate\Http\Resources\Json\AnonymousResourceCollection, employees: \Illuminate\Http\Resources\Json\AnonymousResourceCollection, organization: array, can_cancel: bool, can_unsubscribe: bool, last_activity: null|string, last_activity_locale: null|string,...}
      */
     public function toArray($request): array
     {
@@ -70,7 +73,10 @@ class FundProviderResource extends BaseJsonResource
 
     /**
      * @param FundProvider $fundProvider
-     * @return array
+     *
+     * @return (\Illuminate\Support\Collection|int)[]
+     *
+     * @psalm-return array{products: \Illuminate\Support\Collection, products_count_all: int, products_count_available: int, products_count_approved: int}
      */
     private function productFields(FundProvider $fundProvider): array
     {

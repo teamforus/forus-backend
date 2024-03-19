@@ -269,14 +269,6 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     /**
      * @return string|null
      */
-    public static function getScope(): ?string
-    {
-        return static::$scope;
-    }
-
-    /**
-     * @return string|null
-     */
     public static function getPushKey(): ?string
     {
         return static::$pushKey;
@@ -317,71 +309,12 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     }
 
     /**
-     * Get the notification's delivery channels.
-     *
-     * @return array
-     * @noinspection PhpUnused
-     */
-    public function via(): array
-    {
-        $channelKeys = $this->getChannels();
-        $channels = in_array('database', $channelKeys) ? ['database'] : [];
-
-        if (in_array('mail', $channelKeys)) {
-            $channels[] = MailChannel::class;
-        }
-
-        if (in_array('push', $channelKeys) && !env('DISABLE_PUSH', false)) {
-            $channels[] = PushChannel::class;
-        }
-
-        return $this->eventLog ? $channels : [];
-    }
-
-    /**
-     * Serialize and save the notification in the database
-     *
-     * @return string[]
-     * @noinspection PhpUnused
-     */
-    public function toDatabase(): array
-    {
-        return array_merge([
-            'key' => static::$key,
-            'scope' => static::$scope,
-            'event_id' => $this->eventLog->id,
-        ], $this->meta);
-    }
-
-    /**
      * Get the mail representation of the notification.
      *
      * @param Identity $identity
      * @return void
      */
     public function toMail(Identity $identity): void {}
-
-    /**
-     * Get the mail representation of the notification.
-     *
-     * @param Identity $identity
-     * @return void
-     */
-    public function toPush(Identity $identity): void
-    {
-        $template = SystemNotification::findByKey(static::getKey())->findTemplate(
-            $this->implementation ?? Implementation::general(),
-            $this->eventLog?->data['fund_id'] ?? null,
-            'push',
-        );
-
-        $this->getNotificationService()->sendPushNotification(
-            $identity->address,
-            str_var_replace($template->title, $this->eventLog->data),
-            str_var_replace($template->content, $this->eventLog->data),
-            static::getPushKey()
-        );
-    }
 
     /**
      * Generate and send notifications for EventLog instance

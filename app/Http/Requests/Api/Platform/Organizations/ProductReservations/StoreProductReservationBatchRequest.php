@@ -14,23 +14,16 @@ use Illuminate\Support\Facades\Validator;
  */
 class StoreProductReservationBatchRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return
-            $this->isAuthenticated() &&
-            $this->organization->identityCan($this->identity(), 'scan_vouchers');
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
      * @param array|null $reservations
-     * @return array
+     *
+     * @return (ProviderProductReservationBatchItemPermissionsRule|ProviderProductReservationBatchItemStockRule|ProviderProductReservationBatchRule|string)[][]
+     *
+     * @psalm-return array{reservations: list{string, ProviderProductReservationBatchRule,...}, 'reservations.*': list{string, ProviderProductReservationBatchItemPermissionsRule, ProviderProductReservationBatchItemStockRule,...}}
      */
     public function rules(?array $reservations = null): array
     {

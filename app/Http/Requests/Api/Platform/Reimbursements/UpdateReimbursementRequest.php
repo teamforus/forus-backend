@@ -28,7 +28,9 @@ class UpdateReimbursementRequest extends StoreReimbursementRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, mixed>
+     * @return (array|string)[]
+     *
+     * @psalm-return array{title: 'nullable|string|max:200', description: 'nullable|string|min:5|max:2000', amount: string, email: array{0: 'nullable'|mixed,...}, iban: list{'nullable', 'string', IbanRule}, iban_name: 'nullable|string|min:5|max:200', voucher_id: array, state: string, files: 'required|array', 'files.*': list{'required', 'string', FileUidRule}}
      */
     public function rules(): array
     {

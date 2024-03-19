@@ -12,20 +12,14 @@ use App\Scopes\Builders\OrganizationQuery;
  */
 class IndexProductsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return !empty($this->auth_address());
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{organization_id: string, reservable: 'nullable|boolean', per_page: 'numeric|between:1,100'}
      */
     public function rules(): array
     {

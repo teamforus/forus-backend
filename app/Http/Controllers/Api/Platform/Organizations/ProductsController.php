@@ -26,7 +26,7 @@ class ProductsController extends Controller
      *
      * @param IndexProductRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(

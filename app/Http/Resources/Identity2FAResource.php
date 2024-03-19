@@ -11,7 +11,10 @@ class Identity2FAResource extends BaseJsonResource
 {
     /**
      * @param $request
-     * @return array
+     *
+     * @return (Auth2FAProviderResource|mixed|string)[]
+     *
+     * @psalm-return array{provider_type: Auth2FAProviderResource|mixed, phone?: mixed|string,...}
      */
     public function toArray($request): array
     {

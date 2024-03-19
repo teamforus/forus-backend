@@ -19,7 +19,10 @@ class ProductReservationSubscriber
 {
     /**
      * @param ProductReservation $productReservation
-     * @return array
+     *
+     * @return (ProductReservation|\App\Models\Employee|\App\Models\Fund|\App\Models\Implementation|\App\Models\Organization|\App\Models\Product|\App\Models\Voucher|null)[]
+     *
+     * @psalm-return array{fund: \App\Models\Fund, product: \App\Models\Product, sponsor: \App\Models\Organization, provider: \App\Models\Organization, voucher: \App\Models\Voucher, employee: \App\Models\Employee|null, implementation: \App\Models\Implementation, product_reservation: ProductReservation}
      */
     private function getReservationLogModels(ProductReservation $productReservation): array
     {
@@ -33,107 +36,5 @@ class ProductReservationSubscriber
             'implementation' => $productReservation->voucher->fund->getImplementation(),
             'product_reservation' => $productReservation,
         ];
-    }
-
-    /**
-     * @param ProductReservationCreated $event
-     * @noinspection PhpUnused
-     */
-    public function onProductReservationCreated(ProductReservationCreated $event): void
-    {
-        $productReservation = $event->getProductReservation();
-        $voucher = $productReservation->voucher;
-
-        if (!$voucher->parent_id && $voucher->usedCount() === 1) {
-            $voucher->reportBackofficeFirstUse();
-        }
-
-        IdentityProductReservationCreatedNotification::send($productReservation->log(
-            $productReservation::EVENT_CREATED,
-            $this->getReservationLogModels($productReservation)
-        ));
-    }
-
-    /**
-     * @param ProductReservationAccepted $event
-     * @noinspection PhpUnused
-     */
-    public function onProductReservationAccepted(ProductReservationAccepted $event): void
-    {
-        $productReservation = $event->getProductReservation();
-
-        IdentityProductReservationAcceptedNotification::send($productReservation->log(
-            $productReservation::EVENT_ACCEPTED,
-            $this->getReservationLogModels($productReservation),
-        ));
-    }
-
-    /**
-     * @param ProductReservationPending $event
-     * @noinspection PhpUnused
-     */
-    public function onProductReservationPending(ProductReservationPending $event): void
-    {
-        $productReservation = $event->getProductReservation();
-
-        $productReservation->log(
-            $productReservation::EVENT_PENDING,
-            $this->getReservationLogModels($productReservation),
-        );
-    }
-
-    /**
-     * @param ProductReservationCanceled $event
-     * @noinspection PhpUnused
-     */
-    public function onProductReservationCanceled(ProductReservationCanceled $event): void
-    {
-        $productReservation = $event->getProductReservation();
-
-        if ($productReservation->isCanceledByClient()) {
-            ProductReservationCanceledNotification::send($productReservation->log(
-                $productReservation::EVENT_CANCELED_BY_CLIENT,
-                $this->getReservationLogModels($productReservation),
-            ));
-        }
-
-        if ($productReservation->isCanceledByProvider()) {
-            IdentityProductReservationCanceledNotification::send($productReservation->log(
-                $productReservation::EVENT_CANCELED_BY_PROVIDER,
-                $this->getReservationLogModels($productReservation),
-            ));
-        }
-    }
-
-    /**
-     * @param ProductReservationRejected $event
-     * @noinspection PhpUnused
-     */
-    public function onProductReservationRejected(ProductReservationRejected $event): void
-    {
-        $productReservation = $event->getProductReservation();
-
-        IdentityProductReservationRejectedNotification::send($productReservation->log(
-            $productReservation::EVENT_REJECTED,
-            $this->getReservationLogModels($productReservation)
-        ));
-    }
-
-    /**
-     * Handle the event.
-     *
-     * @param Dispatcher $events
-     * @return void
-     * @noinspection PhpUnused
-     */
-    public function subscribe(Dispatcher $events): void
-    {
-        $class = '\\' . static::class;
-
-        $events->listen(ProductReservationCreated::class, "$class@onProductReservationCreated");
-        $events->listen(ProductReservationAccepted::class, "$class@onProductReservationAccepted");
-        $events->listen(ProductReservationPending::class, "$class@onProductReservationPending");
-        $events->listen(ProductReservationRejected::class, "$class@onProductReservationRejected");
-        $events->listen(ProductReservationCanceled::class, "$class@onProductReservationCanceled");
     }
 }

@@ -13,21 +13,16 @@ use Illuminate\Support\Facades\Config;
  */
 class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((IdentityEmailExistsRule|mixed|string)[]|string)[]
+     *
      * @throws \App\Exceptions\AuthorizationJsonException
+     *
+     * @psalm-return array{email: array{0: 'required'|mixed, 1: IdentityEmailExistsRule|mixed,...}, source: string, target: 'nullable|alpha_dash'}
      */
     public function rules(): array
     {

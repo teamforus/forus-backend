@@ -13,20 +13,14 @@ use Illuminate\Validation\Rule;
  */
 class SearchProvidersRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (array|string)[]
+     *
+     * @psalm-return array{q: 'nullable|string', fund_id: array, postcode: 'nullable|string|max:100', distance: 'nullable|integer|max:1000', order_by: 'nullable|in:created_at,name', order_dir: 'nullable|in:asc,desc', business_type_id: 'nullable|exists:business_types,id', product_category_id: 'nullable|exists:product_categories,id', per_page: string}
      */
     public function rules(): array
     {
@@ -45,7 +39,10 @@ class SearchProvidersRequest extends BaseFormRequest
 
     /**
      * @param Implementation|null $implementation
-     * @return array
+     *
+     * @return (\Illuminate\Validation\Rules\Exists|string)[]
+     *
+     * @psalm-return list{'nullable', \Illuminate\Validation\Rules\Exists}
      */
     protected function fundIdRules(?Implementation $implementation = null): array {
         return [

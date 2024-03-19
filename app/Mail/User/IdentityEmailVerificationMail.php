@@ -21,7 +21,10 @@ class IdentityEmailVerificationMail extends ImplementationMail
 
     /**
      * @param array $data
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array{link: string, button: string}
      */
     protected function getMailExtraData(array $data): array
     {

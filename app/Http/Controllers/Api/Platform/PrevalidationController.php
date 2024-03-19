@@ -58,9 +58,14 @@ class PrevalidationController extends Controller
      * Generate pre-validations hashes for frontend
      *
      * @param UploadPrevalidationsRequest $request
-     * @return array
+     *
+     * @return ((mixed|string)[][]|mixed)[]
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
      * @noinspection PhpUnused
+     *
+     * @psalm-return array{db: mixed, collection: array<array{data: mixed, uid_hash: string, records_hash: string}>}
      */
     public function collectionHash(UploadPrevalidationsRequest $request): array
     {

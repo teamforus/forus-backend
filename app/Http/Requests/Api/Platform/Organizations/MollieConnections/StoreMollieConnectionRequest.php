@@ -14,7 +14,9 @@ class StoreMollieConnectionRequest extends BaseMollieConnectionRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((mixed|string)[]|string)[]
+     *
+     * @psalm-return array{name: 'required|string|max:191', email: array{0: 'required'|mixed,...}, first_name: 'required|string|max:191', last_name: 'required|string|max:191', street: 'nullable|string|max:191', city: 'nullable|string|max:191', postcode: 'nullable|string|max:191', country_code: 'required|string|max:2', profile_name: 'required|string|max:191', website: 'required|url|max:191', phone: list{'required', 'string', 'regex:/^\+[1-9]\d{10,14}$/'}}
      */
     public function rules(): array
     {

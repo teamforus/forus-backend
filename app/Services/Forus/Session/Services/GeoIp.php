@@ -27,11 +27,11 @@ class GeoIp
         return resolve('filesystem.disk');
     }
 
-    private static function countryToString(Country $country) {
+    private static function countryToString(Country $country): array|string {
         return trans_fb('geo_ip/countries.' . $country->isoCode, $country->name);
     }
 
-    private static function cityToString(City $city) {
+    private static function cityToString(City $city): array|string {
         return trans_fb('geo_ip/cities.' . $city->geonameId, $city->name);
     }
 

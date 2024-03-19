@@ -28,7 +28,10 @@ class Identity2FAStateResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
+     *
+     * @return ((array|bool|mixed)[]|\Illuminate\Http\Resources\Json\AnonymousResourceCollection|bool|mixed)[]
+     *
+     * @psalm-return array{required: bool, confirmed: mixed, providers: \Illuminate\Http\Resources\Json\AnonymousResourceCollection, provider_types: array<array>, active_providers: \Illuminate\Http\Resources\Json\AnonymousResourceCollection, restrictions: array, auth_2fa_remember_ip: bool, auth_2fa_remember_hours: mixed, auth_2fa_forget_force: array{voucher: bool, organization: bool}}
      */
     public function toArray($request): array
     {
@@ -87,7 +90,10 @@ class Identity2FAStateResource extends BaseJsonResource
     /**
      * @param bool $isConfirmed
      * @param Identity $identity
-     * @return array
+     *
+     * @return array[]
+     *
+     * @psalm-return array{emails: array, sessions: array, reimbursements: array}
      */
     protected function getRestrictions(bool $isConfirmed, Identity $identity): array
     {
@@ -102,7 +108,10 @@ class Identity2FAStateResource extends BaseJsonResource
      * @param bool $isConfirmed
      * @param Identity $identity
      * @param string $key
-     * @return array
+     *
+     * @return (\Illuminate\Http\Resources\Json\AnonymousResourceCollection|bool)[]
+     *
+     * @psalm-return array{restricted: bool, funds: \Illuminate\Http\Resources\Json\AnonymousResourceCollection}
      */
     protected function getRestriction(bool $isConfirmed, Identity $identity, string $key): array
     {
@@ -115,7 +124,9 @@ class Identity2FAStateResource extends BaseJsonResource
     }
 
     /**
-     * @return array[]
+     * @return string[][]
+     *
+     * @psalm-return list{array{type: 'authenticator', title: 'Authenticator app', subtitle: 'Gebruik een authenticator app'}, array{type: 'phone', title: 'SMS Verificatie', subtitle: 'Gebruik je telefoonnummer als verificatie'}}
      */
     static function getProviderTypes(): array
     {

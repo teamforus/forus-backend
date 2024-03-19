@@ -9,20 +9,14 @@ use Illuminate\Validation\Rule;
 
 class IndexNotificationsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->isAuthenticated();
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\Exists|string)[]|string)[]
+     *
+     * @psalm-return array{seen: 'nullable|boolean', per_page: 'numeric|max:100', mark_read: 'nullable|boolean', organization_id: list{'nullable', \Illuminate\Validation\Rules\Exists}}
      */
     public function rules(): array
     {

@@ -16,15 +16,6 @@ class FilePolicy
 
     /**
      * @param Identity $identity
-     * @return bool
-     */
-    public function viewAny(Identity $identity): bool
-    {
-        return $identity->exists && $identity->address;
-    }
-
-    /**
-     * @param Identity $identity
      * @param File $file
      * @return bool
      */
@@ -71,45 +62,5 @@ class FilePolicy
         }
 
         return false;
-    }
-
-    /**
-     * @param Identity $identity
-     * @param File $file
-     * @return bool
-     */
-    public function download(Identity $identity, File $file): bool
-    {
-        return $this->show($identity, $file);
-    }
-
-    /**
-     * @param Identity $identity
-     * @return bool
-     */
-    public function store(Identity $identity): bool
-    {
-        return $identity->exists && $identity->address;
-    }
-
-    /**
-     * @param Identity $identity
-     * @param File $file
-     * @return bool
-     */
-    public function destroy(Identity $identity, File $file): bool
-    {
-        if (($file->fileable instanceof Reimbursement) && !$file->fileable->isDraft()) {
-            return false;
-        }
-
-        if ($file->fileable && in_array($file->type, [
-            'fund_request_record_proof',
-            'fund_request_clarification_proof',
-        ])) {
-            return false;
-        }
-
-        return $identity->address === $file->identity_address;
     }
 }

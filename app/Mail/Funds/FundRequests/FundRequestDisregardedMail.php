@@ -11,10 +11,9 @@ class FundRequestDisregardedMail extends ImplementationMail
     protected string $notificationTemplateKey = 'notifications_identities.fund_request_disregarded';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
      */
-    public function build(): Mailable
+    public function build(): Mailable|null
     {
         return $this->buildNotificationTemplatedMail();
     }

@@ -16,6 +16,9 @@ class EmbedQrCode implements EmbeddableEntity
         $this->value = $value;
     }
 
+    /**
+     * @return static
+     */
     public static function findEmbeddable($id)
     {
         return new static($id);
@@ -28,11 +31,19 @@ class EmbedQrCode implements EmbeddableEntity
         return make_qr_code($type, $content, 300);
     }
 
+    /**
+     * @return string
+     *
+     * @psalm-return 'qr_code.png'
+     */
     public function getFileName(): string
     {
         return 'qr_code.png';
     }
 
+    /**
+     * @return null
+     */
     public function getMimeType()
     {
         return null;

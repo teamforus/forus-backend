@@ -16,8 +16,11 @@ class MediaCompactResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request|any  $request
-     * @return array
+     * @param \Illuminate\Http\Request|any  $request
+     *
+     * @return (\Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection|mixed|null|string)[]|null
+     *
+     * @psalm-return array{dominant_color: null|string, sizes: \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection<array-key, string>,...}|null
      */
     public function toArray($request): ?array
     {

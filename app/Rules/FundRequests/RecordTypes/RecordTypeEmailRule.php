@@ -5,7 +5,9 @@ namespace App\Rules\FundRequests\RecordTypes;
 class RecordTypeEmailRule extends BaseRecordTypeRule
 {
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{0?: string, 1: 'email'}
      */
     public function rules(): array
     {

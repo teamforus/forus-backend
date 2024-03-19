@@ -108,11 +108,12 @@ class BaseJsonResource extends JsonResource
     }
 
     /**
-     * @param $model
+     * @param Provider\App\ProviderVoucherResource|\App\Models\DemoTransaction|\App\Models\FundProviderInvitation|\App\Models\FundProviderUnsubscribe|\App\Models\FundRequest|\App\Models\FundRequestClarification|\App\Models\FundRequestRecord|\App\Models\FundTopUp|\App\Models\FundTopUpTransaction|\App\Models\IdentityEmail|\App\Models\Note|\App\Models\Notification|\App\Models\RecordValidation|\App\Models\Reimbursement|\App\Models\Voucher|\App\Models\VoucherTransaction|\App\Models\VoucherTransactionBulk|\App\Models\VoucherTransactionNote|\App\Services\EventLogService\Models\EventLog $model
      * @param string|array $key
+     *
      * @return array
      */
-    protected function timestamps($model, ...$key): array
+    protected function timestamps(\App\Models\DemoTransaction|\App\Models\FundProviderInvitation|\App\Models\FundProviderUnsubscribe|\App\Models\FundRequestClarification|\App\Models\FundRequestRecord|\App\Models\FundRequest|\App\Models\IdentityEmail|\App\Models\Note|\App\Models\Notification|Provider\App\ProviderVoucherResource|\App\Models\VoucherTransaction|\App\Models\RecordValidation|\App\Models\Reimbursement|\App\Services\EventLogService\Models\EventLog|\App\Models\FundTopUp|\App\Models\FundTopUpTransaction|\App\Models\Voucher|\App\Models\VoucherTransactionBulk|\App\Models\VoucherTransactionNote $model, ...$key): array
     {
         return static::staticTimestamps($model, $key);
     }
@@ -122,7 +123,7 @@ class BaseJsonResource extends JsonResource
      * @param string|array $key
      * @return array
      */
-    protected static function staticTimestamps($model, ...$key): array
+    protected static function staticTimestamps(\App\Models\FundRequestRecord $model, ...$key): array
     {
         if (is_array($key[0] ?? null) || count($key) > 1) {
             return array_reduce(is_array($key[0] ?? null) ? $key[0] : $key, function($prev, $key) use ($model) {

@@ -94,10 +94,7 @@ class Bank extends Model
         )->getAccessTokenString();
     }
 
-    /**
-     * @return BunqModel|OauthClient
-     */
-    public function getOauthClient(): BunqModel|OauthClient
+    public function getOauthClient(): OauthClient|OauthClient
     {
         return OauthClient::createFromJsonString(json_encode($this->data['oauth_client']));
     }

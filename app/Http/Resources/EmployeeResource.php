@@ -21,8 +21,11 @@ class EmployeeResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request  $request
+     *
+     * @return (\Illuminate\Http\Resources\Json\AnonymousResourceCollection|array|bool|mixed|null|string)[]
+     *
+     * @psalm-return array{roles: \Illuminate\Http\Resources\Json\AnonymousResourceCollection, permissions: array, email: null|string, organization: array, is_2fa_configured: bool, branch: array{id: null|string, name: null|string, number: int|null, full_name: string},...}
      */
     public function toArray($request): array
     {

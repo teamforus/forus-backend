@@ -32,17 +32,6 @@ class BanksTableSeeder extends Seeder
     protected string $bngContextFile = '/bank-connections/bng/bng-data.json';
 
     /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run(): void
-    {
-        $this->bunqBank();
-        $this->bngBank();
-    }
-
-    /**
      * @return void
      */
     protected function bngBank(): void
@@ -95,7 +84,10 @@ class BanksTableSeeder extends Seeder
 
     /**
      * @param int $oauthClientId
-     * @return array
+     *
+     * @return string[]
+     *
+     * @psalm-return array<string>
      */
     protected static function getBunqRedirectUrls(int $oauthClientId): array
     {
@@ -147,10 +139,7 @@ class BanksTableSeeder extends Seeder
         ]));
     }
 
-    /**
-     * @return array|null
-     */
-    public function makeBunqBankInstallation(): ?Bank
+    public function makeBunqBankInstallation(): Bank|null
     {
         $key = 'bunq';
         $bunqKey = Config::get('forus.seeders.bank_seeder.bunq_key');

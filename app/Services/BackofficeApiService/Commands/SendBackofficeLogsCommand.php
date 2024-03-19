@@ -24,14 +24,4 @@ class SendBackofficeLogsCommand extends Command
      * @var string
      */
     protected $description = 'Send backoffice logs.';
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle()
-    {
-        BackofficeApi::sendLogs();
-    }
 }

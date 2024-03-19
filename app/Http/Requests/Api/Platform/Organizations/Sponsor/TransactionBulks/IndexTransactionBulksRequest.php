@@ -14,23 +14,14 @@ use Illuminate\Validation\Rule;
  */
 class IndexTransactionBulksRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->gateAllows([
-            'show'      => $this->organization,
-            'viewAny'   => [VoucherTransactionBulk::class, $this->organization],
-        ]);
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\In|string)[]|string)[]
+     *
+     * @psalm-return array{per_page: string, state: list{'nullable', \Illuminate\Validation\Rules\In}, from: 'nullable|date_format:Y-m-d', to: 'nullable|date_format:Y-m-d', amount_min: 'nullable|numeric|min:0', amount_max: 'nullable|numeric|min:0', quantity_min: 'nullable|numeric|min:0', quantity_max: 'nullable|numeric|min:0', data_format: 'nullable|in:csv,xls', order_by: string, order_dir: 'nullable|in:asc,desc', fields: 'nullable|array', 'fields.*': list{'nullable', \Illuminate\Validation\Rules\In}}
      */
     public function rules(): array
     {

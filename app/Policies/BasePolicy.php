@@ -20,7 +20,10 @@ abstract class BasePolicy
     /**
      * @param mixed $message
      * @param int $code
+     *
      * @throws AuthorizationJsonException
+     *
+     * @return never
      */
     protected function deny($message, $code = 403)
     {

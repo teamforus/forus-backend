@@ -26,14 +26,13 @@ class FundProviderProductQuery
      * @param Voucher $voucher
      * @param null|int|array|Builder $organization_id
      * @param bool $validateLimits
-     * @return Builder
      */
     public static function whereAvailableForSubsidyVoucher(
         Builder|FundProvider $query,
         Voucher $voucher,
         null|int|array|Builder $organization_id = null,
         bool $validateLimits = true
-    ): Builder {
+    ): Builder|FundProvider {
         $query->whereHas('product', static function(Builder $query) use ($voucher, $organization_id) {
             $query->where(static function(Builder $builder) use ($voucher, $organization_id) {
                 $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(

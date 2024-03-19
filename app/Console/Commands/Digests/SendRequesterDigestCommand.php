@@ -24,14 +24,4 @@ class SendRequesterDigestCommand extends Command
      * @var string
      */
     protected $description = 'Send requester digest.';
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        RequesterDigest::dispatchSync();
-    }
 }

@@ -21,7 +21,10 @@ class RecordResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
+     *
+     * @return (\Illuminate\Http\Resources\Json\AnonymousResourceCollection|bool|int|null|string)[]
+     *
+     * @psalm-return array{id: int, key: string, value: string, name: string, order: int, deleted: bool, record_category_id: int|null, validations: \Illuminate\Http\Resources\Json\AnonymousResourceCollection}
      */
     public function toArray($request): array
     {

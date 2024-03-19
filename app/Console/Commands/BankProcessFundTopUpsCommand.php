@@ -37,18 +37,6 @@ class BankProcessFundTopUpsCommand extends Command
     protected int $fetchInterval = 5;
 
     /**
-     * Execute the console command.
-     *
-     * @return void
-     * @throws Throwable
-     */
-    public function handle(): void
-    {
-        $this->processTopUps();
-        $this->processBankConnectionBalance();
-    }
-
-    /**
      * @return void
      */
     public function processBankConnectionBalance(): void

@@ -71,9 +71,9 @@ class Payment
     }
 
     /**
-     * @return string|null
+     * @return Carbon|string
      */
-    public function getRequestedExecutionDate(): ?string
+    public function getRequestedExecutionDate(): string|Carbon
     {
         return $this->requestedExecutionDate ?: $this::getNextBusinessDay();
     }
@@ -86,10 +86,7 @@ class Payment
         return $this->paymentId;
     }
 
-    /**
-     * @return Carbon
-     */
-    public static function getNextBusinessDay(): Carbon
+    public static function getNextBusinessDay(): \Illuminate\Support\Carbon
     {
         $date = now()->addDay();
 

@@ -9,7 +9,9 @@ namespace App\Services\IConnectApiService\Objects;
 class Child extends BasePerson
 {
     /**
-     * @return array
+     * @return int[]
+     *
+     * @psalm-return array{index: int}
      */
     public function getCustomDataArray(): array
     {

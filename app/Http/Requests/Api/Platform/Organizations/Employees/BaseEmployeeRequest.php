@@ -10,18 +10,12 @@ use App\Models\Organization;
  */
 abstract class BaseEmployeeRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->isAuthenticated();
-    }
+
 
     /**
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{roles: 'present|array', 'roles.*': 'exists:roles,id', office_id: string}
      */
     public function updateRules(): array
     {

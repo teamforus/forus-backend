@@ -15,18 +15,12 @@ use Illuminate\Support\Facades\Gate;
  */
 class DeactivateVoucherRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return Gate::allows('deactivateSponsor', [$this->voucher, $this->organization]);
-    }
+
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{notify_by_email: 'nullable|bool', note: 'nullable|string|max:140'}
      */
     public function rules(): array
     {

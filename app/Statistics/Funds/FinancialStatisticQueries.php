@@ -152,7 +152,10 @@ class FinancialStatisticQueries
     /**
      * @param Collection $collection
      * @param array $only
+     *
      * @return array
+     *
+     * @psalm-return array<int, mixed>
      */
     protected function collectionOnly(BaseCollection $collection, array $only): array {
         return $collection->map(function(BaseModel $model) use ($only) {

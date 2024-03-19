@@ -10,20 +10,14 @@ use Illuminate\Validation\Rule;
 
 class SearchPrevalidationsRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return ((\Illuminate\Validation\Rules\Exists|\Illuminate\Validation\Rules\In|string)[]|string)[]
+     *
+     * @psalm-return array{q: 'nullable|string|max:200', fund_id: list{'nullable', \Illuminate\Validation\Rules\Exists}, from: 'nullable|date|date_format:Y-m-d', to: 'nullable|date|date_format:Y-m-d', state: list{'nullable', \Illuminate\Validation\Rules\In}, per_page: 'nullable|numeric|between:1,2500', exported: 'boolean', export_format: 'nullable|string|in:csv,xls'}
      */
     public function rules(): array
     {

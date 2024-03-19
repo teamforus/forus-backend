@@ -18,24 +18,6 @@ class DomainDigIdMiddleware
     protected $strictDomain = false;
 
     /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
-     */
-    public function handle($request, Closure $next)
-    {
-        if (!$this->isHostAllowed($request)) {
-            return response()->json([
-                "message" => 'invalid_host_name'
-            ])->setStatusCode(403);
-        }
-
-        return $next($request);
-    }
-
-    /**
      * @param Request $request
      * @return bool
      */

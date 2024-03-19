@@ -14,50 +14,6 @@ class OfficePolicy
 
     /**
      * @param Identity $identity
-     * @param Organization $organization
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    public function viewAny(Identity $identity, Organization $organization): bool
-    {
-        return $organization->identityCan($identity, 'manage_offices');
-    }
-
-    /**
-     * @param Identity|null $identity
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    public function viewAnyPublic(?Identity $identity): bool
-    {
-        return !$identity || $identity->exists;
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Organization $organization
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    public function store(Identity $identity, Organization $organization): bool
-    {
-        return $organization->identityCan($identity, 'manage_offices');
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Office $office
-     * @param Organization $organization
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    public function show(Identity $identity, Office $office, Organization $organization): bool
-    {
-        return $this->update($identity, $office, $organization);
-    }
-
-    /**
-     * @param Identity $identity
      * @param Office $office
      * @param Organization $organization
      * @return bool
@@ -67,29 +23,6 @@ class OfficePolicy
     {
         if ($office->organization_id != $organization->id) {
             return false;
-        }
-
-        return $office->organization->identityCan($identity, 'manage_offices');
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Office $office
-     * @param Organization $organization
-     * @return bool|Response
-     */
-    public function destroy(Identity $identity, Office $office, Organization $organization): bool|Response
-    {
-        if ($office->organization_id != $organization->id) {
-            return false;
-        }
-
-        if ($organization->offices()->count() <= 1){
-            return $this->deny('Cannot delete the only office.');
-        }
-
-        if ($organization->employees()->exists()){
-            return $this->deny('Cannot delete office with employees.');
         }
 
         return $office->organization->identityCan($identity, 'manage_offices');

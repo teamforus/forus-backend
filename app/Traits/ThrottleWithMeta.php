@@ -76,14 +76,17 @@ trait ThrottleWithMeta
      * @param Request $request
      * @param string $type
      * @param int $code
+     *
      * @throws AuthorizationJsonException
+     *
+     * @return never
      */
     protected function responseWithThrottleMeta(
         $error,
         Request $request,
         string $type = 'prevalidations',
         int $code = 429
-    ): void {
+    ) {
         $key = $this->throttleKey($request);
         $available_in = $this->limiter()->tooManyAttempts($key, $this->maxAttempts()) ?
             max(1, $this->limiter()->availableIn($key)) : null;

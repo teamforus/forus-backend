@@ -341,7 +341,10 @@ class Organization extends BaseModel
 
     /**
      * @param string|null $type
+     *
      * @return string
+     *
+     * @psalm-return 'paused'|'waiting'
      */
     public function initialFundState(?string $type = 'budget'): string
     {
@@ -453,10 +456,14 @@ class Organization extends BaseModel
 
     /**
      * @param BaseFormRequest $request
-     * @return EloquentBuilder[]|Collection
+     *
+     * @return Collection|EloquentBuilder[]
+     *
      * @noinspection PhpUnused
+     *
+     * @psalm-return Collection<array-key, Model>|array<EloquentBuilder>
      */
-    public static function search(BaseFormRequest $request): Collection|Arrayable
+    public static function search(BaseFormRequest $request): array|Collection|Arrayable
     {
         return self::searchQuery($request)->get();
     }
@@ -676,10 +683,9 @@ class Organization extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
-    public function employees_with_trashed(): HasMany
+    public function employees_with_trashed(): Employee|HasMany
     {
         /** @var Employee|HasMany $relation */
         $relation = $this->hasMany(Employee::class);
@@ -816,9 +822,12 @@ class Organization extends BaseModel
 
     /**
      * @param string|array $permission
-     * @return Collection|Employee[]
+     *
+     * @return Collection|EloquentBuilder[]
+     *
+     * @psalm-return Collection<array-key, Model>|array<EloquentBuilder>
      */
-    public function employeesWithPermissions(string|array $permission): Collection|Arrayable
+    public function employeesWithPermissions(string|array $permission): array|Collection|Arrayable
     {
         return $this->employeesWithPermissionsQuery($permission)->get();
     }
@@ -837,10 +846,14 @@ class Organization extends BaseModel
 
     /**
      * Returns identity organization permissions
+     *
      * @param ?Identity $identity
-     * @return Collection
+     *
+     * @return Collection|EloquentBuilder[]|SupportCollection
+     *
+     * @psalm-return Collection|Collection<array-key, Model>|SupportCollection<never, never>|array<EloquentBuilder>
      */
-    public function identityPermissions(?Identity $identity): SupportCollection
+    public function identityPermissions(?Identity $identity): array|Collection|SupportCollection
     {
         if ($identity && strcmp($identity->address, $this->identity_address) === 0) {
             return Permission::allMemCached();
@@ -1031,7 +1044,9 @@ class Organization extends BaseModel
     }
 
     /**
-     * @return array
+     * @return (int|mixed)[]
+     *
+     * @psalm-return array{total_archived: int, total_provider: mixed, total_sponsor: mixed}
      */
     public function productsMeta(): array
     {
@@ -1046,13 +1061,12 @@ class Organization extends BaseModel
      * @param Bank $bank
      * @param Employee $employee
      * @param Implementation $implementation
-     * @return BankConnection|Model
      */
     public function makeBankConnection(
         Bank $bank,
         Employee $employee,
         Implementation $implementation,
-    ): BankConnection|Model {
+    ): BaseModel|Model {
         return BankConnection::addConnection($bank, $employee, $this, $implementation);
     }
 

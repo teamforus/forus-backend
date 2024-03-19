@@ -17,25 +17,11 @@ class UpdateTransactionBulksRequest extends BaseFormRequest
     use ThrottleWithMeta;
 
     /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     * @throws \App\Exceptions\AuthorizationJsonException
-     */
-    public function authorize(): bool
-    {
-        $this->maxAttempts = env('RESET_BULKS_ATTEMPTS', 10);
-        $this->decayMinutes = env('RESET_BULKS_DECAY', 10);
-
-        $this->throttleWithKey('to_many_attempts', $this, 'voucher_transaction_bulks', 'bulk_reset');
-
-        return Gate::allows('show', $this->organization);
-    }
-
-    /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return string[]
+     *
+     * @psalm-return array{state: 'required|in:pending'}
      */
     public function rules(): array
     {

@@ -9,25 +9,14 @@ use Illuminate\Validation\Rule;
 
 class StoreIdentity2FARequest extends BaseIdentity2FARequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     * @throws AuthorizationJsonException
-     */
-    public function authorize(): bool
-    {
-        $this->throttleRequest('store');
 
-        return
-            $this->identityProxy()->is2FAConfirmed() ||
-            $this->identity()->identity_2fa_active()->doesntExist();
-    }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return (\Illuminate\Validation\Rules\Exists|\Illuminate\Validation\Rules\Unique|string)[][]
+     *
+     * @psalm-return array{type: list{'required', \Illuminate\Validation\Rules\Exists}, phone?: list{'required', 'numeric', 'digits_between:8,15', \Illuminate\Validation\Rules\Unique}}
      */
     public function rules(): array
     {

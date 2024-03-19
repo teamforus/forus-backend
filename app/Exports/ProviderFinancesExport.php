@@ -21,9 +21,12 @@ class ProviderFinancesExport implements FromCollection, WithHeadings
     /**
      * @param Organization $sponsor
      * @param \Illuminate\Database\Eloquent\Collection $providers
-     * @return Collection
+     *
+     * @return Collection|EloquentCollection
+     *
+     * @psalm-return Collection<int, array<string>>|EloquentCollection<int, array<string>>
      */
-    protected function exportTransform(Organization $sponsor, Collection $providers): Collection
+    protected function exportTransform(Organization $sponsor, Collection $providers): EloquentCollection|Collection
     {
         return $providers->map(function(Organization $provider) use ($sponsor) {
             return [
@@ -38,9 +41,10 @@ class ProviderFinancesExport implements FromCollection, WithHeadings
 
     /**
      * @param string $key
-     * @return string|null
+     *
+     * @return \Illuminate\Contracts\Translation\Translator|array|null|string
      */
-    protected function trans(string $key): ?string
+    protected function trans(string $key): array|string|\Illuminate\Contracts\Translation\Translator|null
     {
         return trans("export.finances.$key");
     }

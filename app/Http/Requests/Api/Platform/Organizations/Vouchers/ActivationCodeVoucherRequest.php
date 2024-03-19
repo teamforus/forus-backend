@@ -14,23 +14,12 @@ use App\Models\Voucher;
  */
 class ActivationCodeVoucherRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return
-            $this->organization->identityCan($this->identity(), 'manage_vouchers') &&
-            $this->voucher->fund->organization_id === $this->organization->id &&
-            !$this->voucher->is_granted &&
-            !$this->voucher->expired &&
-            !$this->voucher->activation_code;
-    }
+
 
     /**
      * @return string[]
+     *
+     * @psalm-return array{client_uid: 'nullable|string|max:20'}
      */
     public function rules(): array
     {
