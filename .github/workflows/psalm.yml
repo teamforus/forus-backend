@@ -43,7 +43,12 @@ jobs:
       - name: Psalm Security Scan run
         run: ./vendor/bin/psalm --threads=3 --shepherd
 
+      - name: Archive Test Results
+        if: always()
+        run: ls -la
+
       - name: Upload Security Analysis results to GitHub
+        if: always()
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: results.sarif
