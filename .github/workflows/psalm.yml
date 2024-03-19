@@ -34,6 +34,9 @@ jobs:
           sudo apt update
           sudo apt install -y php-bcmath php-gd php-soap php-zip php-intl
 
+      - name: Install psalm dependency
+        run: composer require --dev vimeo/psalm
+        
       - name: Psalm Security Scan init
         run: ./vendor/bin/psalm --init
 
