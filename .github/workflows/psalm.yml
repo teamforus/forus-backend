@@ -36,12 +36,12 @@ jobs:
 
       - name: Install psalm dependency
         run: composer require --dev vimeo/psalm
-        
+
       - name: Psalm Security Scan init
         run: ./vendor/bin/psalm --init
 
       - name: Psalm Security Scan run
-        run: ./vendor/bin/psalm
+        run: ./vendor/bin/psalm --threads=3 --shepherd
 
       - name: Upload Security Analysis results to GitHub
         uses: github/codeql-action/upload-sarif@v2
