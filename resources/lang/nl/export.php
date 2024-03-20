@@ -58,6 +58,7 @@ return [
         'amount' => 'bedrag',
         'date_transaction' => 'Datum betaling',
         'date_payment' => 'Datum uitbetaling',
+        'date_non_cancelable' => 'Vastgestelde transactie',
         'fund' => 'fonds',
         'provider' => 'aanbieder',
         'state' => 'status',
@@ -70,8 +71,8 @@ return [
 
     'voucher_transactions_bulks' => [
         'state-values' => [
-            'draft' => 'Draft',
-            'error' => 'Error',
+            'draft' => 'In voorbereiding',
+            'error' => 'Mislukt',
             'pending' => 'In afwachting',
             'accepted' => 'Geaccepteerd',
             'rejected' => 'Geweigerd',

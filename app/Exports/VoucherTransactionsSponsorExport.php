@@ -19,6 +19,7 @@ class VoucherTransactionsSponsorExport extends BaseFieldedExport
         'amount' => 'Bedrag',
         'date_transaction' => 'Datum transactie',
         'date_payment' => 'Datum betaling',
+        'date_non_cancelable' => 'Vastgestelde transactie',
         'bulk_status_locale'  => 'In de wachtrij (dagen)',
         'fund_name' => 'Fonds',
         'product_id' => 'Aanbod ID',
