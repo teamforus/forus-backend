@@ -59,23 +59,35 @@ class VoucherTransactionsSearch extends BaseSearch
         }
 
         if ($nonCancelableFrom = $this->getFilter('non_cancelable_from')) {
-            $builder->where(
-                'transfer_at',
-                '>=',
-                Carbon::createFromFormat('Y-m-d', $nonCancelableFrom)
-                    ->startOfDay()
-                    ->format('Y-m-d H:i:s')
-            );
+            $from = Carbon::createFromFormat('Y-m-d', $nonCancelableFrom)
+                ->startOfDay()
+                ->format('Y-m-d H:i:s');
+
+            $builder->where(function (Builder $builder) use ($from) {
+                $builder->where(function (Builder $builder) use ($from) {
+                    $builder->whereHas('product_reservation');
+                    $builder->where('transfer_at', '>=', $from);
+                })->orWhere(function (Builder $builder) use ($from) {
+                    $builder->whereDoesntHave('product_reservation');
+                    $builder->where('created_at', '>=', $from);
+                });
+            });
         }
 
         if ($nonCancelableTo = $this->getFilter('non_cancelable_to')) {
-            $builder->where(
-                'transfer_at',
-                '<=',
-                Carbon::createFromFormat('Y-m-d', $nonCancelableTo)
-                    ->endOfDay()
-                    ->format('Y-m-d H:i:s')
-            );
+            $to = Carbon::createFromFormat('Y-m-d', $nonCancelableTo)
+                ->endOfDay()
+                ->format('Y-m-d H:i:s');
+
+            $builder->where(function (Builder $builder) use ($to) {
+                $builder->where(function (Builder $builder) use ($to) {
+                    $builder->whereHas('product_reservation');
+                    $builder->where('transfer_at', '<=', $to);
+                })->orWhere(function (Builder $builder) use ($to) {
+                    $builder->whereDoesntHave('product_reservation');
+                    $builder->where('created_at', '<=', $to);
+                });
+            });
         }
 
         if ($amount_min = $this->getFilter('amount_min')) {

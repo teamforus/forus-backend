@@ -187,7 +187,7 @@ class VoucherTransaction extends BaseModel
      */
     public function getNonCancelableAtAttribute(): ?Carbon
     {
-        return $this->transfer_at?->clone();
+        return $this->product_reservation ? $this->transfer_at?->clone() : $this->created_at->clone();
     }
 
     /**
