@@ -1691,7 +1691,19 @@ class Fund extends BaseModel
             'inactive_percentage'   => currency_format($inactive_percentage),
             'deactivated_amount'    => $deactivatedVouchersQuery->sum('amount'),
             'deactivated_count'     => $deactivated_count,
+            'children_count'        => self::getVoucherChildrenCount($vouchersQuery),
         ];
+    }
+
+    /**
+     * @param Builder $vouchersQuery
+     * @return mixed
+     */
+    protected static function getVoucherChildrenCount(Builder $vouchersQuery): mixed
+    {
+        return VoucherRecord::whereRelation('record_type', 'key', 'children_nth')
+            ->whereIn('voucher_id', $vouchersQuery->select('id'))
+            ->sum('value');
     }
 
     /**
