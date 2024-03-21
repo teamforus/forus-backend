@@ -28,6 +28,15 @@ class Locker
     }
 
     /**
+     * @param string $key
+     * @return Locker
+     */
+    public static function make(string $key): Locker
+    {
+        return new static($key);
+    }
+
+    /**
      * @return void
      * @throws InvalidArgumentException
      */

@@ -6,11 +6,18 @@ use App\Traits\DoesTesting;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Laravel\Dusk\Dusk;
 use Laravel\Dusk\TestCase as BaseTestCase;
 
 abstract class DuskTestCase extends BaseTestCase
 {
     use CreatesApplication, DoesTesting;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Dusk::selectorHtmlAttribute('data-dusk');
+    }
 
     /**
      * Prepare for Dusk test execution.

@@ -148,6 +148,7 @@ class TransactionBulksController extends Controller
      * @param Organization $organization
      * @param VoucherTransactionBulk $transactionBulk
      * @return string
+     * @throws AuthorizationException
      * @noinspection PhpUnused
      */
     public function exportSEPA(

@@ -116,6 +116,10 @@ class StoreProductReservationRequest extends BaseFormRequest
      */
     private function customFieldRules(?Product $product): array
     {
+        if (!$product->reservation_fields) {
+            return [];
+        }
+
         return $product?->organization->reservation_fields->reduce(fn (array $result, $field) => [
             ...$result,
             "custom_fields.$field->id" => array_filter([

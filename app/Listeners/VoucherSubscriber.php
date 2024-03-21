@@ -69,6 +69,10 @@ class VoucherSubscriber
                 'implementation' => $voucher->fund->getImplementation(),
             ], $voucher->only('note'));
 
+            if ($voucher->identity) {
+                VoucherAssigned::dispatch($voucher);
+            }
+
             if ($voucherCreated->shouldNotifyRequesterAdded()) {
                 IdentityProductVoucherAddedNotification::send($event);
             }

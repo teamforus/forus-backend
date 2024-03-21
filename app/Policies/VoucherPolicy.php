@@ -366,7 +366,7 @@ class VoucherPolicy
         }
 
         // reservation used
-        if ($voucher->product_reservation && $voucher->product_reservation->hasExpired()) {
+        if ($voucher->product_reservation && $voucher->product_reservation->isExpired()) {
             return $this->deny('reservation_expired');
         }
 

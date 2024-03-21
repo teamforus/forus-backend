@@ -34,6 +34,7 @@ class SyncPreCheckRequest extends BaseFormRequest
             'pre_check_description' => 'nullable|string|max:1000',
             ...$this->preCheckRules(),
             ...$this->preCheckRecordRules(),
+            ...$this->preCheckRecordSettingRules(),
         ];
     }
 
@@ -66,9 +67,30 @@ class SyncPreCheckRequest extends BaseFormRequest
         return [
             'pre_checks.*.record_types.*'=> 'nullable|array',
             'pre_checks.*.record_types.*.title' => 'required|string|max:100',
-            'pre_checks.*.record_types.*.title_short' => 'nullable|string|max:30',
+            'pre_checks.*.record_types.*.title_short' => 'required|string|max:40',
             'pre_checks.*.record_types.*.description' => 'nullable|string|max:1000',
-            'pre_checks.*.record_types.*.record_type_key' => 'required|string|exists:record_types,key',
+            'pre_checks.*.record_types.*.record_type_key' => [
+                'required',
+                'string',
+                Rule::exists('record_types', 'key')->where('pre_check', true),
+            ],
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    private function preCheckRecordSettingRules(): array
+    {
+        return [
+            'pre_checks.*.record_types.*.record_settings.*'=> 'nullable|array',
+            'pre_checks.*.record_types.*.record_settings.*.fund_id'=> [
+                'nullable',
+                Rule::exists('funds', 'id')->where('organization_id', $this->organization->id),
+            ],
+            'pre_checks.*.record_types.*.record_settings.*.is_knock_out'=> 'required|boolean',
+            'pre_checks.*.record_types.*.record_settings.*.description'=> 'nullable|string|max:1000',
+            'pre_checks.*.record_types.*.record_settings.*.impact_level'=> 'required|int|min:0|max:100',
         ];
     }
 
@@ -79,8 +101,10 @@ class SyncPreCheckRequest extends BaseFormRequest
     {
         return [
             'pre_checks.*.title' => 'title',
+            'pre_checks.*.title_short' => 'short title',
             'pre_checks.*.description' => 'description',
             'pre_checks.*.record_types.*.title' => 'title',
+            'pre_checks.*.record_types.*.title_short' => 'short title',
             'pre_checks.*.record_types.*.record_type_key' => 'key',
         ];
     }

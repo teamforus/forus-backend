@@ -24,7 +24,11 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
         return [
             'bsn' => $this->bsnRule($bsn_enabled),
             'note' => 'nullable|string|max:280',
-            'email' => 'nullable|required_if:assign_by_type,email|email:strict',
+            'email' => [
+                'nullable',
+                'required_if:assign_by_type,email',
+                ...$this->emailRules(),
+            ],
             'amount' => $this->amountRule($fund),
             'records' => $this->recordsRule(),
             'fund_id' => $this->fundIdRule(),

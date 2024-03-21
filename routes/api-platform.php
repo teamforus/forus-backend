@@ -64,6 +64,7 @@ $router->group([], static function() use ($router) {
     ]);
 
     $router->post('pre-checks/calculate', 'Api\Platform\PreCheckController@calculateTotals');
+    $router->post('pre-checks/download-pdf', 'Api\Platform\PreCheckController@downloadPDF');
 
     $router->resource('pre-checks', "Api\Platform\PreCheckController")
         ->only('index');
@@ -174,6 +175,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     // Organizations
     $router->group(['prefix' => 'organizations/{organization}'], function() use ($router) {
         $router->patch('roles', "Api\Platform\OrganizationsController@updateRoles");
+        $router->patch('bank-fields', "Api\Platform\OrganizationsController@updateBankStatementFields");
+        $router->patch('update-bi-connection', "Api\Platform\OrganizationsController@updateBIConnection");
         $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFields");
         $router->patch('update-accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
         $router->get('features', "Api\Platform\OrganizationsController@getFeatures");
@@ -770,25 +773,19 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     );
 
     // Mollie
-    $router->group(['prefix' => 'organizations/{organization}/mollie-connections'], function() use ($router) {
-        $router->get('active', 'Api\Platform\Organizations\MollieConnectionController@getActive');
+    $router->group(['prefix' => 'organizations/{organization}/mollie-connection'], function() use ($router) {
+        $router->get('', 'Api\Platform\Organizations\MollieConnectionController@getActive');
+        $router->post('', 'Api\Platform\Organizations\MollieConnectionController@store');
+        $router->patch('', 'Api\Platform\Organizations\MollieConnectionController@update');
+        $router->delete('', 'Api\Platform\Organizations\MollieConnectionController@destroy');
         $router->get('fetch', 'Api\Platform\Organizations\MollieConnectionController@fetchActive');
         $router->post('connect', 'Api\Platform\Organizations\MollieConnectionController@connectOAuth');
     });
 
     $router->resource(
-        'organizations.mollie-connections',
-        'Api\Platform\Organizations\MollieConnectionController',
-    )->parameters([
-        'mollie-connections' => 'connection',
-    ])->only('store', 'destroy');
-
-    $router->resource(
-        'organizations.mollie-connections.profiles',
+        'organizations/{organization}/mollie-connection/profiles',
         'Api\Platform\Organizations\MollieConnectionProfileController',
-    )->parameters([
-        'mollie-connections' => 'connection',
-    ])->only('store', 'update');
+    )->only('store', 'update');
 
     // BI connection
     $router->group(['prefix' => 'organizations/{organization}/bi-connection'], function() use ($router) {

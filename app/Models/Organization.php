@@ -73,7 +73,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
  * @property bool $allow_provider_extra_payments
- * @property int $allow_pre_checks
+ * @property bool $allow_pre_checks
  * @property bool $reservation_allow_extra_payments
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
@@ -89,6 +89,15 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $auth_2fa_funds_restrict_reimbursements
  * @property bool $auth_2fa_restrict_bi_connections
  * @property int $show_provider_transactions
+ * @property bool $show_provider_transactions
+ * @property bool $bank_transaction_id
+ * @property bool $bank_transaction_date
+ * @property int $bank_reservation_number
+ * @property bool $bank_branch_number
+ * @property bool $bank_branch_id
+ * @property bool $bank_branch_name
+ * @property bool $bank_fund_name
+ * @property bool $bank_note
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -180,7 +189,17 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
  * @method static EloquentBuilder|Organization whereAuth2faRestrictBiTools($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
+ * @method static EloquentBuilder|Organization whereBankBranchId($value)
+ * @method static EloquentBuilder|Organization whereBankBranchName($value)
+ * @method static EloquentBuilder|Organization whereBankBranchNumber($value)
  * @method static EloquentBuilder|Organization whereBankCronTime($value)
+ * @method static EloquentBuilder|Organization whereBankFundName($value)
+ * @method static EloquentBuilder|Organization whereBankNote($value)
+ * @method static EloquentBuilder|Organization whereBankReservationNumber($value)
+ * @method static EloquentBuilder|Organization whereBankTransactionDate($value)
+ * @method static EloquentBuilder|Organization whereBankTransactionId($value)
+ * @method static EloquentBuilder|Organization whereBiConnectionAuthType($value)
+ * @method static EloquentBuilder|Organization whereBiConnectionToken($value)
  * @method static EloquentBuilder|Organization whereBsnEnabled($value)
  * @method static EloquentBuilder|Organization whereBtw($value)
  * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
@@ -265,6 +284,8 @@ class Organization extends BaseModel
         'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
         'reservation_allow_extra_payments', 'allow_provider_extra_payments',
         'auth_2fa_restrict_bi_connections',
+        'bank_transaction_id', 'bank_transaction_date', 'bank_branch_number', 'bank_branch_id',
+        'bank_branch_name', 'bank_fund_name', 'bank_note', 'bank_reservation_number',
     ];
 
     /**
@@ -302,6 +323,15 @@ class Organization extends BaseModel
         'allow_provider_extra_payments'             => 'boolean',
         'allow_pre_checks'                          => 'boolean',
         'reservation_allow_extra_payments'          => 'boolean',
+        'show_provider_transactions'                => 'boolean',
+        'bank_transaction_id'                       => 'boolean',
+        'bank_transaction_date'                     => 'boolean',
+        'bank_reservation_number'                   => 'boolean',
+        'bank_branch_number'                        => 'boolean',
+        'bank_branch_id'                            => 'boolean',
+        'bank_branch_name'                          => 'boolean',
+        'bank_fund_name'                            => 'boolean',
+        'bank_note'                                 => 'boolean',
     ];
 
     /**
@@ -834,10 +864,15 @@ class Organization extends BaseModel
     /**
      * Check if identity is organization employee
      * @param Identity $identity
+     * @param bool $fresh
      * @return bool
      */
-    public function isEmployee(Identity $identity): bool
+    public function isEmployee(Identity $identity, bool $fresh = true): bool
     {
+        if (!$fresh) {
+            return $this->employees->where('identity_address', $identity->address)->isNotEmpty();
+        }
+
         return $this->employees()->where('identity_address', $identity->address)->exists();
     }
 
@@ -1058,13 +1093,16 @@ class Organization extends BaseModel
     /**
      * @param Identity $identity
      * @param array $roles
+     * @param int|null $office_id
      * @return Employee
      */
-    public function addEmployee(Identity $identity, array $roles = []): Employee
+    public function addEmployee(Identity $identity, array $roles = [], int $office_id = null): Employee
     {
         /** @var Employee $employee */
         $employee = $this->employees()->firstOrCreate([
             'identity_address' => $identity->address,
+        ], [
+            'office_id' => $office_id,
         ]);
 
         $employee->roles()->sync($roles);

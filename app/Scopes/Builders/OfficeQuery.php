@@ -3,37 +3,53 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\Office;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class OfficeQuery
 {
     /**
-     * @param Builder $query
+     * @param Office|Relation|Builder $query
      * @param string $q
-     * @return Builder
+     * @param bool $withBranches
+     * @return Office|Relation|Builder
      */
-    public static function queryDeepFilter(Builder $query, string $q = ''): Builder
-    {
-        return $query->where(function (Builder $query) use ($q) {
-            $like = '%' . $q . '%';
+    public static function queryWebshopDeepFilter(
+        Office|Relation|Builder $query,
+        string $q = '',
+        bool $withBranches = false,
+    ): Office|Relation|Builder {
+        return $query->where(function (Builder $query) use ($q, $withBranches) {
+            $query->where('address','LIKE', "%$q%");
 
-            $query->where(
-                'address','LIKE', $like
-            )->orWhereHas('organization.business_type.translations', function(
-                Builder $builder
-            ) use ($like) {
-                $builder->where('business_type_translations.name', 'LIKE', $like);
-            })->orWhereHas('organization', function(Builder $builder) use ($like) {
-                $builder->where('organizations.name', 'LIKE', $like);
-            })->orWhereHas('organization', function(Builder $builder) use ($like) {
-                $builder->where('organizations.email_public', true);
-                $builder->where('organizations.email', 'LIKE', $like);
-            })->orWhereHas('organization', function(Builder $builder) use ($like) {
-                $builder->where('organizations.phone_public', true);
-                $builder->where('organizations.phone', 'LIKE', $like);
-            })->orWhereHas('organization', function(Builder $builder) use ($like) {
-                $builder->where('organizations.website_public', true);
-                $builder->where('organizations.website', 'LIKE', $like);
+            if ($withBranches) {
+                $query->orWhere('branch_id', 'LIKE', "%$q%");
+                $query->orWhere('branch_name', 'LIKE', "%$q%");
+                $query->orWhere('branch_number', 'LIKE', "%$q%");
+            }
+
+            $query->orWhereHas('organization', function(Builder $query) use ($q) {
+                $query->where('name', 'LIKE', "%$q%");
+
+                $query->orWhereHas('business_type.translations', function(Builder $builder) use ($q) {
+                    $builder->where('name', 'LIKE', "%$q%");
+                });
+
+                $query->orWhere(function(Builder $builder) use ($q) {
+                    $builder->where('email_public', true);
+                    $builder->where('email', 'LIKE', "%$q%");
+                });
+
+                $query->orWhere(function(Builder $builder) use ($q) {
+                    $builder->where('phone_public', true);
+                    $builder->where('phone', 'LIKE', "%$q%");
+                });
+
+                $query->orWhere(function(Builder $builder) use ($q) {
+                    $builder->where('website_public', true);
+                    $builder->where('website', 'LIKE', "%$q%");
+                });
             });
         });
     }

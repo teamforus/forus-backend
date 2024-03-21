@@ -6,6 +6,7 @@ use App\Models\Identity;
 use App\Models\Office;
 use App\Models\Organization;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class OfficePolicy
 {
@@ -75,17 +76,20 @@ class OfficePolicy
      * @param Identity $identity
      * @param Office $office
      * @param Organization $organization
-     * @return bool
-     * @noinspection PhpUnused
+     * @return bool|Response
      */
-    public function destroy(Identity $identity, Office $office, Organization $organization): bool
+    public function destroy(Identity $identity, Office $office, Organization $organization): bool|Response
     {
         if ($office->organization_id != $organization->id) {
             return false;
         }
 
         if ($organization->offices()->count() <= 1){
-            return false;
+            return $this->deny('Cannot delete the only office.');
+        }
+
+        if ($organization->employees()->exists()){
+            return $this->deny('Cannot delete office with employees.');
         }
 
         return $office->organization->identityCan($identity, 'manage_offices');

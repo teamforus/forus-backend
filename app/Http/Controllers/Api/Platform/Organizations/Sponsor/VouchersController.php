@@ -439,10 +439,10 @@ class VouchersController extends Controller
         $query = VoucherSubQuery::appendFirstUseFields($query);
 
         $vouchers = $query->with([
-            'transactions', 'voucher_relation', 'product', 'fund.fund_config',
+            'transactions', 'voucher_relation', 'product', 'fund.fund_config.implementation',
             'token_without_confirmation', 'identity.primary_email', 'identity.record_bsn',
             'product_vouchers', 'top_up_transactions', 'reimbursements_pending',
-            'voucher_records.record_type',
+            'voucher_records.record_type', 'paid_out_transactions', 'fund.organization',
         ])->get();
 
         $funds = Fund::whereIn('id', $vouchers->pluck('fund_id')->unique()->toArray())->get();

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection as SupportCollection;
+use Carbon\Carbon;
 
 /**
  * App\Models\VoucherTransaction
@@ -24,6 +25,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property int $voucher_id
  * @property int|null $organization_id
  * @property int|null $employee_id
+ * @property string|null $branch_id
+ * @property string|null $branch_name
+ * @property string|null $branch_number
  * @property int|null $reimbursement_id
  * @property int|null $product_id
  * @property int|null $fund_provider_product_id
@@ -52,6 +56,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
  * @property-read string $bulk_status_locale
  * @property-read bool $iban_final
+ * @property-read \Carbon\Carbon|null $non_cancelable_at
  * @property-read string $state_locale
  * @property-read string $target_locale
  * @property-read float $transaction_cost
@@ -75,6 +80,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static Builder|VoucherTransaction whereAddress($value)
  * @method static Builder|VoucherTransaction whereAmount($value)
  * @method static Builder|VoucherTransaction whereAttempts($value)
+ * @method static Builder|VoucherTransaction whereBranchId($value)
+ * @method static Builder|VoucherTransaction whereBranchName($value)
+ * @method static Builder|VoucherTransaction whereBranchNumber($value)
  * @method static Builder|VoucherTransaction whereCanceledAt($value)
  * @method static Builder|VoucherTransaction whereCreatedAt($value)
  * @method static Builder|VoucherTransaction whereEmployeeId($value)
@@ -155,7 +163,7 @@ class VoucherTransaction extends BaseModel
 
     public const SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'transaction_in', 'fund_name',
-        'provider_name', 'product_name', 'target', 'uid',
+        'provider_name', 'product_name', 'target', 'uid', 'date_non_cancelable', 'bulk_state',
     ];
 
     /**
@@ -169,6 +177,7 @@ class VoucherTransaction extends BaseModel
         'iban_from', 'iban_to', 'iban_to_name', 'payment_time', 'employee_id', 'transfer_at',
         'voucher_transaction_bulk_id', 'payment_description', 'initiator', 'reimbursement_id',
         'target', 'target_iban', 'target_name', 'target_reimbursement_id', 'uid',
+        'branch_id', 'branch_name', 'branch_number',
     ];
 
     protected $hidden = [
@@ -176,8 +185,17 @@ class VoucherTransaction extends BaseModel
     ];
 
     protected $dates = [
-        'transfer_at',
+        'transfer_at', 'non_cancelable_at',
     ];
+
+    /**
+     * @return Carbon|null
+     * @noinspection PhpUnused
+     */
+    public function getNonCancelableAtAttribute(): ?Carbon
+    {
+        return $this->product_reservation ? $this->transfer_at?->clone() : $this->created_at->clone();
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -313,6 +331,7 @@ class VoucherTransaction extends BaseModel
     {
         return [
             static::STATE_PENDING => 'In afwachting',
+            static::STATE_CANCELED => 'Geannuleerd',
             static::STATE_SUCCESS => 'Voltooid',
         ][$this->state] ?? $this->state;
     }
@@ -341,7 +360,7 @@ class VoucherTransaction extends BaseModel
             'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
             'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
             'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
-            'reservation_voucher_id',
+            'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
         ]), self::query());
 
         return $builder->searchSponsor($organization);
@@ -406,6 +425,7 @@ class VoucherTransaction extends BaseModel
             'product_id' => $transaction->product?->id,
             'product_name' => $transaction->product?->name,
             'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
+            'date_non_cancelable' => format_date_locale($transaction->non_cancelable_at),
             'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
             'bulk_status_locale' => $transaction->bulk_status_locale,
         ], $fields))->values();
@@ -560,12 +580,18 @@ class VoucherTransaction extends BaseModel
      */
     public function makePaymentDescription(int $maxLength = 2000): string
     {
-        $note = $this->notes_provider->first()?->message;
+        $organization = $this->voucher->fund->organization;
 
-        return str_limit(trans('bunq.transaction.from_fund', [
-            'fund_name' => $this->voucher->fund->name,
-            'transaction_id' => $this->id
-        ]) . ($note ? ": $note" : ''), $maxLength);
+        return str_limit(trim(implode(' - ', array_filter([
+            $organization->bank_transaction_id ? $this->id : null,
+            $organization->bank_transaction_date ? $this->transfer_at : null,
+            $organization->bank_reservation_number ? $this->product_reservation?->code : null,
+            $organization->bank_branch_number ? $this->employee?->office?->branch_number : null,
+            $organization->bank_branch_id ? $this->employee?->office?->branch_id : null,
+            $organization->bank_branch_name ? $this->employee?->office?->branch_name : null,
+            $organization->bank_fund_name ? $this->voucher?->fund?->name : null,
+            $organization->bank_note ? $this->notes_provider->first()?->message : null,
+        ]))), $maxLength);
     }
 
     /**

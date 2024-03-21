@@ -20,6 +20,7 @@ use App\Models\Traits\HasDbTokens;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Scopes\Builders\VoucherQuery;
 use App\Scopes\Builders\VoucherSubQuery;
+use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -86,6 +87,7 @@ use ZipArchive;
  * @property-read bool $deactivated
  * @property-read bool $expired
  * @property-read \Illuminate\Support\Carbon|null $first_use_date
+ * @property-read bool $has_payouts
  * @property-read bool $has_reservations
  * @property-read bool $has_transactions
  * @property-read bool $in_use
@@ -103,6 +105,8 @@ use ZipArchive;
  * @property-read \App\Models\VoucherTransaction|null $last_transaction
  * @property-read Collection|EventLog[] $logs
  * @property-read int|null $logs_count
+ * @property-read Collection|\App\Models\VoucherTransaction[] $paid_out_transactions
+ * @property-read int|null $paid_out_transactions_count
  * @property-read Voucher|null $parent
  * @property-read Collection|\App\Models\PhysicalCardRequest[] $physical_card_requests
  * @property-read int|null $physical_card_requests_count
@@ -425,6 +429,17 @@ class Voucher extends BaseModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function paid_out_transactions(): HasMany
+    {
+        return $this
+            ->hasMany(VoucherTransaction::class)
+            ->where(fn (Builder $builder) => VoucherTransactionQuery::whereIsPaidOutQuery($builder));
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      * @noinspection PhpUnused
      */
@@ -469,6 +484,15 @@ class Voucher extends BaseModel
     public function getIsExternalAttribute(): bool
     {
         return $this->isExternal();
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getHasPayoutsAttribute(): bool
+    {
+        return $this->paid_out_transactions->count() > 0;
     }
 
     /**
@@ -764,6 +788,7 @@ class Voucher extends BaseModel
         $query = VoucherQuery::whereVisibleToSponsor(self::search($request));
         $unassignedOnly = $request->input('unassigned');
         $in_use = $request->input('in_use');
+        $has_payouts = $request->input('has_payouts');
         $expired = $request->input('expired');
         $count_per_identity_min = $request->input('count_per_identity_min');
         $count_per_identity_max = $request->input('count_per_identity_max');
@@ -844,6 +869,16 @@ class Voucher extends BaseModel
                     VoucherQuery::whereInUseQuery($builder);
                 } else {
                     VoucherQuery::whereNotInUseQuery($builder);
+                }
+            });
+        }
+
+        if ($request->has('has_payouts')) {
+            $query->where(function(Builder $builder) use ($has_payouts) {
+                if ($has_payouts) {
+                    $builder->whereHas('paid_out_transactions');
+                } else {
+                    $builder->whereDoesntHave('paid_out_transactions');
                 }
             });
         }
@@ -1584,6 +1619,9 @@ class Voucher extends BaseModel
         $transaction = $this->makeTransaction(array_merge(Arr::except($attributes, 'note'), [
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
             'employee_id' => $employee->id,
+            'branch_id' => $employee->office?->branch_id,
+            'branch_name' => $employee->office?->branch_name,
+            'branch_number' => $employee->office?->branch_number,
             'payment_time' => $isTopUp ? now() : null,
             'state' => $state,
         ]));

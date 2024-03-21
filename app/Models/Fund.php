@@ -999,9 +999,9 @@ class Fund extends BaseModel
     /**
      * @param string|null $identityAddress
      * @param array|null $records
-     * @return int
+     * @return float
      */
-    public function amountForIdentity(?string $identityAddress, array $records = null): int
+    public function amountForIdentity(?string $identityAddress, array $records = null): float
     {
         if ($this->fund_formulas->count() === 0 &&
             $this->fund_formula_products->pluck('price')->sum() === 0) {
@@ -1240,17 +1240,13 @@ class Fund extends BaseModel
             $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
             $multiplier = $formulaProduct->getIdentityMultiplier($identityAddress);
 
-            $vouchers = array_map(fn () => $this->makeProductVoucher(
+            $vouchers = array_merge($vouchers, array_map(fn () => $this->makeProductVoucher(
                 $identityAddress,
                 $extraFields,
                 $formulaProduct->product->id,
                 $voucherExpireAt,
                 $formulaProduct->price
-            ), array_fill(0, $multiplier, null));
-
-            foreach ($vouchers as $voucher) {
-                Event::dispatch(new VoucherAssigned($voucher));
-            }
+            ), array_fill(0, $multiplier, null)));
         }
 
         return $vouchers;

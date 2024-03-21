@@ -63,6 +63,8 @@ class ReservationExtraPaymentSubscriber
     public function onReservationExtraPaymentRefunded(ReservationExtraPaymentRefunded $event): void
     {
         $this->makeEvent($event, $event->getReservationExtraPayment()::EVENT_REFUNDED);
+
+        $event->getReservationExtraPayment()->product_reservation->rejectOrCancelProvider();
     }
 
     /**

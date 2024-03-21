@@ -31,6 +31,7 @@ use App\Models\ReservationExtraPayment;
 use App\Models\VoucherRecord;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
+use App\Notifications\DatabaseChannel;
 use App\Observers\FundProviderObserver;
 use App\Models\Identity;
 use App\Services\BIConnectionService\Models\BIConnection;
@@ -50,6 +51,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
+use Illuminate\Notifications\Channels\DatabaseChannel as IlluminateDatabaseChannel;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -93,23 +95,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->setLocale(config('app.locale'));
+
         $this->extendValidator();
+        $this->registerMediaConfigs();
+        $this->registerNotificationChannels();
 
         Schema::defaultStringLength(191);
         Relation::morphMap(self::$morphMap);
-
-        MediaService::setMediaConfigs([
-            new CmsMediaConfig(),
-            new FundLogoMediaConfig(),
-            new OfficePhotoMediaConfig(),
-            new ProductPhotoMediaConfig(),
-            new OrganizationLogoMediaConfig(),
-            new ImplementationBannerMediaConfig(),
-            new ReimbursementFilePreviewMediaConfig(),
-            new ImplementationMailLogoMediaConfig(),
-            new ImplementationBlockMediaConfig(),
-            new PreCheckBannerMediaConfig(),
-        ]);
 
         StringHelper::setDecimalSeparator('.');
         StringHelper::setThousandsSeparator(',');
@@ -124,6 +116,33 @@ class AppServiceProvider extends ServiceProvider
             Config::set('mail.default', 'array');
             Config::set('queue.default', 'sync');
         }
+    }
+
+    /**
+     * @return void
+     */
+    protected function registerMediaConfigs(): void
+    {
+        MediaService::setMediaConfigs([
+            new CmsMediaConfig(),
+            new FundLogoMediaConfig(),
+            new OfficePhotoMediaConfig(),
+            new ProductPhotoMediaConfig(),
+            new OrganizationLogoMediaConfig(),
+            new ImplementationBannerMediaConfig(),
+            new ReimbursementFilePreviewMediaConfig(),
+            new ImplementationMailLogoMediaConfig(),
+            new ImplementationBlockMediaConfig(),
+            new PreCheckBannerMediaConfig(),
+        ]);
+    }
+
+    /**
+     * @return void
+     */
+    protected function registerNotificationChannels(): void
+    {
+        $this->app->instance(IlluminateDatabaseChannel::class, new DatabaseChannel());
     }
 
     /**

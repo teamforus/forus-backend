@@ -215,7 +215,7 @@ class ProductReservation extends BaseModel
     {
         do {
             $code = random_int(11111111, 99999999);
-        } while(self::query()->where(compact('code'))->exists());
+        } while (self::query()->where(compact('code'))->exists());
 
         return $code;
     }
@@ -227,9 +227,9 @@ class ProductReservation extends BaseModel
      */
     public function getAddressAttribute($value): string
     {
-        return $value ?: sprintf("%s %s", $this->street ?: '', implode(', ', array_filter([
+        return trim($value ?: sprintf("%s %s", $this->street ?: '', implode(', ', array_filter([
             $this->house_nr, $this->house_nr_addition, $this->postal_code, $this->city,
-        ])));
+        ]))));
     }
 
     /**
@@ -315,7 +315,7 @@ class ProductReservation extends BaseModel
     /**
      * @return bool
      */
-    public function hasExpired(): bool
+    public function isExpired(): bool
     {
         return $this->isPending() && !$this->expire_at->endOfDay()->isFuture();
     }
@@ -359,7 +359,11 @@ class ProductReservation extends BaseModel
      */
     public function isArchivable(): bool
     {
-        return !$this->archived && ($this->isAccepted() || $this->isCanceled());
+        return !$this->archived && (
+            $this->isAccepted() ||
+            $this->isRejected() ||
+            $this->isCanceled() ||
+            $this->isExpired());
     }
 
     /**
@@ -369,7 +373,7 @@ class ProductReservation extends BaseModel
      */
     public function acceptProvider(?Employee $employee = null): self
     {
-        DB::transaction(function() use ($employee) {
+        DB::transaction(function () use ($employee) {
             return $this->setAccepted($this->makeTransaction($employee));
         });
 
@@ -417,6 +421,9 @@ class ProductReservation extends BaseModel
             'product_id' => $this->product_id,
             'transfer_at' => $transfer_at,
             'employee_id' => $employee?->id,
+            'branch_id' => $employee?->office?->branch_id,
+            'branch_name' => $employee?->office?->branch_name,
+            'branch_number' => $employee?->office?->branch_number,
             'target' => VoucherTransaction::TARGET_PROVIDER,
             'organization_id' => $this->product->organization_id,
             'fund_provider_product_id' => $this->fund_provider_product_id ?? null,
@@ -465,7 +472,7 @@ class ProductReservation extends BaseModel
      */
     public function rejectOrCancelProvider(?Employee $employee = null): self
     {
-        DB::transaction(function() use ($employee) {
+        DB::transaction(function () use ($employee) {
             $isRefund = $this->isAccepted();
 
             $this->update($isRefund ? [
@@ -519,16 +526,35 @@ class ProductReservation extends BaseModel
     /**
      * @return bool
      */
+    public function isRejected(): bool
+    {
+        return $this->state === self::STATE_REJECTED;
+    }
+
+    /**
+     * @return bool
+     */
     public function isCancelableByProvider(): bool
     {
         if ($this->isCancelableByRequester()) {
             return true;
         }
 
-        $hasUnRefundedExtra = $this->extra_payment && !$this->extra_payment->isFullyRefunded();
-        $isTransactionCancelable = !$this->isAccepted() || $this->voucher_transaction?->isCancelable();
+        if ($this->isWaiting()) {
+            return $this->extra_payment?->isExpired();
+        }
 
-        return !$hasUnRefundedExtra && $isTransactionCancelable;
+        if ($this->isPending()) {
+            return !$this->extra_payment || $this->extra_payment?->isFullyRefunded();
+        }
+
+        if ($this->isAccepted()) {
+            return
+                $this->voucher_transaction?->isCancelable() &&
+                !$this->extra_payment || $this->extra_payment?->isFullyRefunded();
+        }
+
+        return false;
     }
 
     /**
@@ -561,7 +587,7 @@ class ProductReservation extends BaseModel
      */
     public function cancelByClient(): ?bool
     {
-        DB::transaction(function() {
+        DB::transaction(function () {
             if ($this->product_voucher) {
                 $this->product_voucher->delete();
             }
@@ -584,7 +610,7 @@ class ProductReservation extends BaseModel
      */
     public function cancelByState(string $state): bool
     {
-        DB::transaction(function() use ($state) {
+        DB::transaction(function () use ($state) {
             $this->product_voucher?->delete();
 
             $this->update([
@@ -729,5 +755,18 @@ class ProductReservation extends BaseModel
         }
 
         return null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAcceptable(): bool
+    {
+        return
+            $this->isPending() &&
+            !$this->isExpired() &&
+            !$this->product->trashed() &&
+            (!$this->extra_payment || $this->extra_payment->isPaid()) &&
+            (!$this->extra_payment || $this->extra_payment->refunds_active->isEmpty());
     }
 }
