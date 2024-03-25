@@ -47,7 +47,13 @@ class BIConnectionService
             $builder->where('enabled', true);
             $builder->where('access_token', is_string($accessToken) ? $accessToken : null);
             $builder->where('expire_at', '>', now());
-            $builder->whereJsonContains('ips', $request->ip());
+            $builder->where(function (Builder $builder) use ($request) {
+                $builder->whereJsonContains('ips', $request->ip());
+                $builder->orWhere(function (Builder $builder) {
+                    $builder->whereNull('ips');
+                    $builder->orWhereJsonLength('ips', 0);
+                });
+            });
         })->first();
 
         return $organization ? static::create($organization) : null;

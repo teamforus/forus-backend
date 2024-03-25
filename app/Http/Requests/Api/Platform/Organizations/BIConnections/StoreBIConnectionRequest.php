@@ -42,7 +42,7 @@ class StoreBIConnectionRequest extends BaseFormRequest
                     'required',
                     Rule::in(BIConnection::EXPIRATION_PERIODS),
                 ],
-                'ips' => 'required|array',
+                'ips' => 'nullable|array',
                 'ips.*' => 'required|ip',
                 'data_types' => 'required|array',
                 'data_types.*' => [
