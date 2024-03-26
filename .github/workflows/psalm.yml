@@ -2,12 +2,12 @@ name: Psalm Security Scan
 
 on:
   push:
-    branches: ["master"]
+    branches: ["test123"]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "master" ]
-  schedule:
-    - cron: '09 00 * * 1'
+    branches: [ "test123" ]
+  # schedule:
+  #   - cron: '09 00 * * 1'
 
 permissions:
   contents: read
