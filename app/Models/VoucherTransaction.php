@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection as SupportCollection;
+use Carbon\Carbon;
 
 /**
  * App\Models\VoucherTransaction
@@ -55,6 +56,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
  * @property-read string $bulk_status_locale
  * @property-read bool $iban_final
+ * @property-read \Carbon\Carbon|null $non_cancelable_at
  * @property-read string $state_locale
  * @property-read string $target_locale
  * @property-read float $transaction_cost
@@ -161,7 +163,7 @@ class VoucherTransaction extends BaseModel
 
     public const SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'transaction_in', 'fund_name',
-        'provider_name', 'product_name', 'target', 'uid',
+        'provider_name', 'product_name', 'target', 'uid', 'date_non_cancelable', 'bulk_state',
     ];
 
     /**
@@ -183,8 +185,17 @@ class VoucherTransaction extends BaseModel
     ];
 
     protected $dates = [
-        'transfer_at',
+        'transfer_at', 'non_cancelable_at',
     ];
+
+    /**
+     * @return Carbon|null
+     * @noinspection PhpUnused
+     */
+    public function getNonCancelableAtAttribute(): ?Carbon
+    {
+        return $this->product_reservation ? $this->transfer_at?->clone() : $this->created_at->clone();
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -349,7 +360,7 @@ class VoucherTransaction extends BaseModel
             'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
             'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
             'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
-            'reservation_voucher_id',
+            'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
         ]), self::query());
 
         return $builder->searchSponsor($organization);
@@ -414,6 +425,7 @@ class VoucherTransaction extends BaseModel
             'product_id' => $transaction->product?->id,
             'product_name' => $transaction->product?->name,
             'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
+            'date_non_cancelable' => format_date_locale($transaction->non_cancelable_at),
             'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
             'bulk_status_locale' => $transaction->bulk_status_locale,
         ], $fields))->values();

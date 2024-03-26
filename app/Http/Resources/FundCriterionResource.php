@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\FundCriterion;
 use App\Models\FundCriterionValidator;
 use App\Models\Identity;
+use Illuminate\Http\Request;
 
 /**
  * @property FundCriterion $resource
@@ -15,13 +16,14 @@ class FundCriterionResource extends BaseJsonResource
 {
     const LOAD = [
         'record_type.translation',
+        'record_type.record_type_options',
         'fund_criterion_validators.external_validator',
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      */
     public function toArray($request): array
@@ -50,17 +52,17 @@ class FundCriterionResource extends BaseJsonResource
                 'options' => $criterion->record_type->getOptions(),
             ],
             'is_valid' => $this->isValid($request, $fund, $baseRequest->identity()),
-            'has_record' => $this->hasTrustedRecord($fund, $baseRequest->identity()),
+            'has_record' => $this->hasTrustedRecord($request, $fund, $baseRequest->identity()),
         ]);
     }
 
     /**
-     * @param $request
+     * @param Request $request
      * @param Fund $fund
      * @param Identity|null $identity
      * @return bool|null
      */
-    private function isValid($request, Fund $fund, ?Identity $identity): ?bool
+    private function isValid(Request $request, Fund $fund, ?Identity $identity): ?bool
     {
         $checkCriteria = $request->get('check_criteria', false);
 
@@ -72,16 +74,23 @@ class FundCriterionResource extends BaseJsonResource
     }
 
     /**
+     * @param Request $request
      * @param Fund $fund
      * @param Identity|null $identity
      * @return bool|null
      */
-    private function hasTrustedRecord(Fund $fund, ?Identity $identity): ?bool
+    private function hasTrustedRecord(Request $request, Fund $fund, ?Identity $identity): ?bool
     {
-        return $identity && !empty($fund->getTrustedRecordOfType(
-            $identity->address,
-            $this->resource->record_type_key,
-            $this->resource,
-        ));
+        $checkCriteria = $request->get('check_criteria', false);
+
+        if ($checkCriteria && $identity) {
+            return !empty($fund->getTrustedRecordOfType(
+                $identity->address,
+                $this->resource->record_type_key,
+                $this->resource,
+            ));
+        }
+
+        return $checkCriteria ? false : null;
     }
 }
