@@ -55,11 +55,13 @@ class FinancialStatistic
         $lowest_transaction = $datesData->pluck('lowest_transaction')->sortBy('amount')->first();
         $highest_transaction = $datesData->pluck('highest_transaction')->sortByDesc('amount')->first();
         $highest_daily_transaction = $datesData->pluck('highest_daily_transaction')->sortByDesc('amount')->first();
+        $total_amount = $datesData->sum('amount');
 
         return [
             'dates' => $datesData->toArray(),
             'totals' => [
-                'amount' => $datesData->sum('amount'),
+                'amount' => $total_amount,
+                'amount_locale' => currency_format_locale($total_amount),
                 'count' => $datesData->sum('count'),
             ],
             "lowest_transaction" => $lowest_transaction,

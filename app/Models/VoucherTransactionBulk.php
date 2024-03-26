@@ -57,8 +57,8 @@ use Throwable;
  * @property int|null $implementation_id
  * @property array|null $auth_params
  * @property string $state
- * @property int $accepted_manually
- * @property int $is_exported
+ * @property bool $accepted_manually
+ * @property bool $is_exported
  * @property int $state_fetched_times
  * @property string|null $state_fetched_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -146,6 +146,7 @@ class VoucherTransactionBulk extends BaseModel
     protected $casts = [
         'auth_params' => 'array',
         'accepted_manually' => 'boolean',
+        'is_exported' => 'boolean',
     ];
 
     protected $hidden = [

@@ -72,7 +72,7 @@ class ImplementationPrivateResource extends BaseJsonResource
         Implementation $implementation
     ): array {
         if ($implementation->organization->identityCan($request->identity(), [
-            'implementation_manager',
+            'manage_implementation',
         ])) {
             return $implementation->only([
                 'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
