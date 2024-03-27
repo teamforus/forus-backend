@@ -131,10 +131,8 @@ class BNGService
      * @return BulkPaymentValue
      * @throws ApiException
      */
-    public function getBulkDetails(
-        string $paymentId,
-        string $accessToken
-    ): BulkPaymentValue {
+    public function getBulkDetails(string $paymentId, string $accessToken): BulkPaymentValue
+    {
         $url = $this->getEndpoint('payment_bulk', [$paymentId]);
         $res = $this->requestJson('get', $url, null, [
             "Authorization" => sprintf("Bearer %s", $accessToken),
@@ -148,17 +146,16 @@ class BNGService
      * @param string $accessToken
      * @return BulkPaymentValue
      * @throws ApiException
+     * @noinspection PhpUnused
      */
-    public function getBulkDetailsStatus(
-            string $paymentId,
-            string $accessToken
-        ): BulkPaymentValue {
-            $url = $this->getEndpoint('payment_bulk', [$paymentId]) . '/status';
-            $res = $this->requestJson('get', $url, null, [
-                "Authorization" => sprintf("Bearer %s", $accessToken),
-            ]);
+    public function getBulkDetailsStatus(string $paymentId, string $accessToken): BulkPaymentValue
+    {
+        $url = $this->getEndpoint('payment_bulk', [$paymentId, 'status']);
+        $res = $this->requestJson('get', $url, null, [
+            "Authorization" => sprintf("Bearer %s", $accessToken),
+        ]);
 
-            return new BulkPaymentValue(new ResponseData($res));
+        return new BulkPaymentValue(new ResponseData($res));
     }
 
     /**
