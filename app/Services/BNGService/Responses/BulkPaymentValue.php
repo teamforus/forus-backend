@@ -4,7 +4,7 @@ namespace App\Services\BNGService\Responses;
 
 class BulkPaymentValue extends Value {
     /**
-     * @return string
+     * @return string|null
      */
     public function getTransactionStatus(): ?string
     {
@@ -12,7 +12,7 @@ class BulkPaymentValue extends Value {
     }
 
     /**
-     * @return int
+     * @return int|null
      * @noinspection PhpUnused
      */
     public function getNumberOfTransactions(): ?int
@@ -21,7 +21,7 @@ class BulkPaymentValue extends Value {
     }
 
     /**
-     * @return int
+     * @return int|null
      * @noinspection PhpUnused
      */
     public function getRequestedExecutionDate(): ?int
@@ -30,7 +30,7 @@ class BulkPaymentValue extends Value {
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getStatus(): ?string
     {
