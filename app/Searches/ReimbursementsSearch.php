@@ -32,19 +32,19 @@ class ReimbursementsSearch extends BaseSearch
             $builder->whereRelation('voucher', 'fund_id', $this->getFilter('fund_id'));
         }
 
-        if ($this->hasFilter('from')) {
+        if ($this->getFilter('from')) {
             $builder->where('created_at', '>=', Carbon::parse($this->getFilter('from'))->startOfDay());
         }
 
-        if ($this->hasFilter('to')) {
+        if ($this->getFilter('to')) {
             $builder->where('created_at', '<=', Carbon::parse($this->getFilter('to'))->endOfDay());
         }
 
-        if ($this->hasFilter('amount_min')) {
+        if ($this->getFilter('amount_min')) {
             $builder->where('amount', '>=', $this->getFilter('amount_min'));
         }
 
-        if ($this->hasFilter('amount_max')) {
+        if ($this->getFilter('amount_max')) {
             $builder->where('amount', '<=', $this->getFilter('amount_max'));
         }
 
