@@ -933,6 +933,21 @@ class Identity extends Model implements Authenticatable
      * @param string $feature
      * @return SupportCollection
      */
+    public function getRestricting2FAOrganizations(string $feature): SupportCollection
+    {
+        return $this->employees->reduce(function (SupportCollection $list, Employee $employee) use ($feature) {
+            if ($feature === 'bi_connections' && $employee->organization->auth_2fa_restrict_bi_connections) {
+                return $list->push($employee->organization);
+            }
+
+            return $list;
+        }, collect())->values();
+    }
+
+    /**
+     * @param string $feature
+     * @return SupportCollection
+     */
     public function getRestricting2FAFunds(string $feature): SupportCollection
     {
         return $this->funds->filter(function (Fund $fund) use ($feature) {
@@ -962,6 +977,10 @@ class Identity extends Model implements Authenticatable
      */
     public function isFeature2FARestricted(string $feature): bool
     {
+        if ($feature === 'bi_connections') {
+            return $this->getRestricting2FAOrganizations($feature)->isNotEmpty();
+        }
+
         return $this->getRestricting2FAFunds($feature)->isNotEmpty();
     }
 
