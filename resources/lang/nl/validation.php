@@ -271,6 +271,7 @@ return [
         'house_nr_addition' => 'huisnummertoevoeging',
         'postal_code' => 'postcode',
         'street' => 'straat',
+        'ip' => "IP",
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',
