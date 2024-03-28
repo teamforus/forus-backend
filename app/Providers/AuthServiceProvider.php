@@ -27,6 +27,7 @@ use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use App\Policies\BankConnectionPolicy;
+use App\Policies\BIConnectionPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\FilePolicy;
 use App\Policies\FundProviderChatMessagePolicy;
@@ -57,6 +58,7 @@ use App\Policies\VoucherTransactionBulkPolicy;
 use App\Policies\VoucherTransactionPolicy;
 use App\Services\AuthService\BearerTokenGuard;
 use App\Services\AuthService\ServiceIdentityProvider;
+use App\Services\BIConnectionService\Models\BIConnection;
 use App\Services\FileService\Models\File;
 use App\Models\IdentityEmail;
 use App\Services\MediaService\Models\Media;
@@ -90,6 +92,7 @@ class AuthServiceProvider extends ServiceProvider
         Organization::class             => OrganizationPolicy::class,
         FundProvider::class             => FundProviderPolicy::class,
         PhysicalCard::class             => PhysicalCardPolicy::class,
+        BIConnection::class             => BIConnectionPolicy::class,
         Reimbursement::class            => ReimbursementPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
         IdentityEmail::class            => IdentityEmailPolicy::class,

@@ -34,6 +34,7 @@ use App\Models\VoucherTransactionBulk;
 use App\Notifications\DatabaseChannel;
 use App\Observers\FundProviderObserver;
 use App\Models\Identity;
+use App\Services\BIConnectionService\Models\BIConnection;
 use Carbon\Carbon;
 use App\Media\OrganizationLogoMediaConfig;
 use App\Models\Employee;
@@ -67,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
         'employees'                     => Employee::class,
         'fund_request'                  => FundRequest::class,
         'organization'                  => Organization::class,
+        'bi_connection'                 => BIConnection::class,
         'reimbursement'                 => Reimbursement::class,
         'identity_email'                => IdentityEmail::class,
         'mail_template'                 => NotificationTemplate::class,

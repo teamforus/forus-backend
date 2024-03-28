@@ -58,7 +58,7 @@ return [
         'amount' => 'bedrag',
         'date_transaction' => 'Datum betaling',
         'date_payment' => 'Datum uitbetaling',
-        'date_non_cancelable' => 'Vastgestelde transactie',
+        'date_non_cancelable' => 'Definitieve transactie',
         'fund' => 'fonds',
         'provider' => 'aanbieder',
         'state' => 'status',

@@ -157,6 +157,7 @@ class FundResource extends BaseJsonResource
             'auth_2fa_restrict_emails' => $organization->auth_2fa_funds_restrict_emails,
             'auth_2fa_restrict_auth_sessions' => $organization->auth_2fa_funds_restrict_auth_sessions,
             'auth_2fa_restrict_reimbursements' => $organization->auth_2fa_funds_restrict_reimbursements,
+            'auth_2fa_restrict_bi_connections' => $organization->auth_2fa_restrict_bi_connections,
         ];
     }
 
@@ -258,6 +259,7 @@ class FundResource extends BaseJsonResource
             'left'                          => currency_format($fund->budget_left),
             'transaction_costs'             => currency_format($fund->getTransactionCosts()),
         ] : [], [
+            'children_count'                => $details['children_count'],
             'vouchers_amount'               => currency_format($details['vouchers_amount']),
             'vouchers_count'                => $details['vouchers_count'],
             'active_vouchers_amount'        => currency_format($details['active_amount']),

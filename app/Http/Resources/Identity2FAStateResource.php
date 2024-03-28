@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Tiny\FundTinyResource;
+use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\FundConfig;
@@ -95,6 +96,7 @@ class Identity2FAStateResource extends BaseJsonResource
             'emails' => $this->getRestriction($isConfirmed, $identity, 'emails'),
             'sessions' => $this->getRestriction($isConfirmed, $identity, 'sessions'),
             'reimbursements' => $this->getRestriction($isConfirmed, $identity, 'reimbursements'),
+            'bi_connections' => $this->getRestriction($isConfirmed, $identity, 'bi_connections'),
         ];
     }
 
@@ -106,11 +108,14 @@ class Identity2FAStateResource extends BaseJsonResource
      */
     protected function getRestriction(bool $isConfirmed, Identity $identity, string $key): array
     {
-        $funds = $identity->getRestricting2FAFunds($key);
+        $funds = $key !== 'bi_connections' ? $identity->getRestricting2FAFunds($key) : collect();
+        $organizations = $key === 'bi_connections' ? $identity->getRestricting2FAOrganizations($key) : collect();
+        $restricted = $funds->isNotEmpty() || $organizations->isNotEmpty();
 
         return [
-            'restricted' => $funds->isNotEmpty() && !$isConfirmed,
             'funds' => FundTinyResource::collection($funds),
+            'restricted' => $restricted && !$isConfirmed,
+            'organizations' => OrganizationTinyResource::collection($organizations),
         ];
     }
 

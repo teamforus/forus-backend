@@ -3,10 +3,11 @@
 namespace App\Services\BNGService\Responses;
 
 use App\Services\BNGService\Data\ResponseData;
+use Psr\Http\Message\ResponseInterface;
 
 abstract class Value
 {
-    protected $data = [];
+    protected mixed $data = [];
     protected ResponseData $responseData;
 
     /**
@@ -19,9 +20,9 @@ abstract class Value
     }
 
     /**
-     * @return array|\Psr\Http\Message\ResponseInterface|null
+     * @return ResponseInterface|array|null
      */
-    public function getData(): array|\Psr\Http\Message\ResponseInterface|null
+    public function getData(): ResponseInterface|array|null
     {
         return $this->data;
     }

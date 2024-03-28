@@ -787,6 +787,22 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'Api\Platform\Organizations\MollieConnectionProfileController',
     )->only('store', 'update');
 
+    // BI connection
+    $router->group(['prefix' => 'organizations/{organization}/bi-connection'], function() use ($router) {
+        $router->get('', 'Api\Platform\Organizations\BIConnectionController@getActive');
+        $router->post('', 'Api\Platform\Organizations\BIConnectionController@store');
+        $router->patch('', 'Api\Platform\Organizations\BIConnectionController@update');
+        $router->get('reset', 'Api\Platform\Organizations\BIConnectionController@resetToken');
+        $router->get('data-types', 'Api\Platform\Organizations\BIConnectionController@getAvailableDataTypes');
+    });
+
+    /*$router->resource(
+        'organizations.bi-connections',
+        'Api\Platform\Organizations\BIConnectionController',
+    )->parameters([
+        'bi-connections' => 'connection',
+    ])->only('store', 'update');*/
+
     $router->get(
         'organizations/{organization}/sponsor/finances',
         "Api\Platform\Organizations\FundsController@finances");
