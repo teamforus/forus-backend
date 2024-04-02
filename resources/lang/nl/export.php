@@ -110,6 +110,7 @@ return [
         'inactive' => 'Inactief',
 
         // Budget vouchers
+        'budget_children_count' => 'Aantal kinderen',
         'budget_amount_per_voucher' => 'Per tegoed €',
         'budget_average_per_voucher' => 'Gem per tegoed €',
         'budget_vouchers_amount' => 'Totaal tegoeden €',
