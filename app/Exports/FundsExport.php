@@ -136,7 +136,17 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
             ]);
         }
 
-        return $funds->map(fn(Fund $fund) => $this->getVoucherData($fund));
+        $funds = $funds->map(fn(Fund $fund) => $this->getVoucherData($fund));
+
+        if (!$funds->first(fn(array $item) => $item['budget_children_count'] > 0)) {
+            return $funds->map(function (array $item) {
+                unset($item['budget_children_count']);
+
+                return $item;
+            });
+        }
+
+        return $funds;
     }
 
     /**
@@ -186,6 +196,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
                     "budget_vouchers_active_percentage"    => currency_format($activeVouchersPercentage / 100, 4),
                     "budget_vouchers_active_count"         => currency_format($details['active_count'], 0),
                     "budget_vouchers_deactivated_count"    => currency_format($details['deactivated_count'], 0),
+                    "budget_children_count"                => $details['children_count'],
                 ]);
             }
 
