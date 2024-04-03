@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property string|null $phone
  * @property string|null $branch_id
  * @property string|null $branch_name
- * @property int|null $branch_number
+ * @property string|null $branch_number
  * @property string|null $lon
  * @property string|null $lat
  * @property string|null $postcode
@@ -67,10 +67,6 @@ class Office extends BaseModel
         'organization_id', 'address', 'phone', 'lon', 'lat', 'parsed',
         'postcode', 'postcode_number', 'postcode_addition',
         'branch_name', 'branch_number', 'branch_id',
-    ];
-
-    protected $casts = [
-        'branch_number' => 'integer',
     ];
 
     /**
