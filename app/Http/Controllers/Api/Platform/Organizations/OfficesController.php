@@ -60,9 +60,9 @@ class OfficesController extends Controller
         }
 
         /** @var Office $office */
-        $office = $organization->offices()->create(
-            $request->only(['name', 'address', 'phone', 'email'])
-        );
+        $office = $organization->offices()->create($request->only([
+            'name', 'address', 'phone', 'email', 'branch_id', 'branch_name', 'branch_number',
+        ]));
 
         $office->updateSchedule($request->input('schedule', []));
         $office->updateGeoData();
