@@ -70,7 +70,7 @@ class VoucherSubscriber
             ], $voucher->only('note'));
 
             if ($voucher->identity) {
-                VoucherAssigned::dispatch($voucher, false);
+                VoucherAssigned::dispatch($voucher, !$voucher->product_reservation_id);
             }
 
             if ($voucherCreated->shouldNotifyRequesterAdded()) {

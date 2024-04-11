@@ -4,7 +4,8 @@ namespace App\Events\Vouchers;
 
 use App\Models\Voucher;
 
-class VoucherAssigned extends BaseVoucherEvent {
+class VoucherAssigned extends BaseVoucherEvent
+{
     protected bool $notifyRequesterAssigned;
 
     /**
@@ -15,7 +16,7 @@ class VoucherAssigned extends BaseVoucherEvent {
      */
     public function __construct(
         Voucher $voucher,
-        bool $notifyRequesterAssigned = true
+        bool $notifyRequesterAssigned = true,
     ) {
         parent::__construct($voucher);
 
