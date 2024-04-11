@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection as SupportCollection;
 use Carbon\Carbon;
@@ -52,6 +53,7 @@ use Carbon\Carbon;
  * @property string|null $target_name
  * @property int|null $target_reimbursement_id
  * @property string|null $last_attempt_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
  * @property-read string $bulk_status_locale
@@ -76,6 +78,7 @@ use Carbon\Carbon;
  * @property-read \App\Models\VoucherTransactionBulk|null $voucher_transaction_bulk
  * @method static Builder|VoucherTransaction newModelQuery()
  * @method static Builder|VoucherTransaction newQuery()
+ * @method static Builder|VoucherTransaction onlyTrashed()
  * @method static Builder|VoucherTransaction query()
  * @method static Builder|VoucherTransaction whereAddress($value)
  * @method static Builder|VoucherTransaction whereAmount($value)
@@ -85,6 +88,7 @@ use Carbon\Carbon;
  * @method static Builder|VoucherTransaction whereBranchNumber($value)
  * @method static Builder|VoucherTransaction whereCanceledAt($value)
  * @method static Builder|VoucherTransaction whereCreatedAt($value)
+ * @method static Builder|VoucherTransaction whereDeletedAt($value)
  * @method static Builder|VoucherTransaction whereEmployeeId($value)
  * @method static Builder|VoucherTransaction whereFundProviderProductId($value)
  * @method static Builder|VoucherTransaction whereIbanFrom($value)
@@ -109,11 +113,13 @@ use Carbon\Carbon;
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
  * @method static Builder|VoucherTransaction whereVoucherTransactionBulkId($value)
+ * @method static Builder|VoucherTransaction withTrashed()
+ * @method static Builder|VoucherTransaction withoutTrashed()
  * @mixin \Eloquent
  */
 class VoucherTransaction extends BaseModel
 {
-    use HasLogs;
+    use HasLogs, SoftDeletes;
 
     protected $perPage = 25;
 
