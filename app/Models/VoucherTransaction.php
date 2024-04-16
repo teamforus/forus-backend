@@ -588,7 +588,7 @@ class VoucherTransaction extends BaseModel
     {
         $organization = $this->voucher->fund->organization;
 
-        return str_limit(trim(implode(' - ', array_filter([
+        $description = trim(implode(' - ', array_filter([
             $organization->bank_transaction_id ? $this->id : null,
             $organization->bank_transaction_date ? $this->transfer_at : null,
             $organization->bank_reservation_number ? $this->product_reservation?->code : null,
@@ -597,7 +597,9 @@ class VoucherTransaction extends BaseModel
             $organization->bank_branch_name ? $this->employee?->office?->branch_name : null,
             $organization->bank_fund_name ? $this->voucher?->fund?->name : null,
             $organization->bank_note ? $this->notes_provider->first()?->message : null,
-        ]))), $maxLength);
+        ])));
+
+        return strlen($description) <= $maxLength ? $description : str_limit($description, $maxLength - 3);
     }
 
     /**
