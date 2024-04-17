@@ -586,17 +586,15 @@ class VoucherTransaction extends BaseModel
      */
     public function makePaymentDescription(int $maxLength = 2000): string
     {
-        $organization = $this->voucher->fund->organization;
-
         $description = trim(implode(' - ', array_filter([
-            $organization->bank_transaction_id ? $this->id : null,
-            $organization->bank_transaction_date ? $this->transfer_at : null,
-            $organization->bank_reservation_number ? $this->product_reservation?->code : null,
-            $organization->bank_branch_number ? $this->employee?->office?->branch_number : null,
-            $organization->bank_branch_id ? $this->employee?->office?->branch_id : null,
-            $organization->bank_branch_name ? $this->employee?->office?->branch_name : null,
-            $organization->bank_fund_name ? $this->voucher?->fund?->name : null,
-            $organization->bank_note ? $this->notes_provider->first()?->message : null,
+            $this->provider->bank_transaction_id ? $this->id : null,
+            $this->provider->bank_transaction_date ? $this->created_at : null,
+            $this->provider->bank_reservation_number ? $this->product_reservation?->code : null,
+            $this->provider->bank_branch_number ? $this->employee?->office?->branch_number : null,
+            $this->provider->bank_branch_id ? $this->employee?->office?->branch_id : null,
+            $this->provider->bank_branch_name ? $this->employee?->office?->branch_name : null,
+            $this->provider->bank_fund_name ? $this->voucher?->fund?->name : null,
+            $this->provider->bank_note ? $this->notes_provider->first()?->message : null,
         ])));
 
         return strlen($description) <= $maxLength ? $description : str_limit($description, $maxLength - 3);
