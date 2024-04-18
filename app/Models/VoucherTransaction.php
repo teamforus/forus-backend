@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection as SupportCollection;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 /**
  * App\Models\VoucherTransaction
@@ -586,6 +587,15 @@ class VoucherTransaction extends BaseModel
      */
     public function makePaymentDescription(int $maxLength = 2000): string
     {
+        if ($this->targetIsIban()) {
+            return '';
+        }
+
+        if (!$this->provider) {
+            Log::channel('bng')->error("Unexpected transaction without provider found $this->id.");
+            return '';
+        }
+
         $description = trim(implode(' - ', array_filter([
             $this->provider->bank_transaction_id ? $this->id : null,
             $this->provider->bank_transaction_date ? $this->created_at : null,
