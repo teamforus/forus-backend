@@ -407,7 +407,7 @@ class Reimbursement extends Model
         }
 
         if ($note) {
-            $note = sprintf("%s: $note", $approved ? "Geaccepteerd" : "Afgewezen");
+            $note = ($approved ? "Geaccepteerd: " : "Afgewezen: ") . $note;
             $this->addNote($note, $this->employee);
         }
 
@@ -434,6 +434,9 @@ class Reimbursement extends Model
             'amount' => $this->amount,
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
             'employee_id' => $this->employee->id,
+            'branch_id' => $this->employee?->office?->branch_id,
+            'branch_name' => $this->employee?->office?->branch_name,
+            'branch_number' => $this->employee?->office?->branch_number,
             'reimbursement_id' => $this->id,
             'target' => VoucherTransaction::TARGET_IBAN,
             'state' => VoucherTransaction::STATE_PENDING,

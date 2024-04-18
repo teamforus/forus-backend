@@ -2,26 +2,10 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Employees;
 
-use App\Http\Requests\BaseFormRequest;
-use App\Models\Organization;
+use Illuminate\Validation\Rule;
 
-/**
- * Class StoreEmployeeRequest
- * @property Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Employees
- */
-class StoreEmployeeRequest extends BaseFormRequest
+class StoreEmployeeRequest extends BaseEmployeeRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
-    {
-        return $this->isAuthenticated();
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -36,12 +20,11 @@ class StoreEmployeeRequest extends BaseFormRequest
         return [
             'email' => [
                 'required',
-                'not_in:' . $emails->filter()->join(','),
+                Rule::notIn($emails->filter()->values()->toArray()),
                 ...$this->emailRules(),
             ],
-            'roles' => 'present|array',
-            'roles.*' => 'exists:roles,id',
             'target' => 'nullable|alpha_dash',
+            ...$this->updateRules(),
         ];
     }
 

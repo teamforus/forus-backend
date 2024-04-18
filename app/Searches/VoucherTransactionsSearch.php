@@ -58,6 +58,38 @@ class VoucherTransactionsSearch extends BaseSearch
             );
         }
 
+        if ($nonCancelableFrom = $this->getFilter('non_cancelable_from')) {
+            $from = Carbon::createFromFormat('Y-m-d', $nonCancelableFrom)
+                ->startOfDay()
+                ->format('Y-m-d H:i:s');
+
+            $builder->where(function (Builder $builder) use ($from) {
+                $builder->where(function (Builder $builder) use ($from) {
+                    $builder->whereHas('product_reservation');
+                    $builder->where('transfer_at', '>=', $from);
+                })->orWhere(function (Builder $builder) use ($from) {
+                    $builder->whereDoesntHave('product_reservation');
+                    $builder->where('created_at', '>=', $from);
+                });
+            });
+        }
+
+        if ($nonCancelableTo = $this->getFilter('non_cancelable_to')) {
+            $to = Carbon::createFromFormat('Y-m-d', $nonCancelableTo)
+                ->endOfDay()
+                ->format('Y-m-d H:i:s');
+
+            $builder->where(function (Builder $builder) use ($to) {
+                $builder->where(function (Builder $builder) use ($to) {
+                    $builder->whereHas('product_reservation');
+                    $builder->where('transfer_at', '<=', $to);
+                })->orWhere(function (Builder $builder) use ($to) {
+                    $builder->whereDoesntHave('product_reservation');
+                    $builder->where('created_at', '<=', $to);
+                });
+            });
+        }
+
         if ($amount_min = $this->getFilter('amount_min')) {
             $builder->where('amount', '>=', $amount_min);
         }
@@ -84,6 +116,10 @@ class VoucherTransactionsSearch extends BaseSearch
 
         if ($this->hasFilter('fund_state') && ($fund_state = $this->getFilter('fund_state'))) {
             $builder->whereHas('voucher.fund', fn (Builder $b) => $b->where('state', '=', $fund_state));
+        }
+
+        if ($this->hasFilter('bulk_state') && ($bulk_state = $this->getFilter('bulk_state'))) {
+            $builder->whereRelation('voucher_transaction_bulk', 'state', $bulk_state);
         }
 
         $builder->whereIn('target', is_array($targets) ? $targets : []);

@@ -19,6 +19,7 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
         'voucher.fund:id,name,organization_id',
         'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
         'voucher.product_reservation',
+        'voucher_transaction_bulk',
         'product.photo.presets',
         'provider:id,name,iban',
         'notes_sponsor',
@@ -53,6 +54,9 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'product_reservation' => $transaction->product_reservation?->only([
                 'id', 'voucher_id',
             ]),
+            'non_cancelable_at_locale' => format_date_locale($transaction->non_cancelable_at),
+            'bulk_state' => $transaction->voucher_transaction_bulk?->state,
+            'bulk_state_locale' => $transaction->voucher_transaction_bulk?->state_locale,
         ], $this->timestamps($transaction, 'created_at', 'updated_at'));
     }
 

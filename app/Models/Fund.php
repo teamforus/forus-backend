@@ -7,7 +7,6 @@ use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundExpiringEvent;
 use App\Events\Funds\FundStartedEvent;
 use App\Events\Funds\FundUnArchivedEvent;
-use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Models\Traits\HasFaq;
@@ -45,7 +44,6 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 
 /**
  * App\Models\Fund
@@ -999,9 +997,9 @@ class Fund extends BaseModel
     /**
      * @param string|null $identityAddress
      * @param array|null $records
-     * @return int
+     * @return float
      */
-    public function amountForIdentity(?string $identityAddress, array $records = null): int
+    public function amountForIdentity(?string $identityAddress, array $records = null): float
     {
         if ($this->fund_formulas->count() === 0 &&
             $this->fund_formula_products->pluck('price')->sum() === 0) {
@@ -1240,13 +1238,13 @@ class Fund extends BaseModel
             $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
             $multiplier = $formulaProduct->getIdentityMultiplier($identityAddress);
 
-            $vouchers = array_map(fn () => $this->makeProductVoucher(
+            $vouchers = array_merge($vouchers, array_map(fn () => $this->makeProductVoucher(
                 $identityAddress,
                 $extraFields,
                 $formulaProduct->product->id,
                 $voucherExpireAt,
                 $formulaProduct->price
-            ), array_fill(0, $multiplier, null));
+            ), array_fill(0, $multiplier, null)));
         }
 
         return $vouchers;
@@ -1691,7 +1689,20 @@ class Fund extends BaseModel
             'inactive_percentage'   => currency_format($inactive_percentage),
             'deactivated_amount'    => $deactivatedVouchersQuery->sum('amount'),
             'deactivated_count'     => $deactivated_count,
+            'children_count'        => self::getVoucherChildrenCount($vouchersQuery),
         ];
+    }
+
+    /**
+     * @param Builder $vouchersQuery
+     * @return mixed
+     */
+    protected static function getVoucherChildrenCount(Builder $vouchersQuery): mixed
+    {
+        return VoucherRecord::query()
+            ->whereRelation('record_type', 'key', 'children_nth')
+            ->whereIn('voucher_id', $vouchersQuery->select('id'))
+            ->sum('value');
     }
 
     /**

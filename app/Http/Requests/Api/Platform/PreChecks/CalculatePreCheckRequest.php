@@ -25,8 +25,7 @@ class CalculatePreCheckRequest extends BaseFormRequest
     {
         return [
             'q' => 'nullable|string',
-            'tag' => 'nullable|string|exists:tags,key',
-            'tag_id' => 'nullable|string|exists:tags,id',
+            'tag_id' => 'nullable|exists:tags,id',
             'organization_id' => 'nullable|exists:organizations,id',
             'records' => 'required|array',
             'records.*.key' => 'required|string',

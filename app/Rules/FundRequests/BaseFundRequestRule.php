@@ -14,6 +14,7 @@ use App\Rules\FundRequests\RecordTypes\RecordTypeDateRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeEmailRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeIbanRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeNumericRule;
+use App\Rules\FundRequests\RecordTypes\RecordTypeSelectNumberRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeSelectRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeStringRule;
 use Illuminate\Validation\Rule;
@@ -46,6 +47,7 @@ abstract class BaseFundRequestRule extends BaseRule
             $recordType::TYPE_STRING => Validation::check($value, new RecordTypeStringRule($criterion)),
             $recordType::TYPE_NUMBER => Validation::check($value, new RecordTypeNumericRule($criterion)),
             $recordType::TYPE_SELECT => Validation::check($value, new RecordTypeSelectRule($criterion)),
+            $recordType::TYPE_SELECT_NUMBER => Validation::check($value, new RecordTypeSelectNumberRule($criterion)),
             $recordType::TYPE_EMAIL => Validation::check($value, new RecordTypeEmailRule($criterion)),
             $recordType::TYPE_IBAN => Validation::check($value, new RecordTypeIbanRule($criterion)),
             $recordType::TYPE_BOOL => Validation::check($value, new RecordTypeBoolRule($criterion)),

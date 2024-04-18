@@ -367,9 +367,9 @@ $baseColor = $borderColors[0] ?? '#cecece';
         <h1>Welke regelingen kan ik aanvragen?</h1>
 
         <p>
-            Er bestaan veel verschillende regelingen.
+            Er bestaan veel verschillende regelingen in de gemeente Westerkwartier.
             Op de website heeft u een paar vragen ingevuld om te zien voor welke regelingen u mogelijk in aanmerking komt.
-            Hieronder ziet u per regeling het resultaat.
+            Op basis van de antwoorden die u heeft gegeven, ontvangt u een schatting per regeling.
         </p>
 
         <!-- Funds pre-check table -->
@@ -377,7 +377,7 @@ $baseColor = $borderColors[0] ?? '#cecece';
             @if (count($funds) > 0)
                 <tr>
                     <th>Regelingen</th>
-                    <th>Bedrag</th>
+                    <th>Kans</th>
                     <th>Uitleg</th>
                 </tr>
             @endif
@@ -388,11 +388,15 @@ $baseColor = $borderColors[0] ?? '#cecece';
                         <strong>{{ $fund['name'] }} </strong>
                     </td>
                     <td>
-                        <strong>{{ $fund['amount_total_locale'] }}</strong>
+                        @if ($fund['is_valid'])
+                            Goede kans
+                        @else
+                            Gemiddelde of lage kans
+                        @endif     
                     </td>
                     <td>
                         @if ($fund['is_valid'])
-                            De regeling moet u zelf aanvragen
+                            De regeling kunt u aanvragen
 
                             @if ($fund['is_external'] && $fund['external_link_url'])
                                 via
@@ -400,13 +404,11 @@ $baseColor = $borderColors[0] ?? '#cecece';
                             @endif
 
                         @else
-                            U heeft op basis van uw gegeven antwoorden geen recht op de regeling.
+                            U komt waarschijnlijk niet in aanmerking voor deze regeling.
 
                             @if ($fund['is_external'] && $fund['external_link_url'])
-                                Via
+                                Meer weten? Klik op de link:
                                 <a href="{{ $fund['external_link_url'] }}">{{ $fund['external_link_text'] ?: 'Externe website bekijken' }}</a>
-                                kunt u zien wat de voorwaarden zijn om in aanmerking te komen voor de
-                                regeling.
                             @endif
                         @endif
                     </td>
@@ -416,8 +418,8 @@ $baseColor = $borderColors[0] ?? '#cecece';
 
         <!-- Notice block -->
         <div class="notice-block">
-            Let op: de uitkomst is enkel een advies.
-            Mocht u een lage kans hebben voor een regeling, dan kunt u alsnog een aanvraag doen.
+            Let op: bovenstaande resultaat is een schatting. 
+            U kunt altijd een aanvraag doen voor een regeling, ook als u een lage kans heeft. In sommige situaties is maatwerk mogelijk.
         </div>
 
         <!-- Instructions blocks -->
@@ -429,9 +431,8 @@ $baseColor = $borderColors[0] ?? '#cecece';
             </div>
 
             <div class="list-item-description">
-                De check geeft een advies over de kans dat u een regeling kunt krijgen.
-                In de omschrijving ziet u waar u de regeling kunt aanvragen.
-                Een regeling kunt u altijd aanvragen, ook als u volgens de check een lage kans heeft.
+                Hierboven ziet u wat uw kans is om een in aanmerking te komen voor een regeling. 
+                In de omschrijving ziet u waar u de regeling kunt aanvragen. Een regeling kunt u altijd aanvragen, ook als u een lage kans heeft.
             </div>
         </div>
 
@@ -442,15 +443,14 @@ $baseColor = $borderColors[0] ?? '#cecece';
 
             <div class="list-item-description">
                 Voor vragen of ondersteuning kunt u contact opnemen met de gemeente of een hulp punt.
-                Op de website vindt u meer informatie.
+                Er zijn verschillende organisaties die u graag helpen. Op de website vindt u meer informatie.
             </div>
         </div>
         
         <h1>Toelichting</h1>
 
         <p>
-            Aan de verstrekte informatie kunnen geen rechten worden ontleend.
-            Wij streven ernaar om correcte en actuele informatie te bieden.
+            Aan de informatie en resultaten kunt u geen rechten ontlenen. Wij streven ernaar om correcte en actuele informatie te bieden.
         </p>
     </div>
 </main>

@@ -84,6 +84,7 @@ class VoucherExportData
             'state' => $this->voucher->state ?? null,
             'has_transactions' => $this->voucher->has_transactions ? 'Ja': 'Nee',
             'has_reservations' => $this->voucher->has_reservations ? 'Ja': 'Nee',
+            'has_payouts' => $this->voucher->has_payouts ? 'Ja': 'Nee',
         ]);
 
         return array_only(array_merge(

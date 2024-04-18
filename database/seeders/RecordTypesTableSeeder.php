@@ -29,6 +29,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'key' => 'children_nth',
         'name' => 'Number of children',
         'type' => 'number',
+        'vouchers' => true,
         'criteria' => true,
     ], [
         'key' => 'parent',

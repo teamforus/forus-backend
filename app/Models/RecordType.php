@@ -20,6 +20,7 @@ use Illuminate\Support\Arr;
  * @property bool $system
  * @property bool $criteria
  * @property bool $vouchers
+ * @property bool $pre_check
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\FundCriterion[] $fund_criteria
@@ -47,6 +48,7 @@ use Illuminate\Support\Arr;
  * @method static Builder|RecordType whereId($value)
  * @method static Builder|RecordType whereKey($value)
  * @method static Builder|RecordType whereOrganizationId($value)
+ * @method static Builder|RecordType wherePreCheck($value)
  * @method static Builder|RecordType whereSystem($value)
  * @method static Builder|RecordType whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
  * @method static Builder|RecordType whereTranslationLike(string $translationField, $value, ?string $locale = null)
@@ -67,6 +69,7 @@ class RecordType extends BaseModel
     public const TYPE_STRING = 'string';
     public const TYPE_NUMBER = 'number';
     public const TYPE_SELECT = 'select';
+    public const TYPE_SELECT_NUMBER = 'select_number';
 
     public const TYPES = [
         self::TYPE_BOOL,
@@ -76,6 +79,7 @@ class RecordType extends BaseModel
         self::TYPE_STRING,
         self::TYPE_NUMBER,
         self::TYPE_SELECT,
+        self::TYPE_SELECT_NUMBER,
     ];
 
     /**
@@ -103,6 +107,7 @@ class RecordType extends BaseModel
         'system' => 'bool',
         'criteria' => 'bool',
         'vouchers' => 'bool',
+        'pre_check' => 'bool',
     ];
 
     /**
@@ -209,19 +214,17 @@ class RecordType extends BaseModel
      */
     public function getOperators(): array
     {
-        if (in_array($this->type, ['number', 'date'], true)) {
-            return ['<', '<=', '=', '>=', '>', '*'];
-        }
-
-        if (in_array($this->type, ['string', 'select', 'bool'], true)) {
-            return ['=', '*'];
-        }
-
-        if (in_array($this->type, ['iban', 'email'], true)) {
-            return ['*'];
-        }
-
-        return [];
+        return match ($this->type) {
+            self::TYPE_DATE,
+            self::TYPE_NUMBER => ['<', '<=', '=', '>=', '>', '*'],
+            self::TYPE_SELECT_NUMBER => ['<=', '=', '>=', '*'],
+            self::TYPE_BOOL,
+            self::TYPE_STRING,
+            self::TYPE_SELECT => ['=', '*'],
+            self::TYPE_IBAN,
+            self::TYPE_EMAIL => ['*'],
+            default => [],
+        };
     }
 
     /**
