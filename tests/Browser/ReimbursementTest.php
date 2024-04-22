@@ -658,6 +658,7 @@ class ReimbursementTest extends DuskTestCase
     {
         $formData = $this->makeReimbursementData($voucher);
 
+        $browser->waitFor('@reimbursementForm');
         $browser->within('@reimbursementForm', function(Browser $browser) use ($voucher, $formData) {
             $browser->type('title', $formData['title']);
             $browser->type('amount', $formData['amount']);
@@ -665,6 +666,7 @@ class ReimbursementTest extends DuskTestCase
             $browser->type('iban', $formData['iban']);
             $browser->type('iban_name', $formData['iban_name']);
 
+            $browser->waitFor('@voucherSelector');
             $browser->press('@voucherSelector');
             $browser->waitFor('@voucherSelectorOptions');
             $browser->press("@voucherSelectorOption$voucher->id");
