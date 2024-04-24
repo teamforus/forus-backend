@@ -549,10 +549,14 @@ class ReimbursementTest extends DuskTestCase
         $browser->press($duskSelector);
 
         $browser->waitFor('@reimbursementDetailsPage');
-        $browser->assertVisible('@reimbursementOverviewEditButton');
-        $browser->assertVisible('@reimbursementDetailsPageDeleteBtn');
-        $browser->press('@reimbursementOverviewEditButton');
 
+        $browser->waitFor('@reimbursementOverviewEditButton');
+        $browser->assertVisible('@reimbursementOverviewEditButton');
+
+        $browser->waitFor('@reimbursementDetailsPageDeleteBtn');
+        $browser->assertVisible('@reimbursementDetailsPageDeleteBtn');
+
+        $browser->press('@reimbursementOverviewEditButton');
         $browser->waitFor('@reimbursementEditContent');
 
         $this->submitReimbursement($browser, $data, $reimbursement);
