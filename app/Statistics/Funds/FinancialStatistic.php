@@ -159,6 +159,7 @@ class FinancialStatistic
     {
         return $transaction ? array_merge($transaction->only('id', 'amount'), [
             'provider' => $transaction->provider?->name,
+            'amount_locale' => currency_format_locale($transaction->amount),
         ]) : null;
     }
 
@@ -191,6 +192,7 @@ class FinancialStatistic
             "highest_transaction" => $this->getTransactionData($highest_transaction),
             "highest_daily_transaction" => $highest_daily_transaction ? array_merge($highest_daily_transaction->toArray(), [
                 'date_locale' => format_date_locale($highest_daily_transaction->date ?? null),
+                'amount_locale' => currency_format_locale($highest_daily_transaction->amount),
             ]) : $highest_daily_transaction,
         ]);
     }
