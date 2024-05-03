@@ -44,7 +44,7 @@ return [
             'pending' => 'Wachtend',
             'declined' => 'Geweigerd',
             'approved' => 'Geaccepteerd',
-            'approved_partly' => 'Aanvulling gevraagd',
+            'approved_partly' => 'Partially approved',
         ],
         'validator' => 'Validator',
         'created_at' => 'Indien datum',
