@@ -422,36 +422,27 @@ class NotificationRepo implements INotificationRepo
      */
     public function getNotificationPreferences(string $identityAddress): array
     {
-        $subscribed = false;
-        $identity_address = $identityAddress;
-        $mailKeys = [];
-        $pushKeys = [];
-
-        $unsubscribedKeys = NotificationPreference::where(compact(
-            'identity_address', 'subscribed'
-        ))->get();
+        $unsubscribedKeys = NotificationPreference::where([
+            'identity_address' => $identityAddress,
+            'subscribed' => false,
+        ])->get();
 
         $unsubscribedMailKeys = $unsubscribedKeys->where('type',  'email')->keyBy('key');
-
-        foreach ($this->mailTypeKeys() as $mailKey) {
-            $mailKeys[] = [
-                'key' => $mailKey,
-                'type'  => 'email',
-                'subscribed' => !($unsubscribedMailKeys[$mailKey] ?? false)
-            ];
-        }
-
         $unsubscribedPushKeys = $unsubscribedKeys->where('type',  'push')->keyBy('key');
 
-        foreach (self::getPushNotificationKeys() as $pushKey) {
-            $pushKeys[] = [
-                'key' => $pushKey,
-                'type'  => 'push',
-                'subscribed' => !($unsubscribedPushKeys[$pushKey] ?? false)
-            ];
-        }
+        $mailKeys = array_map(fn ($mailKey) => [
+            'key' => $mailKey,
+            'type'  => 'email',
+            'subscribed' => !($unsubscribedMailKeys[$mailKey] ?? false)
+        ], $this->mailTypeKeys());
 
-        return array_merge($mailKeys, $pushKeys);
+        $pushKeys = array_map(fn ($pushKey) => [
+            'key' => $pushKey,
+            'type'  => 'push',
+            'subscribed' => !($unsubscribedPushKeys[$pushKey] ?? false)
+        ], self::getPushNotificationKeys());
+
+        return [...$mailKeys, ...$pushKeys];
     }
 
     /**
