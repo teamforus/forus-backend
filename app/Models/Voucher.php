@@ -1699,6 +1699,6 @@ class Voucher extends BaseModel
         $givenName = Arr::get($recordsMap, 'given_name');
         $familyName = Arr::get($recordsMap, 'family_name');
 
-        return $givenName ? "$givenName $familyName" : null;
+        return $givenName ? trim("$givenName $familyName") : null;
     }
 }
