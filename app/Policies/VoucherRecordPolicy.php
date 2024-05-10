@@ -26,7 +26,8 @@ class VoucherRecordPolicy
         Voucher $voucher,
         Organization $organization
     ): Response|bool {
-        return $this->validateEndpoint($identity, $voucher, $organization);
+        return $this->validateEndpoint($voucher, $organization) &&
+            $organization->identityCan($identity, ['manage_vouchers', 'view_vouchers'], false);
     }
 
     /**
@@ -60,7 +61,8 @@ class VoucherRecordPolicy
         Voucher $voucher,
         Organization $organization
     ): Response|bool {
-        return $this->validateEndpoint($identity, $voucher, $organization);
+        return $this->validateEndpoint($voucher, $organization) &&
+            $organization->identityCan($identity, 'manage_vouchers');
     }
 
     /**
@@ -78,8 +80,12 @@ class VoucherRecordPolicy
         Voucher $voucher,
         Organization $organization
     ): Response|bool {
-        if (!$this->validateEndpoint($identity, $voucher, $organization)) {
+        if (!$this->validateEndpoint($voucher, $organization)) {
             return false;
+        }
+
+        if (!$organization->identityCan($identity, 'manage_vouchers')) {
+            return $this->deny('no_permission');
         }
 
         return $voucherRecord->voucher_id == $voucher->id;
@@ -104,20 +110,14 @@ class VoucherRecordPolicy
     }
 
     /**
-     * @param Identity $identity
      * @param Organization $organization
      * @param Voucher $voucher
      * @return bool
      */
-    protected function validateEndpoint(
-        Identity $identity,
-        Voucher $voucher,
-        Organization $organization,
-    ): bool {
-        $managesVouchers = $organization->identityCan($identity, 'manage_vouchers');
+    protected function validateEndpoint(Voucher $voucher, Organization $organization,): bool
+    {
         $belongsToOrganization = $voucher->fund->organization_id === $organization->id;
-        $allowVoucherRecords = $voucher->fund?->fund_config?->allow_voucher_records;
 
-        return $allowVoucherRecords && $managesVouchers && $belongsToOrganization;
+        return $voucher->fund?->fund_config?->allow_voucher_records && $belongsToOrganization;
     }
 }

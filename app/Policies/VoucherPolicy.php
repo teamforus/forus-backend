@@ -44,6 +44,17 @@ class VoucherPolicy
      */
     public function viewAnySponsor(Identity $identity, Organization $organization): bool
     {
+        return $organization->identityCan($identity, ['manage_vouchers', 'view_vouchers'], false);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function export(Identity $identity, Organization $organization): bool
+    {
         return $organization->identityCan($identity, 'manage_vouchers');
     }
 
@@ -60,7 +71,7 @@ class VoucherPolicy
         Fund $fund
     ): Response|bool {
         if (($fund->organization_id !== $organization->id) ||
-            !$this->viewAnySponsor($identity, $organization)) {
+            !$organization->identityCan($identity, 'manage_vouchers')) {
             return $this->deny('no_permission_to_make_vouchers');
         }
 
@@ -70,10 +81,6 @@ class VoucherPolicy
 
         if (!$fund->isConfigured()) {
             return $this->deny('Fund not configured.');
-        }
-
-        if (!$organization->identityCan($identity, 'manage_vouchers')) {
-            return $this->deny('no_manage_vouchers_permission');
         }
 
         return true;
@@ -98,7 +105,7 @@ class VoucherPolicy
         return
             ($isBudgetType || $isProductTypeMadeByEmployee || $employeeCanSeeProductVouchers) &&
             ($voucher->fund->organization_id === $organization->id) &&
-            $organization->identityCan($identity, 'manage_vouchers');
+            $organization->identityCan($identity, ['manage_vouchers', 'view_vouchers'], false);
     }
 
     /**

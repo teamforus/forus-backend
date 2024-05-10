@@ -410,7 +410,7 @@ class VouchersController extends Controller
         Organization $organization
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
-        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
+        $this->authorize('export', [Voucher::class, $organization]);
 
         return ExportFieldVoucherArrResource::collection(VoucherExport::getExportFields(
             $request->input('type', 'budget')
@@ -428,7 +428,7 @@ class VouchersController extends Controller
         Organization $organization
     ): VoucherExportArrResource {
         $this->authorize('show', $organization);
-        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
+        $this->authorize('export', [Voucher::class, $organization]);
 
         $fundId = $request->get('fund_id');
         $fields = $request->input('fields', VoucherExport::getExportFields('product'));
