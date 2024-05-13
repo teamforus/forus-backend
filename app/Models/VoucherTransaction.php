@@ -596,9 +596,11 @@ class VoucherTransaction extends BaseModel
             return '';
         }
 
-        $description = trim(implode(' - ', array_filter([
+        $separator = ' | ';
+        $description = $separator . trim(implode($separator, array_filter([
             $this->provider->bank_transaction_id ? $this->id : null,
-            $this->provider->bank_transaction_date ? $this->created_at : null,
+            $this->provider->bank_transaction_date ? $this->created_at?->format('Y-m-d') : null,
+            $this->provider->bank_transaction_time ? $this->created_at?->format('H:i:s') : null,
             $this->provider->bank_reservation_number ? $this->product_reservation?->code : null,
             $this->provider->bank_branch_number ? $this->employee?->office?->branch_number : null,
             $this->provider->bank_branch_id ? $this->employee?->office?->branch_id : null,
