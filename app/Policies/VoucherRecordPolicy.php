@@ -26,7 +26,8 @@ class VoucherRecordPolicy
         Voucher $voucher,
         Organization $organization
     ): Response|bool {
-        return $this->validateEndpoint($voucher, $organization) &&
+        return
+            $this->validateEndpoint($voucher, $organization) &&
             $organization->identityCan($identity, ['manage_vouchers', 'view_vouchers'], false);
     }
 
@@ -61,7 +62,8 @@ class VoucherRecordPolicy
         Voucher $voucher,
         Organization $organization
     ): Response|bool {
-        return $this->validateEndpoint($voucher, $organization) &&
+        return
+            $this->validateEndpoint($voucher, $organization) &&
             $organization->identityCan($identity, 'manage_vouchers');
     }
 
@@ -114,10 +116,11 @@ class VoucherRecordPolicy
      * @param Voucher $voucher
      * @return bool
      */
-    protected function validateEndpoint(Voucher $voucher, Organization $organization,): bool
+    protected function validateEndpoint(Voucher $voucher, Organization $organization): bool
     {
+        $allowVoucherRecords = $voucher->fund?->fund_config?->allow_voucher_records;
         $belongsToOrganization = $voucher->fund->organization_id === $organization->id;
 
-        return $voucher->fund?->fund_config?->allow_voucher_records && $belongsToOrganization;
+        return $allowVoucherRecords && $belongsToOrganization;
     }
 }
