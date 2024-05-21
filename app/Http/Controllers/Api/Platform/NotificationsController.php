@@ -18,6 +18,7 @@ class NotificationsController extends Controller
     public function index(IndexNotificationsRequest $request): AnonymousResourceCollection
     {
         $seen = $request->input('seen');
+        $page = $request->input('page', 1);
         $per_page = $request->input('per_page', 15);
         $mark_read = $request->input('mark_read', false);
 
@@ -26,6 +27,7 @@ class NotificationsController extends Controller
 
         if ($mark_read) {
             $listUnreadFetched = $notificationsQuery->clone()
+                ->skip(($page - 1) * $per_page)
                 ->take($per_page)
                 ->get()
                 ->whereNull('read_at')
