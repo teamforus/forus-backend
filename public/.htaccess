@@ -25,3 +25,7 @@
     Header set Access-Control-Allow-Methods "GET,PUT,POST,DELETE"
     Header set Access-Control-Allow-Headers "Content-Type, Authorization"
 </If>
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>

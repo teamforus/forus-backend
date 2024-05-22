@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations;
+namespace App\Http\Requests\Api\Platform\Organizations\BIConnections;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use App\Services\BIConnectionService\BIConnection;
 
 /**
  * @property-read Organization $organization
  */
-class UpdateOrganizationBIConnectionRequest extends BaseOrganizationRequest
+class ResetTokenBIConnectionRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -27,8 +27,6 @@ class UpdateOrganizationBIConnectionRequest extends BaseOrganizationRequest
      */
     public function rules(): array
     {
-        return [
-            'bi_connection_auth_type' => 'nullable|in:' . implode(',', BIConnection::AUTH_TYPES),
-        ];
+        return [];
     }
 }
