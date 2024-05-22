@@ -2,8 +2,9 @@
 
 namespace App\Http\Resources\Provider\App;
 
+use App\Http\Resources\MediaResource;
+use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductResource;
-use App\Http\Resources\Provider\any;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -15,14 +16,17 @@ class ProviderProductAppResource extends ProductResource
     /**
      * Transform the resource into an array.
      *
-     * @param Request|any $request
-     * @return array|mixed|void|null
+     * @param Request $request
+     * @return array
      */
     public function toArray($request): array
     {
         $data = $this->baseFields($this->resource);
 
         return array_merge($data, [
+            'photo' => new MediaResource($this->resource->photo),
+            'organization' => new OrganizationBasicResource($this->resource->organization),
+            'description_html' => $this->resource->description_html,
             'price_user' => currency_format(0),
             'price_user_locale' => 'Gratis',
             'sponsor_subsidy' => array_get($data, 'price'),
