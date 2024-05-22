@@ -41,10 +41,11 @@ class ProductResource extends BaseJsonResource
     {
         $baseRequest = BaseFormRequest::createFrom($request);
         $product = $this->resource;
-        $simplified = $request->has('simplified') && $request->input('simplified');
-        $baseFields = $this->baseFields($product);
 
-        return $simplified ? $baseFields : array_merge($baseFields, [
+        return array_merge($this->baseFields($product), [
+            'photo' => new MediaResource($product->photo),
+            'organization' => new OrganizationBasicResource($product->organization),
+            'description_html' => $product->description_html,
             'total_amount' => $product->total_amount,
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->countReservedCached(),
@@ -73,13 +74,12 @@ class ProductResource extends BaseJsonResource
     protected function baseFields(Product $product): array
     {
         return array_merge($product->only([
-            'id', 'name', 'description', 'description_html', 'product_category_id', 'sold_out',
+            'id', 'name', 'description', 'product_category_id', 'sold_out',
             'organization_id', 'reservation_enabled', 'reservation_policy', 'alternative_text',
         ]), [
-            'photo' => new MediaResource($product->photo),
             'price' => is_null($product->price) ? null : currency_format($product->price),
             'price_locale' => $product->price_locale,
-            'organization' => new OrganizationBasicResource($product->organization),
+            'organization' => $product->organization->only('id', 'name'),
         ]);
     }
 

@@ -1911,7 +1911,7 @@ class Fund extends BaseModel
                 $this->makeFundFormulaProductVouchers($identity->address, $extraFields);
 
                 $response->getLog()->update([
-                    'voucher_id' => $voucher->id,
+                    'voucher_id' => $voucher?->id,
                 ]);
             }
 
