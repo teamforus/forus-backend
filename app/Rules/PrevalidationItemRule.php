@@ -13,20 +13,20 @@ use Illuminate\Support\Str;
 
 class PrevalidationItemRule extends BaseRule
 {
-    private ?Fund $fund;
-    private string $prefix;
     private Collection $record_types;
     private ?string $csv_primary_key;
 
     /**
      * PrevalidationItemRule constructor.
      * @param Fund|null $fund
+     * @param array $recordValues
      * @param string $prefix
      */
-    public function __construct(?Fund $fund = null, string $prefix = 'data.')
-    {
-        $this->fund = $fund;
-        $this->prefix = $prefix;
+    public function __construct(
+        public ?Fund $fund,
+        public array $recordValues,
+        public string $prefix
+    ) {
         $this->csv_primary_key = $fund->fund_config->csv_primary_key ?? null;
         $this->record_types = RecordType::search()->keyBy('key');
     }
@@ -47,7 +47,7 @@ class PrevalidationItemRule extends BaseRule
         $key = substr($attribute, strlen($this->prefix));
 
         if (!$this->record_types->has($key) ||
-            !in_array($key, $this->fund->requiredPrevalidationKeys(true), true)) {
+            !in_array($key, $this->fund->requiredPrevalidationKeys(true, $this->recordValues), true)) {
             return $this->reject("Invalid record key!");
         }
 
@@ -91,9 +91,11 @@ class PrevalidationItemRule extends BaseRule
     {
         /** @var FundCriterion $criterion */
         $criterion = $this->fund->criteria->where('record_type_key', $key)->first();
-        $validation = $criterion ? BaseFundRequestRule::validateRecordValue($criterion, $value) : null;
 
-        if (!$criterion || !$validation) {
+        $validation = $criterion ? BaseFundRequestRule::validateRecordValue($criterion, $value) : null;
+        $excluded = $criterion && $criterion->isExcludedByRules($this->recordValues);
+
+        if (!$excluded && (!$criterion || !$validation)) {
             return $this->reject(trans('validation.in', [
                 'attribute' => trans('validation.attributes.value'),
             ]));

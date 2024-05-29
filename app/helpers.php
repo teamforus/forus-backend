@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use App\Services\TokenGeneratorService\TokenGenerator;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Http\Requests\BaseFormRequest;
+use Illuminate\Database\Eloquent\Collection;
 
 if (!function_exists('format_datetime_locale')) {
     /**
@@ -138,6 +139,22 @@ if (!function_exists('record_types_cached')) {
         return cache_optional('record_types', static function() {
             return RecordType::search()->toArray();
         }, $minutes, null, $reset);
+    }
+}
+
+if (!function_exists('record_types_static')) {
+    /**
+     * @return RecordType[]|Builder[]|Collection|null
+     */
+    function record_types_static(): Collection|array|null
+    {
+        static $cache = null;
+
+        if ($cache === null) {
+            $cache = RecordType::searchQuery()->with('translations')->get();
+        }
+
+        return $cache->keyBy('key');
     }
 }
 

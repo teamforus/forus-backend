@@ -26,6 +26,7 @@ class FundResource extends BaseJsonResource
         'children',
         'logo.presets',
         'criteria.fund',
+        'criteria.fund_criterion_rules',
         'criteria.record_type.translation',
         'criteria.record_type.record_type_options',
         'criteria.fund_criterion_validators.external_validator',
@@ -86,6 +87,7 @@ class FundResource extends BaseJsonResource
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationResource($organization),
             'criteria' => FundCriterionResource::collection($fund->criteria),
+            'criteria_steps' => FundCriteriaStepResource::collection($fund->criteria_steps->sortBy('order')),
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'faq' => FaqResource::collection($fund->faq),
             'formula_products' => FundFormulaProductResource::collection($fund->fund_formula_products),
@@ -292,7 +294,7 @@ class FundResource extends BaseJsonResource
     {
         return [
             'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',
-            'csv_required_keys' => $fund->requiredPrevalidationKeys(),
+            'csv_required_keys' => $fund->requiredPrevalidationKeys(false, []),
         ];
     }
 

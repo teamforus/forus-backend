@@ -17,6 +17,7 @@ use App\Helpers\Arr;
 use App\Models\BusinessType;
 use App\Models\Fund;
 use App\Models\FundConfig;
+use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\FundProvider;
 use App\Models\Identity;
@@ -675,11 +676,32 @@ class TestData
 
         $fundFormula = $configFormula ?: [[
             'type' => 'fixed',
-            'amount' => $fund->isTypeBudget() ? $this->config('voucher_amount'): 0,
+            'amount' => $fund->isTypeBudget() ? $this->config('voucher_amount') : 0,
             'fund_id' => $fund->id,
         ]];
 
-        $fund->criteria()->createMany($configCriteria ?: $criteria);
+        foreach (($configCriteria ?: $criteria) as $criterion) {
+            $stepTitle = $criterion['step'] ?? null;
+
+            /** @var FundCriteriaStep $stepModel */
+            $stepModel = $stepTitle ?
+                ($fund->criteria_steps()->firstWhere([
+                    'title' => $stepTitle,
+                ]) ?: $fund->criteria_steps()->forceCreate([
+                    'title' => $stepTitle,
+                ])) : null;
+
+            /** @var FundCriterion $criterionModel */
+            $criterionModel = $fund->criteria()->create([
+                ...array_except($criterion, ['rules', 'step']),
+                'fund_criteria_step_id' => $stepModel?->id,
+            ]);
+
+            foreach ($criterion['rules'] ?? [] as $rule) {
+                $criterionModel->fund_criterion_rules()->forceCreate($rule);
+            }
+        }
+
         $fund->fund_formulas()->createMany($fundFormula);
         $fund->fund_limit_multipliers()->createMany($limitMultiplier);
     }
