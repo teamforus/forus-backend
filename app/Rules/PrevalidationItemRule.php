@@ -90,12 +90,15 @@ class PrevalidationItemRule extends BaseRule
     private function validateRecord(string $key, $value): bool
     {
         /** @var FundCriterion $criterion */
-        $criterion = $this->fund->criteria->where('record_type_key', $key)->first();
+        $criterion = $this->fund->criteria->where(function(FundCriterion $criterion) use ($key) {
+            return
+                $criterion->record_type_key === $key &&
+                !$criterion->isExcludedByRules($this->recordValues);
+        })->first();
 
         $validation = $criterion ? BaseFundRequestRule::validateRecordValue($criterion, $value) : null;
-        $excluded = $criterion && $criterion->isExcludedByRules($this->recordValues);
 
-        if (!$excluded && (!$criterion || !$validation)) {
+        if (!$criterion || !$validation) {
             return $this->reject(trans('validation.in', [
                 'attribute' => trans('validation.attributes.value'),
             ]));
