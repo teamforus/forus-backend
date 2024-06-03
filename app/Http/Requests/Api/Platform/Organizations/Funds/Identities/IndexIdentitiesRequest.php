@@ -35,6 +35,7 @@ class IndexIdentitiesRequest extends BaseFormRequest
             'order_by' => 'nullable|in:' . $orderFields,
             'order_dir' => 'nullable|in:asc,desc',
             'with_reservations' => 'nullable|boolean',
+            'identity_ids' => 'nullable|array',
         ];
     }
 }

@@ -315,11 +315,11 @@ class VoucherQuery
 
     /**
      * @param Relation|Builder $query
-     * @return Relation|Builder
+     * @return Relation|Builder|QBuilder
      */
-    public static function whereHasBalance(Relation|Builder $query): Relation|Builder
+    public static function whereHasBalance(Relation|Builder $query): Relation|Builder|QBuilder
     {
-        $selectQuery = Voucher::fromSub(self::addBalanceFields(Voucher::query()), 'vouchers');
+        $selectQuery = Voucher::fromSub(self::addBalanceFields($query), 'vouchers');
 
         $selectQuery->where(function(Builder $builder) {
             $builder->where(fn(Builder $q) => static::whereIsProductVoucherWithoutTransactions($q));
@@ -330,7 +330,7 @@ class VoucherQuery
             });
         });
 
-        return $query->whereIn('id', $selectQuery->select('id'));
+        return Voucher::fromSub($query, 'vouchers');
     }
 
     /**

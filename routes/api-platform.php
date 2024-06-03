@@ -430,6 +430,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations/{organization}/funds/{fund}/identities/notification',
         "Api\Platform\Organizations\Funds\IdentitiesController@sendIdentityNotification");
 
+    $router->get(
+        'organizations/{organization}/funds/{fund}/identities/counts',
+        "Api\Platform\Organizations\Funds\IdentitiesController@getCounts");
+
     $router->resource(
         'organizations.funds.identities',
         "Api\Platform\Organizations\Funds\IdentitiesController"

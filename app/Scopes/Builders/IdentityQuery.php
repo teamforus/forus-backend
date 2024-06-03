@@ -23,7 +23,6 @@ class IdentityQuery
     ): Relation|Builder {
         $vouchersQuery = $fund
             ->vouchers()
-            ->selectRaw('count(*)')
             ->whereColumn('vouchers.identity_address', 'identities.address');
 
         if (!$withReservations) {
@@ -31,23 +30,12 @@ class IdentityQuery
         }
 
         return $builder->addSelect([
-            'count_vouchers' => clone $vouchersQuery,
-            'count_vouchers_active' => VoucherQuery::whereNotExpiredAndActive(clone $vouchersQuery),
-            'count_vouchers_active_with_balance' => VoucherQuery::whereHasBalanceIsActiveAndNotExpired(clone $vouchersQuery),
-        ]);
-    }
-
-    /**
-     * @param Relation|Builder $builder
-     * @return Relation|Builder
-     */
-    public static function appendEmailField(Relation|Builder $builder): Relation|Builder
-    {
-        return $builder->addSelect([
-            'email' => IdentityEmail::query()
-                ->whereColumn('identities.address', 'identity_emails.identity_address')
-                ->where('primary', true)
-                ->select('email'),
+            'count_vouchers' => (clone $vouchersQuery)->selectRaw('count(*)'),
+            'count_vouchers_active' => VoucherQuery::whereNotExpiredAndActive(clone $vouchersQuery)
+                ->selectRaw('count(*)'),
+            'count_vouchers_active_with_balance' => VoucherQuery::whereHasBalanceIsActiveAndNotExpired(
+                clone $vouchersQuery
+            )->selectRaw('count(*)'),
         ]);
     }
 }

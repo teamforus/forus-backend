@@ -22,12 +22,7 @@ class IdentityResource extends BaseJsonResource
      */
     public function toArray($request): array
     {
-        $identity = $this->resource;
-
-        return array_merge(
-            $identity->only('id', 'email', 'address'),
-            $this->getVoucherStats($identity),
-        );
+        return $this->resource->only('id', 'email', 'address');
     }
 
     /**
