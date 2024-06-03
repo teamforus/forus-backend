@@ -83,7 +83,7 @@ class NotifyAboutVoucherExpireCommand extends Command
             Voucher::query(),
             Voucher::EVENT_EXPIRED_BUDGET,
             Voucher::EVENT_EXPIRED_PRODUCT,
-        )->whereDate('expire_at', now()->subDay()->format('Y-m-d'));
+        )->where('expire_at', now()->subDay()->format('Y-m-d'));
 
         return $builder->with('fund', 'fund.organization')->get();
     }
