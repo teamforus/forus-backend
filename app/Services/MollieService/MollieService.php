@@ -134,10 +134,11 @@ class MollieService implements MollieServiceInterface
      */
     private function processConnectionByToken(AccessToken $token, string $state): ?MollieConnection
     {
-        return MollieConnection::firstWhere('state_code', $state)?->updateConnectionByToken(
-            $token,
-            $this->mapResourceOwner($this->getProvider()->getResourceOwner($token)->toArray()),
-        );
+        $mollieConnections = MollieConnection::firstWhere('state_code', $state);
+
+        return $mollieConnections?->updateConnectionByToken($token, $this->mapResourceOwner(
+            $this->getProvider()->getResourceOwner($token)->toArray(),
+        ));
     }
 
     /**
@@ -259,14 +260,10 @@ class MollieService implements MollieServiceInterface
     public function createProfile(array $attributes = []): Profile
     {
         try {
-            return $this->mapProfile(
-                $this->getMollie()->profiles->create(array_merge(Arr::only($attributes, [
-                    'name', 'email', 'phone', 'website',
-                ]), [
-                    'mode' => $this->testMode ? 'test' : 'live',
-                ]))
-            );
-
+            return $this->mapProfile($this->getMollie()->profiles->create([
+                ...Arr::only($attributes, ['name', 'email', 'phone', 'website']),
+                'mode' => $this->testMode ? 'test' : 'live',
+            ]));
         } catch (ApiException $e) {
             $this->processApiException($e, 'createProfile');
         }
@@ -394,7 +391,7 @@ class MollieService implements MollieServiceInterface
     public function enablePaymentMethod(string $profileId, string $method): bool
     {
         try {
-            return (bool)$this->getMollie()->profiles->get($profileId)->enableMethod($method);
+            return (bool) $this->getMollie()->profiles->get($profileId)->enableMethod($method);
         } catch (ApiException $e) {
             $this->processApiException($e, 'enablePaymentMethod');
         }
@@ -410,7 +407,7 @@ class MollieService implements MollieServiceInterface
     public function disablePaymentMethod(string $profileId, string $method): bool
     {
         try {
-            return (bool)$this->getMollie()->profiles->get($profileId)->disableMethod($method);
+            return (bool) $this->getMollie()->profiles->get($profileId)->disableMethod($method);
         } catch (ApiException $e) {
             $this->processApiException($e, 'disablePaymentMethod');
         }

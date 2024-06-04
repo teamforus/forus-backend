@@ -259,9 +259,10 @@ class MollieConnection extends Model
             'mollie_id' => $profileResponse->id,
             'state' => MollieConnectionProfile::STATE_ACTIVE,
             'current' => true,
-            ...Arr::only($profileResponse->toArray(), [
-                'name', 'email', 'phone', 'website',
-            ]),
+            'name' => $profileResponse->name,
+            'email' => $profileResponse->email,
+            'phone' => $profileResponse->phone,
+            'website' => $profileResponse->website,
         ]);
 
         $service = $this->getMollieService();
@@ -328,9 +329,10 @@ class MollieConnection extends Model
             'mollie_organization_id' => $organization->id,
             'completed_at' => $becomeComplete ? now() : $this->completed_at,
             'onboarding_state' => $state,
-            ...Arr::only($organization->toArray(), [
-                'city', 'street', 'country', 'postcode'
-            ]),
+            'city' => $organization->city,
+            'street' => $organization->street,
+            'country' => $organization->country,
+            'postcode' => $organization->postcode,
         ]);
 
         try {
@@ -368,9 +370,10 @@ class MollieConnection extends Model
                 'mollie_id' => $profile->id,
             ], [
                 'state' => MollieConnectionProfile::STATE_ACTIVE,
-                ...Arr::only($profile->toArray(), [
-                    'name', 'email', 'phone', 'website',
-                ]),
+                'name' => $profile->name,
+                'email' => $profile->email,
+                'phone' => $profile->phone,
+                'website' => $profile->website,
             ]);
 
             if ($this->onboardingComplete()) {
@@ -403,15 +406,18 @@ class MollieConnection extends Model
             ->each(fn (MollieConnection $connection) => $connection->delete());
 
         $this->update([
+            'city' => $owner->city,
+            'street' => $owner->street,
+            'country' => $owner->country,
+            'postcode' => $owner->postcode,
+            'vat_number' => $owner->vat_number,
             'last_name' => $owner->first_name ?? $this->last_name,
             'first_name' => $owner->last_name ?? $this->first_name,
+            'registration_number' => $owner->registration_number,
             'state_code' => null,
             'connection_state' => self::STATE_ACTIVE,
             'organization_name' => $owner->name ?? '',
             'mollie_organization_id' => $owner->id,
-            ...Arr::only($owner->toArray(), [
-                'city', 'street', 'country', 'postcode', 'vat_number', 'registration_number'
-            ]),
         ]);
 
         $this->tokens()->delete();

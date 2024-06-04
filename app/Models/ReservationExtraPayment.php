@@ -17,7 +17,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Event;
 use App\Services\MollieService\Objects\Payment;
 use App\Services\MollieService\Objects\Refund;
@@ -202,9 +201,10 @@ class ReservationExtraPayment extends Model
             'state' => $payment->status,
             'paid_at' => $payment->paid_at,
             'canceled_at' => $payment->canceled_at,
-            ...Arr::only($payment->toArray(), [
-                'amount', 'amount_captured', 'amount_refunded', 'amount_remaining',
-            ]),
+            'amount' => $payment->amount,
+            'amount_captured' => $payment->amount_captured,
+            'amount_refunded' => $payment->amount_refunded,
+            'amount_remaining' => $payment->amount_remaining,
         ]);
 
         Event::dispatch(new ReservationExtraPaymentUpdated($this, $employee));
