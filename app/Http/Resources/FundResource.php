@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Role;
 use App\Scopes\Builders\FundRequestQuery;
@@ -21,28 +22,33 @@ class FundResource extends BaseJsonResource
     public const LOAD = [
         'faq',
         'tags',
+        'parent',
+        'children',
         'logo.presets',
         'criteria.fund',
         'criteria.record_type.translation',
+        'criteria.record_type.record_type_options',
         'criteria.fund_criterion_validators.external_validator',
-        'organization.logo.presets',
-        'organization.employees',
-        'organization.employees.roles.permissions',
-        'organization.business_type.translations',
-        'organization.bank_connection_active',
         'organization.tags',
-        'fund_config.implementation',
+        'organization.offices',
+        'organization.contacts',
+        'organization.logo.presets',
+        'organization.reservation_fields',
+        'organization.bank_connection_active',
+        'organization.business_type.translations',
+        'organization.employees.roles.permissions',
+        'fund_config.implementation.page_provider',
         'fund_formula_products',
         'provider_organizations_approved.employees',
         'tags_webshop',
-        'fund_formulas',
+        'fund_formulas.fund.fund_config.implementation',
         'top_up_transactions',
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      */
     public function toArray($request): array
@@ -54,6 +60,7 @@ class FundResource extends BaseJsonResource
         $identity = $baseRequest->identity();
         $isWebShop = $baseRequest->isWebshop();
         $isDashboard = $baseRequest->isDashboard();
+        $fundAmount = $fund->amountFixedByFormula();
 
         $fundConfigData = $this->getFundConfigData($fund);
         $financialData = $this->getFinancialData($fund, $this->stats);
@@ -82,11 +89,12 @@ class FundResource extends BaseJsonResource
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'faq' => FaqResource::collection($fund->faq),
             'formula_products' => FundFormulaProductResource::collection($fund->fund_formula_products),
-            'fund_amount' => $fund->amountFixedByFormula(),
-            'has_pending_fund_requests' => $isWebShop && $baseRequest->auth_address() && $fund->fund_requests()->where(function (Builder $builder) {
-                FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth()->id());
-            })->exists(),
+            'fund_amount' => $fundAmount ? currency_format($fundAmount) : null,
+            'fund_amount_locale' => $fundAmount ? currency_format_locale($fundAmount) : null,
+            'has_pending_fund_requests' => $isWebShop && $this->hadPendingRequests($baseRequest->identity(), $fund),
             'organization_funds_2fa' => $organizationFunds2FAData,
+            'parent' => $fund->parent?->only(['id', 'name']),
+            'children' => $fund->children->map(fn (Fund $child) => $child->only(['id', 'name'])),
         ], $fundConfigData, $criteriaData, $financialData, $generatorData, $prevalidationCsvData);
 
         if ($isDashboard && $organization->identityCan($identity, ['manage_funds', 'manage_fund_texts'], false)) {
@@ -107,6 +115,18 @@ class FundResource extends BaseJsonResource
         }
 
         return array_merge($data, $fund->only(array_keys($this->select ?? [])));
+    }
+
+    /**
+     * @param Identity|null $identity
+     * @param Fund $fund
+     * @return bool
+     */
+    protected function hadPendingRequests(?Identity $identity, Fund $fund): bool
+    {
+        return $identity && $fund->fund_requests()->where(function (Builder $builder) use ($identity) {
+            FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, $identity->address);
+        })->exists();
     }
 
     /**
@@ -137,6 +157,7 @@ class FundResource extends BaseJsonResource
             'auth_2fa_restrict_emails' => $organization->auth_2fa_funds_restrict_emails,
             'auth_2fa_restrict_auth_sessions' => $organization->auth_2fa_funds_restrict_auth_sessions,
             'auth_2fa_restrict_reimbursements' => $organization->auth_2fa_funds_restrict_reimbursements,
+            'auth_2fa_restrict_bi_connections' => $organization->auth_2fa_restrict_bi_connections,
         ];
     }
 
@@ -238,6 +259,7 @@ class FundResource extends BaseJsonResource
             'left'                          => currency_format($fund->budget_left),
             'transaction_costs'             => currency_format($fund->getTransactionCosts()),
         ] : [], [
+            'children_count'                => $details['children_count'],
             'vouchers_amount'               => currency_format($details['vouchers_amount']),
             'vouchers_count'                => $details['vouchers_count'],
             'active_vouchers_amount'        => currency_format($details['active_amount']),
@@ -283,6 +305,6 @@ class FundResource extends BaseJsonResource
     {
         return $baseRequest->get('check_criteria', false) ? [
             'taken_by_partner' => $this->isTakenByPartner($fund, $baseRequest),
-        ]: [];
+        ] : [];
     }
 }

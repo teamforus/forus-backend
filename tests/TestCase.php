@@ -21,6 +21,15 @@ abstract class TestCase extends BaseTestCase
     ];
 
     /**
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Implementation::clearMemo();
+    }
+
+    /**
      * @param $key
      * @return Implementation
      */

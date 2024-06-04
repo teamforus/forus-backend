@@ -8,6 +8,7 @@ use App\Media\ImplementationBannerMediaConfig;
 use App\Media\ImplementationBlockMediaConfig;
 use App\Media\ImplementationMailLogoMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
+use App\Media\PreCheckBannerMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ReimbursementFilePreviewMediaConfig;
 use App\Models\BankConnection;
@@ -30,8 +31,10 @@ use App\Models\ReservationExtraPayment;
 use App\Models\VoucherRecord;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
+use App\Notifications\DatabaseChannel;
 use App\Observers\FundProviderObserver;
 use App\Models\Identity;
+use App\Services\BIConnectionService\Models\BIConnection;
 use Carbon\Carbon;
 use App\Media\OrganizationLogoMediaConfig;
 use App\Models\Employee;
@@ -48,6 +51,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
+use Illuminate\Notifications\Channels\DatabaseChannel as IlluminateDatabaseChannel;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -64,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
         'employees'                     => Employee::class,
         'fund_request'                  => FundRequest::class,
         'organization'                  => Organization::class,
+        'bi_connection'                 => BIConnection::class,
         'reimbursement'                 => Reimbursement::class,
         'identity_email'                => IdentityEmail::class,
         'mail_template'                 => NotificationTemplate::class,
@@ -90,22 +95,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->setLocale(config('app.locale'));
+
         $this->extendValidator();
+        $this->registerMediaConfigs();
+        $this->registerNotificationChannels();
 
         Schema::defaultStringLength(191);
         Relation::morphMap(self::$morphMap);
-
-        MediaService::setMediaConfigs([
-            new CmsMediaConfig(),
-            new FundLogoMediaConfig(),
-            new OfficePhotoMediaConfig(),
-            new ProductPhotoMediaConfig(),
-            new OrganizationLogoMediaConfig(),
-            new ImplementationBannerMediaConfig(),
-            new ReimbursementFilePreviewMediaConfig(),
-            new ImplementationMailLogoMediaConfig(),
-            new ImplementationBlockMediaConfig(),
-        ]);
 
         StringHelper::setDecimalSeparator('.');
         StringHelper::setThousandsSeparator(',');
@@ -120,6 +116,33 @@ class AppServiceProvider extends ServiceProvider
             Config::set('mail.default', 'array');
             Config::set('queue.default', 'sync');
         }
+    }
+
+    /**
+     * @return void
+     */
+    protected function registerMediaConfigs(): void
+    {
+        MediaService::setMediaConfigs([
+            new CmsMediaConfig(),
+            new FundLogoMediaConfig(),
+            new OfficePhotoMediaConfig(),
+            new ProductPhotoMediaConfig(),
+            new OrganizationLogoMediaConfig(),
+            new ImplementationBannerMediaConfig(),
+            new ReimbursementFilePreviewMediaConfig(),
+            new ImplementationMailLogoMediaConfig(),
+            new ImplementationBlockMediaConfig(),
+            new PreCheckBannerMediaConfig(),
+        ]);
+    }
+
+    /**
+     * @return void
+     */
+    protected function registerNotificationChannels(): void
+    {
+        $this->app->instance(IlluminateDatabaseChannel::class, new DatabaseChannel());
     }
 
     /**

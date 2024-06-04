@@ -69,6 +69,10 @@ class VoucherSubscriber
                 'implementation' => $voucher->fund->getImplementation(),
             ], $voucher->only('note'));
 
+            if ($voucher->identity) {
+                VoucherAssigned::dispatch($voucher, !$voucher->product_reservation_id);
+            }
+
             if ($voucherCreated->shouldNotifyRequesterAdded()) {
                 IdentityProductVoucherAddedNotification::send($event);
             }
@@ -138,10 +142,12 @@ class VoucherSubscriber
             'implementation_name' => $voucher->fund->fund_config->implementation->name,
         ]);
 
-        switch ($type) {
-            case 'budget': IdentityVoucherAssignedBudgetNotification::send($event); break;
-            case 'subsidy': IdentityVoucherAssignedSubsidyNotification::send($event); break;
-            case 'product': IdentityVoucherAssignedProductNotification::send($event); break;
+        if ($voucherAssigned->shouldNotifyRequesterAssigned()) {
+            switch ($type) {
+                case 'budget': IdentityVoucherAssignedBudgetNotification::send($event); break;
+                case 'subsidy': IdentityVoucherAssignedSubsidyNotification::send($event); break;
+                case 'product': IdentityVoucherAssignedProductNotification::send($event); break;
+            }
         }
 
         $voucher->reportBackofficeReceived();

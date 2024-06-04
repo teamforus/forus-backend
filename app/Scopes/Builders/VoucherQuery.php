@@ -8,6 +8,7 @@ use App\Models\ProductReservation;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Models\VoucherTransactionBulk;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -77,9 +78,9 @@ class VoucherQuery
 
     /**
      * @param Builder|Relation $builder
-     * @return Builder|Relation
+     * @return Builder|Relation|Voucher
      */
-    public static function whereActive(Builder|Relation $builder): Builder|Relation
+    public static function whereActive(Builder|Relation $builder): Builder|Relation|Voucher
     {
         return $builder->where('state', Voucher::STATE_ACTIVE);
     }

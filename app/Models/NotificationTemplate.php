@@ -44,6 +44,10 @@ class NotificationTemplate extends Model
         'key', 'type', 'formal', 'title', 'content', 'implementation_id', 'fund_id',
     ];
 
+    protected $casts = [
+        'formal' => 'boolean',
+    ];
+
     /**
      * @return BelongsTo
      * @noinspection PhpUnused

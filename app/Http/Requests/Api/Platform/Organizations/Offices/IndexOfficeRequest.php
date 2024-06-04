@@ -26,6 +26,7 @@ class IndexOfficeRequest extends BaseOfficeRequest
     public function rules(): array
     {
         return [
+            'q' => 'nullable|string',
             'per_page' => 'nullable|numeric|between:0,100',
         ];
     }

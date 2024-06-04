@@ -20,9 +20,14 @@ use Illuminate\Support\Arr;
  * @property bool $system
  * @property bool $criteria
  * @property bool $vouchers
+ * @property bool $pre_check
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Collection|\App\Models\FundCriterion[] $fund_criteria
+ * @property-read int|null $fund_criteria_count
  * @property-read \App\Models\Organization|null $organization
+ * @property-read Collection|\App\Models\PreCheckRecord[] $pre_check_records
+ * @property-read int|null $pre_check_records_count
  * @property-read Collection|\App\Models\RecordTypeOption[] $record_type_options
  * @property-read int|null $record_type_options_count
  * @property-read \App\Models\RecordTypeTranslation|null $translation
@@ -43,6 +48,7 @@ use Illuminate\Support\Arr;
  * @method static Builder|RecordType whereId($value)
  * @method static Builder|RecordType whereKey($value)
  * @method static Builder|RecordType whereOrganizationId($value)
+ * @method static Builder|RecordType wherePreCheck($value)
  * @method static Builder|RecordType whereSystem($value)
  * @method static Builder|RecordType whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
  * @method static Builder|RecordType whereTranslationLike(string $translationField, $value, ?string $locale = null)
@@ -63,6 +69,7 @@ class RecordType extends BaseModel
     public const TYPE_STRING = 'string';
     public const TYPE_NUMBER = 'number';
     public const TYPE_SELECT = 'select';
+    public const TYPE_SELECT_NUMBER = 'select_number';
 
     public const TYPES = [
         self::TYPE_BOOL,
@@ -72,6 +79,7 @@ class RecordType extends BaseModel
         self::TYPE_STRING,
         self::TYPE_NUMBER,
         self::TYPE_SELECT,
+        self::TYPE_SELECT_NUMBER,
     ];
 
     /**
@@ -99,7 +107,26 @@ class RecordType extends BaseModel
         'system' => 'bool',
         'criteria' => 'bool',
         'vouchers' => 'bool',
+        'pre_check' => 'bool',
     ];
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_criteria(): HasMany
+    {
+        return $this->hasMany(FundCriterion::class, 'record_type_key', 'key');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function pre_check_records(): HasMany
+    {
+        return $this->hasMany(PreCheckRecord::class, 'record_type_key', 'key');
+    }
 
     /**
      * @param bool $withSystem
@@ -187,19 +214,17 @@ class RecordType extends BaseModel
      */
     public function getOperators(): array
     {
-        if (in_array($this->type, ['number', 'date'], true)) {
-            return ['<', '<=', '=', '>=', '>', '*'];
-        }
-
-        if (in_array($this->type, ['string', 'select', 'bool'], true)) {
-            return ['=', '*'];
-        }
-
-        if (in_array($this->type, ['iban', 'email'], true)) {
-            return ['*'];
-        }
-
-        return [];
+        return match ($this->type) {
+            self::TYPE_DATE,
+            self::TYPE_NUMBER => ['<', '<=', '=', '>=', '>', '*'],
+            self::TYPE_SELECT_NUMBER => ['<=', '=', '>=', '*'],
+            self::TYPE_BOOL,
+            self::TYPE_STRING,
+            self::TYPE_SELECT => ['=', '*'],
+            self::TYPE_IBAN,
+            self::TYPE_EMAIL => ['*'],
+            default => [],
+        };
     }
 
     /**

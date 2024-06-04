@@ -7,7 +7,9 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\VoucherTransaction;
+use App\Models\VoucherTransactionBulk;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Query\Builder as QBuilder;
@@ -78,7 +80,12 @@ class VoucherTransactionQuery
             'product_name' => self::orderProductNameQuery(),
             'provider_name' => self::orderProviderNameQuery(),
             'transaction_in' => self::orderVoucherTransactionIn(),
+            'bulk_state' => self::orderBulkState(),
         ]);
+
+        if ($orderBy == 'date_non_cancelable') {
+            $orderBy = 'transfer_at';
+        }
 
         return $builder->orderBy(
             $orderBy && in_array($orderBy, $fields) ? $orderBy : 'created_at',
@@ -110,6 +117,16 @@ class VoucherTransactionQuery
     protected static function orderProductNameQuery(): Builder|QBuilder
     {
         return Product::whereColumn('id', 'product_id')->select('name');
+    }
+
+    /**
+     * @return Builder|QBuilder
+     */
+    protected static function orderBulkState(): Builder|QBuilder
+    {
+        return VoucherTransactionBulk::query()
+            ->whereColumn('id', 'voucher_transaction_bulk_id')
+            ->select('state');
     }
 
     /**
@@ -145,22 +162,48 @@ class VoucherTransactionQuery
     }
 
     /**
-     * @param Builder|QBuilder $query
+     * @param Builder|Relation|VoucherTransaction $query
      * @param string $q
-     * @return Builder|QBuilder
+     * @return Builder|QBuilder|VoucherTransaction
      */
-    public static function whereQueryFilter(Builder|QBuilder $query, string $q = ''): Builder|QBuilder
-    {
+    public static function whereQueryFilter(
+        Builder|Relation|VoucherTransaction $query,
+        string $q = '',
+    ): Builder|Relation|VoucherTransaction {
         return $query->where(static function (Builder $query) use ($q) {
             $query->where('voucher_transactions.uid', '=', $q);
             $query->orWhereHas('voucher.fund', fn (Builder $b) => $b->where('name', 'LIKE', "%$q%"));
             $query->orWhereRelation('product', 'name', 'LIKE', "%$q%");
             $query->orWhereRelation('provider', 'name', 'LIKE', "%$q%");
 
+            $query->orWhereHas('employee.office', function (Builder $builder) use ($q) {
+                $builder->where('branch_name', 'LIKE', "%$q%");
+                $builder->orWhere('branch_number', 'LIKE', "%$q%");
+                $builder->orWhere('branch_id', 'LIKE', "%$q%");
+            });
+
             if (is_numeric($q)) {
                 $query->orWhere('voucher_transactions.id', '=', $q);
                 $query->orWhereRelation('product', 'id', "=", $q);
             }
+        });
+    }
+
+    /**
+     * @param Builder|VoucherTransaction $builder
+     * @param bool $hasPayouts
+     * @return Builder
+     */
+    public static function whereIsPaidOutQuery(
+        Builder|VoucherTransaction $builder,
+        bool $hasPayouts = true,
+    ): Builder {
+        return $builder->where(function(Builder|VoucherTransaction $builder) use ($hasPayouts) {
+            $builder->whereRelation('voucher_transaction_bulk', function(
+                Builder|VoucherTransactionBulk $builder
+            ) {
+                $builder->where('state', VoucherTransactionBulk::STATE_ACCEPTED);
+            });
         });
     }
 }

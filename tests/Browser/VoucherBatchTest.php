@@ -115,8 +115,8 @@ class VoucherBatchTest extends DuskTestCase
 
             foreach ($vouchers->groupBy('fund_id') as $fundId => $list) {
                 $this->switchToFund($browser, $fundId);
-                $list->each(fn (Voucher $item) => $this->searchVoucher($browser, $item, $type));
-                $list->each(fn (Voucher $item) => $item->delete());
+                $list->each(fn(Voucher $item) => $this->searchVoucher($browser, $item, $type));
+                $list->each(fn(Voucher $item) => $item->delete());
             }
 
             // Logout
@@ -133,7 +133,7 @@ class VoucherBatchTest extends DuskTestCase
      */
     private function searchVoucher(Browser $browser, Voucher $voucher, string $type = 'client_uid'): void
     {
-        $search = match($type) {
+        $search = match ($type) {
             'client_uid' => $voucher->client_uid,
             'bsn' => $voucher->identity?->bsn ?? ($voucher->voucher_relation->bsn ?? null),
             'email' => $voucher->identity?->email,
@@ -154,9 +154,12 @@ class VoucherBatchTest extends DuskTestCase
      */
     private function switchToFund(Browser $browser, int $fundId): void
     {
-        $browser->waitFor("@fundSelectorOption$fundId");
-        $browser->pause(200);
-        $browser->element("@fundSelectorOption$fundId")->click();
+        $browser->waitFor("@selectControlFunds");
+        $browser->element("@selectControlFunds")->click();
+
+        $browser->waitFor("@selectControlFundItem$fundId");
+        $browser->element("@selectControlFundItem$fundId")->click();
+
         $browser->waitFor('@searchVoucher');
         $browser->type('@searchVoucher', '');
         $browser->waitFor("@vouchersCard$fundId");
@@ -191,6 +194,10 @@ class VoucherBatchTest extends DuskTestCase
         $browser->waitFor('@uploadVouchersBatchButton');
         $browser->element('@uploadVouchersBatchButton')->click();
 
+        $browser->waitFor('@modalFundSelect');
+        $browser->waitFor('@modalFundSelectSubmit');
+        $browser->element('@modalFundSelectSubmit')->click();
+
         $browser->waitFor('@modalVoucherUpload');
 
         $browser->waitFor('@selectFileButton');
@@ -205,6 +212,7 @@ class VoucherBatchTest extends DuskTestCase
         $browser->waitFor('@successUploadIcon', 60);
 
         $browser->element('@closeModalButton')->click();
+        $browser->waitUntilMissing('@modalVoucherUpload');
 
         Storage::delete($this->csvPath);
     }
@@ -303,9 +311,9 @@ class VoucherBatchTest extends DuskTestCase
     /**
      * @param Collection $funds
      * @param Carbon $startDate
-     * @return Collection
+     * @return Collection|Voucher[]
      */
-    private function getVouchers(Collection $funds, Carbon $startDate): Collection
+    private function getVouchers(Collection $funds, Carbon $startDate): Collection|array
     {
         return Voucher::query()
             ->whereIn('fund_id', $funds->pluck('id')->all())

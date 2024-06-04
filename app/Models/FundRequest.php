@@ -166,7 +166,7 @@ class FundRequest extends BaseModel
         return [
             self::STATE_PENDING => 'Wachten',
             self::STATE_APPROVED => 'Geaccepteerd',
-            self::STATE_APPROVED_PARTLY => 'Aanvulling gevraagd',
+            self::STATE_APPROVED_PARTLY => 'Deels geaccepteerd',
             self::STATE_DECLINED => 'Geweigerd',
             self::STATE_DISREGARDED => 'Niet beoordeeld',
         ][$this->state] ?? '';

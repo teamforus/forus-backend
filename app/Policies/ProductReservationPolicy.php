@@ -180,8 +180,16 @@ class ProductReservationPolicy
             return $this->deny('Extra payment not paid.');
         }
 
+        if ($productReservation->extra_payment && $productReservation->extra_payment->isPartlyRefunded()) {
+            return $this->deny('Extra payment is partly refunded.');
+        }
+
         if ($productReservation->extra_payment && $productReservation->extra_payment->isFullyRefunded()) {
             return $this->deny('Extra payment is refunded.');
+        }
+
+        if ($productReservation->extra_payment && $productReservation->extra_payment->hasPendingRefunds()) {
+            return $this->deny('Extra payment has pending refunds.');
         }
 
         if (!$productReservation->voucher->activated) {
@@ -196,7 +204,7 @@ class ProductReservationPolicy
             return $this->deny('Not pending.');
         }
 
-        if ($productReservation->hasExpired()) {
+        if ($productReservation->isExpired()) {
             return $this->deny('Reservation expired.');
         }
 
@@ -230,6 +238,10 @@ class ProductReservationPolicy
 
         if ($productReservation->voucher->expired && !$productReservation->isAccepted()) {
             return $this->deny('The voucher used to make the reservation, has expired.');
+        }
+
+        if ($productReservation->isExpired()) {
+            return $this->deny('Reservation expired.');
         }
 
         return
@@ -339,8 +351,9 @@ class ProductReservationPolicy
     ): bool {
         return
             $this->updateProvider($identity, $productReservation, $organization) &&
-            $productReservation->extra_payment?->isPaid() &&
-            $productReservation->extra_payment?->refunds()->doesntExist() &&
-            $productReservation->extra_payment?->isMollieType();
+            $productReservation->extra_payment &&
+            $productReservation->extra_payment->isPaid() &&
+            $productReservation->extra_payment->isRefundable() &&
+            $productReservation->extra_payment->isMollieType();
     }
 }

@@ -7,7 +7,6 @@ use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundExpiringEvent;
 use App\Events\Funds\FundStartedEvent;
 use App\Events\Funds\FundUnArchivedEvent;
-use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Models\Traits\HasFaq;
@@ -45,7 +44,6 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 
 /**
  * App\Models\Fund
@@ -56,6 +54,7 @@ use Illuminate\Support\Facades\Event;
  * @property string|null $description
  * @property string|null $description_text
  * @property string|null $description_short
+ * @property string $description_position
  * @property string|null $faq_title
  * @property string $request_btn_text
  * @property string|null $external_link_url
@@ -77,11 +76,13 @@ use Illuminate\Support\Facades\Event;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
- * @property string $description_position
+ * @property int|null $parent_id
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
+ * @property-read Collection|Fund[] $children
+ * @property-read int|null $children_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
@@ -127,6 +128,7 @@ use Illuminate\Support\Facades\Event;
  * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
+ * @property-read Fund|null $parent
  * @property-read Collection|\App\Models\Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\Product[] $products
@@ -180,6 +182,7 @@ use Illuminate\Support\Facades\Event;
  * @method static Builder|Fund whereNotificationAmount($value)
  * @method static Builder|Fund whereNotifiedAt($value)
  * @method static Builder|Fund whereOrganizationId($value)
+ * @method static Builder|Fund whereParentId($value)
  * @method static Builder|Fund wherePublic($value)
  * @method static Builder|Fund whereRequestBtnText($value)
  * @method static Builder|Fund whereStartDate($value)
@@ -301,6 +304,24 @@ class Fund extends BaseModel
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'fund_products');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     /**
@@ -975,25 +996,32 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identityAddress
-     * @return int
+     * @param array|null $records
+     * @return float
      */
-    public function amountForIdentity(?string $identityAddress): int
+    public function amountForIdentity(?string $identityAddress, array $records = null): float
     {
         if ($this->fund_formulas->count() === 0 &&
             $this->fund_formula_products->pluck('price')->sum() === 0) {
             return 0;
         }
 
-        return $this->fund_formulas->map(function(FundFormula $formula) use ($identityAddress) {
+        return $this->fund_formulas->map(function(FundFormula $formula) use ($identityAddress, $records) {
             switch ($formula->type) {
                 case 'fixed': return $formula->amount;
                 case 'multiply': {
-                    $record = $this->getTrustedRecordOfType(
-                        $identityAddress,
-                        $formula->record_type_key
-                    );
+                    if ($records) {
+                        $value = $records[$formula->record_type_key] ?? null;
+                    } else {
+                        $record = $this->getTrustedRecordOfType(
+                            $identityAddress,
+                            $formula->record_type_key
+                        );
 
-                    return is_numeric($record?->value) ? $formula->amount * $record->value : 0;
+                        $value = $record?->value;
+                    }
+
+                    return is_numeric($value) ? $formula->amount * $value : 0;
                 }
                 default: return 0;
             }
@@ -1002,23 +1030,30 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identityAddress
+     * @param array|null $records
      * @return int
      */
-    public function multiplierForIdentity(?string $identityAddress): int {
+    public function multiplierForIdentity(?string $identityAddress, array $records = null): int {
         /** @var FundLimitMultiplier[]|Collection $multipliers */
         $multipliers = $this->fund_limit_multipliers()->get();
 
-        if (!$identityAddress || ($multipliers->count() === 0)) {
+        if ((!$identityAddress && !$records) || ($multipliers->count() === 0)) {
             return 1;
         }
 
-        return $multipliers->map(function(FundLimitMultiplier $multiplier) use ($identityAddress) {
-            $record = $this->getTrustedRecordOfType(
-                $identityAddress,
-                $multiplier->record_type_key
-            );
+        return $multipliers->map(function(FundLimitMultiplier $multiplier) use ($identityAddress, $records) {
+            if ($records) {
+                $value = (int) ($records[$multiplier->record_type_key] ?: 1);
+            } else {
+                $record = $this->getTrustedRecordOfType(
+                    $identityAddress,
+                    $multiplier->record_type_key
+                );
 
-            return ((int) ($record ? $record->value: 1)) * $multiplier->multiplier;
+                $value = (int) ($record ? $record->value: 1);
+            }
+
+            return $value * $multiplier->multiplier;
         })->sum();
     }
 
@@ -1203,17 +1238,13 @@ class Fund extends BaseModel
             $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
             $multiplier = $formulaProduct->getIdentityMultiplier($identityAddress);
 
-            $vouchers = array_map(fn () => $this->makeProductVoucher(
+            $vouchers = array_merge($vouchers, array_map(fn () => $this->makeProductVoucher(
                 $identityAddress,
                 $extraFields,
                 $formulaProduct->product->id,
                 $voucherExpireAt,
                 $formulaProduct->price
-            ), array_fill(0, $multiplier, null));
-
-            foreach ($vouchers as $voucher) {
-                Event::dispatch(new VoucherAssigned($voucher));
-            }
+            ), array_fill(0, $multiplier, null)));
         }
 
         return $vouchers;
@@ -1658,7 +1689,20 @@ class Fund extends BaseModel
             'inactive_percentage'   => currency_format($inactive_percentage),
             'deactivated_amount'    => $deactivatedVouchersQuery->sum('amount'),
             'deactivated_count'     => $deactivated_count,
+            'children_count'        => self::getVoucherChildrenCount($vouchersQuery),
         ];
+    }
+
+    /**
+     * @param Builder $vouchersQuery
+     * @return mixed
+     */
+    protected static function getVoucherChildrenCount(Builder $vouchersQuery): mixed
+    {
+        return VoucherRecord::query()
+            ->whereRelation('record_type', 'key', 'children_nth')
+            ->whereIn('voucher_id', $vouchersQuery->select('id'))
+            ->sum('value');
     }
 
     /**
@@ -1867,7 +1911,7 @@ class Fund extends BaseModel
                 $this->makeFundFormulaProductVouchers($identity->address, $extraFields);
 
                 $response->getLog()->update([
-                    'voucher_id' => $voucher->id,
+                    'voucher_id' => $voucher?->id,
                 ]);
             }
 

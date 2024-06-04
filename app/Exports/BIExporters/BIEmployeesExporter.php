@@ -7,6 +7,9 @@ use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 
 class BIEmployeesExporter extends BaseBIExporter
 {
+    protected string $key = 'employees';
+    protected string $name = 'Medewerkers';
+
     /**
      * @return array
      */

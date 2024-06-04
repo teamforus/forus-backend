@@ -12,6 +12,21 @@ class ImplementationPolicy
     use HandlesAuthorization;
 
     /**
+     * Determine whether the user can view any implementations public data.
+     *
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function viewAnyPublic(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, [
+            'manage_implementation', 'manage_implementation_cms', 'view_implementations',
+        ], false);
+    }
+
+    /**
      * Determine whether the user can view any implementations.
      *
      * @param Identity $identity
@@ -131,6 +146,25 @@ class ImplementationPolicy
         }
 
         return $organization->identityCan($identity, 'manage_implementation');
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Implementation $implementation
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function updatePreChecks(
+        Identity $identity,
+        Implementation $implementation,
+        Organization $organization,
+    ): bool {
+        if (!$this->checkIntegrity($implementation, $organization)) {
+            return false;
+        }
+
+        return $organization->identityCan($identity, 'manage_implementation') && $organization->allow_pre_checks;
     }
 
     /**
