@@ -9,7 +9,9 @@ use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\IndexIdentitie
 use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\SendIdentityNotificationRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Sponsor\IdentityBsnResource;
+use App\Http\Resources\Sponsor\IdentityBsnWithCountsResource;
 use App\Http\Resources\Sponsor\IdentityResource;
+use App\Http\Resources\Sponsor\IdentityWithCountsResource;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Identity;
@@ -47,6 +49,34 @@ class IdentitiesController extends Controller
         $search = new FundIdentitiesSearch($request->only(array_filter($filters)), $fund);
         $query = $isManager ? clone $search->query() : Identity::whereRaw('false');
 
+        return $organization->bsn_enabled
+            ? IdentityBsnResource::queryCollection($query)
+            : IdentityResource::queryCollection($query);
+    }
+
+    /**
+     * @param IndexIdentitiesRequest $request
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection|JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function getCounts(
+        IndexIdentitiesRequest $request,
+        Organization $organization,
+        Fund $fund
+    ): AnonymousResourceCollection|JsonResponse {
+        $this->authorize('show', [$organization]);
+        $this->authorize('viewIdentitiesSponsor', [$fund, $organization]);
+
+        $isManager = $organization->identityCan($request->identity(), 'manage_vouchers');
+        $filters = ['target', 'has_email', 'order_by', 'order_dir', 'with_reservations', $isManager ? 'q' : null];
+
+        $search = new FundIdentitiesSearch($request->only(array_filter($filters)), $fund, true);
+        $query = $isManager ? clone $search->query() : Identity::whereRaw('false');
+
+        $collection = $query->whereIn('id', $request->get('identity_ids', []))->get();
+
         $counts = [
             'active' => $fund->activeIdentityQuery()->count(),
             'selected' => (clone $search->query())->count(),
@@ -54,8 +84,8 @@ class IdentitiesController extends Controller
         ];
 
         $collection = $organization->bsn_enabled
-            ? IdentityBsnResource::queryCollection($query)
-            : IdentityResource::queryCollection($query);
+            ? IdentityBsnWithCountsResource::collection($collection)
+            : IdentityWithCountsResource::collection($collection);
 
         return $collection->additional([
             'meta' => compact('counts'),
@@ -119,7 +149,7 @@ class IdentitiesController extends Controller
 
         $fields = $request->input('fields', FundIdentitiesExport::getExportFields());
         $filters = ['target', 'has_email', 'order_by', 'order_dir', 'with_reservations', 'q'];
-        $search = new FundIdentitiesSearch($request->only($filters), $fund);
+        $search = new FundIdentitiesSearch($request->only($filters), $fund, true);
 
         $exportType = $request->input('export_type', 'csv');
         $exportData = new FundIdentitiesExport($search->get(), $fields);
