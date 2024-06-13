@@ -152,21 +152,19 @@ class BIConnection extends Model
      */
     public function resetToken(): static
     {
-        if ($this->enabled) {
-            $connectionToken = $this->access_token;
+        $connectionToken = $this->access_token;
 
-            $this->update([
-                'access_token' => BIConnection::makeToken(),
-                'expire_at' => Carbon::now()->addDays($this->expiration_period),
-            ]);
+        $this->update([
+            'access_token' => BIConnection::makeToken(),
+            'expire_at' => Carbon::now()->addDays($this->expiration_period),
+        ]);
 
-            $this->log(self::EVENT_UPDATED, [
-                'bi_connection' => $this,
-            ], [
-                'access_token' => $this->access_token,
-                'access_token_previous' => $connectionToken,
-            ]);
-        }
+        $this->log(self::EVENT_UPDATED, [
+            'bi_connection' => $this,
+        ], [
+            'access_token' => $this->access_token,
+            'access_token_previous' => $connectionToken,
+        ]);
 
         return $this;
     }

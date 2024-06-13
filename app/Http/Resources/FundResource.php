@@ -41,6 +41,7 @@ class FundResource extends BaseJsonResource
         'fund_formula_products',
         'provider_organizations_approved.employees',
         'tags_webshop',
+        'fund_formulas.record_type.translations',
         'fund_formulas.fund.fund_config.implementation',
         'top_up_transactions',
     ];

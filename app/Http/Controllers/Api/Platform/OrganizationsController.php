@@ -183,7 +183,7 @@ class OrganizationsController extends Controller
         $this->authorize('update', $organization);
 
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
-            'bank_transaction_id', 'bank_transaction_date', 'bank_reservation_number',
+            'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time', 'bank_reservation_number',
             'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name', 'bank_note',
         ])));
 
