@@ -164,13 +164,17 @@ class FundResource extends BaseJsonResource
     public function getVoucherGeneratorData(Fund $fund): array
     {
         $isVoucherManager = Gate::allows('funds.manageVouchers', [$fund, $fund->organization]);
+        $limitPerVoucher = $fund->getMaxAmountPerVoucher();
+        $limitSumVoucher = $fund->getMaxAmountSumVouchers();
 
         return $isVoucherManager ? array_merge($fund->fund_config->only([
             'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
             'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
         ]), [
-            'limit_per_voucher' => $fund->getMaxAmountPerVoucher(),
-            'limit_sum_vouchers' => $fund->getMaxAmountSumVouchers(),
+            'limit_per_voucher' => currency_format($limitPerVoucher),
+            'limit_per_voucher_locale' => currency_format_locale($limitPerVoucher),
+            'limit_sum_vouchers' => currency_format($limitSumVoucher),
+            'limit_sum_vouchers_locale' => currency_format_locale($limitSumVoucher),
         ]) : [];
     }
 
