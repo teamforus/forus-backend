@@ -102,6 +102,7 @@ class StoreReimbursementRequest extends BaseFormRequest
     {
         return [
             'voucher_address' => 'tegoeden',
+            'amount' => 'bedrag',
             'files.*' => trans('validation.attributes.file'),
         ];
     }
@@ -112,6 +113,10 @@ class StoreReimbursementRequest extends BaseFormRequest
     public function messages(): array
     {
         return [
+            'title.required' => trans('validation.required_not_filled'),
+            'amount.required' => trans('validation.required_not_filled'),
+            'iban.required' => trans('validation.required_not_filled'),
+            'iban_name.required' => trans('validation.required_not_filled'),
             'files.required' => trans('validation.reimbursement.files.required'),
         ];
     }
