@@ -44,7 +44,7 @@ class UpdateFundRequest extends BaseFundRequest
             'faq_title'                 => 'nullable|string|max:200',
             'tag_ids'                   => 'nullable|array',
             'tag_ids.*'                 => 'required|exists:tags,id',
-            'request_btn_text'          => 'required|string|max:50',
+            'request_btn_text'          => 'nullable|string|max:50',
             'external_link_text'        => 'nullable|string|max:50',
             'external_link_url'         => 'nullable|string|max:200',
             'external_page'             => 'nullable|boolean',
