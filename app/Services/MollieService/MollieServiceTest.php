@@ -13,10 +13,12 @@ use App\Services\MollieService\Objects\Payment;
 use App\Services\MollieService\Objects\PaymentMethod;
 use App\Services\MollieService\Objects\Profile;
 use App\Services\MollieService\Objects\Refund;
+use App\Services\MollieService\Objects\ResourceOwner;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
+use League\OAuth2\Client\Token\AccessToken;
 
 class MollieServiceTest implements MollieServiceInterface
 {
@@ -102,17 +104,37 @@ class MollieServiceTest implements MollieServiceInterface
      */
     public function exchangeOauthCode(string $code, string $state): ?MollieConnection
     {
-        $connection = MollieConnection::create([
-            ...Arr::except($this->data['connection']['organization'], 'id'),
-            'completed_at' => now(),
-            'organization_id' => $this->data['connection']['organization_id'],
-            'connection_state' => MollieConnection::STATE_ACTIVE,
-            'mollie_organization_id' => $this->data['connection']['organization']['id'],
+        $mollieConnections = MollieConnection::firstWhere('state_code', $state);
+
+        $token = new AccessToken([
+            'access_token' => $code,
+            'refresh_token' => $code,
+            'expires_at' => now()->addMinutes(15)
         ]);
 
-        $connection->profiles()->create($this->data['connection']['profile']);
+        return $mollieConnections?->updateConnectionByToken($token, $this->mapResourceOwner(
+            $this->data['connection']['organization'],
+        ));
+    }
 
-        return $connection;
+    /**
+     * @param array $attributes
+     * @return ResourceOwner
+     */
+    private function mapResourceOwner(array $attributes): ResourceOwner
+    {
+        return new ResourceOwner([
+            'id' => $attributes['id'],
+            'name' => $attributes['name'] ?? '',
+            'city' => $attributes['address']['city'] ?? '',
+            'street' => $attributes['address']['streetAndNumber'] ?? '',
+            'country' => $attributes['address']['country'] ?? '',
+            'postcode' => $attributes['address']['postalCode'] ?? '',
+            'last_name' => $attributes['first_name'] ?? null,
+            'first_name' => $attributes['last_name'] ?? null,
+            'vat_number' => $attributes['vatNumber'] ?? null,
+            'registration_number' => $attributes['registrationNumber'] ?? null,
+        ]);
     }
 
     /**
