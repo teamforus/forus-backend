@@ -33,11 +33,11 @@ class FundTopUpTransactionSearch extends BaseSearch
             });
         }
 
-        if ($this->hasFilter('amount_min')) {
+        if ($this->getFilter('amount_min')) {
             $builder->where('amount', '>=', $this->getFilter('amount_min'));
         }
 
-        if ($this->hasFilter('amount_max')) {
+        if ($this->getFilter('amount_max')) {
             $builder->where('amount', '<=', $this->getFilter('amount_max'));
         }
 
