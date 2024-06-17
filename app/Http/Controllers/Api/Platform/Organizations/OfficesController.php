@@ -9,25 +9,13 @@ use App\Http\Resources\OfficeResource;
 use App\Models\Office;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use App\Searches\OfficeSearch;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class OfficesController
- * @package App\Http\Controllers\Api\Platform\Organizations
- */
 class OfficesController extends Controller
 {
-    protected $geocodeService;
-    protected $mediaService;
-
-    public function __construct()
-    {
-        $this->geocodeService = resolve('geocode_api');
-        $this->mediaService = resolve('media');
-    }
-
     /**
      * Display a listing of the resource.
      *
@@ -38,11 +26,17 @@ class OfficesController extends Controller
      */
     public function index(
         IndexOfficeRequest $request,
-        Organization $organization
+        Organization $organization,
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', [Office::class, $organization]);
 
-        return OfficeResource::queryCollection($organization->offices(), $request);
+        $search = new OfficeSearch(
+            $request->only('q'),
+            $organization->offices(),
+            $organization->identityCan($request->identity(), 'manage_offices'),
+        );
+
+        return OfficeResource::queryCollection($search->query(), $request);
     }
 
     /**
@@ -61,14 +55,14 @@ class OfficesController extends Controller
         $media = false;
 
         if ($media_uid = $request->input('media_uid')) {
-            $media = $this->mediaService->findByUid($media_uid);
+            $media = resolve('media')->findByUid($media_uid);
             $this->authorize('destroy', $media);
         }
 
         /** @var Office $office */
-        $office = $organization->offices()->create(
-            $request->only(['name', 'address', 'phone', 'email'])
-        );
+        $office = $organization->offices()->create($request->only([
+            'name', 'address', 'phone', 'email', 'branch_id', 'branch_name', 'branch_number',
+        ]));
 
         $office->updateSchedule($request->input('schedule', []));
         $office->updateGeoData();
@@ -106,7 +100,7 @@ class OfficesController extends Controller
     public function update(
         UpdateOfficeRequest $request,
         Organization $organization,
-        Office $office
+        Office $office,
     ): OfficeResource {
         $this->authorize('show', $organization);
         $this->authorize('update', [$office, $organization]);
@@ -114,11 +108,15 @@ class OfficesController extends Controller
         $media = false;
 
         if ($media_uid = $request->input('media_uid')) {
-            $media = $this->mediaService->findByUid($media_uid);
+            $media = resolve('media')->findByUid($media_uid);
             $this->authorize('destroy', $media);
         }
 
-        $office->update($request->only(['name', 'address', 'phone', 'email']));
+        $office->update($request->only([
+            'name', 'address', 'phone', 'email',
+            'branch_id', 'branch_name', 'branch_number'
+        ]));
+
         $office->updateSchedule($request->input('schedule', []));
         $office->updateGeoData();
 

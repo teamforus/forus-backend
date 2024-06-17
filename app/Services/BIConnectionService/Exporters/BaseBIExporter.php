@@ -6,14 +6,13 @@ use App\Models\Organization;
 
 abstract class BaseBIExporter
 {
+    protected string $key;
+    protected string $name;
+
     /**
-     * @param string $name
      * @param Organization $organization
      */
-    public function __construct(
-        protected string $name,
-        protected Organization $organization
-    ) {}
+    public function __construct(protected Organization $organization) {}
 
     /**
      * @return array
@@ -26,6 +25,14 @@ abstract class BaseBIExporter
     public function getName(): string
     {
         return $this->name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getKey(): string
+    {
+        return $this->key;
     }
 
     /**

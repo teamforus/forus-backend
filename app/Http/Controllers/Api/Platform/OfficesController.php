@@ -6,6 +6,7 @@ use App\Http\Resources\OfficeResource;
 use App\Http\Controllers\Controller;
 use App\Models\Office;
 use App\Http\Requests\Api\Platform\SearchOfficesRequest;
+use App\Searches\OfficeSearch;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class OfficesController extends Controller
@@ -18,7 +19,11 @@ class OfficesController extends Controller
      */
     public function index(SearchOfficesRequest $request): AnonymousResourceCollection
     {
-        return OfficeResource::queryCollection(Office::search($request), $request);
+        $search = new OfficeSearch($request->only([
+            'q', 'approved',
+        ]), Office::query());
+
+        return OfficeResource::queryCollection($search->query(), $request);
     }
 
     /**

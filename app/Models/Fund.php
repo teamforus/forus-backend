@@ -7,7 +7,6 @@ use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundExpiringEvent;
 use App\Events\Funds\FundStartedEvent;
 use App\Events\Funds\FundUnArchivedEvent;
-use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Models\Traits\HasFaq;
@@ -45,7 +44,6 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 
 /**
  * App\Models\Fund
@@ -1691,7 +1689,20 @@ class Fund extends BaseModel
             'inactive_percentage'   => currency_format($inactive_percentage),
             'deactivated_amount'    => $deactivatedVouchersQuery->sum('amount'),
             'deactivated_count'     => $deactivated_count,
+            'children_count'        => self::getVoucherChildrenCount($vouchersQuery),
         ];
+    }
+
+    /**
+     * @param Builder $vouchersQuery
+     * @return mixed
+     */
+    protected static function getVoucherChildrenCount(Builder $vouchersQuery): mixed
+    {
+        return VoucherRecord::query()
+            ->whereRelation('record_type', 'key', 'children_nth')
+            ->whereIn('voucher_id', $vouchersQuery->select('id'))
+            ->sum('value');
     }
 
     /**
@@ -1920,7 +1931,7 @@ class Fund extends BaseModel
                 $this->makeFundFormulaProductVouchers($identity->address, $extraFields);
 
                 $response->getLog()->update([
-                    'voucher_id' => $voucher->id,
+                    'voucher_id' => $voucher?->id,
                 ]);
             }
 

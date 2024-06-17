@@ -7,8 +7,8 @@ use App\Events\Organizations\OrganizationUpdated;
 use App\Http\Requests\Api\Platform\Organizations\TransferOrganizationOwnershipRequest;
 use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
+use App\Http\Requests\Api\Platform\Organizations\UpdateBankStatementFieldsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationAcceptReservationsRequest;
-use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBIConnectionRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationReservationSettingsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRolesRequest;
@@ -125,7 +125,7 @@ class OrganizationsController extends Controller
                 'auth_2fa_policy', 'auth_2fa_remember_ip',
                 'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip',
                 'auth_2fa_funds_restrict_emails', 'auth_2fa_funds_restrict_auth_sessions',
-                'auth_2fa_funds_restrict_reimbursements'
+                'auth_2fa_funds_restrict_reimbursements', 'auth_2fa_restrict_bi_connections',
             ]));
         }
 
@@ -164,6 +164,27 @@ class OrganizationsController extends Controller
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'is_sponsor', 'is_provider', 'is_validator',
             'validator_auto_accept_funds'
+        ])));
+
+        return new OrganizationResource($organization);
+    }
+
+    /**
+     * @param UpdateBankStatementFieldsRequest $request
+     * @param Organization $organization
+     * @return OrganizationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function updateBankStatementFields(
+        UpdateBankStatementFieldsRequest $request,
+        Organization $organization
+    ): OrganizationResource {
+        $this->authorize('update', $organization);
+
+        OrganizationUpdated::dispatch($organization->updateModel($request->only([
+            'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time', 'bank_reservation_number',
+            'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name', 'bank_note',
         ])));
 
         return new OrganizationResource($organization);
@@ -210,29 +231,6 @@ class OrganizationsController extends Controller
         ])));
 
         $organization->syncReservationFields($request->get('fields', []));
-
-        return new OrganizationResource($organization);
-    }
-
-    /**
-     * @param UpdateOrganizationBIConnectionRequest $request
-     * @param Organization $organization
-     * @return OrganizationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @noinspection PhpUnused
-     */
-    public function updateBIConnection(
-        UpdateOrganizationBIConnectionRequest $request,
-        Organization $organization
-    ): OrganizationResource {
-        $this->authorize('updateBIConnection', $organization);
-
-        $authType = $request->input('bi_connection_auth_type');
-        $resetToken = $request->boolean('bi_connection_token_reset');
-
-        if ($authType !== $organization->bi_connection_auth_type || $resetToken) {
-            $organization->updateBIConnection($authType, $resetToken);
-        }
 
         return new OrganizationResource($organization);
     }

@@ -44,7 +44,7 @@ return [
             'pending' => 'Wachtend',
             'declined' => 'Geweigerd',
             'approved' => 'Geaccepteerd',
-            'approved_partly' => 'Aanvulling gevraagd',
+            'approved_partly' => 'Deels geaccepteerd',
         ],
         'validator' => 'Validator',
         'created_at' => 'Indien datum',
@@ -58,6 +58,7 @@ return [
         'amount' => 'bedrag',
         'date_transaction' => 'Datum betaling',
         'date_payment' => 'Datum uitbetaling',
+        'date_non_cancelable' => 'Definitieve transactie',
         'fund' => 'fonds',
         'provider' => 'aanbieder',
         'state' => 'status',
@@ -70,8 +71,8 @@ return [
 
     'voucher_transactions_bulks' => [
         'state-values' => [
-            'draft' => 'Draft',
-            'error' => 'Error',
+            'draft' => 'In voorbereiding',
+            'error' => 'Mislukt',
             'pending' => 'In afwachting',
             'accepted' => 'Geaccepteerd',
             'rejected' => 'Geweigerd',
@@ -109,6 +110,7 @@ return [
         'inactive' => 'Inactief',
 
         // Budget vouchers
+        'budget_children_count' => 'Aantal kinderen',
         'budget_amount_per_voucher' => 'Per tegoed €',
         'budget_average_per_voucher' => 'Gem per tegoed €',
         'budget_vouchers_amount' => 'Totaal tegoeden €',
@@ -136,6 +138,9 @@ return [
     'employees' => [
         'owner' => 'Eigenaar',
         'email' => 'E-mailadres',
+        'branch_number' => 'Vestigingsnummer',
+        'branch_name' => 'Vestigingsnaam',
+        'branch_id' => 'VestigingID',
         'created_at' => 'Created at',
         'updated_at' => 'Updated at',
         'is_2fa_configured' => '2FA',
