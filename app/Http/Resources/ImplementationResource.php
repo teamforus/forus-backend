@@ -21,9 +21,6 @@ class ImplementationResource extends BaseJsonResource
             return null;
         }
 
-        $hasProviderTermsPage = $implementation->page_provider?->isPublic();
-        $providerTermsPage = $implementation->urlWebshop('/aanbieders/aanmelden');
-
         return [
             ...$implementation->only([
                 'id', 'key', 'name', 'url_webshop', 'informal_communication', 'organization_id',
@@ -31,7 +28,7 @@ class ImplementationResource extends BaseJsonResource
                 'pre_check_banner_state', 'pre_check_banner_title',
                 'pre_check_banner_description', 'pre_check_banner_label',
             ]),
-            'url_provider_terms_page' => $hasProviderTermsPage ? $providerTermsPage : null,
+            'has_provider_terms_page' => $implementation->page_provider?->isPublic(),
         ];
     }
 }
