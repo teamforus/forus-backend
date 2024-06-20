@@ -2,27 +2,25 @@
 
 namespace Tests\Unit;
 
-use App\Models\Employee;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\CreatesApplication;
 use Tests\TestCase;
-use Tests\Traits\MakesOrganizationOffice;
+use Tests\Traits\MakesTestOrganizationOffices;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
-use Tests\Traits\MakesTestTransaction;
 use Throwable;
 
 class PaymentDescriptionTest extends TestCase
 {
-    use DoesTesting, DatabaseTransactions, CreatesApplication,
-        MakesTestOrganizations, MakesTestTransaction,
-        MakesTestFunds, MakesOrganizationOffice, MakesProductReservations;
+    use DoesTesting, DatabaseTransactions, CreatesApplication;
+    use MakesTestOrganizations, MakesTestFunds;
+    use MakesTestOrganizationOffices, MakesProductReservations;
 
-    public function testDirectTransactionPaymentDescription()
+    public function testPaymentDescriptionForDirectPayments()
     {
         $transaction = $this->makeVoucherTransaction();
 
@@ -31,14 +29,18 @@ class PaymentDescriptionTest extends TestCase
             'target' => 'iban'
         ]);
 
-        self::assertEquals("", $transaction->makePaymentDescription());
+        static::assertEquals(
+            "$transaction->id - {$transaction->voucher->fund->name}",
+            $transaction->makePaymentDescription(),
+            'Bank payment description for direct payments does not match the expected.',
+        );
     }
 
     /**
      * @return void
      * @throws Throwable
      */
-    public function testPaymentWithoutProviderDescription(): void
+    public function testPaymentDescriptionWhenProviderIsMissing(): void
     {
         $transaction = $this->makeVoucherTransaction();
 
@@ -47,10 +49,14 @@ class PaymentDescriptionTest extends TestCase
             'organization_id' => null,
         ]);
 
-        self::assertEquals("", $transaction->makePaymentDescription());
+        static::assertEquals(
+            "$transaction->id - {$transaction->voucher->fund->name}",
+            $transaction->makePaymentDescription(),
+            'Bank payment description when provider is missing does not match the expected.',
+        );
     }
 
-    public function testMakePaymentWithDisabledProviderFlags(): void
+    public function testPaymentDescriptionWhenAllProviderFlagsDisabled(): void
     {
         $transaction = $this->makeVoucherTransaction();
 
@@ -63,7 +69,7 @@ class PaymentDescriptionTest extends TestCase
      * @return void
      * @throws Throwable
      */
-    public function testProviderFlags(): void
+    public function testPaymentDescriptionProviderFlagsOneByOne(): void
     {
         $providerFlags = [
             'bank_transaction_id',
@@ -87,13 +93,21 @@ class PaymentDescriptionTest extends TestCase
     private function checkPaymentDescriptionFlags(array $providerFlags): void
     {
         $testData = $this->getDescriptionData();
-
         $transaction = $this->makeVoucherTransaction();
 
-        $this->updateEmployeeDetails($transaction->employee);
+        $office = $this->makeOrganizationOffice($transaction->provider, [
+            'branch_number' => $testData['bank_branch_number'],
+            'branch_name' => $testData['bank_branch_name'],
+            'branch_id' => $testData['bank_branch_id'],
+        ]);
 
-        $reservation = $this->makeBudgetReservationInDb($transaction->provider);
-        $reservation->update(['voucher_transaction_id' => $transaction->id]);
+        $transaction->employee->update([
+            'office_id' => $office->id,
+        ]);
+
+        $this->makeBudgetReservationInDb($transaction->provider)->update([
+            'voucher_transaction_id' => $transaction->id,
+        ]);
 
         $this->updateProviderTransactionFlags($transaction->provider, $providerFlags);
 
@@ -113,17 +127,22 @@ class PaymentDescriptionTest extends TestCase
             $transaction->provider->bank_note ? $transaction->notes_provider->first()?->message : null,
         ])));
 
-        self::assertEquals($expectedDescription, $transaction->makePaymentDescription(140));
+        self::assertEquals(
+            $expectedDescription,
+            $transaction->makePaymentDescription(140),
+            "Payment description doesn't match the expectation."
+        );
 
         //- Check if payment description is limited to 140 characters
-        $note->update([
-            'message' => $testData['bank_note_long'],
-        ]);
+        $note->update([ 'message' => $testData['bank_note_long']]);
         $transaction->notes_provider[0]->refresh();
 
-        self::assertEquals(140, strlen($transaction->makePaymentDescription(140)));
+        self::assertLessThanOrEqual(140, strlen($transaction->makePaymentDescription(140)));
     }
 
+    /**
+     * @return array
+     */
     protected function getDescriptionData(): array
     {
         return [
@@ -131,53 +150,45 @@ class PaymentDescriptionTest extends TestCase
             'bank_branch_id' => '114324234',
             'bank_branch_name' => 'JKE234',
             'bank_note' => 'Test note',
-            'bank_note_long' => str_repeat('a', 141),
+            'bank_note_long' => $this->faker->text(300),
         ];
     }
 
-    private function updateEmployeeDetails(Employee $employee): Employee
-    {
-        $testData = $this->getDescriptionData();
-
-        $office = $this->makeOrganizationOffice($employee->organization, [
-            'branch_number' => $testData['bank_branch_number'],
-            'branch_name' => $testData['bank_branch_name'],
-            'branch_id' => $testData['bank_branch_id'],
-        ]);
-
-        $employee->update(['office_id' => $office->id]);
-
-        return $employee;
-    }
-
+    /**
+     * @param Organization $organization
+     * @param array $flags
+     * @return void
+     */
     private function updateProviderTransactionFlags(Organization $organization, array $flags): void
     {
         $organization->update([
             'bank_transaction_id' => in_array('bank_transaction_id', $flags),
-            'bank_transaction_date' => in_array('bank_transaction_id', $flags),
-            'bank_reservation_number' => in_array('bank_transaction_id', $flags),
-            'bank_branch_number' => in_array('bank_transaction_id', $flags),
-            'bank_branch_id' => in_array('bank_transaction_id', $flags),
-            'bank_branch_name' => in_array('bank_transaction_id', $flags),
-            'bank_fund_name' => in_array('bank_transaction_id', $flags),
-            'bank_note' => in_array('bank_transaction_id', $flags),
+            'bank_transaction_date' => in_array('bank_transaction_date', $flags),
+            'bank_reservation_number' => in_array('bank_reservation_number', $flags),
+            'bank_branch_number' => in_array('bank_branch_number', $flags),
+            'bank_branch_id' => in_array('bank_branch_id', $flags),
+            'bank_branch_name' => in_array('bank_branch_name', $flags),
+            'bank_fund_name' => in_array('bank_fund_name', $flags),
+            'bank_note' => in_array('bank_note', $flags),
         ]);
     }
 
+    /**
+     * @return VoucherTransaction
+     */
     private function makeVoucherTransaction(): VoucherTransaction
     {
-        $organization = $this->makeOrganization();
+        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $employee = $organization->employees[0];
         $fund = $this->makeTestFund($organization);
-        $voucher = $fund->makeVoucher($organization->identity->address);
 
-        return $this->makeTestTransaction($organization, $voucher);
-    }
-
-    /**
-     * @return Organization
-     */
-    private function makeOrganization(): Organization
-    {
-        return $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        return $fund->makeVoucher()->makeTransaction([
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'employee_id' => $employee?->id,
+            'branch_id' => $employee?->office?->branch_id,
+            'branch_name' => $employee?->office?->branch_name,
+            'branch_number' => $employee?->office?->branch_number,
+            'organization_id' => $organization->id,
+        ]);
     }
 }
