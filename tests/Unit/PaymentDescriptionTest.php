@@ -62,7 +62,7 @@ class PaymentDescriptionTest extends TestCase
 
         $this->updateProviderTransactionFlags($transaction->provider, []);
 
-        self::assertEquals("", $transaction->makePaymentDescription());
+        self::assertEquals(" | ", $transaction->makePaymentDescription());
     }
 
     /**
@@ -74,6 +74,7 @@ class PaymentDescriptionTest extends TestCase
         $providerFlags = [
             'bank_transaction_id',
             'bank_transaction_date',
+            'bank_transaction_time',
             'bank_reservation_number',
             'bank_branch_number',
             'bank_branch_id',
@@ -116,9 +117,10 @@ class PaymentDescriptionTest extends TestCase
             'shared' => true,
         ]);
 
-        $expectedDescription = trim(implode(' - ', array_filter([
+        $expectedDescription = ' | ' . trim(implode(' | ', array_filter([
             $transaction->provider->bank_transaction_id ? $transaction->id : null,
-            $transaction->provider->bank_transaction_date ? $transaction->created_at : null,
+            $transaction->provider->bank_transaction_date ? $transaction->created_at?->format('Y-m-d') : null,
+            $transaction->provider->bank_transaction_time ? $transaction->created_at?->format('H:i:s') : null,
             $transaction->provider->bank_reservation_number ? $transaction->product_reservation?->code : null,
             $transaction->provider->bank_branch_number ? $transaction->employee?->office?->branch_number : null,
             $transaction->provider->bank_branch_id ? $transaction->employee?->office?->branch_id : null,
@@ -164,6 +166,7 @@ class PaymentDescriptionTest extends TestCase
         $organization->update([
             'bank_transaction_id' => in_array('bank_transaction_id', $flags),
             'bank_transaction_date' => in_array('bank_transaction_date', $flags),
+            'bank_transaction_time' => in_array('bank_transaction_time', $flags),
             'bank_reservation_number' => in_array('bank_reservation_number', $flags),
             'bank_branch_number' => in_array('bank_branch_number', $flags),
             'bank_branch_id' => in_array('bank_branch_id', $flags),
