@@ -226,15 +226,15 @@ class VoucherResource extends BaseJsonResource
 
         if ($voucher->isBudgetType() && $reservable_count !== null) {
             $reservable = FundQuery::whereProductsAreApprovedAndActiveFilter(
-                    Fund::whereId($voucher->fund_id), $product
-                )->exists() && $reservable_count > 0;
+                Fund::whereId($voucher->fund_id), $product
+            )->exists() && $reservable_count > 0;
         }
 
         if (!$voucher->fund->isTypeSubsidy()) {
             $reservable = $reservable && (
-                    $voucher->amount_available >= $product->price ||
-                    ($voucher->amount_available >= 0.1 && $product->reservationExtraPaymentsEnabled($voucher->fund))
-                );
+                $voucher->amount_available >= $product->price ||
+                ($voucher->amount_available >= 0.1 && $product->reservationExtraPaymentsEnabled($voucher->fund))
+            );
         }
 
         return [
@@ -273,8 +273,7 @@ class VoucherResource extends BaseJsonResource
      */
     protected function getProductVouchers(
         Collection|array|null $product_vouchers
-    ): \Illuminate\Support\Collection|array|null
-    {
+    ): \Illuminate\Support\Collection|array|null {
         return $product_vouchers?->map(function (Voucher $product_voucher) {
             return array_merge($product_voucher->only([
                 'identity_address', 'fund_id', 'returnable',
