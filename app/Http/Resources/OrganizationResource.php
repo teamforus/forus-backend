@@ -148,7 +148,7 @@ class OrganizationResource extends JsonResource
                 'can_view_provider_extra_payments' => $organization->canViewExtraPaymentsAsProvider(),
             ] : [],
             'bank_statement_details' => $organization->only([
-                'bank_transaction_id', 'bank_transaction_date', 'bank_branch_number', 'bank_branch_id',
+                'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time', 'bank_branch_number', 'bank_branch_id',
                 'bank_branch_name', 'bank_fund_name', 'bank_note', 'bank_reservation_number',
             ]),
         ] : [];

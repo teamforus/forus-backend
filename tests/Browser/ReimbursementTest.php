@@ -549,10 +549,14 @@ class ReimbursementTest extends DuskTestCase
         $browser->press($duskSelector);
 
         $browser->waitFor('@reimbursementDetailsPage');
-        $browser->assertVisible('@reimbursementOverviewEditButton');
-        $browser->assertVisible('@reimbursementDetailsPageDeleteBtn');
-        $browser->press('@reimbursementOverviewEditButton');
 
+        $browser->waitFor('@reimbursementOverviewEditButton');
+        $browser->assertVisible('@reimbursementOverviewEditButton');
+
+        $browser->waitFor('@reimbursementDetailsPageDeleteBtn');
+        $browser->assertVisible('@reimbursementDetailsPageDeleteBtn');
+
+        $browser->press('@reimbursementOverviewEditButton');
         $browser->waitFor('@reimbursementEditContent');
 
         $this->submitReimbursement($browser, $data, $reimbursement);
@@ -658,6 +662,7 @@ class ReimbursementTest extends DuskTestCase
     {
         $formData = $this->makeReimbursementData($voucher);
 
+        $browser->waitFor('@reimbursementForm');
         $browser->within('@reimbursementForm', function(Browser $browser) use ($voucher, $formData) {
             $browser->type('title', $formData['title']);
             $browser->type('amount', $formData['amount']);
@@ -665,6 +670,7 @@ class ReimbursementTest extends DuskTestCase
             $browser->type('iban', $formData['iban']);
             $browser->type('iban_name', $formData['iban_name']);
 
+            $browser->waitFor('@voucherSelector');
             $browser->press('@voucherSelector');
             $browser->waitFor('@voucherSelectorOptions');
             $browser->press("@voucherSelectorOption$voucher->id");

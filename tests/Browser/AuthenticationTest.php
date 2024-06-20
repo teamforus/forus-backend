@@ -48,6 +48,7 @@ class AuthenticationTest extends DuskTestCase
 
             // Select the login by option
             $browser->element('@authOptionEmailRestore')->click();
+            $browser->waitFor('@authEmailForm');
             $browser->assertVisible('@authEmailForm');
 
             // Type the email and submit the form
@@ -104,6 +105,7 @@ class AuthenticationTest extends DuskTestCase
 
             // Select the registration by email option
             $browser->element('@authOptionEmailRegister')->click();
+            $browser->waitFor('@authEmailForm');
             $browser->assertVisible('@authEmailForm');
 
             // Type the email and submit the form
