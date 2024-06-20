@@ -13,10 +13,12 @@ use App\Services\MollieService\Objects\Payment;
 use App\Services\MollieService\Objects\PaymentMethod;
 use App\Services\MollieService\Objects\Profile;
 use App\Services\MollieService\Objects\Refund;
+use App\Services\MollieService\Objects\ResourceOwner;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
+use League\OAuth2\Client\Token\AccessToken;
 
 class MollieServiceTest implements MollieServiceInterface
 {
@@ -102,17 +104,34 @@ class MollieServiceTest implements MollieServiceInterface
      */
     public function exchangeOauthCode(string $code, string $state): ?MollieConnection
     {
-        $connection = MollieConnection::create([
-            ...Arr::except($this->data['connection']['organization'], 'id'),
-            'completed_at' => now(),
-            'organization_id' => $this->data['connection']['organization_id'],
-            'connection_state' => MollieConnection::STATE_ACTIVE,
-            'mollie_organization_id' => $this->data['connection']['organization']['id'],
-        ]);
+        return $this->processConnectionByToken(new AccessToken([
+            'access_token' => token_generator()->generate(32),
+            'refresh_token' => $code,
+            'expires_at' => now()->addMinutes(15)
+        ]), $state);
+    }
 
-        $connection->profiles()->create($this->data['connection']['profile']);
+    /**
+     * @param AccessToken $token
+     * @param string $state
+     * @return MollieConnection|null
+     */
+    private function processConnectionByToken(AccessToken $token, string $state): ?MollieConnection
+    {
+        $mollieConnections = MollieConnection::firstWhere('state_code', $state);
 
-        return $connection;
+        return $mollieConnections?->updateConnectionByToken($token, new ResourceOwner([
+            'id' => Arr::get($this->data, 'connection.organization.id'),
+            'name' => Arr::get($this->data, 'connection.organization.name', ''),
+            'city' => Arr::get($this->data, 'connection.organization.address.city', ''),
+            'street' => Arr::get($this->data, 'connection.organization.address.streetAndNumber', ''),
+            'country' => Arr::get($this->data, 'connection.organization.address.country', ''),
+            'postcode' => Arr::get($this->data, 'connection.organization.address.postalCode', ''),
+            'first_name' => Arr::get($this->data, 'connection.organization.first_name'),
+            'last_name' => Arr::get($this->data, 'connection.organization.last_name'),
+            'vat_number' => Arr::get($this->data, 'connection.organization.vatNumber'),
+            'registration_number' => Arr::get($this->data, 'connection.organization.registrationNumber'),
+        ]));
     }
 
     /**
