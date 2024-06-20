@@ -104,37 +104,34 @@ class MollieServiceTest implements MollieServiceInterface
      */
     public function exchangeOauthCode(string $code, string $state): ?MollieConnection
     {
-        $mollieConnections = MollieConnection::firstWhere('state_code', $state);
-
-        $token = new AccessToken([
-            'access_token' => $code,
+        return $this->processConnectionByToken(new AccessToken([
+            'access_token' => token_generator()->generate(32),
             'refresh_token' => $code,
             'expires_at' => now()->addMinutes(15)
-        ]);
-
-        return $mollieConnections?->updateConnectionByToken($token, $this->mapResourceOwner(
-            $this->data['connection']['organization'],
-        ));
+        ]), $state);
     }
 
     /**
-     * @param array $attributes
-     * @return ResourceOwner
+     * @param AccessToken $token
+     * @param string $state
+     * @return MollieConnection|null
      */
-    private function mapResourceOwner(array $attributes): ResourceOwner
+    private function processConnectionByToken(AccessToken $token, string $state): ?MollieConnection
     {
-        return new ResourceOwner([
-            'id' => $attributes['id'],
-            'name' => $attributes['name'] ?? '',
-            'city' => $attributes['address']['city'] ?? '',
-            'street' => $attributes['address']['streetAndNumber'] ?? '',
-            'country' => $attributes['address']['country'] ?? '',
-            'postcode' => $attributes['address']['postalCode'] ?? '',
-            'last_name' => $attributes['first_name'] ?? null,
-            'first_name' => $attributes['last_name'] ?? null,
-            'vat_number' => $attributes['vatNumber'] ?? null,
-            'registration_number' => $attributes['registrationNumber'] ?? null,
-        ]);
+        $mollieConnections = MollieConnection::firstWhere('state_code', $state);
+
+        return $mollieConnections?->updateConnectionByToken($token, new ResourceOwner([
+            'id' => Arr::get($this->data, 'connection.organization.id'),
+            'name' => Arr::get($this->data, 'connection.organization.name', ''),
+            'city' => Arr::get($this->data, 'connection.organization.address.city', ''),
+            'street' => Arr::get($this->data, 'connection.organization.address.streetAndNumber', ''),
+            'country' => Arr::get($this->data, 'connection.organization.address.country', ''),
+            'postcode' => Arr::get($this->data, 'connection.organization.address.postalCode', ''),
+            'first_name' => Arr::get($this->data, 'connection.organization.first_name'),
+            'last_name' => Arr::get($this->data, 'connection.organization.last_name'),
+            'vat_number' => Arr::get($this->data, 'connection.organization.vatNumber'),
+            'registration_number' => Arr::get($this->data, 'connection.organization.registrationNumber'),
+        ]));
     }
 
     /**

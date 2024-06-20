@@ -67,7 +67,7 @@ class MollieConnectionController extends Controller
             abort(503, $e->getMessage());
         }
 
-        MollieConnection::makeNewConnection($organization, [
+        $connection = MollieConnection::makeNewConnection($organization, [
             ...Arr::only($data, [
                 'email', 'first_name', 'last_name', 'street', 'city', 'postcode',
             ]),
@@ -80,6 +80,7 @@ class MollieConnectionController extends Controller
         ]);
 
         return new JsonResponse([
+            'id' => $connection->id,
             'url' => $connectAuthUrl,
         ]);
     }
@@ -100,11 +101,15 @@ class MollieConnectionController extends Controller
         $mollieService = MollieConnection::getMollieServiceByForusToken();
         $connectAuthUrl = $mollieService->mollieConnect($state);
 
-        Event::dispatch(new MollieConnectionCreated($organization->mollie_connections()->create([
+        /** @var MollieConnection $connection */
+        $connection = $organization->mollie_connections()->create([
             'state_code' => $state,
-        ]), $request->employee($organization)));
+        ]);
+
+        Event::dispatch(new MollieConnectionCreated($connection, $request->employee($organization)));
 
         return new JsonResponse([
+            'id' => $connection->id,
             'url' => $connectAuthUrl,
         ]);
     }
