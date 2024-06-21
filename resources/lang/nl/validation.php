@@ -105,6 +105,7 @@ return [
     'required_with_all'    => 'Het :attribute veld is verplicht wanneer :values aanwezig is.',
     'required_without'     => 'Het :attribute veld is verplicht wanneer :values niet aanwezig is.',
     'required_without_all' => 'Het :attribute veld is verplicht wanneer geen van :values aanwezig is.',
+    'required_not_filled'  => 'Het :attribute veld is verplicht maar nog niet ingevuld',
     'same'                 => 'Het :attribute en :other moeten hetzelfde zijn.',
     'size'                 => [
         'numeric' => ':attribute moet :size zijn.',
@@ -272,6 +273,8 @@ return [
         'postal_code' => 'postcode',
         'street' => 'straat',
         'ip' => "IP",
+        'title' => 'titel',
+        'iban_name' => 'naam rekeninghouder',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',
