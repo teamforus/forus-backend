@@ -17,7 +17,6 @@ trait MakesVoucherTransaction
      */
     public function getVouchersForBatchTransactionsQuery(
         Organization $organization,
-
     ): Voucher|Builder {
         $builder = Voucher::query()
             ->where(fn (Builder $builder) => VoucherQuery::whereNotExpiredAndActive($builder))
