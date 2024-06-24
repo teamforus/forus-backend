@@ -23,7 +23,7 @@ class IndexVouchersRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->organization->identityCan($this->identity(), 'manage_vouchers');
+        return $this->organization->identityCan($this->identity(), ['manage_vouchers', 'view_vouchers'], false);
     }
 
     /**

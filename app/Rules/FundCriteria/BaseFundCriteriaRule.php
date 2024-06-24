@@ -29,10 +29,10 @@ abstract class BaseFundCriteriaRule extends BaseRule
     ) {}
 
     /**
-     * @param string $key
+     * @param string|null $key
      * @return RecordType|null
      */
-    protected function findRecordType(string $key): ?RecordType
+    protected function findRecordType(?string $key): ?RecordType
     {
         return RecordType::where([
             'key' => $key,

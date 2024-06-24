@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class UpdateImplementationEmailRequest extends FormRequest
+class UpdateImplementationEmailRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,8 +24,8 @@ class UpdateImplementationEmailRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email_from_address'    => 'nullable|string|max:50',
-            'email_from_name'       => 'nullable|string|max:50',
+            'email_from_address' => ['nullable', 'string', ...$this->emailRules()],
+            'email_from_name' => 'nullable|string|max:50',
         ];
     }
 }
