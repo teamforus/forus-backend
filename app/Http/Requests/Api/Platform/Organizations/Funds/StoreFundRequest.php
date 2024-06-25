@@ -50,7 +50,7 @@ class StoreFundRequest extends BaseFundRequest
             'allow_fund_requests'           => 'required|boolean',
             'allow_prevalidations'          => 'required|boolean',
             'allow_direct_requests'         => 'required|boolean',
-            'request_btn_text'              => 'nullable|string|max:50',
+            'request_btn_text'              => 'required|string|max:50',
             'external_link_text'            => 'nullable|string|max:50',
             'external_link_url'             => 'nullable|string|max:200',
             'external_page'                 => 'nullable|boolean',

@@ -28,6 +28,8 @@ class ProviderFinancialResource extends JsonResource
         return array_merge($this->resource->only([
             'highest_transaction', 'nr_transactions', 'total_spent',
         ]), [
+            'total_spent_locale' => currency_format_locale($this->resource->total_spent),
+            'highest_transaction_locale' => currency_format_locale($this->resource->highest_transaction),
             'provider' => new OrganizationBasicResource($this->resource),
         ]);
     }

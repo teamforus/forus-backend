@@ -25,7 +25,9 @@ class RecordTypeResource extends BaseJsonResource
     {
         $recordType = $this->resource;
 
-        return array_merge($recordType->only('key', 'type', 'system'), [
+        return array_merge($recordType->only([
+            'key', 'type', 'system', 'criteria',
+        ]), [
             'name' => $recordType->name ?: $recordType->key,
             'validations' => $recordType->getValidations(),
             'operators' => array_map(fn ($operator) => [

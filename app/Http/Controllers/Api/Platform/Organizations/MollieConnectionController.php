@@ -11,10 +11,8 @@ use App\Http\Requests\Api\Platform\Organizations\MollieConnections\UpdateMollieC
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\MollieConnectionResource;
 use App\Models\Organization;
-use App\Services\MollieService\Data\ForusTokenData;
 use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Models\MollieConnection;
-use App\Services\MollieService\MollieService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
@@ -51,10 +49,10 @@ class MollieConnectionController extends Controller
             'email', 'first_name', 'last_name', 'street', 'city', 'postcode',
         ]);
 
-        $mollieService = MollieService::make(new ForusTokenData());
         $state = token_generator()->generate(64);
 
         try {
+            $mollieService = MollieConnection::getMollieServiceByForusToken();
             $connectAuthUrl = $mollieService->createClientLink($state, $request->get('name'), [
                 "email" => Arr::get($data, 'email'),
                 "givenName" => Arr::get($data, 'first_name'),
@@ -69,7 +67,7 @@ class MollieConnectionController extends Controller
             abort(503, $e->getMessage());
         }
 
-        MollieConnection::makeNewConnection($organization, [
+        $connection = MollieConnection::makeNewConnection($organization, [
             ...Arr::only($data, [
                 'email', 'first_name', 'last_name', 'street', 'city', 'postcode',
             ]),
@@ -82,6 +80,7 @@ class MollieConnectionController extends Controller
         ]);
 
         return new JsonResponse([
+            'id' => $connection->id,
             'url' => $connectAuthUrl,
         ]);
     }
@@ -90,6 +89,7 @@ class MollieConnectionController extends Controller
      * @param OauthMollieConnectionRequest $request
      * @param Organization $organization
      * @return JsonResponse
+     * @throws MollieException
      */
     public function connectOAuth(
         OauthMollieConnectionRequest $request,
@@ -98,14 +98,18 @@ class MollieConnectionController extends Controller
         $this->authorize('connectMollieAccount', [MollieConnection::class, $organization]);
 
         $state = token_generator()->generate(64);
-        $mollieService = MollieService::make(new ForusTokenData());
+        $mollieService = MollieConnection::getMollieServiceByForusToken();
         $connectAuthUrl = $mollieService->mollieConnect($state);
 
-        Event::dispatch(new MollieConnectionCreated($organization->mollie_connections()->create([
+        /** @var MollieConnection $connection */
+        $connection = $organization->mollie_connections()->create([
             'state_code' => $state,
-        ]), $request->employee($organization)));
+        ]);
+
+        Event::dispatch(new MollieConnectionCreated($connection, $request->employee($organization)));
 
         return new JsonResponse([
+            'id' => $connection->id,
             'url' => $connectAuthUrl,
         ]);
     }
@@ -156,6 +160,7 @@ class MollieConnectionController extends Controller
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @return JsonResponse
+     * @throws MollieException
      */
     public function destroy(BaseFormRequest $request, Organization $organization): JsonResponse
     {
