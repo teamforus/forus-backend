@@ -115,6 +115,5 @@ trait HasFrontendActions
         $browser->press('@headerOrganizationSwitcher');
         $browser->waitFor("@headerOrganizationItem$organization->id");
         $browser->press("@headerOrganizationItem$organization->id");
-        $browser->pause(2000);
     }
 }

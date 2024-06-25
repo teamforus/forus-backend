@@ -87,13 +87,11 @@ class VoucherTransactionBatchTest extends DuskTestCase
     private function searchTransaction(Browser $browser, VoucherTransaction $transaction): void
     {
         $browser->waitFor('@searchTransaction');
-        $browser->type('@searchTransaction', $transaction->uid);
+        $browser->value('@searchTransaction', $transaction->uid);
 
-        $browser->pause(2000);
-        $browser->waitFor('@transactionItem');
-        $browser->assertSeeIn('@transactionItem', $transaction->uid);
-
-        $browser->within('@transactionItem', function(Browser $browser) use ($transaction) {
+        $browser->waitFor("@transactionItem$transaction->id");
+        $browser->within("@transactionItem$transaction->id", function(Browser $browser) use ($transaction) {
+            $browser->assertSee($transaction->uid);
             $browser->assertSeeIn('@transactionState', $transaction->state_locale);
         });
     }
