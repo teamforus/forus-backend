@@ -61,9 +61,9 @@ class VoucherTransactionBulkPolicy
                 return true;
             }
 
-            return $this->deny(implode("", [
-                "Action unavailable, you need at least one pending",
-                "transaction to create a new bulk.",
+            return $this->deny(implode(" ", [
+                "Om een nieuwe bulktransactie aan te maken,",
+                "moet er minstens één lopende transactie zijn.",
             ]), 403);
         }
 
