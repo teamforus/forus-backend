@@ -436,6 +436,7 @@ class ReimbursementTest extends DuskTestCase
 
         if ($reimbursement->voucher?->identity?->email) {
             $browser->waitFor('@searchReimbursement');
+            $browser->clear('@searchReimbursement');
             $browser->type('@searchReimbursement', $reimbursement->voucher->identity->email);
             $browser->waitFor("@reimbursement$reimbursement->id", 5);
             $browser->assertVisible("@reimbursement$reimbursement->id");

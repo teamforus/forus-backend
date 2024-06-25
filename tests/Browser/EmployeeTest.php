@@ -206,6 +206,7 @@ class EmployeeTest extends DuskTestCase
     private function searchEmployee(Browser $browser, Employee $employee): void
     {
         $browser->waitFor('@searchEmployee');
+        $browser->clear('@searchEmployee');
         $browser->type('@searchEmployee', $employee->identity->email);
 
         $browser->pause(2000);

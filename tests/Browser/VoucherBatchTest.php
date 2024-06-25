@@ -140,6 +140,7 @@ class VoucherBatchTest extends DuskTestCase
         };
 
         $browser->waitFor('@searchVoucher');
+        $browser->clear('@searchVoucher');
         $browser->type('@searchVoucher', $search);
 
         $browser->waitFor("@voucherItem$voucher->id");
@@ -161,7 +162,7 @@ class VoucherBatchTest extends DuskTestCase
         $browser->element("@selectControlFundItem$fundId")->click();
 
         $browser->waitFor('@searchVoucher');
-        $browser->type('@searchVoucher', '');
+        $browser->clear('@searchVoucher');
         $browser->waitFor("@vouchersCard$fundId");
         $browser->pause(100);
     }
