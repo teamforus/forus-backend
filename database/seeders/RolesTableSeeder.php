@@ -47,6 +47,10 @@ class RolesTableSeeder extends Seeder
         'voucher_officer' => [
             'en' => 'Voucher admin',
             'nl' => 'Voucher beheerder',
+        ],
+        'voucher_reader' => [
+            'en' => 'Voucher viewer',
+            'nl' => 'Raadpleger',
         ]
     ];
 
