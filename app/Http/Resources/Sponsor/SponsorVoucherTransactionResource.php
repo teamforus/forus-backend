@@ -45,7 +45,10 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'timestamp' => $transaction->created_at->timestamp,
             'transaction_in' => $transaction->daysBeforeTransaction(),
             'organization' => $transaction->provider?->only('id', 'name'),
-            'fund' => $transaction->voucher->fund->only('id', 'name', 'organization_id'),
+            'fund' => [
+                ...$transaction->voucher->fund->only('id', 'name', 'organization_id'),
+                'organization_name' => $transaction->voucher->fund->organization?->name,
+            ],
             'notes' => VoucherTransactionNoteResource::collection($transaction->notes_sponsor),
             'bulk_status_locale' => $transaction->bulk_status_locale,
             'transaction_cost' => currency_format($transaction->transaction_cost),
