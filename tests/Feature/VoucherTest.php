@@ -9,7 +9,6 @@ use App\Models\FundConfig;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\PhysicalCard;
-use App\Models\RecordType;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundProviderQuery;
@@ -17,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 use Tests\TestCases\VoucherTestCases;
 use Tests\Traits\MakesTestFunds;
@@ -106,38 +106,18 @@ class VoucherTest extends TestCase
      */
     public function testVoucherFundFormulaProductMultiplier(): void
     {
-        Cache::clear();
-
-        // create custom record type for vouchers
-        $recordType = RecordType::create([
-            'key' => 'test_number_record_type',
-            'type' => 'number',
-            'vouchers' => true,
-        ]);
-
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $fund = $this->makeTestFund($organization, [
-            'criteria' => [[
-                'value' => random_int(2, 6),
-                'operator' => '>',
-                'show_attachment' => false,
-                'record_type_key' => $recordType->key,
-            ]],
-        ], [
+        $identity->setBsnRecord('123456789');
+        $fund = $this->makeTestFund($organization, [], [
             'limit_generator_amount' => 100,
             'limit_voucher_total_amount' => 100,
             'generator_ignore_fund_budget' => true,
             'allow_prevalidations' => true,
         ]);
 
-        $this->makeProviderAndProducts($fund, $recordType->key);
-
-        // make prevalidations and assign custom records
-        $this->makePrevalidation($fund, $identity);
-        $validator = $fund->organization->identity;
-        $this->makeRecords($identity, $validator);
-
+        $prevalidation = $this->buildFundAndPrevalidation($organization, $fund);
+        $prevalidation->assignToIdentity($identity);
         $this->makeVoucherForFundFormulaProduct($fund, $identity);
     }
 
@@ -175,7 +155,7 @@ class VoucherTest extends TestCase
         $voucher = $this->getVouchersBuilder($fund, $startDate, 'budget')->first();
 
         $this->assertNotNull($voucher);
-        $this->assertFundFormulaProducts($voucher, $startDate, 'email');
+        $this->assertFundFormulaProducts($voucher, $startDate);
     }
 
     /**
@@ -698,7 +678,7 @@ class VoucherTest extends TestCase
         );
 
         $response = $this->post($url, [
-            'city' => $this->faker()->city,
+            'city' => Str::limit($this->faker()->city, 20),
             'house' => $this->faker()->numberBetween(1, 100),
             'address' => $this->faker()->address,
             'postcode' => $this->faker()->postcode,
