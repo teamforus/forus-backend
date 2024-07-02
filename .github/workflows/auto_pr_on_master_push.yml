@@ -1,4 +1,4 @@
-name: Create Pull-Request with changes of master branch to develop branch
+name: PR from master to develop
 
 on:
   push:
@@ -12,27 +12,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout master branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: master
+
+      - name: Checkout develop branch
+        run: git fetch origin develop:develop && git checkout develop
+
+      - name: Check for differences between master and develop
+        id: check_diff
+        run: |
+          git diff --name-status $(git merge-base develop master) master | tee changes.txt
+          if [ -s changes.txt ]; then
+            echo "Changes were detected"
+            echo "changes_exist=true" >> $GITHUB_ENV
+          else
+            echo "Changes were not detected, skipping PR creation steps"
+            echo "changes_exist=false" >> $GITHUB_ENV
+          fi
 
       - name: Get current date
         id: get-date
         run: echo "value=$(date +%Y-%m-%d_%H-%M-%S)">> $GITHUB_OUTPUT
 
       - name: Create new branch
+        if: env.changes_exist == 'true'
         run: |
+          git checkout master
           git pull
           git checkout -b "auto/master_to_develop_update-${{steps.get-date.outputs.value}}" origin/master
           git push --set-upstream origin "auto/master_to_develop_update-${{steps.get-date.outputs.value}}"
 
       - name: Create pull request
+        if: env.changes_exist == 'true'
         run: >
           gh pr create
           --base develop
           --head "auto/master_to_develop_update-${{steps.get-date.outputs.value}}"
           --title "[auto] PR master into develop"
           --body "Created by Github action after a change in master branch that doesn't exist in develop branch"
-          --assignee lexlog,RobinMeles,GerbenBosschieter --reviewer lexlog,RobinMeles,GerbenBosschieter
+          --assignee lexlog,RobinMeles --reviewer lexlog,RobinMeles
         env:
           GH_TOKEN: ${{ github.token }}
