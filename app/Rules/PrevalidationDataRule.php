@@ -47,9 +47,9 @@ class PrevalidationDataRule implements Rule
 
         /** @var Fund $fund */
         $fund = $this->fundId ? Fund::query()->find($this->fundId) : false;
-        $requiredKeys = $fund ? $fund->requiredPrevalidationKeys() : [];
 
         foreach ($data as $records) {
+            $requiredKeys = $fund ? $fund->requiredPrevalidationKeys(false, $records) : [];
             $records = collect($records);
 
             if ($fund && $records->keys()->search($fund->fund_config->csv_primary_key) === false) {

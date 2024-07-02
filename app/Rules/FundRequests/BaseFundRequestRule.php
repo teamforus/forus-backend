@@ -22,7 +22,6 @@ use Illuminate\Validation\Validator;
 
 abstract class BaseFundRequestRule extends BaseRule
 {
-
     /**
      * Create a new rule instance.
      *

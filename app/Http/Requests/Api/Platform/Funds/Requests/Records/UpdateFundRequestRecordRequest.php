@@ -9,6 +9,7 @@ use App\Rules\FundRequests\Sponsor\FundRequestRecordValueSponsorRule;
 
 /**
  * @property-read Organization $organization
+ * @property-read FundRequestRecord $fund_request
  * @property-read FundRequestRecord $fund_request_record
  */
 class UpdateFundRequestRecordRequest extends BaseFormRequest
@@ -37,6 +38,7 @@ class UpdateFundRequestRecordRequest extends BaseFormRequest
                     $this->fund_request_record->fund_request->fund,
                     $this,
                     $this->fund_request_record->fund_criterion,
+                    $this->fund_request,
                 ),
             ],
         ];

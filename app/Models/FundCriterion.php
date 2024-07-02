@@ -3,10 +3,21 @@
 namespace App\Models;
 
 use App\Helpers\Markdown;
+use App\Helpers\Validation;
+use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeBoolRule;
+use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeDateRule;
+use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeEmailRule;
+use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeIbanRule;
+use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeNumericRule;
+use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeSelectNumberRule;
+use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeSelectRule;
+use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeStringRule;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 use League\CommonMark\Exception\CommonMarkException;
 
 /**
@@ -15,11 +26,13 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property int $id
  * @property int $fund_id
  * @property string $record_type_key
+ * @property int|null $order
+ * @property int|null $fund_criteria_step_id
  * @property string $operator
  * @property string $value
  * @property bool $optional
- * @property int|null $min
- * @property int|null $max
+ * @property string|null $min
+ * @property string|null $max
  * @property string|null $title
  * @property bool $show_attachment
  * @property string $description
@@ -28,6 +41,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OrganizationValidator[] $external_validator_organizations
  * @property-read int|null $external_validator_organizations_count
  * @property-read \App\Models\Fund $fund
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterionRule[] $fund_criterion_rules
+ * @property-read int|null $fund_criterion_rules_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterionValidator[] $fund_criterion_validators
  * @property-read int|null $fund_criterion_validators_count
  * @property-read \App\Models\FundRequestRecord|null $fund_request_record
@@ -38,12 +53,14 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion query()
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereFundCriteriaStepId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereMax($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereMin($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereOperator($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereOptional($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereRecordTypeKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereShowAttachment($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereTitle($value)
@@ -60,7 +77,7 @@ class FundCriterion extends BaseModel
      */
     protected $fillable = [
         'fund_id', 'record_type_key', 'operator', 'value', 'show_attachment',
-        'description', 'title', 'optional', 'min', 'max',
+        'description', 'title', 'optional', 'min', 'max', 'order', 'fund_criteria_step_id',
     ];
 
     protected $casts = [
@@ -105,6 +122,15 @@ class FundCriterion extends BaseModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_criterion_rules(): HasMany
+    {
+        return $this->hasMany(FundCriterionRule::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      * @noinspection PhpUnused
      */
@@ -121,5 +147,43 @@ class FundCriterion extends BaseModel
     public function getDescriptionHtmlAttribute(): string
     {
         return Markdown::convert($this->description ?: '');
+    }
+
+    /**
+     * @param array $values
+     * @return bool
+     */
+    public function isExcludedByRules(array $values): bool
+    {
+        if ($this->fund_criterion_rules->isEmpty()) {
+            return false;
+        }
+
+        return $this->fund_criterion_rules->filter(function ($rule) use ($values) {
+            return $this->validateRecordValue($rule, $values)?->fails();
+        })->isNotEmpty();
+    }
+
+    /**
+     * @param mixed $rule
+     * @param array $values
+     * @return Validator|null
+     */
+    public function validateRecordValue(FundCriterionRule $rule, array $values): ?Validator
+    {
+        $type = record_types_static()[$rule->record_type_key] ?? null;
+        $value = $values[$rule->record_type_key] ?? '';
+
+        return match ($type?->type) {
+            RecordType::TYPE_STRING => CriteriaRuleTypeStringRule::check($value, $type, $rule),
+            RecordType::TYPE_NUMBER => CriteriaRuleTypeNumericRule::check($value, $type, $rule),
+            RecordType::TYPE_SELECT => CriteriaRuleTypeSelectRule::check($value, $type, $rule),
+            RecordType::TYPE_SELECT_NUMBER => CriteriaRuleTypeSelectNumberRule::check($value, $type, $rule),
+            RecordType::TYPE_EMAIL => CriteriaRuleTypeEmailRule::check($value, $type, $rule),
+            RecordType::TYPE_IBAN => CriteriaRuleTypeIbanRule::check($value, $type, $rule),
+            RecordType::TYPE_BOOL => CriteriaRuleTypeBoolRule::check($value, $type, $rule),
+            RecordType::TYPE_DATE => CriteriaRuleTypeDateRule::check($value, $type, $rule),
+            default => Validation::check('', ['required', Rule::in([])]),
+        };
     }
 }
