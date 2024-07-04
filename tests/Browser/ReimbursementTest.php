@@ -177,10 +177,9 @@ class ReimbursementTest extends DuskTestCase
                 $browser->element('@reimbursementApprove')->click();
                 $browser->waitFor('@reimbursementResolveSubmit');
                 $browser->element('@reimbursementResolveSubmit')->click();
-                $browser->waitFor('@reimbursementsPage', 8);
-                $browser->pause(3000);
-                $reimbursement->refresh();
+                $browser->waitUntilMissing('@reimbursementResolveSubmit');
 
+                $reimbursement->refresh();
                 $this->assertTrue($reimbursement->isApproved());
             }
 
@@ -189,17 +188,15 @@ class ReimbursementTest extends DuskTestCase
                 $browser->element('@reimbursementDecline')->click();
                 $browser->waitFor('@reimbursementResolveSubmit');
                 $browser->element('@reimbursementResolveSubmit')->click();
-                $browser->waitFor('@reimbursementsPage', 8);
-                $browser->pause(3000);
-                $reimbursement->refresh();
+                $browser->waitUntilMissing('@reimbursementResolveSubmit');
 
+                $reimbursement->refresh();
                 $this->assertTrue($reimbursement->isDeclined());
             }
 
             if ($state === 'expired') {
                 $reimbursement->voucher->update(['expire_at' => now()->subDay()]);
                 $reimbursement->refresh();
-
                 $this->assertTrue($reimbursement->isExpired());
             }
 
@@ -259,7 +256,6 @@ class ReimbursementTest extends DuskTestCase
      */
     private function goToReimbursementsPage(Browser $browser) : void {
         $browser->press('@userVouchers');
-        $browser->pause(1000);
         $browser->waitFor('@menuBtnReimbursements');
         $browser->press('@menuBtnReimbursements');
     }
@@ -272,9 +268,7 @@ class ReimbursementTest extends DuskTestCase
     protected function saveReimbursement(Browser $browser): void
     {
         $browser->waitFor('@reimbursementFormSave');
-        $browser->pause(1000);
         $browser->press('@reimbursementFormSave');
-        $browser->pause(1000);
 
         $browser->waitFor('@reimbursementsList');
     }
@@ -436,7 +430,8 @@ class ReimbursementTest extends DuskTestCase
 
         if ($reimbursement->voucher?->identity?->email) {
             $browser->waitFor('@searchReimbursement');
-            $browser->type('@searchReimbursement', $reimbursement->voucher->identity->email);
+            $browser->value('@searchReimbursement', $reimbursement->voucher->identity->email);
+
             $browser->waitFor("@reimbursement$reimbursement->id", 5);
             $browser->assertVisible("@reimbursement$reimbursement->id");
         }
@@ -454,16 +449,14 @@ class ReimbursementTest extends DuskTestCase
         ?Reimbursement $reimbursement,
         array $data,
     ): void {
-        // $this->browse(function (Browser $browser) use ($reimbursement, $data) {
-            // Go to reimbursements page and check if the previously added reimbursement is in the list
-            $this->goToDashboardReimbursementsPage($browser, $reimbursement->voucher->fund->organization);
-            $this->searchDashboardReimbursement($browser, $reimbursement);
-            $this->assertDashboardReimbursementPage($browser, $reimbursement, $data);
+        // Go to reimbursements page and check if the previously added reimbursement is in the list
+        $this->goToDashboardReimbursementsPage($browser, $reimbursement->voucher->fund->organization);
+        $this->searchDashboardReimbursement($browser, $reimbursement);
+        $this->assertDashboardReimbursementPage($browser, $reimbursement, $data);
 
-            // Go to reimbursements details page and check the data
-            $this->goToDashboardReimbursementDetailsPage($browser, $reimbursement);
-            $this->assertDashboardReimbursementDetails($browser, $reimbursement, $data);
-        //});
+        // Go to reimbursements details page and check the data
+        $this->goToDashboardReimbursementDetailsPage($browser, $reimbursement);
+        $this->assertDashboardReimbursementDetails($browser, $reimbursement, $data);
     }
 
     /**
@@ -689,6 +682,7 @@ class ReimbursementTest extends DuskTestCase
         $browser->waitFor('@modalPhotoCropperSubmit', 10);
         $browser->waitUntilEnabled('@modalPhotoCropperSubmit');
         $browser->press('@modalPhotoCropperSubmit');
+        $browser->waitUntilMissing('@modalPhotoCropper');
 
         return $formData;
     }
@@ -721,8 +715,6 @@ class ReimbursementTest extends DuskTestCase
         Browser $browser,
         Reimbursement $reimbursement,
     ): void {
-        $browser->pause(500);
-
         if ($reimbursement->expired) {
             $browser->waitFor('@reimbursementsFilterArchived', 10);
             $browser->press('@reimbursementsFilterArchived');

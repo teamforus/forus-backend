@@ -1760,10 +1760,20 @@ class Fund extends BaseModel
         $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery));
         $deactivatedVouchersQuery = VoucherQuery::whereNotExpiredAndDeactivated((clone $vouchersQuery));
 
-        $vouchers_amount = currency_format($vouchersQuery->sum('amount'));
-        $active_vouchers_amount = currency_format($activeVouchersQuery->sum('amount'));
-        $inactive_vouchers_amount = currency_format($inactiveVouchersQuery->sum('amount'));
-        $deactivated_vouchers_amount = currency_format($deactivatedVouchersQuery->sum('amount'));
+        $vouchersAmount = $vouchersQuery->sum('amount');
+        $activeVouchersAmount = $activeVouchersQuery->sum('amount');
+        $inactiveVouchersAmount = $inactiveVouchersQuery->sum('amount');
+        $deactivatedVouchersAmount = $deactivatedVouchersQuery->sum('amount');
+
+        $vouchers_amount = currency_format($vouchersAmount);
+        $active_vouchers_amount = currency_format($activeVouchersAmount);
+        $inactive_vouchers_amount = currency_format($inactiveVouchersAmount);
+        $deactivated_vouchers_amount = currency_format($deactivatedVouchersAmount);
+
+        $vouchers_amount_locale = currency_format_locale($vouchersAmount);
+        $active_vouchers_amount_locale = currency_format_locale($activeVouchersAmount);
+        $inactive_vouchers_amount_locale = currency_format_locale($inactiveVouchersAmount);
+        $deactivated_vouchers_amount_locale = currency_format_locale($deactivatedVouchersAmount);
 
         $vouchers_count = $vouchersQuery->count();
         $active_vouchers_count = $activeVouchersQuery->count();
@@ -1778,12 +1788,22 @@ class Fund extends BaseModel
             $transaction_costs += $fund->getTransactionCosts();
         }
 
+        $budget_locale = currency_format_locale($budget);
+        $budget_left_locale = currency_format_locale($budget_left);
+        $budget_used_locale = currency_format_locale($budget_used);
+        $budget_used_active_vouchers_locale = currency_format_locale($budget_used_active_vouchers);
+        $transaction_costs_locale = currency_format_locale($transaction_costs);
+
         return compact(
             'budget', 'budget_left',
             'budget_used', 'budget_used_active_vouchers', 'transaction_costs',
             'vouchers_amount', 'vouchers_count', 'active_vouchers_amount', 'active_vouchers_count',
             'inactive_vouchers_amount', 'inactive_vouchers_count',
-            'deactivated_vouchers_amount', 'deactivated_vouchers_count'
+            'deactivated_vouchers_amount', 'deactivated_vouchers_count',
+            'vouchers_amount_locale', 'active_vouchers_amount_locale',
+            'inactive_vouchers_amount_locale', 'deactivated_vouchers_amount_locale',
+            'budget_locale', 'budget_left_locale', 'budget_used_locale',
+            'budget_used_active_vouchers_locale', 'transaction_costs_locale',
         );
     }
 

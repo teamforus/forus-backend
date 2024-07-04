@@ -129,7 +129,7 @@ class ProductReservationPolicy
         $expiresIn = $productReservation->expiresIn();
         $isCancelable = $productReservation->extra_payment->isCancelable();
 
-        if ($isCancelable || $expiresIn <= 0) {
+        if ($isCancelable || ($productReservation->isWaiting() && $expiresIn <= 0)) {
             return true;
         }
 

@@ -29,6 +29,9 @@ class VoucherTransactionBulkResource extends BaseJsonResource
         $voucherTransactionAmount = $transactionBulk->voucher_transactions->sum('amount');
         $voucherTransactionAmountLocale = currency_format_locale($voucherTransactionAmount);
 
+        $voucherTransactionCost = $transactionBulk->voucher_transactions->sum('transaction_cost');
+        $voucherTransactionCostLocale = currency_format_locale($voucherTransactionCost);
+
         return array_merge($transactionBulk->only(
             'id', 'state', 'state_locale', 'payment_id', 'accepted_manually', 'is_exported'
         ), [
@@ -36,7 +39,8 @@ class VoucherTransactionBulkResource extends BaseJsonResource
             'bank' => new BankResource($transactionBulk->bank_connection->bank),
             'execution_date' => $executionDate?->format('Y-m-d'),
             'execution_date_locale' => format_date_locale($transactionBulk->execution_date),
-            'voucher_transactions_cost' => $transactionBulk->voucher_transactions->sum('transaction_cost'),
+            'voucher_transactions_cost' => $voucherTransactionCost,
+            'voucher_transactions_cost_locale' => $voucherTransactionCostLocale,
             'voucher_transactions_count' => $transactionBulk->voucher_transactions->count(),
             'voucher_transactions_amount' => $voucherTransactionAmount,
             'voucher_transactions_amount_locale' => $voucherTransactionAmountLocale,

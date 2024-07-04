@@ -91,7 +91,6 @@ class VoucherBatchTest extends DuskTestCase
             $assertTotalCount = $count * $funds->count();
 
             $browser->visit($implementation->urlSponsorDashboard());
-            $browser->pause(100);
 
             // Authorize identity
             $this->loginIdentity($browser, $organization->identity);
@@ -140,7 +139,7 @@ class VoucherBatchTest extends DuskTestCase
         };
 
         $browser->waitFor('@searchVoucher');
-        $browser->type('@searchVoucher', $search);
+        $browser->value('@searchVoucher', $search);
 
         $browser->waitFor("@voucherItem$voucher->id");
         $browser->assertSeeIn("@voucherItem$voucher->id", $search);
@@ -161,9 +160,7 @@ class VoucherBatchTest extends DuskTestCase
         $browser->element("@selectControlFundItem$fundId")->click();
 
         $browser->waitFor('@searchVoucher');
-        $browser->type('@searchVoucher', '');
         $browser->waitFor("@vouchersCard$fundId");
-        $browser->pause(100);
     }
 
     /**

@@ -106,6 +106,7 @@ class SponsorProviderProductResource extends BaseJsonResource
             'voucher_transactions_count', 'product_reservations_pending_count', 'active', 'product_id',
         ]), [
             'expire_at' => $product->expire_at?->format('Y-m-d'),
+            'amount_locale' => currency_format_locale($product->amount),
             'expire_at_locale' => format_date_locale($product->expire_at),
         ]))->toArray();
     }
