@@ -27,7 +27,7 @@
     $linkBlockStyle = "margin: 0 0 15px;";
     $linkStyle = "font: 400 16px/28px $baseFont color: #383D45; cursor: pointer; color: $colorPrimary; text-decoration: underline;";
 
-    $btnStyle = "display: inline-block; padding: 5px 75px; font: 600 14px/40px $baseFont color: #FFFFFF; border-radius: 3px; text-decoration: none;";
+    $btnStyle = "display: inline-block; padding: 15px 75px; font: 700 14px $baseFont color: #FFFFFF; border-radius: 3px; text-decoration: none; margin: 0 auto;";
     $btnDangerStyle = $btnStyle . " background-color: #bc2527;";
     $btnSuccessStyle = $btnStyle . " background-color: #74c86b;";
     $btnPrimaryStyle = $btnStyle . " background-color: $colorPrimary;";

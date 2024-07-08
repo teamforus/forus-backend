@@ -2,6 +2,7 @@
 
 namespace App\Services\MailDatabaseLoggerService;
 
+use App\Services\EventLogService\Models\EventLog;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Part\DataPart;
@@ -17,30 +18,24 @@ class MailDatabaseLogger
      */
     public function handle(MessageSending $event): void
     {
+        $eventLog = $event->data['eventLog'] ?? null;
+
+        $from = $event->message->getFrom()[0] ?? null;
+        $to = $event->message->getTo()[0] ?? null;
+
         EmailLog::create([
-            'from' => $this->formatAddressField($event->message, 'From'),
-            'to' => $this->formatAddressField($event->message, 'To'),
-            'cc' => $this->formatAddressField($event->message, 'Cc'),
-            'bcc' => $this->formatAddressField($event->message, 'Bcc'),
+            'from_name' => $from?->getName(),
+            'from_address' => $from?->getAddress(),
+            'to_name' => $to?->getName(),
+            'to_address' => $to?->getAddress(),
             'subject' => $event->message->getSubject(),
             'body' => $event->message->toString(),
             'content' => $event->message->getHtmlBody() ?: $event->message->getTextBody(),
             'headers' => $event->message->getHeaders()->toString(),
             'mailable' => $event->data['mailable'] ?? null,
+            'event_log_id' => $eventLog instanceof EventLog ? $eventLog->id : null,
             'attachments' => $this->saveAttachments($event->message),
         ]);
-    }
-
-    /**
-     * Format address strings for sender, to, cc, bcc.
-     *
-     * @param Email $message
-     * @param string $field
-     * @return null|string
-     */
-    function formatAddressField(Email $message, string $field): ?string
-    {
-        return $message->getHeaders()->get($field)?->getBodyAsString();
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Helpers\Markdown;
 use App\Models\Implementation;
 use App\Models\NotificationTemplate;
 use App\Models\SystemNotification;
+use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -38,6 +39,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
     protected string $viewKey = "";
 
     protected ?string $preferencesLink = null;
+    protected ?EventLog $eventLog = null;
 
     /**
      * @var array|false|null
@@ -68,6 +70,22 @@ class ImplementationMail extends Mailable implements ShouldQueue
     public function setPreferencesLink(?string $preferencesLink): void
     {
         $this->preferencesLink = $preferencesLink;
+    }
+
+    /**
+     * @param EventLog|null $eventLog
+     */
+    public function setEventLog(?EventLog $eventLog): void
+    {
+        $this->eventLog = $eventLog;
+    }
+
+    /**
+     * @return EventLog|null
+     */
+    public function getEventLog(): ?EventLog
+    {
+        return $this->eventLog;
     }
 
     /**

@@ -24,10 +24,10 @@ class IdentityFundRequestApprovedNotification extends BaseIdentityFundRequestNot
         }
 
         $mailable = new FundRequestApprovedMail(array_merge($this->eventLog->data, [
-            'app_link'      => 'https://www.forus.io/DL',
-            'webshop_link'  => $fundRequest->fund->urlWebshop('/funds'),
+            'app_link' => 'https://www.forus.io/DL',
+            'webshop_link' => $fundRequest->fund->urlWebshop('/funds'),
         ]), $fundRequest->fund->getEmailFrom());
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

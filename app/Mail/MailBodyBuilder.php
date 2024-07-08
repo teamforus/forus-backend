@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Mail;
 
 use App\Helpers\Markdown;
@@ -137,7 +136,7 @@ class MailBodyBuilder
         $html = str_replace('&amp;nbsp;', ' ', $html);
         $styles = config('forus.mail_styles');
         $textColor = $textColor ? "; color: $textColor;" : '';
-        $globalStyles = array_reduce(array_filter((array) $globalStyles), function($list, $key) use ($styles) {
+        $globalStyles = array_reduce(array_filter((array) $globalStyles), function ($list, $key) use ($styles) {
             return $list . ' ' . ($styles[$key] ?? '');
         }, '');
 
@@ -152,7 +151,7 @@ class MailBodyBuilder
         foreach (array_only($styles, ['h1', 'h2', 'h3', 'h4', 'h5', 'p', 'a', 'li']) as $tagName => $tagStyles) {
             $elements = $document->getElementsByTagName($tagName);
 
-            for ($i = $elements->length; --$i >= 0; ) {
+            for ($i = $elements->length; --$i >= 0;) {
                 $attrStyles = $elements->item($i)->getAttribute('style');
                 $stylesValue = $tagStyles . ' ' . $globalStyles;
                 $stylesValue = ($tagName == 'a' ? $stylesValue . $textColor : $stylesValue);
@@ -160,7 +159,7 @@ class MailBodyBuilder
             }
         }
 
-        return $document->saveHTML();
+        return str_replace('<?xml encoding="utf-8" ?>', '', $document->saveHTML());
     }
 
     /**
