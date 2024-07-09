@@ -113,6 +113,7 @@ class StoreReimbursementRequest extends BaseFormRequest
     public function messages(): array
     {
         return [
+            'voucher_id.required' => trans('validation.required_not_filled'),
             'title.required' => trans('validation.required_not_filled'),
             'amount.required' => trans('validation.required_not_filled'),
             'iban.required' => trans('validation.required_not_filled'),
