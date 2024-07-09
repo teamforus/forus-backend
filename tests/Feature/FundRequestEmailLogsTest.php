@@ -13,7 +13,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Mews\Purifier\Facades\Purifier;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
@@ -40,7 +39,7 @@ class FundRequestEmailLogsTest extends TestCase
 
         echo json_pretty(Config::get('forus.mail_purifier_config'));
 
-        exit(Config::get('forus.mail_purifier_config'));
+        self::fail(json_pretty(Config::get('forus.mail_purifier_config')));
 
         // create the organization and fund
         $organization = $this->makeTestOrganization($sponsorIdentity);
