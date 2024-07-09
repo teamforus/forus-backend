@@ -97,6 +97,7 @@ return [
         ],
         'custom_attributes' => [
             ['a', 'target', 'Enum#_blank,_self,_target,_top'],
+            ['img', 'data-auto-embed', 'Enum#data-auto-embed'],
         ],
         'custom_elements' => [
             ['u', 'Inline', 'Inline', 'Common'],
