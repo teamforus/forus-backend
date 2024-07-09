@@ -87,7 +87,7 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $digid_trusted_cert
  * @property string|null $digid_cgi_tls_key
  * @property string|null $digid_cgi_tls_cert
- * @property int $pre_check_enabled
+ * @property bool $pre_check_enabled
  * @property string $pre_check_title
  * @property string $pre_check_banner_title
  * @property string $pre_check_description

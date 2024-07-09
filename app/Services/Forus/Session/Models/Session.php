@@ -36,7 +36,7 @@ use Illuminate\Support\Facades\Config;
  * @property-read int|null $requests_count
  * @method static Builder|Session newModelQuery()
  * @method static Builder|Session newQuery()
- * @method static \Illuminate\Database\Query\Builder|Session onlyTrashed()
+ * @method static Builder|Session onlyTrashed()
  * @method static Builder|Session query()
  * @method static Builder|Session whereCreatedAt($value)
  * @method static Builder|Session whereDeletedAt($value)
@@ -46,8 +46,8 @@ use Illuminate\Support\Facades\Config;
  * @method static Builder|Session whereLastActivityAt($value)
  * @method static Builder|Session whereUid($value)
  * @method static Builder|Session whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|Session withTrashed()
- * @method static \Illuminate\Database\Query\Builder|Session withoutTrashed()
+ * @method static Builder|Session withTrashed()
+ * @method static Builder|Session withoutTrashed()
  * @mixin \Eloquent
  */
 class Session extends Model

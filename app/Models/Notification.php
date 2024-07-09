@@ -13,14 +13,14 @@ use Illuminate\Notifications\DatabaseNotification;
  * App\Models\Notification
  *
  * @property string $id
+ * @property string|null $key
+ * @property string|null $scope
+ * @property int|null $organization_id
+ * @property int|null $event_id
  * @property string $type
  * @property string $notifiable_type
  * @property int $notifiable_id
  * @property array $data
- * @property string $key
- * @property string $scope
- * @property int|null $organization_id
- * @property int|null $event_id
  * @property \Illuminate\Support\Carbon|null $read_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at

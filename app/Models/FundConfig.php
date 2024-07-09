@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $fund_id
  * @property int|null $implementation_id
  * @property string $key
+ * @property bool $hide_meta
  * @property string|null $auth_2fa_policy
  * @property bool $auth_2fa_remember_ip
  * @property bool $auth_2fa_restrict_emails
@@ -43,7 +44,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $contact_info_required
  * @property bool $contact_info_message_custom
  * @property string|null $contact_info_message_text
- * @property bool $hide_meta
  * @property string|null $limit_generator_amount
  * @property string|null $limit_voucher_top_up_amount
  * @property string|null $limit_voucher_total_amount
