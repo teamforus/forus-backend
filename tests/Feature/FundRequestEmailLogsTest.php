@@ -10,8 +10,10 @@ use App\Services\MediaService\Traits\UsesMediaService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Mews\Purifier\Facades\Purifier;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
@@ -35,6 +37,10 @@ class FundRequestEmailLogsTest extends TestCase
         $sponsorIdentity = $this->makeIdentity($this->makeUniqueEmail());
         $requesterIdentity = $this->makeIdentity($this->makeUniqueEmail());
         $requesterIdentity->setBsnRecord('123456789');
+
+        echo json_pretty(Config::get('forus.mail_purifier_config'));
+
+        exit(Config::get('forus.mail_purifier_config'));
 
         // create the organization and fund
         $organization = $this->makeTestOrganization($sponsorIdentity);
