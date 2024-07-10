@@ -23,9 +23,10 @@ class IdentityFundRequestCreatedNotification extends BaseIdentityFundRequestNoti
             return;
         }
 
-        $mailable = new FundRequestCreatedMail(array_merge($this->eventLog->data, [
+        $mailable = new FundRequestCreatedMail([
+            ...$this->eventLog->data,
             'webshop_link' => $fund->urlWebshop(),
-        ]), $fund->getEmailFrom());
+        ], $fund->getEmailFrom());
 
         $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }

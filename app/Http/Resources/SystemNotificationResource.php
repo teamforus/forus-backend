@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 /**
  * @property SystemNotification $resource
+ * @property array $fundIds
  */
 class SystemNotificationResource extends BaseJsonResource
 {
@@ -51,7 +52,24 @@ class SystemNotificationResource extends BaseJsonResource
             'channels' => $systemNotification->baseChannels(),
             'templates' => NotificationTemplateResource::collection($implementationTemplates),
             'templates_default' => NotificationTemplateResource::collection($generalTemplates),
+            ...($this->fundIds ? $this->getLastSentData($systemNotification, $this->fundIds) : []),
         ]);
+    }
+
+    /**
+     * @param SystemNotification $systemNotification
+     * @param array $fundIds
+     * @return array
+     */
+    public function getLastSentData(SystemNotification $systemNotification, array $fundIds): array
+    {
+        if ($systemNotification->key === 'notifications_identities.voucher_expire_soon_budget') {
+            return $this->makeTimestamps([
+                'last_sent_date' => $systemNotification->getLastSentDate($fundIds),
+            ], true);
+        }
+
+        return [];
     }
 
     /**

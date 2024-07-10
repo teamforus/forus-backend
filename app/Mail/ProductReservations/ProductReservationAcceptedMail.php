@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class ProductReservationAcceptedMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = 'notifications_identities.product_reservation_accepted';
+    public ?string $notificationTemplateKey = 'notifications_identities.product_reservation_accepted';
 
     /**
      * @return Mailable

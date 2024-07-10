@@ -308,8 +308,11 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      * @param ?EventLog $eventLog
      * @return bool
      */
-    public function sendMailNotification(string $email, Mailable $mailable, ?EventLog $eventLog = null): bool
-    {
+    public function sendMailNotification(
+        string $email,
+        Mailable $mailable,
+        ?EventLog $eventLog = null,
+    ): bool {
         if ($mailable instanceof ImplementationMail) {
             $mailable->setEventLog($eventLog);
             $mailable->setPreferencesLink($this->implementation?->makePreferencesLink(static::$scope));

@@ -24,12 +24,11 @@ class FundProvidersRevokedBudgetNotification extends BaseFundProvidersNotificati
             return;
         }
 
-        $this->sendMailNotification(
-            $identity->email,
-            new ProviderRejectedMail(
-                $this->eventLog->data,
-                $fund->fund_config->implementation->getEmailFrom()
-            )
+        $mailable = new ProviderRejectedMail(
+            $this->eventLog->data,
+            $fund->fund_config->implementation->getEmailFrom()
         );
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

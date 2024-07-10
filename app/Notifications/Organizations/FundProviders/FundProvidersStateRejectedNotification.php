@@ -28,11 +28,11 @@ class FundProvidersStateRejectedNotification extends BaseFundProvidersNotificati
         $fundProvider = $this->eventLog->loggable;
         $fund = $fundProvider->fund;
 
-        $this->sendMailNotification(
-            $identity->email,
-            new ProviderStateRejectedMail(array_merge($this->eventLog->data, [
-                'provider_dashboard_link' => $fund->urlProviderDashboard(),
-            ]), $fund->fund_config->implementation->getEmailFrom())
-        );
+        $mailable = new ProviderStateRejectedMail([
+            ...$this->eventLog->data,
+            'provider_dashboard_link' => $fund->urlProviderDashboard(),
+        ], $fund->fund_config->implementation->getEmailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

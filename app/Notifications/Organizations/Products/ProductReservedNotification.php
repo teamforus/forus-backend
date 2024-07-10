@@ -16,10 +16,11 @@ class ProductReservedNotification extends BaseProductsNotification
 
     public function toMail(Identity $identity): void
     {
-        $mailable = new ProductBoughtProviderMail(array_merge($this->eventLog->data, [
+        $mailable = new ProductBoughtProviderMail([
+            ...$this->eventLog->data,
             'provider_dashboard_link' => Implementation::general()->urlProviderDashboard(),
-        ]), Implementation::general()->emailFrom());
+        ], Implementation::general()->emailFrom());
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

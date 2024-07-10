@@ -7,4 +7,5 @@ return [
     'CSS.AllowTricky' => true,
     'AutoFormat.AutoParagraph' => false,
     'AutoFormat.RemoveEmpty' => false,
+    'URI.AllowedSchemes' => [ 'http' => true, 'https' => true, 'data' => true],
 ];

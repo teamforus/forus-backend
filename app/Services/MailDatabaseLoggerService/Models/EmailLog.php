@@ -12,7 +12,9 @@ use App\Services\EventLogService\Models\EventLog;
 use Barryvdh\DomPDF\PDF;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
 use Mews\Purifier\Facades\Purifier;
 
 /**
@@ -21,6 +23,7 @@ use Mews\Purifier\Facades\Purifier;
  * @property int $id
  * @property int|null $event_log_id
  * @property string|null $from_name
+ * @property string|null $system_notification_key
  * @property string|null $from_address
  * @property string|null $to_name
  * @property string|null $to_address
@@ -29,14 +32,14 @@ use Mews\Purifier\Facades\Purifier;
  * @property string|null $content
  * @property string|null $headers
  * @property string|null $mailable
- * @property string|null $attachments
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MailDatabaseLoggerService\Models\EmailLogAttachment[] $email_log_attachments
+ * @property-read int|null $email_log_attachments_count
  * @property-read EventLog|null $event_log
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog query()
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereAttachments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereBody($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereContent($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereCreatedAt($value)
@@ -47,6 +50,7 @@ use Mews\Purifier\Facades\Purifier;
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereMailable($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereSubject($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereSystemNotificationKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereToAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereToName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereUpdatedAt($value)
@@ -55,13 +59,13 @@ use Mews\Purifier\Facades\Purifier;
 class EmailLog extends Model
 {
     protected $fillable = [
-        'from_name', 'from_address', 'to_name', 'to_address', 'subject', 'body',
-        'content', 'headers', 'mailable', 'attachments', 'event_log_id',
+        'from_name', 'from_address', 'to_name', 'to_address', 'subject', 'content',
+        'headers', 'mailable', 'event_log_id', 'system_notification_key',
     ];
 
     protected $hidden = [
-        'from_name', 'from_address', 'to_name', 'to_address', 'subject', 'body',
-        'content', 'headers', 'mailable', 'attachments', 'event_log_id',
+        'from_name', 'from_address', 'to_name', 'to_address', 'subject', 'content',
+        'headers', 'mailable', 'event_log_id', 'system_notification_key',
     ];
 
     /**
@@ -70,6 +74,14 @@ class EmailLog extends Model
     public function event_log(): BelongsTo
     {
         return $this->belongsTo(EventLog::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function email_log_attachments(): HasMany
+    {
+        return $this->hasMany(EmailLogAttachment::class);
     }
 
     /**
@@ -90,23 +102,19 @@ class EmailLog extends Model
     /**
      * @param bool $stripUnsubscribeLink
      * @param bool $insertStats
+     * @param bool $addBase64
      * @return string
      */
     public function getContent(
         bool $stripUnsubscribeLink = true,
         bool $insertStats = false,
+        bool $addBase64 = false,
     ): string {
-        $html = $stripUnsubscribeLink ?
-            preg_replace('/(notifications\/unsubscribe\/)[a-zA-Z0-9]+/', '$1#', $this->content) :
-            $this->content;
+        $html = $this->content;
 
-
-        $insert = view('emails.email-log-stats', ['emailLog' => $this])->toHtml();
-        $pos = strrpos($html, '</html>');
-
-        if ($insertStats && $pos !== false) {
-            $html = substr_replace($html, $insert, $pos, 0);
-        }
+        $html = $stripUnsubscribeLink ? $this->removeUnsubscriptionUrl($html) : $html;
+        $html = $insertStats ? $this->addEmailStats($html) : $html;
+        $html = $addBase64 ? $this->addBase64Attachments($html) : $html;
 
         return Purifier::clean($html, Config::get('forus.mail_purifier_config'));
     }
@@ -124,5 +132,43 @@ class EmailLog extends Model
         $pdf->loadHTML($this->getContent($stripUnsubscribeLink, $insertStats));
 
         return $pdf;
+    }
+
+    /**
+     * @param string $html
+     * @return string
+     */
+    protected function removeUnsubscriptionUrl(string $html): string
+    {
+        return preg_replace('/(notifications\/unsubscribe\/)[a-zA-Z0-9]+/', '$1#', $html);
+    }
+
+    /**
+     * @param string $html
+     * @return string
+     */
+    protected function addBase64Attachments(string $html): string
+    {
+        $attachments = $this
+            ->email_log_attachments
+            ->where('type', EmailLogAttachment::TYPE_ATTACHMENT);
+
+        foreach ($attachments as $attachment) {
+            $html = Str::replace("cid:$attachment->file_name", $attachment->getBase64(), $html);
+        }
+
+        return $html;
+    }
+
+    /**
+     * @param string $html
+     * @return string
+     */
+    protected function addEmailStats(string $html): string
+    {
+        $insert = view('emails.email-log-stats', ['emailLog' => $this])->toHtml();
+        $pos = strrpos($html, '</html>');
+
+        return $pos !== false ? substr_replace($html, $insert, $pos, 0) : $html;
     }
 }

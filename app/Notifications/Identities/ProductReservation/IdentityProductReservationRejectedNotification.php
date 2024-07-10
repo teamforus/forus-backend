@@ -24,11 +24,12 @@ class IdentityProductReservationRejectedNotification extends BaseProductReservat
         $refundedExtra = $reservation->extra_payment && $reservation->extra_payment->isFullyRefunded();
         $transKey = 'mails/reservations.extra_payment';
 
-        $mailable = new ProductReservationRejectedMail(array_merge($this->eventLog->data, [
+        $mailable = new ProductReservationRejectedMail([
+            ...$this->eventLog->data,
             'webshop_link' => $implementation->urlWebshop("/reservations/$reservation->id"),
             'refunded_body' => $refundedExtra ? trans("$transKey.refunded_body") : '',
-        ]), $reservation->voucher->fund->getEmailFrom());
+        ], $reservation->voucher->fund->getEmailFrom());
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

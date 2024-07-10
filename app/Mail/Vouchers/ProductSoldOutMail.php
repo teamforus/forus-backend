@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class ProductSoldOutMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = 'notifications_products.sold_out';
+    public ?string $notificationTemplateKey = 'notifications_products.sold_out';
 
     /**
      * @return Mailable

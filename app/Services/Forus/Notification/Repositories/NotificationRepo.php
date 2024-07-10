@@ -9,7 +9,6 @@ use App\Mail\Digest\DigestRequesterMail;
 use App\Mail\Digest\DigestSponsorMail;
 use App\Mail\Digest\DigestValidatorMail;
 use App\Mail\Funds\FundBalanceWarningMail;
-use App\Mail\Funds\FundExpireSoonMail;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
@@ -20,6 +19,7 @@ use App\Mail\Vouchers\ProductBoughtProviderMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
+use App\Mail\Vouchers\VoucherExpireSoonBudgetMail;
 use App\Models\SystemNotification;
 use App\Notifications\Identities\Employee\IdentityAddedEmployeeNotification;
 use App\Notifications\Identities\Employee\IdentityAssignedToFundRequestBySupervisorNotification;
@@ -29,10 +29,10 @@ use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedBudgetNot
 use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedProductsNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRequestedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRequestedNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationAcceptedNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCanceledNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCreatedNotification;
@@ -77,10 +77,10 @@ use App\Notifications\Organizations\Products\ProductExpiredNotification;
 use App\Notifications\Organizations\Products\ProductReservedNotification;
 use App\Notifications\Organizations\Products\ProductRevokedNotification;
 use App\Notifications\Organizations\Products\ProductSoldOutNotification;
+use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Notification\Models\NotificationPreference;
 use App\Services\Forus\Notification\Models\NotificationUnsubscription;
 use App\Services\Forus\Notification\Models\NotificationUnsubscriptionToken;
-use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -186,7 +186,7 @@ class NotificationRepo implements INotificationRepo
         'funds.provider_approved' => ProviderApprovedMail::class,
         'funds.provider_rejected' => ProviderRejectedMail::class,
         'funds.product_sold_out' => ProductSoldOutMail::class,
-        'funds.fund_expires' => FundExpireSoonMail::class,
+        'funds.fund_expires' => VoucherExpireSoonBudgetMail::class,
         'funds.balance_warning' => FundBalanceWarningMail::class,
         'funds.product_reserved' => ProductBoughtProviderMail::class,
         'funds_requests.assigned_by_supervisor' => FundRequestAssignedBySupervisorMail::class,

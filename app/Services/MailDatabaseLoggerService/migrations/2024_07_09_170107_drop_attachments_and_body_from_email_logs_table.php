@@ -13,13 +13,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('event_logs', static function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->morphs('loggable');
-            $table->string('event', 40);
-            $table->string('identity_address', 200)->nullable();
-            $table->json('data');
-            $table->timestamps();
+        Schema::table('email_logs', function (Blueprint $table) {
+            $table->dropColumn('attachments');
+            $table->dropColumn('body');
         });
     }
 
@@ -30,6 +26,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('event_logs');
+        Schema::table('email_logs', function (Blueprint $table) {
+            $table->text('attachments')->after('mailable')->nullable();
+            $table->text('body')->after('subject')->nullable();
+        });
     }
 };
