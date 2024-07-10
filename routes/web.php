@@ -30,11 +30,3 @@ Route::get('/bng/payment-bulks/{bngVoucherTransactionBulkToken}', 'BNGController
 
 Route::get('/mollie/callback', 'MollieController@processCallback')->name('mollie.callback');
 Route::post('/mollie/webhooks', 'MollieController@processWebhook')->name('mollie.webhook');
-
-
-Route::get('test', function() {
-
-    // \Mews\Purifier\Facades\Purifier::getInstance()->config->set('URI.AllowedSchemes', ['data' => true]);
-
-    return \App\Services\MailDatabaseLoggerService\Models\EmailLog::find(12)->getContent(true, true, true);
-});

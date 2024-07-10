@@ -41,6 +41,10 @@ class MailDatabaseLoggerClearUnusedAttachmentsCommand extends BaseCommand
                     $storage->delete($directoryFile);
                 }
             }
+
+            if (count($storage->allFiles($directory)) === 0) {
+                $storage->deleteDirectory($directory);
+            }
         });
     }
 }
