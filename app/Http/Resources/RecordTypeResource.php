@@ -33,12 +33,12 @@ class RecordTypeResource extends BaseJsonResource
             'operators' => array_map(fn ($operator) => [
                 'key' => $operator,
                 'name' => [
-                    '*' => 'any value',
+                    '*' => 'n.v.t.',
                     '=' => 'gelijk aan',
                     '<' => 'is kleiner dan',
                     '>' => 'is groter dan',
-                    '<=' => 'is less or equal',
-                    '>=' => 'is more or equal',
+                    '<=' => 'is kleiner dan of gelijk aan',
+                    '>=' => 'is groter dan of gelijk aan',
                 ][$operator] ?? ''
             ], $recordType->getOperators()),
             'options' => $recordType->getOptions(),
