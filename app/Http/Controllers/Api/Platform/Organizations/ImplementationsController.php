@@ -121,7 +121,7 @@ class ImplementationsController extends Controller
         $this->authorize('updateDigiD', [$implementation, $organization]);
 
         $implementation->update($request->only([
-            'digid_app_id', 'digid_shared_secret', 'digid_a_select_server',
+            'digid_enabled', 'digid_app_id', 'digid_shared_secret', 'digid_a_select_server',
         ]));
 
         return new ImplementationPrivateResource($implementation);

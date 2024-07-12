@@ -40,7 +40,11 @@ class OrganizationFeaturesResource extends BaseJsonResource
                 'iconnect_api' => $this->isIConnectApiOinEnabled($organization),
                 'fund_requests' => $this->isFundRequestsEnabled($organization),
                 'extra_payments' => $this->isExtraPaymentsEnabled($organization),
+                'voucher_top_up' => $this->isVoucherTopUpEnabled($organization),
                 'email_connection' => true,
+                'external_funds' => true,
+                'budget_funds' => true,
+                'subsidy_funds' => true,
             ]
         ];
     }
@@ -118,6 +122,17 @@ class OrganizationFeaturesResource extends BaseJsonResource
     {
         return $organization->funds
             ->filter(fn(Fund $fund) => $fund->fund_config->allow_fund_requests)
+            ->isNotEmpty();
+    }
+
+    /**
+     * @param Organization $organization
+     * @return bool
+     */
+    protected function isVoucherTopUpEnabled(Organization $organization): bool
+    {
+        return $organization->funds
+            ->filter(fn(Fund $fund) => $fund->fund_config->allow_voucher_top_ups)
             ->isNotEmpty();
     }
 }

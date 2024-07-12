@@ -74,7 +74,7 @@ class EmployeeTest extends DuskTestCase
         $email = $this->makeUniqueEmail();
         $roles = is_array($role) ? $role : [$role];
 
-        $browser->waitFor('@addEmployee', 10);
+        $browser->waitFor('@addEmployee');
         $browser->press('@addEmployee');
 
         $this->assertNotNull($role);
@@ -82,10 +82,6 @@ class EmployeeTest extends DuskTestCase
         $this->selectEmployeeRoles($browser, $roles, [], [
             '@formEmployeeEmail' => $email,
         ]);
-
-        $browser->waitUntilMissing('@successNotification');
-
-        $browser->pause(1000);
 
         $identity = Identity::findByEmail($email);
         $this->assertNotNull($identity);
@@ -116,9 +112,6 @@ class EmployeeTest extends DuskTestCase
 
         // Wait for the form to be submitted
         $browser->waitFor('@successNotification');
-        $browser->waitUntilMissing('@successNotification');
-
-        $browser->pause(1000);
 
         // Check that the new roles have been applied
         $employee->unsetRelation('roles');
@@ -144,7 +137,7 @@ class EmployeeTest extends DuskTestCase
         $browser->waitFor('@formEmployeeEdit');
 
         // uncheck all previous employee roles and select the given one
-        $browser->within('@formEmployeeEdit', function(Browser $browser) use ($addRoles, $removeRoles, $fields) {
+        $browser->within('@formEmployeeEdit', function (Browser $browser) use ($addRoles, $removeRoles, $fields) {
             foreach ($removeRoles as $role) {
                 $browser->waitFor("label[for=role_$role->id]");
                 $browser->press("label[for=role_$role->id]");
@@ -161,6 +154,8 @@ class EmployeeTest extends DuskTestCase
 
             $browser->press('@formEmployeeSubmit');
         });
+
+        $browser->waitUntilMissing('@formEmployeeEdit');
     }
 
     /**
@@ -172,15 +167,14 @@ class EmployeeTest extends DuskTestCase
     private function employeeDelete(Browser $browser, Employee $employee): void
     {
         $browser->waitFor("@employeeRow$employee->id");
-        $browser->within("@employeeRow$employee->id", function(Browser $browser) {
+        $browser->within("@employeeRow$employee->id", function (Browser $browser) {
             $browser->press("@btnEmployeeDelete");
         });
 
         $browser->waitFor('@modalDangerZone');
         $browser->waitFor('@btnDangerZoneSubmit');
         $browser->press('@btnDangerZoneSubmit');
-        $browser->waitFor('@successNotification');
-        $browser->waitUntilMissing('@successNotification');
+        $browser->waitUntilMissing('@modalDangerZone');
 
         $this->assertNotNull($employee->identity->fresh());
         $this->assertTrue($employee->fresh()->trashed());
@@ -206,11 +200,12 @@ class EmployeeTest extends DuskTestCase
     private function searchEmployee(Browser $browser, Employee $employee): void
     {
         $browser->waitFor('@searchEmployee');
-        $browser->type('@searchEmployee', $employee->identity->email);
+        $browser->value('@searchEmployee', $employee->identity->email);
 
-        $browser->pause(2000);
-        $browser->waitFor('@employeeEmail');
-        $browser->assertSeeIn('@employeeEmail', $employee->identity->email);
+        $browser->waitFor("@employeeRow$employee->id");
+        $browser->within("@employeeRow$employee->id", function (Browser $browser) use ($employee) {
+            $browser->assertSeeIn('@employeeEmail', $employee->identity->email);
+        });
     }
 
     /**
