@@ -170,7 +170,7 @@ return [
     'fund_request_request_field_incomplete' => 'Dit veld mag niet leeg zijn.',
     'fund_request_request_eligible_field_incomplete' => 'Ga akkoord met de voorwaarden.',
     'email_already_used' => 'Dit e-mailadres is al ingenomen door een ander account.',
-    'iban' => 'Het IBAN-nummer is verplicht en moet geldig zijn.',
+    'iban' => 'Vul een geldig IBAN-nummer in, bijvoorbeeld NL02ABNA0123456789',
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
     'business_type_id' => 'Organisatie type',
     'voucher' => [
