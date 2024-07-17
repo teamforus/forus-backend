@@ -508,7 +508,7 @@ class ImplementationCMSTest extends TestCase
         }
 
         if (isset($body['blocks'])) {
-            $this->assertEquals($page->blocks->count(), count($body['blocks']));
+            $this->assertCount($page->blocks->count(), $body['blocks']);
 
             /** @var ImplementationBlock $block */
             foreach ($page->blocks as $index => $block) {

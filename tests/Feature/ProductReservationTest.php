@@ -158,7 +158,8 @@ class ProductReservationTest extends TestCase
 
         $identity = $organization->identity;
 
-        Organization::where('reservations_subsidy_enabled', true)
+        Organization::query()
+            ->where('reservations_subsidy_enabled', true)
             ->update(['reservations_subsidy_enabled' => false]);
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);

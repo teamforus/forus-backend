@@ -130,9 +130,7 @@ class ProductIdToReservationRule extends BaseRule
             return true;
         }
 
-        return
-            $voucher->amount_available >= 0.1 &&
-            $product->reservationExtraPaymentsEnabled($voucher->fund);
+        return $product->reservationExtraPaymentsEnabled($voucher->fund, $voucher->amount_available);
     }
 
     /**

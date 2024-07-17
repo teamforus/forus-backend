@@ -53,6 +53,7 @@ class UpdateFundProviderRequest extends FormRequest
             'allow_budget' => 'nullable|boolean',
             'allow_products' => 'nullable|boolean',
             'allow_extra_payments' => 'nullable|boolean',
+            'allow_extra_payments_full' => 'nullable|boolean',
         ];
     }
 

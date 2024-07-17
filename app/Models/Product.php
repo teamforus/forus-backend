@@ -386,10 +386,13 @@ class Product extends BaseModel
 
     /**
      * @param Fund $fund
+     * @param string|bool $voucherBalance
      * @return bool
      */
-    public function reservationExtraPaymentsEnabled(Fund $fund): bool
-    {
+    public function reservationExtraPaymentsEnabled(
+        Fund $fund,
+        string|bool $voucherBalance = false,
+    ): bool {
         if ($this->reservation_extra_payments === self::RESERVATION_EXTRA_PAYMENT_GLOBAL) {
             $allowed = $this->organization->reservation_allow_extra_payments;
         } else {
@@ -400,9 +403,21 @@ class Product extends BaseModel
             return false;
         }
 
-        return (bool) $this->organization
+        $extraPaymentsAllowed = $this->organization
             ->fund_providers_allowed_extra_payments
-            ->first(fn(FundProvider $provider) => $provider->fund_id === $fund->id);
+            ->filter(fn(FundProvider $provider) => $provider->fund_id === $fund->id)
+            ->isNotEmpty();
+
+        $extraPaymentsFullAllowed = $voucherBalance !== false ? $this->organization
+            ->fund_providers_allowed_extra_payments_full
+            ->filter(fn(FundProvider $provider) => $provider->fund_id === $fund->id)
+            ->isNotEmpty() : null;
+
+        $voucherBalanceIsValid =
+            $voucherBalance === false ||
+            ($extraPaymentsFullAllowed || ($voucherBalance >= 0.1));
+
+        return $extraPaymentsAllowed && $voucherBalanceIsValid;
     }
 
     /**
@@ -703,9 +718,12 @@ class Product extends BaseModel
      */
     public function getFundProviderProduct(Fund $fund): ?FundProviderProduct
     {
-        return $this->fund_provider_products()->whereRelation('fund_provider.fund', [
+        /** @var FundProviderProduct $query */
+        $query = $this->fund_provider_products()->whereRelation('fund_provider.fund', [
             'id' => $fund->id,
-        ])->latest()->first();
+        ])->latest();
+
+        return $query->first();
     }
 
     /**

@@ -33,7 +33,7 @@ trait MakesTestFunds
         $fund->changeState($fund::STATE_ACTIVE);
 
         $implementation = $organization->implementations->isNotEmpty() ?
-            $organization->implementations[0]->id :
+            $organization->implementations[0] :
             $this->makeTestImplementation($organization);
 
         $fund->fund_config()->forceCreate([
@@ -87,7 +87,10 @@ trait MakesTestFunds
         array $implementationData = [],
     ): Implementation {
         return $organization->implementations()->create([
-            'name' => fake()->title,
+            'name' => fake()->text(30),
+            ...Implementation::general()->only([
+                'url_webshop', 'url_sponsor', 'url_provider', 'url_validator',
+            ]),
             ...$implementationData,
         ]);
     }

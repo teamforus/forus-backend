@@ -338,7 +338,7 @@ class NotificationService
     private function logFailure(?string $message): void
     {
         if ($logger = logger()) {
-            $logger->error("Error sending notification: `${$message}`");
+            $logger->error("Error sending notification: `$message`");
         }
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Services\MediaService\Commands;
 
 use App\Services\MediaService\MediaService;
 use Illuminate\Console\Command;

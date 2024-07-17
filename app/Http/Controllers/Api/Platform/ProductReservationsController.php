@@ -98,6 +98,7 @@ class ProductReservationsController extends Controller
                     DB::commit();
 
                     return new JsonResponse([
+                        'id' => $reservation->id,
                         'checkout_url' => $payment->getCheckoutUrl(),
                     ], 200);
                 }

@@ -161,10 +161,10 @@ trait AssertsSentEmails
         $htmlDom = new DOMDocument;
 
         $htmlDom->loadHTML($content);
+        /** @var DOMElement[] $links */
         $links = $htmlDom->getElementsByTagName('a');
         $linksArray = [];
 
-        /** @var DOMElement $link */
         foreach ($links as $link) {
             $linksArray[] = $link->getAttribute('href');
         }
