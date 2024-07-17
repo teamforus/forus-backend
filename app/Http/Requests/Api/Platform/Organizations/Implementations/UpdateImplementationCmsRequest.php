@@ -34,6 +34,7 @@ class UpdateImplementationCmsRequest extends FormRequest
             'overlay_type' => 'nullable|in:color,dots,lines,points,circles',
             'overlay_opacity' => 'nullable|numeric|min:0|max:100',
             'header_text_color' => 'nullable|in:bright,dark,auto',
+            'page_title_suffix' => 'nullable|string|max:60',
         ], $this->announcementsRules(), $this->showBlockFlags());
     }
 
@@ -77,6 +78,7 @@ class UpdateImplementationCmsRequest extends FormRequest
         return [
             'announcement.title' => 'titel',
             'announcement.description' => 'description',
+            'page_title_suffix' => 'browser tab postfix',
         ];
     }
 }
