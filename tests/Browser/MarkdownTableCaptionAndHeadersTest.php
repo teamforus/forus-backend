@@ -18,7 +18,8 @@ class MarkdownTableCaptionAndHeadersTest extends DuskTestCase
     public function testMarkdownTableReplaceHeadingsAndCaption(): void
     {
         $implementation = Implementation::byKey('nijmegen');
-        $fund = $this->makeTestFund($implementation->organization);
+        $fund = $implementation->funds[0];
+        $description  = $fund->description;
 
         $caption = '1.1 Omnis doloremque et repudiandae doloremque ullam quasi.';
         $header1 = 'header 1';
@@ -39,7 +40,7 @@ class MarkdownTableCaptionAndHeadersTest extends DuskTestCase
         ]);
 
         $this->browse(function (Browser $browser) use (
-            $implementation, $fund, $caption, $header1, $header2, $header3,
+            $implementation, $fund, $caption, $header1, $header2, $header3, $description,
         ) {
             $browser->visit($implementation->urlWebshop("/funds/$fund->id"));
             $browser->waitFor('.block.block-markdown table caption');
@@ -48,6 +49,10 @@ class MarkdownTableCaptionAndHeadersTest extends DuskTestCase
             $browser->assertSeeIn('.block.block-markdown table th:nth-child(1)', $header1);
             $browser->assertSeeIn('.block.block-markdown table th:nth-child(2)', $header2);
             $browser->assertSeeIn('.block.block-markdown table th:nth-child(3)', $header3);
+
+            $fund->update([
+                'description' => $description,
+            ]);
         });
     }
 }
