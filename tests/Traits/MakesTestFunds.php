@@ -52,7 +52,7 @@ trait MakesTestFunds
         $fund->changeState($fund::STATE_ACTIVE);
 
         $implementation = $organization->implementations->isNotEmpty() ?
-            $organization->implementations[0]->id :
+            $organization->implementations[0] :
             $this->makeTestImplementation($organization);
 
         $fund->fund_config()->forceCreate([

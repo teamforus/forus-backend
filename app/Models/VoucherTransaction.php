@@ -588,12 +588,18 @@ class VoucherTransaction extends BaseModel
     public function makePaymentDescription(int $maxLength = 2000): string
     {
         if ($this->targetIsIban()) {
-            return '';
+            return trans('bunq.transaction.from_fund', [
+                'fund_name' => $this->voucher->fund->name,
+                'transaction_id' => $this->id
+            ]);
         }
 
         if (!$this->provider) {
             Log::channel('bng')->error("Unexpected transaction without provider found $this->id.");
-            return '';
+            return trans('bunq.transaction.from_fund', [
+                'fund_name' => $this->voucher->fund->name,
+                'transaction_id' => $this->id
+            ]);
         }
 
         $separator = ' | ';

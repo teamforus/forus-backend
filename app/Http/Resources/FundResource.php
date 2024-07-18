@@ -41,6 +41,7 @@ class FundResource extends BaseJsonResource
         'fund_formula_products',
         'provider_organizations_approved.employees',
         'tags_webshop',
+        'fund_formulas.record_type.translations',
         'fund_formulas.fund.fund_config.implementation',
         'top_up_transactions',
     ];
@@ -181,13 +182,17 @@ class FundResource extends BaseJsonResource
     public function getVoucherGeneratorData(Fund $fund): array
     {
         $isVoucherManager = Gate::allows('funds.manageVouchers', [$fund, $fund->organization]);
+        $limitPerVoucher = $fund->getMaxAmountPerVoucher();
+        $limitSumVoucher = $fund->getMaxAmountSumVouchers();
 
         return $isVoucherManager ? array_merge($fund->fund_config->only([
             'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
             'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
         ]), [
-            'limit_per_voucher' => $fund->getMaxAmountPerVoucher(),
-            'limit_sum_vouchers' => $fund->getMaxAmountSumVouchers(),
+            'limit_per_voucher' => currency_format($limitPerVoucher),
+            'limit_per_voucher_locale' => currency_format_locale($limitPerVoucher),
+            'limit_sum_vouchers' => currency_format($limitSumVoucher),
+            'limit_sum_vouchers_locale' => currency_format_locale($limitSumVoucher),
         ]) : [];
     }
 
@@ -252,22 +257,31 @@ class FundResource extends BaseJsonResource
         };
 
         return array_merge($type == 'budget' ? [
-            'total'                         => currency_format($fund->budget_total),
-            'validated'                     => currency_format($fund->budget_validated),
-            'used'                          => currency_format($fund->budget_used),
-            'used_active_vouchers'          => currency_format($fund->budget_used_active_vouchers),
-            'left'                          => currency_format($fund->budget_left),
-            'transaction_costs'             => currency_format($fund->getTransactionCosts()),
+            'total'                             => currency_format($fund->budget_total),
+            'total_locale'                      => currency_format_locale($fund->budget_total),
+            'validated'                         => currency_format($fund->budget_validated),
+            'used'                              => currency_format($fund->budget_used),
+            'used_locale'                       => currency_format_locale($fund->budget_used),
+            'used_active_vouchers'              => currency_format($fund->budget_used_active_vouchers),
+            'used_active_vouchers_locale'       => currency_format_locale($fund->budget_used_active_vouchers),
+            'left'                              => currency_format($fund->budget_left),
+            'left_locale'                       => currency_format_locale($fund->budget_left),
+            'transaction_costs'                 => currency_format($fund->getTransactionCosts()),
+            'transaction_costs_locale'          => currency_format_locale($fund->getTransactionCosts()),
         ] : [], [
-            'children_count'                => $details['children_count'],
-            'vouchers_amount'               => currency_format($details['vouchers_amount']),
-            'vouchers_count'                => $details['vouchers_count'],
-            'active_vouchers_amount'        => currency_format($details['active_amount']),
-            'active_vouchers_count'         => $details['active_count'],
-            'inactive_vouchers_amount'      => currency_format($details['inactive_amount']),
-            'inactive_vouchers_count'       => $details['inactive_count'],
-            'deactivated_vouchers_amount'   => currency_format($details['deactivated_amount']),
-            'deactivated_vouchers_count'    => $details['deactivated_count'],
+            'children_count'                    => $details['children_count'],
+            'vouchers_count'                    => $details['vouchers_count'],
+            'vouchers_amount'                   => currency_format($details['vouchers_amount']),
+            'vouchers_amount_locale'            => currency_format_locale($details['vouchers_amount']),
+            'active_vouchers_amount'            => currency_format($details['active_amount']),
+            'active_vouchers_amount_locale'     => currency_format_locale($details['active_amount']),
+            'active_vouchers_count'             => $details['active_count'],
+            'inactive_vouchers_amount'          => currency_format($details['inactive_amount']),
+            'inactive_vouchers_amount_locale'   => currency_format_locale($details['inactive_amount']),
+            'inactive_vouchers_count'           => $details['inactive_count'],
+            'deactivated_vouchers_amount'       => currency_format($details['deactivated_amount']),
+            'deactivated_vouchers_amount_locale'=> currency_format_locale($details['deactivated_amount']),
+            'deactivated_vouchers_count'        => $details['deactivated_count'],
         ]);
     }
 

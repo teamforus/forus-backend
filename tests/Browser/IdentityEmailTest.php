@@ -115,7 +115,6 @@ class IdentityEmailTest extends DuskTestCase
             $this->assertIdentityAuthenticatedFrontend($browser, $identity, $frontend);
 
             $this->goToIdentityEmailPage($browser, $identity, $frontend);
-            $browser->pause(3000);
 
             $email = $this->addNewEmail($browser, $identity);
 
@@ -129,10 +128,8 @@ class IdentityEmailTest extends DuskTestCase
 
             // Verify email
             $browser->visit($this->findFirstEmailVerificationLink($identityEmail->email, $startTime));
-            $browser->pause(2000);
 
-            $this->goToIdentityEmailPage($browser, $identity, $frontend);
-            $browser->pause(3000);
+            $this->goToIdentityEmailPage($browser, $identity, $frontend, $frontend != 'webshop');
 
             $this->setEmailAsPrimary($browser, $identityEmail);
             $this->deleteEmail($browser, $identity, $frontend);
@@ -144,14 +141,18 @@ class IdentityEmailTest extends DuskTestCase
      * @param Browser $browser
      * @param Identity $identity
      * @param string $frontend
+     * @param bool $hasButton
      * @return void
      * @throws TimeoutException
      */
-    private function goToIdentityEmailPage(Browser $browser, Identity $identity, string $frontend): void
-    {
-        $browser->pause(2000);
-
-        if (!empty($browser->element('@identityEmailConfirmedButton'))) {
+    private function goToIdentityEmailPage(
+        Browser $browser,
+        Identity $identity,
+        string $frontend,
+        bool $hasButton = false,
+    ): void {
+        if ($hasButton) {
+            $browser->waitFor('@identityEmailConfirmedButton');
             $browser->element('@identityEmailConfirmedButton')->click();
         }
 
@@ -166,8 +167,9 @@ class IdentityEmailTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Identity $identity
+     * @param string $frontend
      * @return void
-     * @throws TimeOutException
+     * @throws TimeoutException
      */
     private function deleteEmail(Browser $browser, Identity $identity, string $frontend): void
     {
