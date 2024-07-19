@@ -32,7 +32,7 @@ use Illuminate\Support\Arr;
  * @property-read int|null $validations_approved_count
  * @method static Builder|Record newModelQuery()
  * @method static Builder|Record newQuery()
- * @method static \Illuminate\Database\Query\Builder|Record onlyTrashed()
+ * @method static Builder|Record onlyTrashed()
  * @method static Builder|Record query()
  * @method static Builder|Record whereCreatedAt($value)
  * @method static Builder|Record whereDeletedAt($value)
@@ -44,8 +44,8 @@ use Illuminate\Support\Arr;
  * @method static Builder|Record whereRecordTypeId($value)
  * @method static Builder|Record whereUpdatedAt($value)
  * @method static Builder|Record whereValue($value)
- * @method static \Illuminate\Database\Query\Builder|Record withTrashed()
- * @method static \Illuminate\Database\Query\Builder|Record withoutTrashed()
+ * @method static Builder|Record withTrashed()
+ * @method static Builder|Record withoutTrashed()
  * @mixin \Eloquent
  */
 class Record extends BaseModel

@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property string $type
  * @property string|null $key
- * @property bool $dismissible
  * @property string $title
  * @property string|null $description
  * @property \Illuminate\Support\Carbon|null $expire_at
@@ -23,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $implementation_id
  * @property string|null $announceable_type
  * @property int|null $announceable_id
+ * @property bool $dismissible
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at

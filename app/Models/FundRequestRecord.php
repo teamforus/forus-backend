@@ -34,7 +34,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read int|null $fund_request_clarifications_count
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read \App\Models\RecordType $record_type
+ * @property-read \App\Models\RecordType|null $record_type
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord query()

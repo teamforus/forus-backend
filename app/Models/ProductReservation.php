@@ -64,7 +64,6 @@ use App\Services\MollieService\Objects\Payment;
  * @property-read string $state_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read \App\Models\ReservationExtraPayment|null $mollie_extra_payment
  * @property-read \App\Models\Product $product
  * @property-read \App\Models\Voucher|null $product_voucher
  * @property-read \App\Models\Voucher $voucher
@@ -76,6 +75,7 @@ use App\Services\MollieService\Objects\Payment;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAcceptedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAmountExtra($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereArchived($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereBirthDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCanceledAt($value)
@@ -85,7 +85,6 @@ use App\Services\MollieService\Objects\Payment;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereExpireAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereExtraAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFirstName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFundProviderProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereHouseNr($value)

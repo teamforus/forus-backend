@@ -31,12 +31,12 @@ class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
             $identity->makeIdentityPoxy()->exchange_token,
         );
 
-        $this->sendMailNotification(
-            $identity->email,
-            new EmployeeAddedMail(array_merge($this->eventLog->data, [
-                'dashboard_auth_link'   => $confirmationLink,
-                'download_me_app_link'  => 'https://www.forus.io/DL',
-            ]), Implementation::emailFrom())
-        );
+        $mailable = new EmployeeAddedMail([
+            ...$this->eventLog->data,
+            'dashboard_auth_link' => $confirmationLink,
+            'download_me_app_link' => 'https://www.forus.io/DL',
+        ], Implementation::emailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

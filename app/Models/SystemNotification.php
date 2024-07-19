@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Services\MailDatabaseLoggerService\Models\EmailLog;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -185,5 +188,19 @@ class SystemNotification extends Model
             ($this->mail && (!$config || $config->enable_mail)) ? 'mail' : false,
             ($this->push && (!$config || $config->enable_push)) ? 'push' : false,
         ]);
+    }
+
+    /**
+     * @param array $fundIds
+     * @return Carbon|null
+     */
+    public function getLastSentDate(array $fundIds): ?Carbon
+    {
+        return EmailLog::query()
+            ->where('system_notification_key', $this->key)
+            ->whereHas('event_log', fn (Builder $builder) => $builder->whereIn('data->fund_id', $fundIds))
+            ->latest('created_at')
+            ->first()
+            ?->created_at;
     }
 }

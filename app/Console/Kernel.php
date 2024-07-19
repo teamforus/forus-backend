@@ -34,6 +34,7 @@ use App\Services\FileService\Commands\FilesCleanupCommand;
 use App\Services\Forus\Session\Commands\UpdateSessionsExpirationCommand;
 use App\Services\MediaService\Commands\MediaCleanupCommand;
 use App\Services\MediaService\Commands\MediaRegenerateCommand;
+use App\Services\MailDatabaseLoggerService\Commands\MailDatabaseLoggerClearUnusedAttachmentsCommand;
 use App\Services\MollieService\Commands\UpdateCompletedMollieConnectionsCommand;
 use App\Services\MollieService\Commands\UpdatePendingMollieConnectionsCommand;
 use Illuminate\Console\Scheduling\Schedule;
@@ -121,6 +122,9 @@ class Kernel extends ConsoleKernel
 
         // extra payments
         ReservationExtraPaymentExpireCommand::class,
+
+        // Email logger
+        MailDatabaseLoggerClearUnusedAttachmentsCommand::class,
     ];
 
     /**

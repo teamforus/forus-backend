@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class ProviderAppliedMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = "notifications_funds.provider_applied";
+    public ?string $notificationTemplateKey = "notifications_funds.provider_applied";
 
     /**
      * @return Mailable

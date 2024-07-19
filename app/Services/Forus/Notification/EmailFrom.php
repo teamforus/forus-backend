@@ -3,6 +3,7 @@
 namespace App\Services\Forus\Notification;
 
 use App\Models\Implementation;
+use Illuminate\Support\Facades\Config;
 
 /**
  * Class ImplementationFrom
@@ -10,26 +11,26 @@ use App\Models\Implementation;
  */
 class EmailFrom
 {
-    private $email_from_name;
-    private $email_from_address;
+    private ?string $email_from_name;
+    private ?string $email_from_address;
 
-    private $implementation_key;
-    private $informal_communication;
+    private ?string $implementation_key;
+    private ?bool $informal_communication;
 
     /**
      * EmailSender constructor.
      * @param Implementation $implementation
      */
     public function __construct(Implementation $implementation) {
-        $this->email_from_name = $implementation->email_from_name ?: config('mail.from.name');
-        $this->email_from_address = $implementation->email_from_address ?: config('mail.from.address');
+        $this->email_from_name = $implementation->email_from_name ?: Config::get('mail.from.name');
+        $this->email_from_address = $implementation->email_from_address ?: Config::get('mail.from.address');
 
         $this->implementation_key = $implementation->key ?: $implementation::KEY_GENERAL;
         $this->informal_communication = $implementation->informal_communication ?? false;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getEmail(): ?string
     {

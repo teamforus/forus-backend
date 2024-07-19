@@ -12,7 +12,7 @@ class DeactivationVoucherMail extends ImplementationMail
 {
     use Queueable, SerializesModels;
 
-    protected string $notificationTemplateKey = 'notifications_identities.voucher_deactivated';
+    public ?string $notificationTemplateKey = 'notifications_identities.voucher_deactivated';
 
     /**
      * @return Mailable

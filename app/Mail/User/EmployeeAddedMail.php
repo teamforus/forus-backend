@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class EmployeeAddedMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = 'notifications_identities.added_employee';
+    public ?string $notificationTemplateKey = 'notifications_identities.added_employee';
 
     /**
      * @return Mailable

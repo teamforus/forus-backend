@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class FundRequestAssignedBySupervisorMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = 'notifications_identities.assigned_to_fund_request_by_supervisor';
+    public ?string $notificationTemplateKey = 'notifications_identities.assigned_to_fund_request_by_supervisor';
 
     /**
      * @return Mailable

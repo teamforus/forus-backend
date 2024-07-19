@@ -52,18 +52,18 @@ use Throwable;
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Announcement> $announcements
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements
  * @property-read int|null $announcements_count
  * @property-read Bank $bank
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\BankConnectionAccount> $bank_connection_accounts
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BankConnectionAccount[] $bank_connection_accounts
  * @property-read int|null $bank_connection_accounts_count
  * @property-read \App\Models\BankConnectionAccount|null $bank_connection_default_account
  * @property-read string|null $iban
  * @property-read \App\Models\Implementation $implementation
- * @property-read \Illuminate\Database\Eloquent\Collection<int, EventLog> $logs
+ * @property-read \Illuminate\Database\Eloquent\Collection|EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Organization $organization
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\VoucherTransactionBulk> $voucher_transaction_bulks
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
  * @property-read int|null $voucher_transaction_bulks_count
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection newQuery()

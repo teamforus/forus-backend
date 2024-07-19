@@ -85,7 +85,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereIsRoot()
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereKey($value)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereLft($value)
- * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereNodeBetween($values, $boolean = 'and', $not = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereNodeBetween($values, $boolean = 'and', $not = false, $query = null)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereNotDescendantOf($id)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereParentId($value)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereRgt($value)
@@ -94,7 +94,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereTranslationLike(string $translationField, $value, ?string $locale = null)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereUpdatedAt($value)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory withDepth(string $as = 'depth')
- * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory withTranslation()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory withTranslation(?string $locale = null)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory withoutRoot()
  * @mixin \Eloquent
  */

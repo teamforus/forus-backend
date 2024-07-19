@@ -20,6 +20,6 @@ class IdentityFundRequestDeniedNotification extends BaseIdentityFundRequestNotif
         $emailFrom = $fundRequest->fund->getEmailFrom();
         $mailable = new FundRequestDeniedMail($this->eventLog->data, $emailFrom);
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

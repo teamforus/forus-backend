@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Mail\Funds;
+namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
 use League\CommonMark\Exception\CommonMarkException;
 
-class FundExpireSoonMail extends ImplementationMail
+class VoucherExpireSoonBudgetMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = 'notifications_identities.voucher_expire_soon_budget';
+    public ?string $notificationTemplateKey = 'notifications_identities.voucher_expire_soon_budget';
 
     /**
      * @return Mailable

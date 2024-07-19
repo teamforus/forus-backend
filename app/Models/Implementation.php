@@ -48,6 +48,7 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $title
  * @property string|null $description
  * @property string $description_alignment
+ * @property string|null $page_title_suffix
  * @property bool $overlay_enabled
  * @property string $overlay_type
  * @property string $header_text_color
@@ -87,7 +88,7 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $digid_trusted_cert
  * @property string|null $digid_cgi_tls_key
  * @property string|null $digid_cgi_tls_cert
- * @property int $pre_check_enabled
+ * @property bool $pre_check_enabled
  * @property string $pre_check_title
  * @property string $pre_check_banner_title
  * @property string $pre_check_description
@@ -163,6 +164,7 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder|Implementation whereOverlayEnabled($value)
  * @method static Builder|Implementation whereOverlayOpacity($value)
  * @method static Builder|Implementation whereOverlayType($value)
+ * @method static Builder|Implementation wherePageTitleSuffix($value)
  * @method static Builder|Implementation wherePreCheckBannerDescription($value)
  * @method static Builder|Implementation wherePreCheckBannerLabel($value)
  * @method static Builder|Implementation wherePreCheckBannerState($value)
@@ -230,6 +232,7 @@ class Implementation extends BaseModel
         'currency_sign', 'currency_round', 'digid_cgi_tls_key', 'digid_cgi_tls_cert',
         'pre_check_enabled', 'pre_check_title', 'pre_check_banner_state', 'pre_check_banner_title',
         'pre_check_description', 'pre_check_banner_description', 'pre_check_banner_label',
+        'page_title_suffix',
     ];
 
     /**
@@ -757,7 +760,7 @@ class Implementation extends BaseModel
                 ...$implementation->isGeneral() ? [] : $implementation->getPreCheckFields(),
                 ...$implementation->only([
                     'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
-                    'show_office_map', 'show_voucher_map', 'show_product_map',
+                    'show_office_map', 'show_voucher_map', 'show_product_map', 'page_title_suffix',
                 ])
             ]);
         }

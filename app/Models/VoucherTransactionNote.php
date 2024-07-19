@@ -11,7 +11,7 @@ namespace App\Models;
  * @property string $message
  * @property int $pin_to_top
  * @property string $group
- * @property int $shared
+ * @property bool $shared
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote newModelQuery()

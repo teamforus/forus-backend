@@ -107,7 +107,7 @@ class ProductReservationsController extends Controller
 
                 return new JsonResponse([
                     'message' => "Could prepare the extra payment.",
-                ], 200);
+                ], 503);
             }
 
             if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
@@ -122,7 +122,7 @@ class ProductReservationsController extends Controller
 
         return new JsonResponse([
             'message' => "Something went wrong, please try again later.",
-        ], 200);
+        ], 503);
     }
 
     /**
