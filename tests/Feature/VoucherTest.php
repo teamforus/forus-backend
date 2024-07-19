@@ -9,6 +9,7 @@ use App\Models\FundConfig;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\PhysicalCard;
+use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundProviderQuery;
@@ -17,11 +18,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Random\RandomException;
 use Tests\TestCase;
 use Tests\TestCases\VoucherTestCases;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\VoucherTestTrait;
+use Throwable;
 
 class VoucherTest extends TestCase
 {
@@ -116,7 +119,15 @@ class VoucherTest extends TestCase
             'allow_prevalidations' => true,
         ]);
 
-        $prevalidation = $this->buildFundAndPrevalidation($organization, $fund);
+        $this->addTestCriteriaToFund($fund);
+
+        $prevalidation = $this->makePrevalidationForTestCriteria($organization, $fund);
+        $products = $this->makeProviderAndProducts($fund);
+
+        if ($fund->isTypeBudget()) {
+            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+        }
+
         $prevalidation->assignToIdentity($identity);
         $this->makeVoucherForFundFormulaProduct($fund, $identity);
     }
@@ -155,11 +166,11 @@ class VoucherTest extends TestCase
         $voucher = $this->getVouchersBuilder($fund, $startDate, 'budget')->first();
 
         $this->assertNotNull($voucher);
-        $this->assertFundFormulaProducts($voucher, $startDate);
+        $this->assertFundFormulaProductVouchersCreatedByMainVoucher($voucher);
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     protected function processVoucherTestCase(array $testCase): void
     {
@@ -171,30 +182,27 @@ class VoucherTest extends TestCase
         $fund->fund_config->forceFill($testCase['fund_config'] ?? [])->save();
         $fund->organization->forceFill($testCase['organization'] ?? [])->save();
 
-        $this->makeProviderAndProducts($fund);
-        $this->makeVoucher($fund, $testCase);
-    }
+        $this->addTestCriteriaToFund($fund);
+        $products = $this->makeProviderAndProducts($fund);
 
-    /**
-     * @param Fund $fund
-     * @param array $testCase
-     * @return void
-     * @throws \Throwable
-     */
-    protected function makeVoucher(Fund $fund, array $testCase): void
-    {
+        if ($fund->isTypeBudget()) {
+            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+        }
+
         foreach ($testCase['asserts'] as $assert) {
-            $this->storeVoucher($fund, $assert);
+            $this->storeVoucher($fund, $assert, $products[$assert['product'] ?? 'approved']);
         }
     }
 
     /**
      * @param Fund $fund
      * @param array $assert
+     * @param Product[] $products
      * @return void
-     * @throws \Throwable
+     * @throws Throwable
+     * @throws RandomException
      */
-    protected function storeVoucher(Fund $fund, array $assert): void
+    protected function storeVoucher(Fund $fund, array $assert, array $products): void
     {
         $assert['vouchers_count'] = 1;
         $startDate = now();
@@ -203,7 +211,7 @@ class VoucherTest extends TestCase
         $data = [
             'fund_id' => $fund->id,
             'assign_by_type' => $assert['assign_by'] === 'client_uid' ? 'activation_code' : $assert['assign_by'],
-            ...$this->makeVoucherData($fund, $assert)[0],
+            ...$this->makeVoucherData($fund, $assert, $products)[0],
         ];
 
         $validateResponse = $this->postJson($this->getApiUrl($fund, '/validate'), $data, $headers);

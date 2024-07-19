@@ -15,7 +15,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\FundFormulaProductTestTrait;
-use Tests\Traits\MakesProviderAndProducts;
+use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
@@ -27,7 +27,7 @@ class FundCriteriaTest extends TestCase
     use MakesTestIdentities;
     use DatabaseTransactions;
     use MakesTestOrganizations;
-    use MakesProviderAndProducts;
+    use MakesTestFundProviders;
     use FundFormulaProductTestTrait;
 
     /**
@@ -302,11 +302,10 @@ class FundCriteriaTest extends TestCase
      */
     public function testFundRequestRecordsApplySuccess(): void
     {
-        $startDate = now();
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFundWithCriteria($fund);
+        $this->addTestCriteriaToFund($fund);
 
         $response = $this->makeFundRequest($identity, $fund, [
             $this->makeRequestCriterionValue($fund, "test_bool", 'Ja'),
@@ -324,7 +323,8 @@ class FundCriteriaTest extends TestCase
 
         // create products for fund formula products assertion
         // used 'test_number' as record key, created in method 'prepareTestFund'
-        $this->makeProviderAndProducts($fund, 'test_number');
+        $products = $this->makeProviderAndProducts($fund);
+        $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
 
         /** @var Employee $employee */
         $fundRequest = FundRequest::find($response->json('data.id'));
@@ -338,17 +338,14 @@ class FundCriteriaTest extends TestCase
         $fundRequest->refresh();
 
         $this->assertTrue($fundRequest->isApproved());
-        $vouchers = $fundRequest->identity->vouchers;
-        /** @var Voucher $budgetVoucher */
-        $budgetVoucher = $vouchers->whereNull('product_id')->first();
+
+        $budgetVoucher = $fundRequest->identity->vouchers->whereNull('product_id')[0] ?? null;
+        $totalFormulaAmount = $fund->fund_formulas[0]?->amount;
+        $totalFormulaProductsAmount = $fund->fund_formula_products->pluck('price')->sum();
+
         $this->assertNotNull($budgetVoucher);
-
-        $this->assertEquals(
-            $budgetVoucher->amount,
-            $fund->fund_formulas[0]?->amount + $fund->fund_formula_products->pluck('price')->sum()
-        );
-
-        $this->assertFundFormulaProducts($budgetVoucher, $startDate);
+        $this->assertEquals($budgetVoucher->amount, $totalFormulaAmount + $totalFormulaProductsAmount);
+        $this->assertFundFormulaProductVouchersCreatedByMainVoucher($budgetVoucher);
 }
 
     /**
@@ -376,7 +373,6 @@ class FundCriteriaTest extends TestCase
      */
     public function assertPrevalidationSuccess(bool $assertRedeem = true): void
     {
-        $startDate = now();
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $identity->setBsnRecord('123456789');
@@ -388,7 +384,13 @@ class FundCriteriaTest extends TestCase
             'Client-Key' => $fund->fund_config->implementation->key,
         ];
 
-        $prevalidation = $this->buildFundAndPrevalidation($organization, $fund);
+        $this->addTestCriteriaToFund($fund);
+        $prevalidation = $this->makePrevalidationForTestCriteria($organization, $fund);
+        $products = $this->makeProviderAndProducts($fund);
+
+        if ($fund->isTypeBudget()) {
+            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+        }
 
         if ($assertRedeem) {
             $code = $prevalidation->uid;
@@ -403,7 +405,7 @@ class FundCriteriaTest extends TestCase
         }
 
         $this->assertNotNull($voucher);
-        $this->assertFundFormulaProducts($voucher, $startDate);
+        $this->assertFundFormulaProductVouchersCreatedByMainVoucher($voucher);
     }
 
     /**
@@ -413,7 +415,6 @@ class FundCriteriaTest extends TestCase
     public function testPrevalidationCheckSuccess(): void
     {
         $bsn = '123456789';
-        $startDate = now();
         $organization = $this->makeTestOrganization($this->makeIdentity(), ['bsn_enabled' => true]);
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $identity->setBsnRecord($bsn);
@@ -425,7 +426,15 @@ class FundCriteriaTest extends TestCase
             'Client-Key' => $fund->fund_config->implementation->key,
         ];
 
-        $this->buildFundAndPrevalidation($organization, $fund, compact('bsn'));
+        $this->addTestCriteriaToFund($fund);
+        $this->makePrevalidationForTestCriteria($organization, $fund, compact('bsn'));
+
+        $products = $this->makeProviderAndProducts($fund);
+
+        if ($fund->isTypeBudget()) {
+            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+        }
+
         $response = $this->postJson(sprintf($this->apiUrlFundsCheck, $fund->id), [], $identityHeaders);
         $response->assertSuccessful();
 
@@ -433,7 +442,7 @@ class FundCriteriaTest extends TestCase
         $voucher = $identity->vouchers()->whereNull('product_id')->first();
 
         $this->assertNotNull($voucher);
-        $this->assertFundFormulaProducts($voucher, $startDate);
+        $this->assertFundFormulaProductVouchersCreatedByMainVoucher($voucher);
     }
 
     /**
@@ -444,7 +453,7 @@ class FundCriteriaTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFundWithCriteria($fund);
+        $this->addTestCriteriaToFund($fund);
 
         $records = [
             $this->makeRequestCriterionValue($fund, "test_bool", 'Nee'),
@@ -471,7 +480,7 @@ class FundCriteriaTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFundWithCriteria($fund);
+        $this->addTestCriteriaToFund($fund);
 
         $records = [
             $this->makeRequestCriterionValue($fund, "test_date", '01-01-1995'),
@@ -494,7 +503,7 @@ class FundCriteriaTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFundWithCriteria($fund);
+        $this->addTestCriteriaToFund($fund);
 
         $records = [
             $this->makeRequestCriterionValue($fund, "test_date", '01-01-2030'),
@@ -517,7 +526,7 @@ class FundCriteriaTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFundWithCriteria($fund);
+        $this->addTestCriteriaToFund($fund);
         $fund->criteria()->update([
             'optional' => true,
         ]);
@@ -546,7 +555,7 @@ class FundCriteriaTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFundWithCriteria($fund);
+        $this->addTestCriteriaToFund($fund);
 
         $fund->criteria()->update([
             'show_attachment' => true,

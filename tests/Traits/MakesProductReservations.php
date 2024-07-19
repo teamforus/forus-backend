@@ -6,7 +6,6 @@ use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Product;
-use App\Models\ProductCategory;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
@@ -18,7 +17,9 @@ use Illuminate\Foundation\Testing\WithFaker;
 
 trait MakesProductReservations
 {
-    use HasDbTokens, WithFaker;
+    use WithFaker;
+    use HasDbTokens;
+    use MakesTestProducts;
 
     /**
      * @param Organization $organization
@@ -52,20 +53,7 @@ trait MakesProductReservations
      */
     private function createProductForReservation(Organization $organization): Product
     {
-        $product = Product::query()->create([
-            'name'                  => $this->faker->text(60),
-            'description'           => $this->faker->text(),
-            'organization_id'       => $organization->id,
-            'product_category_id'   => ProductCategory::first()->id,
-            'reservation_enabled'   => 1,
-            'expire_at'             => now()->addDays(30),
-            'price_type'            => Product::PRICE_TYPE_REGULAR,
-            'unlimited_stock'       => 1,
-            'price_discount'        => 0,
-            'total_amount'          => 0,
-            'sold_out'              => 0,
-            'price'                 => 20,
-        ]);
+        $product = $this->makeTestProduct($organization);
 
         foreach ($organization->funds as $fund) {
             $product->fund_providers()->firstOrCreate([

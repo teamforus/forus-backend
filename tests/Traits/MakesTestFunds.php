@@ -16,7 +16,7 @@ use Throwable;
 trait MakesTestFunds
 {
     use DoesTesting;
-    use MakesProviderAndProducts;
+    use MakesTestFundProviders;
 
     /**
      * @var string
@@ -118,10 +118,11 @@ trait MakesTestFunds
      * @return Prevalidation
      * @throws Throwable
      */
-    public function buildFundAndPrevalidation(Organization $organization, Fund $fund, array $rawCriterion = []): Prevalidation
-    {
-        $this->prepareTestFundWithCriteria($fund);
-
+    public function makePrevalidationForTestCriteria(
+        Organization $organization,
+        Fund $fund, array
+        $rawCriterion = [],
+    ): Prevalidation {
         // create prevalidation
         $response = $this->makeStorePrevalidationRequest($organization->identity, $fund, [
             $this->makeRequestCriterionValue($fund, "test_bool", 'Ja'),
@@ -139,13 +140,8 @@ trait MakesTestFunds
         ]);
 
         $response->assertSuccessful();
-        $prevalidation = Prevalidation::find($response->json('data.id'));
 
-        // create products for fund formula products assertion
-        // used 'test_number' as record key, created in method 'prepareTestFund'
-        $this->makeProviderAndProducts($fund, 'test_number');
-
-        return $prevalidation;
+        return Prevalidation::find($response->json('data.id'));
     }
 
     /**
@@ -198,7 +194,7 @@ trait MakesTestFunds
      * @param Fund $fund
      * @return void
      */
-    protected function prepareTestFundWithCriteria(Fund $fund): void
+    protected function addTestCriteriaToFund(Fund $fund): void
     {
         $fund->criteria()->forceDelete();
 

@@ -7,6 +7,7 @@ use App\Mail\Vouchers\VoucherAssignedProductMail;
 use App\Mail\Vouchers\VoucherAssignedSubsidyMail;
 use App\Models\Fund;
 use App\Models\Identity;
+use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
+use Random\RandomException;
 
 trait VoucherTestTrait
 {
@@ -25,7 +27,7 @@ trait VoucherTestTrait
     use DoesTesting;
     use AssertsSentEmails;
     use MakesTestIdentities;
-    use MakesProviderAndProducts;
+    use MakesTestFundProviders;
     use FundFormulaProductTestTrait;
 
     /**
@@ -46,14 +48,16 @@ trait VoucherTestTrait
     /**
      * @param Fund $fund
      * @param array $assert
+     * @param Product[] $products
      * @return array
+     * @throws RandomException
      * @throws \Throwable
      */
-    protected function makeVoucherData(Fund $fund, array $assert): array
+    protected function makeVoucherData(Fund $fund, array $assert, array $products): array
     {
         $range = range(0, Arr::get($assert, 'vouchers_count', 10) - 1);
 
-        return array_reduce($range, function (array $vouchers, $index) use ($fund, $assert) {
+        return array_reduce($range, function (array $vouchers, $index) use ($fund, $assert, $products) {
             $params = [];
             $amount = random_int(1, $fund->getMaxAmountPerVoucher());
             $voucherType = $assert['type'] ?? 'budget';
@@ -71,12 +75,7 @@ trait VoucherTestTrait
             if ($voucherType === 'budget') {
                 $amount = $exceedVoucherAmountLimit ? $fund->getMaxAmountPerVoucher() + 10 : $amount;
             } elseif ($voucherType === 'product') {
-                $productId = match ($assert['product'] ?? 'approved') {
-                    'approved' => array_random($this->getApprovedProducts())->id,
-                    'unapproved' => array_random($this->getUnapprovedProducts())->id,
-                    'empty_stock' => array_random($this->getEmptyStockProducts())->id,
-                    default => null,
-                };
+                $productId = array_random($products)->id;
             }
 
             $item = array_merge($params, [
@@ -204,7 +203,9 @@ trait VoucherTestTrait
             $this->assertFieldsEquals($voucher, $voucherArr);
             $this->assertActivationCode($voucher, $voucherArr);
 
-            $this->assertFundFormulaProducts($voucher, $startDate, $assert['assign_by'] === 'email');
+            if ($assert['assign_by'] === 'email' && $voucher->isBudgetType()) {
+                $this->assertFundFormulaProductVouchersCreatedByMainVoucher($voucher);
+            }
         }
 
         if ($sameAssignBy > 0) {

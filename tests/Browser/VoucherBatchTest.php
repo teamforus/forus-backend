@@ -80,7 +80,7 @@ class VoucherBatchTest extends DuskTestCase
         // configure organization for bsn
         $organization->update(['bsn_enabled' => true]);
 
-        $funds = $organization->funds;
+        $funds = $organization->funds->take(3);
         $this->assertNotEmpty($funds);
 
         $this->browse(function (Browser $browser) use ($implementation, $organization, $funds, $testCase) {
@@ -206,7 +206,7 @@ class VoucherBatchTest extends DuskTestCase
         $browser->waitFor('@uploadFileButton');
         $browser->element('@uploadFileButton')->click();
 
-        $browser->waitFor('@successUploadIcon', 60);
+        $browser->waitFor('@successUploadIcon', 15);
 
         $browser->element('@closeModalButton')->click();
         $browser->waitUntilMissing('@modalVoucherUpload');

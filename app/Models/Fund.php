@@ -913,17 +913,12 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return BelongsToMany
      * @noinspection PhpUnused
      */
-    public function formula_products(): HasManyThrough
+    public function formula_products(): BelongsToMany
     {
-        return $this->hasManyThrough(
-            Product::class,
-            FundFormulaProduct::class,
-            'fund_id',
-            'id'
-        );
+        return $this->belongsToMany(Product::class, 'fund_formula_products');
     }
 
     /**
