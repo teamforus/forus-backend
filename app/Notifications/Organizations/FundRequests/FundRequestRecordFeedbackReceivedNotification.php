@@ -38,12 +38,12 @@ class FundRequestRecordFeedbackReceivedNotification extends BaseFundsRequestsNot
             $fundRequest->id,
         ));
 
-        $this->sendMailNotification(
-            $identity->email,
-            new FundRequestClarificationReceivedMail(array_merge($this->eventLog->data, [
-                'validator_fund_request_link' => $link,
-            ]), $fundRequest->fund->getEmailFrom())
-        );
+        $mailable = new FundRequestClarificationReceivedMail([
+            ...$this->eventLog->data,
+            'validator_fund_request_link' => $link,
+        ], $fundRequest->fund->getEmailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 
     /**

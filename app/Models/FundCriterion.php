@@ -18,8 +18,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string $operator
  * @property string $value
  * @property bool $optional
- * @property int|null $min
- * @property int|null $max
+ * @property string|null $min
+ * @property string|null $max
  * @property string|null $title
  * @property bool $show_attachment
  * @property string $description

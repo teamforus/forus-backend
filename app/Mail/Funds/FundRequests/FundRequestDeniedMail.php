@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class FundRequestDeniedMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = 'notifications_identities.fund_request_denied';
+    public ?string $notificationTemplateKey = 'notifications_identities.fund_request_denied';
 
     /**
      * @return Mailable

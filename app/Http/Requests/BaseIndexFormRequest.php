@@ -10,6 +10,7 @@ class BaseIndexFormRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
+            'q' => $this->qRule(),
             'per_page' => $this->perPageRule(),
         ];
     }

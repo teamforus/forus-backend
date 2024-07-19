@@ -12,8 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $pre_check_record_id
  * @property int $fund_id
  * @property string|null $description
- * @property int|null $impact_level
- * @property int $is_knock_out
+ * @property int $impact_level
+ * @property bool $is_knock_out
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund

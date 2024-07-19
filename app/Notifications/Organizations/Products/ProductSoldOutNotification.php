@@ -20,10 +20,12 @@ class ProductSoldOutNotification extends BaseProductsNotification
     public function toMail(Identity $identity): void
     {
         $emailFrom = Implementation::general()->getEmailFrom();
-        $mailable = new ProductSoldOutMail(array_merge($this->eventLog->data, [
-            'provider_dashboard_link' => Implementation::general()->urlProviderDashboard(),
-        ]), $emailFrom);
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $mailable = new ProductSoldOutMail([
+            ...$this->eventLog->data,
+            'provider_dashboard_link' => Implementation::general()->urlProviderDashboard(),
+        ], $emailFrom);
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

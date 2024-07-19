@@ -35,7 +35,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|Role whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Role whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
  * @method static \Illuminate\Database\Eloquent\Builder|Role whereTranslationLike(string $translationField, $value, ?string $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|Role withTranslation()
+ * @method static \Illuminate\Database\Eloquent\Builder|Role withTranslation(?string $locale = null)
  * @mixin \Eloquent
  */
 class Role extends BaseModel

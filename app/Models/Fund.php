@@ -55,6 +55,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $description_text
  * @property string|null $description_short
  * @property string $description_position
+ * @property int|null $parent_id
  * @property string|null $faq_title
  * @property string $request_btn_text
  * @property string|null $external_link_url
@@ -76,7 +77,6 @@ use Illuminate\Support\Facades\DB;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
- * @property int|null $parent_id
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers

@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class FundBalanceWarningMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = "notifications_funds.balance_low";
+    public ?string $notificationTemplateKey = "notifications_funds.balance_low";
 
     /**
      * @return Mailable

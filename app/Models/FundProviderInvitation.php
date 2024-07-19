@@ -23,10 +23,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund|null $from_fund
- * @property-read \App\Models\Fund $fund
+ * @property-read \App\Models\Fund|null $fund
  * @property-read Carbon $expire_at
  * @property-read bool $expired
- * @property-read \App\Models\Organization $organization
+ * @property-read \App\Models\Organization|null $organization
  * @method static Builder|FundProviderInvitation newModelQuery()
  * @method static Builder|FundProviderInvitation newQuery()
  * @method static Builder|FundProviderInvitation query()

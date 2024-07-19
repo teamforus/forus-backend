@@ -15,7 +15,8 @@ use Tests\Traits\MakesTestFunds;
 
 class VoucherTransactionNoteTest extends TestCase
 {
-    use DatabaseTransactions, MakesTestFunds;
+    use DatabaseTransactions;
+    use MakesTestFunds;
 
     /**
      * @var string
@@ -121,7 +122,8 @@ class VoucherTransactionNoteTest extends TestCase
     ): void {
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
         $response = $this->getJson(
-            sprintf($this->apiUrl, $organization->id, $type) . "/$transaction->address", $headers
+            sprintf($this->apiUrl, $organization->id, $type) . "/$transaction->address",
+            $headers
         );
         $response->assertSuccessful();
 
@@ -181,8 +183,8 @@ class VoucherTransactionNoteTest extends TestCase
     {
         /** @var Voucher $voucher */
         $voucher = $fund->vouchers()
-            ->where(fn(Builder $builder) => VoucherQuery::whereNotExpiredAndActive($builder))
-            ->where(fn(Builder $builder) => VoucherQuery::whereHasBalance($builder))
+            ->where(fn (Builder $builder) => VoucherQuery::whereNotExpiredAndActive($builder))
+            ->where(fn (Builder $builder) => VoucherQuery::whereHasBalance($builder))
             ->whereNull('product_id')
             ->first();
 

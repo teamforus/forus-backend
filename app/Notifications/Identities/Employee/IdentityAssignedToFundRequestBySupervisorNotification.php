@@ -26,12 +26,13 @@ class IdentityAssignedToFundRequestBySupervisorNotification extends BaseIdentity
             Arr::get($this->eventLog->data, 'fund_request_id'),
         ));
 
-        $mailData = array_merge($this->eventLog->data, [
+        $mailable = new FundRequestAssignedBySupervisorMail([
+            ...$this->eventLog->data,
             'button_link' => $buttonLink,
             'supervisor_assigned_at'=> now()->format('Y-m-d H:i:s'),
             'supervisor_assigned_at_locale'=> format_datetime_locale(now()),
         ]);
 
-        $this->sendMailNotification($identity->email, new FundRequestAssignedBySupervisorMail($mailData));
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

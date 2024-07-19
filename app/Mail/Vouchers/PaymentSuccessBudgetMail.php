@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class PaymentSuccessBudgetMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = 'notifications_identities.voucher_budget_transaction';
+    public ?string $notificationTemplateKey = 'notifications_identities.voucher_budget_transaction';
 
     /**
      * @return Mailable

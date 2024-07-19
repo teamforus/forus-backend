@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Implementations;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\SystemNotifications\IndexSystemNotificationsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Implementations\SystemNotifications\ShowSystemNotificationRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\SystemNotifications\UpdateSystemNotificationsRequest;
 use App\Http\Resources\SystemNotificationResource;
 use App\Models\Implementation;
@@ -42,13 +43,14 @@ class SystemNotificationsController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param ShowSystemNotificationRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
      * @param SystemNotification $systemNotification
      * @return SystemNotificationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
+        ShowSystemNotificationRequest $request,
         Organization $organization,
         Implementation $implementation,
         SystemNotification $systemNotification
@@ -57,7 +59,11 @@ class SystemNotificationsController extends Controller
         $this->authorize('viewAny', [Implementation::class, $organization]);
         $this->authorize('view', [$implementation, $organization]);
 
-        return SystemNotificationResource::create($systemNotification);
+        $funds =  $organization->funds;
+
+        return SystemNotificationResource::create($systemNotification, [
+            'fundIds' => (array) $request->get('fund_id') ?: $funds->pluck('id')->toArray(),
+        ]);
     }
 
     /**

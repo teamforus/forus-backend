@@ -26,11 +26,12 @@ class IdentityVoucherAssignedBudgetNotification extends BaseIdentityVoucherNotif
             return;
         }
 
-        $mailable = new VoucherAssignedBudgetMail(array_merge($this->eventLog->data, [
+        $mailable = new VoucherAssignedBudgetMail([
+            ...$this->eventLog->data,
             'qr_token' => $voucher->token_without_confirmation->address,
             'webshop_link' => $voucher->fund->urlWebshop(),
-        ]), $voucher->fund->getEmailFrom());
+        ], $voucher->fund->getEmailFrom());
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

@@ -39,7 +39,7 @@ use Illuminate\Http\Request;
  * @method static Builder|BusinessType whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
  * @method static Builder|BusinessType whereTranslationLike(string $translationField, $value, ?string $locale = null)
  * @method static Builder|BusinessType whereUpdatedAt($value)
- * @method static Builder|BusinessType withTranslation()
+ * @method static Builder|BusinessType withTranslation(?string $locale = null)
  * @mixin \Eloquent
  */
 class BusinessType extends BaseModel

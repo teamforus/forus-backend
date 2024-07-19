@@ -4,11 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- * @noinspection PhpIllegalPsrClassPathInspection
- */
-class CreateSessionsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -37,4 +33,4 @@ class CreateSessionsTable extends Migration
     {
         Schema::dropIfExists('sessions');
     }
-}
+};

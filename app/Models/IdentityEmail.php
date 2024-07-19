@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \App\Models\Redirect|null $redirect
  * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail newQuery()
- * @method static \Illuminate\Database\Query\Builder|IdentityEmail onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail query()
  * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereDeletedAt($value)
@@ -36,8 +36,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereVerificationToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereVerified($value)
- * @method static \Illuminate\Database\Query\Builder|IdentityEmail withTrashed()
- * @method static \Illuminate\Database\Query\Builder|IdentityEmail withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail withoutTrashed()
  * @mixin \Eloquent
  */
 class IdentityEmail extends Model

@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Events\Vouchers\VoucherExpired;
 use App\Events\Vouchers\VoucherExpireSoon;
 use App\Models\Voucher;
-use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherQuery;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -35,41 +34,34 @@ class NotifyAboutVoucherExpireCommand extends Command
      */
     public function handle(): void
     {
-        $interval3Weeks = [now(), now()->addWeeks(3)];
-        $interval6Weeks = [now()->addWeeks(3)->addDay(), now()->addWeeks(6)];
+        $interval3Weeks = [now()->startOfDay(), now()->addWeeks(3)->endOfDay()];
+        $interval6Weeks = [now()->startOfDay(), now()->addWeeks(6)->endOfDay()];
 
-        $expiredVouchers = $this->getExpiredVouchers();
-        $expiringVouchers3Weeks = $this->getExpiringVouchers($interval3Weeks[0], $interval3Weeks[1]);
-        $expiringVouchers6Weeks = $this->getExpiringVouchers($interval6Weeks[0], $interval6Weeks[1]);
-
-        foreach ($expiringVouchers3Weeks as $voucher) {
+        foreach ($this->getExpiringVouchers($interval3Weeks) as $voucher) {
             VoucherExpireSoon::dispatch($voucher);
         }
 
-        foreach ($expiringVouchers6Weeks as $voucher) {
+        foreach ($this->getExpiringVouchers($interval6Weeks) as $voucher) {
             VoucherExpireSoon::dispatch($voucher);
         }
 
-        foreach ($expiredVouchers as $voucher) {
+        foreach ($this->getExpiredVouchers() as $voucher) {
             VoucherExpired::dispatch($voucher);
         }
     }
 
     /**
-     * @param Carbon $startDate
-     * @param Carbon $endDate
+     * @param Carbon[] $between
      * @return Collection
      */
-    public function getExpiringVouchers(Carbon $startDate, Carbon $endDate): Collection
+    public function getExpiringVouchers(array $between): Collection
     {
         $builder = $this->queryVouchers(
             VoucherQuery::whereNotExpiredAndActive(Voucher::query()),
             Voucher::EVENT_EXPIRING_SOON_BUDGET,
-            Voucher::EVENT_EXPIRING_SOON_PRODUCT
-        )->whereBetween('expire_at', [
-            $startDate->format('Y-m-d'),
-            $endDate->format('Y-m-d'),
-        ]);
+            Voucher::EVENT_EXPIRING_SOON_PRODUCT,
+            $between,
+        )->whereBetween('expire_at', $between);
 
         return $builder->with('fund', 'fund.organization')->get();
     }
@@ -89,32 +81,36 @@ class NotifyAboutVoucherExpireCommand extends Command
     }
 
     /**
-     * @param Builder $builder
+     * @param Builder|Voucher $builder
      * @param string $budgetEvent
      * @param string $productEvent
+     * @param Carbon[] $logBetween
      * @return Builder
      */
     protected function queryVouchers(
-        Builder $builder,
+        Builder|Voucher $builder,
         string $budgetEvent,
-        string $productEvent
+        string $productEvent,
+        array $logBetween = null,
     ): Builder {
-        $builder->where(function(Builder $builder) use ($budgetEvent, $productEvent) {
+        $builder->where(function(Builder $builder) use ($budgetEvent, $productEvent, $logBetween) {
             // budget vouchers
-            $builder->where(function(Builder $builder) use ($budgetEvent) {
+            $builder->where(function(Builder $builder) use ($budgetEvent, $logBetween) {
                 $builder->whereNull('product_id');
-                $builder->whereDoesntHave('logs', function(Builder $builder) use ($budgetEvent) {
+                $builder->whereDoesntHave('logs', function(Builder $builder) use ($budgetEvent, $logBetween) {
                     $builder->where('event', $budgetEvent);
+                    $logBetween && $builder->whereBetween('created_at', $logBetween);
                 });
             });
 
             // product vouchers
-            $builder->orWhere(function(Builder $builder) use ($productEvent) {
+            $builder->orWhere(function(Builder $builder) use ($productEvent, $logBetween) {
                 $builder->whereNotNull('product_id');
                 $builder->whereDoesntHave('transactions');
 
-                $builder->whereDoesntHave('logs', function(Builder $builder) use ($productEvent) {
+                $builder->whereDoesntHave('logs', function(Builder $builder) use ($productEvent, $logBetween) {
                     $builder->where('event', $productEvent);
+                    $logBetween && $builder->whereBetween('created_at', $logBetween);
                 });
             });
         });

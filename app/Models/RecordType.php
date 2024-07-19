@@ -55,7 +55,7 @@ use Illuminate\Support\Arr;
  * @method static Builder|RecordType whereType($value)
  * @method static Builder|RecordType whereUpdatedAt($value)
  * @method static Builder|RecordType whereVouchers($value)
- * @method static Builder|RecordType withTranslation()
+ * @method static Builder|RecordType withTranslation(?string $locale = null)
  * @mixin \Eloquent
  */
 class RecordType extends BaseModel

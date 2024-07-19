@@ -19,11 +19,12 @@ class IdentityReimbursementApprovedNotification extends BaseIdentityReimbursemen
         $reimbursement = $this->eventLog->loggable;
         $fund = $reimbursement->voucher->fund;
 
-        $mailable = new ReimbursementApprovedMail(array_merge($this->eventLog->data, [
-            'app_link'      => 'https://www.forus.io/DL',
-            'webshop_link'  => $fund->urlWebshop('/funds'),
-        ]), $fund->getEmailFrom());
+        $mailable = new ReimbursementApprovedMail([
+            ...$this->eventLog->data,
+            'app_link' => 'https://www.forus.io/DL',
+            'webshop_link' => $fund->urlWebshop('/funds'),
+        ], $fund->getEmailFrom());
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

@@ -12,7 +12,7 @@ use League\CommonMark\Exception\CommonMarkException;
  *
  * @property int $id
  * @property string $type
- * @property int $formal
+ * @property bool $formal
  * @property int $system_notification_id
  * @property int $implementation_id
  * @property int|null $fund_id

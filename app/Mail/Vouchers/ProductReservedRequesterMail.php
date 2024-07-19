@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class ProductReservedRequesterMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = 'notifications_identities.product_voucher_reserved';
+    public ?string $notificationTemplateKey = 'notifications_identities.product_voucher_reserved';
 
     /**
      * @return Mailable

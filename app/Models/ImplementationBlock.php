@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Config;
  * @property bool $button_enabled
  * @property string|null $button_text
  * @property string|null $button_link
- * @property string|null $button_link_label
+ * @property string $button_link_label
  * @property bool $button_target_blank
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at

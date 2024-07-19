@@ -24,10 +24,11 @@ class IdentityFundRequestRecordDeclinedNotification extends BaseIdentityFundRequ
             return;
         }
 
-        $mailable = new FundRequestRecordDeclinedMail(array_merge($this->eventLog->data, [
+        $mailable = new FundRequestRecordDeclinedMail([
+            ...$this->eventLog->data,
             'webshop_link' => $fundRequest->fund->urlWebshop(),
-        ]), $fundRequest->fund->getEmailFrom());
+        ], $fundRequest->fund->getEmailFrom());
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }
