@@ -85,6 +85,8 @@ use Illuminate\Support\Facades\DB;
  * @property-read int|null $children_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
+ * @property-read Collection|\App\Models\FundCriteriaStep[] $criteria_steps
+ * @property-read int|null $criteria_steps_count
  * @property-read \App\Models\Employee|null $default_validator_employee
  * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
  * @property-read int|null $digests_count
@@ -304,6 +306,15 @@ class Fund extends BaseModel
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'fund_products');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function criteria_steps(): HasMany
+    {
+        return $this->hasMany(FundCriteriaStep::class);
     }
 
     /**
@@ -923,6 +934,24 @@ class Fund extends BaseModel
 
     /**
      * @param string $identity_address
+     * @param array $record_types
+     * @param FundCriterion|null $criterion
+     * @return array|Record[]
+     */
+    public function getTrustedRecordOfTypes(
+        string $identity_address,
+        array $record_types,
+        FundCriterion $criterion = null,
+    ): array {
+        return array_combine($record_types, array_map(fn ($record_type) => $this->getTrustedRecordOfType(
+            $identity_address,
+            $record_type,
+            $criterion
+        )?->value, $record_types));
+    }
+
+    /**
+     * @param string $identity_address
      * @param string $record_type
      * @param FundCriterion|null $criterion
      * @return Model|Record|null
@@ -1072,16 +1101,19 @@ class Fund extends BaseModel
 
     /**
      * @param bool $withOptional
+     * @param array $values
      * @return array
      */
-    public function requiredPrevalidationKeys(bool $withOptional = false): array
+    public function requiredPrevalidationKeys(bool $withOptional, array $values): array
     {
         $criteriaKeys = $withOptional ?
             $this->criteria
                 ?->pluck('record_type_key')
                 ?->toArray() ?? [] :
             $this->criteria
-                ?->where('optional', false)
+                ?->filter(function (FundCriterion $criterion) use ($values) {
+                    return !$criterion->optional && !$criterion->isExcludedByRules($values);
+                })
                 ?->pluck('record_type_key')
                 ?->toArray() ?? [];
 
@@ -1096,7 +1128,7 @@ class Fund extends BaseModel
             ...$formulaKeys,
         ]);
 
-        return array_unique($list);
+        return array_values(array_unique($list));
     }
 
     /**
@@ -1502,7 +1534,12 @@ class Fund extends BaseModel
         $record_type = $criterion->record_type;
         $value = $this->getTrustedRecordOfType($identity->address, $record_type->key, $criterion)?->value;
 
-        return BaseFundRequestRule::validateRecordValue($criterion, $value)->passes();
+        $records = $criterion->fund_criterion_rules->pluck('record_type_key')->unique()->toArray();
+        $recordsValues = $this->getTrustedRecordOfTypes($identity->address, $records, $criterion);
+
+        return
+            $criterion->isExcludedByRules($recordsValues) ||
+            BaseFundRequestRule::validateRecordValue($criterion, $value)->passes();
     }
 
     /**

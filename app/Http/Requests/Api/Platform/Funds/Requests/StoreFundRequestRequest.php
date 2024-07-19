@@ -65,12 +65,15 @@ class StoreFundRequestRequest extends BaseFormRequest
      */
     protected function recordsRule(Fund $fund): array
     {
+        $values = $this->input('records');
+        $values = is_array($values) ? array_pluck($values, 'value', 'fund_criterion_id') : [];
+
         return [
             'records' => $this->isValidationRequest ? 'present|array' : 'present|array|min:1',
             'records.*' => 'required|array',
             'records.*.value' => [
                 'present',
-                new FundRequestRecordValueRule($fund, $this),
+                new FundRequestRecordValueRule($fund, $this, $values),
             ],
             'records.*.files' => [
                 'present',

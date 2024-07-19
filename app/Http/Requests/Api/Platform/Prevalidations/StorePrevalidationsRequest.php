@@ -35,11 +35,7 @@ class StorePrevalidationsRequest extends BaseFormRequest
     {
         $fund = Fund::find($this->input('fund_id'));
         $data = $this->input('data', []);
-        $presentKeys = RecordType::query()
-            ->whereIn('key', is_array($data) ? array_keys($data) : [])
-            ->where('criteria', true)
-            ->pluck('key')
-            ->toArray();
+        $data = array_filter(is_array($data) ? $data : []);
 
         return array_merge([
             'fund_id' => [
@@ -49,25 +45,23 @@ class StorePrevalidationsRequest extends BaseFormRequest
             'data' => [
                 'required',
                 'array',
-                new PrevalidationItemHasRequiredKeysRule($fund),
+                new PrevalidationItemHasRequiredKeysRule($fund, $data),
             ],
-            'data.*' => 'required'
-        ], array_fill_keys([...$this->getRequiredKeysRules($fund, $presentKeys)], [
-            'required', new PrevalidationItemRule($fund)
+        ], array_fill_keys([...$this->getRequiredKeysRules($fund, $data)], [
+            'required', new PrevalidationItemRule($fund, $data, 'data.')
         ]));
     }
 
     /**
      * @param Fund|null $fund
-     * @param array $extraKeys
+     * @param array $data
      * @return array
      */
-    private function getRequiredKeysRules(?Fund $fund, array $extraKeys = []): array
+    private function getRequiredKeysRules(?Fund $fund, array $data): array
     {
         // all required keys must be present and validated by criteria
         return $fund ? array_map(fn ($key) => "data.$key", [
-            ...$fund->requiredPrevalidationKeys(),
-            ...$extraKeys,
+            ...$fund->requiredPrevalidationKeys(false, $data),
         ]) : [];
     }
 
