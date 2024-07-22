@@ -32,6 +32,7 @@ use Carbon\Carbon;
  * @property bool $allow_products
  * @property bool $allow_some_products
  * @property bool $allow_extra_payments
+ * @property bool $allow_extra_payments_full
  * @property bool $excluded
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -60,6 +61,7 @@ use Carbon\Carbon;
  * @method static Builder|FundProvider query()
  * @method static Builder|FundProvider whereAllowBudget($value)
  * @method static Builder|FundProvider whereAllowExtraPayments($value)
+ * @method static Builder|FundProvider whereAllowExtraPaymentsFull($value)
  * @method static Builder|FundProvider whereAllowProducts($value)
  * @method static Builder|FundProvider whereAllowSomeProducts($value)
  * @method static Builder|FundProvider whereCreatedAt($value)
@@ -104,7 +106,8 @@ class FundProvider extends BaseModel
      */
     protected $fillable = [
         'organization_id', 'fund_id', 'state',
-        'allow_products', 'allow_budget', 'allow_some_products', 'excluded', 'allow_extra_payments',
+        'allow_extra_payments', 'allow_extra_payments_full',
+        'allow_products', 'allow_budget', 'allow_some_products', 'excluded',
     ];
 
     /**
@@ -116,6 +119,7 @@ class FundProvider extends BaseModel
         'allow_products' => 'boolean',
         'allow_some_products' => 'boolean',
         'allow_extra_payments' => 'boolean',
+        'allow_extra_payments_full' => 'boolean',
     ];
 
     /**
@@ -603,8 +607,9 @@ class FundProvider extends BaseModel
         array $data,
         bool $withTrashed = false,
     ): FundProviderProduct {
+        /** @var FundProviderProduct $query */
         $query = $this->fund_provider_products()
-            ->latest('created_at')
+            ->latest()
             ->latest('id');
 
         if ($withTrashed) {
@@ -676,6 +681,7 @@ class FundProvider extends BaseModel
      */
     protected function resetProduct(array $data): ?FundProviderProduct
     {
+        /** @var FundProviderProduct $query */
         $query = $this->fund_provider_products()->latest();
 
         if ($this->fund->isTypeBudget()) {

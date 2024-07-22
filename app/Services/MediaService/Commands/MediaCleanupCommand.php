@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Services\MediaService\Commands;
 
 use Illuminate\Console\Command;
 
@@ -12,7 +12,7 @@ class MediaCleanupCommand extends Command
      * @var string
      */
     protected $signature = 'media:cleanup
-                            {--minutes= : How old in minutes should me media to be considered expired.} 
+                            {--minutes= : How old in minutes should a file be media to be considered expired.} 
                             {--force : Do not ask for confirmation before deleting.}';
 
     /**
@@ -68,10 +68,7 @@ class MediaCleanupCommand extends Command
 
             if ($this->option('force') ||
                 $this->confirm("Would you like to delete them?")) {
-                echo sprintf(
-                    "√ %s media deleted.\n",
-                    $media->clearMediasWithoutMediable()
-                );
+                echo "√ {$media->clearMediasWithoutMediable()} media deleted.\n";
             } else {
                 echo "√ Skipped.\n";
             }

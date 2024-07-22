@@ -14,7 +14,10 @@ use Tests\Traits\MakesTestOrganizations;
 
 class VoucherTransactionTransferDaysTest extends TestCase
 {
-    use DatabaseTransactions, MakesTestFunds, MakesTestOrganizations, MakesProductReservations;
+    use MakesTestFunds;
+    use DatabaseTransactions;
+    use MakesTestOrganizations;
+    use MakesProductReservations;
 
     /**
      * @var string

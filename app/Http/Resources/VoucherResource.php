@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * @property Voucher $resource
@@ -135,19 +136,18 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Voucher $voucher
-     * @return \Illuminate\Support\Collection
+     * @return SupportCollection
      */
-    protected function getStateHistory(Voucher $voucher): \Illuminate\Support\Collection
+    protected function getStateHistory(Voucher $voucher): SupportCollection
     {
         $logs = $voucher->requesterHistoryLogs();
 
-        return $logs->map(function (EventLog $eventLog) use ($voucher) {
-            return array_merge($eventLog->only('id', 'event'), [
-                'event_locale' => $eventLog->eventDescriptionLocaleWebshop(),
-                'created_at' => $eventLog->created_at->format('Y-m-d'),
-                'created_at_locale' => format_date_locale($eventLog->created_at),
-            ]);
-        })->values();
+        return $logs->map(fn (EventLog $eventLog) => [
+            ...$eventLog->only('id', 'event'),
+            'event_locale' => $eventLog->eventDescriptionLocaleWebshop(),
+            'created_at' => $eventLog->created_at->format('Y-m-d'),
+            'created_at_locale' => format_date_locale($eventLog->created_at),
+        ])->values();
     }
 
     /**
@@ -163,18 +163,19 @@ class VoucherResource extends BaseJsonResource
         } elseif ($voucher->type === 'product') {
             $used = $voucher->transactions_count > 0;
             $amount = $voucher->amount;
-            $productResource = array_merge($voucher->product->only([
-                'id', 'name', 'description', 'description_html', 'price', 'price_locale',
-                'total_amount', 'sold_amount', 'product_category_id',
-                'organization_id'
-            ]), [
+            $productResource = [
+                ...$voucher->product->only([
+                    'id', 'name', 'description', 'description_html', 'price', 'price_locale',
+                    'total_amount', 'sold_amount', 'product_category_id',
+                    'organization_id',
+                ]),
                 'price_locale' => $voucher->product->priceLocale($voucher->fund->getImplementation()),
                 'product_category' => $voucher->product->product_category,
                 'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : '',
                 'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
                 'photo' => new MediaResource($voucher->product->photo),
                 'organization' => new OrganizationBasicWithPrivateResource($voucher->product->organization),
-            ]);
+            ];
         } else {
             abort("Unknown voucher type!", 403);
         }
@@ -233,7 +234,7 @@ class VoucherResource extends BaseJsonResource
         if (!$voucher->fund->isTypeSubsidy()) {
             $reservable = $reservable && (
                 $voucher->amount_available >= $product->price ||
-                ($voucher->amount_available >= 0.1 && $product->reservationExtraPaymentsEnabled($voucher->fund))
+                $product->reservationExtraPaymentsEnabled($voucher->fund, $voucher->amount_available)
             );
         }
 
@@ -269,11 +270,11 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Collection|Voucher[]|null $product_vouchers
-     * @return Voucher[]|\Illuminate\Support\Collection|null
+     * @return Voucher[]|SupportCollection|null
      */
     protected function getProductVouchers(
         Collection|array|null $product_vouchers
-    ): \Illuminate\Support\Collection|array|null {
+    ): SupportCollection|array|null {
         return $product_vouchers?->map(function (Voucher $product_voucher) {
             return array_merge($product_voucher->only([
                 'identity_address', 'fund_id', 'returnable',

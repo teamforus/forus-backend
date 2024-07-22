@@ -66,6 +66,7 @@ class ProductExclusionsTest extends TestCase
         array $providerParams = []
     ): Collection {
         return $funds->map(function(Fund $fund) use ($product, $providerParams) {
+            /** @var FundProvider $provider */
             $provider = $fund->providers()->updateOrCreate($product->only([
                 'organization_id',
             ]), array_merge([
@@ -114,7 +115,7 @@ class ProductExclusionsTest extends TestCase
         ]);
 
         $approvedProducts = $this->getApprovedProducts($product->id, $funds->pluck('id')->toArray());
-        $this->assertTrue(count($approvedProducts) == 0);
+        $this->assertEmpty($approvedProducts);
     }
 
     /**

@@ -27,6 +27,7 @@ class ProductResource extends BaseJsonResource
         'organization.logo.presets',
         'organization.business_type.translations',
         'organization.fund_providers_allowed_extra_payments',
+        'organization.fund_providers_allowed_extra_payments_full',
         'organization.mollie_connection',
         'bookmarks',
     ];

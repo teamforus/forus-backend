@@ -1226,7 +1226,7 @@ class Fund extends BaseModel
         Carbon $expire_at = null,
         ?int $limit_multiplier = null,
     ): ?Voucher {
-        $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
+        $amount = $voucherAmount === null ? $this->amountForIdentity($identity_address) : $voucherAmount;
         $returnable = false;
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;

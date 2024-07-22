@@ -106,7 +106,10 @@ trait MakesTestFunds
         array $implementationData = [],
     ): Implementation {
         return $organization->implementations()->create([
-            'name' => fake()->title,
+            'name' => fake()->text(30),
+            ...Implementation::general()->only([
+                'url_webshop', 'url_sponsor', 'url_provider', 'url_validator',
+            ]),
             ...$implementationData,
         ]);
     }
@@ -114,14 +117,13 @@ trait MakesTestFunds
     /**
      * @param Organization $organization
      * @param Fund $fund
-     * @param array $rawCriterion
+     * @param string|null $primaryKey
      * @return Prevalidation
-     * @throws Throwable
      */
     public function makePrevalidationForTestCriteria(
         Organization $organization,
-        Fund $fund, array
-        $rawCriterion = [],
+        Fund $fund,
+        ?string $primaryKey = null,
     ): Prevalidation {
         // create prevalidation
         $response = $this->makeStorePrevalidationRequest($organization->identity, $fund, [
@@ -135,8 +137,7 @@ trait MakesTestFunds
             $this->makeRequestCriterionValue($fund, "test_select", 'foo'),
             $this->makeRequestCriterionValue($fund, "test_select_number", 2),
         ], [
-            'uid' => token_generator()->generate(32),
-            ...$rawCriterion,
+            $fund->fund_config->csv_primary_key => $primaryKey ?: token_generator()->generate(32),
         ]);
 
         $response->assertSuccessful();
@@ -196,6 +197,7 @@ trait MakesTestFunds
      */
     protected function addTestCriteriaToFund(Fund $fund): void
     {
+        $fund->criteria->each(fn ($criterion) => $criterion->fund_criterion_rules()->delete());
         $fund->criteria()->forceDelete();
 
         $this->makeRecordType($fund->organization, RecordType::TYPE_BOOL, "test_bool");
@@ -224,6 +226,7 @@ trait MakesTestFunds
             'fund_request_resolve_policy' => $fund->organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
         ])->save();
 
+        $fund->refresh();
         $response->assertSuccessful();
     }
 

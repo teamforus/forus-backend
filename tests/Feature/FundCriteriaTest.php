@@ -321,8 +321,6 @@ class FundCriteriaTest extends TestCase
 
         $response->assertSuccessful();
 
-        // create products for fund formula products assertion
-        // used 'test_number' as record key, created in method 'prepareTestFund'
         $products = $this->makeProviderAndProducts($fund);
         $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
 
@@ -427,7 +425,7 @@ class FundCriteriaTest extends TestCase
         ];
 
         $this->addTestCriteriaToFund($fund);
-        $this->makePrevalidationForTestCriteria($organization, $fund, compact('bsn'));
+        $this->makePrevalidationForTestCriteria($organization, $fund, $bsn);
 
         $products = $this->makeProviderAndProducts($fund);
 

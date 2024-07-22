@@ -13,6 +13,7 @@ use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\ProductSubQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Models\ProductReservation;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\WithFaker;
 
 trait MakesProductReservations
@@ -49,13 +50,14 @@ trait MakesProductReservations
 
     /**
      * @param Organization $organization
+     * @param Collection|Fund[] $funds
      * @return Product
      */
-    private function createProductForReservation(Organization $organization): Product
+    private function createProductForReservation(Organization $organization, Collection|array $funds): Product
     {
         $product = $this->makeTestProduct($organization);
 
-        foreach ($organization->funds as $fund) {
+        foreach ($funds as $fund) {
             $product->fund_providers()->firstOrCreate([
                 'organization_id' => $organization->id,
                 'fund_id'         => $fund->id,
@@ -68,7 +70,7 @@ trait MakesProductReservations
         /** @var \Illuminate\Database\Eloquent\Collection|FundProvider[] $fund_providers */
         $fund_providers = FundProviderQuery::whereApprovedForFundsFilter(
             FundProvider::query(),
-            $organization->funds()->pluck('id')->toArray()
+            collect($funds)->pluck('id')->toArray()
         )->get();
 
         foreach ($fund_providers as $fund_provider) {
@@ -113,7 +115,7 @@ trait MakesProductReservations
         $product = $product->first();
 
         if (!$product) {
-            return $this->createProductForReservation($voucher->fund->organization);
+            return $this->createProductForReservation($voucher->fund->organization, [$voucher->fund]);
         }
 
         return $product;
