@@ -3,5 +3,5 @@
 return [
     'needs-data' => 'In afwachting',
     'in-review' => 'In afwachting',
-    'completed' => 'Connected',
+    'completed' => 'Verbonden',
 ];
