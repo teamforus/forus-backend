@@ -18,6 +18,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Traits\HasFormattedTimestamps;
+use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Scopes\Builders\VoucherSubQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
@@ -1344,16 +1345,16 @@ class Voucher extends BaseModel
             return null;
         }
 
-        /** @var Builder $query */
-        $query = self::whereNull('identity_address');
+        $vouchers = self::query()
+            ->whereNull('identity_address')
+            ->whereHas('fund', fn (Builder $q) => FundQuery::whereActiveFilter($q))
+            ->whereRelation('fund.organization', fn (Builder $q) => $q->where('bsn_enabled', true))
+            ->whereHas('voucher_relation', fn (Builder $q) => $q->where('bsn', $identity->bsn))
+            ->get();
 
-        return $query->whereHas('fund.organization', function(Builder $builder) {
-            $builder->where('bsn_enabled', true);
-        })->whereHas('voucher_relation', static function(Builder $builder) use ($identity) {
-            $builder->where('bsn', '=', $identity->bsn);
-        })->get()->each(static function(Voucher $voucher) {
-            $voucher->voucher_relation->assignByBsnIfExists();
-        })->count();
+        return $vouchers
+            ->each(fn (Voucher $voucher) => $voucher->voucher_relation->assignByBsnIfExists())
+            ->count();
     }
 
     /**
