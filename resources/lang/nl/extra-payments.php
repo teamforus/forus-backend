@@ -2,9 +2,9 @@
 
 return [
     'payment' => [
-        'description' => 'Description',
+        'description' => 'Beschrijving',
     ],
     'refund' => [
-        'description' => 'Refund payment',
+        'description' => 'Betaling terugbetalen',
     ],
 ];
