@@ -1,6 +1,6 @@
 <?php
 
-namespace Feature;
+namespace Tests\Feature;
 
 use App\Models\Voucher;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -42,7 +42,6 @@ class FundCheckRelationBsnTest extends TestCase
         $this->assertEquals($voucher->fresh()->identity_address, $requester->address);
     }
 
-
     /**
      * @return void
      * @throws \Throwable
@@ -68,6 +67,33 @@ class FundCheckRelationBsnTest extends TestCase
         );
 
         $response->assertSuccessful();
+
+        $this->assertEquals(0, $response->json('vouchers'));
+        $this->assertNull($voucher->fresh()->identity_address);
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testExpiredBsnRelationVoucherNotReceived(): void
+    {
+        $voucher = $this->makeFundForCheckTest();
+        $requester = $this->makeIdentity($this->makeUniqueEmail());
+        $requester->setBsnRecord($voucher->voucher_relation->bsn);
+
+        self::assertEquals($voucher->voucher_relation->bsn, $requester->bsn);
+
+        $voucher->update([ 'expire_at' => now()->subDays(5) ]);
+
+        $response = $this->postJson(
+            "/api/v1/platform/funds/$voucher->fund_id/check",
+            [],
+            $this->makeApiHeaders($this->makeIdentityProxy($requester)),
+        );
+
+        $response->assertSuccessful();
+
         $this->assertEquals(0, $response->json('vouchers'));
         $this->assertNull($voucher->fresh()->identity_address);
     }

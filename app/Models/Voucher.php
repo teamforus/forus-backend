@@ -1345,7 +1345,7 @@ class Voucher extends BaseModel
             return null;
         }
 
-        $vouchers = self::query()
+        $vouchers = VoucherQuery::whereNotExpired(self::query())
             ->whereNull('identity_address')
             ->whereHas('fund', fn (Builder $q) => FundQuery::whereActiveFilter($q))
             ->whereRelation('fund.organization', fn (Builder $q) => $q->where('bsn_enabled', true))
