@@ -32,11 +32,11 @@ class FundProvidersApprovedBudgetNotification extends BaseFundProvidersNotificat
             return;
         }
 
-        $this->sendMailNotification(
-            $identity->email,
-            new ProviderApprovedMail(array_merge($this->eventLog->data, [
-                'provider_dashboard_link' => $fund->urlProviderDashboard(),
-            ]), $fund->fund_config->implementation->getEmailFrom())
-        );
+        $mailable = new ProviderApprovedMail([
+            ...$this->eventLog->data,
+            'provider_dashboard_link' => $fund->urlProviderDashboard(),
+        ], $fund->fund_config->implementation->getEmailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

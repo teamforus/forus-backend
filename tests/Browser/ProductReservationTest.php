@@ -17,15 +17,26 @@ use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
+use Tests\Traits\MakesTestFundProviders;
+use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Illuminate\Support\Facades\Cache;
 use Tests\Traits\MakesProductReservations;
 use Illuminate\Foundation\Testing\WithFaker;
-use Throwable;
+use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestProducts;
 
 class ProductReservationTest extends DuskTestCase
 {
-    use AssertsSentEmails, MakesTestIdentities, MakesProductReservations, HasFrontendActions, WithFaker;
+    use WithFaker;
+    use MakesTestFunds;
+    use AssertsSentEmails;
+    use MakesTestProducts;
+    use HasFrontendActions;
+    use MakesTestIdentities;
+    use MakesTestOrganizations;
+    use MakesTestFundProviders;
+    use MakesProductReservations;
 
     protected ?Identity $identity;
 
@@ -37,34 +48,42 @@ class ProductReservationTest extends DuskTestCase
     {
         // Select implementation
         $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+
+        $fund = $this->makeTestFund($organization->fresh());
+        $fund->getOrCreateTopUp()->transactions()->create(['amount' => 100000]);
 
         // Models exist
         $this->assertNotNull($implementation);
         $this->assertNotNull($implementation->organization);
 
-        $this->browse(function (Browser $browser) use ($implementation) {
+        $this->browse(function (Browser $browser) use ($implementation, $fund) {
             // Visit the url and wait for the page to load
             $browser->visit($implementation->urlWebshop());
 
-            // Authorize identity
-            $funds = $implementation->funds->filter(function(Fund $fund) {
-                 return FundProviderQuery::whereApprovedForFundsFilter(FundProvider::query(), $fund->id)->exists();
-            });
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+            $provider = $this->makeProviderOrganization($this->makeIdentity($this->makeUniqueEmail()));
 
-            $identity = $this->makeIdentity();
-            $identity->addEmail($this->makeUniqueEmail(), true, true, true);
-            $funds->each(fn (Fund $fund) => $fund->makeVoucher($identity->address));
+            $this->makeTestProductForReservation($provider);
+
+            $implementation->funds->each(fn (Fund $fund) => $fund->makeVoucher($identity->address));
+            $implementation->funds->each(fn (Fund $fund) => $this->makeTestFundProvider($provider, $fund));
+
+            // Authorize identity
+            $funds = $implementation->fresh()->funds
+                ->filter(fn (Fund $model) => $model->id == $fund->id)
+                ->filter(fn (Fund $fund) => FundProviderQuery::whereApprovedForFundsFilter(
+                    FundProvider::query(),
+                    $fund->id,
+                )->exists());
 
             $this->loginIdentity($browser, $identity);
             $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
             $browser->waitFor('@headerTitle');
 
             // Assert at lease one fund exist
-            $this->assertGreaterThan(1, $implementation->funds->count());
-
-            // Make reservations on all funds
-            $this->createProductForReservation($implementation->organization);
-            $funds->each(fn (Fund $fund) => $this->makeReservation($browser, $fund, $identity));
+            $this->assertCount(1, $funds);
+            $this->makeReservation($browser, $fund, $identity);
 
             // Logout user
             $this->logout($browser);
@@ -134,16 +153,13 @@ class ProductReservationTest extends DuskTestCase
      * @param Browser $browser
      * @param ProductReservation $reservation
      * @return void
-     * @throws TimeOutException
+     * @throws TimeoutException
      */
-    private function checkReservationState(
-        Browser $browser,
-        ProductReservation $reservation
-    ): void {
-        $browser->waitFor('@reservationRow' . $reservation->id);
-        $browser->within('@reservationRow' . $reservation->id, function(Browser $browser) use ($reservation) {
-            $browser->assertSeeIn('@reservationState', $reservation->state_locale);
-        });
+    private function checkReservationState(Browser $browser, ProductReservation $reservation): void
+    {
+        $browser
+            ->waitFor("@reservationRow$reservation->id")
+            ->assertSeeIn("@reservationRow$reservation->id @reservationState", $reservation->state_locale);
     }
 
     /**
@@ -231,18 +247,16 @@ class ProductReservationTest extends DuskTestCase
         $this->assertTrue($stateIsValid, 'Wrong reservation status');
 
         // find reserved product in list with pending label
-        $reservationElement = $this->findReservationElement($browser, $reservation);
-        $this->assertNotNull($reservationElement, 'Reservation not created');
+        $this->assertReservationElementExists($browser, $reservation);
 
         // cancel reservation
-        $reservationElement->findElement(WebDriverBy::xpath(".//*[@data-dusk='btnCancelReservation']"))->click();
+        $browser->within("@reservationItem$reservation->id", fn(Browser $el) => $el->click('@btnCancelReservation'));
 
         $browser->waitFor('@modalProductReserveCancel');
         $browser->within('@modalProductReserveCancel', fn(Browser $el) => $el->click('@btnSubmit'));
-        $browser->waitUntilMissingText($reservation->code);
 
-        $reservationElement = $this->findReservationElement($browser, $reservation);
-        $this->assertNull($reservationElement, 'Reservation not deleted.');
+        $browser->waitUntilMissingText($reservation->code);
+        $browser->assertMissing("@reservationItem$reservation->id");
 
         $reservation->refresh();
         $this->assertTrue($reservation->isCanceledByClient(), 'Reservation not canceled.');
@@ -296,19 +310,15 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param ProductReservation $reservation
-     * @return RemoteWebElement|null
+     * @return void
+     * @throws TimeoutException
      */
-    private function findReservationElement(
+    private function assertReservationElementExists(
         Browser $browser,
         ProductReservation $reservation,
-    ): ?RemoteWebElement {
+    ): void {
         $selector = "@reservationItem$reservation->id";
-
-        try {
-            $browser->waitFor($selector);
-        } catch (Throwable) {
-            return null;
-        }
+        $browser->waitFor($selector);
 
         $browser->within($selector, function(Browser $browser) use ($reservation) {
             $browser->assertVisible($reservation->isExpired() ? '@labelExpired' : [
@@ -322,8 +332,6 @@ class ProductReservationTest extends DuskTestCase
             $browser->assertSeeIn('@reservationProduct', $reservation->product->name);
             $browser->assertSeeIn('@reservationCode', $reservation->code);
         });
-
-        return $browser->element($selector);
     }
 
     /**

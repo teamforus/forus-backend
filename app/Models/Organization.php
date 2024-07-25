@@ -121,6 +121,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $fund_providers_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers_allowed_extra_payments
  * @property-read int|null $fund_providers_allowed_extra_payments_count
+ * @property-read Collection|\App\Models\FundProvider[] $fund_providers_allowed_extra_payments_full
+ * @property-read int|null $fund_providers_allowed_extra_payments_full_count
  * @property-read Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read Collection|\App\Models\Fund[] $funds
@@ -763,6 +765,18 @@ class Organization extends BaseModel
         return $this
             ->hasMany(FundProvider::class)
             ->where('allow_extra_payments', true);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_providers_allowed_extra_payments_full(): HasMany
+    {
+        return $this
+            ->hasMany(FundProvider::class)
+            ->where('allow_extra_payments', true)
+            ->where('allow_extra_payments_full', true);
     }
 
     /**

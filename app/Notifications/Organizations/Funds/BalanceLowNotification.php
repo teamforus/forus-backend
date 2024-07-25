@@ -23,6 +23,6 @@ class BalanceLowNotification extends BaseFundsNotification
         $fund = $this->eventLog->loggable;
         $mailable = new FundBalanceWarningMail($this->eventLog->data, $fund->getEmailFrom());
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

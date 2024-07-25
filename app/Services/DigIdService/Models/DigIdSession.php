@@ -48,7 +48,7 @@ use Illuminate\Support\Facades\Log;
  * @property-read Implementation|null $implementation
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession newQuery()
- * @method static \Illuminate\Database\Query\Builder|DigIdSession onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession query()
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereClientType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereConnectionType($value)
@@ -74,8 +74,8 @@ use Illuminate\Support\Facades\Log;
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereSessionUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|DigIdSession withTrashed()
- * @method static \Illuminate\Database\Query\Builder|DigIdSession withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession withoutTrashed()
  * @mixin \Eloquent
  */
 class DigIdSession extends Model

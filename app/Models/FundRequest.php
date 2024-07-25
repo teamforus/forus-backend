@@ -38,7 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property-read int|null $lead_time_days
  * @property-read string $lead_time_locale
  * @property-read string $state_locale
- * @property-read \App\Models\Identity $identity
+ * @property-read \App\Models\Identity|null $identity
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read Collection|\App\Models\Note[] $notes

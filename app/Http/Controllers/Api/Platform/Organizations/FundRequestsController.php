@@ -14,15 +14,20 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Requests\BaseIndexFormRequest;
 use App\Http\Resources\Arr\FundRequestPersonArrResource;
 use App\Http\Resources\NoteResource;
+use App\Http\Resources\Validator\ValidatorFundRequestEmailLogResource;
 use App\Http\Resources\Validator\ValidatorFundRequestResource;
 use App\Models\Employee;
 use App\Models\FundRequest;
 use App\Models\Note;
 use App\Models\Organization;
+use App\Scopes\Builders\EmailLogQuery;
 use App\Searches\FundRequestSearch;
+use App\Searches\Sponsor\EmailLogSearch;
+use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FundRequestsController extends Controller
@@ -349,6 +354,45 @@ class FundRequestsController extends Controller
             $request->input('description'),
             $request->employee($organization),
         ));
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param BaseIndexFormRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return AnonymousResourceCollection
+     */
+    public function emailLogs(
+        BaseIndexFormRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest,
+    ): AnonymousResourceCollection {
+        $this->authorize('viewAnyEmailLogs', [$fundRequest, $organization]);
+
+        $query = EmailLogQuery::whereFundRequest(EmailLog::query(), $fundRequest);
+        $search = new EmailLogSearch($request->only(['q']), $query);
+
+        return ValidatorFundRequestEmailLogResource::queryCollection($search->query(), $request);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @param EmailLog $emailLog
+     * @return Response
+     */
+    public function exportEmailLog(
+        Organization $organization,
+        FundRequest $fundRequest,
+        EmailLog $emailLog
+    ): Response {
+        $this->authorize('exportEmailLog', [$fundRequest, $organization, $emailLog]);
+
+        return $emailLog->toPdf()->download('email.pdf');
     }
 
     /**

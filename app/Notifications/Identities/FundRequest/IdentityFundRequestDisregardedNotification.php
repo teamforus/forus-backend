@@ -18,8 +18,11 @@ class IdentityFundRequestDisregardedNotification extends BaseIdentityFundRequest
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->eventLog->loggable;
 
-        $mailable = new FundRequestDisregardedMail($this->eventLog->data, $fundRequest->fund->getEmailFrom());
+        $mailable = new FundRequestDisregardedMail(
+            $this->eventLog->data,
+            $fundRequest->fund->getEmailFrom(),
+        );
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

@@ -20,7 +20,7 @@ class SessionServiceProvider extends ServiceProvider
         Session::class => SessionPolicy::class,
     ];
 
-    public function boot()
+    public function boot(): void
     {
         $this->registerPolicies();
         $this->loadMigrationsFrom(__DIR__ . '/migrations');

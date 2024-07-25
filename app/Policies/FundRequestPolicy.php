@@ -8,10 +8,12 @@ use App\Models\FundRequestRecord;
 use App\Models\Identity;
 use App\Models\Note;
 use App\Models\Organization;
+use App\Scopes\Builders\EmailLogQuery;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Scopes\Builders\OrganizationQuery;
+use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
@@ -459,7 +461,7 @@ class FundRequestPolicy
         FundRequest $fundRequest,
         Organization $organization
     ): Response|bool {
-        $records = $fundRequest->records()->whereHas('employee', fn(Builder $q) => $q->whereIn(
+        $records = $fundRequest->records()->whereHas('employee', fn (Builder $q) => $q->whereIn(
             'employees.id',
             $organization->employees()->select('employees.id')->getQuery()
         ));
@@ -537,6 +539,47 @@ class FundRequestPolicy
         }
 
         return true;
+    }
+
+    /**
+     * Determine whether the user can view reimbursement notes.
+     *
+     * @param Identity $identity
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function viewAnyEmailLogs(
+        Identity $identity,
+        FundRequest $fundRequest,
+        Organization $organization
+    ): Response|bool {
+        return $this->viewAsValidator($identity, $fundRequest, $organization);
+    }
+
+    /**
+     * Determine whether the user can view reimbursement notes.
+     *
+     * @param Identity $identity
+     * @param EmailLog $emailLog
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return Response|bool
+     */
+    public function exportEmailLog(
+        Identity $identity,
+        FundRequest $fundRequest,
+        Organization $organization,
+        EmailLog $emailLog,
+    ): Response|bool {
+        if (!EmailLogQuery::whereFundRequest(EmailLog::query(), $fundRequest)
+            ->where('id', $emailLog->id)
+            ->exists()) {
+            return false;
+        }
+
+        return $this->viewAsValidator($identity, $fundRequest, $organization);
     }
 
     /**

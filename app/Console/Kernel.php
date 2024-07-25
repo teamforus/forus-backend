@@ -3,27 +3,25 @@
 namespace App\Console;
 
 use App\Console\Commands\BankConnectionExpirationNotifyCommand;
+use App\Console\Commands\BankConnections\BankConnectionsInspectCommand;
 use App\Console\Commands\BankProcessFundTopUpsCommand;
 use App\Console\Commands\BankUpdateContextSessionsCommand;
 use App\Console\Commands\BankVoucherTransactionBulksBuildCommand;
 use App\Console\Commands\BankVoucherTransactionBulksUpdateStateCommand;
 use App\Console\Commands\BankVoucherTransactionProcessZeroAmountCommand;
-use App\Console\Commands\BankConnections\BankConnectionsInspectCommand;
 use App\Console\Commands\CalculateFundUsersCommand;
 use App\Console\Commands\CheckFundStateCommand;
 use App\Console\Commands\CheckProductExpirationCommand;
-use App\Console\Commands\Digests\SendProviderReservationsDigestCommand;
-use App\Console\Commands\ExportPhysicalCardsRequestsCommand;
-use App\Console\Commands\MediaCleanupCommand;
-use App\Console\Commands\MediaRegenerateCommand;
-use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
-use App\Console\Commands\NotifyAboutVoucherExpireCommand;
 use App\Console\Commands\Digests\SendAllDigestsCommand;
 use App\Console\Commands\Digests\SendProviderFundsDigestCommand;
 use App\Console\Commands\Digests\SendProviderProductsDigestCommand;
+use App\Console\Commands\Digests\SendProviderReservationsDigestCommand;
 use App\Console\Commands\Digests\SendRequesterDigestCommand;
 use App\Console\Commands\Digests\SendSponsorDigestCommand;
 use App\Console\Commands\Digests\SendValidatorDigestCommand;
+use App\Console\Commands\ExportPhysicalCardsRequestsCommand;
+use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
+use App\Console\Commands\NotifyAboutVoucherExpireCommand;
 use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
 use App\Console\Commands\ReservationExtraPaymentExpireCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
@@ -31,8 +29,12 @@ use App\Console\Commands\UpdateNotificationTemplatesCommand;
 use App\Console\Commands\UpdateProductCategoriesCommand;
 use App\Console\Commands\UpdateRolesCommand;
 use App\Console\Commands\UpdateSystemNotificationsCommand;
-use App\Services\Forus\Session\Commands\UpdateSessionsExpirationCommand;
 use App\Services\BackofficeApiService\Commands\SendBackofficeLogsCommand;
+use App\Services\FileService\Commands\FilesCleanupCommand;
+use App\Services\Forus\Session\Commands\UpdateSessionsExpirationCommand;
+use App\Services\MediaService\Commands\MediaCleanupCommand;
+use App\Services\MediaService\Commands\MediaRegenerateCommand;
+use App\Services\MailDatabaseLoggerService\Commands\MailDatabaseLoggerClearUnusedAttachmentsCommand;
 use App\Services\MollieService\Commands\UpdateCompletedMollieConnectionsCommand;
 use App\Services\MollieService\Commands\UpdatePendingMollieConnectionsCommand;
 use Illuminate\Console\Scheduling\Schedule;
@@ -54,6 +56,9 @@ class Kernel extends ConsoleKernel
         // media
         MediaCleanupCommand::class,
         MediaRegenerateCommand::class,
+
+        // files
+        FilesCleanupCommand::class,
 
         // funds
         CheckFundStateCommand::class,
@@ -117,6 +122,9 @@ class Kernel extends ConsoleKernel
 
         // extra payments
         ReservationExtraPaymentExpireCommand::class,
+
+        // Email logger
+        MailDatabaseLoggerClearUnusedAttachmentsCommand::class,
     ];
 
     /**

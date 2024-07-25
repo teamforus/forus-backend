@@ -80,7 +80,7 @@ trait AssertsSentEmails
     public function assertEmailRestoreLinkSent(
         string $email,
         ?Carbon $after = null
-    ): void{
+    ): void {
         static::assertNotNull(
             $this->findFirstEmailRestoreLink($email, $after),
             "No identity email restore link sent."
@@ -97,7 +97,7 @@ trait AssertsSentEmails
     public function assertEmailConfirmationLinkSent(
         string $email,
         ?Carbon $after = null
-    ): void{
+    ): void {
         static::assertNotNull(
             $this->findFirstEmailConfirmationLink($email, $after),
             "No identity email confirmation link sent."
@@ -114,7 +114,7 @@ trait AssertsSentEmails
     public function assertEmailVerificationLinkSent(
         string $email,
         ?Carbon $after = null
-    ): void{
+    ): void {
         static::assertNotNull(
             $this->findFirstEmailVerificationLink($email, $after),
             "No identity email verification link sent."
@@ -134,7 +134,7 @@ trait AssertsSentEmails
     ): Collection|Arrayable {
         $emails = $this->getEmailQuery($email, $after)->get();
 
-        return $emails->filter(function(EmailLog $emailLog) use ($urlSubstr) {
+        return $emails->filter(function (EmailLog $emailLog) use ($urlSubstr) {
             return !empty($this->getEmailLink($emailLog->content, $urlSubstr));
         });
     }
@@ -158,13 +158,13 @@ trait AssertsSentEmails
      */
     protected function getEmailLinks(string $content): array
     {
-        $htmlDom = new DOMDocument;
+        $htmlDom = new DOMDocument();
 
         $htmlDom->loadHTML($content);
+        /** @var DOMElement[] $links */
         $links = $htmlDom->getElementsByTagName('a');
         $linksArray = [];
 
-        /** @var DOMElement $link */
         foreach ($links as $link) {
             $linksArray[] = $link->getAttribute('href');
         }
@@ -221,12 +221,12 @@ trait AssertsSentEmails
      */
     protected function getEmailQuery(string $email, ?Carbon $after = null): Builder
     {
-        return EmailLog::where(function(Builder $builder) use ($email, $after) {
+        return EmailLog::where(function (Builder $builder) use ($email, $after) {
             if ($after) {
                 $builder->where('created_at', '>=', $after);
             }
 
-            $builder->where('to', $email);
+            $builder->where('to_address', $email);
         });
     }
 

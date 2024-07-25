@@ -7,50 +7,27 @@ use App\Models\FundProvider;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Product;
-use App\Models\ProductCategory;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Services\MollieService\Models\MollieConnection;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestProducts;
 use Throwable;
 
 class MollieExtraPaymentsTest extends TestCase
 {
-    use MakesTestOrganizations, MakesTestFunds, DatabaseTransactions, WithFaker;
-
-    /**
-     * @var string
-     */
-    protected string $apiUrl = '/api/v1/platform/organizations/%s';
-
-    /**
-     * @var string
-     */
-    protected string $apiUrlCreate = '/api/v1/platform/organizations/%s/mollie-connection';
-
-    /**
-     * @var string
-     */
-    protected string $apiUrlConnect = '/api/v1/platform/organizations/%s/mollie-connection/connect';
-
-    /**
-     * @var string
-     */
-    protected string $apiFundProviderUrl = '/api/v1/platform/organizations/%s/funds/%s/providers/%s';
-
-    /**
-     * @var string
-     */
-    protected string $apiReservationUrl = '/api/v1/platform/product-reservations';
-
-    /**
-     * @var string
-     */
-    protected string $apiProviderReservationUrl = '/api/v1/platform/organizations/%s/product-reservations';
+    use WithFaker;
+    use MakesTestFunds;
+    use MakesTestProducts;
+    use DatabaseTransactions;
+    use MakesTestOrganizations;
+    use MakesTestFundProviders;
 
     /**
      * @return void
@@ -87,7 +64,7 @@ class MollieExtraPaymentsTest extends TestCase
         $provider = $this->prepareFundProvider()->organization;
 
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($provider->identity));
-        $response = $this->getJson(sprintf($this->apiUrl . '/mollie-connection', $provider->id), $apiHeaders);
+        $response = $this->getJson("/api/v1/platform/organizations/$provider->id/mollie-connection", $apiHeaders);
 
         $response->assertSuccessful();
         $response->assertJsonIsArray('data');
@@ -112,9 +89,11 @@ class MollieExtraPaymentsTest extends TestCase
 
         $this->createPendingMollieConnection($provider);
 
-        $response = $this->patchJson(sprintf($this->apiFundProviderUrl, $organization->id, $fund->id, $fundProvider->id), [
-            'allow_extra_payments' => false
-        ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
+        $response = $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/funds/$fund->id/providers/$fundProvider->id",
+            [ 'allow_extra_payments' => false ],
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity))
+        );
 
         $response->assertSuccessful();
         $response->assertJsonFragment(['allow_extra_payments' => false]);
@@ -137,9 +116,11 @@ class MollieExtraPaymentsTest extends TestCase
         $connection = $this->createPendingMollieConnection($provider);
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
-        $response = $this->patchJson(sprintf($this->apiFundProviderUrl, $organization->id, $fund->id, $fundProvider->id), [
-            'allow_extra_payments' => true
-        ], $apiHeaders);
+        $response = $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/funds/$fund->id/providers/$fundProvider->id",
+            [ 'allow_extra_payments' => true ],
+            $apiHeaders,
+        );
 
         $response->assertSuccessful();
         $response->assertJsonFragment(['allow_extra_payments' => true]);
@@ -154,9 +135,52 @@ class MollieExtraPaymentsTest extends TestCase
      * @return void
      * @throws Throwable
      */
-    public function testMollieAccountReservationSuccess(): void
+    public function testExtraPaymentReservationSuccess(): void
     {
-        $this->makeReservation();
+        $reservation = $this->makeReservation();
+        $this->payExtraPayment($reservation);
+    }
+
+    /**
+     * @return void
+     * @throws Throwable
+     */
+    public function testExtraPaymentReservationEmptyVoucherSuccess(): void
+    {
+        $reservation = $this->makeReservation(true);
+        $this->payExtraPayment($reservation);
+    }
+
+    /**
+     * @return void
+     * @throws Throwable
+     */
+    public function testExtraPaymentReservationWhileExtraIsPendingSuccess(): void
+    {
+        $reservation = $this->makeReservation(true);
+
+        // second reservation of the same product before extra payment is paid
+        $response = $this->makeReservationRequest($reservation->voucher, $reservation->product);
+        $response->assertUnprocessable();
+
+        $this->payExtraPayment($reservation);
+
+        // second reservation of the same product after the extra payment is paid
+        $response = $this->makeReservationRequest($reservation->voucher, $reservation->product);
+        $response->assertSuccessful();
+    }
+
+    /**
+     * @return void
+     * @throws Throwable
+     */
+    public function testExtraPaymentDoubleReservationForNonFullFails(): void
+    {
+        $reservation = $this->makeReservation();
+        $this->payExtraPayment($reservation);
+
+        $response = $this->makeReservationRequest($reservation->voucher, $reservation->product);
+        $response->assertUnprocessable();
     }
 
     /**
@@ -165,12 +189,12 @@ class MollieExtraPaymentsTest extends TestCase
      */
     public function testReservationRejectNotPaidAndNotExpired(): void
     {
-        $reservation = $this->makeReservation(false);
+        $reservation = $this->makeReservation();
         $provider = $reservation->product->organization;
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($provider->identity));
 
         $response = $this->postJson(
-            sprintf($this->apiProviderReservationUrl . '/%s/reject', $provider->id, $reservation->id), [], $headers
+            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject", [], $headers
         );
 
         $response->assertForbidden();
@@ -182,13 +206,13 @@ class MollieExtraPaymentsTest extends TestCase
      */
     public function testReservationRejectNotPaidAndExpired(): void
     {
-        $reservation = $this->makeReservation(false);
+        $reservation = $this->makeReservation();
         $reservation->extra_payment->update(['expires_at' => now()->subMinute()]);
         $provider = $reservation->product->organization;
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($provider->identity));
 
         $response = $this->postJson(
-            sprintf($this->apiProviderReservationUrl . '/%s/reject', $provider->id, $reservation->id), [], $headers
+            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject", [], $headers
         );
 
         $response->assertSuccessful();
@@ -203,11 +227,13 @@ class MollieExtraPaymentsTest extends TestCase
         $reservation = $this->makeReservation();
         $provider = $reservation->product->organization;
 
+        $this->payExtraPayment($reservation);
+
         $proxy = $this->makeIdentityProxy($provider->identity);
         $headers = $this->makeApiHeaders($proxy);
 
         $response = $this->postJson(
-            sprintf($this->apiProviderReservationUrl . '/%s/reject', $provider->id, $reservation->id), [], $headers
+            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject", [], $headers
         );
 
         $response->assertForbidden();
@@ -222,11 +248,14 @@ class MollieExtraPaymentsTest extends TestCase
         $reservation = $this->makeReservation();
         $provider = $reservation->product->organization;
 
+        $this->payExtraPayment($reservation);
+
         $proxy = $this->makeIdentityProxy($provider->identity);
         $headers = $this->makeApiHeaders($proxy);
 
         $response = $this->getJson(
-            sprintf($this->apiProviderReservationUrl . '/%s/extra-payments/refund', $provider->id, $reservation->id), $headers
+            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/extra-payments/refund",
+            $headers,
         );
 
         $response->assertSuccessful();
@@ -235,7 +264,7 @@ class MollieExtraPaymentsTest extends TestCase
         $this->assertTrue($reservation->extra_payment->isFullyRefunded());
 
         $response = $this->postJson(
-            sprintf($this->apiProviderReservationUrl . '/%s/reject', $provider->id, $reservation->id), [], $headers
+            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject", [], $headers
         );
 
         $response->assertSuccessful();
@@ -250,13 +279,12 @@ class MollieExtraPaymentsTest extends TestCase
         $reservation = $this->makeReservation();
         $identity = $reservation->voucher->identity;
 
+        $this->payExtraPayment($reservation);
+
         $proxy = $this->makeIdentityProxy($identity);
         $headers = $this->makeApiHeaders($proxy);
 
-        $response = $this->postJson(
-            sprintf($this->apiReservationUrl . '/%s/cancel', $reservation->id), [], $headers
-        );
-
+        $response = $this->postJson("/api/v1/platform/product-reservations/$reservation->id/cancel", [], $headers);
         $response->assertForbidden();
     }
 
@@ -266,17 +294,14 @@ class MollieExtraPaymentsTest extends TestCase
      */
     public function testReservationCancelNotPaidAndNotExpiredByRequester(): void
     {
-        $reservation = $this->makeReservation(false);
+        $reservation = $this->makeReservation();
         $identity = $reservation->voucher->identity;
         $this->assertNotNull($identity);
 
         $proxy = $this->makeIdentityProxy($identity);
         $headers = $this->makeApiHeaders($proxy);
 
-        $response = $this->postJson(
-            sprintf($this->apiReservationUrl . '/%s/cancel', $reservation->id), [], $headers
-        );
-
+        $response = $this->postJson("/api/v1/platform/product-reservations/$reservation->id/cancel", [], $headers);
         $response->assertForbidden();
     }
 
@@ -286,17 +311,14 @@ class MollieExtraPaymentsTest extends TestCase
      */
     public function testReservationCancelNotPaidAndExpiredByRequester(): void
     {
-        $reservation = $this->makeReservation(false);
+        $reservation = $this->makeReservation();
         $reservation->extra_payment->update(['expires_at' => now()->subMinute()]);
         $identity = $reservation->voucher->identity;
 
         $proxy = $this->makeIdentityProxy($identity);
         $headers = $this->makeApiHeaders($proxy);
 
-        $response = $this->postJson(
-            sprintf($this->apiReservationUrl . '/%s/cancel', $reservation->id), [], $headers
-        );
-
+        $response = $this->postJson("/api/v1/platform/product-reservations/$reservation->id/cancel", [], $headers);
         $response->assertSuccessful();
     }
 
@@ -331,7 +353,7 @@ class MollieExtraPaymentsTest extends TestCase
         $proxy = $this->makeIdentityProxy($organization->identity);
         $headers = $this->makeApiHeaders($proxy);
 
-        $response = $this->post($this->apiReservationUrl, [
+        $response = $this->postJson('/api/v1/platform/product-reservations', [
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
@@ -382,7 +404,7 @@ class MollieExtraPaymentsTest extends TestCase
         $proxy = $this->makeIdentityProxy($organization->identity);
         $headers = $this->makeApiHeaders($proxy);
 
-        $response = $this->post($this->apiReservationUrl, [
+        $response = $this->postJson('/api/v1/platform/product-reservations', [
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
@@ -421,7 +443,7 @@ class MollieExtraPaymentsTest extends TestCase
         $proxy = $this->makeIdentityProxy($organization->identity);
         $headers = $this->makeApiHeaders($proxy);
 
-        $response = $this->post($this->apiReservationUrl, [
+        $response = $this->postJson('/api/v1/platform/product-reservations', [
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
@@ -448,9 +470,9 @@ class MollieExtraPaymentsTest extends TestCase
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($provider->identity));
 
         if ($existingMollieAccount) {
-            $response = $this->postJson(sprintf($this->apiUrlConnect, $provider->id), [], $apiHeaders);
+            $response = $this->postJson("/api/v1/platform/organizations/$provider->id/mollie-connection/connect", [], $apiHeaders);
         } else {
-            $response = $this->postJson(sprintf($this->apiUrlCreate, $provider->id), [
+            $response = $this->postJson("/api/v1/platform/organizations/$provider->id/mollie-connection", [
                 'name' => $this->faker->name,
                 'country_code' => $this->faker->countryCode,
                 'profile_name' => $this->faker->name,
@@ -495,7 +517,7 @@ class MollieExtraPaymentsTest extends TestCase
         $proxy = $this->makeIdentityProxy($organization->identity);
         $headers = $this->makeApiHeaders($proxy);
 
-        $response = $this->post($this->apiReservationUrl, [
+        $response = $this->postJson('/api/v1/platform/product-reservations', [
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
@@ -513,21 +535,24 @@ class MollieExtraPaymentsTest extends TestCase
      */
     private function prepareFundProvider(): FundProvider
     {
-        $organization = $this->getOrganization();
+        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $fund = $this->makeTestFund($organization);
 
-        /** @var Fund $fund */
-        $fund = $organization->funds->first();
-        $this->assertNotNull($fund);
+        $organization->update([
+            'allow_provider_extra_payments' => true,
+        ]);
 
-        $voucher = $fund->makeVoucher($organization->identity_address, [
+        $fund->fund_config->update([
+            'allow_reservations' => true,
+        ]);
+
+        $this->assertNotNull($fund->makeVoucher($organization->identity_address, [
             'state' => Voucher::STATE_ACTIVE
-        ], 100);
+        ], 100));
 
-        $this->assertNotNull($voucher);
-
-        $provider = $this->makeProviderOrganization();
-        $product = $this->createProductForReservation($provider);
-        $fundProvider = $this->createFundProvider($provider, $fund);
+        $provider = $this->makeProviderOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $product = $this->makeTestProductForReservation($provider);
+        $fundProvider = $this->makeTestFundProvider($provider, $fund);
 
         $this->assertNotNull($product);
         $this->assertNotNull($fundProvider);
@@ -553,9 +578,11 @@ class MollieExtraPaymentsTest extends TestCase
     ): void {
         $this->assertNotNull($organization->identity);
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
-        $response = $this->patchJson(sprintf($this->apiFundProviderUrl, $organization->id, $fund->id, $fundProvider->id), [
-            'allow_extra_payments' => $allowExtraPayments
-        ], $apiHeaders);
+        $response = $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/funds/$fund->id/providers/$fundProvider->id",
+            [ 'allow_extra_payments' => $allowExtraPayments ],
+            $apiHeaders,
+        );
 
         $response->assertSuccessful();
         $response->assertJsonFragment(['allow_extra_payments' => $allowExtraPayments]);
@@ -575,7 +602,7 @@ class MollieExtraPaymentsTest extends TestCase
         $this->assertEquals(MollieConnection::STATE_ACTIVE, $mollieConnection->connection_state);
 
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($provider->identity));
-        $response = $this->getJson(sprintf($this->apiUrl . '/mollie-connection/fetch', $provider->id), $apiHeaders);
+        $response = $this->getJson("/api/v1/platform/organizations/$provider->id/mollie-connection/fetch", $apiHeaders);
 
         $response->assertSuccessful();
         $provider->refresh();
@@ -595,7 +622,7 @@ class MollieExtraPaymentsTest extends TestCase
         bool $forbidden,
     ): void {
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($provider->identity));
-        $response = $this->getJson(sprintf($this->apiUrl . '/mollie-connection', $provider->id), $apiHeaders);
+        $response = $this->getJson("/api/v1/platform/organizations/$provider->id/mollie-connection", $apiHeaders);
 
         if ($forbidden) {
             $response->assertForbidden();
@@ -622,19 +649,76 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @param bool $payExtra
+     * @param bool $emptyVoucher
      * @return ProductReservation
      * @throws Throwable
      */
-    private function makeReservation(bool $payExtra = true): ProductReservation
+    private function makeReservation(bool $emptyVoucher = false): ProductReservation
     {
         $fundProvider = $this->prepareFundProvider();
-        $provider = $fundProvider->organization;
-        $fund = $fundProvider->fund;
-        $organization = $fund->organization;
+        $this->setupMollieConnection($fundProvider->organization);
 
+        $amount = $emptyVoucher ? 0 : 5;
+        $voucher = $fundProvider->fund->makeVoucher($this->makeIdentity($this->makeUniqueEmail()), [], $amount);
+        $product = $this->makeTestProductForReservation($fundProvider->organization);
+
+        $product->update(['price' => 10]);
+
+        if ($emptyVoucher) {
+            $response = $this->makeReservationRequest($voucher, $product);
+            $response->assertUnprocessable();
+
+            $fundProvider->update([
+                'allow_extra_payments' => true,
+                'allow_extra_payments_full' => true,
+            ]);
+        }
+
+        $response = $this->makeReservationRequest($voucher, $product);
+        $response->assertSuccessful();
+        $response->assertJsonStructure(['checkout_url']);
+
+        $reservation = ProductReservation::find($response->json('id'));
+        $this->assertProductReservationWithPaymentIdCreate($reservation);
+
+        return $reservation;
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @return void
+     */
+    private function assertProductReservationWithPaymentIdCreate(
+        ProductReservation $reservation,
+    ): void {
+        $this->assertNotNull($reservation);
+        $this->assertNotNull($reservation->extra_payment?->payment_id);
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @return void
+     */
+    private function payExtraPayment(ProductReservation $reservation): void
+    {
+        $response = $this->postJson("/mollie/webhooks", [
+            'id' => $reservation->extra_payment->payment_id
+        ]);
+
+        $response->assertSuccessful();
+
+        $reservation->refresh();
+        $this->assertTrue($reservation->extra_payment->isPaid());
+    }
+
+    /**
+     * @param Organization $provider
+     * @return void
+     */
+    private function setupMollieConnection(Organization $provider): void
+    {
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($provider->identity));
-        $response = $this->postJson(sprintf($this->apiUrl . '/mollie-connection/connect', $provider->id), [], $apiHeaders);
+        $response = $this->postJson("/api/v1/platform/organizations/$provider->id/mollie-connection/connect", [], $apiHeaders);
 
         $response->assertSuccessful();
         $response->assertJsonStructure(['url']);
@@ -643,72 +727,22 @@ class MollieExtraPaymentsTest extends TestCase
 
         $this->activateMollieConnection($connection);
         $this->assertConnectionActiveAndOnboarded($provider, $connection);
+    }
 
-        /** @var Voucher $voucher */
-        /** @var Product $product */
-        $voucher = $fund->vouchers()->first();
-        $product = $provider->products()->first();
-
-        $proxy = $this->makeIdentityProxy($organization->identity);
-        $headers = $this->makeApiHeaders($proxy);
-
-        $response = $this->post($this->apiReservationUrl, [
+    /**
+     * @param Voucher $voucher
+     * @param Product $product
+     * @return \Illuminate\Testing\TestResponse
+     */
+    private function makeReservationRequest(Voucher $voucher, Product $product): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/product-reservations', [
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
             'voucher_address' => $voucher->token_without_confirmation->address,
             'product_id' => $product->id
-        ], $headers);
-
-        $response->assertSuccessful();
-        $response->assertJsonStructure(['checkout_url']);
-
-        /** @var ProductReservation $reservation */
-        $reservation = $voucher->product_reservations()->first();
-        $this->assertNotNull($reservation);
-        $this->assertNotNull($reservation->extra_payment?->payment_id);
-
-        if ($payExtra) {
-            $response = $this->postJson("/mollie/webhooks", [
-                'id' => $reservation->extra_payment->payment_id
-            ]);
-
-            $response->assertSuccessful();
-
-            $reservation->refresh();
-            $this->assertTrue($reservation->extra_payment->isPaid());
-        }
-
-        return $reservation;
-    }
-
-    /**
-     * @return Organization
-     */
-    private function getOrganization(): Organization
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()), [
-            'allow_provider_extra_payments' => true,
-        ]);
-
-        $this->makeTestFund($organization, [], [
-            'allow_reservations' => true,
-        ]);
-
-        return $organization->refresh();
-    }
-
-    /**
-     * @return Organization
-     */
-    private function makeProviderOrganization(): Organization
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()), [
-            'reservations_budget_enabled' => true,
-            'reservation_allow_extra_payments' => true,
-        ]);
-
-        return $organization->refresh();
+        ], $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity)));
     }
 
     /**
@@ -723,44 +757,5 @@ class MollieExtraPaymentsTest extends TestCase
         static::assertNotNull($connection);
 
         return $connection;
-    }
-
-    /**
-     * @param Organization $providerOrganization
-     * @return Product
-     */
-    private function createProductForReservation(Organization $providerOrganization): Product
-    {
-        return Product::create([
-            'name' => $this->faker->text(60),
-            'description' => $this->faker->text(),
-            'organization_id' => $providerOrganization->id,
-            'product_category_id' => ProductCategory::first()->id,
-            'reservation_enabled' => 1,
-            'expire_at' => now()->addDays(30),
-            'price_type' => Product::PRICE_TYPE_REGULAR,
-            'unlimited_stock' => 1,
-            'price_discount' => 0,
-            'total_amount' => 0,
-            'sold_out' => 0,
-            'price' => 120,
-            'reservation_extra_payments' => Product::RESERVATION_EXTRA_PAYMENT_GLOBAL,
-        ]);
-    }
-
-    /**
-     * @param Organization $providerOrganization
-     * @param Fund $fund
-     * @return FundProvider
-     */
-    private function createFundProvider(Organization $providerOrganization, Fund $fund): FundProvider
-    {
-        return FundProvider::create([
-            'state' => FundProvider::STATE_ACCEPTED,
-            'fund_id' => $fund->id,
-            'allow_budget' => true,
-            'organization_id' => $providerOrganization->id,
-            'allow_products' => true,
-        ])->refresh();
     }
 }

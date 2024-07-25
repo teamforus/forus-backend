@@ -45,7 +45,7 @@ class VoucherBatchTestCases
                 'limit_multiplier' => -10,
                 'expire_at' => '01-01-2030',
                 'note' => ['array'],
-                'email' => 'invalidemail',
+                'email' => 'invalid-email',
             ],
         ], [
             'type' => 'budget',

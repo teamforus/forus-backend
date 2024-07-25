@@ -42,7 +42,7 @@ use Illuminate\Support\Collection;
  * @property-read int|null $records_count
  * @method static Builder|Prevalidation newModelQuery()
  * @method static Builder|Prevalidation newQuery()
- * @method static \Illuminate\Database\Query\Builder|Prevalidation onlyTrashed()
+ * @method static Builder|Prevalidation onlyTrashed()
  * @method static Builder|Prevalidation query()
  * @method static Builder|Prevalidation whereCreatedAt($value)
  * @method static Builder|Prevalidation whereDeletedAt($value)
@@ -58,8 +58,8 @@ use Illuminate\Support\Collection;
  * @method static Builder|Prevalidation whereUidHash($value)
  * @method static Builder|Prevalidation whereUpdatedAt($value)
  * @method static Builder|Prevalidation whereValidatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|Prevalidation withTrashed()
- * @method static \Illuminate\Database\Query\Builder|Prevalidation withoutTrashed()
+ * @method static Builder|Prevalidation withTrashed()
+ * @method static Builder|Prevalidation withoutTrashed()
  * @mixin \Eloquent
  */
 class Prevalidation extends BaseModel

@@ -18,7 +18,9 @@ use Tests\TestCase;
 
 class SystemNotificationsTest extends TestCase
 {
-    use UsesMediaService, DatabaseTransactions, WithFaker;
+    use UsesMediaService;
+    use DatabaseTransactions;
+    use WithFaker;
 
     protected array $templateStructure = [
         'id', 'content', 'formal', 'fund_id', 'implementation_id', 'key', 'title', 'type',
@@ -133,13 +135,13 @@ class SystemNotificationsTest extends TestCase
             'templates' => [[
                 'formal' => !$implementation->informal_communication,
                 'fund_id' => null,
-                'title'=> 'Lorem :fund_name',
+                'title' => 'Lorem :fund_name',
                 'content' => 'Ipsum',
                 'type' => $channel,
             ], [
                 'formal' => $implementation->informal_communication,
                 'fund_id' => null,
-                'title'=> 'Value that should not be ignored',
+                'title' => 'Value that should not be ignored',
                 'content' => 'Value that should not be ignored',
                 'type' => $channel,
             ]]
@@ -158,13 +160,13 @@ class SystemNotificationsTest extends TestCase
             'templates' => [[
                 'formal' => !$implementation->informal_communication,
                 'fund_id' => $funds[0]->id,
-                'title'=> 'Lorem II :fund_name',
+                'title' => 'Lorem II :fund_name',
                 'content' => 'Ipsum',
                 'type' => $channel,
             ], [
                 'formal' => $implementation->informal_communication,
                 'fund_id' => $funds[0]->id,
-                'title'=> 'Value that should not be ignored',
+                'title' => 'Value that should not be ignored',
                 'content' => 'Value that should not be ignored',
                 'type' => $channel,
             ]]
@@ -201,13 +203,13 @@ class SystemNotificationsTest extends TestCase
             'templates' => [[
                 'formal' => !$implementation->informal_communication,
                 'fund_id' => $funds[1]->id,
-                'title'=> 'Lorem III :fund_name',
+                'title' => 'Lorem III :fund_name',
                 'content' => 'Ipsum',
                 'type' => $channel,
             ], [
                 'formal' => $implementation->informal_communication,
                 'fund_id' => $funds[1]->id,
-                'title'=> 'Value that should not be ignored',
+                'title' => 'Value that should not be ignored',
                 'content' => 'Value that should not be ignored',
                 'type' => $channel,
             ]],
@@ -330,7 +332,7 @@ class SystemNotificationsTest extends TestCase
     {
         $notifications = SystemNotification::whereIn('key', $keys)->get();
 
-        $notifications->each(function(SystemNotification $notification) {
+        $notifications->each(function (SystemNotification $notification) {
             $notification->templates()
                 ->whereRelation('implementation', 'key', '!=', Implementation::KEY_GENERAL)
                 ->delete();
@@ -423,8 +425,9 @@ class SystemNotificationsTest extends TestCase
         $notifications = $this->getJson('/api/v1/platform/notifications?per_page=10', $headers);
         $notifications->assertSuccessful();
 
-        $notifications = array_filter($notifications->json('data'), function(array $notification) use (
-            $now, $notificationIds
+        $notifications = array_filter($notifications->json('data'), function (array $notification) use (
+            $now,
+            $notificationIds
         ) {
             return
                 $notificationIds->search($notification['id']) !== false &&

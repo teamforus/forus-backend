@@ -9,7 +9,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class BankConnectionExpiringMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = "notifications_bank_connections.expiring";
+    public ?string $notificationTemplateKey = "notifications_bank_connections.expiring";
 
     /**
      * @return Mailable

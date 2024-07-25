@@ -21,10 +21,11 @@ class IdentityProductReservationAcceptedNotification extends BaseProductReservat
         /** @var ProductReservation $productReservation */
         $productReservation = $this->eventLog->loggable;
 
-        $mailable = new ProductReservationAcceptedMail(array_merge($this->eventLog->data, [
+        $mailable = new ProductReservationAcceptedMail([
+            ...$this->eventLog->data,
             'webshop_link' => $productReservation->voucher->fund->urlWebshop(),
-        ]), $productReservation->voucher->fund->getEmailFrom());
+        ], $productReservation->voucher->fund->getEmailFrom());
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

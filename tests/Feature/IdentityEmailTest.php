@@ -6,12 +6,13 @@ use App\Mail\User\IdentityEmailVerificationMail;
 use App\Models\IdentityEmail;
 use App\Models\IdentityProxy;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class IdentityEmailTest extends TestCase
 {
-    use AssertsSentEmails;
+    use AssertsSentEmails, DatabaseTransactions;
 
     /**
      * @var string

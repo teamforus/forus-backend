@@ -30,11 +30,11 @@ class IdentityVoucherBudgetTransactionNotification extends BaseIdentityVoucherNo
             return;
         }
 
-        $this->sendMailNotification(
-            $identity->email,
-            new PaymentSuccessBudgetMail(array_merge($this->eventLog->data, [
-                'webshop_link' => $voucher->fund->urlWebshop(),
-            ]), $voucher->fund->fund_config->implementation->getEmailFrom())
-        );
+        $mailable = new PaymentSuccessBudgetMail([
+            ...$this->eventLog->data,
+            'webshop_link' => $voucher->fund->urlWebshop(),
+        ], $voucher->fund->fund_config->implementation->getEmailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

@@ -21,8 +21,12 @@ class IdentityVoucherPhysicalCardRequestedNotification extends BaseIdentityVouch
     {
         /** @var Voucher $voucher */
         $voucher = $this->eventLog->loggable;
-        $mailable = new RequestPhysicalCardMail($this->eventLog->data, $voucher->fund->getEmailFrom());
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $mailable = new RequestPhysicalCardMail(
+            $this->eventLog->data,
+            $voucher->fund->getEmailFrom(),
+        );
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }
