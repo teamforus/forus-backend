@@ -78,7 +78,7 @@ class StoreReimbursementRequest extends BaseFormRequest
             ->availableVouchers($identity, $reimbursement)
             ->find($this->input('voucher_id'));
 
-        return "required|numeric|min:.1|max:" . currency_format($voucher?->amount_available ?: 0);
+        return "required|numeric|min:0.1|max:" . currency_format($voucher?->amount_available ?: 0);
     }
 
     /**
