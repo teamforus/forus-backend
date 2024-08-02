@@ -8,6 +8,7 @@ use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 
 /**
@@ -141,6 +142,40 @@ class OrganizationQuery
         return $builder->whereHas('business_type', function(Builder $builder) use ($businessTypes) {
             $builder->whereIn('id', $businessTypes);
         });
+    }
+
+    /**
+     * @param Builder|Relation|Organization $builder
+     * @param string|null $stateGroup
+     * @return Builder
+     */
+    public static function whereHasStateGroup(Builder|Relation|Organization $builder, ?string $stateGroup = null): Builder
+    {
+        switch ($stateGroup) {
+            case 'pending': {
+                $builder->whereRelation('fund_providers', 'state', FundProvider::STATE_PENDING);
+            } break;
+            case 'active': {
+                $builder->whereRelation('fund_providers', 'state', FundProvider::STATE_ACCEPTED);
+
+                $builder->whereDoesntHave('fund_providers', fn (Builder $q) => $q->where([
+                    'state' => FundProvider::STATE_PENDING
+                ]));
+            } break;
+            case 'rejected': {
+                $builder->whereRelation('fund_providers', 'state', FundProvider::STATE_REJECTED);
+
+                $builder->whereDoesntHave('fund_providers', fn (Builder $q) => $q->where([
+                    'state' => FundProvider::STATE_ACCEPTED
+                ]));
+
+                $builder->whereDoesntHave('fund_providers', fn (Builder $q) => $q->where([
+                    'state' => FundProvider::STATE_PENDING
+                ]));
+            } break;
+        }
+
+        return $builder;
     }
 
     /**
