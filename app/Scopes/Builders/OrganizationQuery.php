@@ -8,6 +8,7 @@ use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 
@@ -146,32 +147,44 @@ class OrganizationQuery
 
     /**
      * @param Builder|Relation|Organization $builder
+     * @param Collection|Fund[] $funds
      * @param string|null $stateGroup
      * @return Builder
      */
-    public static function whereHasStateGroup(Builder|Relation|Organization $builder, ?string $stateGroup = null): Builder
-    {
+    public static function whereHasStateGroup(
+        Builder|Relation|Organization $builder,
+        Collection|array $funds,
+        ?string $stateGroup = null
+    ): Builder {
+        $fundIds = $funds->pluck('id')->all();
+
         switch ($stateGroup) {
             case 'pending': {
-                $builder->whereRelation('fund_providers', 'state', FundProvider::STATE_PENDING);
+                $builder->whereHas('fund_providers', fn (Builder $q) => $q->where([
+                    'state' => FundProvider::STATE_PENDING,
+                ])->whereIn('fund_id', $fundIds));
             } break;
             case 'active': {
-                $builder->whereRelation('fund_providers', 'state', FundProvider::STATE_ACCEPTED);
+                $builder->whereHas('fund_providers', fn (Builder $q) => $q->where([
+                    'state' => FundProvider::STATE_ACCEPTED,
+                ])->whereIn('fund_id', $fundIds));
 
                 $builder->whereDoesntHave('fund_providers', fn (Builder $q) => $q->where([
-                    'state' => FundProvider::STATE_PENDING
-                ]));
+                    'state' => FundProvider::STATE_PENDING,
+                ])->whereIn('fund_id', $fundIds));
             } break;
             case 'rejected': {
-                $builder->whereRelation('fund_providers', 'state', FundProvider::STATE_REJECTED);
+                $builder->whereHas('fund_providers', fn (Builder $q) => $q->where([
+                    'state' => FundProvider::STATE_REJECTED,
+                ])->whereIn('fund_id', $fundIds));
 
                 $builder->whereDoesntHave('fund_providers', fn (Builder $q) => $q->where([
-                    'state' => FundProvider::STATE_ACCEPTED
-                ]));
+                    'state' => FundProvider::STATE_ACCEPTED,
+                ])->whereIn('fund_id', $fundIds));
 
                 $builder->whereDoesntHave('fund_providers', fn (Builder $q) => $q->where([
-                    'state' => FundProvider::STATE_PENDING
-                ]));
+                    'state' => FundProvider::STATE_PENDING,
+                ])->whereIn('fund_id', $fundIds));
             } break;
         }
 
