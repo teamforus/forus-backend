@@ -61,7 +61,7 @@ class ImplementationPagesController extends Controller
 
         /** @var ImplementationPage $implementationPage */
         $implementationPage = $implementation->pages()->create(array_merge($request->only([
-            'description', 'description_alignment', 'description_position',
+            'title', 'description', 'description_alignment', 'description_position',
             'external', 'external_url', 'page_type', 'state', 'blocks_per_row',
         ]), $isInternalType ? [
             'external' => false,
@@ -141,7 +141,7 @@ class ImplementationPagesController extends Controller
         $isInternalType = ImplementationPage::isInternalType($implementationPage->page_type);
 
         $data = array_merge($request->only([
-            'state', 'description', 'description_position', 'description_alignment',
+            'title', 'state', 'description', 'description_position', 'description_alignment',
             'external', 'external_url', 'blocks_per_row',
         ]), $isInternalType ? [
             'external' => false,
@@ -176,6 +176,13 @@ class ImplementationPagesController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('updateCMS', [$implementation, $organization]);
         $this->authorize('destroy', [$implementationPage, $implementation, $organization]);
+
+        if ($implementationPage->page_type == 'home') {
+            $implementationPage->implementation->pages
+                ?->where('page_type', ImplementationPage::TYPE_BLOCK_HOME_PRODUCTS)
+                ?->first()
+                ?->delete();
+        }
 
         $implementationPage->delete();
 
