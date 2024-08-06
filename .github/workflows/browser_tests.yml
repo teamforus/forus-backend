@@ -41,9 +41,9 @@ jobs:
         working-directory: forus-backend
         run: cp -n .env.docker.dusk .env
 
-      - name: Run docker-compose up
+      - name: Run docker compose up
         working-directory: forus-backend
-        run: docker-compose --profile testing up -d
+        run: docker compose --profile testing up -d
 
       - name: Crutch - set correct ownership of files in docker
         working-directory: forus-backend
@@ -51,23 +51,23 @@ jobs:
 
       - name: Install dependencies
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "composer install"
+        run: docker compose exec -T app bash -c "composer install"
 
       - name: Create database structure with artisan
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "composer dumpautoload && php artisan migrate"
+        run: docker compose exec -T app bash -c "composer dumpautoload && php artisan migrate"
 
       - name: Set app key
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "php artisan key:generate"
+        run: docker compose exec -T app bash -c "php artisan key:generate"
 
       - name: Run base seeders
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "php artisan db:seed"
+        run: docker compose exec -T app bash -c "php artisan db:seed"
 
       - name: Generate test data
         working-directory: forus-backend
-        run: docker-compose exec -T app php artisan test-data:seed
+        run: docker compose exec -T app php artisan test-data:seed
 
       - name: "Set frontend branch value for manual and auto runs"
         run: |
@@ -79,16 +79,16 @@ jobs:
             echo "FRONTEND_BRANCH=${{ github.event.inputs.frontend_branch }}" >> $GITHUB_ENV
           fi
 
-      - name: Check out forus-frontend repo
+      - name: Check out forus-frontend-react repo
         uses: actions/checkout@v3
         with:
-          repository: teamforus/forus-frontend
+          repository: teamforus/forus-frontend-react
           path: forus-frontend
           ref: ${{ env.FRONTEND_BRANCH }}
 
-      - name: docker-compose up
+      - name: docker compose up
         working-directory: forus-frontend
-        run: mkdir -p dist && docker-compose up -d
+        run: mkdir -p dist && docker compose up -d
 
       - name: Add forus-frontend to the backend network
         working-directory: forus-frontend
@@ -96,52 +96,52 @@ jobs:
           docker network connect --alias forus-frontend forus-backend_forus-network forus-frontend-app && \
           docker network inspect forus-backend_forus-network
 
-      - name: Create qdt-env file and run npm install
+      - name: Create env.js file and run npm install
         working-directory: forus-frontend
-        run: docker-compose exec -T app sh -c "cd src && mv qdt-env.dusk.js qdt-env.js && npm install"
+        run: docker compose exec -T app sh -c "mv env.example.js env.js && npm install"
 
-      - name: Run gulp init and gulp compile
+#      - name: Execute npm run build
+#        working-directory: forus-frontend
+#        run: docker compose exec -T app sh -c "yes n | npm run build"
+
+      - name: Run npm server in background
         working-directory: forus-frontend
-        run: docker-compose exec -T app sh -c "cd src && yes n | gulp init && gulp compile"
+        run: docker compose exec -T app sh -c "npm run start &"
 
-      - name: Run gulp server in background
-        working-directory: forus-frontend
-        run: docker-compose exec -T app sh -c "cd src && gulp serve &"
-
-      - name: Debug - check docker images
+      - name: Debug - check running docker containers list
         run: docker ps
 
-      - name: Debug - print .env file
+      - name: Debug - print backend .env file
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "cat .env"
+        run: docker compose exec -T app bash -c "cat .env"
 
-      - name: Debug - print qdt-env.js file
+      - name: Debug - print frontend env.js file
         working-directory: forus-frontend
-        run: docker-compose exec -T app sh -c "cd src && cat qdt-env.js"
+        run: docker compose exec -T app sh -c "cat env.js"
 
-      - name: Debug - Check connection from front to front
+      - name: Debug - Check connection from frontend to frontend
         working-directory: forus-frontend
-        run: docker-compose exec -T app sh -c "wget http://forus-frontend:3000"
+        run: docker compose exec -T app sh -c "wget http://forus-frontend:5000/webshop.general"
 
       - name: Debug - Check connection from backend to frontend sponsor dashboard
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "wget http://forus-frontend:4000"
+        run: docker compose exec -T app bash -c "wget http://forus-frontend:5000/dashboard.sponsor"
 
       - name: Debug - Check connection from backend to frontend provider dashboard
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "wget http://forus-frontend:5000"
+        run: docker compose exec -T app bash -c "wget http://forus-frontend:5000/dashboard.provider"
 
       - name: Debug - Check connection from backend to frontend validator dashboard
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "wget http://forus-frontend:5500"
+        run: docker compose exec -T app bash -c "wget http://forus-frontend:5000/dashboard.validator"
 
       - name: Install chrome driver
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "php artisan dusk:chrome"
+        run: docker compose exec -T app bash -c "php artisan dusk:chrome 126"
 
       - name: --- RUN BROWSER TESTS ----
         working-directory: forus-backend
-        run: docker-compose exec -T app bash -c "php artisan dusk --debug --verbose --testdox"
+        run: docker compose exec -T app bash -c "php artisan dusk --debug --verbose --testdox"
 
       - uses: actions/upload-artifact@v3
         if: always()

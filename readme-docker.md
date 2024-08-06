@@ -28,9 +28,9 @@ ___
 
 Using docker compose you can start all the necessary services to run the backend (`PHP`, `apache2`, `MySQL` and `PhpMyAdmin`), and mount the project directory as a container volume. This will allow you to edit the files within the container for easier development and testing.
 
-Run `docker-compose` command to build the images:
+Run `docker compose` command to build the images:
 ``` 
-docker-compose build
+docker compose build
 ```
 
 Next, you can run a bash script, to perform the next operations:
@@ -44,7 +44,7 @@ Next, you can run a bash script, to perform the next operations:
 ```bash
 ./docker/cmd/start-docker-compose.sh
 ```
-Please check the `start-docker-compose.sh` for more details.
+Please check the `start-docker compose.sh` for more details.
 
 ## Links
 If everything fine, you should be able to find the `backend` and `phpMyAdmin` at following urls:
@@ -67,14 +67,14 @@ If you are running the project for the first time, you will need to adjust the `
 ___
 When you are ready, you can use the next command to run the migrations (this will create the database structure):
 ``` 
-docker-compose exec app bash -c "composer dumpautoload && php artisan migrate"
+docker compose exec app bash -c "composer dumpautoload && php artisan migrate"
 ```
 
 ### Seeders
 ___
 Then you need to run the seeder to fill the base system tables like: `product-categories`, `record-types` and other system tables (which are needed to run the project): 
 ```bash 
-docker-compose exec app bash -c "php artisan db:seed"
+docker compose exec app bash -c "php artisan db:seed"
 ```
 
 Now you should be able to use the backend to create organizations, funds and products.
@@ -126,7 +126,7 @@ nano ./config/forus/test_data/configs/default/funds.php
 ```
 To seed the test data after you finished editing your config file run:
 ```bash
-docker-compose exec app php artisan test-data:seed
+docker compose exec app php artisan test-data:seed
 ```
 
 ## Update composer dependencies
@@ -135,21 +135,21 @@ Since you just initiated the project, your composer dependencies should be up-to
 
 However, if you switch to another branch or pull new commits your installed composer dependencies might get outdated, and you might have to manually install the update. For that, please run the following command to make sure your dependencies are up to date. 
 ``` 
-docker-compose exec app composer install
+docker compose exec app composer install
 ```
 
 ## Stopping the containers
 ___
 To stop the containers please run:
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ## Restarting the containers
 ___
 To start again existing container, without `composer install` run:
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 # Docker image
@@ -174,7 +174,7 @@ The next command will start the containers (`php`, `apache2`, `mysql` and `phpmy
 ___
 If you want to make changes to the `.env` file from the container - adjust the `.env` file from the project directory and run the following command to update the `.env` file within the container.
 ``` 
-docker exec -it forus-backend nano .env
+docker exec -it forus-backend-app nano .env
 ```
 
 ## Database
@@ -182,23 +182,23 @@ ___
 
 To run the migrations (create db structure):
 ```bash
-docker exec -it forus-backend bash -c "composer dumpautoload && php artisan migrate" 
+docker exec -it forus-backend-app bash -c "composer dumpautoload && php artisan migrate" 
 ```
 
 And base seeders (bare minimum):
 ```bash
-docker exec -it forus-backend bash -c "php artisan db:seed"
+docker exec -it forus-backend-app bash -c "php artisan db:seed"
 ```
 
 To generate test data, please run:
 ```bash
-docker exec -it forus-backend bash -c "php artisan test-data:seed"
+docker exec -it forus-backend-app bash -c "php artisan test-data:seed"
 ```
 
 To reset the database run:  
 **WARNING!** this will drop all existing tables
 ```bash
-docker exec -it forus-backend bash -c "php artisan migrate:reset"
+docker exec -it forus-backend-app bash -c "php artisan migrate:reset"
 ```
 
 ## Links
@@ -216,7 +216,7 @@ password: forus
 To stop containers:
 ```bash
 docker stop forus-backend-db
-docker stop forus-backend
+docker stop forus-backend-app
 docker stop forus-backend-phpmyadmin
 docker network rm forus-network
 ```
