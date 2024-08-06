@@ -149,5 +149,6 @@ jobs:
           name: Screenshots
           path: |
             forus-backend/tests/Browser/screenshots/*
+            forus-backend/tests/Browser/console/*
             forus-backend/storage/logs/laravel.log
           retention-days: 5
