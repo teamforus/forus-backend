@@ -119,6 +119,14 @@ jobs:
         working-directory: forus-frontend
         run: docker compose exec -T app sh -c "cat env.js"
 
+      - name: Debug - Check connection from frontend to backend
+        working-directory: forus-frontend
+        run: docker compose exec -T app sh -c "wget http://forus-backend-app/api/v1/status"
+
+      - name: Debug - Check connection from selenuim to backend
+        working-directory: forus-backend
+        run: docker compose exec -T selenium sh -c "wget http://forus-backend-app/api/v1/status"
+
       - name: Debug - Check connection from frontend to frontend
         working-directory: forus-frontend
         run: docker compose exec -T app sh -c "wget http://forus-frontend:5000/webshop.general"
