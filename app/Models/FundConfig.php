@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $implementation_id
  * @property string $key
  * @property bool $hide_meta
+ * @property int $voucher_amount_visible
  * @property string|null $auth_2fa_policy
  * @property bool $auth_2fa_remember_ip
  * @property bool $auth_2fa_restrict_emails
@@ -139,6 +140,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVoucherAmountVisible($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVouchersType($value)
  * @mixin \Eloquent
  */
@@ -173,7 +175,7 @@ class FundConfig extends BaseModel
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'email_required', 'contact_info_enabled', 'contact_info_required',
         'contact_info_message_custom', 'contact_info_message_text',
-        'auth_2fa_policy', 'auth_2fa_remember_ip', 'hide_meta',
+        'auth_2fa_policy', 'auth_2fa_remember_ip', 'hide_meta', 'voucher_amount_visible',
     ];
 
     /**
