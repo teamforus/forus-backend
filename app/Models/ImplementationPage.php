@@ -18,6 +18,7 @@ use Illuminate\Support\Arr;
  * @property int $implementation_id
  * @property string|null $page_type
  * @property string $state
+ * @property string|null $title
  * @property string|null $description
  * @property string $description_alignment
  * @property string $description_position
@@ -51,6 +52,7 @@ use Illuminate\Support\Arr;
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage wherePageType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage withoutTrashed()
@@ -72,6 +74,7 @@ class ImplementationPage extends BaseModel
     const TYPE_FOOTER_OPENING_TIMES = 'footer_opening_times';
     const TYPE_FOOTER_CONTACT_DETAILS = 'footer_contact_details';
     const TYPE_FOOTER_APP_INFO = 'footer_app_info';
+    const TYPE_BLOCK_HOME_PRODUCTS = 'block_home_products';
 
     const STATE_DRAFT = 'draft';
     const STATE_PUBLIC = 'public';
@@ -163,13 +166,19 @@ class ImplementationPage extends BaseModel
         'blocks' => false,
         'faq' => false,
         'description_position_configurable' => true,
+    ], [
+        'key' => self::TYPE_BLOCK_HOME_PRODUCTS,
+        'type' => 'block',
+        'blocks' => false,
+        'faq' => false,
+        'description_position_configurable' => false,
     ]];
 
     /**
      * @var string[]
      */
     protected $fillable = [
-        'implementation_id', 'page_type', 'description', 'description_alignment',
+        'title', 'implementation_id', 'page_type', 'description', 'description_alignment',
         'external', 'external_url', 'state', 'description_position', 'blocks_per_row',
     ];
 

@@ -38,6 +38,7 @@ class IndexProvidersRequest extends IndexFundProviderRequest
             'business_type_ids'         => 'nullable|array',
             'business_type_ids.*'       => 'nullable|exists:business_types,id',
             'implementation_id'         => 'nullable|exists:implementations,id|in:' . $implementations->join(','),
+            'state_group'               => 'nullable|in:pending,active,rejected',
         ]);
     }
 }

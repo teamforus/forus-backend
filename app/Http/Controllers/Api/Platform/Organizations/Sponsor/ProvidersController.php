@@ -40,6 +40,10 @@ class ProvidersController extends Controller
             FundProvider::search($request, $organization, $builder);
         });
 
+        $query = OrganizationQuery::whereGroupState(
+            $query, $organization->funds->pluck('id')->all(), $request->get('state_group'),
+        );
+
         $query = OrganizationQuery::orderProvidersBy($query, $organization, $request->only([
             'order_by', 'order_dir',
         ]));
