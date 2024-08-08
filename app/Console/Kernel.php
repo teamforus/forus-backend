@@ -163,7 +163,7 @@ class Kernel extends ConsoleKernel
          * NotifyAboutReachedNotificationFundAmount
          */
         $schedule->command('forus.fund:check-amount')
-            ->cron('0 */8 * * *')->withoutOverlapping()->onOneServer();
+            ->dailyAt('08:00')->withoutOverlapping()->onOneServer();
 
         /**
          * CheckProductExpirationCommand
