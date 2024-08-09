@@ -602,7 +602,7 @@ class VoucherTransaction extends BaseModel
             ]);
         }
 
-        $separator = ' | ';
+        $separator = " {$this->provider->bank_separator} ";
         $description = $separator . trim(implode($separator, array_filter([
             $this->provider->bank_transaction_id ? $this->id : null,
             $this->provider->bank_transaction_date ? $this->created_at?->format('Y-m-d') : null,
