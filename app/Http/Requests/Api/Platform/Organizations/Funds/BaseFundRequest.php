@@ -52,6 +52,7 @@ abstract class BaseFundRequest extends BaseFormRequest
             'allow_fund_requests' => 'nullable|boolean',
             'allow_prevalidations' => 'nullable|boolean',
             'allow_direct_requests' => 'nullable|boolean',
+            'voucher_amount_visible' => 'nullable|boolean',
             'contact_info_enabled' => 'nullable|boolean',
             'contact_info_required' => 'nullable|boolean',
             'contact_info_message_custom' => 'nullable|boolean',

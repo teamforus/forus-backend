@@ -88,6 +88,7 @@ class ProviderVoucherResource extends BaseJsonResource
         ], $useAsProvider ? [
             'amount' => currency_format($fund->isTypeBudget() ? $voucher->amount_available : 0),
             'amount_locale' => currency_format_locale($fund->isTypeBudget() ? $voucher->amount_available : 0),
+            'amount_visible' => $fund->fund_config?->voucher_amount_visible,
         ] : [], $this->timestamps($this, 'created_at'));
     }
 
