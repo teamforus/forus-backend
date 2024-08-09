@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->boolean('voucher_amount_visible')->default(true)->after('hide_meta');
+            $table->boolean('voucher_amount_visible')->default(false)->after('hide_meta');
         });
     }
 

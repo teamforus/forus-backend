@@ -31,12 +31,13 @@ class VouchersProviderMeAppTest extends TestCase
         $fund = $this->makeTestFund($organization);
 
         $fund->fund_config->update([
-            'voucher_amount_visible' => 0,
+            'voucher_amount_visible' => false,
         ]);
 
         $voucher = $fund->makeVoucher($this->makeIdentity(), [
             'state' => Voucher::STATE_ACTIVE
         ], 100);
+
         $this->assertNotNull($voucher);
 
         $providerIdentity = $this->makeIdentity($this->makeUniqueEmail());
@@ -45,17 +46,12 @@ class VouchersProviderMeAppTest extends TestCase
 
         $this->assertNotNull($fundProvider);
 
-        $proxy = $this->makeIdentityProxy($providerIdentity);
-        $headers = $this->makeApiHeaders($proxy);
-
-        $response = $this->getJson('/api/v1/platform/provider/vouchers/'.$voucher->token_with_confirmation->address, $headers);
+        $response = $this->getJson(
+            "/api/v1/platform/provider/vouchers/{$voucher->token_with_confirmation->address}",
+            $this->makeApiHeaders($this->makeIdentityProxy($providerIdentity)),
+        );
 
         $response->assertSuccessful();
-        $response->assertJsonStructure([
-            'data' => [
-                'amount_visible',
-            ],
-        ]);
-        $this->assertEquals(0, $response->json('data.amount_visible'));
+        $this->assertFalse($response->json('data.amount_visible'));
     }
 }

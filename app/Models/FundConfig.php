@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $implementation_id
  * @property string $key
  * @property bool $hide_meta
- * @property int $voucher_amount_visible
+ * @property bool $voucher_amount_visible
  * @property string|null $auth_2fa_policy
  * @property bool $auth_2fa_remember_ip
  * @property bool $auth_2fa_restrict_emails
@@ -233,6 +233,7 @@ class FundConfig extends BaseModel
         'auth_2fa_restrict_auth_sessions' => 'boolean',
         'auth_2fa_restrict_reimbursements' => 'boolean',
         'hide_meta' => 'boolean',
+        'voucher_amount_visible' => 'boolean',
     ];
 
     /**
