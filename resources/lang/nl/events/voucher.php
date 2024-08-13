@@ -33,6 +33,7 @@ return [
         'transaction_subsidy' => 'Tegoed #:id transactie is aangemaakt',
         'transaction_budget' => 'Tegoed #:id transactie is aangemaakt',
         'transaction_product' => 'Tegoed #:id transactie is aangemaakt',
+        'physical_card_requested' => 'Tegoed #:id plastic pas is besteld',
     ]
 
 ];
