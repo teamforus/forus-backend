@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Api\Platform\Organizations;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Organization;
+use Illuminate\Validation\Rule;
 
 /**
  * Class UpdateBankStatementFieldsRequest
@@ -36,6 +38,11 @@ class UpdateBankStatementFieldsRequest extends BaseFormRequest
             'bank_branch_name' => 'nullable|boolean',
             'bank_fund_name' => 'nullable|boolean',
             'bank_note' => 'nullable|boolean',
+            'bank_separator' => [
+                'required',
+                'string',
+                Rule::in(Organization::BANK_SEPARATORS),
+            ],
         ];
     }
 }

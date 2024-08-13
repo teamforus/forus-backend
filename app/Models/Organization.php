@@ -98,6 +98,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $bank_branch_name
  * @property bool $bank_fund_name
  * @property bool $bank_note
+ * @property string $bank_separator
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -198,6 +199,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereBankFundName($value)
  * @method static EloquentBuilder|Organization whereBankNote($value)
  * @method static EloquentBuilder|Organization whereBankReservationNumber($value)
+ * @method static EloquentBuilder|Organization whereBankSeparateSymbol($value)
  * @method static EloquentBuilder|Organization whereBankTransactionDate($value)
  * @method static EloquentBuilder|Organization whereBankTransactionId($value)
  * @method static EloquentBuilder|Organization whereBankTransactionTime($value)
@@ -267,6 +269,8 @@ class Organization extends BaseModel
         self::AUTH_2FA_FUNDS_POLICY_RESTRICT,
     ];
 
+    public const BANK_SEPARATORS = ['-', '/', '+', ':', '--', '//', '++', '::'];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -287,7 +291,7 @@ class Organization extends BaseModel
         'auth_2fa_restrict_bi_connections',
         'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time',
         'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
-        'bank_note', 'bank_reservation_number',
+        'bank_note', 'bank_reservation_number', 'bank_separator',
     ];
 
     /**
