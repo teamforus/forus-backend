@@ -5,6 +5,7 @@ namespace App\Scopes\Builders;
 
 use App\Models\Fund;
 use App\Models\FundProvider;
+use App\Models\Organization;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -253,5 +254,23 @@ class FundQuery
 
             $builder->where('balance_provider', $balanceProvider);
         });
+    }
+
+    /**
+     * @param Builder|Relation|Fund $query
+     * @param Organization $organization
+     * @return Relation|Builder|Fund
+     */
+    public static function whereProviderProductsRequired(
+        Builder|Relation|Fund $query,
+        Organization $organization
+    ): Relation|Builder|Fund {
+        return $query
+            ->where('archived', false)
+            ->whereRelation('fund_config', 'provider_products_required', true)
+            ->whereHas('fund_providers', function (Builder $builder) use ($organization) {
+                $builder->where('state', '!=', FundProvider::STATE_REJECTED);
+                $builder->where('organization_id', $organization->id);
+            });
     }
 }

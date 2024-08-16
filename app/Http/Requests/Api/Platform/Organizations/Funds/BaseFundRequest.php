@@ -64,6 +64,7 @@ abstract class BaseFundRequest extends BaseFormRequest
             'auth_2fa_restrict_emails' => 'nullable|boolean',
             'auth_2fa_restrict_auth_sessions' => 'nullable|boolean',
             'auth_2fa_restrict_reimbursements' => 'nullable|boolean',
+            'provider_products_required' => 'nullable|boolean',
         ];
     }
 

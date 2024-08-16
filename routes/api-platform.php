@@ -126,6 +126,10 @@ $router->group([], static function() use ($router) {
         'organizations/{organization}/funds/{fund}/unarchive',
         "Api\Platform\Organizations\FundsController@unArchive");
 
+    $router->get(
+        'organizations/{organization}/funds/product-required',
+        "Api\Platform\Organizations\FundsController@listProviderProductsRequired");
+
     $router->resource(
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
