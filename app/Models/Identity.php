@@ -313,16 +313,17 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @param string|null $bsn
+     * @param bool|null $exactSearch
      * @return Identity|BaseModel|null
      */
-    public static function findByBsn(?string $bsn): Identity|Model|null
+    public static function findByBsn(?string $bsn, ?bool $exactSearch = true): Identity|Model|null
     {
         if (empty($bsn)) {
             return null;
         }
 
-        return static::whereHas('records', function(Builder $builder) use ($bsn) {
-            $builder->where('value', $bsn);
+        return static::whereHas('records', function(Builder $builder) use ($bsn, $exactSearch) {
+            $builder->where('value', $exactSearch ? '=' : 'LIKE', $exactSearch ? $bsn : "%$bsn%");
             $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
         })->first();
     }
