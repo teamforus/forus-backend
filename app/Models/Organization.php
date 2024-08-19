@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
@@ -699,10 +700,9 @@ class Organization extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
-     * @noinspection PhpUnused
+     * @return HasOneThrough
      */
-    public function last_employee_session(): HasManyThrough
+    public function last_employee_session(): HasOneThrough
     {
         return $this->hasOneThrough(
             Session::class,

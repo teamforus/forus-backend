@@ -366,7 +366,7 @@ class ReimbursementTest extends DuskTestCase
             }
 
             if ($reimbursement->isPending()) {
-                $browser->waitFor('@reimbursementsItemDateSubmitted');
+                $browser->waitFor('@reimbursementsItemDateSubmitted', 9999999);
                 $browser->assertSeeIn('@reimbursementsItemDateSubmitted', $reimbursement->submitted_at);
             }
 

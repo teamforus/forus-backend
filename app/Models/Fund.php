@@ -72,7 +72,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $notification_amount
  * @property \Illuminate\Support\Carbon|null $notified_at
  * @property \Illuminate\Support\Carbon|null $start_date
- * @property \Illuminate\Support\Carbon $end_date
+ * @property \Illuminate\Support\Carbon|null $end_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id

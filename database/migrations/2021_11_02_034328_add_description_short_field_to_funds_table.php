@@ -14,10 +14,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::getDoctrineSchemaManager()
-            ->getDatabasePlatform()
-            ->registerDoctrineTypeMapping('enum', 'string');
-
         Schema::table('funds', function(Blueprint $table) {
             $table->string('description_short', 1000)->nullable()->after('description_text');
             $table->string('description', 4000)->nullable()->change();
