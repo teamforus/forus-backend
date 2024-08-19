@@ -276,20 +276,12 @@ class Fund extends BaseModel
     protected $casts = [
         'public' => 'boolean',
         'archived' => 'boolean',
+        'end_date' => 'datetime',
+        'start_date' => 'datetime',
+        'notified_at' => 'datetime',
         'external_page' => 'boolean',
         'auto_requests_validation' => 'boolean',
         'criteria_editable_after_start' => 'boolean',
-    ];
-
-    /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = [
-        'start_date',
-        'end_date',
-        'notified_at',
     ];
 
     /**

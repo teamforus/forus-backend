@@ -199,7 +199,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereBankFundName($value)
  * @method static EloquentBuilder|Organization whereBankNote($value)
  * @method static EloquentBuilder|Organization whereBankReservationNumber($value)
- * @method static EloquentBuilder|Organization whereBankSeparateSymbol($value)
+ * @method static EloquentBuilder|Organization whereBankSeparator($value)
  * @method static EloquentBuilder|Organization whereBankTransactionDate($value)
  * @method static EloquentBuilder|Organization whereBankTransactionId($value)
  * @method static EloquentBuilder|Organization whereBankTransactionTime($value)

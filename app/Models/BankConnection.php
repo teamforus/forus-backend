@@ -156,14 +156,8 @@ class BankConnection extends BaseModel
      */
     protected $casts = [
         'context' => 'array',
+        'expire_at' => 'datetime',
         'auth_params' => 'array',
-    ];
-
-    /**
-     * @var string[]
-     */
-    protected $dates = [
-        'expire_at',
     ];
 
     /**

@@ -70,14 +70,8 @@ class FundProviderProduct extends BaseModel
      * @var string[]
      */
     protected $casts = [
+        'expire_at' => 'datetime',
         'limit_total_unlimited' => 'bool',
-    ];
-
-    /**
-     * @var string[]
-     */
-    protected $dates = [
-        'expire_at'
     ];
 
     /**

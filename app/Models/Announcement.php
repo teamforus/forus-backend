@@ -68,14 +68,8 @@ class Announcement extends Model
      */
     protected $casts = [
         'active' => 'boolean',
+        'expire_at' => 'datetime',
         'dismissible' => 'boolean',
-    ];
-
-    /**
-     * @var string[]
-     */
-    protected $dates = [
-        'expire_at',
     ];
 
     /**
