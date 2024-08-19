@@ -344,7 +344,7 @@ if (!function_exists('user_agent_data')) {
      */
     function user_agent_data($user_agent = null): AgentData
     {
-        return Browser::getAgentData($user_agent ?: request()->userAgent());
+        return Browser::getAgentData($user_agent ?: request()->userAgent() ?: '');
     }
 }
 
