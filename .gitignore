@@ -21,3 +21,4 @@ _ide_helper.php
 /public/assets
 /.vscode
 .phpunit.result.cache
+.phpunit.cache

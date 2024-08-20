@@ -294,6 +294,14 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
+     * @return string
+     */
+    public function getAuthPasswordName(): string
+    {
+        return 'password';
+    }
+
+    /**
      * @param string|null $address
      * @return Identity|BaseModel|null
      */
