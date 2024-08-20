@@ -13,9 +13,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::getDoctrineSchemaManager()
-            ->getDatabasePlatform()
-            ->registerDoctrineTypeMapping('enum', 'string');
         Schema::table('products', function (Blueprint $table) {
             $table->dateTime('expire_at')->nullable()->default(null)->change();
         });

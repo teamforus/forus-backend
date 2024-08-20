@@ -120,8 +120,10 @@ class ReservationExtraPayment extends Model
     /**
      * @var string[]
      */
-    protected $dates = [
-        'paid_at', 'expires_at', 'canceled_at',
+    protected $casts = [
+        'paid_at' => 'datetime',
+        'expires_at' => 'datetime',
+        'canceled_at' => 'datetime',
     ];
 
     /**

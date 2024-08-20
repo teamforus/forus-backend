@@ -105,9 +105,9 @@ class MollieServiceTest implements MollieServiceInterface
     public function exchangeOauthCode(string $code, string $state): ?MollieConnection
     {
         return $this->processConnectionByToken(new AccessToken([
+            'expires' => now()->addMinutes(15)->getTimestamp(),
             'access_token' => token_generator()->generate(32),
             'refresh_token' => $code,
-            'expires_at' => now()->addMinutes(15)
         ]), $state);
     }
 

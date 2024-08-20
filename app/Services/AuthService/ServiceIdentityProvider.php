@@ -41,22 +41,16 @@ class ServiceIdentityProvider implements UserProvider
     /**
      * @param $identifier
      * @param $token
-     * @return null
+     * @return void
      */
-    public function retrieveByToken($identifier, $token)
-    {
-        return null;
-    }
+    public function retrieveByToken($identifier, $token): void {}
 
     /**
      * @param Authenticatable $user
      * @param $token
-     * @return null
+     * @return void
      */
-    public function updateRememberToken(Authenticatable $user, $token)
-    {
-        return null;
-    }
+    public function updateRememberToken(Authenticatable $user, $token): void {}
 
     /**
      * @param Authenticatable|Identity $user
@@ -67,4 +61,16 @@ class ServiceIdentityProvider implements UserProvider
     {
         return $user->address === $this->retrieveByCredentials($credentials)->address;
     }
+
+    /**
+     * @param Authenticatable $user
+     * @param array $credentials
+     * @param bool $force
+     * @return void
+     */
+    public function rehashPasswordIfRequired(
+        Authenticatable $user,
+        array $credentials,
+        bool $force = false
+    ): void {}
 }
