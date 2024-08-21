@@ -409,15 +409,9 @@ class FundRequestPolicy
      */
     private function checkIntegrityValidator(
         Organization $organization,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
     ): bool {
-        $externalValidators = OrganizationQuery::whereIsExternalValidator(
-            Organization::query(),
-            $fundRequest->fund
-        )->pluck('organizations.id')->toArray();
-
-        return $fundRequest->fund->organization_id === $organization->id ||
-            in_array($organization->id, $externalValidators, true);
+        return $fundRequest->fund->organization_id === $organization->id;
     }
 
     /**

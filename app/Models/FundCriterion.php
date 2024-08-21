@@ -38,13 +38,9 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string $description
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OrganizationValidator[] $external_validator_organizations
- * @property-read int|null $external_validator_organizations_count
  * @property-read \App\Models\Fund $fund
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterionRule[] $fund_criterion_rules
  * @property-read int|null $fund_criterion_rules_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterionValidator[] $fund_criterion_validators
- * @property-read int|null $fund_criterion_validators_count
  * @property-read \App\Models\FundRequestRecord|null $fund_request_record
  * @property-read string $description_html
  * @property-read \App\Models\RecordType|null $record_type
@@ -116,27 +112,9 @@ class FundCriterion extends BaseModel
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
-    public function fund_criterion_validators(): HasMany
-    {
-        return $this->hasMany(FundCriterionValidator::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
-     */
     public function fund_criterion_rules(): HasMany
     {
         return $this->hasMany(FundCriterionRule::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function external_validator_organizations(): BelongsToMany
-    {
-        return $this->belongsToMany(OrganizationValidator::class, FundCriterionValidator::class);
     }
 
     /**

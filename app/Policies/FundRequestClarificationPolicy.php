@@ -6,7 +6,6 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -146,13 +145,7 @@ class FundRequestClarificationPolicy
         FundRequest $fundRequest,
         FundRequestClarification $fundRequestClarification = null
     ): bool {
-        $externalValidators = OrganizationQuery::whereIsExternalValidator(
-            Organization::query(),
-            $fundRequest->fund
-        )->pluck('organizations.id')->toArray();
-
-        if (($fundRequest->fund->organization_id !== $organization->id) &&
-            !in_array($organization->id, $externalValidators, true)) {
+        if ($fundRequest->fund->organization_id !== $organization->id) {
             return false;
         }
 

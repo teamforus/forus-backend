@@ -3,12 +3,10 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 
@@ -84,28 +82,6 @@ class OrganizationQuery
                     $voucher->fund->isTypeBudget() ? 'budget' : 'subsidy'
                 );
             }
-        });
-    }
-
-    /**
-     * @param Builder $query
-     * @param Fund $fund
-     * @return Builder
-     */
-    public static function whereIsExternalValidator(Builder $query, Fund $fund): Builder
-    {
-        return $query->where(static function(Builder $builder) use ($fund) {
-            $builder->where('is_validator', true);
-
-            $builder->whereHas('validated_organizations.fund_criteria_validators', static function(
-                Builder $builder
-            ) use ($fund) {
-                $builder->whereHas('fund_criterion', static function(
-                    Builder $builder
-                ) use ($fund) {
-                    $builder->where('fund_id', $fund->id);
-                });
-            });
         });
     }
 

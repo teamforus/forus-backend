@@ -19,6 +19,7 @@ use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 /**
@@ -39,7 +40,6 @@ class ValidatorFundRequestResource extends BaseJsonResource
         'records.fund_request_clarifications.fund_request_record.record_type.translations',
         'identity.primary_email',
         'fund.criteria.record_type.translation',
-        'fund.criteria.fund_criterion_validators.external_validator',
         'fund.tags',
     ];
 
@@ -49,7 +49,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $fundRequest = $this->resource;
         $baseFormRequest = BaseFormRequest::createFrom($request);
@@ -86,7 +86,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
     protected function getAllowedRequestEmployeesQuery(
         BaseFormRequest $request,
         FundRequest $fundRequest,
-        Organization $organization
+        Organization $organization,
     ): Relation|Builder {
         $recordsQuery = $fundRequest->records_pending()->whereNull('employee_id');
         $employeesQuery = $organization->employees();

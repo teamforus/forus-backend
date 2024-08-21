@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -29,7 +30,6 @@ class FundResource extends BaseJsonResource
         'criteria.fund_criterion_rules',
         'criteria.record_type.translation',
         'criteria.record_type.record_type_options',
-        'criteria.fund_criterion_validators.external_validator',
         'organization.tags',
         'organization.offices',
         'organization.contacts',
@@ -53,7 +53,7 @@ class FundResource extends BaseJsonResource
      * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $fund = $this->resource;
         $organization = $fund->organization;

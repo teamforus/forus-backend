@@ -17,7 +17,6 @@ class FundCriterionResource extends BaseJsonResource
         'fund_criterion_rules',
         'record_type.translation',
         'record_type.record_type_options',
-        'fund_criterion_validators.external_validator',
     ];
 
     /**
@@ -26,7 +25,7 @@ class FundCriterionResource extends BaseJsonResource
      * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $identity =  BaseFormRequest::createFrom($request)->identity();
         $criterion = $this->resource;
@@ -36,11 +35,6 @@ class FundCriterionResource extends BaseJsonResource
             'title', 'description', 'description_html', 'record_type',
             'min', 'max', 'optional', 'value', 'fund_criteria_step_id',
         ]), [
-            'external_validators' => $criterion->fund_criterion_validators->map(fn ($validator) => [
-                'organization_validator_id' => $validator->organization_validator_id,
-                'organization_id' => $validator->external_validator->validator_organization_id,
-                'accepted' => $validator->accepted,
-            ])->toArray(),
             'rules' => $criterion->fund_criterion_rules->map(fn ($criterion) => $criterion->only([
                 'record_type_key', 'operator', 'value',
             ]))->toArray(),
@@ -83,11 +77,7 @@ class FundCriterionResource extends BaseJsonResource
         $checkCriteria = $request->get('check_criteria', false);
 
         if ($checkCriteria && $identity) {
-            return !empty($fund->getTrustedRecordOfType(
-                $identity->address,
-                $this->resource->record_type_key,
-                $this->resource,
-            ));
+            return !empty($fund->getTrustedRecordOfType($identity->address, $this->resource->record_type_key));
         }
 
         return $checkCriteria ? false : null;
