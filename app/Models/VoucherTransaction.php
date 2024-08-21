@@ -191,8 +191,9 @@ class VoucherTransaction extends BaseModel
         'voucher_id', 'last_attempt_at', 'attempts', 'notes',
     ];
 
-    protected $dates = [
-        'transfer_at', 'non_cancelable_at',
+    protected $casts = [
+        'transfer_at' => 'datetime',
+        'non_cancelable_at' => 'datetime',
     ];
 
     /**
@@ -602,7 +603,7 @@ class VoucherTransaction extends BaseModel
             ]);
         }
 
-        $separator = ' | ';
+        $separator = " {$this->provider->bank_separator} ";
         $description = $separator . trim(implode($separator, array_filter([
             $this->provider->bank_transaction_id ? $this->id : null,
             $this->provider->bank_transaction_date ? $this->created_at?->format('Y-m-d') : null,

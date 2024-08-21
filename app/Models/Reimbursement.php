@@ -142,9 +142,9 @@ class Reimbursement extends Model
     /**
      * @var string[]
      */
-    protected $dates = [
-        'resolved_at',
-        'submitted_at',
+    protected $casts = [
+        'resolved_at' => 'datetime',
+        'submitted_at' => 'datetime',
     ];
 
     /**

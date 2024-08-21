@@ -72,7 +72,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $notification_amount
  * @property \Illuminate\Support\Carbon|null $notified_at
  * @property \Illuminate\Support\Carbon|null $start_date
- * @property \Illuminate\Support\Carbon $end_date
+ * @property \Illuminate\Support\Carbon|null $end_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
@@ -276,20 +276,12 @@ class Fund extends BaseModel
     protected $casts = [
         'public' => 'boolean',
         'archived' => 'boolean',
+        'end_date' => 'datetime',
+        'start_date' => 'datetime',
+        'notified_at' => 'datetime',
         'external_page' => 'boolean',
         'auto_requests_validation' => 'boolean',
         'criteria_editable_after_start' => 'boolean',
-    ];
-
-    /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = [
-        'start_date',
-        'end_date',
-        'notified_at',
     ];
 
     /**
@@ -497,7 +489,7 @@ class Fund extends BaseModel
             'contact_info_message_custom', 'contact_info_message_text',
             'auth_2fa_policy', 'auth_2fa_remember_ip',
             'auth_2fa_restrict_emails', 'auth_2fa_restrict_auth_sessions',
-            'auth_2fa_restrict_reimbursements', 'hide_meta',
+            'auth_2fa_restrict_reimbursements', 'hide_meta', 'voucher_amount_visible',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([

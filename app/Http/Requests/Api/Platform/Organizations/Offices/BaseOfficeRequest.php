@@ -45,7 +45,7 @@ abstract class BaseOfficeRequest extends BaseFormRequest
             }
 
             $week_day = $scheduleMap[$index];
-            $dateLocale = $date->startOfWeek()->addDays($week_day)->formatLocalized('%A');
+            $dateLocale = $date->startOfWeek()->addDays($week_day)->isoFormat('dddd');
 
             $attributes["schedule.$week_day.start_time"] = $dateLocale . ' start time';
             $attributes["schedule.$week_day.end_time"] = $dateLocale . ' end time';

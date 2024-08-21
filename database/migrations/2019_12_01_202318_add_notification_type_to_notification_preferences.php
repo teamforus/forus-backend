@@ -22,15 +22,9 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @throws \Doctrine\DBAL\DBALException
      */
     public function down(): void
     {
-        DB::getDoctrineSchemaManager()
-            ->getDatabasePlatform()
-            ->registerDoctrineTypeMapping('enum', 'string');
-
         Schema::table('notification_preferences', function(Blueprint $table) {
             $table->dropColumn('type');
 

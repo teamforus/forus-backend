@@ -26,9 +26,7 @@ if (!function_exists('format_datetime_locale')) {
                 $date = new Carbon($date);
             }
 
-            return $date->formatLocalized(
-                config("forus.formats.$format") ?: $format
-            );
+            return str_replace('.', '', $date->isoFormat(config("forus.formats.$format") ?: $format));
         } catch (Throwable) {
             return is_string($date) ? $date : null;
         }
@@ -52,7 +50,7 @@ if (!function_exists('format_date_locale')) {
                 $date = new Carbon($date);
             }
 
-            return $date->formatLocalized(config("forus.formats.$format") ?: $format);
+            return str_replace('.', '', $date->isoFormat(config("forus.formats.$format") ?: $format));
         } catch (Throwable) {
             return is_string($date) ? $date : null;
         }
@@ -72,7 +70,8 @@ if (!function_exists('currency_format')) {
         int $decimals = 2,
         string $decPoint = '.',
         string $thousandsSep = ''
-    ): string {
+    ): string
+    {
         return number_format($number, $decimals, $decPoint, $thousandsSep);
     }
 }
@@ -111,12 +110,13 @@ if (!function_exists('cache_optional')) {
      * @return mixed
      */
     function cache_optional(
-        string $key,
+        string   $key,
         callable $callback,
-        float $minutes = 1,
-        string $driver = null,
-        bool $reset = false
-    ): mixed {
+        float    $minutes = 1,
+        string   $driver = null,
+        bool     $reset = false
+    ): mixed
+    {
         try {
             $reset && cache()->driver()->delete($key);
             return cache()->driver($driver)->remember($key, $minutes * 60, $callback);
@@ -134,9 +134,10 @@ if (!function_exists('record_types_cached')) {
      */
     function record_types_cached(
         float $minutes = 1,
-        bool $reset = false
-    ): mixed {
-        return cache_optional('record_types', static function() {
+        bool  $reset = false
+    ): mixed
+    {
+        return cache_optional('record_types', static function () {
             return RecordType::search()->toArray();
         }, $minutes, null, $reset);
     }
@@ -172,7 +173,7 @@ if (!function_exists('pretty_file_size')) {
         }
 
         return round($bytes, $precision) .
-            ['','k','M','G','T','P','E','Z','Y'][$i] . 'B';
+            ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'][$i] . 'B';
     }
 }
 
@@ -187,7 +188,8 @@ if (!function_exists('json_pretty')) {
     {
         try {
             return json_encode($value, JSON_THROW_ON_ERROR | $options + JSON_PRETTY_PRINT, $depth);
-        } catch (Throwable) {}
+        } catch (Throwable) {
+        }
 
         return $value;
     }
@@ -214,10 +216,11 @@ if (!function_exists('api_dependency_requested')) {
      * @return bool
      */
     function api_dependency_requested(
-        string $key,
+        string                   $key,
         \Illuminate\Http\Request $request = null,
-        bool $default = true
-    ): bool {
+        bool                     $default = true
+    ): bool
+    {
         $requestData = $request ?? request();
         $dependency = $requestData->input('dependency');
 
@@ -264,7 +267,8 @@ if (!function_exists('http_resolve_url')) {
      * @param string $uri
      * @return string
      */
-    function http_resolve_url(string $url, string $uri = ''): string {
+    function http_resolve_url(string $url, string $uri = ''): string
+    {
         return url(sprintf('%s/%s', rtrim($url, '/'), ltrim($uri, '/')));
     }
 }
@@ -278,7 +282,7 @@ if (!function_exists('make_qr_code')) {
      */
     function make_qr_code(string $type, string $value, int $size = 400): string
     {
-        return (string) QrCode::format('png')
+        return (string)QrCode::format('png')
             ->size($size)
             ->margin(2)
             ->generate(json_encode(compact('type', 'value')));
@@ -306,11 +310,12 @@ if (!function_exists('trans_fb')) {
      * @return string|array
      */
     function trans_fb(
-        string $id,
+        string       $id,
         string|array $fallback,
-        ?array $parameters = [],
-        ?string $locale = null
-    ): string|array {
+        ?array       $parameters = [],
+        ?string      $locale = null
+    ): string|array
+    {
         return ($id === ($translation = trans($id, $parameters, $locale))) ? $fallback : $translation;
     }
 }
@@ -318,11 +323,11 @@ if (!function_exists('trans_fb')) {
 if (!function_exists('str_var_replace')) {
     function str_var_replace(string $string, array $replace): string
     {
-        $replace = array_sort($replace, fn ($value, $key) => mb_strlen($key) * -1);
+        $replace = array_sort($replace, fn($value, $key) => mb_strlen($key) * -1);
 
         foreach ($replace as $key => $value) {
             $string = str_replace(
-                [':'.$key, ':' . Str::upper($key), ':' . Str::ucfirst($key)],
+                [':' . $key, ':' . Str::upper($key), ':' . Str::ucfirst($key)],
                 [$value, Str::upper($value), Str::ucfirst($value)],
                 $string
             );
@@ -339,7 +344,7 @@ if (!function_exists('user_agent_data')) {
      */
     function user_agent_data($user_agent = null): AgentData
     {
-        return Browser::getAgentData($user_agent ?: request()->userAgent());
+        return Browser::getAgentData($user_agent ?: request()->userAgent() ?: '');
     }
 }
 
@@ -350,7 +355,7 @@ if (!function_exists('query_to_sql')) {
      */
     function query_to_sql(Builder|QBuilder|Relation $builder): string
     {
-        $bindings = array_map(function($binding) {
+        $bindings = array_map(function ($binding) {
             return '"' . htmlspecialchars($binding) . '"';
         }, $builder->getBindings());
 

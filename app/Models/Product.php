@@ -205,18 +205,14 @@ class Product extends BaseModel
     ];
 
     /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
+     * @var string[]
      */
-    public $dates = [
-        'expire_at', 'deleted_at'
-    ];
-
     protected $casts = [
         'unlimited_stock' => 'boolean',
         'reservation_fields' => 'boolean',
         'reservation_enabled' => 'boolean',
+        'expire_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /**

@@ -56,13 +56,17 @@ class PaymentDescriptionTest extends TestCase
         );
     }
 
+    /**
+     * @return void
+     */
     public function testPaymentDescriptionWhenAllProviderFlagsDisabled(): void
     {
         $transaction = $this->makeVoucherTransaction();
 
-        $this->updateProviderTransactionFlags($transaction->provider, []);
+        $separator = array_random(Organization::BANK_SEPARATORS);
+        $this->updateProviderTransactionFlags($transaction->provider, [], $separator);
 
-        self::assertEquals(" | ", $transaction->makePaymentDescription());
+        self::assertEquals(" $separator ", $transaction->makePaymentDescription());
     }
 
     /**
@@ -110,14 +114,16 @@ class PaymentDescriptionTest extends TestCase
             'voucher_transaction_id' => $transaction->id,
         ]);
 
-        $this->updateProviderTransactionFlags($transaction->provider, $providerFlags);
+        $separator = array_random(Organization::BANK_SEPARATORS);
+        $this->updateProviderTransactionFlags($transaction->provider, $providerFlags, $separator);
 
         $note = $transaction->notes_provider()->create([
             'message' => $testData['bank_note'],
             'shared' => true,
         ]);
 
-        $expectedDescription = ' | ' . trim(implode(' | ', array_filter([
+        $separator = " $separator ";
+        $expectedDescription = $separator . trim(implode($separator, array_filter([
             $transaction->provider->bank_transaction_id ? $transaction->id : null,
             $transaction->provider->bank_transaction_date ? $transaction->created_at?->format('Y-m-d') : null,
             $transaction->provider->bank_transaction_time ? $transaction->created_at?->format('H:i:s') : null,
@@ -159,10 +165,14 @@ class PaymentDescriptionTest extends TestCase
     /**
      * @param Organization $organization
      * @param array $flags
+     * @param string $separator
      * @return void
      */
-    private function updateProviderTransactionFlags(Organization $organization, array $flags): void
-    {
+    private function updateProviderTransactionFlags(
+        Organization $organization,
+        array $flags,
+        string $separator
+    ): void {
         $organization->update([
             'bank_transaction_id' => in_array('bank_transaction_id', $flags),
             'bank_transaction_date' => in_array('bank_transaction_date', $flags),
@@ -173,6 +183,7 @@ class PaymentDescriptionTest extends TestCase
             'bank_branch_name' => in_array('bank_branch_name', $flags),
             'bank_fund_name' => in_array('bank_fund_name', $flags),
             'bank_note' => in_array('bank_note', $flags),
+            'bank_separator' => $separator,
         ]);
     }
 

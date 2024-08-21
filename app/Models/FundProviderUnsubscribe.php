@@ -43,13 +43,6 @@ class FundProviderUnsubscribe extends BaseModel
     ];
 
     /**
-     * @var string[]
-     */
-    protected $dates = [
-        'unsubscribe_at',
-    ];
-
-    /**
      * The attributes that are mass assignable.
      *
      * @var array
@@ -63,6 +56,7 @@ class FundProviderUnsubscribe extends BaseModel
      */
     protected $casts = [
         'canceled' => 'boolean',
+        'unsubscribe_at' => 'datetime',
     ];
 
     /**

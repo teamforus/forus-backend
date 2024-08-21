@@ -123,11 +123,8 @@ class FundRequest extends BaseModel
         'contact_information',
     ];
 
-    protected $dates = [
-        'resolved_at',
-    ];
-
     protected $casts = [
+        'resolved_at' => 'datetime',
         'disregard_notify' => 'boolean',
     ];
 

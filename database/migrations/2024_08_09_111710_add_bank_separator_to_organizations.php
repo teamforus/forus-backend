@@ -13,10 +13,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('fund_configs', function (Blueprint $table) {
-            $table->text('backoffice_certificate')->nullable()->change();
-            $table->text('backoffice_client_cert')->change();
-            $table->text('backoffice_client_cert_key')->change();
+        Schema::table('organizations', function (Blueprint $table) {
+            $table->string('bank_separator')->default('--')->after('bank_note');
         });
     }
 
@@ -25,5 +23,10 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down(): void {}
+    public function down(): void
+    {
+        Schema::table('organizations', function (Blueprint $table) {
+            $table->dropColumn('bank_separator');
+        });
+    }
 };
