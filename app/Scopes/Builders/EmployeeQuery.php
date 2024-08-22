@@ -38,27 +38,6 @@ class EmployeeQuery
 
     /**
      * @param Builder|Relation $query
-     * @param Builder|Relation|array $records
-     * @return Builder|Relation
-     */
-    public static function whereCanValidateRecords(
-        Builder|Relation $query,
-        Builder|Relation|array $records
-    ): Relation|Builder {
-        return $query->where(function($builder) use ($records) {
-            static::whereHasPermissionFilter($builder, 'validate_records');
-
-            $builder->whereHas('organization', function(Builder $builder) use ($records) {
-                // internal funds
-                $builder->whereHas('funds.fund_requests.records', function(Builder $q) use ($records) {
-                    $q->whereIn('fund_request_records.id', $records);
-                });
-            });
-        });
-    }
-
-    /**
-     * @param Builder|Relation $query
      * @param string $q
      * @return Builder|Relation
      */

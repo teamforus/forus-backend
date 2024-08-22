@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Identity;
+use App\Models\Permission;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
@@ -123,10 +124,9 @@ class FundRequestQuery
         Relation|Builder $query,
         Employee $employee
     ): Relation|Builder {
-        return $query->where(static function(Builder $builder) use ($employee) {
-            // sponsor employees
-            $builder->where(fn(Builder $q) => static::whereSponsorEmployeeHasPermission($q, $employee));
-        });
+        return $query->where(fn(Builder $q) => static::whereSponsorEmployeeHasPermission($q, $employee, [
+            Permission::VALIDATE_RECORDS,
+        ]));
     }
 
     /**
@@ -138,9 +138,9 @@ class FundRequestQuery
         Relation|Builder $query,
         Employee $employee
     ): Relation|Builder {
-        return $query->where(fn(Builder $q) => static::whereSponsorEmployeeHasPermission(
-            $q, $employee, 'manage_validators'
-        ));
+        return $query->where(fn(Builder $q) => static::whereSponsorEmployeeHasPermission($q, $employee, [
+            Permission::MANAGE_VALIDATORS,
+        ]));
     }
 
     /**
@@ -152,7 +152,7 @@ class FundRequestQuery
     public static function whereSponsorEmployeeHasPermission(
         Relation|Builder $query,
         Employee $employee,
-        array|string $permission = 'validate_records',
+        array|string $permission,
     ): Relation|Builder {
         $funds = Fund::query()
             ->whereHas('organization', function (Builder $q) use ($employee, $permission) {

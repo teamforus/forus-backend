@@ -6,13 +6,14 @@ use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationReceivedMai
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Support\Collection;
 
 class FundRequestRecordFeedbackReceivedNotification extends BaseFundsRequestsNotification
 {
     protected static ?string $key = 'notifications_fund_requests.clarification_received';
-    protected static string|array $permissions = 'validate_records';
+    protected static string|array $permissions = Permission::VALIDATE_RECORDS;
 
     /**
      * @param FundRequestRecord $loggable
@@ -57,6 +58,6 @@ class FundRequestRecordFeedbackReceivedNotification extends BaseFundsRequestsNot
         /** @var Collection|Identity[] $identities */
         $identities = parent::eligibleIdentities($loggable, $eventLog);
 
-        return $identities->where('address', $loggable->employee?->identity_address);
+        return $identities->where('address', $loggable->fund_request?->employee?->identity_address);
     }
 }

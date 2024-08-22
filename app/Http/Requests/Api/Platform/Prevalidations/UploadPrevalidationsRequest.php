@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Prevalidations;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
+use App\Models\Permission;
 use App\Models\Prevalidation;
 use App\Rules\PrevalidationDataRule;
 use App\Scopes\Builders\FundQuery;
@@ -49,7 +50,9 @@ class UploadPrevalidationsRequest extends BaseFormRequest
     private function getAvailableFunds(): Builder
     {
         return Fund::whereHas('organization', function(Builder $builder) {
-            OrganizationQuery::whereHasPermissions($builder, $this->auth_address(), 'validate_records');
+            OrganizationQuery::whereHasPermissions($builder, $this->auth_address(), [
+                Permission::VALIDATE_RECORDS,
+            ]);
         })->where(function(Builder $builder) {
             FundQuery::whereIsInternal($builder);
             FundQuery::whereIsConfiguredByForus($builder);

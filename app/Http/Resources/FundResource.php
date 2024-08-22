@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\VoucherQuery;
@@ -230,7 +231,7 @@ class FundResource extends BaseJsonResource
 
         $validatorsCount = $fund->organization->employees->filter(function (Employee $employee) {
             return $employee->roles->filter(function (Role $role) {
-                return $role->permissions->where('key', 'validate_records')->isNotEmpty();
+                return $role->permissions->where('key', Permission::VALIDATE_RECORDS)->isNotEmpty();
             });
         })->count();
 

@@ -7,7 +7,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Scopes\Builders\FundRequestRecordQuery;
+use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -19,22 +19,22 @@ class FundRequestRecordPolicy
      * Determine whether the user can view FundRequestRecords.
      *
      * @param Identity $identity
-     * @param FundRequest $request
+     * @param FundRequest $fundRequest
      * @param Fund $fund
      * @return Response|bool
      * @noinspection PhpUnused
      */
     public function viewAnyAsRequester(
         Identity $identity,
-        FundRequest $request,
-        Fund $fund
+        FundRequest $fundRequest,
+        Fund $fund,
     ): Response|bool {
-        if (!$this->checkIntegrityRequester($fund, $request)) {
+        if (!$this->checkIntegrityRequester($fund, $fundRequest)) {
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
         // only fund requester is allowed to see records
-        if ($request->identity_address !== $identity->address) {
+        if ($fundRequest->identity_address !== $identity->address) {
             return $this->deny('fund_requests.not_requester');
         }
 
@@ -55,7 +55,7 @@ class FundRequestRecordPolicy
         Identity $identity,
         FundRequestRecord $requestRecord,
         FundRequest $request,
-        Fund $fund
+        Fund $fund,
     ): Response|bool {
         if (!$this->checkIntegrityRequester($fund, $request, $requestRecord)) {
             return $this->deny('fund_requests.invalid_endpoint');
@@ -81,13 +81,13 @@ class FundRequestRecordPolicy
     public function viewAnyAsValidator(
         Identity $identity,
         FundRequest $fundRequest,
-        Organization $organization
+        Organization $organization,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, 'validate_records')) {
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return $this->deny('fund_requests.invalid_validator');
         }
 
@@ -108,13 +108,13 @@ class FundRequestRecordPolicy
         Identity $identity,
         FundRequestRecord $requestRecord,
         FundRequest $request,
-        Organization $organization
+        Organization $organization,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $request, $requestRecord)) {
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, 'validate_records')) {
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return $this->deny('fund_requests.invalid_validator');
         }
 
@@ -135,27 +135,19 @@ class FundRequestRecordPolicy
         Identity $identity,
         FundRequestRecord $requestRecord,
         FundRequest $request,
-        Organization $organization
+        Organization $organization,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $request, $requestRecord)) {
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, 'validate_records')) {
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return $this->deny('fund_requests.invalid_validator');
         }
 
-        // only assigned employee is allowed to resolve the request
-        if (!FundRequestRecordQuery::whereEmployeeIsAssignedValidator(
-            $request->records(),
-            $organization->findEmployee($identity->address)
-        )->where('fund_request_records.id', $requestRecord->id)->exists()) {
-            return $this->deny('fund_request.not_assigned_employee');
-        }
-
-        return $requestRecord->employee &&
-            ($requestRecord->isPending()) &&
-            ($requestRecord->employee->identity_address === $identity->address);
+        return
+            $requestRecord->isPending() &&
+            ($requestRecord->fund_request->employee->identity_address === $identity->address);
     }
 
     /**
@@ -172,7 +164,7 @@ class FundRequestRecordPolicy
         Identity $identity,
         FundRequestRecord $requestRecord,
         FundRequest $request,
-        Organization $organization
+        Organization $organization,
     ): Response|bool {
         $result = $this->resolveAsValidator($identity, $requestRecord, $request, $organization);
 
@@ -181,24 +173,18 @@ class FundRequestRecordPolicy
 
     /**
      * @param Fund $fund
-     * @param FundRequest $request
-     * @param FundRequestRecord|null $requestRecord
+     * @param FundRequest $fundRequest
+     * @param FundRequestRecord|null $fundRequestRecord
      * @return bool
      */
     private function checkIntegrityRequester(
         Fund $fund,
-        FundRequest $request,
-        FundRequestRecord $requestRecord = null
+        FundRequest $fundRequest,
+        FundRequestRecord $fundRequestRecord = null,
     ): bool {
-        if ($request->fund_id !== $fund->id) {
-            return false;
-        }
-
-        if ($requestRecord && ($requestRecord->fund_request_id !== $request->id)) {
-            return false;
-        }
-
-        return true;
+        return
+            $fundRequest->fund_id === $fund->id &&
+            (!$fundRequestRecord || ($fundRequestRecord->fund_request_id !== $fundRequest->id));
     }
 
     /**
@@ -210,12 +196,10 @@ class FundRequestRecordPolicy
     private function checkIntegrityValidator(
         Organization $organization,
         FundRequest $fundRequest,
-        FundRequestRecord $fundRequestRecord = null
+        FundRequestRecord $fundRequestRecord = null,
     ): bool {
-        if ($fundRequest->fund->organization_id !== $organization->id) {
-            return false;
-        }
-
-        return !$fundRequestRecord || $fundRequestRecord->fund_request_id === $fundRequest->id;
+        return
+            ($fundRequest->fund->organization_id === $organization->id) &&
+            (!$fundRequestRecord || $fundRequestRecord->fund_request_id === $fundRequest->id);
     }
 }

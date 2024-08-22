@@ -847,7 +847,7 @@ class Fund extends BaseModel
             'organization_id',
             'id'
         )->whereHas('roles.permissions', static function(Builder $builder) {
-            $builder->where('key', 'validate_records');
+            $builder->where('key', Permission::VALIDATE_RECORDS);
         });
     }
 
@@ -865,7 +865,7 @@ class Fund extends BaseModel
             'organization_id',
             'id'
         )->whereHas('roles.permissions', static function(Builder $builder) {
-            $builder->where('key', 'manage_validators');
+            $builder->where('key', Permission::MANAGE_VALIDATORS);
         });
     }
 

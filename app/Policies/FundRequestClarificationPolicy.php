@@ -6,6 +6,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -80,7 +81,7 @@ class FundRequestClarificationPolicy
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, 'validate_records')) {
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return $this->deny('fund_requests.invalid_validator');
         }
 
@@ -105,7 +106,7 @@ class FundRequestClarificationPolicy
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, 'validate_records')) {
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return $this->deny('fund_requests.invalid_validator');
         }
 
