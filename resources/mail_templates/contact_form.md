@@ -1,7 +1,9 @@
 # New message from contact form
 
-Name: :name  
+Naam: :name  
 Email: :email  
-Phone: :phone  
-Organization: :organization  
-Message: :message  
+Telefoon: :phone  
+Organisatie: :organization_name  
+Vragen: :message  
+Nieuwsbrief: :accept_product_update_terms  
+Toestemming: :accept_privacy_terms  
