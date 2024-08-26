@@ -60,7 +60,7 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'non_cancelable_at_locale' => format_date_locale($transaction->non_cancelable_at),
             'bulk_state' => $transaction->voucher_transaction_bulk?->state,
             'bulk_state_locale' => $transaction->voucher_transaction_bulk?->state_locale,
-            'payment_type_locale' => $this->getPaymentType($transaction),
+            'payment_type_locale' => $this->getPaymentTypeLocale($transaction),
         ], $this->timestamps($transaction, 'created_at', 'updated_at'));
     }
 
@@ -81,7 +81,7 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
      * @param VoucherTransaction $transaction
      * @return array
      */
-    public function getPaymentType(VoucherTransaction $transaction): array
+    public function getPaymentTypeLocale(VoucherTransaction $transaction): array
     {
         $type = 'voucher_scan';
         $params = [];
@@ -90,9 +90,9 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             $type = 'reimbursement';
         }
 
-        if ($transaction->product) {
+        if ($transaction->product_id) {
             $type = $transaction->product_reservation ? 'product_reservation' : 'product_voucher';
-            $params['product'] = $transaction->product->name;
+            $params['product'] = $transaction->product?->name;
         }
 
         if ($transaction->initiator === $transaction::INITIATOR_SPONSOR) {
