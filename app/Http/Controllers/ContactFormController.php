@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Api\Contact\SendContactFormRequest;
 use App\Mail\ContactForm\ContactFormMail;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 
@@ -24,10 +25,11 @@ class ContactFormController extends Controller
         ]);
 
         if ($email = Config::get('forus.notification_mails.contact_form', false)) {
-            resolve('forus.services.notification')->sendSystemMail($email, new ContactFormMail(array_merge($data, [
-                'accept_product_update_terms' => $data['accept_product_update_terms'] ? 'Ja' : 'Nee',
-                'accept_privacy_terms' => $data['accept_privacy_terms'] ? 'Ja' : 'Nee',
-            ])));
+            resolve('forus.services.notification')->sendSystemMail($email, new ContactFormMail([
+                ...$data,
+                'accept_privacy_terms' => Arr::get($data, 'accept_privacy_terms') ? 'Ja' : 'Nee',
+                'accept_product_update_terms' => Arr::get($data, 'accept_product_update_terms') ? 'Ja' : 'Nee',
+            ]));
         } else {
             Log::error('Contact form submitted but the feedback email is not set: ', $data);
         }
