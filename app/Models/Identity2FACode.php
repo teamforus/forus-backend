@@ -53,8 +53,8 @@ class Identity2FACode extends Model
     /**
      * @var string[]
      */
-    protected $dates = [
-        'expire_at'
+    protected $casts = [
+        'expire_at' => 'datetime',
     ];
 
     /**

@@ -43,6 +43,7 @@ class AuthenticationTest extends DuskTestCase
             $browser->assertSeeIn('@headerTitle', $implementation->name);
 
             // Click on the navbar start button to go to the auth page
+            $browser->waitFor('@btnStart');
             $browser->element('@btnStart')->click();
             $browser->waitFor('@authOptionEmailRestore');
 
@@ -99,6 +100,7 @@ class AuthenticationTest extends DuskTestCase
             $browser->assertSeeIn('@headerTitle', $implementation->name);
 
             // Click on the navbar start button to go to the auth page
+            $browser->waitFor('@btnStart');
             $browser->element('@btnStart')->click();
             $browser->waitFor('@authOptionEmailRegister');
 

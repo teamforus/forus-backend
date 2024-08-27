@@ -31,7 +31,7 @@ class BankHoliday extends BaseModel
     /**
      * @var string[]
      */
-    protected $dates = [
-        'date',
+    protected $casts = [
+        'date' => 'datetime',
     ];
 }

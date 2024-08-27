@@ -63,8 +63,8 @@ class Session extends Model
         'uid', 'identity_address', 'identity_proxy_id', 'last_activity_at',
     ];
 
-    protected $dates = [
-        'last_activity_at',
+    protected $casts = [
+        'last_activity_at' => 'datetime',
     ];
 
     /**

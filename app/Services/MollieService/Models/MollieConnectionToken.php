@@ -56,8 +56,8 @@ class MollieConnectionToken extends Model
     /**
      * @var string[]
      */
-    protected $dates = [
-        'expired_at',
+    protected $casts = [
+        'expired_at' => 'datetime',
     ];
 
     /**

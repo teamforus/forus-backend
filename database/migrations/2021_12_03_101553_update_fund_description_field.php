@@ -7,16 +7,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * @throws \Doctrine\DBAL\Exception
-     */
-    public function __construct()
-    {
-        DB::getDoctrineSchemaManager()
-            ->getDatabasePlatform()
-            ->registerDoctrineTypeMapping('enum', 'string');
-    }
-
-    /**
      * Run the migrations.
      *
      * @return void
@@ -24,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('funds', function(Blueprint $table) {
-            $table->string('description', 15000)->change();
+            $table->string('description', 15000)->nullable()->change();
         });
     }
 
@@ -36,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('funds', function(Blueprint $table) {
-            $table->string('description', 4000)->change();
+            $table->string('description', 4000)->nullable()->change();
         });
     }
 };

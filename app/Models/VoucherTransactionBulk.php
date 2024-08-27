@@ -140,14 +140,11 @@ class VoucherTransactionBulk extends BaseModel
         'id', 'amount', 'created_at', 'state', 'voucher_transactions_count',
     ];
 
-    protected $dates = [
-        'execution_date',
-    ];
-
     protected $casts = [
         'auth_params' => 'array',
-        'accepted_manually' => 'boolean',
         'is_exported' => 'boolean',
+        'execution_date' => 'datetime',
+        'accepted_manually' => 'boolean',
     ];
 
     protected $hidden = [

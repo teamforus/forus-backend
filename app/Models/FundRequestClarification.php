@@ -48,8 +48,8 @@ class FundRequestClarification extends BaseModel
         'fund_request_record_id', 'state', 'question', 'answer', 'answered_at',
     ];
 
-    protected $dates = [
-        'answered_at',
+    protected $casts = [
+        'answered_at' => 'datetime',
     ];
 
     /**
