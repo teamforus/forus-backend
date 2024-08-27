@@ -323,7 +323,9 @@ class Identity extends Model implements Authenticatable
         }
 
         return static::whereHas('records', function(Builder $builder) use ($bsn, $exactSearch) {
-            $builder->where('value', $exactSearch ? '=' : 'LIKE', $exactSearch ? $bsn : "%$bsn%");
+            $exactSearch ?
+                $builder->where('value', '=', $bsn) :
+                $builder->where('value', 'LIKE', "%$bsn%");
             $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
         })->first();
     }
