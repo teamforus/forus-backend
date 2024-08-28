@@ -89,7 +89,7 @@ class FundRequestQuery
                 $builder->where('email', 'LIKE', "%$q%");
             });
 
-            if ($bsnIdentity = Identity::findByBsn($q)) {
+            if ($bsnIdentity = Identity::findByBsn($q, false)) {
                 $query->orWhere('identity_address', '=', $bsnIdentity->address);
             }
 
