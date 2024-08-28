@@ -28,6 +28,8 @@ class Permission extends BaseModel
     const VALIDATE_RECORDS = 'validate_records';
     const MANAGE_VALIDATORS = 'manage_validators';
 
+    const MANAGE_PAYOUTS = 'manage_validators';
+
     protected $fillable = [
         'key', 'name',
     ];

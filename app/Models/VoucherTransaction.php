@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -27,6 +28,7 @@ use Illuminate\Support\Facades\Log;
  * @property int $voucher_id
  * @property int|null $organization_id
  * @property int|null $employee_id
+ * @property int|null $upload_batch_id
  * @property string|null $branch_id
  * @property string|null $branch_name
  * @property string|null $branch_number
@@ -112,6 +114,7 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder|VoucherTransaction whereTransferAt($value)
  * @method static Builder|VoucherTransaction whereUid($value)
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
+ * @method static Builder|VoucherTransaction whereUploadBatchId($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
  * @method static Builder|VoucherTransaction whereVoucherTransactionBulkId($value)
  * @method static Builder|VoucherTransaction withTrashed()
@@ -151,16 +154,19 @@ class VoucherTransaction extends BaseModel
 
     public const TARGET_PROVIDER = 'provider';
     public const TARGET_TOP_UP = 'top_up';
+    public const TARGET_PAYOUT = 'payout';
     public const TARGET_IBAN = 'iban';
 
     public const TARGETS = [
         self::TARGET_PROVIDER,
+        self::TARGET_PAYOUT,
         self::TARGET_TOP_UP,
         self::TARGET_IBAN,
     ];
 
     public const TARGETS_OUTGOING = [
         self::TARGET_PROVIDER,
+        self::TARGET_PAYOUT,
         self::TARGET_IBAN,
     ];
 
@@ -171,6 +177,7 @@ class VoucherTransaction extends BaseModel
     public const SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'transaction_in', 'fund_name',
         'provider_name', 'product_name', 'target', 'uid', 'date_non_cancelable', 'bulk_state',
+        'employee_email',
     ];
 
     /**
@@ -184,7 +191,7 @@ class VoucherTransaction extends BaseModel
         'iban_from', 'iban_to', 'iban_to_name', 'payment_time', 'employee_id', 'transfer_at',
         'voucher_transaction_bulk_id', 'payment_description', 'initiator', 'reimbursement_id',
         'target', 'target_iban', 'target_name', 'target_reimbursement_id', 'uid',
-        'branch_id', 'branch_name', 'branch_number',
+        'branch_id', 'branch_name', 'branch_number', 'upload_batch_id',
     ];
 
     protected $hidden = [
@@ -353,6 +360,7 @@ class VoucherTransaction extends BaseModel
         return [
             self::TARGET_PROVIDER => trans("transaction.target.$this->target"),
             self::TARGET_TOP_UP => trans("transaction.target.$this->target"),
+            self::TARGET_PAYOUT => trans("transaction.target.$this->target"),
             self::TARGET_IBAN => trans("transaction.target.$this->target"),
         ][$this->target] ?? $this->target;
     }
@@ -541,11 +549,30 @@ class VoucherTransaction extends BaseModel
     /**
      * @return bool
      */
+    public function isEditableBySponsor(): bool
+    {
+        return
+            $this->targetIsPayout() &&
+            $this->isPending() &&
+            !$this->voucher_transaction_bulk_id;
+    }
+
+    /**
+     * @return bool
+     */
     public function isCancelable(): bool
     {
         return !$this->voucher_transaction_bulk &&
             ($this->isPending()) &&
             ($this->transfer_at && $this->transfer_at->isFuture());
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCancelableBySponsor(): bool
+    {
+        return $this->isCancelable();
     }
 
     /**
@@ -665,11 +692,19 @@ class VoucherTransaction extends BaseModel
 
     /**
      * @return bool
+     */
+    public function targetIsPayout(): bool
+    {
+        return $this->target === self::TARGET_PAYOUT;
+    }
+
+    /**
+     * @return bool
      * @noinspection PhpUnused
      */
     public function targetIsIban(): bool
     {
-        return $this->target === self::TARGET_IBAN;
+        return in_array($this->target, [self::TARGET_IBAN, self::TARGET_PAYOUT]);
     }
 
     /**
@@ -696,5 +731,56 @@ class VoucherTransaction extends BaseModel
     public function isIncoming(): bool
     {
         return in_array($this->target, self::TARGETS_INCOMING);
+    }
+
+    /**
+     * @param array $data
+     * @return void
+     */
+    public function updatePayout(array $data): void
+    {
+        $voucher = $this->voucher;
+        $amount_preset = $voucher->fund->amount_presets?->find(Arr::get($data, 'amount_preset_id'));
+        $amount = Arr::get($data, 'amount');
+
+        if ($amount_preset) {
+            if (($amount_preset->id !== $voucher->fund_amount_preset_id) ||
+                ($amount_preset->amount !== $voucher->amount)) {
+                $voucher->update([
+                    'amount' => $amount_preset->amount,
+                    'fund_amount_preset_id' => $amount_preset->id,
+                ]);
+
+                $this->update([ 'amount' => $voucher->amount ]);
+            }
+        }
+
+        if ($amount && ($amount !== $voucher->amount)) {
+            if ($amount !== $voucher->amount) {
+                $voucher->update([
+                    'amount' => $amount,
+                    'fund_amount_preset_id' => null,
+                ]);
+
+                $this->update([ 'amount' => $voucher->amount ]);
+            }
+        }
+
+        $this->update(Arr::only($data, [
+            'target_iban', 'target_name',
+        ]));
+    }
+
+    /**
+     * @return int
+     * @throws \Random\RandomException
+     */
+    public static function makeBatchUploadId(): int
+    {
+        do {
+            $batchId = random_int(100_000_000_000, 900_000_000_000);
+        } while (VoucherTransaction::whereUploadBatchId($batchId)->exists());
+
+        return $batchId;
     }
 }

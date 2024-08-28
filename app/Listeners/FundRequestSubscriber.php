@@ -13,6 +13,7 @@ use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\FundConfig;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Notifications\Identities\Employee\IdentityAssignedToFundRequestBySupervisorNotification;
@@ -106,7 +107,26 @@ class FundRequestSubscriber
 
             foreach ($funds as $fund) {
                 if (Gate::forUser($fundRequest->identity)->allows('apply', [$fund, $logScope])) {
-                    $fund->makeVoucher($fundRequest->identity_address);
+                    if (
+                        $fund->id === $fundRequest->fund_id &&
+                        $fund->fund_config->outcome_type === FundConfig::OUTCOME_TYPE_PAYOUT) {
+
+                        $amount = $fund->amount_presets()->find($fundRequest->fund_amount_preset_id) ?: $fundRequest->amount;
+
+                        $payout = $fund->makePayout(
+                            $amount ?: $fund->amountForIdentity($fundRequest->identity_address),
+                            $fundRequest->employee,
+                            $fundRequest->fund->getTrustedRecordOfType($fundRequest->identity_address, 'iban')?->value ?: '',
+                            $fundRequest->fund->getTrustedRecordOfType($fundRequest->identity_address, 'iban_name')?->value ?: '',
+                        );
+
+                        $payout->voucher->update([
+                            'identity_address' => $fundRequest->identity_address,
+                        ]);
+                    } else {
+                        $fund->makeVoucher($fundRequest->identity_address);
+                    }
+
                     $fund->makeFundFormulaProductVouchers($fundRequest->identity_address);
                 }
             }

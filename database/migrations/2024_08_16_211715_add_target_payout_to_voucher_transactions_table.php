@@ -8,13 +8,11 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up(): void
     {
         Schema::table('voucher_transactions', function (Blueprint $table) {
-            $table->enum('target', ['provider', 'iban', 'top_up'])
+            $table->enum('target', ['provider', 'iban', 'top_up', 'payout'])
                 ->default('provider')
                 ->after('initiator')
                 ->change();
@@ -23,8 +21,6 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
     public function down(): void {}
 };

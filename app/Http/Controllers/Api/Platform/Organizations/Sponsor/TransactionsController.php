@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 use App\Exports\VoucherTransactionsSponsorExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\IndexTransactionsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\StorePayoutTransactionBatchRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\StorePayoutTransactionRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\StoreTransactionBatchRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\StoreTransactionRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\UpdatePayoutTransactionRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
@@ -20,6 +23,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
+use Random\RandomException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
@@ -55,7 +59,11 @@ class TransactionsController extends Controller
 
         if (!$organization->show_provider_transactions &&
             ($request->has('voucher_id') || $request->has('reservation_voucher_id'))) {
-            $options['target'] = [VoucherTransaction::TARGET_TOP_UP, VoucherTransaction::TARGET_IBAN];
+            $options['target'] = [
+                VoucherTransaction::TARGET_IBAN,
+                VoucherTransaction::TARGET_PAYOUT,
+                VoucherTransaction::TARGET_TOP_UP,
+            ];
             $options['initiator'] = VoucherTransaction::INITIATOR_SPONSOR;
         }
 
@@ -116,6 +124,132 @@ class TransactionsController extends Controller
         }, compact('target'));
 
         return SponsorVoucherTransactionResource::create($voucher->makeTransactionBySponsor($employee, $fields));
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param StorePayoutTransactionRequest $request
+     * @param Organization $organization
+     * @return SponsorVoucherTransactionResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function storePayout(
+        StorePayoutTransactionRequest $request,
+        Organization $organization,
+    ): SponsorVoucherTransactionResource {
+        $this->authorize('show', $organization);
+        $this->authorize('storeAsSponsor', [VoucherTransaction::class, $organization]);
+
+        $fund = $organization->funds()->find($request->input('fund_id'));
+        $employee = $request->employee($organization);
+
+        $amount = $request->input('amount_preset_id') ?
+            $fund->amount_presets?->find($request->input('amount_preset_id')) :
+            $request->input('amount');
+
+        return SponsorVoucherTransactionResource::create($fund->makePayout(
+            $amount,
+            $employee,
+            $request->input('target_iban'),
+            $request->input('target_name'),
+            $request->input('note'),
+        ));
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param StorePayoutTransactionBatchRequest $request
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws RandomException
+     * @noinspection PhpUnused
+     */
+    public function storePayoutBatch(
+        StorePayoutTransactionBatchRequest $request,
+        Organization $organization,
+    ): AnonymousResourceCollection {
+        $this->authorize('show', $organization);
+        $this->authorize('storeAsSponsor', [VoucherTransaction::class, $organization]);
+
+        $fund = $organization->funds()->find($request->input('fund_id'));
+        $batchId = $request->input('upload_batch_id') ?: VoucherTransaction::makeBatchUploadId();
+        $employee = $request->employee($organization);
+
+        $payouts = array_map(function ($payout) use ($fund, $employee, $batchId) {
+            $amount = Arr::get($payout, 'amount_preset') ?
+                $fund->amount_presets()->where('amount', Arr::get($payout, 'amount_preset'))->first() :
+                Arr::get($payout, 'amount');
+
+            $transaction = $fund->makePayout(
+                $amount,
+                $employee,
+                Arr::get($payout, 'target_iban'),
+                Arr::get($payout, 'target_name'),
+                Arr::get($payout, 'note'),
+            );
+
+            $transaction->update([
+                'upload_batch_id' => $batchId,
+            ]);
+
+            return $transaction;
+        }, $request->input('payouts'));
+
+        return SponsorVoucherTransactionResource::collection($payouts);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param StorePayoutTransactionBatchRequest $request
+     * @param Organization $organization
+     * @return JsonResponse
+     */
+    public function storePayoutBatchValidate(
+        StorePayoutTransactionBatchRequest $request,
+        Organization $organization,
+    ): JsonResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('storeAsSponsor', [VoucherTransaction::class, $organization]);
+
+        return new JsonResponse($request->authorize() ?: []);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param UpdatePayoutTransactionRequest $request
+     * @param Organization $organization
+     * @param VoucherTransaction $transaction
+     * @return SponsorVoucherTransactionResource
+     */
+    public function updatePayout(
+        UpdatePayoutTransactionRequest $request,
+        Organization $organization,
+        VoucherTransaction $transaction,
+    ): SponsorVoucherTransactionResource {
+        $this->authorize('show', $organization);
+        $this->authorize('updatePayouts', [$transaction, $organization]);
+
+        $transaction->updatePayout($request->only([
+            'amount', 'amount_preset_id', 'target_name', 'target_iban',
+        ]));
+
+        if ($request->input('skip_transfer_delay')) {
+            $transaction->update([
+                'transfer_at' => now(),
+            ]);
+        }
+
+        if ($request->input('cancel')) {
+            $transaction->cancelPending();
+        }
+
+        return SponsorVoucherTransactionResource::create($transaction);
     }
 
     /**
@@ -227,7 +361,7 @@ class TransactionsController extends Controller
      */
     public function show(
         Organization $organization,
-        VoucherTransaction $voucherTransaction
+        VoucherTransaction $voucherTransaction,
     ): SponsorVoucherTransactionResource {
         $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucherTransaction, $organization]);

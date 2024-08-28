@@ -49,9 +49,11 @@ use ZipArchive;
  *
  * @property int $id
  * @property int $fund_id
+ * @property string $voucher_type
  * @property string|null $identity_address
  * @property string $state
  * @property string $amount
+ * @property int|null $fund_amount_preset_id
  * @property int $limit_multiplier
  * @property bool $returnable
  * @property int|null $product_reservation_id
@@ -143,6 +145,7 @@ use ZipArchive;
  * @method static Builder|Voucher whereCreatedAt($value)
  * @method static Builder|Voucher whereEmployeeId($value)
  * @method static Builder|Voucher whereExpireAt($value)
+ * @method static Builder|Voucher whereFundAmountPresetId($value)
  * @method static Builder|Voucher whereFundBackofficeLogId($value)
  * @method static Builder|Voucher whereFundId($value)
  * @method static Builder|Voucher whereId($value)
@@ -155,6 +158,7 @@ use ZipArchive;
  * @method static Builder|Voucher whereReturnable($value)
  * @method static Builder|Voucher whereState($value)
  * @method static Builder|Voucher whereUpdatedAt($value)
+ * @method static Builder|Voucher whereVoucherType($value)
  * @mixin \Eloquent
  */
 class Voucher extends BaseModel
@@ -183,6 +187,9 @@ class Voucher extends BaseModel
 
     public const TYPE_BUDGET = 'regular';
     public const TYPE_PRODUCT = 'product';
+
+    public const VOUCHER_TYPE_PAYOUT = 'payout';
+    public const VOUCHER_TYPE_VOUCHER = 'voucher';
 
     public const STATE_ACTIVE = 'active';
     public const STATE_PENDING = 'pending';
@@ -219,7 +226,7 @@ class Voucher extends BaseModel
         'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id',
         'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'state',
         'activation_code', 'client_uid', 'fund_backoffice_log_id',
-        'product_reservation_id',
+        'product_reservation_id', 'voucher_type', 'fund_amount_preset_id',
     ];
 
     /**
@@ -794,6 +801,8 @@ class Voucher extends BaseModel
         $in_use_from = $request->input('in_use_from');
         $in_use_to = $request->input('in_use_to');
 
+        $query->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER);
+
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
 
@@ -1270,9 +1279,11 @@ class Voucher extends BaseModel
      */
     public static function findByAddress(
         string $address,
-        ?string $identity_address = null
+        ?string $identity_address = null,
     ): ?Voucher {
-        return self::whereHas('tokens', static function(Builder $builder) use ($address) {
+        return self::query()->where([
+            'voucher_type' => Voucher::VOUCHER_TYPE_VOUCHER,
+        ])->whereHas('tokens', static function(Builder $builder) use ($address) {
             $builder->where('address', '=', $address);
         })->where(static function(Builder $builder) use ($identity_address) {
             $identity_address && $builder->where('identity_address', '=', $identity_address);
@@ -1286,9 +1297,11 @@ class Voucher extends BaseModel
      */
     public static function findByPhysicalCardQuery(
         string $number,
-        ?string $identity_address = null
+        ?string $identity_address = null,
     ): Builder|Voucher {
-        return self::whereHas('fund.fund_config', static function (Builder $builder) {
+        return self::query()->where([
+            'voucher_type' => Voucher::VOUCHER_TYPE_VOUCHER,
+        ])->whereHas('fund.fund_config', static function (Builder $builder) {
             $builder->where('allow_physical_cards', '=', true);
         })->whereHas('physical_cards', static function (Builder $builder) use ($number) {
             $builder->where('code', '=', $number);

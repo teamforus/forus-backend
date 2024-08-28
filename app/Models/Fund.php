@@ -75,6 +75,8 @@ use Illuminate\Support\Facades\DB;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
+ * @property-read Collection|\App\Models\FundAmountPreset[] $amount_presets
+ * @property-read int|null $amount_presets_count
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
@@ -234,8 +236,8 @@ class Fund extends BaseModel
     ];
 
     public const TYPE_BUDGET = 'budget';
-    public const TYPE_SUBSIDIES = 'subsidies';
     public const TYPE_EXTERNAL = 'external';
+    public const TYPE_SUBSIDIES = 'subsidies';
 
     public const TYPES = [
         self::TYPE_BUDGET,
@@ -468,6 +470,7 @@ class Fund extends BaseModel
 
         $this->fund_config()->create()->forceFill($preApprove ? [
             'key' => str_slug($this->name, '_') . '_' . resolve('token_generator')->generate(8),
+            'outcome_type' => Arr::get($attributes, 'outcome_type', Fund::OUTCOME_TYPE_VOUCHER),
             'is_configured' => 1,
             'implementation_id' => $this->organization->implementations[0]->id ?? null,
         ] : [])->save();
@@ -488,6 +491,9 @@ class Fund extends BaseModel
             'auth_2fa_policy', 'auth_2fa_remember_ip',
             'auth_2fa_restrict_emails', 'auth_2fa_restrict_auth_sessions',
             'auth_2fa_restrict_reimbursements', 'hide_meta', 'voucher_amount_visible',
+            'allow_custom_amounts', 'allow_custom_amounts_validator',
+            'allow_preset_amounts', 'allow_preset_amounts_validator',
+            'custom_amount_min', 'custom_amount_max',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
@@ -495,6 +501,25 @@ class Fund extends BaseModel
         ], false) : [];
 
         $this->fund_config->forceFill(array_merge($values, $replaceValues))->save();
+    }
+
+    /**
+     * @param array $presets
+     * @return void
+     */
+    public function syncAmountPresets(array $presets): void
+    {
+        $this->amount_presets()
+            ->whereNotIn('id', array_filter(Arr::pluck($presets, 'id')))
+            ->delete();
+
+        foreach ($presets as $preset) {
+            $data = array_only($preset, ['name', 'amount']);
+
+            $preset['id'] ?? null ?
+                $this->amount_presets()->find($preset['id'])->update($data) :
+                $this->amount_presets()->create($data);
+        }
     }
 
     /**
@@ -900,6 +925,15 @@ class Fund extends BaseModel
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
+    public function amount_presets(): HasMany
+    {
+        return $this->hasMany(FundAmountPreset::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
     public function fund_limit_multipliers(): HasMany
     {
         return $this->hasMany(FundLimitMultiplier::class);
@@ -1216,16 +1250,13 @@ class Fund extends BaseModel
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
         $limit_multiplier = $limit_multiplier ?: $this->multiplierForIdentity($identity_address);
-        $voucher = null;
 
-        if ($this->fund_formulas->count() > 0) {
-            $voucher = Voucher::create(array_merge(compact(
-                'identity_address', 'amount', 'expire_at', 'fund_id',
-                'returnable', 'limit_multiplier'
-            ), $extraFields));
+        $voucher = Voucher::create(array_merge(compact(
+            'identity_address', 'amount', 'expire_at', 'fund_id',
+            'returnable', 'limit_multiplier'
+        ), $extraFields));
 
-            VoucherCreated::dispatch($voucher);
-        }
+        VoucherCreated::dispatch($voucher);
 
         return $voucher;
     }
@@ -1984,5 +2015,41 @@ class Fund extends BaseModel
             $this->isTypeBudget() &&
             $this->fund_config?->allow_direct_payments &&
             $this->fund_config?->allow_generator_direct_payments;
+    }
+
+    /**
+     * @param FundAmountPreset|string $amount
+     * @param Employee $employee
+     * @param string $targetIban
+     * @param string $targetName
+     * @param string|null $note
+     * @return VoucherTransaction
+     */
+    public function makePayout(
+        FundAmountPreset|string $amount,
+        Employee $employee,
+        string $targetIban,
+        string $targetName,
+        ?string $note = null,
+    ): VoucherTransaction {
+        $presetModel = $amount instanceof FundAmountPreset ? $amount : null;
+        $amount = $presetModel ? $presetModel->amount : $amount;
+
+        $voucher = $this->makeVoucher(null, [
+            'fund_preset' => $presetModel?->id,
+            'voucher_type' => Voucher::VOUCHER_TYPE_PAYOUT,
+            'employee_id' => $employee->id,
+            'fund_amount_preset_id' => $presetModel?->id,
+        ], $amount);
+
+        return $voucher->makeTransactionBySponsor($employee, [
+            'note' => $note,
+            'amount' => $amount,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'target_iban' => $targetIban,
+            'target_name' => $targetName,
+            'employee_id' => $employee->id,
+            'transfer_at' => now()->addDay(),
+        ]);
     }
 }

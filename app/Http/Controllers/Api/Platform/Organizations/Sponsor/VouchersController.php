@@ -69,7 +69,7 @@ class VouchersController extends Controller
      */
     public function store(
         StoreVoucherRequest $request,
-        Organization        $organization
+        Organization $organization,
     ): SponsorVoucherResource {
         $fund = Fund::find($request->post('fund_id'));
 

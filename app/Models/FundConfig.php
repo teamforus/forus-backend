@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $fund_id
  * @property int|null $implementation_id
  * @property string $key
+ * @property string $outcome_type
  * @property bool $hide_meta
  * @property bool $voucher_amount_visible
  * @property string|null $auth_2fa_policy
@@ -37,6 +38,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_generator_direct_payments
  * @property bool $allow_voucher_top_ups
  * @property bool $allow_voucher_records
+ * @property bool $allow_custom_amounts
+ * @property bool $allow_custom_amounts_validator
+ * @property bool $allow_preset_amounts
+ * @property bool $allow_preset_amounts_validator
+ * @property string|null $custom_amount_min
+ * @property string|null $custom_amount_max
  * @property bool $employee_can_see_product_vouchers
  * @property string $vouchers_type
  * @property bool $is_configured
@@ -78,11 +85,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig query()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowBlockingVouchers($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowCustomAmounts($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowCustomAmountsValidator($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectPayments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowFundRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowGeneratorDirectPayments($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPresetAmounts($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPresetAmountsValidator($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowReimbursements($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowReservations($value)
@@ -114,6 +125,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCsvPrimaryKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCustomAmountMax($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCustomAmountMin($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereEmailRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereEmployeeCanSeeProductVouchers($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereFundId($value)
@@ -138,6 +151,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTopUpAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereOutcomeType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVoucherAmountVisible($value)
@@ -169,6 +183,14 @@ class FundConfig extends BaseModel
         self::AUTH_2FA_POLICY_RESTRICT,
     ];
 
+    public const OUTCOME_TYPE_PAYOUT = 'payout';
+    public const OUTCOME_TYPE_VOUCHER = 'voucher';
+
+    public const OUTCOME_TYPES = [
+        self::OUTCOME_TYPE_PAYOUT,
+        self::OUTCOME_TYPE_VOUCHER,
+    ];
+
     protected $fillable = [
         'backoffice_enabled', 'backoffice_url', 'backoffice_key',
         'backoffice_certificate', 'backoffice_fallback',
@@ -176,6 +198,8 @@ class FundConfig extends BaseModel
         'email_required', 'contact_info_enabled', 'contact_info_required',
         'contact_info_message_custom', 'contact_info_message_text',
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'hide_meta', 'voucher_amount_visible',
+        'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
+        'allow_custom_amounts', 'allow_preset_amounts', 'custom_amount_min', 'custom_amount_max',
     ];
 
     /**
@@ -234,6 +258,10 @@ class FundConfig extends BaseModel
         'auth_2fa_restrict_reimbursements' => 'boolean',
         'hide_meta' => 'boolean',
         'voucher_amount_visible' => 'boolean',
+        'allow_custom_amounts' => 'boolean',
+        'allow_preset_amounts' => 'boolean',
+        'allow_custom_amounts_validator' => 'boolean',
+        'allow_preset_amounts_validator' => 'boolean',
     ];
 
     /**

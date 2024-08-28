@@ -101,7 +101,7 @@ class FundsController extends Controller
             'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'email_required', 'contact_info_enabled', 'contact_info_required',
             'contact_info_message_custom', 'contact_info_message_text',
-            'hide_meta', 'voucher_amount_visible',
+            'hide_meta', 'voucher_amount_visible', 'outcome_type',
         ]));
 
         $fund->attachMediaByUid($request->input('media_uid'));
@@ -193,8 +193,14 @@ class FundsController extends Controller
             $fund->updateFundsConfig($request->only([
                 'email_required', 'contact_info_enabled', 'contact_info_required',
                 'contact_info_message_custom', 'contact_info_message_text',
-                'hide_meta', 'voucher_amount_visible',
+                'hide_meta', 'voucher_amount_visible', 'custom_amount_min', 'custom_amount_max',
+                'allow_preset_amounts', 'allow_preset_amounts_validator',
+                'allow_custom_amounts', 'allow_custom_amounts_validator',
             ]));
+
+            if (is_array($request->input('amount_presets'))) {
+                $fund->syncAmountPresets($request->input('amount_presets'));
+            }
 
             if ($fund->isWaiting()) {
                 $fund->updateFundsConfig($request->only([

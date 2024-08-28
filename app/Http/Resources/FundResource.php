@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\FundConfig;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
@@ -65,7 +66,7 @@ class FundResource extends BaseJsonResource
         $isDashboard = $baseRequest->isDashboard();
         $fundAmount = $fund->amountFixedByFormula();
 
-        $fundConfigData = $this->getFundConfigData($fund);
+        $fundConfigData = $this->getFundConfigData($fund, $isDashboard);
         $financialData = $this->getFinancialData($fund, $this->stats);
         $criteriaData = $isWebShop ? $this->getCriteriaData($fund, $baseRequest) : [];
         $generatorData = $isDashboard ? $this->getVoucherGeneratorData($fund) : [];
@@ -78,6 +79,7 @@ class FundResource extends BaseJsonResource
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
             'balance_provider', 'external_page', 'external_page_url',
         ]), [
+            'outcome_type' => $fund->fund_config?->outcome_type ?: FundConfig::OUTCOME_TYPE_VOUCHER,
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
             'tags' => TagResource::collection($fund->tags_webshop),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
@@ -90,8 +92,8 @@ class FundResource extends BaseJsonResource
             'organization' => new OrganizationResource($organization),
             'criteria' => FundCriterionResource::collection($fund->criteria),
             'criteria_steps' => FundCriteriaStepResource::collection($fund->criteria_steps->sortBy('order')),
-            'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'faq' => FaqResource::collection($fund->faq),
+            'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'formula_products' => FundFormulaProductResource::collection($fund->fund_formula_products),
             'fund_amount' => $fundAmount ? currency_format($fundAmount) : null,
             'fund_amount_locale' => $fundAmount ? currency_format_locale($fundAmount) : null,
@@ -118,6 +120,10 @@ class FundResource extends BaseJsonResource
             $data['backoffice'] = $this->getBackofficeData($fund);
         }
 
+        if ($isDashboard && $organization->identityCan($identity, ['manage_funds', 'validate_records'], false)) {
+            $data['amount_presets'] = FundAmountPresetResource::collection($fund->amount_presets);
+        }
+
         return array_merge($data, $fund->only(array_keys($this->select ?? [])));
     }
 
@@ -135,19 +141,27 @@ class FundResource extends BaseJsonResource
 
     /**
      * @param Fund $fund
+     * @param bool $isDashboard
      * @return array
      */
-    protected function getFundConfigData(Fund $fund): array
+    protected function getFundConfigData(Fund $fund, bool $isDashboard): array
     {
-        return $fund->fund_config?->only([
-            'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
-            'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
-            'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
-            'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
-            'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',
-            'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails',
-            'hide_meta', 'voucher_amount_visible',
-        ]) ?: [];
+        return [
+            ...$fund->fund_config ? $fund->fund_config->only([
+                'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+                'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
+                'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
+                'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
+                'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',
+                'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails',
+                'hide_meta', 'voucher_amount_visible',
+            ]) : [],
+            ...$isDashboard && $fund->fund_config ? $fund->fund_config->only([
+                'allow_custom_amounts', 'allow_preset_amounts',
+                'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
+                'custom_amount_min', 'custom_amount_max',
+            ]) : [],
+        ];
     }
 
     /**
