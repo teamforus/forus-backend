@@ -22,7 +22,7 @@ class RolesTableSeeder extends Seeder
         ],
         'supervisor_validator' => [
             'en' => 'Supervisor validator',
-            'nl' => 'Manager beoordelaars',
+            'nl' => 'Toezichthouder beoordelaar',
         ],
         'policy_officer' => [
             'en' => 'Providers manager',
@@ -46,7 +46,7 @@ class RolesTableSeeder extends Seeder
         ],
         'voucher_officer' => [
             'en' => 'Voucher admin',
-            'nl' => 'Voucher beheerder',
+            'nl' => 'Tegoed beheerder',
         ],
         'voucher_reader' => [
             'en' => 'Voucher viewer',
