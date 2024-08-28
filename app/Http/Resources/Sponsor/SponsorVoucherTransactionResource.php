@@ -109,6 +109,9 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
                 $transaction::TARGET_PROVIDER => 'direct_provider',
                 $transaction::TARGET_IBAN => 'direct_iban',
                 $transaction::TARGET_TOP_UP => 'direct_top_up',
+                $transaction::TARGET_PAYOUT => $transaction->employee_id ? (
+                    $transaction->upload_batch_id ? 'payout_bulk' : 'payout_single'
+                ) : 'payout_request',
             };
         }
 
