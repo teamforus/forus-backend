@@ -41,8 +41,10 @@ class SendContactFormRequest extends BaseFormRequest
                 ...$this->emailRules(),
             ],
             'phone' => 'nullable|string',
-            'organization' => 'nullable|string',
             'message' => 'required|string',
+            'organization_name' => 'nullable|string',
+            'accept_privacy_terms' => 'required|boolean|accepted',
+            'accept_product_update_terms' => 'nullable|boolean',
         ];
     }
 }
