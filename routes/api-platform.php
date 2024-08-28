@@ -126,10 +126,6 @@ $router->group([], static function() use ($router) {
         'organizations/{organization}/funds/{fund}/unarchive',
         "Api\Platform\Organizations\FundsController@unArchive");
 
-    $router->get(
-        'organizations/{organization}/funds/product-required',
-        "Api\Platform\Organizations\FundsController@listProviderProductsRequired");
-
     $router->resource(
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
@@ -747,6 +743,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations/{organization}/provider/funds-available',
         'Api\Platform\Organizations\Provider\FundProviderController@availableFunds'
     );
+
+    $router->get(
+        'organizations/{organization}/provider/funds-product-required',
+        "Api\Platform\Organizations\Provider\FundProviderController@fundsProductRequired");
 
     $router->resource(
         'organizations/{organization}/provider/funds',

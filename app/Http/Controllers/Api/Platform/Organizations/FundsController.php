@@ -15,10 +15,8 @@ use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundBackofficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
-use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
-use App\Http\Resources\Small\FundSmallResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -487,25 +485,5 @@ class FundsController extends Controller
         $fund->unArchive($organization->findEmployee($request->auth_address()));
 
         return FundResource::create($fund);
-    }
-
-    /**
-     * @param Organization $organization
-     * @param IndexOrganizationRequest $request
-     * @return AnonymousResourceCollection
-     */
-    public function listProviderProductsRequired(
-        Organization $organization,
-        IndexOrganizationRequest $request
-    ): AnonymousResourceCollection {
-        $query = Fund::query();
-
-        if ($organization->products()->count() === 0) {
-            FundQuery::whereProviderProductsRequired($query, $organization);
-        } else {
-            $query->whereRaw('FALSE');
-        }
-
-        return FundSmallResource::queryCollection($query->orderBy('name'), $request);
     }
 }

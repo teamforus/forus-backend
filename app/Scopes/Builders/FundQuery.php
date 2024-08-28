@@ -258,19 +258,20 @@ class FundQuery
 
     /**
      * @param Builder|Relation|Fund $query
-     * @param Organization $organization
+     * @param int|int[] $organizationId
      * @return Relation|Builder|Fund
      */
     public static function whereProviderProductsRequired(
         Builder|Relation|Fund $query,
-        Organization $organization
+        int | array $organizationId,
     ): Relation|Builder|Fund {
         return $query
             ->where('archived', false)
             ->whereRelation('fund_config', 'provider_products_required', true)
-            ->whereHas('fund_providers', function (Builder $builder) use ($organization) {
+            ->whereHas('fund_providers', function (Builder $builder) use ($organizationId) {
                 $builder->where('state', '!=', FundProvider::STATE_REJECTED);
-                $builder->where('organization_id', $organization->id);
+                $builder->whereIn('organization_id', (array) $organizationId);
+                $builder->whereDoesntHave('products');
             });
     }
 }
