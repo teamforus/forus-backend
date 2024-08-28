@@ -5,10 +5,8 @@ namespace App\Listeners;
 use App\Events\FundRequestClarifications\FundRequestClarificationReceived;
 use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
 use App\Events\FundRequestRecords\FundRequestRecordApproved;
-use App\Events\FundRequestRecords\FundRequestRecordAssigned;
 use App\Events\FundRequestRecords\FundRequestRecordUpdated;
 use App\Events\FundRequestRecords\FundRequestRecordDeclined;
-use App\Events\FundRequestRecords\FundRequestRecordResigned;
 use App\Events\FundRequests\FundRequestAssigned;
 use App\Events\FundRequests\FundRequestCreated;
 use App\Events\FundRequests\FundRequestResigned;
@@ -50,7 +48,7 @@ class FundRequestSubscriber
 
         // auto approve request if required
         if (!empty($identityBsn) && $fund->isAutoValidatingRequests()) {
-            $fundRequest->approve($fund->default_validator_employee);
+            $fundRequest->approve();
         }
 
         $event = $fundRequest->log(
@@ -190,36 +188,6 @@ class FundRequestSubscriber
     }
 
     /**
-     * @param FundRequestRecordAssigned $event
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestRecordAssigned(FundRequestRecordAssigned $event): void
-    {
-        $fundRequestRecord = $event->getFundRequestRecord();
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
-        $supervisorEmployee = $event->getSupervisorEmployee();
-
-        $fundRequestRecord->log($fundRequestRecord::EVENT_ASSIGNED, $eventModels, array_merge(
-            $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [],
-        ));
-    }
-
-    /**
-     * @param FundRequestRecordResigned $event
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestRecordResigned(FundRequestRecordResigned $event): void
-    {
-        $fundRequestRecord = $event->getFundRequestRecord();
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
-        $supervisorEmployee = $event->getSupervisorEmployee();
-
-        $fundRequestRecord->log($fundRequestRecord::EVENT_RESIGNED, $eventModels, array_merge(
-            $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [],
-        ));
-    }
-
-    /**
      * @param FundRequestRecordUpdated $event
      * @noinspection PhpUnused
      */
@@ -337,8 +305,6 @@ class FundRequestSubscriber
 
         $events->listen(FundRequestRecordDeclined::class, "$class@onFundRequestRecordDeclined");
         $events->listen(FundRequestRecordApproved::class, "$class@onFundRequestRecordApproved");
-        $events->listen(FundRequestRecordAssigned::class, "$class@onFundRequestRecordAssigned");
-        $events->listen(FundRequestRecordResigned::class, "$class@onFundRequestRecordResigned");
         $events->listen(FundRequestRecordUpdated::class, "$class@onFundRequestRecordUpdated");
 
         $events->listen(FundRequestClarificationRequested::class, "$class@onFundRequestClarificationRequested");

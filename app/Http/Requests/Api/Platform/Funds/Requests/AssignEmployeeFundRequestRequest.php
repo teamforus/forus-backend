@@ -5,7 +5,9 @@ namespace App\Http\Requests\Api\Platform\Funds\Requests;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\FundRequest;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Scopes\Builders\EmployeeQuery;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * @property-read Organization $organization
@@ -40,11 +42,13 @@ class AssignEmployeeFundRequestRequest extends BaseFormRequest
      */
     protected function validEmployeeId(): array
     {
-        $recordsQuery = $this->fund_request->records_pending()->whereDoesntHave('employee');
-
-        return EmployeeQuery::whereCanValidateRecords(
-            $this->organization->employees(),
-            $recordsQuery->select('fund_request_records.id')->getQuery()
-        )->pluck('id')->toArray();
+        return $this->organization
+            ->employees()
+            ->where('id', '!=', $this->fund_request->employee_id)
+            ->where(fn (Builder $builder) => EmployeeQuery::whereHasPermissionFilter($builder, [
+                Permission::VALIDATE_RECORDS,
+            ]))
+            ->pluck('id')
+            ->toArray();
     }
 }

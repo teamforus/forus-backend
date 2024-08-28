@@ -505,7 +505,7 @@ class ReimbursementTest extends TestCase
             'description' => $this->faker->text(600),
             'amount' => random_int(1, 10),
             'iban' => $this->faker()->iban('NL'),
-            'iban_name' => str_limit($this->faker()->firstName . ' ' . $this->faker()->lastName, 90),
+            'iban_name' => 'John Doe',
             'voucher_id' => $voucher?->id,
             'files' => [
                 $this->makeReimbursementProofFile($headers)->json('data.uid'),
