@@ -197,15 +197,12 @@ class ProductReservation extends BaseModel
      */
     protected $casts = [
         'archived' => 'boolean',
+        'expire_at' => 'datetime',
+        'birth_date' => 'datetime',
+        'accepted_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        'canceled_at' => 'datetime',
     ];
-
-    /**
-     * @var string[]
-     */
-    protected $dates = [
-        'accepted_at', 'rejected_at', 'canceled_at', 'expire_at', 'birth_date',
-    ];
-
     /**
      * @throws \Exception
      */

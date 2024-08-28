@@ -13,10 +13,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('organizations', function (Blueprint $table) {
-            $table->boolean('pre_approve_external_funds')
-                ->default(false)
-                ->after('allow_batch_reservations');
+        Schema::table('implementation_blocks', function (Blueprint $table) {
+            $table->integer('order')->after('button_target_blank');
         });
     }
 
@@ -27,8 +25,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('organizations', function (Blueprint $table) {
-            $table->dropColumn('pre_approve_external_funds');
+        Schema::table('implementation_blocks', function (Blueprint $table) {
+            $table->dropColumn('order');
         });
     }
 };

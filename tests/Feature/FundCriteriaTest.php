@@ -332,7 +332,7 @@ class FundCriteriaTest extends TestCase
         $this->assertNotNull($employee);
 
         $fundRequest->assignEmployee($employee);
-        $fundRequest->approve($employee);
+        $fundRequest->approve();
         $fundRequest->refresh();
 
         $this->assertTrue($fundRequest->isApproved());

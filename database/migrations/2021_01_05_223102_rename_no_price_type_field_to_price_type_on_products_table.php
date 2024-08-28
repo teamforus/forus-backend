@@ -9,15 +9,9 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @throws \Doctrine\DBAL\DBALException
      */
     public function up(): void
     {
-        DB::getDoctrineSchemaManager()
-            ->getDatabasePlatform()
-            ->registerDoctrineTypeMapping('enum', 'string');
-
         Schema::table('products', function (Blueprint $table) {
             $table->renameColumn('no_price_discount', 'price_discount');
             $table->dropColumn('old_price');
@@ -68,14 +62,9 @@ return new class extends Migration
      * Reverse the migrations.
      *
      * @return void
-     * @throws \Doctrine\DBAL\DBALException
      */
     public function down(): void
     {
-        DB::getDoctrineSchemaManager()
-            ->getDatabasePlatform()
-            ->registerDoctrineTypeMapping('enum', 'string');
-
         Schema::table('products', function (Blueprint $table) {
             $table->renameColumn('price_discount', 'no_price_discount');
             $table->boolean('no_price')->default(false)->after('unlimited_stock');

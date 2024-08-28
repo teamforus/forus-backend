@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
@@ -56,7 +57,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $is_sponsor
  * @property bool $is_provider
  * @property bool $is_validator
- * @property bool $validator_auto_accept_funds
  * @property bool $reservations_budget_enabled
  * @property bool $reservations_subsidy_enabled
  * @property bool $reservations_auto_accept
@@ -75,7 +75,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_provider_extra_payments
  * @property bool $allow_pre_checks
  * @property bool $reservation_allow_extra_payments
- * @property bool $pre_approve_external_funds
+ * @property int $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
@@ -114,8 +114,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $employees_count
  * @property-read Collection|\App\Models\Employee[] $employees_with_trashed
  * @property-read int|null $employees_with_trashed_count
- * @property-read Collection|Organization[] $external_validators
- * @property-read int|null $external_validators_count
  * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
@@ -145,8 +143,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $mollie_connections_count
  * @property-read Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
- * @property-read Collection|\App\Models\OrganizationValidator[] $organization_validators
- * @property-read int|null $organization_validators_count
  * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @property-read Collection|\App\Models\Product[] $products_as_sponsor
@@ -163,8 +159,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $supplied_funds_count
  * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
- * @property-read Collection|\App\Models\OrganizationValidator[] $validated_organizations
- * @property-read int|null $validated_organizations_count
  * @property-read Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
  * @property-read int|null $voucher_transaction_bulks_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
@@ -199,7 +193,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereBankFundName($value)
  * @method static EloquentBuilder|Organization whereBankNote($value)
  * @method static EloquentBuilder|Organization whereBankReservationNumber($value)
- * @method static EloquentBuilder|Organization whereBankSeparateSymbol($value)
+ * @method static EloquentBuilder|Organization whereBankSeparator($value)
  * @method static EloquentBuilder|Organization whereBankTransactionDate($value)
  * @method static EloquentBuilder|Organization whereBankTransactionId($value)
  * @method static EloquentBuilder|Organization whereBankTransactionTime($value)
@@ -234,7 +228,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereReservationsSubsidyEnabled($value)
  * @method static EloquentBuilder|Organization whereShowProviderTransactions($value)
  * @method static EloquentBuilder|Organization whereUpdatedAt($value)
- * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
  * @method static EloquentBuilder|Organization whereWebsite($value)
  * @method static EloquentBuilder|Organization whereWebsitePublic($value)
  * @mixin \Eloquent
@@ -280,7 +273,7 @@ class Organization extends BaseModel
         'identity_address', 'name', 'iban', 'email', 'email_public',
         'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
-        'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
+        'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'allow_bi_connection',
@@ -307,7 +300,6 @@ class Organization extends BaseModel
         'is_validator'                              => 'boolean',
         'backoffice_available'                      => 'boolean',
         'manage_provider_products'                  => 'boolean',
-        'validator_auto_accept_funds'               => 'boolean',
         'reservations_budget_enabled'               => 'boolean',
         'reservations_subsidy_enabled'              => 'boolean',
         'reservations_auto_accept'                  => 'boolean',
@@ -318,7 +310,6 @@ class Organization extends BaseModel
         'allow_2fa_restrictions'                    => 'boolean',
         'allow_fund_request_record_edit'            => 'boolean',
         'allow_bi_connection'                       => 'boolean',
-        'pre_approve_external_funds'                => 'boolean',
         'bsn_enabled'                               => 'boolean',
         'auth_2fa_remember_ip'                      => 'boolean',
         'auth_2fa_funds_remember_ip'                => 'boolean',
@@ -560,36 +551,6 @@ class Organization extends BaseModel
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
-    public function validated_organizations(): HasMany
-    {
-        return $this->hasMany(OrganizationValidator::class, 'validator_organization_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function organization_validators(): HasMany {
-        return $this->hasMany(OrganizationValidator::class);
-    }
-
-    /**
-     * @return BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function external_validators(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            self::class,
-            OrganizationValidator::class,
-            'organization_id',
-            'validator_organization_id'
-        );
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
-     */
     public function offices(): HasMany
     {
         return $this->hasMany(Office::class);
@@ -699,10 +660,9 @@ class Organization extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
-     * @noinspection PhpUnused
+     * @return HasOneThrough
      */
-    public function last_employee_session(): HasManyThrough
+    public function last_employee_session(): HasOneThrough
     {
         return $this->hasOneThrough(
             Session::class,
@@ -972,27 +932,6 @@ class Organization extends BaseModel
                 });
             })->orWhere('identity_address', $identityAddress);
         });
-    }
-
-    /**
-     * @param Organization $validatorOrganization
-     */
-    public function detachExternalValidator(
-        Organization $validatorOrganization
-    ): void {
-        /** @var Fund[] $fundsAffected */
-        $fundsAffected = FundQuery::whereExternalValidatorFilter(
-            $this->funds()->getQuery(),
-            $validatorOrganization->id
-        )->get();
-
-        foreach ($fundsAffected as $fund) {
-            $fund->detachExternalValidator($validatorOrganization);
-        }
-
-        $this->organization_validators()->where([
-            'validator_organization_id' => $validatorOrganization->id,
-        ])->delete();
     }
 
     /**

@@ -8,20 +8,17 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->dateTime('expire_at')->nullable()->default(null)->change();
-        });
+        //
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down(): void {}
+    public function down(): void
+    {
+        //
+    }
 };

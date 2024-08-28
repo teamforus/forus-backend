@@ -122,8 +122,6 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->registerPolicies();
-
         // add custom guard provider
         Auth::provider('identity_service', function () {
             return new ServiceIdentityProvider();

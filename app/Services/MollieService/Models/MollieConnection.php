@@ -126,8 +126,8 @@ class MollieConnection extends Model
     /**
      * @var string[]
      */
-    protected $dates = [
-        'completed_at',
+    protected $casts = [
+        'completed_at' => 'datetime',
     ];
 
     /**

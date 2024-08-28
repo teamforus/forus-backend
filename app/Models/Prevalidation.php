@@ -77,8 +77,8 @@ class Prevalidation extends BaseModel
     /**
      * @var string[]
      */
-    protected $dates = [
-        'validated_at'
+    protected $casts = [
+        'validated_at' => 'datetime',
     ];
 
     /**
@@ -190,7 +190,9 @@ class Prevalidation extends BaseModel
 
         // list of identities who can validate records for funds where you can manage funds
         $relatedIdentities = Identity::whereHas('employees', function(Builder $builder) use ($identity_address) {
-            EmployeeQuery::whereHasPermissionFilter($builder, 'validate_records');
+            EmployeeQuery::whereHasPermissionFilter($builder, [
+                Permission::VALIDATE_RECORDS,
+            ]);
 
             $builder->whereHas('organization', function(Builder $builder) use ($identity_address) {
                 OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');

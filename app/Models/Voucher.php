@@ -227,11 +227,8 @@ class Voucher extends BaseModel
      *
      * @var array
      */
-    protected $dates = [
-        'expire_at',
-    ];
-
     protected $casts = [
+        'expire_at' => 'datetime',
         'returnable' => 'boolean',
     ];
 

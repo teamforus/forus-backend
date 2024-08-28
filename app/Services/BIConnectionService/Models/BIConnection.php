@@ -76,14 +76,8 @@ class BIConnection extends Model
         'ips' => 'array',
         'enabled' => 'boolean',
         'data_types' => 'array',
+        'expire_at' => 'datetime',
         'expiration_period' => 'integer',
-    ];
-
-    /**
-     * @var string[]
-     */
-    protected $dates = [
-        'expire_at',
     ];
 
     /**

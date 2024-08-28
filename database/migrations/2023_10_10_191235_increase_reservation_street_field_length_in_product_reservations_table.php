@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('product_reservations', function (Blueprint $table) {
-            $table->string('city', 100)->change();
+            $table->string('city', 100)->nullable()->change();
         });
     }
 
@@ -26,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('product_reservations', function (Blueprint $table) {
-            $table->string('city', 50)->change();
+            $table->string('city', 50)->nullable()->change();
         });
     }
 };

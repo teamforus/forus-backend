@@ -8,6 +8,7 @@ use App\Services\Forus\Session\Models\SessionRequest;
 use App\Services\Forus\Session\Services\Browser;
 use App\Services\Forus\Session\Services\GeoIp;
 use App\Services\Forus\Session\SessionService;
+use Illuminate\Http\Request;
 
 /**
  * @property Session $resource
@@ -17,10 +18,10 @@ class SessionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $session = $this->resource;
         $sessionStartTime = $session->last_request->created_at;
@@ -50,7 +51,7 @@ class SessionResource extends BaseJsonResource
     private function requestData(SessionRequest $request): array
     {
         if (Browser::isEnabled()) {
-            $agentData = Browser::getAgentData($request->user_agent);
+            $agentData = Browser::getAgentData($request->user_agent ?: '');
             $agentDataArray = $agentData->isDetected() ? $agentData->toArray() : null;
         } else {
             $agentData = null;

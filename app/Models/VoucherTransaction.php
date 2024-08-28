@@ -191,8 +191,9 @@ class VoucherTransaction extends BaseModel
         'voucher_id', 'last_attempt_at', 'attempts', 'notes',
     ];
 
-    protected $dates = [
-        'transfer_at', 'non_cancelable_at',
+    protected $casts = [
+        'transfer_at' => 'datetime',
+        'non_cancelable_at' => 'datetime',
     ];
 
     /**

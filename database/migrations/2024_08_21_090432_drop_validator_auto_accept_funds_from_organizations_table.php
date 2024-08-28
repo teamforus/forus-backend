@@ -8,25 +8,21 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up(): void
     {
-        Schema::table('fund_configs', function(Blueprint $table) {
-            $table->string('backoffice_certificate', 8000)->nullable()->change();
+        Schema::table('organizations', function(Blueprint $table) {
+            $table->dropColumn('validator_auto_accept_funds');
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
     public function down(): void
     {
-        Schema::table('fund_configs', function(Blueprint $table) {
-            $table->string('backoffice_certificate', 2000)->nullable()->change();
+        Schema::table('organizations', function(Blueprint $table) {
+            $table->boolean('validator_auto_accept_funds')->default(false)->after('is_validator');
         });
     }
 };

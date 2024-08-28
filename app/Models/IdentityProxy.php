@@ -88,8 +88,8 @@ class IdentityProxy extends Model
     /**
      * @var string[]
      */
-    protected $dates = [
-        'activated_at',
+    protected $casts = [
+        'activated_at' => 'datetime',
     ];
 
     /**
