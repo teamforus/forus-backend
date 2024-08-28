@@ -242,26 +242,6 @@ class TestData
     }
 
     /**
-     * @param string $identity_address
-     * @param int|null $count
-     * @throws \Throwable
-     */
-    public function makeExternalValidators(string $identity_address, ?int $count = null): void
-    {
-        $count = $count ?: $this->config('validators_count');
-        $organizations = $this->makeOrganizations("Validator", $identity_address, $count);
-
-        foreach ($organizations as $key => $organization) {
-            $this->makeOffices($organization, random_int(1, 2));
-
-            $organization->update([
-                'is_validator' => true,
-                'validator_auto_accept_funds' => $key <= ($this->config('validators_count') / 2),
-            ]);
-        }
-    }
-
-    /**
      * @param Identity $identity
      * @return void
      * @throws \Exception
