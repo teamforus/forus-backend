@@ -77,8 +77,8 @@ class Prevalidation extends BaseModel
     /**
      * @var string[]
      */
-    protected $dates = [
-        'validated_at'
+    protected $casts = [
+        'validated_at' => 'datetime',
     ];
 
     /**

@@ -22,13 +22,12 @@ use Mews\Purifier\Facades\Purifier;
  *
  * @property int $id
  * @property int|null $event_log_id
- * @property string|null $from_name
  * @property string|null $system_notification_key
+ * @property string|null $from_name
  * @property string|null $from_address
  * @property string|null $to_name
  * @property string|null $to_address
  * @property string|null $subject
- * @property string|null $body
  * @property string|null $content
  * @property string|null $headers
  * @property string|null $mailable
@@ -40,7 +39,6 @@ use Mews\Purifier\Facades\Purifier;
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog query()
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereBody($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereContent($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereEventLogId($value)

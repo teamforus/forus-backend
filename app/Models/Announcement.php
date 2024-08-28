@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent $announceable
+ * @property-read Model|\Eloquent|null $announceable
  * @property-read string $description_html
  * @method static Builder|Announcement newModelQuery()
  * @method static Builder|Announcement newQuery()
@@ -68,14 +68,8 @@ class Announcement extends Model
      */
     protected $casts = [
         'active' => 'boolean',
+        'expire_at' => 'datetime',
         'dismissible' => 'boolean',
-    ];
-
-    /**
-     * @var string[]
-     */
-    protected $dates = [
-        'expire_at',
     ];
 
     /**

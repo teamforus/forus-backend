@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->text('backoffice_certificate')->change();
+            $table->text('backoffice_certificate')->nullable()->change();
             $table->text('backoffice_client_cert')->change();
             $table->text('backoffice_client_cert_key')->change();
         });

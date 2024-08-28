@@ -48,8 +48,8 @@ jobs:
 
       - name: --- RUN UNIT TESTS ----
         working-directory: forus-backend
-        run: docker compose exec -T app bash -c "./vendor/bin/phpunit --debug --verbose --testdox tests/Unit/."
+        run: docker compose exec -T app bash -c "./vendor/bin/phpunit --debug --testdox tests/Unit/."
 
       - name: --- RUN FEATURE TESTS ----
         working-directory: forus-backend
-        run: docker compose exec -T app bash -c "./vendor/bin/phpunit --debug --verbose --testdox tests/Feature/."
+        run: docker compose exec -T app bash -c "./vendor/bin/phpunit --debug --testdox tests/Feature/."

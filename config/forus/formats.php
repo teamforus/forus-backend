@@ -1,12 +1,12 @@
 <?php
 
 return [
-    'short_date' => 'd M, Y',
-    'short_date_time' => 'H:i - d M, Y',
+    'short_date' => 'DD MMM, YYYY',
+    'short_date_time' => 'HH:mm - DD MMM, YYYY',
 
-    'short_date_locale' => '%-d %b, %Y',
-    'short_date_time_locale' => '%H:%M - %-d %b, %Y',
+    'short_date_locale' => 'D MMM, YYYY',
+    'short_date_time_locale' => 'HH:mm - D MMM, YYYY',
 
-    'long_date_locale' => '%A %-d %B %Y',
-    'long_date_time_locale' => '%H:%M - %A, %-d %b %Y',
+    'long_date_locale' => 'dddd D MMMM YYYY',
+    'long_date_time_locale' => 'HH:mm - dddd, D MMM YYYY',
 ];
