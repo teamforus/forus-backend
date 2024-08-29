@@ -427,6 +427,15 @@ class VoucherTransaction extends BaseModel
         $data = $data->map(fn (VoucherTransaction $transaction) => array_only([
             'id' => $transaction->id,
             'amount' => currency_format($transaction->amount),
+            'method' => $transaction->product_reservation?->amount_extra > 0
+                ? 'iDeal + Tegoed'
+                : 'Tegoed',
+            'branch_name' => $transaction->branch_name,
+            'branch_id' => $transaction->branch_id,
+            'branch_number' => $transaction->branch_number,
+            'amount_extra' => $transaction->product_reservation?->amount_extra > 0 ?
+                currency_format($transaction->product_reservation?->amount_extra)
+                : '',
             'date_transaction' => format_datetime_locale($transaction->created_at),
             'date_payment' => format_datetime_locale($transaction->payment_time),
             'fund_name' => $transaction->voucher->fund->name,

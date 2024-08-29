@@ -202,7 +202,7 @@ class ImplementationPage extends BaseModel
      */
     public function blocks(): HasMany
     {
-        return $this->hasMany(ImplementationBlock::class);
+        return $this->hasMany(ImplementationBlock::class)->orderBy('order');
     }
 
     /**
@@ -219,12 +219,12 @@ class ImplementationPage extends BaseModel
         $block_ids = array_filter(Arr::pluck($blocks, 'id'));
         $this->blocks()->whereNotIn('id', $block_ids)->delete();
 
-        foreach ($blocks as $block) {
-            $blockData = Arr::only($block, [
+        foreach ($blocks as $order => $block) {
+            $blockData = array_merge(Arr::only($block, [
                 'type', 'key', 'media_uid', 'label', 'title', 'description',
                 'button_enabled', 'button_text', 'button_link', 'button_target_blank',
                 'button_link_label',
-            ]);
+            ]), compact('order'));
 
             /** @var ImplementationBLock $block */
             if ($block = $this->blocks()->find($block['id'] ?? null)) {

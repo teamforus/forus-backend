@@ -4,6 +4,8 @@ namespace App\Http\Requests\Api\Identity;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
+use App\Models\Permission;
+use Illuminate\Validation\Rule;
 
 class ApproveRecordValidationRequest extends BaseFormRequest
 {
@@ -24,14 +26,14 @@ class ApproveRecordValidationRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $organizationsAvailable = Organization::queryByIdentityPermissions(
-            $this->auth_address(), 'validate_records'
-        )->pluck('id');
+        $organizationsAvailable = Organization::queryByIdentityPermissions($this->auth_address(), [
+            Permission::VALIDATE_RECORDS,
+        ]);
 
         return [
             'organization_id' => [
                 'nullable',
-                'in:' . $organizationsAvailable->implode(',')
+                Rule::in($organizationsAvailable->pluck('id')->toArray()),
             ],
         ];
     }

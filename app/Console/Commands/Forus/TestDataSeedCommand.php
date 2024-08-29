@@ -59,11 +59,6 @@ class TestDataSeedCommand extends BaseCommand
         $testData->success("✓ Providers created!");
         $testData->separator();
 
-        $testData->info("⇾ Making validators!");
-        $testData->makeExternalValidators($baseIdentity->address);
-        $testData->success("✓ Validators created!");
-        $testData->separator();
-
         $testData->info("⇾ Applying providers to funds!");
         $testData->applyFunds($baseIdentity);
         $testData->success("✓ Providers applied to funds!");

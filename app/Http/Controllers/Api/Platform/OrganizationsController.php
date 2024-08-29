@@ -163,7 +163,6 @@ class OrganizationsController extends Controller
 
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'is_sponsor', 'is_provider', 'is_validator',
-            'validator_auto_accept_funds'
         ])));
 
         return new OrganizationResource($organization);

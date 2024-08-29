@@ -28,10 +28,10 @@ class FundRequestRecordsController extends Controller
     public function index(
         IndexFundRequestRecordsRequest $request,
         Organization $organization,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
     ): AnonymousResourceCollection {
-        $this->authorize('viewAnyValidator', [
-            FundRequestRecord::class, $fundRequest, $organization
+        $this->authorize('viewAnyAsValidator', [
+            FundRequestRecord::class, $fundRequest, $organization,
         ]);
 
         return ValidatorFundRequestRecordResource::queryCollection($fundRequest->records(), $request);
@@ -55,10 +55,8 @@ class FundRequestRecordsController extends Controller
         $this->authorize('addPartnerBsnNumber', [$fundRequest, $organization]);
 
         /** @var FundRequestRecord $fundRequestRecord */
-        $fundRequestRecord = $fundRequest->records()->create(array_merge($request->only([
+        $fundRequestRecord = $fundRequest->records()->create($request->only([
             'value', 'record_type_key',
-        ]), [
-            'employee_id' => $request->employee($organization)->id,
         ]));
 
         $fundRequestRecord->approve();

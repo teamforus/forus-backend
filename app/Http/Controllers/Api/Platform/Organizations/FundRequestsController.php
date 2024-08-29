@@ -42,7 +42,7 @@ class FundRequestsController extends Controller
      */
     public function index(
         IndexFundRequestsRequest $request,
-        Organization $organization
+        Organization $organization,
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyAsValidator', [FundRequest::class, $organization]);
 
@@ -63,7 +63,7 @@ class FundRequestsController extends Controller
      */
     public function show(
         Organization $organization,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
     ): ValidatorFundRequestResource {
         $this->authorize('viewAsValidator', [$fundRequest, $organization]);
 
@@ -116,22 +116,18 @@ class FundRequestsController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function approve(
-        BaseFormRequest $request,
         Organization $organization,
         FundRequest $fundRequest
     ): ValidatorFundRequestResource {
         $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
 
-        return ValidatorFundRequestResource::create($fundRequest->approve(
-            $request->employee($organization)
-        ));
+        return ValidatorFundRequestResource::create($fundRequest->approve());
     }
 
     /**
@@ -151,8 +147,7 @@ class FundRequestsController extends Controller
         $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
 
         return ValidatorFundRequestResource::create($fundRequest->decline(
-            $request->employee($organization),
-            $request->input('note')
+            $request->input('note'),
         ));
     }
 
@@ -174,16 +169,14 @@ class FundRequestsController extends Controller
         $this->authorize('disregard', [$fundRequest, $organization]);
 
         return ValidatorFundRequestResource::create($fundRequest->disregard(
-            $request->employee($organization),
             $request->input('note'),
-            $request->input('notify')
+            $request->input('notify'),
         ));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
@@ -191,15 +184,12 @@ class FundRequestsController extends Controller
      * @noinspection PhpUnused
      */
     public function disregardUndo(
-        BaseFormRequest $request,
         Organization $organization,
         FundRequest $fundRequest
     ): ValidatorFundRequestResource {
         $this->authorize('disregardUndo', [$fundRequest, $organization]);
 
-        return ValidatorFundRequestResource::create($fundRequest->disregardUndo(
-            $request->employee($organization)
-        ));
+        return ValidatorFundRequestResource::create($fundRequest->disregardUndo());
     }
 
     /**
@@ -240,7 +230,7 @@ class FundRequestsController extends Controller
         $this->authorize('assignEmployeeAsSupervisor', [$fundRequest, $organization]);
 
         /** @var Employee $employee */
-        $employee = $organization->employees()->find($request->post('employee_id'));
+        $employee = $organization->employees()->find($request->input('employee_id'));
 
         return ValidatorFundRequestResource::create($fundRequest->assignEmployee(
             $employee,
@@ -259,13 +249,13 @@ class FundRequestsController extends Controller
     public function resignEmployee(
         BaseFormRequest $request,
         Organization $organization,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
     ): ValidatorFundRequestResource {
         $this->authorize('resignEmployeeAsSupervisor', [$fundRequest, $organization]);
 
-        return ValidatorFundRequestResource::create($fundRequest->resignAllEmployees(
-            $organization,
-            $request->employee($organization)
+        return ValidatorFundRequestResource::create($fundRequest->resignEmployee(
+            $fundRequest->employee,
+            $request->employee($organization),
         ));
     }
 
