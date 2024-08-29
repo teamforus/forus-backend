@@ -133,8 +133,8 @@ class OrganizationResource extends JsonResource
         return $request->identity() && $organization->isEmployee($request->identity(), false) ? [
             'has_bank_connection' => !empty($organization->bank_connection_active),
             ...$organization->only([
-                'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
-                'allow_custom_fund_notifications', 'validator_auto_accept_funds',
+                'manage_provider_products', 'backoffice_available',
+                'reservations_auto_accept', 'allow_custom_fund_notifications',
                 'reservations_budget_enabled', 'reservations_subsidy_enabled',
                 'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled',
                 'allow_batch_reservations', 'allow_budget_fund_limits',

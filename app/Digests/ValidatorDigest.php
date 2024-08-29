@@ -9,6 +9,7 @@ use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -24,8 +25,9 @@ class ValidatorDigest extends BaseOrganizationDigest
 
     protected string $requiredRelation = "funds";
     protected string $digestKey = "validator";
+
     protected array $employeePermissions = [
-        'validate_records'
+        Permission::VALIDATE_RECORDS,
     ];
 
     /**

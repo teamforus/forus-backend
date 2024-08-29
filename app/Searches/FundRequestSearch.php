@@ -10,7 +10,6 @@ use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\IdentityEmail;
 use App\Scopes\Builders\FundRequestQuery;
-use App\Scopes\Builders\FundRequestRecordQuery;
 use Illuminate\Database\Eloquent\Builder;
 
 class FundRequestSearch extends BaseSearch
@@ -65,19 +64,15 @@ class FundRequestSearch extends BaseSearch
         }
 
         if ($employee_id = $this->getFilter('employee_id')) {
-            $employee = Employee::find($employee_id);
-
-            $builder->whereHas('records', static function(Builder $builder) use ($employee) {
-                FundRequestRecordQuery::whereEmployeeIsAssignedValidator($builder, $employee);
-            });
+            $builder->where('employee_id', $employee_id);
         }
 
         if ($this->hasFilter('assigned') && $this->getFilter('assigned')) {
-            $builder->whereHas('records.employee');
+            $builder->whereHas('employee');
         }
 
         if ($this->hasFilter('assigned') && !$this->getFilter('assigned')) {
-            $builder->whereDoesntHave('records.employee');
+            $builder->whereDoesntHave('employee');
         }
 
         return $this->order($builder);

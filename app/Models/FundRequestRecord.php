@@ -22,10 +22,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $value
  * @property string $note
  * @property string|null $state
- * @property int|null $employee_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Employee|null $employee
  * @property-read Collection|\App\Services\FileService\Models\File[] $files
  * @property-read int|null $files_count
  * @property-read \App\Models\FundCriterion|null $fund_criterion
@@ -39,7 +37,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord query()
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereFundCriterionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereFundRequestId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereId($value)
@@ -59,8 +56,6 @@ class FundRequestRecord extends BaseModel
     public const STATE_DECLINED = 'declined';
     public const STATE_DISREGARDED = 'disregarded';
 
-    public const EVENT_ASSIGNED = 'assigned';
-    public const EVENT_RESIGNED = 'resigned';
     public const EVENT_APPROVED = 'approved';
     public const EVENT_DECLINED = 'declined';
     public const EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
@@ -69,8 +64,6 @@ class FundRequestRecord extends BaseModel
 
     public const EVENTS = [
         self::EVENT_UPDATED,
-        self::EVENT_ASSIGNED,
-        self::EVENT_RESIGNED,
         self::EVENT_APPROVED,
         self::EVENT_DECLINED,
         self::EVENT_CLARIFICATION_REQUESTED,
@@ -85,8 +78,7 @@ class FundRequestRecord extends BaseModel
     ];
 
     protected $fillable = [
-        'value', 'record_type_key', 'fund_request_id', 'state', 'note',
-        'employee_id', 'fund_criterion_id',
+        'value', 'record_type_key', 'fund_request_id', 'state', 'note', 'fund_criterion_id',
     ];
 
     /**
@@ -121,14 +113,6 @@ class FundRequestRecord extends BaseModel
     public function fund_request_clarifications(): HasMany
     {
         return $this->hasMany(FundRequestClarification::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function employee(): BelongsTo
-    {
-        return $this->belongsTo(Employee::class);
     }
 
     /**
@@ -244,17 +228,12 @@ class FundRequestRecord extends BaseModel
      * @param string $value
      * @return FundRequestRecord
      */
-    private function applyRecordAndValidation(
-        string $recordTypeKey,
-        string $value
-    ): FundRequestRecord {
-        $fundRequest = $this->fund_request;
-        $requestIdentity = $fundRequest->identity;
-
-        $requestIdentity
+    private function applyRecordAndValidation(string $recordTypeKey, string $value): FundRequestRecord
+    {
+        $this->fund_request->identity
             ->makeRecord(RecordType::findByKey($recordTypeKey), $value)
             ->makeValidationRequest()
-            ->approve($this->employee->identity, $fundRequest->fund->organization);
+            ->approve($this->fund_request->employee->identity, $this->fund_request->fund->organization);
 
         return $this;
     }

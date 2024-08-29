@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Config;
  * @property string|null $button_link
  * @property string $button_link_label
  * @property bool $button_target_blank
+ * @property int $order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $description_html
@@ -46,6 +47,7 @@ use Illuminate\Support\Facades\Config;
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereImplementationPageId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereLabel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationBlock whereUpdatedAt($value)
@@ -66,7 +68,7 @@ class ImplementationBlock extends Model
     protected $fillable = [
         'implementation_page_id', 'key', 'type', 'label', 'title', 'description',
         'button_enabled', 'button_text', 'button_link', 'button_target_blank',
-        'button_link_label',
+        'button_link_label', 'order',
     ];
 
     /**

@@ -140,6 +140,7 @@ class EventLogService implements IEventLogService
             'id' => $fundRequest->id,
             'note' => $fundRequest->note,
             'state' => $fundRequest->state,
+            'employee_id' => $fundRequest->employee_id,
             'disregard_note' => $fundRequest->disregard_note,
             'disregard_notify' => $fundRequest->disregard_notify,
             'created_date' => $fundRequest->created_at->format('Y-m-d'),
@@ -158,7 +159,6 @@ class EventLogService implements IEventLogService
             'note' => $fundRequestRecord->note,
             'value' => $fundRequestRecord->value,
             'state' => $fundRequestRecord->state,
-            'employee_id' => $fundRequestRecord->employee_id,
             'record_type_key' => $fundRequestRecord->record_type_key,
             'fund_criterion_id' => $fundRequestRecord->fund_criterion_id,
         ], 'fund_request_record_');
