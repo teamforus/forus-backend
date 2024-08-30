@@ -948,17 +948,18 @@ class Fund extends BaseModel
     ): Record|Model|null {
         $fund = $this;
         $daysTrusted = $this->getTrustedDays($record_type);
+        $startDate = $this->fund_config?->record_validity_start_date;
 
         $builder = Record::search(Identity::findByAddress($identity_address)->records(), [
             'type' => $record_type,
-        ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund) {
-            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted);
+        ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund, $startDate) {
+            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
             RecordValidationQuery::whereTrustedByQuery($query, $fund);
         });
 
-        $validationSubQuery = RecordValidation::where(function(Builder $query) use ($daysTrusted, $fund) {
+        $validationSubQuery = RecordValidation::where(function(Builder $query) use ($daysTrusted, $fund, $startDate) {
             $query->whereColumn('records.id', '=', 'record_validations.record_id');
-            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted);
+            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
             RecordValidationQuery::whereTrustedByQuery($query, $fund);
         });
 
