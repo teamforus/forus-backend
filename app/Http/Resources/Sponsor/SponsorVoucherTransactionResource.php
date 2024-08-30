@@ -88,14 +88,10 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
 
         if ($transaction->reimbursement_id) {
             $type = 'reimbursement';
-        }
-
-        if ($transaction->product_id) {
+        } elseif ($transaction->product_id) {
             $type = $transaction->product_reservation ? 'product_reservation' : 'product_voucher';
             $params['product'] = $transaction->product?->name;
-        }
-
-        if ($transaction->initiator === $transaction::INITIATOR_SPONSOR) {
+        } elseif ($transaction->initiator === $transaction::INITIATOR_SPONSOR) {
             $type = match ($transaction->target) {
                 $transaction::TARGET_PROVIDER => 'direct_provider',
                 $transaction::TARGET_IBAN => 'direct_iban',
