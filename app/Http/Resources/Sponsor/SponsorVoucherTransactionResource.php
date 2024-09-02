@@ -60,6 +60,7 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'non_cancelable_at_locale' => format_date_locale($transaction->non_cancelable_at),
             'bulk_state' => $transaction->voucher_transaction_bulk?->state,
             'bulk_state_locale' => $transaction->voucher_transaction_bulk?->state_locale,
+            'payment_type_locale' => $this->getPaymentTypeLocale($transaction),
         ], $this->timestamps($transaction, 'created_at', 'updated_at'));
     }
 
@@ -73,6 +74,34 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'iban_from' => $transaction->voucher->fund->organization->bank_connection_active->iban ?? null,
             'iban_to' => $transaction->getTargetIban(),
             'iban_to_name' => $transaction->getTargetName(),
+        ];
+    }
+
+    /**
+     * @param VoucherTransaction $transaction
+     * @return array
+     */
+    public function getPaymentTypeLocale(VoucherTransaction $transaction): array
+    {
+        $type = 'voucher_scan';
+        $params = [];
+
+        if ($transaction->reimbursement_id) {
+            $type = 'reimbursement';
+        } elseif ($transaction->product_id) {
+            $type = $transaction->product_reservation ? 'product_reservation' : 'product_voucher';
+            $params['product'] = $transaction->product?->name;
+        } elseif ($transaction->initiator === $transaction::INITIATOR_SPONSOR) {
+            $type = match ($transaction->target) {
+                $transaction::TARGET_PROVIDER => 'direct_provider',
+                $transaction::TARGET_IBAN => 'direct_iban',
+                $transaction::TARGET_TOP_UP => 'direct_top_up',
+            };
+        }
+
+        return [
+            'title' => trans("transaction.payment_type.$type.title", $params),
+            'subtitle' => trans("transaction.payment_type.$type.subtitle", $params),
         ];
     }
 }
