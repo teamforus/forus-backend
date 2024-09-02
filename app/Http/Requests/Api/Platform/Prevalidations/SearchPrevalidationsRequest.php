@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Prevalidations;
 
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Prevalidation;
 use Illuminate\Database\Query\Builder as QBuilder;
 use App\Http\Requests\BaseFormRequest;
@@ -33,7 +34,7 @@ class SearchPrevalidationsRequest extends BaseFormRequest
                 'nullable',
                 Rule::exists('funds', 'id')->where(function(QBuilder $builder) {
                     $builder->addWhereExistsQuery(Organization::queryByIdentityPermissions(
-                        $this->auth_address(), 'validate_records'
+                        $this->auth_address(), Permission::VALIDATE_RECORDS,
                     )->getQuery());
                 })
             ],

@@ -12,8 +12,6 @@ use App\Mail\Forus\FundStatisticsMail;
 use App\Models\Traits\HasFaq;
 use App\Models\Traits\HasTags;
 use App\Rules\FundRequests\BaseFundRequestRule;
-use App\Scopes\Builders\FundCriteriaQuery;
-use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\RecordValidationQuery;
@@ -850,7 +848,7 @@ class Fund extends BaseModel
             'organization_id',
             'id'
         )->whereHas('roles.permissions', static function(Builder $builder) {
-            $builder->where('key', 'validate_records');
+            $builder->where('key', Permission::VALIDATE_RECORDS);
         });
     }
 
@@ -868,7 +866,7 @@ class Fund extends BaseModel
             'organization_id',
             'id'
         )->whereHas('roles.permissions', static function(Builder $builder) {
-            $builder->where('key', 'manage_validators');
+            $builder->where('key', Permission::MANAGE_VALIDATORS);
         });
     }
 
@@ -928,46 +926,41 @@ class Fund extends BaseModel
     /**
      * @param string $identity_address
      * @param array $record_types
-     * @param FundCriterion|null $criterion
      * @return array|Record[]
      */
     public function getTrustedRecordOfTypes(
         string $identity_address,
         array $record_types,
-        FundCriterion $criterion = null,
     ): array {
         return array_combine($record_types, array_map(fn ($record_type) => $this->getTrustedRecordOfType(
             $identity_address,
             $record_type,
-            $criterion
         )?->value, $record_types));
     }
 
     /**
      * @param string $identity_address
      * @param string $record_type
-     * @param FundCriterion|null $criterion
      * @return Model|Record|null
      */
     public function getTrustedRecordOfType(
         string $identity_address,
         string $record_type,
-        FundCriterion $criterion = null,
     ): Record|Model|null {
         $fund = $this;
         $daysTrusted = $this->getTrustedDays($record_type);
 
         $builder = Record::search(Identity::findByAddress($identity_address)->records(), [
             'type' => $record_type,
-        ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund, $criterion) {
+        ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund) {
             RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted);
-            RecordValidationQuery::whereTrustedByQuery($query, $fund, $criterion);
+            RecordValidationQuery::whereTrustedByQuery($query, $fund);
         });
 
-        $validationSubQuery = RecordValidation::where(function(Builder $query) use ($daysTrusted, $fund, $criterion) {
+        $validationSubQuery = RecordValidation::where(function(Builder $query) use ($daysTrusted, $fund) {
             $query->whereColumn('records.id', '=', 'record_validations.record_id');
             RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted);
-            RecordValidationQuery::whereTrustedByQuery($query, $fund, $criterion);
+            RecordValidationQuery::whereTrustedByQuery($query, $fund);
         });
 
         $builder->addSelect([
@@ -1032,7 +1025,7 @@ class Fund extends BaseModel
                     } else {
                         $record = $this->getTrustedRecordOfType(
                             $identityAddress,
-                            $formula->record_type_key
+                            $formula->record_type_key,
                         );
 
                         $value = $record?->value;
@@ -1064,7 +1057,7 @@ class Fund extends BaseModel
             } else {
                 $record = $this->getTrustedRecordOfType(
                     $identityAddress,
-                    $multiplier->record_type_key
+                    $multiplier->record_type_key,
                 );
 
                 $value = (int) ($record ? $record->value: 1);
@@ -1349,31 +1342,11 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param FundCriterion|null $fundCriterion
      * @return array
      */
-    public function validatorEmployees(?FundCriterion $fundCriterion = null): array
+    public function validatorEmployees(): array
     {
-        $employees = $this->employees_validators()->pluck('employees.identity_address');
-        $externalEmployees = [];
-
-        /** @var Organization[] $external_validators */
-        $external_validators = $fundCriterion ? (
-            $this->organization->external_validators()->whereIn(
-                'organizations.id',
-                $fundCriterion->external_validator_organizations->pluck(
-                    'validator_organization_id'
-                )->toArray()
-            )->get()
-        ) : $this->organization->external_validators;
-
-        foreach ($external_validators as $external_validator) {
-            $externalEmployees[] = $external_validator->employeesWithPermissions(
-                'validate_records'
-            )->pluck('identity_address')->toArray();
-        }
-
-        return array_merge($employees->toArray(), array_flatten($externalEmployees, 1));
+        return $this->employees_validators()->pluck('employees.identity_address')->toArray();
     }
 
     /**
@@ -1443,8 +1416,6 @@ class Fund extends BaseModel
      */
     protected function syncCriterion(array $criterion, bool $textsOnly = false): void
     {
-        /** @var FundCriterion $fundCriterion */
-        $validators = $criterion['validators'] ?? null;
         $fundCriterion = $this->criteria()->find($criterion['id'] ?? null);
 
         if (!$fundCriterion && !$this->criteriaIsEditable()) {
@@ -1467,52 +1438,8 @@ class Fund extends BaseModel
                 'title', 'description',
             ]): $data_criterion);
         } elseif (!$textsOnly) {
-            $fundCriterion = $this->criteria()->create($data_criterion);
+            $this->criteria()->create($data_criterion);
         }
-
-        if (!$textsOnly && is_array($validators)) {
-            $this->syncCriterionValidators($fundCriterion, $validators);
-        }
-    }
-
-    /**
-     * Update fund criterion validators
-     * @param FundCriterion $criterion
-     * @param array $externalValidators
-     */
-    protected function syncCriterionValidators(
-        FundCriterion $criterion,
-        array $externalValidators,
-    ): void {
-        $fund = $this;
-        $currentValidators = [];
-
-        /** @var OrganizationValidator[] $validators */
-        $validators = array_map(static function($organization_validator_id) use ($fund) {
-            return $fund->organization->organization_validators()->where([
-                'organization_validators.id' => $organization_validator_id
-            ])->first();
-        }, array_unique(array_values($externalValidators)));
-
-        foreach ($validators as $organizationValidator) {
-            $currentValidators[] = $criterion->fund_criterion_validators()->firstOrCreate([
-                'organization_validator_id' => $organizationValidator->id
-            ], [
-                'accepted' => $organizationValidator->validator_organization
-                    ->validator_auto_accept_funds
-            ])->getKey();
-        }
-
-        $criterionValidators = $criterion->fund_criterion_validators()->whereNotIn(
-            'fund_criterion_validators.id', $currentValidators
-        )->get();
-
-        $this->resignCriterionValidators($criterionValidators);
-
-        $criterion->fund_criterion_validators()->whereIn(
-            'fund_criterion_validators.id',
-            $criterionValidators->pluck('id')->toArray()
-        )->delete();
     }
 
     /**
@@ -1525,38 +1452,14 @@ class Fund extends BaseModel
         FundCriterion $criterion,
     ): bool {
         $record_type = $criterion->record_type;
-        $value = $this->getTrustedRecordOfType($identity->address, $record_type->key, $criterion)?->value;
+        $value = $this->getTrustedRecordOfType($identity->address, $record_type->key)?->value;
 
         $records = $criterion->fund_criterion_rules->pluck('record_type_key')->unique()->toArray();
-        $recordsValues = $this->getTrustedRecordOfTypes($identity->address, $records, $criterion);
+        $recordsValues = $this->getTrustedRecordOfTypes($identity->address, $records);
 
         return
             $criterion->isExcludedByRules($recordsValues) ||
             BaseFundRequestRule::validateRecordValue($criterion, $value)->passes();
-    }
-
-    /**
-     * Resign fund request record employees be criterion validator
-     * @param FundCriterionValidator[]|Collection $criterionValidators
-     */
-    protected function resignCriterionValidators(Collection|Arrayable $criterionValidators): void
-    {
-        foreach ($criterionValidators as $criterionValidator) {
-            $validator_organization = $criterionValidator
-                ->external_validator->validator_organization;
-
-            foreach ($validator_organization->employees as $employee) {
-                /** @var FundRequest[] $fund_requests */
-                $fund_requests = $this->fund_requests()->whereIn('state', [
-                    FundRequest::STATE_PENDING,
-                    FundRequest::STATE_APPROVED_PARTLY,
-                ])->get();
-
-                foreach ($fund_requests as $fund_request) {
-                    $fund_request->resignEmployee($employee, $criterionValidator->fund_criterion);
-                }
-            }
-        }
     }
 
     /**
@@ -1644,46 +1547,6 @@ class Fund extends BaseModel
     public function criteriaIsEditable(): bool {
         return ($this->state === self::STATE_WAITING) || (
             ($this->state === self::STATE_ACTIVE) && $this->criteria_editable_after_start);
-    }
-
-    /**
-     * @param Organization $validatorOrganization
-     */
-    public function detachExternalValidator(
-        Organization $validatorOrganization
-    ): void {
-        /** @var FundCriterion[] $fundCriteria */
-        $fundCriteria = FundCriteriaQuery::whereHasExternalValidatorFilter(
-            $this->criteria()->getQuery(),
-            $validatorOrganization->id
-        )->get();
-
-        // delete validator organization from all fund criteria
-        foreach ($fundCriteria as $criterion) {
-            FundCriteriaValidatorQuery::whereHasExternalValidatorFilter(
-                $criterion->fund_criterion_validators()->getQuery(),
-                $validatorOrganization->id
-            )->delete();
-        }
-
-        /**
-          All pending fund requests which have records assigned to external validator employees
-         * @var FundRequest[] $fundRequests
-         */
-        $fundRequests = FundRequest::whereHas('records.employee', static function(
-            Builder $builder
-        ) use ($validatorOrganization) {
-            $builder->where('organization_id', $validatorOrganization->id);
-        })->where('state', [
-            FundRequest::STATE_PENDING,
-            FundRequest::STATE_APPROVED_PARTLY
-        ])->get();
-
-        foreach ($fundRequests as $fundRequest) {
-            foreach ($validatorOrganization->employees as $employee) {
-                $fundRequest->resignEmployee($employee);
-            }
-        }
     }
 
     /**

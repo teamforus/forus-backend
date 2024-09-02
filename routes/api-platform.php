@@ -715,17 +715,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ->parameter('bank-connections', 'bankConnection')
         ->only('index', 'show', 'store', 'update');
 
-    $router->resource(
-        'organizations.validators',
-        "Api\Platform\Organizations\ValidatorOrganizationsController", [
-        'only' => [
-            'index', 'show', 'store', 'destroy'
-        ],
-        'parameters' => [
-            'validators' => 'validator_organization'
-        ]
-    ]);
-
     $router->get(
         'organizations/{organization}/employees/export',
         'Api\Platform\Organizations\EmployeesController@export'

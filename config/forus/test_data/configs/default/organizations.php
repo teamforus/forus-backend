@@ -33,7 +33,6 @@ return [
             'is_sponsor' => true,
             'is_provider' => true,
             'is_validator' => true,
-            'validator_auto_accept_funds' => false,
             'reservations_budget_enabled' => true,
             'reservations_subsidy_enabled' => true,
             'reservations_auto_accept' => false,

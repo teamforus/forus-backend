@@ -15,7 +15,6 @@ class FundProviderResource extends BaseJsonResource
         'fund.tags',
         'fund.logo.presets',
         'fund.criteria.fund',
-        'fund.criteria.fund_criterion_validators.external_validator',
         'fund.organization.logo.presets',
         'fund.organization.employees',
         'fund.organization.employees.roles.permissions',

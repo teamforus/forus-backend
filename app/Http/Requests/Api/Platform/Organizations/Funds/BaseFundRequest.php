@@ -76,7 +76,6 @@ abstract class BaseFundRequest extends BaseFormRequest
     {
         $organization = $this->organization;
         $criteriaEditable = Config::get('forus.features.dashboard.organizations.funds.criteria');
-        $validators = $organization->organization_validators()->pluck('id');
 
         return $criteriaEditable ? [
             'criteria' => 'nullable|array',
@@ -95,9 +94,6 @@ abstract class BaseFundRequest extends BaseFormRequest
 
             'criteria.*.title' => 'nullable|string|max:100',
             'criteria.*.description' => 'nullable|string|max:4000',
-
-            'criteria.*.validators' => 'nullable|array',
-            'criteria.*.validators.*' => Rule::in($validators->toArray())
         ] : [];
     }
 

@@ -27,7 +27,6 @@ class UpdateOrganizationRolesRequest extends FormRequest
             'is_sponsor' => 'nullable|boolean',
             'is_provider' => 'nullable|boolean',
             'is_validator' => 'nullable|boolean',
-            'validator_auto_accept_funds' => 'nullable|boolean',
         ];
     }
 }
