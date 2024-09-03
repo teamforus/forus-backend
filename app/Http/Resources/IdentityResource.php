@@ -41,7 +41,7 @@ class IdentityResource extends BaseJsonResource
         if ($request->auth_address() === $identity->address) {
             return [
                 'bsn' => !empty($bsnRecord),
-                'bsn_time' => $bsnRecord ? now()->diffInSeconds($bsnRecord->created_at) : null,
+                'bsn_time' => $bsnRecord ? now()->diffInSeconds($bsnRecord->created_at, true) : null,
                 'email' => $email,
             ];
         }
