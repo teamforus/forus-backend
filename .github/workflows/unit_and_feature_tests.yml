@@ -1,12 +1,22 @@
 name: Run unit and feature tests
 
-on: [pull_request]
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Enable debug mode'
+        required: false
+        default: 'true'
 
 jobs:
 
   build:
 
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: forus-backend
 
     steps:
       - name: Checkout forus-backend repo
@@ -15,41 +25,40 @@ jobs:
           path: forus-backend
 
       - name: Copy .env.docker.dusk file to .env
-        working-directory: forus-backend
         run: cp -n .env.docker.dusk .env
 
-      - name: Run docker-compose up
-        working-directory: forus-backend
+      - name: Run docker compose up
         run: docker compose --profile testing up -d
 
-      - name: Crutch - set correct ownership of files in docker
-        working-directory: forus-backend
+      - name: Set correct ownership of files in docker
         run: docker exec -u 0 forus-backend-app chown -R forus:forus /var/www/
 
       - name: Install dependencies
-        working-directory: forus-backend
         run: docker compose exec -T app bash -c "composer install"
 
-      - name: Create database structure with artisan
-        working-directory: forus-backend
+      - name: Create database structure
         run: docker compose exec -T app bash -c "composer dumpautoload && php artisan migrate"
 
       - name: Set app key
-        working-directory: forus-backend
         run: docker compose exec -T app bash -c "php artisan key:generate"
 
       - name: Run base seeders
-        working-directory: forus-backend
         run: docker compose exec -T app bash -c "php artisan db:seed"
 
       - name: Generate test data
-        working-directory: forus-backend
         run: docker compose exec -T app php artisan test-data:seed
 
-      - name: --- RUN UNIT TESTS ----
-        working-directory: forus-backend
-        run: docker compose exec -T app bash -c "./vendor/bin/phpunit --debug --testdox tests/Unit/."
+      - name: Set debug based on input
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.debug }}" == "true" ]; then
+            echo "DEBUG=--debug" >> $GITHUB_ENV
+          else
+            echo "DEBUG=" >> $GITHUB_ENV
+          fi
 
-      - name: --- RUN FEATURE TESTS ----
+      - name: --- RUN UNIT TESTS ---
+        run: docker compose exec -T app bash -c "./vendor/bin/phpunit $DEBUG_FLAG tests/Unit/."
+
+      - name: --- RUN FEATURE TESTS ---
         working-directory: forus-backend
-        run: docker compose exec -T app bash -c "./vendor/bin/phpunit --debug --testdox tests/Feature/."
+        run: docker compose exec -T app bash -c "./vendor/bin/phpunit $DEBUG_FLAG tests/Feature/."
