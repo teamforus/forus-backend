@@ -35,6 +35,7 @@ class PermissionsTableSeeder extends Seeder
         'manage_bi_connection'      => "Manage BI connection",
         'manage_payment_methods'    => "Manage payment methods",
         'view_funds_extra_payments' => "See funds extra payments",
+        'manage_payouts'            => "Manage payouts",
     ];
 
     /**

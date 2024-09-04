@@ -8,23 +8,21 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up(): void
     {
         Schema::table('voucher_transactions', function (Blueprint $table) {
-            $table->enum('target', ['provider', 'iban', 'top_up'])
-                ->default('provider')
-                ->after('initiator')
-                ->change();
+            $table->unsignedBigInteger('upload_batch_id')->nullable()->after('employee_id');
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down(): void {}
+    public function down(): void
+    {
+        Schema::table('voucher_transactions', function (Blueprint $table) {
+            $table->dropColumn('upload_batch_id');
+        });
+    }
 };

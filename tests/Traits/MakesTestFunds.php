@@ -93,6 +93,10 @@ trait MakesTestFunds
             'amount' => 300,
         ]);
 
+        $fund->getOrCreateTopUp()->transactions()->create([
+            'amount' => 1000000,
+        ]);
+
         return $fund->refresh();
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Exports\FundRequestsExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Funds\Requests\ApproveFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\AssignEmployeeFundRequestRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DisregardFundRequestsRequest;
@@ -71,6 +72,23 @@ class FundRequestsController extends Controller
     }
 
     /**
+     * Get fund request
+     *
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     */
+    public function formula(
+        Organization $organization,
+        FundRequest $fundRequest,
+    ): JsonResponse {
+        $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
+
+        return new JsonResponse($fundRequest->formulaPreview());
+    }
+
+    /**
      * Assign fund request to employee
      *
      * @param BaseFormRequest $request
@@ -116,18 +134,31 @@ class FundRequestsController extends Controller
     /**
      * Update the specified resource in storage.
      *
+     * @param ApproveFundRequestsRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function approve(
+        ApproveFundRequestsRequest $request,
         Organization $organization,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
     ): ValidatorFundRequestResource {
         $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
 
-        return ValidatorFundRequestResource::create($fundRequest->approve());
+        $data = $request->input('fund_amount_preset_id') ?
+            $request->only('fund_amount_preset_id') :
+            $request->only('amount');
+
+        $fundRequest->forceFill($data)->save();
+        $fundRequest->approve();
+
+        if ($request->input('note')) {
+            $fundRequest->addNote($request->input('note'), $request->employee($organization));
+        }
+
+        return ValidatorFundRequestResource::create($fundRequest);
     }
 
     /**

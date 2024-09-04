@@ -108,6 +108,9 @@ class EventLogService implements IEventLogService
             'start_date_locale' => format_date_locale($fund->start_date),
             'end_date_locale' => format_date_locale($fund->end_date->clone()->addDay()),
             'end_date_minus1_locale' => format_date_locale($fund->end_date),
+            'amount_presets' => $fund->amount_presets?->map(fn ($preset) => $preset->only([
+                'id', 'name', 'amount',
+            ]))->toArray(),
         ], 'fund_');
     }
 
@@ -127,6 +130,12 @@ class EventLogService implements IEventLogService
             'backoffice_enabled' => $fundConfig->backoffice_enabled,
             'auth_2fa_policy' => $fundConfig->auth_2fa_policy,
             'auth_2fa_remember_ip' => $fundConfig->auth_2fa_remember_ip,
+            'allow_preset_amounts' => $fundConfig->allow_preset_amounts,
+            'allow_preset_amounts_validator' => $fundConfig->allow_preset_amounts_validator,
+            'allow_custom_amounts' => $fundConfig->allow_custom_amounts,
+            'allow_custom_amounts_validator' => $fundConfig->allow_custom_amounts_validator,
+            'custom_amount_min' => $fundConfig->custom_amount_min,
+            'custom_amount_max' => $fundConfig->custom_amount_max,
         ], 'fund_config_');
     }
 
@@ -140,6 +149,8 @@ class EventLogService implements IEventLogService
             'id' => $fundRequest->id,
             'note' => $fundRequest->note,
             'state' => $fundRequest->state,
+            'amount' => $fundRequest->amount,
+            'fund_amount_preset_id' => $fundRequest->fund_amount_preset_id,
             'employee_id' => $fundRequest->employee_id,
             'disregard_note' => $fundRequest->disregard_note,
             'disregard_notify' => $fundRequest->disregard_notify,
@@ -274,6 +285,8 @@ class EventLogService implements IEventLogService
                 $voucher->amount_available,
                 $voucher->fund->getImplementation(),
             ),
+            'voucher_type' => $voucher->voucher_type,
+            'fund_amount_preset_id' => $voucher->fund_amount_preset_id,
             'expire_date' => $voucher->last_active_day->format('Y-m-d'),
             'limit_multiplier' => $voucher->limit_multiplier,
             'expire_date_locale' => format_date_locale($voucher->last_active_day),
@@ -298,6 +311,7 @@ class EventLogService implements IEventLogService
             'initiator' => $transaction->initiator,
             'target' => $transaction->target,
             'target_iban' => $transaction->target_iban,
+            'upload_batch_id' => $transaction->upload_batch_id,
             'payment_time' => $transaction->payment_time,
             'payment_time_locale' => format_date_locale($transaction->payment_time),
             'created_at' => $transaction->created_at->format('Y-m-d'),

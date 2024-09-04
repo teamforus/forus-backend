@@ -107,17 +107,6 @@ $router->group([], static function() use ($router) {
         ]
     ]);
 
-    $router->resource(
-        'organizations.external-funds',
-        "Api\Platform\Organizations\ExternalFundsController", [
-        'only' => [
-            'index', 'update'
-        ],
-        'parameters' => [
-            'external-funds' => 'fund'
-        ]
-    ]);
-
     $router->post(
         'organizations/{organization}/funds/{fund}/archive',
         "Api\Platform\Organizations\FundsController@archive");
@@ -443,6 +432,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     ])->only('index', 'show', 'store');
 
     if (config('forus.features.dashboard.organizations.funds.fund_requests', FALSE)) {
+        $router->get(
+            'organizations/{organization}/fund-requests/{fund_request}/formula',
+            "Api\Platform\Organizations\FundRequestsController@formula"
+        );
+
         $router->patch(
             'organizations/{organization}/fund-requests/{fund_request}/assign',
             "Api\Platform\Organizations\FundRequestsController@assign"
@@ -787,13 +781,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->get('data-types', 'Api\Platform\Organizations\BIConnectionController@getAvailableDataTypes');
     });
 
-    /*$router->resource(
-        'organizations.bi-connections',
-        'Api\Platform\Organizations\BIConnectionController',
-    )->parameters([
-        'bi-connections' => 'connection',
-    ])->only('store', 'update');*/
-
     $router->get(
         'organizations/{organization}/sponsor/finances',
         "Api\Platform\Organizations\FundsController@finances");
@@ -827,9 +814,29 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\Sponsor\TransactionsController@storeBatchValidate"
     );
 
+    $router->post(
+        'organizations/{organization}/sponsor/transactions/payout',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@storePayout"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/transactions/payouts',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@storePayoutBatch"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/transactions/payouts/validate',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@storePayoutBatchValidate"
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/transactions/payouts/{transaction_address}',
+        'Api\Platform\Organizations\Sponsor\TransactionsController@updatePayout',
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/transactions',
-        "Api\Platform\Organizations\Sponsor\TransactionsController"
+        'Api\Platform\Organizations\Sponsor\TransactionsController'
     )->parameters([
         'transactions' => 'transaction_address',
     ])->only('index', 'show', 'store');

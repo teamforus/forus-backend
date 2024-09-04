@@ -6,6 +6,7 @@ use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\Tiny\ProductTinyResource;
 use App\Http\Resources\VoucherTransactionNoteResource;
 use App\Models\VoucherTransaction;
+use Illuminate\Http\Request;
 
 /**
  * @property VoucherTransaction $resource
@@ -22,28 +23,30 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
         'voucher_transaction_bulk',
         'product.photo.presets',
         'provider:id,name,iban',
+        'employee.identity.primary_email',
         'notes_sponsor',
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $transaction = $this->resource;
 
         return array_merge($transaction->only([
             'id', 'organization_id', 'product_id', 'state_locale', 'updated_at', 'address', 'state',
-            'payment_id', 'voucher_transaction_bulk_id', 'attempts',
-            'transfer_at', 'iban_final', 'target', 'target_locale', 'uid', 'voucher_id',
+            'payment_id', 'voucher_transaction_bulk_id', 'attempts', 'employee_id', 'upload_batch_id',
+            'iban_final', 'target', 'target_locale', 'uid', 'voucher_id',
         ]), $this->getIbanFields($transaction), [
             'amount' => currency_format($transaction->amount),
             'amount_locale' => currency_format_locale($transaction->amount),
             'timestamp' => $transaction->created_at->timestamp,
-            'transaction_in' => $transaction->daysBeforeTransaction(),
+            'transfer_in' => $transaction->daysBeforeTransaction(),
+            'transfer_in_pending' => (bool) $transaction->transfer_at?->isFuture(),
             'organization' => $transaction->provider?->only('id', 'name'),
             'fund' => [
                 ...$transaction->voucher->fund->only('id', 'name', 'organization_id'),
@@ -60,8 +63,14 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'non_cancelable_at_locale' => format_date_locale($transaction->non_cancelable_at),
             'bulk_state' => $transaction->voucher_transaction_bulk?->state,
             'bulk_state_locale' => $transaction->voucher_transaction_bulk?->state_locale,
+            'employee' => $transaction->employee?->identity?->only([
+                'id', 'email', 'address',
+            ]),
+            'is_editable' => $transaction->isEditableBySponsor(),
+            'is_cancelable' => $transaction->isCancelableBySponsor(),
+            'amount_preset_id' => $transaction?->voucher?->fund_amount_preset_id,
             'payment_type_locale' => $this->getPaymentTypeLocale($transaction),
-        ], $this->timestamps($transaction, 'created_at', 'updated_at'));
+        ], $this->timestamps($transaction, 'created_at', 'transfer_at', 'updated_at'));
     }
 
     /**
@@ -77,11 +86,7 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
         ];
     }
 
-    /**
-     * @param VoucherTransaction $transaction
-     * @return array
-     */
-    public function getPaymentTypeLocale(VoucherTransaction $transaction): array
+    public function getPaymentTypeLocale2(VoucherTransaction $transaction): array
     {
         $type = 'voucher_scan';
         $params = [];
@@ -96,6 +101,41 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
                 $transaction::TARGET_PROVIDER => 'direct_provider',
                 $transaction::TARGET_IBAN => 'direct_iban',
                 $transaction::TARGET_TOP_UP => 'direct_top_up',
+            };
+        }
+
+        return [
+            'title' => trans("transaction.payment_type.$type.title", $params),
+            'subtitle' => trans("transaction.payment_type.$type.subtitle", $params),
+        ];
+    }
+
+    /**
+     * @param VoucherTransaction $transaction
+     * @return array
+     */
+    public function getPaymentTypeLocale(VoucherTransaction $transaction): array
+    {
+        $type = 'voucher_scan';
+        $params = [];
+
+        if ($transaction->reimbursement_id) {
+            $type = 'reimbursement';
+        }
+
+        if ($transaction->product_id) {
+            $type = $transaction->product_reservation ? 'product_reservation' : 'product_voucher';
+            $params['product'] = $transaction->product?->name;
+        }
+
+        if ($transaction->initiator === $transaction::INITIATOR_SPONSOR) {
+            $type = match ($transaction->target) {
+                $transaction::TARGET_PROVIDER => 'direct_provider',
+                $transaction::TARGET_IBAN => 'direct_iban',
+                $transaction::TARGET_TOP_UP => 'direct_top_up',
+                $transaction::TARGET_PAYOUT => $transaction->employee_id ? (
+                    $transaction->upload_batch_id ? 'payout_bulk' : 'payout_single'
+                ) : 'payout_request',
             };
         }
 

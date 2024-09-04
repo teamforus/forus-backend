@@ -5,8 +5,10 @@ namespace App\Policies;
 use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\VoucherTransaction;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class VoucherTransactionPolicy
 {
@@ -132,10 +134,46 @@ class VoucherTransactionPolicy
      * @param Organization $organization
      * @return bool
      */
+    public function storeAsSponsor(
+        Identity $identity,
+        Organization $organization,
+    ): bool {
+        return $organization->identityCan($identity, 'make_direct_payments');
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
     public function storeBatchAsSponsor(
         Identity $identity,
         Organization $organization
     ): bool {
-        return $organization->identityCan($identity, 'make_direct_payments');
+        return $this->storeAsSponsor($identity, $organization);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param VoucherTransaction $transaction
+     * @param Organization $organization
+     * @return bool|Response
+     */
+    public function updatePayouts(
+        Identity $identity,
+        VoucherTransaction $transaction,
+        Organization $organization,
+    ): bool|Response {
+        if ($transaction->voucher->fund->organization_id != $organization->id) {
+            return false;
+        }
+
+        if (!$transaction->targetIsPayout()) {
+            return $this->deny('Not payout transaction.');
+        }
+
+        return $transaction->voucher->fund->organization->identityCan($identity, [
+            Permission::MANAGE_PAYOUTS,
+        ]) && $transaction->isEditableBySponsor();
     }
 }

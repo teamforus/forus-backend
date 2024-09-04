@@ -123,6 +123,7 @@ class RouteServiceProvider extends ServiceProvider
         $router->bind('budget_voucher_token_address', static function ($address) {
             return VoucherToken::whereAddress($address)->whereHas('voucher', static function(Builder $builder) {
                 $builder->whereNull('parent_id');
+                $builder->where('type', '!=', Voucher::VOUCHER_TYPE_PAYOUT);
             })->firstOrFail();
         });
 

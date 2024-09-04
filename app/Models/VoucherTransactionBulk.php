@@ -300,9 +300,9 @@ class VoucherTransactionBulk extends BaseModel
                 ) : null;
 
                 $transaction->forceFill([
-                    'state'             => VoucherTransaction::STATE_SUCCESS,
-                    'payment_id'        => $payment?->getId(),
-                    'payment_time'      => now(),
+                    'state' => VoucherTransaction::STATE_SUCCESS,
+                    'payment_id' => $payment?->getId(),
+                    'payment_time' => now(),
                 ])->save();
 
                 VoucherTransactionBunqSuccess::dispatch($transaction);

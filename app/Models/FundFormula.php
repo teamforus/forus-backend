@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
  * @property-read string|null $amount_locale
+ * @property-read string|null $type_locale
  * @property-read \App\Models\RecordType|null $record_type
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormula newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormula newQuery()
@@ -42,6 +43,15 @@ class FundFormula extends BaseModel
     public function getAmountLocaleAttribute(): ?string
     {
         return currency_format_locale($this->amount, $this->fund->getImplementation());
+    }
+
+    /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getTypeLocaleAttribute(): ?string
+    {
+        return $this->type === 'fixed' ? 'Vastgesteld' : 'Multiply';
     }
 
     /**
