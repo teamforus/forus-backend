@@ -5,7 +5,7 @@ namespace Tests\TestCases;
 class VoucherTestCases
 {
     /** @var array|array[] */
-    public static array $featureTestCase1 = [
+    public static array $featureTestCaseBudgetVouchers = [
         'fund_id' => 1,
         'assert_fund_type' => 'budget',
 
@@ -96,7 +96,7 @@ class VoucherTestCases
 
 
     /** @var array|array[]  */
-    public static array $featureTestCase2 = [
+    public static array $featureTestCaseProductVouchers = [
         'fund_id' => 1,
         'assert_fund_type' => 'budget',
 
@@ -125,7 +125,7 @@ class VoucherTestCases
     ];
 
     /** @var array|array[]  */
-    public static array $featureTestCase3 = [
+    public static array $featureTestCaseBudgetVouchersExceedAmount = [
         'fund_id' => 2,
         'assert_fund_type' => 'budget',
 
@@ -150,7 +150,7 @@ class VoucherTestCases
     ];
 
     /** @var array|array[]  */
-    public static array $featureTestCase4 = [
+    public static array $featureTestCaseBudgetVouchersNoBSNExceedAmount = [
         'fund_id' => 2,
         'assert_fund_type' => 'budget',
 
@@ -184,7 +184,7 @@ class VoucherTestCases
     ];
 
     /** @var array|array[]  */
-    public static array $featureTestCase5 = [
+    public static array $featureTestCaseProductVouchersEdgeCases = [
         'fund_id' => 2,
         'assert_fund_type' => 'budget',
 
@@ -237,7 +237,7 @@ class VoucherTestCases
     ];
 
     /** @var array|array[]  */
-    public static array $featureTestCase6 = [
+    public static array $featureTestCaseSubsidyFundBudgetVouchers = [
         'fund_id' => 6,
         'assert_fund_type' => 'subsidies',
 
@@ -278,7 +278,7 @@ class VoucherTestCases
     ];
 
     /** @var array|array[]  */
-    public static array $featureTestCase7 = [
+    public static array $featureTestCaseBudgetVouchersExcludedFields = [
         'fund_id' => 3,
         'assert_fund_type' => 'budget',
 
