@@ -17,7 +17,7 @@ class UpdatePayoutTransactionRequest extends StorePayoutTransactionRequest
      */
     public function authorize(): bool
     {
-        return Gate::allows('updatePayouts', [$this->transaction_address, $this->organization]);
+        return Gate::allows('updatePayoutsSponsor', [$this->transaction_address, $this->organization]);
     }
 
     /**

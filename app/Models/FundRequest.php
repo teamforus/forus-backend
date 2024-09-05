@@ -56,6 +56,8 @@ use Illuminate\Support\Arr;
  * @property-read int|null $records_disregarded_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $records_pending
  * @property-read int|null $records_pending_count
+ * @property-read Collection|\App\Models\Voucher[] $vouchers
+ * @property-read int|null $vouchers_count
  * @method static Builder|FundRequest newModelQuery()
  * @method static Builder|FundRequest newQuery()
  * @method static Builder|FundRequest query()
@@ -206,6 +208,14 @@ class FundRequest extends BaseModel
     public function records(): HasMany
     {
         return $this->hasMany(FundRequestRecord::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function vouchers(): HasMany
+    {
+        return $this->hasMany(Voucher::class);
     }
 
     /**

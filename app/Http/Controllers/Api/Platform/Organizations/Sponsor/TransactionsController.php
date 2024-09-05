@@ -151,7 +151,7 @@ class TransactionsController extends Controller
         Organization $organization,
     ): SponsorVoucherTransactionResource {
         $this->authorize('show', $organization);
-        $this->authorize('storeAsSponsor', [VoucherTransaction::class, $organization]);
+        $this->authorize('storePayoutsSponsor', [VoucherTransaction::class, $organization]);
 
         $fund = $organization->funds()->find($request->input('fund_id'));
         $employee = $request->employee($organization);
@@ -188,7 +188,7 @@ class TransactionsController extends Controller
         Organization $organization,
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
-        $this->authorize('storeAsSponsor', [VoucherTransaction::class, $organization]);
+        $this->authorize('storePayoutsSponsor', [VoucherTransaction::class, $organization]);
 
         $fund = $organization->funds()->find($request->input('fund_id'));
         $batchId = $request->input('upload_batch_id') ?: VoucherTransaction::makeBatchUploadId();
@@ -228,7 +228,7 @@ class TransactionsController extends Controller
         Organization $organization,
     ): JsonResponse {
         $this->authorize('show', $organization);
-        $this->authorize('storeAsSponsor', [VoucherTransaction::class, $organization]);
+        $this->authorize('storePayoutsSponsor', [VoucherTransaction::class, $organization]);
 
         return new JsonResponse($request->authorize() ?: []);
     }
@@ -247,7 +247,7 @@ class TransactionsController extends Controller
         VoucherTransaction $transaction,
     ): SponsorVoucherTransactionResource {
         $this->authorize('show', $organization);
-        $this->authorize('updatePayouts', [$transaction, $organization]);
+        $this->authorize('updatePayoutsSponsor', [$transaction, $organization]);
 
         $employee = $request->employee($organization);
 

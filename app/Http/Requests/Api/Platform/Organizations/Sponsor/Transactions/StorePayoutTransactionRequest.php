@@ -5,10 +5,12 @@ namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
+use App\Models\VoucherTransaction;
 use App\Rules\Base\IbanRule;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 /**
@@ -23,7 +25,7 @@ class StorePayoutTransactionRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->getFundsQuery()->whereId($this->post('fund_id'))->exists();
+        return Gate::allows('storePayoutsSponsor', [VoucherTransaction::class, $this->organization]);
     }
 
     /**
@@ -127,7 +129,7 @@ class StorePayoutTransactionRequest extends BaseFormRequest
      */
     protected function amountRules(?Fund $fund): array
     {
-        if (!$fund || !$fund->fund_config->allow_custom_amounts) {
+        if (!$fund?->fund_config?->allow_custom_amounts) {
             return [Rule::in([])];
         }
 
@@ -145,7 +147,7 @@ class StorePayoutTransactionRequest extends BaseFormRequest
      */
     protected function amountOptionIdRules(?Fund $fund, string $column): array
     {
-        if (!$fund || !$fund->fund_config->allow_preset_amounts) {
+        if (!$fund?->fund_config?->allow_preset_amounts) {
             return ['in:'];
         }
 

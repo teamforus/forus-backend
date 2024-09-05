@@ -146,6 +146,18 @@ class VoucherTransactionPolicy
      * @param Organization $organization
      * @return bool
      */
+    public function storePayoutsSponsor(
+        Identity $identity,
+        Organization $organization,
+    ): bool {
+        return $organization->identityCan($identity, Permission::MANAGE_PAYOUTS);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
     public function storeBatchAsSponsor(
         Identity $identity,
         Organization $organization
@@ -159,7 +171,7 @@ class VoucherTransactionPolicy
      * @param Organization $organization
      * @return bool|Response
      */
-    public function updatePayouts(
+    public function updatePayoutsSponsor(
         Identity $identity,
         VoucherTransaction $transaction,
         Organization $organization,
