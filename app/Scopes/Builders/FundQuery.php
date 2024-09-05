@@ -233,7 +233,7 @@ class FundQuery
             ->whereHas('fund_providers', function (Builder $builder) use ($organizationId) {
                 $builder->where('state', '!=', FundProvider::STATE_REJECTED);
                 $builder->whereIn('organization_id', (array) $organizationId);
-                $builder->whereDoesntHave('products');
+                $builder->doesntHave('organization.products');
             });
     }
 }
