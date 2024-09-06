@@ -83,25 +83,12 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
      */
     public function getPaymentTypeLocale(VoucherTransaction $transaction): array
     {
-        $type = 'voucher_scan';
-        $params = [];
-
-        if ($transaction->reimbursement_id) {
-            $type = 'reimbursement';
-        } elseif ($transaction->product_id) {
-            $type = $transaction->product_reservation ? 'product_reservation' : 'product_voucher';
-            $params['product'] = $transaction->product?->name;
-        } elseif ($transaction->initiator === $transaction::INITIATOR_SPONSOR) {
-            $type = match ($transaction->target) {
-                $transaction::TARGET_PROVIDER => 'direct_provider',
-                $transaction::TARGET_IBAN => 'direct_iban',
-                $transaction::TARGET_TOP_UP => 'direct_top_up',
-            };
-        }
+        $key = $transaction['payment_type'];
+        $params = ['product' => $transaction->product?->name];
 
         return [
-            'title' => trans("transaction.payment_type.$type.title", $params),
-            'subtitle' => trans("transaction.payment_type.$type.subtitle", $params),
+            'title' => trans("transaction.payment_type.$key.title", $params),
+            'subtitle' => trans("transaction.payment_type.$key.subtitle", $params),
         ];
     }
 }
