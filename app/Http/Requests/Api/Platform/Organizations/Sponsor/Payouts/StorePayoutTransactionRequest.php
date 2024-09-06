@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions;
+namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
@@ -38,7 +38,6 @@ class StorePayoutTransactionRequest extends BaseFormRequest
         $fund = $this->getFundsQuery()->find($this->input('fund_id'));
 
         return [
-            'note' => $this->noteRules(),
             'fund_id' => $this->fundIdsRules(),
             'amount' => [
                 'required_without:amount_preset_id',
@@ -50,6 +49,9 @@ class StorePayoutTransactionRequest extends BaseFormRequest
             ],
             'target_iban' => $this->targetIbanRules(),
             'target_name' => $this->targetNameRules(),
+            'bsn' => ['nullable', ...$this->bsnRules()],
+            'email' => ['nullable', ...$this->emailRules()],
+            'description' => $this->descriptionRules(),
         ];
     }
 
@@ -86,18 +88,6 @@ class StorePayoutTransactionRequest extends BaseFormRequest
     }
 
     /**
-     * @return string[]
-     */
-    protected function noteRules(): array
-    {
-        return [
-            'nullable',
-            'string',
-            'max:255',
-        ];
-    }
-
-    /**
      * @param bool $nullable
      * @return array
      */
@@ -121,6 +111,14 @@ class StorePayoutTransactionRequest extends BaseFormRequest
             'min:3',
             'max:200',
         ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function descriptionRules(): array
+    {
+        return ['nullable', 'string', 'max:500'];
     }
 
     /**

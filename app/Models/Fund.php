@@ -1273,7 +1273,6 @@ class Fund extends BaseModel
      * @param BankAccount $bankAccount
      * @param array $voucherFields
      * @param array $transactionFields
-     * @param string|null $transactionNote
      * @return VoucherTransaction
      */
     public function makePayout(
@@ -1282,7 +1281,6 @@ class Fund extends BaseModel
         BankAccount $bankAccount,
         array $voucherFields = [],
         array $transactionFields = [],
-        string $transactionNote = null,
     ): VoucherTransaction {
         $voucher = $this->makeVoucher(null, [
             'voucher_type' => Voucher::VOUCHER_TYPE_PAYOUT,
@@ -1298,7 +1296,7 @@ class Fund extends BaseModel
             'employee_id' => $employee->id,
             'transfer_at' => now()->addDay(),
             ...$transactionFields,
-        ], $transactionNote);
+        ]);
     }
 
     /**

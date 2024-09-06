@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions;
+namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts;
 
 use App\Models\VoucherTransaction;
 use Illuminate\Support\Facades\Gate;
@@ -40,6 +40,7 @@ class UpdatePayoutTransactionRequest extends StorePayoutTransactionRequest
             ],
             'target_iban' => $this->targetIbanRules(true),
             'target_name' => $this->targetNameRules(true),
+            'description' => $this->descriptionRules(),
         ];
     }
 }

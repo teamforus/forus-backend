@@ -23,7 +23,6 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
         'voucher_transaction_bulk',
         'product.photo.presets',
         'provider:id,name,iban',
-        'employee.identity.primary_email',
         'notes_sponsor',
     ];
 
@@ -39,14 +38,14 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
 
         return array_merge($transaction->only([
             'id', 'organization_id', 'product_id', 'state_locale', 'updated_at', 'address', 'state',
-            'payment_id', 'voucher_transaction_bulk_id', 'attempts', 'employee_id', 'upload_batch_id',
-            'iban_final', 'target', 'target_locale', 'uid', 'voucher_id',
+            'payment_id', 'voucher_transaction_bulk_id', 'attempts', 'iban_final',
+            'target', 'target_locale', 'uid', 'voucher_id', 'description',
         ]), $this->getIbanFields($transaction), [
             'amount' => currency_format($transaction->amount),
             'amount_locale' => currency_format_locale($transaction->amount),
             'timestamp' => $transaction->created_at->timestamp,
             'transfer_in' => $transaction->daysBeforeTransaction(),
-            'transfer_in_pending' => (bool) $transaction->transfer_at?->isFuture(),
+            'transfer_in_pending' => $transaction->transfer_at?->isFuture() && $transaction->isPending(),
             'organization' => $transaction->provider?->only('id', 'name'),
             'fund' => [
                 ...$transaction->voucher->fund->only('id', 'name', 'organization_id'),
@@ -63,12 +62,6 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'non_cancelable_at_locale' => format_date_locale($transaction->non_cancelable_at),
             'bulk_state' => $transaction->voucher_transaction_bulk?->state,
             'bulk_state_locale' => $transaction->voucher_transaction_bulk?->state_locale,
-            'employee' => $transaction->employee?->identity?->only([
-                'id', 'email', 'address',
-            ]),
-            'is_editable' => $transaction->isEditableBySponsor(),
-            'is_cancelable' => $transaction->isCancelableBySponsor(),
-            'amount_preset_id' => $transaction?->voucher?->fund_amount_preset_id,
             'payment_type_locale' => $this->getPaymentTypeLocale($transaction),
         ], $this->timestamps($transaction, 'created_at', 'transfer_at', 'updated_at'));
     }
@@ -83,30 +76,6 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'iban_from' => $transaction->voucher->fund->organization->bank_connection_active->iban ?? null,
             'iban_to' => $transaction->getTargetIban(),
             'iban_to_name' => $transaction->getTargetName(),
-        ];
-    }
-
-    public function getPaymentTypeLocale2(VoucherTransaction $transaction): array
-    {
-        $type = 'voucher_scan';
-        $params = [];
-
-        if ($transaction->reimbursement_id) {
-            $type = 'reimbursement';
-        } elseif ($transaction->product_id) {
-            $type = $transaction->product_reservation ? 'product_reservation' : 'product_voucher';
-            $params['product'] = $transaction->product?->name;
-        } elseif ($transaction->initiator === $transaction::INITIATOR_SPONSOR) {
-            $type = match ($transaction->target) {
-                $transaction::TARGET_PROVIDER => 'direct_provider',
-                $transaction::TARGET_IBAN => 'direct_iban',
-                $transaction::TARGET_TOP_UP => 'direct_top_up',
-            };
-        }
-
-        return [
-            'title' => trans("transaction.payment_type.$type.title", $params),
-            'subtitle' => trans("transaction.payment_type.$type.subtitle", $params),
         ];
     }
 
@@ -133,7 +102,7 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
                 $transaction::TARGET_PROVIDER => 'direct_provider',
                 $transaction::TARGET_IBAN => 'direct_iban',
                 $transaction::TARGET_TOP_UP => 'direct_top_up',
-                $transaction::TARGET_PAYOUT => $transaction->employee_id ? (
+                $transaction::TARGET_PAYOUT => !$transaction->voucher?->fund_request_id ? (
                     $transaction->upload_batch_id ? 'payout_bulk' : 'payout_single'
                 ) : 'payout_request',
             };

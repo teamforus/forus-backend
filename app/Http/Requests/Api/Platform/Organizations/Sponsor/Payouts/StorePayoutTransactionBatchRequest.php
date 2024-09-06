@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions;
+namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts;
 
 use App\Models\Organization;
 
@@ -21,7 +21,6 @@ class StorePayoutTransactionBatchRequest extends StorePayoutTransactionRequest
         return [
             'fund_id' => $this->fundIdsRules(),
             'upload_batch_id' => $this->uploadBatchId(),
-            'payouts.*.note' => $this->noteRules(),
             'payouts.*.amount' => [
                 'required_without:payouts.*.amount_preset',
                 ...$this->amountRules($fund),
@@ -30,8 +29,11 @@ class StorePayoutTransactionBatchRequest extends StorePayoutTransactionRequest
                 'required_without:payouts.*.amount',
                 ...$this->amountOptionIdRules($fund, 'amount'),
             ],
+            'payouts.*.bsn' => ['nullable', ...$this->bsnRules()],
+            'payouts.*.email' => ['nullable', ...$this->emailRules()],
             'payouts.*.target_iban' => $this->targetIbanRules(),
             'payouts.*.target_name' => $this->targetNameRules(),
+            'payouts.*.description' => $this->descriptionRules(),
         ];
     }
 }

@@ -48,6 +48,10 @@ class RolesTableSeeder extends Seeder
             'en' => 'Voucher admin',
             'nl' => 'Tegoed beheerder',
         ],
+        'payouts_manager' => [
+            'en' => 'Payouts manage',
+            'nl' => 'Uitbetalingen beheerder',
+        ],
         'voucher_reader' => [
             'en' => 'Voucher viewer',
             'nl' => 'Raadpleger',

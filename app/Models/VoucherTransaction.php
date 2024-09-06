@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Log;
  * @property int $voucher_id
  * @property int|null $organization_id
  * @property int|null $employee_id
+ * @property string|null $description
  * @property int|null $upload_batch_id
  * @property string|null $branch_id
  * @property string|null $branch_name
@@ -73,6 +74,8 @@ use Illuminate\Support\Facades\Log;
  * @property-read int|null $notes_provider_count
  * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes_sponsor
  * @property-read int|null $notes_sponsor_count
+ * @property-read Collection|\App\Models\PayoutRelation[] $payout_relations
+ * @property-read int|null $payout_relations_count
  * @property-read \App\Models\Product|null $product
  * @property-read \App\Models\ProductReservation|null $product_reservation
  * @property-read \App\Models\Organization|null $provider
@@ -92,6 +95,7 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder|VoucherTransaction whereCanceledAt($value)
  * @method static Builder|VoucherTransaction whereCreatedAt($value)
  * @method static Builder|VoucherTransaction whereDeletedAt($value)
+ * @method static Builder|VoucherTransaction whereDescription($value)
  * @method static Builder|VoucherTransaction whereEmployeeId($value)
  * @method static Builder|VoucherTransaction whereFundProviderProductId($value)
  * @method static Builder|VoucherTransaction whereIbanFrom($value)
@@ -198,7 +202,7 @@ class VoucherTransaction extends BaseModel
         'iban_from', 'iban_to', 'iban_to_name', 'payment_time', 'employee_id', 'transfer_at',
         'voucher_transaction_bulk_id', 'payment_description', 'initiator', 'reimbursement_id',
         'target', 'target_iban', 'target_name', 'target_reimbursement_id', 'uid',
-        'branch_id', 'branch_name', 'branch_number', 'upload_batch_id',
+        'branch_id', 'branch_name', 'branch_number', 'upload_batch_id', 'description',
     ];
 
     protected $hidden = [
@@ -284,6 +288,15 @@ class VoucherTransaction extends BaseModel
     public function notes(): HasMany
     {
         return $this->hasMany(VoucherTransactionNote::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function payout_relations(): HasMany
+    {
+        return $this->hasMany(PayoutRelation::class)->orderBy('type');
     }
 
     /**
@@ -565,7 +578,7 @@ class VoucherTransaction extends BaseModel
     /**
      * @return bool
      */
-    public function isEditableBySponsor(): bool
+    public function isEditablePayout(): bool
     {
         return
             $this->targetIsPayout() &&
@@ -781,12 +794,14 @@ class VoucherTransaction extends BaseModel
                     'fund_amount_preset_id' => null,
                 ]);
 
-                $this->update([ 'amount' => $voucher->amount ]);
+                $this->update([
+                    'amount' => $voucher->amount,
+                ]);
             }
         }
 
         $this->update(Arr::only($data, [
-            'target_iban', 'target_name',
+            'target_iban', 'target_name', 'description',
         ]));
 
         $this->log(
@@ -844,5 +859,18 @@ class VoucherTransaction extends BaseModel
             'employee' => $employee,
             'voucher_transaction' => $this,
         ];
+    }
+
+    /**
+     * @param string $type
+     * @param string $value
+     * @return PayoutRelation
+     */
+    public function addPayoutRelation(string $type, string $value): PayoutRelation
+    {
+        return $this->payout_relations()->create([
+            'type' => $type,
+            'value' => $value,
+        ]);
     }
 }

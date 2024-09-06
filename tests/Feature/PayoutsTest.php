@@ -6,7 +6,6 @@ use App\Models\Fund;
 use App\Models\FundAmountPreset;
 use App\Models\FundConfig;
 use App\Models\FundRequest;
-use App\Models\Voucher;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
@@ -102,21 +101,28 @@ class PayoutsTest extends TestCase
         $this->configureFundPayouts($fund);
         $this->assertPayoutsUpdated($fund);
 
-        $res = $this->storeRequest($fund, [
+        $data = [
+            'amount' => '50.00',
             'fund_id' => $fund->id,
-            'note' => 'Test note',
-            'amount' => '50',
+            'description' => 'Test description',
             'target_iban' => $this->faker()->iban,
             'target_name' => 'John Doe',
-        ]);
+        ];
+
+        $res = $this->storeRequest($fund, $data);
 
         $res->assertSuccessful();
 
-        $voucher = $fund->vouchers()->find($res->json('data.voucher_id'));
-        $transaction = $voucher?->transactions()->find($res->json('data.id'));
+        self::assertEquals(
+            VoucherTransaction::TARGET_PAYOUT,
+            VoucherTransaction::find($res->json('data.id'))->target,
+        );
 
-        self::assertEquals(Voucher::VOUCHER_TYPE_PAYOUT, $voucher?->voucher_type);
-        self::assertEquals(VoucherTransaction::TARGET_PAYOUT, $transaction?->target);
+        self::assertEquals($data['amount'], $res->json('data.amount'));
+        self::assertEquals($data['fund_id'], $res->json('data.fund.id'));
+        self::assertEquals($data['description'], $res->json('data.description'));
+        self::assertEquals($data['target_iban'], $res->json('data.iban_to'));
+        self::assertEquals($data['target_name'], $res->json('data.iban_to_name'));
     }
 
     /**
@@ -145,9 +151,9 @@ class PayoutsTest extends TestCase
         $this->storeRequest($fund, ['fund_id' => $fund2->id])->assertJsonValidationErrorFor('fund_id');
         $this->storeRequest($fund, ['fund_id' => $fund->id])->assertJsonMissingValidationErrors('fund_id');
 
-        // assert can't use non string for note but null is allowed
-        $this->storeRequest($fund, ['note' => []])->assertJsonValidationErrorFor('note');
-        $this->storeRequest($fund, ['note' => null])->assertJsonMissingValidationErrors('note');
+        // assert can't use non string for description but null is allowed
+        $this->storeRequest($fund, ['description' => []])->assertJsonValidationErrorFor('description');
+        $this->storeRequest($fund, ['description' => null])->assertJsonMissingValidationErrors('description');
 
         // assert can't use amount lower or higher than configured
         $this->storeRequest($fund, ['amount' => 5])->assertJsonValidationErrorFor('amount');
@@ -192,7 +198,7 @@ class PayoutsTest extends TestCase
         $this->assertPayoutsUpdated($fund);
 
         $res = $this->storeRequestBatch($fund, [
-            'note' => 'Test note',
+            'description' => 'Test description',
             'amount' => '50',
             'target_iban' => $this->faker()->iban,
             'target_name' => 'John Doe',
@@ -200,11 +206,10 @@ class PayoutsTest extends TestCase
 
         $res->assertSuccessful();
 
-        $voucher = $fund->vouchers()->find($res->json('data.0.voucher_id'));
-        $transaction = $voucher?->transactions()->find($res->json('data.0.id'));
-
-        self::assertEquals(Voucher::VOUCHER_TYPE_PAYOUT, $voucher?->voucher_type);
-        self::assertEquals(VoucherTransaction::TARGET_PAYOUT, $transaction?->target);
+        self::assertEquals(
+            VoucherTransaction::TARGET_PAYOUT,
+            VoucherTransaction::find($res->json('data.0.id'))?->target,
+        );
     }
 
     /**
@@ -226,9 +231,9 @@ class PayoutsTest extends TestCase
         // assert can't use fund_id from another organization while correct fund id works
         $this->storeRequestBatch($fund, ['fund_id' => $fund->id])->assertJsonMissingValidationErrors('fund_id');
 
-        // assert can't use non string for note but null is allowed
-        $this->storeRequestBatch($fund, ['note' => []])->assertJsonValidationErrorFor('payouts.0.note');
-        $this->storeRequestBatch($fund, ['note' => null])->assertJsonMissingValidationErrors('payouts.0.note');
+        // assert can't use non string for description but null is allowed
+        $this->storeRequestBatch($fund, ['description' => []])->assertJsonValidationErrorFor('payouts.0.description');
+        $this->storeRequestBatch($fund, ['description' => null])->assertJsonMissingValidationErrors('payouts.0.description');
 
         // assert can't use amount lower or higher than configured
         $this->storeRequestBatch($fund, ['amount' => 5])->assertJsonValidationErrorFor('payouts.0.amount');
@@ -371,7 +376,7 @@ class PayoutsTest extends TestCase
         )->count());
 
         $res = $this->patchJson(
-            "/api/v1/platform/organizations/$organization->id/sponsor/transactions/payouts/$transaction->address",
+            "/api/v1/platform/organizations/$organization->id/sponsor/payouts/$transaction->address",
             ['skip_transfer_delay' => true],
             $this->makeApiHeaders($this->makeIdentityProxy($organization->identity))
         );
@@ -401,7 +406,7 @@ class PayoutsTest extends TestCase
         self::assertEquals(VoucherTransaction::STATE_PENDING, $transaction->state);
 
         $res = $this->patchJson(
-            "/api/v1/platform/organizations/$organization->id/sponsor/transactions/payouts/$transaction->address",
+            "/api/v1/platform/organizations/$organization->id/sponsor/payouts/$transaction->address",
             ['cancel' => true],
             $this->makeApiHeaders($this->makeIdentityProxy($organization->identity))
         );
@@ -473,7 +478,7 @@ class PayoutsTest extends TestCase
      */
     protected function storeRequest(Fund $fund, array $data): TestResponse
     {
-        $apiUrl = "/api/v1/platform/organizations/$fund->organization_id/sponsor/transactions/payout";
+        $apiUrl = "/api/v1/platform/organizations/$fund->organization_id/sponsor/payouts";
 
         return $this->postJson($apiUrl, [
             'fund_id' => $fund->id,
@@ -488,7 +493,7 @@ class PayoutsTest extends TestCase
      */
     protected function storeRequestBatch(Fund $fund, array $data): TestResponse
     {
-        $apiUrl = "/api/v1/platform/organizations/$fund->organization_id/sponsor/transactions/payouts";
+        $apiUrl = "/api/v1/platform/organizations/$fund->organization_id/sponsor/payouts/batch";
 
         return $this->postJson($apiUrl, [
             'fund_id' => $fund->id,
@@ -577,8 +582,6 @@ class PayoutsTest extends TestCase
 
         self::assertNotNull($voucher);
         self::assertNotNull($transaction);
-
-        self::assertEquals(Voucher::VOUCHER_TYPE_PAYOUT, $voucher?->voucher_type);
         self::assertEquals(VoucherTransaction::TARGET_PAYOUT, $transaction?->target);
     }
 }

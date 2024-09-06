@@ -57,6 +57,9 @@ class RolePermissionsTableSeeder extends Seeder
         "voucher_reader" => [
             "view_vouchers", "view_implementations", "view_funds",
         ],
+        "payouts_manager" => [
+            "manage_payouts",
+        ],
     ];
 
     /**

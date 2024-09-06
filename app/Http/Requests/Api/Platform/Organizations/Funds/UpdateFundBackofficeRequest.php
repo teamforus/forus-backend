@@ -6,6 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\FundConfig;
 use App\Models\Organization;
+use App\Models\Permission;
 
 /**
  * Class UpdateFundRequest
@@ -24,7 +25,7 @@ class UpdateFundBackofficeRequest extends BaseFormRequest
     {
         return $this->isAuthenticated() &&
             $this->fund->organization_id === $this->organization->id &&
-            $this->organization->identityCan($this->identity(), 'manage_funds');
+            $this->organization->identityCan($this->identity(), Permission::MANAGE_FUNDS);
     }
 
     /**

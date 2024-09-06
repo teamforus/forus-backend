@@ -102,7 +102,7 @@ class FundResource extends BaseJsonResource
             'children' => $fund->children->map(fn (Fund $child) => $child->only(['id', 'name'])),
         ], $fundConfigData, $financialData, $generatorData, $prevalidationCsvData);
 
-        if ($isDashboard && $organization->identityCan($identity, ['manage_funds', 'manage_fund_texts'], false)) {
+        if ($isDashboard && $organization->identityCan($identity, [Permission::MANAGE_FUNDS, Permission::MANAGE_FUND_TEXTS], false)) {
             $requesterCount = VoucherQuery::whereNotExpiredAndActive($fund->vouchers())
                 ->whereNull('parent_id')
                 ->count();
@@ -115,11 +115,13 @@ class FundResource extends BaseJsonResource
             ]);
         }
 
-        if ($isDashboard && $organization->identityCan($identity, 'manage_funds')) {
+        if ($isDashboard && $organization->identityCan($identity, Permission::MANAGE_FUNDS)) {
             $data['backoffice'] = $this->getBackofficeData($fund);
         }
 
-        if ($isDashboard && $organization->identityCan($identity, ['manage_funds', 'validate_records'], false)) {
+        if ($isDashboard && $organization->identityCan($identity, [
+            Permission::MANAGE_FUNDS, Permission::VALIDATE_RECORDS, Permission::MANAGE_PAYOUTS,
+        ], false)) {
             $data['amount_presets'] = FundAmountPresetResource::collection($fund->amount_presets);
         }
 

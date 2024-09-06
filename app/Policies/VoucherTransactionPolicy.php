@@ -28,7 +28,6 @@ class VoucherTransactionPolicy
      * @param Identity $identity
      * @param Organization $organization
      * @return bool
-     * @noinspection PhpUnused
      */
     public function viewAnySponsor(Identity $identity, Organization $organization): bool
     {
@@ -84,9 +83,7 @@ class VoucherTransactionPolicy
             }
         }
 
-        return $transaction->voucher->fund->organization->identityCan($identity, [
-            'view_finances',
-        ]);
+        return $transaction->voucher->fund->organization->identityCan($identity, 'view_finances');
     }
 
     /**
@@ -146,10 +143,42 @@ class VoucherTransactionPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function storePayoutsSponsor(
+    public function storeBatchAsSponsor(
         Identity $identity,
-        Organization $organization,
+        Organization $organization
     ): bool {
+        return $this->storeAsSponsor($identity, $organization);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
+    public function viewAnyPayoutsSponsor(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, [Permission::MANAGE_PAYOUTS]);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param VoucherTransaction $transaction
+     * @param Organization|null $organization
+     * @return bool|Response
+     */
+    public function showPayoutSponsor(
+        Identity $identity,
+        VoucherTransaction $transaction,
+        Organization $organization = null,
+    ): bool|Response {
+        if ($transaction->voucher?->fund?->organization_id !== $organization->id) {
+            return false;
+        }
+
+        if (!$transaction->targetIsPayout()) {
+            return $this->deny('Not payout transaction.');
+        }
+
         return $organization->identityCan($identity, Permission::MANAGE_PAYOUTS);
     }
 
@@ -158,11 +187,11 @@ class VoucherTransactionPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function storeBatchAsSponsor(
+    public function storePayoutsSponsor(
         Identity $identity,
-        Organization $organization
+        Organization $organization,
     ): bool {
-        return $this->storeAsSponsor($identity, $organization);
+        return $organization->identityCan($identity, Permission::MANAGE_PAYOUTS);
     }
 
     /**
@@ -176,7 +205,7 @@ class VoucherTransactionPolicy
         VoucherTransaction $transaction,
         Organization $organization,
     ): bool|Response {
-        if ($transaction->voucher->fund->organization_id != $organization->id) {
+        if ($transaction->voucher?->fund?->organization_id !== $organization->id) {
             return false;
         }
 
@@ -186,6 +215,6 @@ class VoucherTransactionPolicy
 
         return $transaction->voucher->fund->organization->identityCan($identity, [
             Permission::MANAGE_PAYOUTS,
-        ]) && $transaction->isEditableBySponsor();
+        ]) && $transaction->isEditablePayout();
     }
 }

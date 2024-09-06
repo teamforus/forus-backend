@@ -814,32 +814,29 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\Sponsor\TransactionsController@storeBatchValidate"
     );
 
-    $router->post(
-        'organizations/{organization}/sponsor/transactions/payout',
-        "Api\Platform\Organizations\Sponsor\TransactionsController@storePayout"
-    );
-
-    $router->post(
-        'organizations/{organization}/sponsor/transactions/payouts',
-        "Api\Platform\Organizations\Sponsor\TransactionsController@storePayoutBatch"
-    );
-
-    $router->post(
-        'organizations/{organization}/sponsor/transactions/payouts/validate',
-        "Api\Platform\Organizations\Sponsor\TransactionsController@storePayoutBatchValidate"
-    );
-
-    $router->patch(
-        'organizations/{organization}/sponsor/transactions/payouts/{transaction_address}',
-        'Api\Platform\Organizations\Sponsor\TransactionsController@updatePayout',
-    );
-
     $router->resource(
         'organizations/{organization}/sponsor/transactions',
         'Api\Platform\Organizations\Sponsor\TransactionsController'
     )->parameters([
         'transactions' => 'transaction_address',
     ])->only('index', 'show', 'store');
+
+    $router->post(
+        'organizations/{organization}/sponsor/payouts/batch',
+        "Api\Platform\Organizations\Sponsor\PayoutsController@storeBatch"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/payouts/batch/validate',
+        "Api\Platform\Organizations\Sponsor\PayoutsController@storeBatchValidate"
+    );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/payouts',
+        'Api\Platform\Organizations\Sponsor\PayoutsController'
+    )->parameters([
+        'payouts' => 'transaction_address',
+    ])->only('index', 'show', 'store', 'update');
 
     $router->get(
         'organizations/{organization}/sponsor/transaction-bulks/export-fields',
