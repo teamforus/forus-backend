@@ -140,7 +140,7 @@ class OrganizationResource extends JsonResource
                 'allow_batch_reservations', 'allow_budget_fund_limits',
                 'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
                 'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
-                'allow_provider_extra_payments', 'allow_pre_checks',
+                'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts',
             ]),
             ...$request->isProviderDashboard() ? [
                 'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),

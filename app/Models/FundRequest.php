@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Arr;
 
 /**
  * App\Models\FundRequest
@@ -27,6 +28,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string $disregard_note
  * @property bool $disregard_notify
  * @property string|null $state
+ * @property string|null $amount
+ * @property int|null $fund_amount_preset_id
  * @property \Illuminate\Support\Carbon|null $resolved_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -34,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property-read int|null $clarifications_count
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
+ * @property-read \App\Models\FundAmountPreset|null $fund_amount_preset
  * @property-read int|null $lead_time_days
  * @property-read string $lead_time_locale
  * @property-read string $state_locale
@@ -52,14 +56,18 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property-read int|null $records_disregarded_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $records_pending
  * @property-read int|null $records_pending_count
+ * @property-read Collection|\App\Models\Voucher[] $vouchers
+ * @property-read int|null $vouchers_count
  * @method static Builder|FundRequest newModelQuery()
  * @method static Builder|FundRequest newQuery()
  * @method static Builder|FundRequest query()
+ * @method static Builder|FundRequest whereAmount($value)
  * @method static Builder|FundRequest whereContactInformation($value)
  * @method static Builder|FundRequest whereCreatedAt($value)
  * @method static Builder|FundRequest whereDisregardNote($value)
  * @method static Builder|FundRequest whereDisregardNotify($value)
  * @method static Builder|FundRequest whereEmployeeId($value)
+ * @method static Builder|FundRequest whereFundAmountPresetId($value)
  * @method static Builder|FundRequest whereFundId($value)
  * @method static Builder|FundRequest whereId($value)
  * @method static Builder|FundRequest whereIdentityAddress($value)
@@ -186,11 +194,28 @@ class FundRequest extends BaseModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function fund_amount_preset(): BelongsTo
+    {
+        return $this->belongsTo(FundAmountPreset::class)->withTrashed();
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function records(): HasMany
     {
         return $this->hasMany(FundRequestRecord::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function vouchers(): HasMany
+    {
+        return $this->hasMany(Voucher::class);
     }
 
     /**
@@ -546,5 +571,76 @@ class FundRequest extends BaseModel
     public function isResolved(): bool
     {
         return in_array($this->state, self::STATES_RESOLVED);
+    }
+
+    /**
+     * @return array
+     */
+    public function formulaPreview(): array
+    {
+        $recordTypes = array_unique([
+            ...$this->fund->fund_formula_products->pluck('record_type_key_multiplier')->filter(),
+            ...$this->fund->fund_formulas->pluck('record_type_key')->filter(),
+        ]);
+
+        $trustedValues = $this->fund->getTrustedRecordOfTypes($this->identity_address, $recordTypes);
+        $requestValues = $this->records->pluck('value', 'record_type_key')->toArray();
+        $values = [...$trustedValues, ...$requestValues];
+
+        $products = $this->fund->fund_formula_products->sortByDesc('product_id')->map(fn ($formula) => [
+            'record' => $formula->record_type ? $formula->record_type->name : 'Product tegoed',
+            'type' => $formula->record_type_key_multiplier ? 'Multiply' : 'Vastgesteld',
+            'value' => $formula->product->name,
+            'count' => $formula->record_type_key_multiplier ? Arr::get($values, $formula->record_type_key_multiplier) : 1,
+            'total' => $formula->product->name,
+        ]);
+
+        $formula = $this->fund->fund_formulas->map(fn ($formula) => [
+            'record' => $formula->record_type ? $formula->record_type->name : 'Vastbedrag',
+            'type' => $formula->type_locale,
+            'value' => $formula->amount_locale,
+            'count' => $formula->record_type_key ? Arr::get($values, $formula->record_type_key) : 1,
+            'total' => currency_format_locale($formula->amount),
+            'amount' => currency_format($formula->amount),
+        ]);
+
+        return [
+            'trustedValues' => $trustedValues,
+            'requestValues' => $requestValues,
+            'total_products' => $products->sum('count'),
+            'total_amount' => currency_format_locale($formula->sum('amount')),
+            'products' => $products->toArray(),
+            'items' => $formula,
+        ];
+    }
+
+    /**
+     * @return FundAmountPreset|string|null
+     */
+    public function getPaymentAmount(): FundAmountPreset|string|null
+    {
+        return $this->fund_amount_preset ?: $this->amount;
+    }
+
+    /**
+     * @return string
+     */
+    public function getIban(): string
+    {
+        return $this->fund->getTrustedRecordOfType(
+            $this->identity_address,
+            $this->fund->fund_config->iban_record_key,
+        )?->value ?: '';
+    }
+
+    /**
+     * @return string
+     */
+    public function getIbanName(): string
+    {
+        return $this->fund->getTrustedRecordOfType(
+            $this->identity_address,
+            $this->fund->fund_config->iban_name_record_key,
+        )?->value ?: '';
     }
 }

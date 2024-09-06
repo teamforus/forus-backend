@@ -74,6 +74,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_bi_connection
  * @property bool $allow_provider_extra_payments
  * @property bool $allow_pre_checks
+ * @property bool $allow_payouts
  * @property bool $reservation_allow_extra_payments
  * @property int $pre_approve_external_funds
  * @property int $provider_throttling_value
@@ -175,6 +176,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAllowPayouts($value)
  * @method static EloquentBuilder|Organization whereAllowPreChecks($value)
  * @method static EloquentBuilder|Organization whereAllowProviderExtraPayments($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
@@ -319,6 +321,7 @@ class Organization extends BaseModel
         'auth_2fa_restrict_bi_connections'          => 'boolean',
         'allow_provider_extra_payments'             => 'boolean',
         'allow_pre_checks'                          => 'boolean',
+        'allow_payouts'                             => 'boolean',
         'reservation_allow_extra_payments'          => 'boolean',
         'show_provider_transactions'                => 'boolean',
         'bank_transaction_id'                       => 'boolean',
@@ -661,6 +664,7 @@ class Organization extends BaseModel
 
     /**
      * @return HasOneThrough
+     * @noinspection PhpUnused
      */
     public function last_employee_session(): HasOneThrough
     {
