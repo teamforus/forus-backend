@@ -188,7 +188,7 @@ class VoucherTransaction extends BaseModel
     public const SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'transaction_in', 'fund_name',
         'provider_name', 'product_name', 'target', 'uid', 'date_non_cancelable', 'bulk_state',
-        'employee_email',
+        'payment_type', 'employee_email',
     ];
 
     /**

@@ -4,10 +4,12 @@
 namespace App\Searches;
 
 use App\Models\Organization;
+use App\Models\ProductReservation;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QBuilder;
 
 class VoucherTransactionsSearch extends BaseSearch
 {
@@ -161,7 +163,7 @@ class VoucherTransactionsSearch extends BaseSearch
             VoucherTransactionQuery::whereAvailableForBulking($builder);
         }
 
-        return $builder;
+        return self::appendSelectPaymentType($builder);
     }
 
     /**
@@ -176,5 +178,43 @@ class VoucherTransactionsSearch extends BaseSearch
         }
 
         return VoucherTransactionQuery::whereOutgoing($builder);
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    protected static function appendSelectPaymentType(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        $builder = self::appendReservationField($builder);
+
+        return $builder->selectRaw(
+            'voucher_transactions.*,' .
+            '(CASE WHEN `reimbursement_id` IS NOT NULL THEN "reimbursement" ELSE ' .
+            '(CASE WHEN `product_id` IS NOT NULL THEN ' .
+            '(CASE WHEN `product_reservation_id` IS NOT NULL THEN "product_reservation" ELSE ' .
+            '"product_voucher" END) ELSE' .
+            '(CASE WHEN `initiator` = "' . VoucherTransaction::INITIATOR_SPONSOR . '" THEN ' .
+            '(CASE WHEN `target` = "' . VoucherTransaction::TARGET_PROVIDER . '" THEN ' .
+            '"direct_provider" ELSE' .
+            '(CASE WHEN `target` = "' . VoucherTransaction::TARGET_TOP_UP . '" THEN ' .
+            '"direct_top_up" ELSE "direct_iban" END) END) ELSE' .
+            '"voucher_scan" END) END) END) as `payment_type`'
+        );
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    public static function appendReservationField(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        $builder->addSelect([
+            'product_reservation_id' => ProductReservation::query()
+                ->whereColumn('voucher_transactions.id', 'voucher_transaction_id')
+                ->select('id')
+        ]);
+
+        return VoucherTransaction::fromSub($builder, 'voucher_transactions')->select('*');
     }
 }
