@@ -104,7 +104,7 @@ class UpdateFundRequest extends BaseFundRequest
             'amount_presets' => 'nullable|array',
             'amount_presets.*.id' => 'nullable|in:' . $this->fund->amount_presets()->pluck('id')->join(','),
             'amount_presets.*.name' => 'required|string|max:200',
-            'amount_presets.*.amount' => 'required|numeric|min:0|max:' . $this->fund->getMaxAmountPerVoucher(),
+            'amount_presets.*.amount' => "required|numeric|min:0|max:$maxPerVoucherAmount",
         ];
     }
 
