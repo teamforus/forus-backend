@@ -86,6 +86,7 @@ class UpdateFundRequest extends BaseFundRequest
             'allow_custom_amounts_validator' => 'nullable|boolean',
             'allow_preset_amounts_validator' => 'nullable|boolean',
             'custom_amount_min' => [
+                'nullable',
                 'required_if_accepted:allow_custom_amounts',
                 'required_if_accepted:allow_custom_amounts_validator',
                 'numeric',
@@ -94,6 +95,7 @@ class UpdateFundRequest extends BaseFundRequest
                 "max:$maxPerVoucherAmount",
             ],
             'custom_amount_max' => [
+                'nullable',
                 'required_if_accepted:allow_custom_amounts',
                 'required_if_accepted:allow_custom_amounts_validator',
                 'numeric',
