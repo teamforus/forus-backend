@@ -47,7 +47,7 @@ class PayoutsController extends Controller
             ]),
             'date_from' => $request->input('from') ? Carbon::parse($request->input('from'))->startOfDay() : null,
             'date_to' => $request->input('to') ? Carbon::parse($request->input('to'))->endOfDay() : null,
-            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'targets' => [VoucherTransaction::TARGET_PAYOUT],
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
         ], VoucherTransaction::searchSponsor($request, $organization));
 
