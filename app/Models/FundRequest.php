@@ -5,8 +5,10 @@ namespace App\Models;
 use App\Events\FundRequests\FundRequestAssigned;
 use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
+use App\Helpers\Validation;
 use App\Models\Traits\HasNotes;
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
+use App\Rules\Base\IbanRule;
 use App\Searches\FundRequestSearch;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Builder;
@@ -573,19 +575,32 @@ class FundRequest extends BaseModel
         return in_array($this->state, self::STATES_RESOLVED);
     }
 
-    /**
-     * @return array
-     */
-    public function formulaPreview(): array
+    private function getTrustedAndPendingRecordValues(): array
     {
         $recordTypes = array_unique([
             ...$this->fund->fund_formula_products->pluck('record_type_key_multiplier')->filter(),
             ...$this->fund->fund_formulas->pluck('record_type_key')->filter(),
         ]);
 
-        $trustedValues = $this->fund->getTrustedRecordOfTypes($this->identity_address, $recordTypes);
-        $requestValues = $this->records->pluck('value', 'record_type_key')->toArray();
-        $values = [...$trustedValues, ...$requestValues];
+        $trustedValues = $this->fund->getTrustedRecordOfTypes(
+            $this->identity_address,
+            $recordTypes,
+        );
+
+        $requestValues = $this->records->whereIn('state', [
+            FundRequestRecord::STATE_PENDING,
+            FundRequestRecord::STATE_APPROVED,
+        ])->pluck('value', 'record_type_key')->toArray();
+
+        return  [...$trustedValues, ...$requestValues];
+    }
+
+    /**
+     * @return array
+     */
+    public function formulaPreview(): array
+    {
+        $values = $this->getTrustedAndPendingRecordValues();
 
         $products = $this->fund->fund_formula_products->sortByDesc('product_id')->map(fn ($formula) => [
             'record' => $formula->record_type ? $formula->record_type->name : 'Product tegoed',
@@ -605,8 +620,6 @@ class FundRequest extends BaseModel
         ]);
 
         return [
-            'trustedValues' => $trustedValues,
-            'requestValues' => $requestValues,
             'total_products' => $products->sum('count'),
             'total_amount' => currency_format_locale($formula->sum('amount')),
             'products' => $products->toArray(),
@@ -642,5 +655,30 @@ class FundRequest extends BaseModel
             $this->identity_address,
             $this->fund->fund_config->iban_name_record_key,
         )?->value ?: '';
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getResolvingError(): ?string
+    {
+        if ($this->fund->fund_config->isPayoutOutcome()) {
+            $values = $this->getTrustedAndPendingRecordValues();
+
+            if (!Arr::get($values, $this->fund?->fund_config->iban_record_key) ||
+                !Arr::get($values, $this->fund?->fund_config->iban_name_record_key)) {
+                return "invalid_iban_record_values";
+            }
+
+            if (Validation::check(Arr::get($values, $this->fund?->fund_config->iban_record_key), [
+                'required', new IbanRule(),
+            ])->fails()) {
+                return "invalid_iban_format";
+            }
+
+            return $this->fund->getResolvingError();
+        }
+
+        return null;
     }
 }

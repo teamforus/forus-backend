@@ -83,7 +83,7 @@ class FundRequestsController extends Controller
         Organization $organization,
         FundRequest $fundRequest,
     ): JsonResponse {
-        $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
+        $this->authorize('approveAsValidator', [$fundRequest, $organization]);
 
         return new JsonResponse($fundRequest->formulaPreview());
     }
@@ -145,7 +145,7 @@ class FundRequestsController extends Controller
         Organization $organization,
         FundRequest $fundRequest,
     ): ValidatorFundRequestResource {
-        $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
+        $this->authorize('approveAsValidator', [$fundRequest, $organization]);
 
         $data = $request->input('fund_amount_preset_id') ?
             $request->only('fund_amount_preset_id') :

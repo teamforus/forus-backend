@@ -43,6 +43,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * App\Models\Fund
@@ -2053,5 +2054,38 @@ class Fund extends BaseModel
             $this->isTypeBudget() &&
             $this->fund_config?->allow_direct_payments &&
             $this->fund_config?->allow_generator_direct_payments;
+    }
+
+    /**
+     * @return ?string
+     */
+    public function getResolvingError(): ?string
+    {
+        if ($this->fund_config->isPayoutOutcome()) {
+            if (!$this->fund_config->iban_record_key || !$this->fund_config->iban_name_record_key) {
+                return "invalid_iban_record_keys";
+            }
+
+            if ($this->organization->fund_request_resolve_policy ===
+                Organization::FUND_REQUEST_POLICY_MANUAL) {
+                return "invalid_fund_request_manual_policy";
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $error
+     * @param array $data
+     * @return void
+     */
+    public function logError(string $error, array $data = []): void
+    {
+        Log::channel('funds')->error(json_pretty([
+            'error' => "[$error]",
+            'fund_id' => $this->id,
+            ...$data,
+        ]));
     }
 }
