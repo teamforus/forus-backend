@@ -41,8 +41,23 @@ class SendContactFormRequest extends BaseFormRequest
                 ...$this->emailRules(),
             ],
             'phone' => 'nullable|string',
-            'organization' => 'nullable|string',
-            'message' => 'required|string',
+            'message' => 'nullable|string',
+            'organization_name' => 'nullable|string',
+            'accept_privacy_terms' => 'required|boolean|accepted',
+            'accept_product_update_terms' => 'nullable|boolean',
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Deze informatie hebben we nodig om uw aanvraag goed te verwerken.',
+            'email.required' => 'Deze informatie hebben we nodig om uw aanvraag goed te verwerken.',
+            'accept_privacy_terms.accepted' => 'Om verder te gaan, dient u toestemming geven voor '.
+                'het verwerken en opslaan van uw persoonsgegevens.',
         ];
     }
 }
