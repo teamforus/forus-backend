@@ -6,6 +6,7 @@ use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\Tiny\ProductTinyResource;
 use App\Http\Resources\VoucherTransactionNoteResource;
 use App\Models\VoucherTransaction;
+use App\Searches\VoucherTransactionsSearch;
 use Illuminate\Http\Request;
 
 /**
@@ -87,6 +88,10 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
     {
         $key = $transaction['payment_type'];
         $params = ['product' => $transaction->product?->name];
+
+        $key = $key ?: VoucherTransactionsSearch::appendSelectPaymentType(
+            VoucherTransaction::whereId($transaction->id),
+        )->pluck('payment_type')->first();
 
         return [
             'title' => trans("transaction.payment_type.$key.title", $params),

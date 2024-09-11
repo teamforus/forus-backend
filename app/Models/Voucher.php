@@ -523,7 +523,7 @@ class Voucher extends BaseModel
      */
     public function isTypePayout(): bool
     {
-        return $this->type === self::VOUCHER_TYPE_PAYOUT;
+        return $this->voucher_type === self::VOUCHER_TYPE_PAYOUT;
     }
 
     /**

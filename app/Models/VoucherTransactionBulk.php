@@ -614,7 +614,7 @@ class VoucherTransactionBulk extends BaseModel
 
         $transactionsBulk->log(self::EVENT_CREATED, $transactionsBulk->getLogModels($employee));
 
-        $query->take($perBulk)->update([
+        VoucherTransaction::whereIn('id', $query->take($perBulk)->pluck('id')->toArray())->update([
             'voucher_transaction_bulk_id' => $transactionsBulk->id,
         ]);
 

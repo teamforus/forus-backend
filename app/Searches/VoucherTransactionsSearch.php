@@ -186,7 +186,7 @@ class VoucherTransactionsSearch extends BaseSearch
      * @param Builder|QBuilder $builder
      * @return Builder|QBuilder
      */
-    private static function appendSelectPaymentType(Builder|QBuilder $builder): Builder|QBuilder
+    public static function appendSelectPaymentType(Builder|QBuilder $builder): Builder|QBuilder
     {
         $builder = self::appendFundRequestId($builder);
         $builder = self::appendReservationField($builder);
