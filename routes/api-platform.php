@@ -733,6 +733,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'Api\Platform\Organizations\Provider\FundProviderController@availableFunds'
     );
 
+    $router->get(
+        'organizations/{organization}/provider/funds-product-required',
+        "Api\Platform\Organizations\Provider\FundProviderController@fundsProductRequired");
+
     $router->resource(
         'organizations/{organization}/provider/funds',
         "Api\Platform\Organizations\Provider\FundProviderController", [

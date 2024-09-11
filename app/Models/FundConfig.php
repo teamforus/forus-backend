@@ -70,6 +70,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $iconnect_cert
  * @property string $iconnect_cert_pass
  * @property string $iconnect_cert_trust
+ * @property bool $provider_products_required
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -138,6 +139,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTopUpAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereProviderProductsRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVoucherAmountVisible($value)
@@ -176,6 +178,7 @@ class FundConfig extends BaseModel
         'email_required', 'contact_info_enabled', 'contact_info_required',
         'contact_info_message_custom', 'contact_info_message_text',
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'hide_meta', 'voucher_amount_visible',
+        'provider_products_required',
     ];
 
     /**
@@ -234,6 +237,7 @@ class FundConfig extends BaseModel
         'auth_2fa_restrict_reimbursements' => 'boolean',
         'hide_meta' => 'boolean',
         'voucher_amount_visible' => 'boolean',
+        'provider_products_required' => 'boolean',
     ];
 
     /**

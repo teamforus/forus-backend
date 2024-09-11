@@ -488,6 +488,7 @@ class Fund extends BaseModel
             'auth_2fa_policy', 'auth_2fa_remember_ip',
             'auth_2fa_restrict_emails', 'auth_2fa_restrict_auth_sessions',
             'auth_2fa_restrict_reimbursements', 'hide_meta', 'voucher_amount_visible',
+            'provider_products_required',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
