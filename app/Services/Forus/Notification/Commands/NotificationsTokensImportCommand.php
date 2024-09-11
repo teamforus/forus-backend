@@ -74,6 +74,6 @@ class NotificationsTokensImportCommand extends Command
             }
         }
 
-        $this->line("${$countSuccess} rows imported, ${$countError} rows failed.");
+        $this->line("{${$countSuccess}} rows imported, {${$countError}} rows failed.");
     }
 }
