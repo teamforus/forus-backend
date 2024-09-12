@@ -27,6 +27,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -100,9 +101,8 @@ class FundsController extends Controller
         $fund->makeFundConfig($request->only([
             'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'email_required', 'contact_info_enabled', 'contact_info_required',
-            'contact_info_message_custom', 'contact_info_message_text',
-            'hide_meta', 'voucher_amount_visible',
-            'provider_products_required',
+            'contact_info_message_custom', 'contact_info_message_text', 'hide_meta',
+            'voucher_amount_visible', 'outcome_type', 'provider_products_required',
         ]));
 
         $fund->attachMediaByUid($request->input('media_uid'));
@@ -171,32 +171,53 @@ class FundsController extends Controller
     public function update(
         UpdateFundRequest $request,
         Organization $organization,
-        Fund $fund
+        Fund $fund,
     ): FundResource {
         $this->authorize('show', $organization);
 
         $manageFund = Gate::allows('update', [$fund, $organization]);
         $manageFundTexts = Gate::allows('updateTexts', [$fund, $organization]);
 
-        $fund->update($request->only(array_merge($manageFundTexts || $manageFund ? [
-            'name', 'description', 'description_short', 'description_position', 'request_btn_text',
-            'external_link_text', 'external_link_url', 'faq_title', 'external_page', 'external_page_url',
-        ] : [], $manageFund ? [
-            'notification_amount', 'default_validator_employee_id',
-            'auto_requests_validation', 'request_btn_text',
-        ] : [])));
+        if ($manageFundTexts && !$manageFund) {
+            $fund->update($request->only([
+                'name', 'description', 'description_short', 'description_position', 'request_btn_text',
+                'external_link_text', 'external_link_url', 'faq_title', 'external_page', 'external_page_url',
+            ]));
+        }
 
         if ($manageFund) {
+            $fund->update([
+                ...$request->only([
+                    'name', 'description', 'description_short', 'description_position', 'request_btn_text',
+                    'external_link_text', 'external_link_url', 'faq_title', 'external_page', 'external_page_url',
+                    'notification_amount', 'default_validator_employee_id',
+                    'auto_requests_validation', 'request_btn_text',
+                ]),
+                ...($fund->isWaiting() ? $request->only([
+                    'start_date', 'end_date',
+                ]) : [])
+            ]);
+
             if (!$fund->default_validator_employee_id) {
                 $fund->updateModelValue('auto_requests_validation', false);
             }
 
-            $fund->updateFundsConfig($request->only([
-                'email_required', 'contact_info_enabled', 'contact_info_required',
-                'contact_info_message_custom', 'contact_info_message_text',
-                'hide_meta', 'voucher_amount_visible',
-                'provider_products_required',
-            ]));
+            $fund->updateFundsConfig([
+                ...$request->only([
+                    'email_required', 'contact_info_enabled', 'contact_info_required',
+                    'contact_info_message_custom', 'contact_info_message_text',
+                    'hide_meta', 'voucher_amount_visible', 'provider_products_required',
+                ]),
+                ...($fund->organization->allow_payouts ? $request->only([
+                    'custom_amount_min', 'custom_amount_max',
+                    'allow_preset_amounts', 'allow_preset_amounts_validator',
+                    'allow_custom_amounts', 'allow_custom_amounts_validator',
+                ]) : [])
+            ]);
+
+            if ($fund->organization->allow_payouts && is_array($request->input('amount_presets'))) {
+                $fund->syncAmountPresets($request->input('amount_presets'));
+            }
 
             if ($fund->isWaiting()) {
                 $fund->updateFundsConfig($request->only([
@@ -228,7 +249,7 @@ class FundsController extends Controller
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
 
-        FundUpdatedEvent::dispatch($fund);
+        Event::dispatch(new FundUpdatedEvent($fund));
 
         return FundResource::create($fund);
     }

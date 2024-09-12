@@ -3,11 +3,15 @@
 
 namespace App\Searches;
 
+use App\Models\Voucher;
 use App\Models\Organization;
+use App\Models\PayoutRelation;
+use App\Models\ProductReservation;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QBuilder;
 
 class VoucherTransactionsSearch extends BaseSearch
 {
@@ -115,7 +119,7 @@ class VoucherTransactionsSearch extends BaseSearch
         }
 
         if ($this->hasFilter('fund_state') && ($fund_state = $this->getFilter('fund_state'))) {
-            $builder->whereHas('voucher.fund', fn (Builder $b) => $b->where('state', '=', $fund_state));
+            $builder->whereHas('voucher.fund', fn(Builder $b) => $b->where('state', '=', $fund_state));
         }
 
         if ($this->hasFilter('bulk_state') && ($bulk_state = $this->getFilter('bulk_state'))) {
@@ -161,7 +165,7 @@ class VoucherTransactionsSearch extends BaseSearch
             VoucherTransactionQuery::whereAvailableForBulking($builder);
         }
 
-        return $builder;
+        return self::appendSelectPaymentType(self::appendSelectRelation($builder));
     }
 
     /**
@@ -176,5 +180,87 @@ class VoucherTransactionsSearch extends BaseSearch
         }
 
         return VoucherTransactionQuery::whereOutgoing($builder);
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    public static function appendSelectPaymentType(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        $builder = self::appendFundRequestId($builder);
+        $builder = self::appendReservationField($builder);
+
+        return $builder->selectRaw(
+            'voucher_transactions.*, 
+            (
+                CASE WHEN `reimbursement_id` IS NOT NULL THEN "reimbursement"
+                ELSE (
+                    CASE WHEN `product_id` IS NOT NULL THEN (
+                        CASE 
+                            WHEN `product_reservation_id` IS NOT NULL THEN "product_reservation" 
+                            ELSE "product_voucher" END
+                    ) ELSE (
+                        CASE
+                            WHEN `initiator` = "' . VoucherTransaction::TARGET_PROVIDER . '" THEN "direct_provider"
+                            WHEN `target` = "' . VoucherTransaction::TARGET_IBAN . '" THEN "direct_iban"
+                            WHEN `target` = "' . VoucherTransaction::TARGET_TOP_UP . '" THEN "direct_top_up"
+                            WHEN `target` = "' . VoucherTransaction::TARGET_PAYOUT . '" THEN (
+                                CASE WHEN `fund_request_id` IS NULL THEN (
+                                    CASE WHEN `upload_batch_id` IS NOT NULL THEN "payout_bulk" ELSE "payout_single" END
+                                ) ELSE "payout_request" END
+                            )
+                        ELSE NULL END
+                    ) END
+                ) END
+            ) as `payment_type`'
+        );
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    private static function appendSelectRelation(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        $builder->addSelect([
+            'relation' => PayoutRelation::query()
+                ->whereColumn('voucher_transactions.id', 'voucher_transaction_id')
+                ->orderBy('type')
+                ->select('value')
+                ->take(1),
+        ]);
+
+        return VoucherTransaction::fromSub($builder, 'voucher_transactions')->select('*');
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    private static function appendReservationField(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        $builder->addSelect([
+            'product_reservation_id' => ProductReservation::query()
+                ->whereColumn('voucher_transactions.id', 'voucher_transaction_id')
+                ->select('id')
+        ]);
+
+        return VoucherTransaction::fromSub($builder, 'voucher_transactions')->select('*');
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    private static function appendFundRequestId(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        $builder->addSelect([
+            'fund_request_id' => Voucher::query()
+                ->whereColumn('id', 'voucher_id')
+                ->select('fund_request_id')
+        ]);
+
+        return VoucherTransaction::fromSub($builder, 'voucher_transactions')->select('*');
     }
 }

@@ -13,6 +13,7 @@ use App\Scopes\Builders\FundRequestQuery;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\App;
 
 class FundRequestPolicy
 {
@@ -193,13 +194,14 @@ class FundRequestPolicy
      * @param Identity $identity
      * @param FundRequest $fundRequest
      * @param Organization $organization
+     * @param bool $checkResolvingIssues
      * @return Response|bool
-     * @noinspection PhpUnused
      */
     private function baseResolveAsValidator(
         Identity $identity,
         FundRequest $fundRequest,
-        Organization $organization
+        Organization $organization,
+        bool $checkResolvingIssues = false,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
             return $this->deny('invalid_endpoint');
@@ -215,6 +217,12 @@ class FundRequestPolicy
             return $this->deny('has_disregarded_records');
         }
 
+        // should be properly configured
+        if ($checkResolvingIssues && ($error = $fundRequest->getResolvingError())) {
+            $fundRequest->fund->logError($error, ['fund_request_id' => $fundRequest->id]);
+            return $this->deny(App::hasDebugModeEnabled() ? $error : 'configuration_issue');
+        }
+
         // has to be assigned
         return $fundRequest->employee?->identity_address === $identity->address;
     }
@@ -225,19 +233,37 @@ class FundRequestPolicy
      * @param Identity $identity
      * @param FundRequest $fundRequest
      * @param Organization $organization
+     * @param bool $checkResolvingIssues
      * @return Response|bool
-     * @noinspection PhpUnused
      */
     public function resolveAsValidator(
         Identity $identity,
         FundRequest $fundRequest,
         Organization $organization,
+        bool $checkResolvingIssues = false,
     ): Response|bool {
         if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return $this->deny('invalid_validator');
         }
 
-        return $this->baseResolveAsValidator($identity, $fundRequest, $organization);
+        return $this->baseResolveAsValidator($identity, $fundRequest, $organization, $checkResolvingIssues);
+    }
+
+    /**
+     * Determine whether the validator can approve the fundRequest.
+     *
+     * @param Identity $identity
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function approveAsValidator(
+        Identity $identity,
+        FundRequest $fundRequest,
+        Organization $organization,
+    ): Response|bool {
+        return $this->resolveAsValidator($identity, $fundRequest, $organization, true);
     }
 
     /**

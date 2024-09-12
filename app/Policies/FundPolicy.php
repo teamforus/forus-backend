@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\FundCriterion;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -21,7 +22,7 @@ class FundPolicy
     public function viewAny(Identity $identity, Organization $organization): bool
     {
         return $organization->identityCan($identity, [
-            'manage_funds', 'view_finances', 'view_funds',
+            Permission::MANAGE_PAYOUTS, Permission::MANAGE_FUNDS, 'view_finances', 'view_funds',
         ], false);
     }
 
@@ -32,7 +33,7 @@ class FundPolicy
      */
     public function store(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_funds');
+        return $organization->identityCan($identity, Permission::MANAGE_FUNDS);
     }
 
     /**
@@ -48,7 +49,7 @@ class FundPolicy
         }
 
         return $fund->public || $fund->organization->identityCan($identity, [
-            'manage_funds', 'view_finances', 'view_funds'
+            Permission::MANAGE_FUNDS, 'view_finances', 'view_funds'
         ], false);
     }
 
@@ -167,7 +168,7 @@ class FundPolicy
             return false;
         }
 
-        return $fund->organization->identityCan($identity, 'manage_funds');
+        return $fund->organization->identityCan($identity, Permission::MANAGE_FUNDS);
     }
 
     /**
@@ -182,7 +183,7 @@ class FundPolicy
             return false;
         }
 
-        return $fund->organization->identityCan($identity, 'manage_fund_texts');
+        return $fund->organization->identityCan($identity, Permission::MANAGE_FUND_TEXTS);
     }
 
     /**
@@ -356,7 +357,8 @@ class FundPolicy
             return false;
         }
 
-        return $organization->identityCan($identity, 'manage_funds') &&
+        return
+            $organization->identityCan($identity, Permission::MANAGE_FUNDS) &&
             $fund->state === Fund::STATE_WAITING;
     }
 

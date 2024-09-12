@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\FundProviderInvitation;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -27,7 +28,7 @@ class FundProviderInvitationPolicy
         }
 
         return $organization->identityCan($identity, [
-            'manage_providers', 'manage_funds'
+            'manage_providers', Permission::MANAGE_FUNDS,
         ]);
     }
 
@@ -54,7 +55,7 @@ class FundProviderInvitationPolicy
         }
 
         return $organization->identityCan($identity, [
-            'manage_providers', 'manage_funds'
+            'manage_providers', Permission::MANAGE_FUNDS,
         ]);
     }
 
@@ -81,7 +82,7 @@ class FundProviderInvitationPolicy
         }
 
         return $organization->identityCan($identity, [
-            'manage_providers', 'manage_funds'
+            'manage_providers', Permission::MANAGE_FUNDS,
         ]);
     }
 

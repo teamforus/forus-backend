@@ -45,13 +45,13 @@ class VoucherSubscriber
         $product = $voucher->product;
 
         $voucher->tokens()->create([
-            'address'           => resolve('token_generator')->address(),
+            'address' => resolve('token_generator')->address(),
             'need_confirmation' => true,
         ]);
 
         /** @var VoucherToken $voucherToken */
         $voucher->tokens()->create([
-            'address'           => resolve('token_generator')->address(),
+            'address' => resolve('token_generator')->address(),
             'need_confirmation' => false,
         ]);
 
@@ -92,15 +92,19 @@ class VoucherSubscriber
             if ($voucher->identity && $voucher->fund->fund_formulas->count() > 0) {
                 VoucherAssigned::dispatch($voucher);
 
-                if ($voucher->fund->isTypeSubsidy()) {
-                    IdentityVoucherAddedSubsidyNotification::send($event);
-                } else {
-                    IdentityVoucherAddedBudgetNotification::send($event);
+                if (!$voucher->isTypePayout()) {
+                    if ($voucher->fund->isTypeSubsidy()) {
+                        IdentityVoucherAddedSubsidyNotification::send($event);
+                    } else {
+                        IdentityVoucherAddedBudgetNotification::send($event);
+                    }
                 }
             }
         }
 
-        $voucher->reportBackofficeReceived();
+        if (!$voucher->isTypePayout()) {
+            $voucher->reportBackofficeReceived();
+        }
     }
 
     /**
@@ -142,7 +146,7 @@ class VoucherSubscriber
             'implementation_name' => $voucher->fund->fund_config->implementation->name,
         ]);
 
-        if ($voucherAssigned->shouldNotifyRequesterAssigned()) {
+        if ($voucherAssigned->shouldNotifyRequesterAssigned() && !$voucher->isTypePayout()) {
             switch ($type) {
                 case 'budget': IdentityVoucherAssignedBudgetNotification::send($event); break;
                 case 'subsidy': IdentityVoucherAssignedSubsidyNotification::send($event); break;
@@ -150,7 +154,9 @@ class VoucherSubscriber
             }
         }
 
-        $voucher->reportBackofficeReceived();
+        if (!$voucher->isTypePayout()) {
+            $voucher->reportBackofficeReceived();
+        }
     }
 
     /**

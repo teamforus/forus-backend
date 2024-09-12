@@ -185,7 +185,7 @@ class Prevalidation extends BaseModel
 
         // list of funds where you can manage funds
         $managedFunds = Fund::whereRelation('organization', function(Builder $builder) use ($identity_address) {
-            OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');
+            OrganizationQuery::whereHasPermissions($builder, $identity_address, Permission::MANAGE_FUNDS);
         })->pluck('id')->toArray();
 
         // list of identities who can validate records for funds where you can manage funds
@@ -195,7 +195,7 @@ class Prevalidation extends BaseModel
             ]);
 
             $builder->whereHas('organization', function(Builder $builder) use ($identity_address) {
-                OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');
+                OrganizationQuery::whereHasPermissions($builder, $identity_address, Permission::MANAGE_FUNDS);
             });
         })->pluck('address')->toArray();
 

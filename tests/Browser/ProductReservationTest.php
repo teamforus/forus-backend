@@ -51,7 +51,6 @@ class ProductReservationTest extends DuskTestCase
         $organization = $implementation->organization;
 
         $fund = $this->makeTestFund($organization->fresh());
-        $fund->getOrCreateTopUp()->transactions()->create(['amount' => 100000]);
 
         // Models exist
         $this->assertNotNull($implementation);

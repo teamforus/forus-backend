@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use App\Models\Fund;
+use App\Models\FundConfig;
 use App\Models\Organization;
 use App\Rules\MediaUidRule;
 use Illuminate\Support\Facades\Gate;
@@ -34,8 +35,9 @@ class StoreFundRequest extends BaseFundRequest
         $startAfter = now()->addDays(5)->format('Y-m-d');
         $descriptionPositions = implode(',', Fund::DESCRIPTION_POSITIONS);
 
-        return array_merge([
+        return [
             'type'                          => ['required', Rule::in(Fund::TYPES)],
+            'outcome_type'                  => ['required', Rule::in(FundConfig::OUTCOME_TYPES)],
             'name'                          => 'required|between:2,200',
             'media_uid'                     => ['nullable', new MediaUidRule('fund_logo')],
             'description'                   => 'nullable|string|max:15000',
@@ -57,11 +59,10 @@ class StoreFundRequest extends BaseFundRequest
             'external_page_url'             => 'nullable|required_if:external_page,true|string|max:200|url',
             'auto_requests_validation'      => 'nullable|boolean',
             'default_validator_employee_id' => 'nullable|in:' . $availableEmployees->join(','),
-        ], array_merge(
-            $this->faqRules([]),
-            $this->criteriaRule(),
-            $this->funConfigsRules(),
-            $this->fundFormulaProductsRule(),
-        ));
+            ...$this->faqRules([]),
+            ...$this->criteriaRule(),
+            ...$this->funConfigsRules(),
+            ...$this->fundFormulaProductsRule(),
+        ];
     }
 }
