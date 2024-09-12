@@ -79,6 +79,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $iconnect_cert
  * @property string $iconnect_cert_pass
  * @property string $iconnect_cert_trust
+ * @property bool $provider_products_required
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -155,7 +156,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTopUpAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
+<<<<<<< HEAD
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereOutcomeType($value)
+=======
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereProviderProductsRequired($value)
+>>>>>>> develop
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVoucherAmountVisible($value)
@@ -204,6 +209,7 @@ class FundConfig extends BaseModel
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'hide_meta', 'voucher_amount_visible',
         'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
         'allow_custom_amounts', 'allow_preset_amounts', 'custom_amount_min', 'custom_amount_max',
+        'provider_products_required',
     ];
 
     /**
@@ -266,6 +272,7 @@ class FundConfig extends BaseModel
         'allow_preset_amounts' => 'boolean',
         'allow_custom_amounts_validator' => 'boolean',
         'allow_preset_amounts_validator' => 'boolean',
+        'provider_products_required' => 'boolean',
     ];
 
     /**
