@@ -20,6 +20,11 @@ return [[
     'type' => 'iban',
     'criteria' => true,
 ], [
+    'key' => 'iban_name',
+    'name' => 'IBAN Name',
+    'type' => 'string',
+    'criteria' => true,
+], [
     'key' => 'municipality',
     'name' => 'Municipality',
     'type' => 'select',

@@ -23,7 +23,7 @@ class StoreFundRequestRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->fund->state === Fund::STATE_ACTIVE;
+        return $this->fund->state === Fund::STATE_ACTIVE && !$this->fund->getResolvingError();
     }
 
     /**

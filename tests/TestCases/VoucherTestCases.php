@@ -238,7 +238,7 @@ class VoucherTestCases
 
     /** @var array|array[]  */
     public static array $featureTestCaseSubsidyFundBudgetVouchers = [
-        'fund_id' => 6,
+        'fund_id' => 4,
         'assert_fund_type' => 'subsidies',
 
         'organization' => [

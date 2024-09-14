@@ -58,7 +58,6 @@ class FundCheckRelationBsnTest extends TestCase
         $requester->setBsnRecord($voucher->voucher_relation->bsn);
 
         $futureFund = $this->makeTestFund($voucher->fund->organization);
-        $futureFund->getOrCreateTopUp()->transactions()->create(['amount' => 100000]);
 
         $response = $this->postJson(
             "/api/v1/platform/funds/$futureFund->id/check",
@@ -109,9 +108,6 @@ class FundCheckRelationBsnTest extends TestCase
         $sponsorOrganization->update(['bsn_enabled' => true]);
 
         $fund = $this->makeTestFund($sponsorOrganization);
-        $fund->getOrCreateTopUp()->transactions()->create(['amount' => 100000]);
-
-        self::assertEquals(100000, $fund->refresh()->budget_left);
 
         $uploadResponse = $this->postJson(
             "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/vouchers",

@@ -245,6 +245,10 @@ class IdentityController extends Controller
             $sourceUrl = config('forus.front_ends.app-me_app');
         } else {
             $sourceUrl = Implementation::byKey($implementationKey)->urlFrontend($clientType);
+
+            if ($clientType == 'website') {
+                $sourceUrl = config('forus.front_ends.website-default');
+            }
         }
 
         $redirectUrl = sprintf(

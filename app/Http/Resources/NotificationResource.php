@@ -6,6 +6,7 @@ use App\Models\Implementation;
 use App\Models\Notification;
 use App\Models\NotificationTemplate;
 use App\Services\EventLogService\Models\EventLog;
+use Illuminate\Http\Request;
 use Throwable;
 
 /**
@@ -25,18 +26,19 @@ class NotificationResource extends BaseJsonResource
      * @return array
      * @throws Throwable
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $event = $this->resource->event;
         $template = $this->getTemplate($event);
+        $templateData = array_map(fn ($item) => is_array($item) ? '' : $item, $event->data);
 
         return array_merge([
             'id' => $this->resource->id,
             'type' => $this->resource->key,
             'seen' => $this->resource->read_at != null,
         ], $template ? [
-            'title' => str_var_replace($template->title, $event->data),
-            'description' => str_var_replace($template->content, $event->data),
+            'title' => str_var_replace($template->title, $templateData),
+            'description' => str_var_replace($template->content, $templateData),
         ] : [], $this->timestamps($this->resource, 'created_at'));
     }
 

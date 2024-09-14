@@ -19,7 +19,9 @@ use App\Searches\FundSearch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Gate;
+use Exception;
 
 class FundsController extends Controller
 {
@@ -108,11 +110,16 @@ class FundsController extends Controller
      * @param BaseFormRequest $request
      * @param Fund $fund
      * @return VoucherResource|null
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
      */
     public function apply(BaseFormRequest $request, Fund $fund): ?VoucherResource
     {
         $this->authorize('apply', [$fund, 'apply']);
+
+        if ($error = $fund->getResolvingError()) {
+            $fund->logError('[invalid_iban_record_keys]', ['action' => 'fund_apply']);
+            throw new Exception(App::hasDebugModeEnabled() ? $error : 'Niet beschikbaar.', 403);
+        }
 
         $voucher = $fund->makeVoucher($request->auth_address());
         $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($request->auth_address());
