@@ -57,15 +57,58 @@ class AnnouncementSearch extends BaseSearch
             ->where(function (Builder $builder) {
                 $builder->whereNull('expire_at');
                 $builder->orWhere('expire_at', '>=', now()->startOfDay());
+            })
+            ->where(function (Builder $builder) {
+                $builder->whereNull('start_at');
+                $builder->orWhere('start_at', '<=', now()->startOfDay());
             });
 
         if (!$this->hasFilter('identity_address') || !$this->hasFilter('organization_id')) {
             $builder->where(function (Builder $builder) {
                 $builder->whereNull('announceable_id');
                 $builder->whereNull('announceable_type');
+                $builder->whereNull('organization_id');
+                $builder->whereNull('role_id');
             });
         } else {
-            $this->whereBankConnection($builder);
+            $identity_address = $this->getFilter('identity_address');
+            $organization_id = $this->getFilter('organization_id');
+
+            $builder->where(function (Builder $builder) use ($identity_address, $organization_id) {
+                $this->whereBankConnection($builder);
+
+                $builder->orWhere(function (Builder $builder) use ($identity_address, $organization_id) {
+                    if ($identity_address) {
+                        $builder->where(function (Builder $builder) use ($identity_address, $organization_id) {
+                            $builder->whereHas('role', function (Builder $builder) use ($identity_address) {
+                                $builder->whereRelation('employees', 'identity_address', $identity_address);
+                            });
+
+                            if ($organization_id) {
+                                $builder->where(function (Builder $builder) use ($organization_id) {
+                                    $builder->whereNull('organization_id');
+                                    $builder->orWhere('organization_id', $organization_id);
+                                });
+                            }
+                        });
+                    }
+
+                    if ($organization_id) {
+                        $builder->orWhere(function (Builder $builder) use ($organization_id, $identity_address) {
+                            $builder->where('organization_id', $organization_id);
+
+                            if ($identity_address) {
+                                $builder->where(function (Builder $builder) use ($identity_address) {
+                                    $builder->whereNull('role_id');
+                                    $builder->orWhereHas('role', function (Builder $builder) use ($identity_address) {
+                                        $builder->whereRelation('employees', 'identity_address', $identity_address);
+                                    });
+                                });
+                            }
+                        });
+                    }
+                });
+            });
         }
 
         return $builder->orderBy('created_at');
