@@ -6,10 +6,14 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\EmployeeResource;
 use App\Http\Resources\FileResource;
+use App\Http\Resources\FundAmountPresetResource;
 use App\Http\Resources\FundCriterionResource;
+use App\Http\Resources\FundFormulaProductResource;
+use App\Http\Resources\FundFormulaResource;
 use App\Http\Resources\FundRequestClarificationResource;
 use App\Http\Resources\TagResource;
 use App\Models\Employee;
+use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
@@ -67,7 +71,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
             'contact_information', 'state_locale', 'employee_id',
         ]), [
             'bsn' => $bsn_enabled ? $fundRequest->identity->bsn : null,
-            'fund' => $this->fundDetails($fundRequest),
+            'fund' => $this->fundDetails($fundRequest->fund),
             'email' => $fundRequest->identity->email,
             'records' => $this->getRecordsDetails($baseFormRequest, $organization, $fundRequest),
             'replaced' => $this->isReplaced($fundRequest),
@@ -76,7 +80,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
                 ...$employee->only([
                     'id', 'organization_id', 'identity_address',
                 ]),
-                'email' => $employee?->identity?->email,
+                'email' => $employee->identity?->email,
             ])->toArray(),
         ], $this->timestamps($fundRequest, 'created_at', 'updated_at', 'resolved_at'));
     }
@@ -107,18 +111,29 @@ class ValidatorFundRequestResource extends BaseJsonResource
     }
 
     /**
-     * @param FundRequest $request
+     * @param Fund $fund
      * @return array
      */
-    protected function fundDetails(FundRequest $request): array
+    protected function fundDetails(Fund $fund): array
     {
-        return array_merge($request->fund->only([
-            'id', 'name', 'description', 'organization_id', 'state', 'type',
-        ]), [
-            'criteria' => FundCriterionResource::collection($request->fund->criteria),
-            'tags' => TagResource::collection($request->fund->tags),
-            'has_person_bsn_api' => $request->fund->hasIConnectApiOin(),
-        ]);
+        return [
+            ...$fund->only([
+                'id', 'name', 'description', 'organization_id', 'state', 'type',
+            ]),
+            ...$fund->fund_config->only([
+                'allow_custom_amounts', 'allow_preset_amounts',
+                'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
+                'custom_amount_min', 'custom_amount_max',
+            ]),
+            'tags' => TagResource::collection($fund->tags),
+            'criteria' => FundCriterionResource::collection($fund->criteria),
+            'amount_presets' => FundAmountPresetResource::collection(
+                $fund->fund_config?->allow_preset_amounts_validator ? $fund->amount_presets : [],
+            ),
+            'has_person_bsn_api' => $fund->hasIConnectApiOin(),
+            'formulas' => FundFormulaResource::collection($fund->fund_formulas),
+            'formula_products' => FundFormulaProductResource::collection($fund->fund_formula_products),
+        ];
     }
 
     /**

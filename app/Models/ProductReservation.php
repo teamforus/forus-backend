@@ -481,7 +481,7 @@ class ProductReservation extends BaseModel
             ]);
 
             if ($this->voucher_transaction && $this->voucher_transaction->isCancelable()) {
-                $this->voucher_transaction->cancelPending();
+                $this->voucher_transaction->cancelPending($employee, false);
             }
 
             if ($isRefund) {

@@ -3,7 +3,9 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\IdentityEmail;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\VoucherTransaction;
@@ -13,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Query\Builder as QBuilder;
+use PharIo\Manifest\Email;
 
 /**
  * Class VoucherQuery
@@ -40,7 +43,7 @@ class VoucherTransactionQuery
 
         return $builder->where(function(Builder $query) {
             $query->whereNull('transfer_at');
-            $query->orWhereDate('transfer_at', '<', now());
+            $query->orWhereDate('transfer_at', '<', now()->format('Y-m-d H:i:s'));
         });
     }
 
@@ -81,6 +84,7 @@ class VoucherTransactionQuery
             'provider_name' => self::orderProviderNameQuery(),
             'transaction_in' => self::orderVoucherTransactionIn(),
             'bulk_state' => self::orderBulkState(),
+            'employee_email' => self::orderEmployeeEmail(),
         ]);
 
         if ($orderBy == 'date_non_cancelable') {
@@ -127,6 +131,19 @@ class VoucherTransactionQuery
         return VoucherTransactionBulk::query()
             ->whereColumn('id', 'voucher_transaction_bulk_id')
             ->select('state');
+    }
+
+    /**
+     * @return Builder|QBuilder
+     */
+    protected static function orderEmployeeEmail(): Builder|QBuilder
+    {
+        return IdentityEmail::query()
+            ->where('primary', true)
+            ->whereHas('identity.employees', fn (Builder $builder) => $builder->whereColumn([
+                'employees.id' => 'employee_id',
+            ]))
+            ->select('email');
     }
 
     /**

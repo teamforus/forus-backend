@@ -7,6 +7,7 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Identity;
 use App\Models\IdentityProxy;
+use App\Rules\BsnRule;
 use App\Services\Forus\Notification\NotificationService;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -157,6 +158,16 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
         return [
             'max:191',
             'email:strict,filter_unicode',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function bsnRules(): array
+    {
+        return [
+            new BsnRule(),
         ];
     }
 

@@ -107,17 +107,6 @@ $router->group([], static function() use ($router) {
         ]
     ]);
 
-    $router->resource(
-        'organizations.external-funds',
-        "Api\Platform\Organizations\ExternalFundsController", [
-        'only' => [
-            'index', 'update'
-        ],
-        'parameters' => [
-            'external-funds' => 'fund'
-        ]
-    ]);
-
     $router->post(
         'organizations/{organization}/funds/{fund}/archive',
         "Api\Platform\Organizations\FundsController@archive");
@@ -443,6 +432,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     ])->only('index', 'show', 'store');
 
     if (config('forus.features.dashboard.organizations.funds.fund_requests', FALSE)) {
+        $router->get(
+            'organizations/{organization}/fund-requests/{fund_request}/formula',
+            "Api\Platform\Organizations\FundRequestsController@formula"
+        );
+
         $router->patch(
             'organizations/{organization}/fund-requests/{fund_request}/assign',
             "Api\Platform\Organizations\FundRequestsController@assign"
@@ -733,6 +727,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'Api\Platform\Organizations\Provider\FundProviderController@availableFunds'
     );
 
+    $router->get(
+        'organizations/{organization}/provider/funds-product-required',
+        "Api\Platform\Organizations\Provider\FundProviderController@fundsProductRequired");
+
     $router->resource(
         'organizations/{organization}/provider/funds',
         "Api\Platform\Organizations\Provider\FundProviderController", [
@@ -787,13 +785,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->get('data-types', 'Api\Platform\Organizations\BIConnectionController@getAvailableDataTypes');
     });
 
-    /*$router->resource(
-        'organizations.bi-connections',
-        'Api\Platform\Organizations\BIConnectionController',
-    )->parameters([
-        'bi-connections' => 'connection',
-    ])->only('store', 'update');*/
-
     $router->get(
         'organizations/{organization}/sponsor/finances',
         "Api\Platform\Organizations\FundsController@finances");
@@ -829,10 +820,27 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations/{organization}/sponsor/transactions',
-        "Api\Platform\Organizations\Sponsor\TransactionsController"
+        'Api\Platform\Organizations\Sponsor\TransactionsController'
     )->parameters([
         'transactions' => 'transaction_address',
     ])->only('index', 'show', 'store');
+
+    $router->post(
+        'organizations/{organization}/sponsor/payouts/batch',
+        "Api\Platform\Organizations\Sponsor\PayoutsController@storeBatch"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/payouts/batch/validate',
+        "Api\Platform\Organizations\Sponsor\PayoutsController@storeBatchValidate"
+    );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/payouts',
+        'Api\Platform\Organizations\Sponsor\PayoutsController'
+    )->parameters([
+        'payouts' => 'transaction_address',
+    ])->only('index', 'show', 'store', 'update');
 
     $router->get(
         'organizations/{organization}/sponsor/transaction-bulks/export-fields',

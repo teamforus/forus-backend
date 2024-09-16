@@ -20,16 +20,6 @@ class VoucherTransactionTransferDaysTest extends TestCase
     use MakesProductReservations;
 
     /**
-     * @var string
-     */
-    protected string $apiUrl = '/api/v1/platform/product-reservations';
-
-    /**
-     * @var string
-     */
-    protected string $sponsorApiUrl = '/api/v1/platform/organizations/%s/sponsor/transactions/%s';
-
-    /**
      * @return void
      * @throws \Throwable
      */
@@ -60,13 +50,13 @@ class VoucherTransactionTransferDaysTest extends TestCase
         $this->assertNotNull($transaction);
 
         $organization = $voucher->fund->organization;
-        $voucherEndpoint = sprintf($this->sponsorApiUrl, $organization->id, $transaction->address);
+        $voucherEndpoint = "/api/v1/platform/organizations/$organization->id/sponsor/transactions/$transaction->address";
         $sponsorAuthHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
         $response = $this->getJson($voucherEndpoint, $sponsorAuthHeaders);
         $response->assertSuccessful();
 
-        $transactionIn = $response->json('data.transaction_in');
+        $transactionIn = $response->json('data.transfer_in');
         $this->assertGreaterThan(0, $transactionIn);
 
         Carbon::setTestNow(now()->addDays($transactionIn + 5));
@@ -74,7 +64,7 @@ class VoucherTransactionTransferDaysTest extends TestCase
         $response = $this->getJson($voucherEndpoint, $sponsorAuthHeaders);
         $response->assertSuccessful();
 
-        $transactionIn = $response->json('data.transaction_in');
+        $transactionIn = $response->json('data.transfer_in');
         $this->assertEquals(0, $transactionIn);
     }
 
@@ -89,7 +79,7 @@ class VoucherTransactionTransferDaysTest extends TestCase
         $proxy = $this->makeIdentityProxy($identity);
         $headers = $this->makeApiHeaders($proxy);
 
-        $response = $this->post($this->apiUrl, [
+        $response = $this->post("/api/v1/platform/product-reservations", [
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',

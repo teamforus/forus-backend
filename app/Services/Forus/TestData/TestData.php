@@ -620,6 +620,7 @@ class TestData
     {
         $configFormula = $this->config("funds.$fund->name.fund_formula");
         $configCriteria = $this->config("funds.$fund->name.fund_criteria");
+        $configFundPresets = $this->config("funds.$fund->name.fund_amount_presets", []);
         $configLimitMultiplier = $this->config("funds.$fund->name.fund_limit_multiplier");
 
         $eligibility_key = sprintf("%s_eligible", $fund->load('fund_config')->fund_config->key);
@@ -684,6 +685,7 @@ class TestData
 
         $fund->fund_formulas()->createMany($fundFormula);
         $fund->fund_limit_multipliers()->createMany($limitMultiplier);
+        $fund->syncAmountPresets($configFundPresets);
     }
 
     /**
@@ -933,6 +935,11 @@ class TestData
                         '=' => $criterion->value,
                         '>' => (int) $criterion->value * 2,
                         '<' => (int) ((int) $criterion->value / 2),
+                        '*' => match ($criterion->record_type_key) {
+                            'iban' => 'NL50RABO3741207772',
+                            'iban_name' => 'John Doe',
+                            default => '',
+                        },
                         default => '',
                     },
                     'files' => array_map(

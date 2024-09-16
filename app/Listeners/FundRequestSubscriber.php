@@ -11,6 +11,7 @@ use App\Events\FundRequests\FundRequestAssigned;
 use App\Events\FundRequests\FundRequestCreated;
 use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
+use App\Models\Data\BankAccount;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
@@ -106,7 +107,31 @@ class FundRequestSubscriber
 
             foreach ($funds as $fund) {
                 if (Gate::forUser($fundRequest->identity)->allows('apply', [$fund, $logScope])) {
-                    $fund->makeVoucher($fundRequest->identity_address);
+                    $amount = $fund->id === $fundRequest->fund_id ? $fundRequest->getPaymentAmount() : null;
+
+                    if ($fund->fund_config->isPayoutOutcome()) {
+                        $fund->makePayout(
+                            amount: $amount,
+                            employee: $fundRequest->employee,
+                            bankAccount: new BankAccount(
+                                $fundRequest->getIban(),
+                                $fundRequest->getIbanName(),
+                            ),
+                            voucherFields: [
+                                'fund_request_id' => $fundRequest->id,
+                                'identity_address' => $fundRequest->identity_address,
+                            ],
+                        );
+                    } else {
+                        $fund->makeVoucher(
+                            $fundRequest->identity_address,
+                            voucherFields: [
+                                'fund_request_id' => $fundRequest->id,
+                            ],
+                            amount: $amount,
+                        );
+                    }
+
                     $fund->makeFundFormulaProductVouchers($fundRequest->identity_address);
                 }
             }
