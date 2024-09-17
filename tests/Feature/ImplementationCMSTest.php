@@ -340,8 +340,8 @@ class ImplementationCMSTest extends TestCase
             'button_link_label' => $this->faker->text(),
             'button_target_blank' => (bool) rand(0, 1),
             'button_text' => $this->faker->text(100),
-            'description' => $this->faker->text(),
-            'label' => $this->faker->text(100),
+            'description' => $this->faker->text(500),
+            'label' => $this->faker->text(30),
             'title' => $this->faker->text(100),
             'media_uid' => $this->makeMedia('implementation_block_media')->uid,
         ];
