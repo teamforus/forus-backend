@@ -202,7 +202,8 @@ class VoucherTransactionsSearch extends BaseSearch
                             ELSE "product_voucher" END
                     ) ELSE (
                         CASE
-                            WHEN `initiator` = "' . VoucherTransaction::TARGET_PROVIDER . '" THEN "direct_provider"
+                            WHEN `initiator` = "' . VoucherTransaction::INITIATOR_PROVIDER . '" THEN "voucher_scan"
+                            WHEN `target` = "' . VoucherTransaction::TARGET_PROVIDER . '" THEN "direct_provider"
                             WHEN `target` = "' . VoucherTransaction::TARGET_IBAN . '" THEN "direct_iban"
                             WHEN `target` = "' . VoucherTransaction::TARGET_TOP_UP . '" THEN "direct_top_up"
                             WHEN `target` = "' . VoucherTransaction::TARGET_PAYOUT . '" THEN (
