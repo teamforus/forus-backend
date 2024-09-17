@@ -74,13 +74,11 @@ class FundRequestEmailLogsTest extends TestCase
 
     /**
      * @param Fund $fund
-     * @param Identity $requesterIdentity
+     * @param Identity $requester
      * @return FundRequest
      */
-    protected function makeFundRequest(Fund $fund, Identity $requesterIdentity): FundRequest
+    protected function makeFundRequest(Fund $fund, Identity $requester): FundRequest
     {
-        $requesterIdentityAuth = $this->makeApiHeaders($this->makeIdentityProxy($requesterIdentity));
-
         // make the fund request
         $response = $this->postJson("/api/v1/platform/funds/$fund->id/requests", [
             'records' => [[
@@ -88,7 +86,7 @@ class FundRequestEmailLogsTest extends TestCase
                 'value' => 5,
                 'files' => [],
             ]]
-        ], $requesterIdentityAuth);
+        ], $this->makeApiHeaders($requester));
 
         $response->assertSuccessful();
         $fundRequest = FundRequest::find($response->json('data.id'));
@@ -110,7 +108,7 @@ class FundRequestEmailLogsTest extends TestCase
         // assert email log exists
         $response = $this->getJson(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
@@ -141,7 +139,7 @@ class FundRequestEmailLogsTest extends TestCase
                 'fund_request_record_id' => $fundRequestRecord->id,
                 'question' => $questionToken,
             ],
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
@@ -163,7 +161,7 @@ class FundRequestEmailLogsTest extends TestCase
         // assert email log exists
         $response = $this->getJson(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
@@ -195,7 +193,7 @@ class FundRequestEmailLogsTest extends TestCase
                 "/records/$fundRequestRecord->id/decline",
             ]),
             [ 'note' => $noteToken ],
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
@@ -217,7 +215,7 @@ class FundRequestEmailLogsTest extends TestCase
         // assert email log exists
         $response = $this->getJson(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
@@ -244,7 +242,7 @@ class FundRequestEmailLogsTest extends TestCase
         $response = $this->patch(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/approve",
             [],
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
@@ -262,7 +260,7 @@ class FundRequestEmailLogsTest extends TestCase
         // assert email log exists
         $response = $this->getJson(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
@@ -286,7 +284,7 @@ class FundRequestEmailLogsTest extends TestCase
         $response = $this->patch(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/disregard",
             [ 'notify' => $notify ],
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
@@ -306,7 +304,7 @@ class FundRequestEmailLogsTest extends TestCase
         // assert email log exists
         $response = $this->getJson(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();

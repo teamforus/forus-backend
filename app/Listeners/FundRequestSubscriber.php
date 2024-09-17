@@ -91,6 +91,7 @@ class FundRequestSubscriber
             IdentityFundRequestDisregardedNotification::send($eventLog);
         }
 
+
         if ($fundRequest->isApproved()) {
             /** @var Fund[] $funds */
             $funds = [];
