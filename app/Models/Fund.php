@@ -1250,21 +1250,24 @@ class Fund extends BaseModel
     ): ?Voucher {
         $presetModel = $amount instanceof FundAmountPreset ? $amount : null;
 
+        $voucher = null;
         $amount = $presetModel ? $presetModel->amount : $amount;
         $amount = $amount === null ? $this->amountForIdentity($identity_address) : $amount;
 
-        $voucher = Voucher::create([
-            'identity_address' => $identity_address,
-            'amount' => $amount,
-            'expire_at' => $expire_at ?: $this->end_date,
-            'fund_id' => $this->id,
-            'returnable' => false,
-            'limit_multiplier' => $limit_multiplier ?: $this->multiplierForIdentity($identity_address),
-            'fund_amount_preset_id' => $presetModel?->id,
-            ...$voucherFields,
-        ]);
+        if ($this->fund_formulas->count() > 0) {
+            $voucher = Voucher::create([
+                'identity_address' => $identity_address,
+                'amount' => $amount,
+                'expire_at' => $expire_at ?: $this->end_date,
+                'fund_id' => $this->id,
+                'returnable' => false,
+                'limit_multiplier' => $limit_multiplier ?: $this->multiplierForIdentity($identity_address),
+                'fund_amount_preset_id' => $presetModel?->id,
+                ...$voucherFields,
+            ]);
 
-        VoucherCreated::dispatch($voucher);
+            VoucherCreated::dispatch($voucher);
+        }
 
         return $voucher;
     }
