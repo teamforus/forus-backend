@@ -71,43 +71,9 @@ class AnnouncementSearch extends BaseSearch
                 $builder->whereNull('role_id');
             });
         } else {
-            $identity_address = $this->getFilter('identity_address');
-            $organization_id = $this->getFilter('organization_id');
-
-            $builder->where(function (Builder $builder) use ($identity_address, $organization_id) {
-                $this->whereBankConnection($builder);
-
-                $builder->orWhere(function (Builder $builder) use ($identity_address, $organization_id) {
-                    if ($identity_address) {
-                        $builder->where(function (Builder $builder) use ($identity_address, $organization_id) {
-                            $builder->whereHas('role', function (Builder $builder) use ($identity_address) {
-                                $builder->whereRelation('employees', 'identity_address', $identity_address);
-                            });
-
-                            if ($organization_id) {
-                                $builder->where(function (Builder $builder) use ($organization_id) {
-                                    $builder->whereNull('organization_id');
-                                    $builder->orWhere('organization_id', $organization_id);
-                                });
-                            }
-                        });
-                    }
-
-                    if ($organization_id) {
-                        $builder->orWhere(function (Builder $builder) use ($organization_id, $identity_address) {
-                            $builder->where('organization_id', $organization_id);
-
-                            if ($identity_address) {
-                                $builder->where(function (Builder $builder) use ($identity_address) {
-                                    $builder->whereNull('role_id');
-                                    $builder->orWhereHas('role', function (Builder $builder) use ($identity_address) {
-                                        $builder->whereRelation('employees', 'identity_address', $identity_address);
-                                    });
-                                });
-                            }
-                        });
-                    }
-                });
+            $builder->where(function (Builder $builder) {
+                $builder->where(fn(Builder $builder) => $this->whereBankConnection($builder));
+                $builder->orWhere(fn(Builder $builder) => $this->whereOrganizationOrRole($builder));
             });
         }
 
@@ -130,6 +96,48 @@ class AnnouncementSearch extends BaseSearch
             });
 
             $builder->where('state', BankConnection::STATE_ACTIVE);
+        });
+    }
+
+    /**
+     * @param Builder|Announcement $builder
+     * @return Builder|Announcement
+     */
+    protected function whereOrganizationOrRole(Builder|Announcement $builder): Builder|Announcement
+    {
+        $identity_address = $this->getFilter('identity_address');
+        $organization_id = $this->getFilter('organization_id');
+
+        return $builder->where(function (Builder $builder) use ($identity_address, $organization_id) {
+            if ($identity_address) {
+                $builder->where(function (Builder $builder) use ($identity_address, $organization_id) {
+                    $builder->whereHas('role', function (Builder $builder) use ($identity_address) {
+                        $builder->whereRelation('employees', 'identity_address', $identity_address);
+                    });
+
+                    if ($organization_id) {
+                        $builder->where(function (Builder $builder) use ($organization_id) {
+                            $builder->whereNull('organization_id');
+                            $builder->orWhere('organization_id', $organization_id);
+                        });
+                    }
+                });
+            }
+
+            if ($organization_id) {
+                $builder->orWhere(function (Builder $builder) use ($organization_id, $identity_address) {
+                    $builder->where('organization_id', $organization_id);
+
+                    if ($identity_address) {
+                        $builder->where(function (Builder $builder) use ($identity_address) {
+                            $builder->whereNull('role_id');
+                            $builder->orWhereHas('role', function (Builder $builder) use ($identity_address) {
+                                $builder->whereRelation('employees', 'identity_address', $identity_address);
+                            });
+                        });
+                    }
+                });
+            }
         });
     }
 }

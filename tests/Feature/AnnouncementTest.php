@@ -14,8 +14,8 @@ use Tests\Traits\MakesTestOrganizations;
 
 class AnnouncementTest extends TestCase
 {
-    use DatabaseTransactions;
     use WithFaker;
+    use DatabaseTransactions;
     use MakesTestOrganizations;
 
     /**
@@ -23,7 +23,7 @@ class AnnouncementTest extends TestCase
      */
     protected $defaultHeaders = [
         'Accept' => 'application/json',
-        'client_type' => 'sponsor',
+        'Client-Type' => 'sponsor',
     ];
 
     /**
@@ -36,34 +36,28 @@ class AnnouncementTest extends TestCase
     ];
 
     /**
-     * @var string
-     */
-    protected string $apiUrl = '/api/v1/platform/organizations/%s/announcements';
-
-    /**
-     * @var string
-     */
-    protected string $apiUrlConfig = '/api/v1/platform/config/dashboard';
-
-    /**
      * @return void
      * @throws \Throwable
      */
-    public function testGlobalAnnouncement(): void
+    public function testSystemAnnouncementVisible(): void
     {
         $identity = $this->makeIdentity();
         $organization = $this->makeTestOrganization($identity);
+        $systemAnnouncement = $this->makeAnnouncement();
 
-        $announcement = $this->makeAnnouncement();
+        $this->assertSystemAnnouncementVisibility(
+            $identity,
+            $systemAnnouncement,
+            true,
+            'System announcement must be visible'
+        );
 
-        $this->assertAnnouncementsInConfig($identity, $announcement);
-
-        $this->assertAnnouncementsForOrganization(
+        $this->assertOrganizationAnnouncementVisibility(
             $organization,
             $identity,
-            $announcement,
+            $systemAnnouncement,
             false,
-            'Global announcement must not be visible in organization request'
+            'System announcement must not be visible in organization request'
         );
     }
 
@@ -71,7 +65,7 @@ class AnnouncementTest extends TestCase
      * @return void
      * @throws \Throwable
      */
-    public function testAnnouncementForOrganization(): void
+    public function testOrganizationAnnouncementVisibleOnlyForOrganization(): void
     {
         $identity = $this->makeIdentity();
         $organization = $this->makeTestOrganization($identity);
@@ -80,24 +74,30 @@ class AnnouncementTest extends TestCase
             'organization_id' => $organization->id,
         ]);
 
-        $this->assertAnnouncementsInConfig(
+        $this->assertSystemAnnouncementVisibility(
             $identity,
             $announcement,
             false,
-            'Announcement for organization must be not visible for implementation'
+            'Organization announcement must not be visible as system'
         );
 
-        $this->assertAnnouncementsForOrganization($organization, $identity, $announcement);
+        $this->assertOrganizationAnnouncementVisibility(
+            $organization,
+            $identity,
+            $announcement,
+            true,
+            'Organization announcement must be visible for connected organization'
+        );
 
         // make another organization
         $secondOrganization = $this->makeTestOrganization($identity);
 
-        $this->assertAnnouncementsForOrganization(
+        $this->assertOrganizationAnnouncementVisibility(
             $secondOrganization,
             $identity,
             $announcement,
             false,
-            'Announcement must be visible for other organizations'
+            'Organization announcement must not be visible for other organizations'
         );
     }
 
@@ -105,11 +105,10 @@ class AnnouncementTest extends TestCase
      * @return void
      * @throws \Throwable
      */
-    public function testAnnouncementForRole(): void
+    public function testOrganizationAnnouncementVisibleOnlyForRole(): void
     {
         $identity = $this->makeIdentity();
         $organization = $this->makeTestOrganization($identity);
-
         $employee = $organization->findEmployee($identity->address);
         $this->assertNotNull($employee);
 
@@ -121,26 +120,32 @@ class AnnouncementTest extends TestCase
             'role_id' => $role->id,
         ]);
 
-        $this->assertAnnouncementsInConfig(
+        $this->assertSystemAnnouncementVisibility(
             $identity,
             $announcement,
             false,
-            'Announcement for organization must be not visible for implementation'
+            'Organization announcement must not be visible as system'
         );
 
-        $this->assertAnnouncementsForOrganization($organization, $identity, $announcement);
+        $this->assertOrganizationAnnouncementVisibility(
+            $organization,
+            $identity,
+            $announcement,
+            true,
+            'Organization announcement must be visible for connected role'
+        );
 
         // make another employee
         $secondIdentity = $this->makeIdentity();
         $roles = Role::whereNotIn('id', [$role->id])->pluck('id')->toArray();
         $organization->addEmployee($secondIdentity, $roles);
 
-        $this->assertAnnouncementsForOrganization(
+        $this->assertOrganizationAnnouncementVisibility(
             $organization,
             $secondIdentity,
             $announcement,
             false,
-            'Announcement must be visible for other roles'
+            'Organization announcement must not be visible for other roles'
         );
     }
 
@@ -148,11 +153,10 @@ class AnnouncementTest extends TestCase
      * @return void
      * @throws \Throwable
      */
-    public function testAnnouncementForOrganizationAndRole(): void
+    public function testOrganizationAnnouncementVisibleOnlyForOrganizationAndRole(): void
     {
         $identity = $this->makeIdentity();
         $organization = $this->makeTestOrganization($identity);
-
         $employee = $organization->findEmployee($identity->address);
         $this->assertNotNull($employee);
 
@@ -165,52 +169,64 @@ class AnnouncementTest extends TestCase
             'organization_id' => $organization->id,
         ]);
 
-        $this->assertAnnouncementsInConfig(
+        $this->assertSystemAnnouncementVisibility(
             $identity,
             $announcement,
             false,
-            'Announcement for organization must be not visible for implementation'
+            'Organization announcement must not be visible as system'
         );
 
-        $this->assertAnnouncementsForOrganization($organization, $identity, $announcement);
+        $this->assertOrganizationAnnouncementVisibility(
+            $organization,
+            $identity,
+            $announcement,
+            true,
+            'Organization announcement must be visible for connected organization and role'
+        );
 
         // make another employee
         $secondIdentity = $this->makeIdentity();
         $roles = Role::whereNotIn('id', [$role->id])->pluck('id')->toArray();
         $organization->addEmployee($secondIdentity, $roles);
 
-        $this->assertAnnouncementsForOrganization(
+        $this->assertOrganizationAnnouncementVisibility(
             $organization,
             $secondIdentity,
             $announcement,
             false,
-            'Announcement must not be visible for other roles',
+            'Organization announcement must not be visible for other roles from same organization',
         );
 
         $organization->addEmployee($secondIdentity, [$role->id]);
 
-        $this->assertAnnouncementsForOrganization($organization, $secondIdentity, $announcement);
+        $this->assertOrganizationAnnouncementVisibility(
+            $organization,
+            $secondIdentity,
+            $announcement,
+            true,
+            'Organization announcement must be visible for connected organization and role'
+        );
 
         // make another organization
         $secondOrganization = $this->makeTestOrganization($identity);
         $secondOrganization->addEmployee($secondIdentity, $roles);
 
-        $this->assertAnnouncementsForOrganization(
+        $this->assertOrganizationAnnouncementVisibility(
             $secondOrganization,
             $secondIdentity,
             $announcement,
             false,
-            'Announcement must not be visible for other roles and other organizations'
+            'Organization announcement must not be visible for other roles and other organization'
         );
 
         $secondOrganization->addEmployee($secondIdentity, [$role->id]);
 
-        $this->assertAnnouncementsForOrganization(
+        $this->assertOrganizationAnnouncementVisibility(
             $secondOrganization,
             $secondIdentity,
             $announcement,
             false,
-            'Announcement must not be visible for same role and other organizations'
+            'Organization announcement must not be visible for connected role and other organization'
         );
     }
 
@@ -218,73 +234,87 @@ class AnnouncementTest extends TestCase
      * @return void
      * @throws \Throwable
      */
-    public function testAnnouncementStartAtDate(): void
+    public function testSystemAnnouncementStartAtDateVisibility(): void
     {
         $identity = $this->makeIdentity();
 
-        $announcement = $this->makeAnnouncement([
+        $systemAnnouncement = $this->makeAnnouncement([
             'start_at' => now()->addDay(),
         ]);
 
-        $this->assertAnnouncementsInConfig(
+        $this->assertSystemAnnouncementVisibility(
             $identity,
-            $announcement,
+            $systemAnnouncement,
             false,
-            'Announcement must be not visible for implementation if not started'
+            'System announcement must not be visible for implementation if not started'
         );
 
-        $announcement->update(['start_at' => now()->subDay()]);
+        $systemAnnouncement->update(['start_at' => now()->subDay()]);
 
-        $this->assertAnnouncementsInConfig($identity, $announcement);
+        $this->assertSystemAnnouncementVisibility(
+            $identity,
+            $systemAnnouncement,
+            true,
+            'System announcement must be visible for implementation if started'
+        );
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testAnnouncementExpireAtDate(): void
+    public function testSystemAnnouncementExpireAtDateVisibility(): void
     {
         $identity = $this->makeIdentity();
 
-        $announcement = $this->makeAnnouncement([
+        $systemAnnouncement = $this->makeAnnouncement([
             'expire_at' => now()->subDay(),
         ]);
 
-        $this->assertAnnouncementsInConfig(
+        $this->assertSystemAnnouncementVisibility(
             $identity,
-            $announcement,
+            $systemAnnouncement,
             false,
-            'Announcement must be not visible for implementation if not started'
+            'System announcement must not be visible for implementation if expired'
         );
 
-        $announcement->update(['expire_at' => now()->addDay()]);
+        $systemAnnouncement->update(['expire_at' => now()->addDay()]);
 
-        $this->assertAnnouncementsInConfig($identity, $announcement);
+        $this->assertSystemAnnouncementVisibility(
+            $identity,
+            $systemAnnouncement,
+            true,
+            'System announcement must be visible for implementation if not expired'
+        );
     }
 
     /**
      * @param Identity $identity
      * @param Announcement $announcement
-     * @param bool $assert
-     * @param string $message
+     * @param bool $assertVisible
+     * @param string|null $message
      * @return void
      */
-    private function assertAnnouncementsInConfig(
+    private function assertSystemAnnouncementVisibility(
         Identity $identity,
         Announcement $announcement,
-        bool $assert = true,
-        string $message = 'Announcement must be visible for implementation',
+        bool $assertVisible,
+        string $message = null,
     ): void {
         $proxy = $this->makeIdentityProxy($identity);
 
-        $response = $this->getJson($this->apiUrlConfig, $this->makeApiHeaders($proxy));
+        $response = $this->getJson(
+            '/api/v1/platform/config/dashboard',
+            $this->makeApiHeaders($proxy)
+        );
+
         $response->assertSuccessful();
         $response->assertJsonStructure(['announcements']);
 
         $announcementItem = collect($response->json('announcements'))
             ->first(fn ($item) => $item['id'] === $announcement->id);
 
-        if ($assert) {
+        if ($assertVisible) {
             $this->assertNotNull($announcementItem, $message);
         } else {
             $this->assertNull($announcementItem, $message);
@@ -295,21 +325,21 @@ class AnnouncementTest extends TestCase
      * @param Organization $organization
      * @param Identity $identity
      * @param Announcement $announcement
-     * @param bool $assert
-     * @param string $message
+     * @param bool $assertVisible
+     * @param string|null $message
      * @return void
      */
-    private function assertAnnouncementsForOrganization(
+    private function assertOrganizationAnnouncementVisibility(
         Organization $organization,
         Identity $identity,
         Announcement $announcement,
-        bool $assert = true,
-        string $message = 'Announcement must be visible for organization',
+        bool $assertVisible,
+        string $message = null,
     ): void {
         $proxy = $this->makeIdentityProxy($identity);
 
         $response = $this->getJson(
-            sprintf($this->apiUrl, $organization->id),
+            "/api/v1/platform/organizations/$organization->id/announcements",
             $this->makeApiHeaders($proxy)
         );
 
@@ -319,7 +349,7 @@ class AnnouncementTest extends TestCase
         $announcementItem = collect($response->json('data'))
             ->first(fn ($item) => $item['id'] === $announcement->id);
 
-        if ($assert) {
+        if ($assertVisible) {
             $this->assertNotNull($announcementItem, $message);
         } else {
             $this->assertNull($announcementItem, $message);
