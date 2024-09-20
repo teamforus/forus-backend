@@ -496,7 +496,7 @@ class Fund extends BaseModel
             'allow_custom_amounts', 'allow_custom_amounts_validator',
             'allow_preset_amounts', 'allow_preset_amounts_validator',
             'custom_amount_min', 'custom_amount_max',
-            'provider_products_required',
+            'provider_products_required', 'shown_criteria_label_details',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([

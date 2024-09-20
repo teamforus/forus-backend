@@ -103,6 +103,7 @@ class FundsController extends Controller
             'email_required', 'contact_info_enabled', 'contact_info_required',
             'contact_info_message_custom', 'contact_info_message_text', 'hide_meta',
             'voucher_amount_visible', 'outcome_type', 'provider_products_required',
+            'shown_criteria_label_details',
         ]));
 
         $fund->attachMediaByUid($request->input('media_uid'));
@@ -207,6 +208,7 @@ class FundsController extends Controller
                     'email_required', 'contact_info_enabled', 'contact_info_required',
                     'contact_info_message_custom', 'contact_info_message_text',
                     'hide_meta', 'voucher_amount_visible', 'provider_products_required',
+                    'shown_criteria_label_details',
                 ]),
                 ...($fund->organization->allow_payouts ? $request->only([
                     'custom_amount_min', 'custom_amount_max',
