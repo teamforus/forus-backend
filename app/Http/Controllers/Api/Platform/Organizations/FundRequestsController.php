@@ -48,10 +48,17 @@ class FundRequestsController extends Controller
         $this->authorize('viewAnyAsValidator', [FundRequest::class, $organization]);
 
         $search = (new FundRequestSearch($request->only([
-            'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir', 'assigned',
+            'q', 'state', 'employee_id', 'from', 'to',
+            'order_by', 'order_dir', 'assigned', 'is_resolved',
         ])))->setEmployee($request->employee($organization));
 
-        return ValidatorFundRequestResource::queryCollection($search->query(), $request);
+        return ValidatorFundRequestResource::queryCollection(
+            $search->query(), $request
+        )->additional([
+            'meta' => [
+                'totals' => FundRequest::makeTotalsMeta($organization),
+            ],
+        ]);
     }
 
     /**

@@ -38,6 +38,7 @@ class IndexFundRequestsRequest extends BaseFormRequest
             'order_by'      => 'nullable|in:id,fund_name,created_at,note,state,requester_email,assignee_email',
             'order_dir'     => 'nullable|in:asc,desc',
             'export_format' => 'nullable|in:csv,xls',
+            'is_resolved'   => 'nullable|boolean',
         ];
     }
 }

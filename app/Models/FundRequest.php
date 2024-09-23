@@ -681,4 +681,20 @@ class FundRequest extends BaseModel
 
         return null;
     }
+
+    /**
+     * @param Organization $organization
+     * @return array
+     */
+    public static function makeTotalsMeta(Organization $organization): array
+    {
+        return [
+            'hold' => $organization->fund_requests()->whereNull('employee_id')->count(),
+            'pending' => $organization->fund_requests()->where(
+                'fund_requests.state', self::STATE_PENDING
+            )->whereNotNull('employee_id')->count(),
+            'resolved' => $organization->fund_requests()->whereNotNull('resolved_at')->count(),
+            'total' => $organization->fund_requests()->count(),
+        ];
+    }
 }
