@@ -156,11 +156,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTopUpAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
-<<<<<<< HEAD
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereOutcomeType($value)
-=======
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereProviderProductsRequired($value)
->>>>>>> develop
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVoucherAmountVisible($value)

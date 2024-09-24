@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property int $id
  * @property string $title
+ * @property string|null $description
  * @property int $fund_id
  * @property int $order
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -18,10 +20,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Models\Fund $fund
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterion[] $fund_criteria
  * @property-read int|null $fund_criteria_count
+ * @property-read string $description_html
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep query()
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep whereOrder($value)
@@ -31,6 +35,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class FundCriteriaStep extends Model
 {
+    use HasMarkdownDescription;
+
     /**
      * @return BelongsTo
      */
