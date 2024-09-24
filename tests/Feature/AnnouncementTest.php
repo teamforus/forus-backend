@@ -5,16 +5,19 @@ namespace Tests\Feature;
 use App\Helpers\Arr;
 use App\Models\Announcement;
 use App\Models\Identity;
+use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Role;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 
 class AnnouncementTest extends TestCase
 {
     use WithFaker;
+    use MakesTestFunds;
     use DatabaseTransactions;
     use MakesTestOrganizations;
 
@@ -58,6 +61,107 @@ class AnnouncementTest extends TestCase
             $systemAnnouncement,
             false,
             'System announcement must not be visible in organization request'
+        );
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testSystemAnnouncementVisibleForAllWebshops(): void
+    {
+        $identity = $this->makeIdentity();
+        $organization = $this->makeTestOrganization($identity);
+        $this->makeTestFund($organization);
+        $implementation = $organization->implementations()->first();
+        $this->assertNotNull($implementation);
+
+        $systemWebshopAnnouncement = $this->makeAnnouncement([
+            'scope' => 'webshop',
+        ]);
+
+        // check with default (dashboard) client type
+        $this->assertSystemAnnouncementVisibility(
+            $identity,
+            $systemWebshopAnnouncement,
+            false,
+            'System announcement must not be visible for dashboard',
+        );
+
+        // check with webshop client type
+        $this->assertSystemAnnouncementVisibilityWebshop(
+            $implementation,
+            $identity,
+            $systemWebshopAnnouncement,
+            true,
+            'System announcement must be visible for webshop',
+        );
+
+        $identity = $this->makeIdentity();
+        $organization = $this->makeTestOrganization($identity);
+        $this->makeTestFund($organization);
+        $implementation = $organization->implementations()->first();
+        $this->assertNotNull($implementation);
+
+        // check with webshop client type
+        $this->assertSystemAnnouncementVisibilityWebshop(
+            $implementation,
+            $identity,
+            $systemWebshopAnnouncement,
+            true,
+            'System announcement must be visible for webshop',
+        );
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testSystemAnnouncementVisibleForSingleImplementationOnWebshop(): void
+    {
+        $identity = $this->makeIdentity();
+        $organization = $this->makeTestOrganization($identity);
+        $this->makeTestFund($organization);
+
+        /** @var Implementation $implementation */
+        $implementation = $organization->implementations()->first();
+        $this->assertNotNull($implementation);
+
+        $systemWebshopAnnouncement = $this->makeAnnouncement([
+            'scope' => 'webshop',
+            'implementation_id' => $implementation->id,
+        ]);
+
+        // check with default (dashboard) client type
+        $this->assertSystemAnnouncementVisibility(
+            $identity,
+            $systemWebshopAnnouncement,
+            false,
+            'System announcement must not be visible for dashboard',
+        );
+
+        // check with webshop client type and connected implementation
+        $this->assertSystemAnnouncementVisibilityWebshop(
+            $implementation,
+            $identity,
+            $systemWebshopAnnouncement,
+            true,
+            'System announcement must be visible for webshop',
+        );
+
+        $identity = $this->makeIdentity();
+        $organization = $this->makeTestOrganization($identity);
+        $this->makeTestFund($organization);
+        $implementation = $organization->implementations()->first();
+        $this->assertNotNull($implementation);
+
+        // check with webshop client type and other implementation
+        $this->assertSystemAnnouncementVisibilityWebshop(
+            $implementation,
+            $identity,
+            $systemWebshopAnnouncement,
+            false,
+            'System announcement must not be visible for webshop another implamentation',
         );
     }
 
@@ -307,6 +411,43 @@ class AnnouncementTest extends TestCase
             '/api/v1/platform/config/dashboard',
             $this->makeApiHeaders($proxy)
         );
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure(['announcements']);
+
+        $announcementItem = collect($response->json('announcements'))
+            ->first(fn ($item) => $item['id'] === $announcement->id);
+
+        if ($assertVisible) {
+            $this->assertNotNull($announcementItem, $message);
+        } else {
+            $this->assertNull($announcementItem, $message);
+        }
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param Identity $identity
+     * @param Announcement $announcement
+     * @param bool $assertVisible
+     * @param string|null $message
+     * @return void
+     */
+    private function assertSystemAnnouncementVisibilityWebshop(
+        Implementation $implementation,
+        Identity $identity,
+        Announcement $announcement,
+        bool $assertVisible,
+        string $message = null,
+    ): void {
+        $proxy = $this->makeIdentityProxy($identity);
+
+        $headers = $this->makeApiHeaders($proxy, [
+            'Client-Type' => 'webshop',
+            'Client-Key' => $implementation->key,
+        ]);
+
+        $response = $this->getJson('/api/v1/platform/config/webshop', $headers);
 
         $response->assertSuccessful();
         $response->assertJsonStructure(['announcements']);
