@@ -20,8 +20,7 @@ class IdentityFundRequestRecordFeedbackRequestedNotification extends BaseIdentit
         $fundRequest = $fundRequestRecord->fund_request;
 
         $linkClarification = $fundRequest->fund->urlWebshop(sprintf(
-            'fund-request/%s?target=fundRequest-%s',
-            $this->eventLog->data['fund_request_id'],
+            'fund-request/%s',
             $this->eventLog->data['fund_request_id'],
         ));
 
