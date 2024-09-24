@@ -662,14 +662,17 @@ class TestData
         ]];
 
         foreach (($configCriteria ?: $criteria) as $criterion) {
-            $stepTitle = $criterion['step'] ?? null;
+            $stepTitle = Arr::get($criterion, 'step', Arr::get($criterion, 'step.title'));
+            $stepFields = is_array(Arr::get($criterion, 'step')) ? Arr::get($criterion, 'step') : [];
 
             /** @var FundCriteriaStep $stepModel */
             $stepModel = $stepTitle ?
                 ($fund->criteria_steps()->firstWhere([
                     'title' => $stepTitle,
+                    ...$stepFields,
                 ]) ?: $fund->criteria_steps()->forceCreate([
                     'title' => $stepTitle,
+                    ...$stepFields,
                 ])) : null;
 
             /** @var FundCriterion $criterionModel */
