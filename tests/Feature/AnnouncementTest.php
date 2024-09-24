@@ -363,7 +363,7 @@ class AnnouncementTest extends TestCase
     private function makeAnnouncement(array $params = []): Announcement
     {
         return Announcement::create([
-            'type' => Arr::random(['warning', 'danger', 'success', 'primary', 'default']),
+            'type' => 'warning',
             'scope' => 'dashboards',
             'title' => $this->faker->text(2000),
             'description' => $this->faker->text(8000),

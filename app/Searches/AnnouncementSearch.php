@@ -41,15 +41,18 @@ class AnnouncementSearch extends BaseSearch
         $clientType = $this->getFilter('client_type');
         $isWebshop = $clientType === Implementation::FRONTEND_WEBSHOP;
 
+        $identityAddress = $this->getFilter('identity_address');
+        $organizationId = $this->getFilter('organization_id');
+
         if ($clientType !== Implementation::FRONTEND_WEBSHOP) {
             $clientType = [$clientType, 'dashboards'];
         }
 
         $builder
-            ->where(function(Builder $builder) use ($isWebshop) {
+            ->where(function(Builder $builder) use ($isWebshop, $organizationId) {
                 if ($isWebshop) {
                     $builder->whereNull('implementation_id');
-                    $builder->orWhere('implementation_id', $this->getFilter('implementation_id'));
+                    $builder->orWhere('implementation_id', $organizationId);
                 }
             })
             ->where('active', true)
@@ -63,7 +66,7 @@ class AnnouncementSearch extends BaseSearch
                 $builder->orWhere('start_at', '<=', now()->startOfDay());
             });
 
-        if (!$this->hasFilter('identity_address') || !$this->hasFilter('organization_id')) {
+        if (!$identityAddress || !$organizationId) {
             $builder->where(function (Builder $builder) {
                 $builder->whereNull('announceable_id');
                 $builder->whereNull('announceable_type');
@@ -71,9 +74,18 @@ class AnnouncementSearch extends BaseSearch
                 $builder->whereNull('role_id');
             });
         } else {
-            $builder->where(function (Builder $builder) {
-                $builder->where(fn(Builder $builder) => $this->whereBankConnection($builder));
-                $builder->orWhere(fn(Builder $builder) => $this->whereOrganizationOrRole($builder));
+            $builder->where(function (Builder $builder) use ($identityAddress, $organizationId) {
+                $builder->where(fn(Builder $builder) => $this->whereBankConnection(
+                    $builder,
+                    $identityAddress,
+                    $organizationId,
+                ));
+
+                $builder->orWhere(fn(Builder $builder) => $this->whereOrganizationOrRole(
+                    $builder,
+                    $identityAddress,
+                    $organizationId,
+                ));
             });
         }
 
@@ -82,15 +94,24 @@ class AnnouncementSearch extends BaseSearch
 
     /**
      * @param Builder|Announcement $builder
+     * @param string|null $identityAddress
+     * @param int|null $organizationId
      * @return Builder|Announcement
      */
-    protected function whereBankConnection(Builder|Announcement $builder): Builder|Announcement
-    {
-        return $builder->whereHasMorph('announceable', BankConnection::class, function (Builder $builder) {
-            $builder->whereHas('organization', function (Builder $builder) {
+    protected function whereBankConnection(
+        Builder|Announcement $builder,
+        ?string $identityAddress = null,
+        ?int $organizationId = null,
+    ): Builder|Announcement {
+        return $builder->whereHasMorph('announceable', BankConnection::class, function (
+            Builder $builder,
+        ) use ($identityAddress, $organizationId) {
+            $builder->whereHas('organization', function (
+                Builder $builder,
+            ) use ($identityAddress, $organizationId) {
                 return OrganizationQuery::whereHasPermissions(
-                    $builder->where('id', $this->getFilter('organization_id')),
-                    $this->getFilter('identity_address'),
+                    $builder->where('id', $organizationId),
+                    $identityAddress,
                     $this->entityPermissionsMap['bank_connection'],
                 );
             });
@@ -101,38 +122,40 @@ class AnnouncementSearch extends BaseSearch
 
     /**
      * @param Builder|Announcement $builder
+     * @param string|null $identityAddress
+     * @param int|null $organizationId
      * @return Builder|Announcement
      */
-    protected function whereOrganizationOrRole(Builder|Announcement $builder): Builder|Announcement
-    {
-        $identity_address = $this->getFilter('identity_address');
-        $organization_id = $this->getFilter('organization_id');
-
-        return $builder->where(function (Builder $builder) use ($identity_address, $organization_id) {
-            if ($identity_address) {
-                $builder->where(function (Builder $builder) use ($identity_address, $organization_id) {
-                    $builder->whereHas('role', function (Builder $builder) use ($identity_address) {
-                        $builder->whereRelation('employees', 'identity_address', $identity_address);
+    protected function whereOrganizationOrRole(
+        Builder|Announcement $builder,
+        ?string $identityAddress = null,
+        ?int $organizationId = null,
+    ): Builder|Announcement {
+        return $builder->where(function (Builder $builder) use ($identityAddress, $organizationId) {
+            if ($identityAddress) {
+                $builder->where(function (Builder $builder) use ($identityAddress, $organizationId) {
+                    $builder->whereHas('role', function (Builder $builder) use ($identityAddress) {
+                        $builder->whereRelation('employees', 'identity_address', $identityAddress);
                     });
 
-                    if ($organization_id) {
-                        $builder->where(function (Builder $builder) use ($organization_id) {
+                    if ($organizationId) {
+                        $builder->where(function (Builder $builder) use ($organizationId) {
                             $builder->whereNull('organization_id');
-                            $builder->orWhere('organization_id', $organization_id);
+                            $builder->orWhere('organization_id', $organizationId);
                         });
                     }
                 });
             }
 
-            if ($organization_id) {
-                $builder->orWhere(function (Builder $builder) use ($organization_id, $identity_address) {
-                    $builder->where('organization_id', $organization_id);
+            if ($organizationId) {
+                $builder->orWhere(function (Builder $builder) use ($organizationId, $identityAddress) {
+                    $builder->where('organization_id', $organizationId);
 
-                    if ($identity_address) {
-                        $builder->where(function (Builder $builder) use ($identity_address) {
+                    if ($identityAddress) {
+                        $builder->where(function (Builder $builder) use ($identityAddress) {
                             $builder->whereNull('role_id');
-                            $builder->orWhereHas('role', function (Builder $builder) use ($identity_address) {
-                                $builder->whereRelation('employees', 'identity_address', $identity_address);
+                            $builder->orWhereHas('role', function (Builder $builder) use ($identityAddress) {
+                                $builder->whereRelation('employees', 'identity_address', $identityAddress);
                             });
                         });
                     }
