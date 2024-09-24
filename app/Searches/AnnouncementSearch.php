@@ -41,18 +41,19 @@ class AnnouncementSearch extends BaseSearch
         $clientType = $this->getFilter('client_type');
         $isWebshop = $clientType === Implementation::FRONTEND_WEBSHOP;
 
-        $identityAddress = $this->getFilter('identity_address');
         $organizationId = $this->getFilter('organization_id');
+        $identityAddress = $this->getFilter('identity_address');
+        $implementationId = $this->getFilter('implementation_id');
 
         if ($clientType !== Implementation::FRONTEND_WEBSHOP) {
             $clientType = [$clientType, 'dashboards'];
         }
 
         $builder
-            ->where(function(Builder $builder) use ($isWebshop, $organizationId) {
+            ->where(function(Builder $builder) use ($isWebshop, $implementationId) {
                 if ($isWebshop) {
                     $builder->whereNull('implementation_id');
-                    $builder->orWhere('implementation_id', $organizationId);
+                    $builder->orWhere('implementation_id', $implementationId);
                 }
             })
             ->where('active', true)
