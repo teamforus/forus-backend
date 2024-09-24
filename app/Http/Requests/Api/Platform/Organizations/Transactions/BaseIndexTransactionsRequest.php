@@ -40,6 +40,7 @@ abstract class BaseIndexTransactionsRequest extends BaseFormRequest
             'state' => ['nullable', Rule::in(VoucherTransaction::STATES)],
             'fund_state' => ['nullable', Rule::in(Fund::STATES)],
             'from' => 'nullable|date_format:Y-m-d',
+            'to' => 'nullable|date_format:Y-m-d',
             'amount_min' => 'nullable|numeric|min:0',
             'amount_max' => 'nullable|numeric|min:0',
             'data_format' => 'nullable|in:csv,xls',

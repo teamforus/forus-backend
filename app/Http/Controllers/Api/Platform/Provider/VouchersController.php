@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Platform\Provider;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BaseFormRequest;
-use App\Http\Resources\Provider\App\ProviderVoucherProxyResource;
 use App\Http\Resources\Provider\App\ProviderVoucherResource;
 use App\Models\VoucherToken;
 use Illuminate\Auth\Access\AuthorizationException;

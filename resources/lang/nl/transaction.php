@@ -4,6 +4,7 @@ return [
     'target' => [
         'provider' => 'Aanbieder',
         'top_up' => 'Opwaarderen',
+        'payout' => 'Uitbetalingen',
         'iban' => 'IBAN',
     ],
     'type' => [
@@ -28,8 +29,8 @@ return [
             'subtitle' => 'Reservering',
         ],
         'direct_provider' => [
-            'title' => 'Uitbetaling',
-            'subtitle' => '',
+            'title' => 'Tegoed',
+            'subtitle' => 'Transactie door medewerker',
         ],
         'direct_iban' => [
             'title' => 'Uitbetaling',
@@ -37,6 +38,18 @@ return [
         ],
         'direct_top_up' => [
             'title' => 'Uitbetaling',
+            'subtitle' => '',
+        ],
+        'payout_single' => [
+            'title' => 'Handmatig Individueel',
+            'subtitle' => '',
+        ],
+        'payout_bulk' => [
+            'title' => 'Handmatig Bulk',
+            'subtitle' => '',
+        ],
+        'payout_request' => [
+            'title' => 'Beoordelaar',
             'subtitle' => '',
         ],
     ],

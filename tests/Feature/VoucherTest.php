@@ -44,63 +44,63 @@ class VoucherTest extends TestCase
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase1(): void
+    public function testVoucherCaseBudgetVouchers(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase1);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseBudgetVouchers);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase2(): void
+    public function testVoucherCaseProductVouchers(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase2);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseProductVouchers);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase3(): void
+    public function testVoucherCaseBudgetVouchersExceedAmount(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase3);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseBudgetVouchersExceedAmount);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase4(): void
+    public function testVoucherCaseBudgetVouchersNoBSNExceedAmount(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase4);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseBudgetVouchersNoBSNExceedAmount);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase5(): void
+    public function testVoucherCaseProductVouchersEdgeCases(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase5);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseProductVouchersEdgeCases);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase6(): void
+    public function testVoucherCaseSubsidyFundBudgetVouchers(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase6);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseSubsidyFundBudgetVouchers);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase7(): void
+    public function testVoucherCaseBudgetVouchersExcludedFields(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase7);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseBudgetVouchersExcludedFields);
     }
 
     /**
@@ -686,8 +686,8 @@ class VoucherTest extends TestCase
         );
 
         $response = $this->post($url, [
-            'city' => Str::limit($this->faker()->city, 20),
-            'house' => $this->faker()->numberBetween(1, 100),
+            'city' => Str::substr($this->faker()->city, 0, 20),
+            'house' => $this->faker()->numberBetween(1, 200),
             'address' => $this->faker()->address,
             'postcode' => $this->faker()->postcode,
             'house_addition' => $this->faker()->word,

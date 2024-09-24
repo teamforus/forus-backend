@@ -35,33 +35,33 @@ class VoucherBatchTest extends DuskTestCase
     /**
      * @throws \Throwable
      */
-    public function testUploadBatchCase1(): void
+    public function testUploadBatchCaseAssignByEmail(): void
     {
-        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCase1);
+        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCaseAssignByEmail);
     }
 
     /**
      * @throws \Throwable
      */
-    public function testUploadBatchCase2(): void
+    public function testUploadBatchCaseAssignByBSN(): void
     {
-        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCase2);
+        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCaseAssignByBSN);
     }
 
     /**
      * @throws \Throwable
      */
-    public function testUploadBatchCase3(): void
+    public function testUploadBatchCaseAssignByClientUID(): void
     {
-        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCase3);
+        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCaseAssignByClientUID);
     }
 
     /**
      * @throws \Throwable
      */
-    public function testUploadBatchCase4(): void
+    public function testUploadBatchCaseAssignByClientUIDSameCode(): void
     {
-        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCase4);
+        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCaseAssignByClientUIDSameCode);
     }
 
     /**

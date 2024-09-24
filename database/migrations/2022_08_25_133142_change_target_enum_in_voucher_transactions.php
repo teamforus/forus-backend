@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -11,11 +13,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("
-            ALTER TABLE `voucher_transactions` 
-            CHANGE `target` `target` ENUM('provider', 'iban', 'top_up') 
-            NOT NULL DEFAULT 'provider';
-        ");
+        Schema::table('voucher_transactions', function (Blueprint $table) {
+            $table->enum('target', ['provider', 'iban', 'top_up'])
+                ->default('provider')
+                ->after('initiator')
+                ->change();
+        });
     }
 
     /**

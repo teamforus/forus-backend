@@ -93,6 +93,12 @@ trait MakesTestFunds
             'amount' => 300,
         ]);
 
+        $fund->getOrCreateTopUp()->transactions()->create([
+            'amount' => 100000,
+        ]);
+
+        self::assertEquals(100000, $fund->refresh()->budget_left);
+
         return $fund->refresh();
     }
 

@@ -3,13 +3,9 @@
 namespace App\Policies;
 
 use App\Models\Employee;
-use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Scopes\Builders\FundQuery;
-use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
 
 class OrganizationPolicy

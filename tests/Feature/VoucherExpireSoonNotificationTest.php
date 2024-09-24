@@ -30,7 +30,6 @@ class VoucherExpireSoonNotificationTest extends TestCase
         $organization = $this->makeTestOrganization($identitySponsor);
 
         $fund = $this->makeTestFund($organization);
-        $fund->getOrCreateTopUp()->transactions()->create(['amount' => 1000000]);
 
         $expireDate = $fund->end_date->clone();
 
