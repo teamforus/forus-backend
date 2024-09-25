@@ -55,7 +55,6 @@ jobs:
           else
             echo "DEBUG=" >> $GITHUB_ENV
           fi
-
       - name: --- RUN UNIT TESTS ---
         run: docker compose exec -T app bash -c "./vendor/bin/phpunit $DEBUG_FLAG tests/Unit/."
 
