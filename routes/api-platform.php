@@ -544,6 +544,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ])->only('update');
     }
 
+    // requester route
+    $router->resource('payouts', "Api\Platform\PayoutsController")->only([
+        'index'
+    ]);
+
     $router->get(
         'organizations/{organization}/providers/export',
         "Api\Platform\Organizations\FundProviderController@export"

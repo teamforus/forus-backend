@@ -5,8 +5,10 @@ namespace App\Http\Resources\Requester;
 use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\FundRequestClarificationResource;
 use App\Http\Resources\Tiny\FundTinyResource;
+use App\Http\Resources\VoucherResource;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
+use App\Models\Voucher;
 
 /**
  * @property FundRequest $resource
@@ -36,6 +38,11 @@ class FundRequestResource extends BaseJsonResource
         ]), [
             'fund' => new FundTinyResource($this->resource->fund),
             'records' => $this->getRecordsDetails($this->resource),
+            'vouchers' => VoucherResource::collection($this->resource->vouchers),
+            'payoutVoucher' => new VoucherResource(Voucher::query()->where([
+                'fund_request_id' => $this->resource->id,
+                'voucher_type' => Voucher::VOUCHER_TYPE_PAYOUT,
+            ])->first()),
         ], $this->makeTimestamps($this->resource->only([
             'created_at', 'updated_at',
         ])));
