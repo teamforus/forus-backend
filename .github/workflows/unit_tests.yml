@@ -39,5 +39,8 @@ jobs:
           php artisan db:seed
           php artisan test-data:seed
 
-      - name: Run tests
+      - name: Run unit tests
+        run: php artisan test tests/Unit
+
+      - name: Run feature tests
         run: php artisan test tests/Feature
