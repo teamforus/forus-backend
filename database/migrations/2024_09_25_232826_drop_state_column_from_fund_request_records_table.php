@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::table('fund_request_records', function (Blueprint $table) {
             $table->dropColumn('state');
-            $table->dropColumn('note');
         });
     }
 
@@ -26,7 +25,6 @@ return new class extends Migration
             $table->enum('state', [
                 'pending', 'approved', 'declined', 'disregarded',
             ])->default('pending');
-            $table->string('note', 2000)->default('');
         });
     }
 };
