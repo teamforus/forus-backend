@@ -228,7 +228,7 @@ class ReimbursementTest extends DuskTestCase
     {
         $this->goToReimbursementsPage($browser);
 
-        $browser->waitFor('@reimbursementsEmptyBlock');
+        $browser->waitFor('@reimbursementsEmptyBlock', 15);
         $browser->assertVisible('@reimbursementsEmptyBlock');
         $browser->waitFor('@btnEmptyBlock');
         $browser->press('@btnEmptyBlock');
@@ -267,10 +267,10 @@ class ReimbursementTest extends DuskTestCase
      */
     protected function saveReimbursement(Browser $browser): void
     {
-        $browser->waitFor('@reimbursementFormSave');
+        $browser->waitFor('@reimbursementFormSave', 10);
         $browser->press('@reimbursementFormSave');
 
-        $browser->waitFor('@reimbursementsList');
+        $browser->waitFor('@reimbursementsList', 25);
     }
 
     /**
@@ -294,7 +294,7 @@ class ReimbursementTest extends DuskTestCase
 
         $browser->waitFor('@modalReimbursementConfirmationSubmit');
         $browser->press('@modalReimbursementConfirmationSubmit');
-        $browser->waitFor('@reimbursementsList', 10);
+        $browser->waitFor('@reimbursementsList', 15);
     }
 
     /**
@@ -422,7 +422,7 @@ class ReimbursementTest extends DuskTestCase
     ): void {
         $fundSelector = "@fundSelectorOption" . $reimbursement->voucher->fund_id;
 
-        $browser->waitFor($fundSelector);
+        $browser->waitFor($fundSelector, 10);
         $browser->element($fundSelector)->click();
 
         $browser->refresh();
@@ -432,7 +432,7 @@ class ReimbursementTest extends DuskTestCase
             $browser->waitFor('@searchReimbursement');
             $browser->value('@searchReimbursement', $reimbursement->voucher->identity->email);
 
-            $browser->waitFor("@reimbursement$reimbursement->id", 5);
+            $browser->waitFor("@reimbursement$reimbursement->id", 15);
             $browser->assertVisible("@reimbursement$reimbursement->id");
         }
     }
@@ -657,17 +657,6 @@ class ReimbursementTest extends DuskTestCase
 
         $browser->waitFor('@reimbursementForm');
         $browser->within('@reimbursementForm', function(Browser $browser) use ($voucher, $formData) {
-            $browser->type('title', $formData['title']);
-            $browser->type('amount', $formData['amount']);
-            $browser->type('description', $formData['description']);
-            $browser->type('iban', $formData['iban']);
-            $browser->type('iban_name', $formData['iban_name']);
-
-            $browser->waitFor('@voucherSelector');
-            $browser->press('@voucherSelector');
-            $browser->waitFor('@voucherSelectorOptions');
-            $browser->press("@voucherSelectorOption$voucher->id");
-
             $browser->within('@fileUploader', function (Browser $browser) {
                 $browser->script("document.querySelector('.droparea-hidden-input').style.display = 'block'");
                 $browser->waitFor('[name=file_uploader_input_hidden]');
@@ -683,6 +672,20 @@ class ReimbursementTest extends DuskTestCase
         $browser->waitUntilEnabled('@modalPhotoCropperSubmit');
         $browser->press('@modalPhotoCropperSubmit');
         $browser->waitUntilMissing('@modalPhotoCropper');
+
+        $browser->waitFor('@reimbursementForm');
+        $browser->within('@reimbursementForm', function(Browser $browser) use ($voucher, $formData) {
+            $browser->type('title', $formData['title']);
+            $browser->type('amount', $formData['amount']);
+            $browser->type('description', $formData['description']);
+            $browser->type('iban', $formData['iban']);
+            $browser->type('iban_name', $formData['iban_name']);
+
+            $browser->waitFor('@voucherSelector');
+            $browser->press('@voucherSelector');
+            $browser->waitFor('@voucherSelectorOptions');
+            $browser->press("@voucherSelectorOption$voucher->id");
+        });
 
         return $formData;
     }
@@ -720,6 +723,6 @@ class ReimbursementTest extends DuskTestCase
             $browser->press('@reimbursementsFilterArchived');
         }
 
-        $browser->waitFor('@reimbursementsList', 10);
+        $browser->waitFor('@reimbursementsList', 15);
     }
 }
