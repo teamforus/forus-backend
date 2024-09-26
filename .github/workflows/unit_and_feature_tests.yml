@@ -28,25 +28,29 @@ jobs:
         run: cp -n .env.docker.dusk .env
 
       - name: Run docker compose up
-        run: docker compose --profile testing up -d
+        run: docker compose up -d
 
       - name: Set correct ownership of files in docker
         run: docker exec -u 0 forus-backend-app chown -R forus:forus /var/www/
 
       - name: Install dependencies
-        run: docker compose exec -T app bash -c "composer install"
+        run: docker compose exec -T app bash -c "composer install && composer dumpautoload"
 
-      - name: Create database structure
-        run: docker compose exec -T app bash -c "composer dumpautoload && php artisan migrate"
+      - name: Run migrations to create DB structure
+        run: docker compose exec -T app bash -c "php artisan migrate"
 
-      - name: Set app key
-        run: docker compose exec -T app bash -c "php artisan key:generate"
+      - name: Test rollback
+        run: |
+          docker compose exec -T app bash -c "
+          for i in {1..10} 
+          do
+            php artisan migrate:rollback --step=\$i;
+            php artisan migrate;
+          done"
 
-      - name: Run base seeders
-        run: docker compose exec -T app bash -c "php artisan db:seed"
-
-      - name: Generate test data
-        run: docker compose exec -T app php artisan test-data:seed
+      - name: Run seeders
+        run: |
+          docker compose exec -T app bash -c "php artisan key:generate && php artisan db:seed && php artisan test-data:seed"
 
       - name: Set debug based on input
         run: |
