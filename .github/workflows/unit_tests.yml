@@ -6,9 +6,15 @@ jobs:
   tests:
     name: Run tests
     runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: localhost
+      DB_PORT: 3306
+      DB_DATABASE: testdb
+      DB_USERNAME: root
+      DB_PASSWORD: root
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -19,10 +25,19 @@ jobs:
       - name: Run composer install
         run: composer install
 
+      - name: Set up MySQL
+        run: |
+          sudo systemctl start mysql
+          mysql -e 'CREATE DATABASE testdb;' -uroot -proot
+          mysql -e 'SHOW DATABASES;' -uroot -proot
+
       - name: Prepare Laravel Application
         run: |
           cp .env.example .env
           php artisan key:generate
+          php artisan migrate
+          php artisan db:seed
+          php artisan test-data:seed
 
       - name: Run tests
         run: php artisan test tests/Unit
