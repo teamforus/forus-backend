@@ -25,6 +25,7 @@ return [
         'expired_budget' => 'Tegoed #:id is verlopen',
         'expired_product' => 'Tegoed #:id is verlopen',
         'expiring_soon_budget' => 'Tegoed #:id verloopt binnenkort',
+        'expiring_soon_product' => 'Tegoed #:id verloopt binnenkort',
         'limit_multiplier_changed' => 'Tegoed #:id aantal personen bijgewerkt',
         'transaction' => [
             'basic' => 'Tegoed #:id :transaction_type transactie aangemaakt',
