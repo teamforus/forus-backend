@@ -92,10 +92,10 @@ trait HasFrontendActions
      */
     private function logout(Browser $browser): void
     {
-        $browser->waitFor('@userProfile')->waitFor('@userProfile');
+        $browser->waitFor('@userProfile')->waitFor('@userProfile', 10);
         $browser->element('@userProfile')->click();
 
-        $browser->waitFor('@btnUserLogout')->waitFor('@btnUserLogout');
+        $browser->waitFor('@btnUserLogout')->waitFor('@btnUserLogout', 10);
         $browser->element('@btnUserLogout')->click();
 
         $browser->waitUntilMissing('@userProfile');
