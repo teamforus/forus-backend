@@ -80,9 +80,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $iconnect_cert_pass
  * @property string $iconnect_cert_trust
  * @property bool $provider_products_required
+ * @property string $criteria_label_requirement_show
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string $shown_criteria_label_details
  * @property-read \App\Models\Fund $fund
  * @property-read \App\Models\Implementation|null $implementation
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newModelQuery()
@@ -128,6 +128,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoMessageText($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCriteriaLabelRequirementShow($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCsvPrimaryKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCustomAmountMax($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCustomAmountMin($value)
@@ -157,13 +158,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTopUpAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
-<<<<<<< HEAD
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereOutcomeType($value)
-=======
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereProviderProductsRequired($value)
->>>>>>> develop
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereShownCriteriaLabelDetails($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVoucherAmountVisible($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVouchersType($value)
@@ -211,7 +208,7 @@ class FundConfig extends BaseModel
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'hide_meta', 'voucher_amount_visible',
         'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
         'allow_custom_amounts', 'allow_preset_amounts', 'custom_amount_min', 'custom_amount_max',
-        'provider_products_required', 'shown_criteria_label_details',
+        'provider_products_required', 'criteria_label_requirement_show',
     ];
 
     /**

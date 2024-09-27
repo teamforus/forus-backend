@@ -12,9 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->enum(
-                'shown_criteria_label_details',
-                ['optional', 'required', 'both']
+            $table->enum('criteria_label_requirement_show',
+                [ 'optional', 'required', 'both' ],
             )->after('provider_products_required')->default('both');
         });
     }
@@ -25,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->dropColumn('shown_criteria_label_details');
+            $table->dropColumn('criteria_label_requirement_show');
         });
     }
 };
