@@ -8,7 +8,6 @@ use App\Models\ProductReservation;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use App\Models\VoucherTransactionBulk;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -63,26 +62,55 @@ class VoucherQuery
 
     /**
      * @param Builder|Relation $builder
+     * @param int|null $year
      * @return Builder|Relation
      */
-    public static function whereNotExpired(Builder|Relation $builder): Builder|Relation
+    public static function whereNotExpired(Builder|Relation $builder, int $year = null): Builder|Relation
     {
-        return $builder->where(static function(Builder $builder) {
-            $builder->where('vouchers.expire_at', '>=', today());
+        logger()->info('year: '. print_r($year, true));
 
-            $builder->whereHas('fund', static function(Builder $builder) {
-                $builder->whereDate('end_date', '>=', today());
+        return $builder->where(static function(Builder $builder) use ($year) {
+            if ($year) {
+                $builder->whereYear('vouchers.created_at', '>=', $year);
+                $builder->whereYear('vouchers.expire_at', '<=', $year);
+            } else {
+                $builder->where('vouchers.expire_at', '>=', today());
+            }
+
+            $builder->whereHas('fund', static function(Builder $builder) use ($year) {
+                if ($year) {
+                    $builder->whereYear('end_date', '>=', $year);
+                } else {
+                    $builder->whereDate('end_date', '>=', today());
+                }
             });
         });
     }
 
     /**
      * @param Builder|Relation $builder
+     * @param int|null $year
      * @return Builder|Relation|Voucher
      */
-    public static function whereActive(Builder|Relation $builder): Builder|Relation|Voucher
+    public static function whereActive(Builder|Relation $builder, int $year = null): Builder|Relation|Voucher
     {
-        return $builder->where('state', Voucher::STATE_ACTIVE);
+        if (!$year) {
+            return $builder->where('state', Voucher::STATE_ACTIVE);
+        }
+
+        return $builder->whereYear('created_at', '<=', $year)->where(
+            static function(Builder $builder) use ($year) {
+                $builder->where(static function (Builder $builder) use ($year) {
+                    $builder->where('state', Voucher::STATE_ACTIVE);
+                    $builder->whereYear('expire_at', '>=', $year);
+                })->orWhere(static function(Builder $builder) use ($year) {
+                    $builder->where('state', Voucher::STATE_DEACTIVATED);
+                    $builder->whereRelation('logs', function (Builder $builder) use ($year) {
+                        $builder->where('event', Voucher::EVENT_DEACTIVATED);
+                        $builder->whereYear('created_at', $year);
+                    });
+                });
+        });
     }
 
     /**
@@ -114,29 +142,32 @@ class VoucherQuery
 
     /**
      * @param Builder|Relation $builder
+     * @param int|null $year
      * @return Builder|Relation
      */
-    public static function whereNotExpiredAndActive(Builder|Relation $builder): Builder|Relation
+    public static function whereNotExpiredAndActive(Builder|Relation $builder, int $year = null): Builder|Relation
     {
-        return self::whereNotExpired(self::whereActive($builder));
+        return self::whereNotExpired(self::whereActive($builder, $year), $year);
     }
 
     /**
      * @param Builder $builder
+     * @param int|null $year
      * @return Builder
      */
-    public static function whereNotExpiredAndPending(Builder $builder): Builder
+    public static function whereNotExpiredAndPending(Builder $builder, int $year = null): Builder
     {
-        return self::whereNotExpired(self::wherePending($builder));
+        return self::whereNotExpired(self::wherePending($builder), $year);
     }
 
     /**
      * @param Builder $builder
+     * @param int|null $year
      * @return Builder
      */
-    public static function whereNotExpiredAndDeactivated(Builder $builder): Builder
+    public static function whereNotExpiredAndDeactivated(Builder $builder, int $year = null): Builder
     {
-        return self::whereNotExpired(self::whereDeactivated($builder));
+        return self::whereNotExpired(self::whereDeactivated($builder), $year);
     }
 
     /**

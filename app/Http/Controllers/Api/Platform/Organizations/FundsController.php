@@ -24,6 +24,7 @@ use App\Scopes\Builders\FundQuery;
 use App\Searches\FundSearch;
 use App\Statistics\Funds\FinancialStatistic;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Config;
@@ -67,7 +68,7 @@ class FundsController extends Controller
 
         return FundResource::queryCollection(FundQuery::sortByState($query, [
             'active', 'waiting', 'paused', 'closed',
-        ]), $request, $request->only('stats'))->additional(compact('meta'));
+        ]), $request, $request->only('stats', 'year'))->additional(compact('meta'));
     }
 
     /**
@@ -363,15 +364,26 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);
 
+        $year = $request->input('year');
+
         $query = $organization->funds()->where('archived', false);
         $fundsQuery = (clone $query)->where('state', '!=', Fund::STATE_WAITING);
-        $activeFundsQuery = (clone $query)->where([
+        $budgetFundsQuery = (clone $query)->where([
             'type' => Fund::TYPE_BUDGET,
-        ])->where('state', '=', Fund::STATE_ACTIVE);
+        ])->where(static function (Builder $builder) use ($year) {
+            $builder->where('state', '=', Fund::STATE_ACTIVE)
+                ->orWhere(static function (Builder $builder) use ($year) {
+                    $builder->whereYear('start_date', '<=', $year);
+                    $builder->whereHas('logs', static function (Builder $builder) use ($year) {
+                        $builder->where('event', Fund::EVENT_FUND_ENDED);
+                        $builder->whereYear('created_at', $year);
+                    });
+                });
+        });
 
         return $request->isAuthenticated() ? new JsonResponse([
-            'funds' => Fund::getFundTotals($fundsQuery->get()),
-            'budget_funds' => Fund::getFundTotals($activeFundsQuery->get()),
+            'funds' => Fund::getFundTotals($fundsQuery->get(), $year),
+            'budget_funds' => Fund::getFundTotals($budgetFundsQuery->get(), $year),
         ]) : new JsonResponse([], 403);
     }
 
