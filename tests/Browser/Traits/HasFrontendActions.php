@@ -96,7 +96,7 @@ trait HasFrontendActions
         $browser->element('@userProfile')->click();
 
         $browser->waitFor('@btnUserLogout')->waitFor('@btnUserLogout', 20);
-        $browser->element('@btnUserLogout')->click();
+        $browser->pause(500)->element('@btnUserLogout')->click();
 
         $browser->waitUntilMissing('@userProfile');
     }
