@@ -14,7 +14,7 @@ on:
 
 jobs:
 
-  build:
+  test_ui:
 
     runs-on: ubuntu-latest
     defaults:
@@ -56,15 +56,31 @@ jobs:
       - name: Generate test data
         run: docker compose exec -T app php artisan test-data:seed
 
-      - name: "Set frontend branch value for manual and auto runs"
+      - name: "Set frontend branch value for manual, auto runs, and PR CI"
         run: |
-          if [[ -z "${{ github.event.inputs.frontend_branch }}" ]]; then
-            echo "Frontend branch param. is not set, setting default 'develop'"
-            echo "FRONTEND_BRANCH=develop" >> $GITHUB_ENV
+          FRONTEND_BRANCH=""
+          
+          if [[ -n "${{ github.event.inputs.frontend_branch }}" ]]; then
+            FRONTEND_BRANCH=${{ github.event.inputs.frontend_branch }}
+            echo "Frontend branch param is set: $FRONTEND_BRANCH"
           else
-            echo "Frontend branch param is set: ${{ github.event.inputs.frontend_branch }}"
-            echo "FRONTEND_BRANCH=${{ github.event.inputs.frontend_branch }}" >> $GITHUB_ENV
+            if [[ -n "${{ github.event.pull_request.head.ref }}" ]]; then
+              FRONTEND_BRANCH="${{ github.event.pull_request.head.ref }}"
+              echo "Trying to set FRONTEND_BRANCH from PR source branch: $FRONTEND_BRANCH"
+
+              if [[ $(git ls-remote --heads https://github.com/teamforus/forus-frontend-react.git "$FRONTEND_BRANCH") ]]; then
+                echo "Branch $FRONTEND_BRANCH exists in frontend repo, using it"
+              else
+                echo "Branch does not exist in 'forus-frontend', defaulting to 'develop'."
+                FRONTEND_BRANCH="develop"
+              fi
+            else
+              echo "PR source branch is not set, defaulting to 'develop'."
+              FRONTEND_BRANCH="develop"
+            fi
           fi
+          
+          echo "FRONTEND_BRANCH=$FRONTEND_BRANCH" >> "$GITHUB_ENV"
 
       - name: Check out forus-frontend-react repo
         uses: actions/checkout@v4
