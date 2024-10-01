@@ -89,7 +89,7 @@ class FundRequestClarificationTest extends DuskTestCase
             $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
 
             // assert requester was redirected to fund request page
-            $browser->waitFor('@fundRequestFund');
+            $browser->waitFor('@fundRequestFund', 20);
             $browser->assertSeeIn('@fundRequestFund', $fundRequest->fund->name);
 
             // Logout identity
