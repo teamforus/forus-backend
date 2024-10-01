@@ -1,15 +1,10 @@
 name: Run browser tests
 
 on:
-  # schedule:
-  #   - cron: '00 3 * * *'
-  # pull_request:
-  #   branches:
-  #     - release/*
-  #     - master
-  # push:
-  #   branches:
-  #     - develop
+  schedule:
+    - cron: '00 3 * * *'
+  pull_request:
+
   workflow_dispatch:
     inputs:
       frontend_branch:
@@ -19,142 +14,106 @@ on:
 
 jobs:
 
-  build:
+  test_ui:
 
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: forus-backend
 
     steps:
       - name: Checkout forus-backend repo develop branch, if it is scheduled build
         if: github.event.schedule == '00 3 * * *'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: forus-backend
           ref: develop
 
       - name: Checkout forus-backend repo
         if: github.event.schedule != '00 3 * * *'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: forus-backend
 
-      - name: Copy .env.docker.dusk file to .env
-        working-directory: forus-backend
-        run: cp -n .env.docker.dusk .env
+      - name: Create .env from .env.docker.dusk
+        run: cp -n .env.docker.dusk .env && cat .env
 
       - name: Run docker compose up
-        working-directory: forus-backend
         run: docker compose --profile testing up -d
 
-      - name: Crutch - set correct ownership of files in docker
-        working-directory: forus-backend
+      - name: Set ownership of files due to volume on Github agent
         run: docker exec -u 0 forus-backend-app chown -R forus:forus /var/www/
 
       - name: Install dependencies
-        working-directory: forus-backend
         run: docker compose exec -T app bash -c "composer install"
 
       - name: Create database structure with artisan
-        working-directory: forus-backend
         run: docker compose exec -T app bash -c "composer dumpautoload && php artisan migrate"
 
-      - name: Set app key
-        working-directory: forus-backend
-        run: docker compose exec -T app bash -c "php artisan key:generate"
-
       - name: Run base seeders
-        working-directory: forus-backend
-        run: docker compose exec -T app bash -c "php artisan db:seed"
+        run: docker compose exec -T app bash -c "php artisan key:generate && php artisan db:seed"
 
       - name: Generate test data
-        working-directory: forus-backend
         run: docker compose exec -T app php artisan test-data:seed
 
-      - name: "Set frontend branch value for manual and auto runs"
+      - name: "Set frontend branch value for manual, auto runs, and PR CI"
         run: |
-          if [[ -z "${{ github.event.inputs.frontend_branch }}" ]]; then
-            echo "Frontend branch param. is not set, setting default 'develop'"
-            echo "FRONTEND_BRANCH=develop" >> $GITHUB_ENV
+          FRONTEND_BRANCH=""
+          
+          if [[ -n "${{ github.event.inputs.frontend_branch }}" ]]; then
+            FRONTEND_BRANCH=${{ github.event.inputs.frontend_branch }}
+            echo "Frontend branch param is set: $FRONTEND_BRANCH"
           else
-            echo "Frontend branch param is set: ${{ github.event.inputs.frontend_branch }}"
-            echo "FRONTEND_BRANCH=${{ github.event.inputs.frontend_branch }}" >> $GITHUB_ENV
+            if [[ -n "${{ github.event.pull_request.head.ref }}" ]]; then
+              FRONTEND_BRANCH="${{ github.event.pull_request.head.ref }}"
+              echo "Trying to set FRONTEND_BRANCH from PR source branch: $FRONTEND_BRANCH"
+
+              if [[ $(git ls-remote --heads https://github.com/teamforus/forus-frontend-react.git "$FRONTEND_BRANCH") ]]; then
+                echo "Branch $FRONTEND_BRANCH exists in frontend repo, using it"
+              else
+                echo "Branch does not exist in 'forus-frontend', defaulting to 'develop'."
+                FRONTEND_BRANCH="develop"
+              fi
+            else
+              echo "PR source branch is not set, defaulting to 'develop'."
+              FRONTEND_BRANCH="develop"
+            fi
           fi
+          
+          echo "FRONTEND_BRANCH=$FRONTEND_BRANCH" >> "$GITHUB_ENV"
 
       - name: Check out forus-frontend-react repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: teamforus/forus-frontend-react
           path: forus-frontend
           ref: ${{ env.FRONTEND_BRANCH }}
 
-      - name: docker compose up
+      - name: Create env.js for a frontend
         working-directory: forus-frontend
-        run: mkdir -p dist && docker compose up -d
+        run: cp env.example.js env.js && cat env.js
 
-      - name: Add forus-frontend to the backend network
+      - name: Frontend docker compose up and build frontends
         working-directory: forus-frontend
+        run: docker compose up -d && docker compose exec app sh -c "npm i && yes n | npm run build" && docker compose down app
+
+      - name: Debug - Check connections from backend
         run: |
-          docker network connect --alias forus-frontend forus-backend_forus-network forus-frontend-app && \
-          docker network inspect forus-backend_forus-network
-
-      - name: Create env.js file and run npm install
-        working-directory: forus-frontend
-        run: docker compose exec -T app sh -c "mv env.example.js env.js && npm install"
-
-#      - name: Execute npm run build
-#        working-directory: forus-frontend
-#        run: docker compose exec -T app sh -c "yes n | npm run build"
-
-      - name: Run npm server in background
-        working-directory: forus-frontend
-        run: docker compose exec -T app sh -c "npm run start &"
-
-      - name: Debug - check running docker containers list
-        run: docker ps
-
-      - name: Debug - print backend .env file
-        working-directory: forus-backend
-        run: docker compose exec -T app bash -c "cat .env"
-
-      - name: Debug - print frontend env.js file
-        working-directory: forus-frontend
-        run: docker compose exec -T app sh -c "cat env.js"
-
-      - name: Debug - Check connection from frontend to backend
-        working-directory: forus-frontend
-        run: docker compose exec -T app sh -c "wget http://forus-backend-app/api/v1/status"
-
-      - name: Debug - Check connection from selenuim to backend
-        working-directory: forus-backend
-        run: docker compose exec -T selenium sh -c "wget http://forus-backend-app/api/v1/status"
-
-      - name: Debug - Check connection from frontend to frontend
-        working-directory: forus-frontend
-        run: docker compose exec -T app sh -c "wget http://forus-frontend:5000/webshop.general"
-
-      - name: Debug - Check connection from backend to frontend sponsor dashboard
-        working-directory: forus-backend
-        run: docker compose exec -T app bash -c "wget http://forus-frontend:5000/dashboard.sponsor"
-
-      - name: Debug - Check connection from backend to frontend provider dashboard
-        working-directory: forus-backend
-        run: docker compose exec -T app bash -c "wget http://forus-frontend:5000/dashboard.provider"
-
-      - name: Debug - Check connection from backend to frontend validator dashboard
-        working-directory: forus-backend
-        run: docker compose exec -T app bash -c "wget http://forus-frontend:5000/dashboard.validator"
+          docker compose exec -T app bash -c "wget http://forus-frontend-apache:3000/webshop.general/#/" &&
+          docker compose exec -T app bash -c "wget http://forus-frontend-apache:3000/dashboard.sponsor/#/" &&
+          docker compose exec -T app bash -c "wget http://forus-frontend-apache:3000/dashboard.provider/#/"
+          docker compose exec -T app bash -c "wget http://forus-frontend-apache:3000/dashboard.validator/#/"
 
       - name: Install chrome driver
-        working-directory: forus-backend
-        run: docker compose exec -T app bash -c "php artisan dusk:chrome 126"
+        run: docker compose exec -T app bash -c "php artisan dusk:chrome"
 
-      - name: --- RUN BROWSER TESTS ----
-        working-directory: forus-backend
-        run: docker compose exec -T app bash -c "php artisan dusk --debug --verbose --testdox"
+      - name: --- RUN BROWSER TESTS ---
+        run: docker compose exec -T app bash -c "php artisan dusk --debug --testdox"
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Screenshots
+          name: Upload test results artifacts
           path: |
             forus-backend/tests/Browser/screenshots/*
             forus-backend/tests/Browser/console/*
