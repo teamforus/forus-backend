@@ -112,6 +112,7 @@ trait MakesTestFunds
         array $implementationData = [],
     ): Implementation {
         return $organization->implementations()->create([
+            'key' => fake()->slug(1),
             'name' => fake()->text(30),
             ...Implementation::general()->only([
                 'url_webshop', 'url_sponsor', 'url_provider', 'url_validator',

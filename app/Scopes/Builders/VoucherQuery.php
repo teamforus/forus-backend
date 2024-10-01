@@ -113,11 +113,12 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder|Relation $builder
-     * @return Builder|Relation
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereNotExpiredAndActive(Builder|Relation $builder): Builder|Relation
-    {
+    public static function whereNotExpiredAndActive(
+        Builder|Relation|Voucher $builder
+    ): Builder|Relation|Voucher {
         return self::whereNotExpired(self::whereActive($builder));
     }
 
