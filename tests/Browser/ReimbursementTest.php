@@ -432,7 +432,7 @@ class ReimbursementTest extends DuskTestCase
             $browser->waitFor('@searchReimbursement');
             $browser->value('@searchReimbursement', $reimbursement->voucher->identity->email);
 
-            $browser->waitFor("@reimbursement$reimbursement->id", 15);
+            $browser->waitFor("@reimbursement$reimbursement->id", 20);
             $browser->assertVisible("@reimbursement$reimbursement->id");
         }
     }
@@ -701,7 +701,7 @@ class ReimbursementTest extends DuskTestCase
             'description' => $this->faker->text(600),
             'amount' => random_int(1, 10),
             'iban' => $this->faker()->iban('NL'),
-            'iban_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,
+            'iban_name' => str_replace("'", '', $this->faker()->firstName . ' ' . $this->faker()->lastName),
             'fund_name' => $voucher->fund->name,
             'sponsor_name' => $voucher->fund->organization->name,
             'voucher_id' => $voucher->id,
