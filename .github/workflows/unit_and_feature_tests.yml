@@ -11,7 +11,7 @@ on:
 
 jobs:
 
-  build:
+  test_features:
 
     runs-on: ubuntu-latest
     defaults:
