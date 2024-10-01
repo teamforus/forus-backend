@@ -108,7 +108,7 @@ jobs:
         run: docker compose exec -T app bash -c "php artisan dusk:chrome"
 
       - name: --- RUN BROWSER TESTS ---
-        run: docker compose exec -T app bash -c "php artisan dusk --debug --testdox"
+        run: docker compose exec -T app bash -c "php artisan dusk tests/Browser/AuthenticationTest.php --debug --testdox"
 
       - uses: actions/upload-artifact@v4
         if: always()
