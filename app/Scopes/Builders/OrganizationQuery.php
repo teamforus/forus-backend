@@ -3,6 +3,7 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Voucher;
@@ -123,80 +124,102 @@ class OrganizationQuery
 
     /**
      * @param Builder|Relation|Organization $builder
-     * @param int|int[] $fundIds
+     * @param Organization $sponsorOrganization
      * @param string|null $stateGroup
      * @return Builder
      */
     public static function whereGroupState(
         Builder|Relation|Organization $builder,
-        int|array $fundIds,
+        Organization $sponsorOrganization,
         ?string $stateGroup = null
     ): Builder {
         return match ($stateGroup) {
-            'pending' => self::whereGroupStatePending($builder, $fundIds),
-            'active' => self::whereGroupStateActive($builder, $fundIds),
-            'rejected' => self::whereGroupStateRejected($builder, $fundIds),
+            'pending' => self::whereGroupStatePending($builder, $sponsorOrganization),
+            'active' => self::whereGroupStateActive($builder, $sponsorOrganization),
+            'rejected' => self::whereGroupStateRejected($builder, $sponsorOrganization),
             default => $builder,
         };
     }
 
     /**
      * @param Builder|Relation|Organization $builder
-     * @param int|int[] $fundIds
+     * @param Organization $sponsorOrganization
      * @return Builder
      */
     public static function whereGroupStatePending(
         Builder|Relation|Organization $builder,
-        int|array $fundIds
+        Organization $sponsorOrganization,
     ): Builder {
-        return $builder->whereHas('fund_providers', function (Builder $query) use ($fundIds) {
+        $fundsBuilder = FundQuery::whereActiveFilter($sponsorOrganization->funds());
+
+        return $builder->whereHas('fund_providers', function (Builder $query) use ($fundsBuilder) {
             $query->where('state', FundProvider::STATE_PENDING);
-            $query->whereIn('fund_id', (array) $fundIds);
+
+            $query->whereHas('fund', function(Builder|Fund $builder) use ($fundsBuilder) {
+                $builder->whereIn('id', $fundsBuilder->select('id'));
+                $builder->where(fn (Builder|Fund $builder) => FundQuery::whereActiveFilter($builder));
+            });
         });
     }
 
     /**
      * @param Builder|Relation|Organization $builder
-     * @param int|int[] $fundIds
+     * @param Organization $sponsorOrganization
      * @return Builder
      */
     public static function whereGroupStateActive(
         Builder|Relation|Organization $builder,
-        int|array $fundIds
+        Organization $sponsorOrganization,
     ): Builder {
-        $builder->whereHas('fund_providers', function (Builder $query) use ($fundIds) {
-            $query->where('state', FundProvider::STATE_ACCEPTED);
-            $query->whereIn('fund_id', (array) $fundIds);
-        });
+        $fundsBuilder = FundQuery::whereActiveFilter($sponsorOrganization->funds());
 
-        return $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundIds) {
-            $query->where('state', FundProvider::STATE_PENDING);
-            $query->whereIn('fund_id', (array) $fundIds);
+        return $builder->where(function (Builder $builder) use ($fundsBuilder) {
+            $builder->whereHas('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                $query->where('state', FundProvider::STATE_ACCEPTED);
+                $query->whereIn('fund_id', $fundsBuilder->select('id'));
+            });
+
+            $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                $query->where('state', FundProvider::STATE_PENDING);
+                $query->whereIn('fund_id', $fundsBuilder->select('id'));
+            });
         });
     }
 
     /**
      * @param Builder|Relation|Organization $builder
-     * @param int|int[] $fundIds
+     * @param Organization $sponsorOrganization
      * @return Builder
      */
     public static function whereGroupStateRejected(
         Builder|Relation|Organization $builder,
-        int|array $fundIds
+        Organization $sponsorOrganization,
     ): Builder {
-        $builder->whereHas('fund_providers', function (Builder $query) use ($fundIds) {
-            $query->where('state', FundProvider::STATE_REJECTED);
-            $query->whereIn('fund_id', (array) $fundIds);
-        });
+        return $builder->where(function (Builder $builder) use ($sponsorOrganization) {
+            $builder->where(function (Builder $builder) use ($sponsorOrganization) {
+                $fundsBuilder = clone FundQuery::whereActiveFilter($sponsorOrganization->funds());
 
-        $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundIds) {
-            $query->where('state', FundProvider::STATE_ACCEPTED);
-            $query->whereIn('fund_id', (array) $fundIds);
-        });
+                $builder->whereHas('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                    $query->where('state', FundProvider::STATE_REJECTED);
+                    $query->whereIn('fund_id', $fundsBuilder->select('id'));
+                });
 
-        return $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundIds) {
-            $query->where('state', FundProvider::STATE_PENDING);
-            $query->whereIn('fund_id', (array) $fundIds);
+                $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                    $query->where('state', FundProvider::STATE_ACCEPTED);
+                    $query->whereIn('fund_id', $fundsBuilder->select('id'));
+                });
+
+                $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                    $query->where('state', FundProvider::STATE_PENDING);
+                    $query->whereIn('fund_id', $fundsBuilder->select('id'));
+                });
+            });
+
+            $builder->orWhereHas('fund_providers', function (Builder $query) use ($sponsorOrganization) {
+                $fundsBuilder = clone FundQuery::whereNotActiveFilter($sponsorOrganization->funds());
+
+                $query->whereIn('fund_id', $fundsBuilder->select('id'));
+            });
         });
     }
 

@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $auth_2fa_restrict_auth_sessions
  * @property bool $auth_2fa_restrict_reimbursements
  * @property int|null $record_validity_days
+ * @property \Illuminate\Support\Carbon|null $record_validity_start_date
  * @property bool $hash_bsn
  * @property string|null $hash_bsn_salt
  * @property bool $hash_partner_deny
@@ -156,12 +157,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTopUpAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
-<<<<<<< HEAD
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereOutcomeType($value)
-=======
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereProviderProductsRequired($value)
->>>>>>> develop
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVoucherAmountVisible($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVouchersType($value)
@@ -250,6 +249,7 @@ class FundConfig extends BaseModel
         'allow_voucher_top_ups' => 'boolean',
         'allow_voucher_records' => 'boolean',
         'backoffice_check_partner' => 'boolean',
+        'record_validity_start_date' => 'date',
         'employee_can_see_product_vouchers' => 'boolean',
         'email_required' => 'boolean',
         'contact_info_enabled' => 'boolean',

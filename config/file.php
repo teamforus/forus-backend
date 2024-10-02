@@ -3,7 +3,6 @@
 use Illuminate\Support\Env;
 
 return [
-    'enabled' => Env::get('FILES_SERVICE_ENABLED', false),
     'filesystem_driver' => Env::get('FILES_STORAGE_DRIVER', 'local'),
     'storage_path' => Env::get('FILES_STORAGE_PATH', 'files'),
 
