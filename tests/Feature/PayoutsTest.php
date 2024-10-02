@@ -297,6 +297,20 @@ class PayoutsTest extends TestCase
     /**
      * @return void
      */
+    public function testPayoutFundRequestUsingCustomAmountWhenFormulaIsMissing(): void
+    {
+        $fundRequest = $this->makePayoutFundRequest();
+        $fundRequest->fund->fund_formulas()->delete();
+
+        $fundRequest = $this->approveFundRequest($fundRequest, ['amount' => 75]);
+        $this->assertFundRequestGeneratedPayout($fundRequest);
+
+        self::assertEquals(75, $fundRequest->vouchers[0]?->transactions[0]?->amount);
+    }
+
+    /**
+     * @return void
+     */
     public function testPayoutFundRequestUsingCustomPreset(): void
     {
         $fundRequest = $this->makePayoutFundRequest();
@@ -527,7 +541,7 @@ class PayoutsTest extends TestCase
     protected function makeFundRequest(Fund $fund, array $records): FundRequest
     {
         $requester = $this->makeIdentity($this->makeUniqueEmail());
-        $requesterIdentityAuth = $this->makeApiHeaders($this->makeIdentityProxy($requester));
+        $requesterIdentityAuth = $this->makeApiHeaders($requester);
 
         $requester->setBsnRecord('123456789');
 
