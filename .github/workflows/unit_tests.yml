@@ -15,17 +15,22 @@ jobs:
       DB_PASSWORD: root
     steps:
       - uses: actions/checkout@v4
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions:  pdo_mysql mbstring exif pcntl bcmath zip intl soap gd
-          coverage: none
 
-      - name: Run composer install
-        run: composer install
+      - name: Cache composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            composer-
 
-      - name: Set up MySQL
+      - run: composer install
+
+      - name: Set up MySQL DB
         run: |
           sudo systemctl start mysql
           mysql -e 'CREATE DATABASE testdb;' -uroot -proot
