@@ -20,13 +20,17 @@ jobs:
           php-version: '8.2'
           extensions:  pdo_mysql mbstring exif pcntl bcmath zip intl soap gd
 
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: |
+          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
       - name: Cache composer dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: |
-            composer-
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer
+          restore-keys: ${{ runner.os }}-composer
 
       - run: composer install
 
