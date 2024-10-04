@@ -985,17 +985,18 @@ class Fund extends BaseModel
     ): Record|Model|null {
         $fund = $this;
         $daysTrusted = $this->getTrustedDays($record_type);
+        $startDate = $this->fund_config?->record_validity_start_date;
 
         $builder = Record::search(Identity::findByAddress($identity_address)->records(), [
             'type' => $record_type,
-        ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund) {
-            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted);
+        ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund, $startDate) {
+            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
             RecordValidationQuery::whereTrustedByQuery($query, $fund);
         });
 
-        $validationSubQuery = RecordValidation::where(function(Builder $query) use ($daysTrusted, $fund) {
+        $validationSubQuery = RecordValidation::where(function(Builder $query) use ($daysTrusted, $fund, $startDate) {
             $query->whereColumn('records.id', '=', 'record_validations.record_id');
-            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted);
+            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
             RecordValidationQuery::whereTrustedByQuery($query, $fund);
         });
 
@@ -1250,24 +1251,25 @@ class Fund extends BaseModel
     ): ?Voucher {
         $presetModel = $amount instanceof FundAmountPreset ? $amount : null;
 
-        $voucher = null;
+        if ($this->fund_formulas->count() === 0 && $amount === null) {
+            return null;
+        }
+
         $amount = $presetModel ? $presetModel->amount : $amount;
         $amount = $amount === null ? $this->amountForIdentity($identity_address) : $amount;
 
-        if ($this->fund_formulas->count() > 0) {
-            $voucher = Voucher::create([
-                'identity_address' => $identity_address,
-                'amount' => $amount,
-                'expire_at' => $expire_at ?: $this->end_date,
-                'fund_id' => $this->id,
-                'returnable' => false,
-                'limit_multiplier' => $limit_multiplier ?: $this->multiplierForIdentity($identity_address),
-                'fund_amount_preset_id' => $presetModel?->id,
-                ...$voucherFields,
-            ]);
+        $voucher = Voucher::create([
+            'identity_address' => $identity_address,
+            'amount' => $amount,
+            'expire_at' => $expire_at ?: $this->end_date,
+            'fund_id' => $this->id,
+            'returnable' => false,
+            'limit_multiplier' => $limit_multiplier ?: $this->multiplierForIdentity($identity_address),
+            'fund_amount_preset_id' => $presetModel?->id,
+            ...$voucherFields,
+        ]);
 
-            VoucherCreated::dispatch($voucher);
-        }
+        VoucherCreated::dispatch($voucher);
 
         return $voucher;
     }
