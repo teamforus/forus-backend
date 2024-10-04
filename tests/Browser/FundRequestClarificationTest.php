@@ -3,6 +3,7 @@
 namespace Tests\Browser;
 
 use App\Mail\Auth\UserLoginMail;
+use App\Models\FundRequest;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -44,8 +45,19 @@ class FundRequestClarificationTest extends DuskTestCase
         $organization = $this->makeTestOrganization($sponsorIdentity);
         $fund = $this->makeTestFund($organization);
 
+        $records = [[
+            'fund_criterion_id' => $fund->criteria[0]?->id,
+            'value' => 5,
+            'files' => [],
+        ]];
+
         // create fund request and assert email log created
-        $fundRequest = $this->makeFundRequest($fund, $identity, $headers);
+        $response = $this->makeFundRequest($identity, $fund, $records, false, $headers);
+        $response->assertSuccessful();
+        /** @var FundRequest $fundRequest */
+        $fundRequest = FundRequest::find($response->json('data.id'));
+        $this->assertNotNull($fundRequest);
+
         $this->assertFundRequestCreateEmailLog($organization, $fundRequest, $headers);
 
         $fundRequest->assignEmployee($organization->findEmployee($sponsorIdentity));

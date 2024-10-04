@@ -40,8 +40,18 @@ class FundRequestEmailLogsTest extends TestCase
         $organization = $this->makeTestOrganization($sponsorIdentity);
         $fund = $this->makeTestFund($organization);
 
+        $records = [[
+            'fund_criterion_id' => $fund->criteria[0]?->id,
+            'value' => 5,
+            'files' => [],
+        ]];
+
         // create fund request and assert email log created
-        $fundRequest = $this->makeFundRequest($fund, $requesterIdentity);
+        $response = $this->makeFundRequest($requesterIdentity, $fund, $records, false);
+        $response->assertSuccessful();
+        /** @var FundRequest $fundRequest */
+        $fundRequest = FundRequest::find($response->json('data.id'));
+        $this->assertNotNull($fundRequest);
         $this->assertFundRequestCreateEmailLog($organization, $fundRequest);
 
         $fundRequest->assignEmployee($organization->findEmployee($sponsorIdentity));
