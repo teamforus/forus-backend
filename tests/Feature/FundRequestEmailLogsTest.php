@@ -112,7 +112,7 @@ class FundRequestEmailLogsTest extends TestCase
         // assert email log exists
         $response = $this->getJson(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
@@ -139,7 +139,7 @@ class FundRequestEmailLogsTest extends TestCase
         $response = $this->patch(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/approve",
             [],
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
@@ -157,7 +157,7 @@ class FundRequestEmailLogsTest extends TestCase
         // assert email log exists
         $response = $this->getJson(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
@@ -181,7 +181,7 @@ class FundRequestEmailLogsTest extends TestCase
         $response = $this->patch(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/disregard",
             [ 'notify' => $notify ],
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
@@ -201,7 +201,7 @@ class FundRequestEmailLogsTest extends TestCase
         // assert email log exists
         $response = $this->getJson(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+            $this->makeApiHeaders($organization->identity),
         );
 
         $response->assertSuccessful();
