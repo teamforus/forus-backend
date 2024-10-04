@@ -36,4 +36,14 @@ class StorePayoutTransactionBatchRequest extends StorePayoutTransactionRequest
             'payouts.*.description' => $this->descriptionRules(),
         ];
     }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'payouts.*.email' => 'Vul een geldig e-mailadres in, bijvoorbeeld naam@voorbeeld.com',
+        ];
+    }
 }
