@@ -310,7 +310,7 @@ class VoucherTest extends TestCase
                 };
             }
 
-            $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+            $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
             $url = $this->getSponsorApiUrl($voucher, '/assign');
 
             $response = $this->patch($url, $params, $headers);
@@ -342,7 +342,7 @@ class VoucherTest extends TestCase
     {
         $voucher->refresh();
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+        $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
         $url = $this->getSponsorApiUrl($voucher, '/activate');
 
         $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
@@ -359,7 +359,7 @@ class VoucherTest extends TestCase
     {
         $voucher->refresh();
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+        $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
         $url = $this->getSponsorApiUrl($voucher, '/deactivate');
 
         $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
@@ -377,7 +377,7 @@ class VoucherTest extends TestCase
         $voucher->refresh();
 
         if ($voucher->isDeactivated()) {
-            $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+            $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
             $url = $this->getSponsorApiUrl($voucher, '/activate');
 
             $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
@@ -398,7 +398,7 @@ class VoucherTest extends TestCase
 
         if ($voucher->fund->isTypeSubsidy()) {
             $limitMultiplier = $voucher->limit_multiplier + random_int(1, 10);
-            $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+            $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
             $url = $this->getSponsorApiUrl($voucher);
 
             $response = $this->patch($url, ['limit_multiplier' => $limitMultiplier], $headers);
@@ -421,7 +421,7 @@ class VoucherTest extends TestCase
         $voucher->refresh();
 
         if (!$voucher->is_granted && !$voucher->activation_code && !$voucher->isDeactivated()) {
-            $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+            $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
             $url = $this->getSponsorApiUrl($voucher, '/activation-code');
 
             $response = $this->patch($url, [], $headers);
@@ -467,7 +467,7 @@ class VoucherTest extends TestCase
         $amount = random_int(1, round($voucher->amount_available / 2));
         $organization = $voucher->fund->organization;
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $headers = $this->makeApiHeaders($organization->identity);
         $url = sprintf($this->apiOrganizationUrl . '/sponsor/transactions', $organization->id);
 
         $response = $this->post($url, [
@@ -513,7 +513,7 @@ class VoucherTest extends TestCase
         $this->assertNotNull($fundProvider->organization);
         $provider = $fundProvider->organization;
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $headers = $this->makeApiHeaders($organization->identity);
         $url = sprintf($this->apiOrganizationUrl . '/sponsor/transactions', $organization->id);
 
         $response = $this->post($url, [
@@ -570,7 +570,7 @@ class VoucherTest extends TestCase
         ]);
         $amount = random_int(1, round($maxAmount / 2));
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $headers = $this->makeApiHeaders($organization->identity);
         $url = sprintf($this->apiOrganizationUrl . '/sponsor/transactions', $organization->id);
         $params = [
             'voucher_id' => $voucher->id,
@@ -659,7 +659,7 @@ class VoucherTest extends TestCase
         $card = $voucher->physical_cards()->first();
         $this->assertNotNull($card);
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+        $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
         $url = $this->getSponsorApiUrlPhysicalCards($voucher, "/$card->id");
 
         $response = $this->delete($url, [], $headers);
@@ -677,7 +677,7 @@ class VoucherTest extends TestCase
     protected function assertAbilityCreatePhysicalCardRequest(Voucher $voucher): void
     {
         $startDate = now();
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+        $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
 
         $url = sprintf(
             $this->apiOrganizationUrl . '/sponsor/vouchers/%s/physical-card-requests',
