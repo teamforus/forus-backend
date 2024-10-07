@@ -304,7 +304,7 @@ trait VoucherTestTrait
 
         $identity = $this->makeIdentity(null, ['bsn' => $voucher->voucher_relation->bsn]);
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($identity));
+        $headers = $this->makeApiHeaders($identity);
         $response = $this->post(sprintf($this->apiFundUrl . '/check', $voucher->fund_id), [], $headers);
         $response->assertSuccessful();
         $this->assertNotEmpty($response['vouchers']);

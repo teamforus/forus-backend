@@ -25,6 +25,19 @@ class FundQuery
     }
 
     /**
+     * @param Builder|Relation|Fund $query
+     * @return Builder|Relation|Fund
+     */
+    public static function whereNotActiveFilter(
+        Builder|Relation|Fund $query
+    ): Builder|Relation|Fund {
+        return $query->where(function(Builder $builder) {
+            $builder->where('state', '!=', Fund::STATE_ACTIVE);
+            $builder->orWhereDate('end_date', '<', today());
+        });
+    }
+
+    /**
      * @param Builder $query
      * @param bool $includeArchived
      * @param bool $includeExternal

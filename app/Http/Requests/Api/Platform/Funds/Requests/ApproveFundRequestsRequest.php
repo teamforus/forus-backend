@@ -79,7 +79,7 @@ class ApproveFundRequestsRequest extends BaseFormRequest
             $fund->fund_config->allow_preset_amounts_validator ? [
             $this->hasFormula($fund) ? 'nullable' : (
             $fund->organization->allow_payouts && $fund->fund_config->allow_custom_amounts_validator ?
-                'required_without:fund_amount_preset_id' :
+                'required_without:amount' :
                 'required'
             ),
             Rule::exists('fund_amount_presets', 'id')->where('fund_id', $fund->id),

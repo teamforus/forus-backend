@@ -16,6 +16,7 @@ use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\FundFormulaProductTestTrait;
 use Tests\Traits\MakesTestFundProviders;
+use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
@@ -26,14 +27,10 @@ class FundCriteriaTest extends TestCase
     use MakesTestFunds;
     use MakesTestIdentities;
     use DatabaseTransactions;
+    use MakesTestFundRequests;
     use MakesTestOrganizations;
     use MakesTestFundProviders;
     use FundFormulaProductTestTrait;
-
-    /**
-     * @var string
-     */
-    protected string $apiUrlFundRequest = '/api/v1/platform/funds/%s/requests';
 
     /**
      * @var string
@@ -377,7 +374,7 @@ class FundCriteriaTest extends TestCase
         $fund = $this->makeTestFund($organization);
 
         $identityHeaders = [
-            ...$this->makeApiHeaders($this->makeIdentityProxy($identity)),
+            ...$this->makeApiHeaders($identity),
             'Client-Type' => 'webshop',
             'Client-Key' => $fund->fund_config->implementation->key,
         ];
@@ -419,7 +416,7 @@ class FundCriteriaTest extends TestCase
         $fund = $this->makeTestFund($organization, [], ['csv_primary_key' => 'bsn']);
 
         $identityHeaders = [
-            ...$this->makeApiHeaders($this->makeIdentityProxy($identity)),
+            ...$this->makeApiHeaders($identity),
             'Client-Type' => 'webshop',
             'Client-Key' => $fund->fund_config->implementation->key,
         ];
@@ -649,26 +646,6 @@ class FundCriteriaTest extends TestCase
     }
 
     /**
-     * @param Identity $identity
-     * @param Fund $fund
-     * @param mixed $records
-     * @param bool $validate
-     * @return TestResponse
-     */
-    protected function makeFundRequest(
-        Identity $identity,
-        Fund $fund,
-        mixed $records,
-        bool $validate,
-    ): TestResponse {
-        $url = sprintf($this->apiUrlFundRequest, $fund->id) . ($validate ? "/validate" : "");
-        $proxy = $this->makeIdentityProxy($identity);
-        $identity->setBsnRecord('123456789');
-
-        return $this->postJson($url, compact('records'), $this->makeApiHeaders($proxy));
-    }
-
-    /**
      * @param array $criteria
      * @param Fund $fund
      * @return TestResponse
@@ -679,6 +656,6 @@ class FundCriteriaTest extends TestCase
 
         return $this->patchJson($url, [
             'criteria' => [$criteria],
-        ], $this->makeApiHeaders($this->makeIdentityProxy($fund->organization?->identity)));
+        ], $this->makeApiHeaders($fund->organization?->identity));
     }
 }
