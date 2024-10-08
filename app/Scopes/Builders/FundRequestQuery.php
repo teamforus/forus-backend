@@ -37,20 +37,51 @@ class FundRequestQuery
 
     /**
      * @param Builder|Relation $builder
-     * @param string $identity_address
+     * @return Builder|Relation
+     */
+    public static function whereNoEmployee(
+        Builder|Relation $builder,
+    ): Builder|Relation {
+        return $builder->whereNull('employee_id');
+    }
+
+    /**
+     * @param Builder|Relation $builder
+     * @param string|null $identity_address
      * @return Builder|Relation
      */
     public static function whereIsPending(
         Builder|Relation $builder,
-        string $identity_address,
+        string $identity_address = null,
     ): Builder|Relation {
         return $builder->where(function(Builder $builder) use ($identity_address) {
             $builder->where([
-                'state' => FundRequest::STATE_PENDING,
-                'identity_address' => $identity_address,
+                'fund_requests.state' => FundRequest::STATE_PENDING,
             ]);
+
+            if ($identity_address) {
+                $builder->where([
+                    'identity_address' => $identity_address,
+                ]);
+            }
         });
     }
+
+    /**
+     * @param Builder|Relation $builder
+     * @return Builder|Relation
+     */
+    public static function whereIsResolved(
+        Builder|Relation $builder,
+    ): Builder|Relation {
+        return $builder->whereIn('fund_requests.state', [
+            FundRequest::STATE_APPROVED,
+            FundRequest::STATE_APPROVED_PARTLY,
+            FundRequest::STATE_DECLINED,
+            FundRequest::STATE_DISREGARDED
+        ]);
+    }
+
     /**
      * @param Builder|Relation $builder
      * @param string $identity_address

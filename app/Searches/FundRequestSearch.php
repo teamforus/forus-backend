@@ -76,7 +76,7 @@ class FundRequestSearch extends BaseSearch
         }
 
         if ($this->hasFilter('is_resolved')) {
-            $builder->whereNotNull('resolved_at');
+            FundRequestQuery::whereIsResolved($builder);
         }
 
         return $this->order($builder);

@@ -9,6 +9,7 @@ use App\Helpers\Validation;
 use App\Models\Traits\HasNotes;
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
 use App\Rules\Base\IbanRule;
+use App\Scopes\Builders\FundRequestQuery;
 use App\Searches\FundRequestSearch;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Builder;
@@ -688,13 +689,13 @@ class FundRequest extends BaseModel
      */
     public static function makeTotalsMeta(Organization $organization): array
     {
+        $query = $organization->fund_requests();
+
         return [
-            'hold' => $organization->fund_requests()->whereNull('employee_id')->count(),
-            'pending' => $organization->fund_requests()->where(
-                'fund_requests.state', self::STATE_PENDING
-            )->whereNotNull('employee_id')->count(),
-            'resolved' => $organization->fund_requests()->whereNotNull('resolved_at')->count(),
-            'total' => $organization->fund_requests()->count(),
+            'hold' => FundRequestQuery::whereNoEmployee(clone $query)->count(),
+            'pending' => FundRequestQuery::whereIsPending(clone $query)->whereNotNull('employee_id')->count(),
+            'resolved' => FundRequestQuery::whereIsResolved(clone $query)->count(),
+            'total' => (clone $query)->count(),
         ];
     }
 }
