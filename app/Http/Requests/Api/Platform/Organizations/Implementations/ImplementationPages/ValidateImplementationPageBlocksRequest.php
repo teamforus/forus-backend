@@ -26,9 +26,9 @@ class ValidateImplementationPageBlocksRequest extends BaseFormRequest
     {
         return [
             'blocks.*'                      => 'nullable|array',
-            'blocks.*.label'                => 'nullable|string|max:200',
-            'blocks.*.title'                => 'required|string|max:200',
-            'blocks.*.description'          => 'required|string|max:5000',
+            'blocks.*.label'                => 'nullable|string|max:30',
+            'blocks.*.title'                => 'required|string|max:100',
+            'blocks.*.description'          => 'required|string|max:500',
             'blocks.*.button_enabled'       => 'nullable|boolean',
             'blocks.*.button_text'          => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
             'blocks.*.button_link'          => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',

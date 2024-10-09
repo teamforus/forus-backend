@@ -41,7 +41,7 @@ class ProvidersController extends Controller
         });
 
         $query = OrganizationQuery::whereGroupState(
-            $query, $organization->funds->pluck('id')->all(), $request->get('state_group'),
+            $query, $organization, $request->get('state_group'),
         );
 
         $query = OrganizationQuery::orderProvidersBy($query, $organization, $request->only([

@@ -33,7 +33,7 @@ return new class extends Migration
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->dropColumn([
-                'allow_custom_amounts', 'allow_custom_amounts_validator',
+                'outcome_type', 'allow_custom_amounts', 'allow_custom_amounts_validator',
                 'allow_preset_amounts', 'allow_preset_amounts_validator',
                 'custom_amount_min', 'custom_amount_max',
             ]);

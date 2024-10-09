@@ -718,7 +718,7 @@ class Implementation extends BaseModel
         if (is_array($config)) {
             $implementation = self::active() ?? abort(403);
             $banner = $implementation->banner;
-            $request = BaseFormRequest::createFromGlobals();
+            $request = BaseFormRequest::createFromBase(request());
             $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
 
             $config = array_merge($config, [

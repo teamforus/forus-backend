@@ -29,8 +29,8 @@ return [
             'subtitle' => 'Reservering',
         ],
         'direct_provider' => [
-            'title' => 'Uitbetaling',
-            'subtitle' => '',
+            'title' => 'Tegoed',
+            'subtitle' => 'Transactie door medewerker',
         ],
         'direct_iban' => [
             'title' => 'Uitbetaling',
