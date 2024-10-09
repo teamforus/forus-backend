@@ -6,7 +6,6 @@ namespace App\Scopes\Builders;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
-use App\Models\Identity;
 use App\Models\Permission;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -89,9 +88,9 @@ class FundRequestQuery
                 $builder->where('email', 'LIKE', "%$q%");
             });
 
-            if ($bsnIdentity = Identity::findByBsn($q, false)) {
-                $query->orWhere('identity_address', '=', $bsnIdentity->address);
-            }
+            $query->orWhereHas('identity', static function(Builder $builder) use ($q) {
+                IdentityQuery::whereBsnLike($builder, $q);
+            });
 
             $query->orWhere('id', '=', $q);
         });
