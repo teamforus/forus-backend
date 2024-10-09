@@ -9,36 +9,31 @@ use App\Models\Organization;
 use App\Traits\DoesTesting;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 
 trait MakesTestFundRequests
 {
     use DoesTesting;
 
     /**
+     * @param Identity $identity
      * @param Fund $fund
-     * @param Identity $requesterIdentity
-     * @param array $headers
-     * @return FundRequest
+     * @param mixed $records
+     * @param bool $validate
+     * @return TestResponse
      */
-    protected function makeFundRequest(Fund $fund, Identity $requesterIdentity, array $headers = []): FundRequest
-    {
-        $requesterIdentityAuth = $this->makeApiHeaders($this->makeIdentityProxy($requesterIdentity), $headers);
+    protected function makeFundRequest(
+        Identity $identity,
+        Fund $fund,
+        mixed $records,
+        bool $validate,
+        array $headers = []
+    ): TestResponse {
+        $url = "/api/v1/platform/funds/$fund->id/requests" . ($validate ? "/validate" : "");
+        $proxy = $this->makeIdentityProxy($identity);
+        $identity->setBsnRecord('123456789');
 
-        // make the fund request
-        $response = $this->postJson("/api/v1/platform/funds/$fund->id/requests", [
-            'records' => [[
-                'fund_criterion_id' => $fund->criteria[0]?->id,
-                'value' => 5,
-                'files' => [],
-            ]]
-        ], $requesterIdentityAuth);
-
-        $response->assertSuccessful();
-        $fundRequest = FundRequest::find($response->json('data.id'));
-
-        self::assertNotNull($fundRequest);
-
-        return $fundRequest;
+        return $this->postJson($url, compact('records'), $this->makeApiHeaders($proxy, $headers));
     }
 
     /**

@@ -39,7 +39,7 @@ class EmployeeTest extends TestCase
     {
         $organization = Organization::first();
         $this->assertNotNull($organization);
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $headers = $this->makeApiHeaders($organization->identity);
         $employeeData = $this->makeEmployeeData();
 
         // make valid store employee request
@@ -63,7 +63,7 @@ class EmployeeTest extends TestCase
     {
         $organization = Organization::first();
         $this->assertNotNull($organization);
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $headers = $this->makeApiHeaders($organization->identity);
 
         $employeeData = $this->makeEmployeeData();
         $employee = $this->storeEmployee($organization, $employeeData, $headers);
@@ -85,7 +85,7 @@ class EmployeeTest extends TestCase
     {
         $organization = Organization::where('name', 'Nijmegen')->first();
         $this->assertNotNull($organization);
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $headers = $this->makeApiHeaders($organization->identity);
 
         $employeeData = $this->makeEmployeeData();
         $employee = $this->storeEmployee($organization, $employeeData, $headers);
@@ -103,7 +103,7 @@ class EmployeeTest extends TestCase
     {
         $organization = Organization::where('name', 'Nijmegen')->first();
         $this->assertNotNull($organization);
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $headers = $this->makeApiHeaders($organization->identity);
 
         $this->storeEmployee($organization, $this->makeEmployeeData(), $headers);
     }
@@ -114,7 +114,7 @@ class EmployeeTest extends TestCase
     {
         $organization = Organization::where('name', 'Nijmegen')->first();
         $this->assertNotNull($organization);
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $headers = $this->makeApiHeaders($organization->identity);
 
         $employeeData = $this->makeEmployeeData();
         $employee = $this->storeEmployee($organization, $employeeData, $headers);
