@@ -37,49 +37,19 @@ class FundRequestQuery
 
     /**
      * @param Builder|Relation $builder
-     * @return Builder|Relation
-     */
-    public static function whereNoEmployee(
-        Builder|Relation $builder,
-    ): Builder|Relation {
-        return $builder->whereNull('employee_id');
-    }
-
-    /**
-     * @param Builder|Relation $builder
-     * @param string|null $identity_address
+     * @param string $identity_address
      * @return Builder|Relation
      */
     public static function whereIsPending(
         Builder|Relation $builder,
-        string $identity_address = null,
+        string $identity_address,
     ): Builder|Relation {
         return $builder->where(function(Builder $builder) use ($identity_address) {
             $builder->where([
-                'fund_requests.state' => FundRequest::STATE_PENDING,
+                'state' => FundRequest::STATE_PENDING,
+                'identity_address' => $identity_address,
             ]);
-
-            if ($identity_address) {
-                $builder->where([
-                    'identity_address' => $identity_address,
-                ]);
-            }
         });
-    }
-
-    /**
-     * @param Builder|Relation $builder
-     * @return Builder|Relation
-     */
-    public static function whereIsResolved(
-        Builder|Relation $builder,
-    ): Builder|Relation {
-        return $builder->whereIn('fund_requests.state', [
-            FundRequest::STATE_APPROVED,
-            FundRequest::STATE_APPROVED_PARTLY,
-            FundRequest::STATE_DECLINED,
-            FundRequest::STATE_DISREGARDED
-        ]);
     }
 
     /**
@@ -193,5 +163,52 @@ class FundRequestQuery
             ->select('id');
 
         return $query->whereIn('fund_id', $funds);
+    }
+
+    /**
+     * @param Builder|Relation|FundRequest $builder
+     * @return Builder|Relation|FundRequest
+     */
+    public static function whereGroupStatePending(
+        Builder|Relation|FundRequest $builder,
+    ): Builder|Relation|FundRequest {
+        return $builder->whereNull('employee_id');
+    }
+
+    /**
+     * @param Builder|Relation|FundRequest $builder
+     * @return Builder|Relation|FundRequest
+     */
+    public static function whereGroupStateAssigned(
+        Builder|Relation|FundRequest $builder,
+    ): Builder|Relation|FundRequest {
+        return $builder->where('state', FundRequest::STATE_PENDING)->whereNotNull('employee_id');
+    }
+
+    /**
+     * @param Builder|Relation|FundRequest $builder
+     * @return Builder|Relation|FundRequest
+     */
+    public static function whereGroupStateResolved(
+        Builder|Relation|FundRequest $builder,
+    ): Builder|Relation|FundRequest {
+        return $builder->whereIn('fund_requests.state', FundRequest::STATES_RESOLVED);
+    }
+
+    /**
+     * @param Builder|Relation|FundRequest $builder
+     * @param string|null $stateGroup
+     * @return Builder|Relation|FundRequest
+     */
+    public static function whereGroupState(
+        Builder|Relation|FundRequest $builder,
+        ?string $stateGroup = null,
+    ): Builder|Relation|FundRequest {
+        return match ($stateGroup) {
+            'pending' => self::whereGroupStatePending($builder),
+            'assigned' => self::whereGroupStateAssigned($builder),
+            'resolved' => self::whereGroupStateResolved($builder),
+            default => $builder,
+        };
     }
 }

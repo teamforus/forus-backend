@@ -75,10 +75,6 @@ class FundRequestSearch extends BaseSearch
             $builder->whereDoesntHave('employee');
         }
 
-        if ($this->hasFilter('is_resolved')) {
-            FundRequestQuery::whereIsResolved($builder);
-        }
-
         return $this->order($builder);
     }
 

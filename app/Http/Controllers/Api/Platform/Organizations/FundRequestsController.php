@@ -22,6 +22,7 @@ use App\Models\FundRequest;
 use App\Models\Note;
 use App\Models\Organization;
 use App\Scopes\Builders\EmailLogQuery;
+use App\Scopes\Builders\FundRequestQuery;
 use App\Searches\FundRequestSearch;
 use App\Searches\Sponsor\EmailLogSearch;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
@@ -48,15 +49,21 @@ class FundRequestsController extends Controller
         $this->authorize('viewAnyAsValidator', [FundRequest::class, $organization]);
 
         $search = (new FundRequestSearch($request->only([
-            'q', 'state', 'employee_id', 'from', 'to',
-            'order_by', 'order_dir', 'assigned', 'is_resolved',
+            'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir', 'assigned',
         ])))->setEmployee($request->employee($organization));
 
-        return ValidatorFundRequestResource::queryCollection(
-            $search->query(), $request
-        )->additional([
+        $stateGroup = $request->get('state_group');
+        $builder = $search->query();
+        $query = $stateGroup ? FundRequestQuery::whereGroupState(clone $builder, $stateGroup) : $builder;
+
+        return ValidatorFundRequestResource::queryCollection($query, $request)->additional([
             'meta' => [
-                'totals' => FundRequest::makeTotalsMeta($organization),
+                'totals' => [
+                    'all' => (clone $builder)->count(),
+                    'pending' => FundRequestQuery::whereGroupStatePending(clone $builder)->count(),
+                    'assigned' => FundRequestQuery::whereGroupStateAssigned(clone $builder)->count(),
+                    'resolved' => FundRequestQuery::whereGroupStateResolved(clone $builder)->count(),
+                ],
             ],
         ]);
     }
