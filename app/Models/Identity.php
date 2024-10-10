@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Scopes\Builders\IdentityQuery;
 use App\Services\Forus\Auth2FAService\Auth2FAService;
 use App\Services\Forus\Auth2FAService\Data\Auth2FASecret;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
@@ -321,21 +322,15 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @param string|null $bsn
-     * @param bool|null $exactSearch
      * @return Identity|BaseModel|null
      */
-    public static function findByBsn(?string $bsn, ?bool $exactSearch = true): Identity|Model|null
+    public static function findByBsn(?string $bsn): Identity|Model|null
     {
         if (empty($bsn)) {
             return null;
         }
 
-        return static::whereHas('records', function(Builder $builder) use ($bsn, $exactSearch) {
-            $exactSearch ?
-                $builder->where('value', '=', $bsn) :
-                $builder->where('value', 'LIKE', "%$bsn%");
-            $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
-        })->first();
+        return IdentityQuery::whereBsn(Identity::query(), $bsn)->first();
     }
 
     /**
