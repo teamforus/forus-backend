@@ -336,7 +336,7 @@ class FundRequest extends BaseModel
     {
         $fundRequests = (clone $builder)->with([
             'identity.record_bsn',
-            'records.employee',
+            'records',
             'fund',
         ])->get();
 
@@ -345,9 +345,6 @@ class FundRequest extends BaseModel
             ->pluck('record_type_key');
 
         return $fundRequests->map(static function(FundRequest $request) use ($recordKeyList) {
-            $employees = $request->records->pluck('employee')->filter();
-            $employees = $employees->map(fn(Employee $employee) => $employee->identity->email)->unique();
-
             $records = $recordKeyList->reduce(fn ($records, $key) => [
                 ...$records, $key => $request->records->firstWhere('record_type_key', $key),
             ], []);
@@ -356,7 +353,7 @@ class FundRequest extends BaseModel
                 trans("export.fund_requests.bsn") => $request->identity?->record_bsn?->value ?: '-',
                 trans("export.fund_requests.fund_name") => $request->fund->name,
                 trans("export.fund_requests.status") => trans("export.fund_requests.state-values.$request->state"),
-                trans("export.fund_requests.validator") => $employees->filter()->join(', ') ?: null,
+                trans("export.fund_requests.validator") => $request->employee?->identity?->email ?: '-',
                 trans("export.fund_requests.created_at") => $request->created_at,
                 trans("export.fund_requests.resolved_at") => $request->resolved_at,
                 trans("export.fund_requests.lead_time_days") => (string) $request->lead_time_days,
