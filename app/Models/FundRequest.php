@@ -279,7 +279,9 @@ class FundRequest extends BaseModel
      */
     public function disregardUndo(): self
     {
-        $this->setState(FundRequest::STATE_PENDING);
+        $this->update([
+            'state' => FundRequest::STATE_PENDING,
+        ]);
 
         return $this;
     }
