@@ -254,6 +254,15 @@ class Voucher extends BaseModel
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      * @noinspection PhpUnused
      */
+    public function fund_request(): BelongsTo
+    {
+        return $this->belongsTo(FundRequest::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
