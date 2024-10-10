@@ -21,8 +21,6 @@ class IndexPayoutsRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return [
-            'q' => 'nullable|string'
-        ];
+        return $this->sortableResourceRules();
     }
 }

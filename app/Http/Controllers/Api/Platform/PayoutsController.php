@@ -24,18 +24,17 @@ class PayoutsController extends Controller
     {
         $this->authorize('viewAny', [VoucherTransaction::class]);
 
-        $query = VoucherTransaction::query()->where(function(Builder|VoucherTransaction $builder) use ($request) {
+        $query = VoucherTransaction::where(function(Builder $builder) use ($request) {
             $builder->where('target', VoucherTransaction::TARGET_PAYOUT);
-            $builder->whereHas('voucher', function (Builder|Voucher $builder) use ($request) {
+            $builder->whereHas('voucher', function (Builder $builder) use ($request) {
                 $builder->where('voucher_type', Voucher::VOUCHER_TYPE_PAYOUT);
-                $builder->whereHas('fund_request', function (Builder|FundRequest $builder) use ($request) {
-                    $builder->where('identity_address', $request->identity()->address);
-                });
+                $builder->whereRelation('fund_request', 'identity_address', $request->auth_address());
             });
         });
 
-        $search = new VoucherTransactionsSearch($request->only('q'), $query);
-
-        return VoucherTransactionPayoutResource::queryCollection($search->query());
+        return VoucherTransactionPayoutResource::queryCollection(
+            (new VoucherTransactionsSearch($request->only('q'), $query))->query(),
+            $request,
+        );
     }
 }

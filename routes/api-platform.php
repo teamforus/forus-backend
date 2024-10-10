@@ -531,7 +531,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             ]
         ]);
 
-        // requester route
         $router->resource('fund-requests', "Api\Platform\FundRequestsController")->only([
             'index', 'show',
         ]);
@@ -544,7 +543,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ])->only('update');
     }
 
-    // requester route
     $router->resource('payouts', "Api\Platform\PayoutsController")->only([
         'index'
     ]);

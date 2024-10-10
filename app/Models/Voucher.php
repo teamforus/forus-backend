@@ -77,6 +77,7 @@ use ZipArchive;
  * @property-read int|null $backoffice_logs_count
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
+ * @property-read \App\Models\FundRequest|null $fund_request
  * @property-read bool $activated
  * @property-read string $amount_available
  * @property-read string $amount_available_cached

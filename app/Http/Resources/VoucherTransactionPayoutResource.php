@@ -22,21 +22,19 @@ class VoucherTransactionPayoutResource extends VoucherTransactionResource
      */
     public function toArray($request): array
     {
-        $transaction = $this->resource;
-
         return [
-            ...$transaction->only([
+            ...$this->resource->only([
                 'state', 'state_locale', 'iban_from',
             ]),
-            'iban_to' => $transaction->getTargetIban(),
-            'iban_to_name' => $transaction->getTargetName(),
-            'amount' => currency_format($transaction->amount),
-            'amount_locale' => currency_format_locale($transaction->amount),
+            'iban_to' => $this->resource->getTargetIban(),
+            'iban_to_name' => $this->resource->getTargetName(),
+            'amount' => currency_format($this->resource->amount),
+            'amount_locale' => currency_format_locale($this->resource->amount),
             'fund' => [
-                ...$transaction->voucher->fund->only('id', 'name', 'organization_id'),
-                'organization_name' => $transaction->voucher->fund->organization?->name,
+                ...$this->resource->voucher->fund->only('id', 'name', 'organization_id'),
+                'organization_name' => $this->resource->voucher->fund->organization?->name,
             ],
-            ...$this->makeTimestamps($transaction->only([
+            ...$this->makeTimestamps($this->resource->only([
                 'created_at', 'updated_at',
             ])),
         ];
