@@ -22,9 +22,10 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Scopes\Builders\FundQuery;
 use App\Searches\FundSearch;
+use App\Statistics\Funds\FinancialOverviewStatistic;
 use App\Statistics\Funds\FinancialStatistic;
+use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Config;
@@ -364,27 +365,9 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);
 
-        $year = $request->input('year');
-
-        $query = $organization->funds()->where('archived', false);
-        $fundsQuery = (clone $query)->where('state', '!=', Fund::STATE_WAITING);
-        $budgetFundsQuery = (clone $query)->where([
-            'type' => Fund::TYPE_BUDGET,
-        ])->where(static function (Builder $builder) use ($year) {
-            $builder->where('state', '=', Fund::STATE_ACTIVE)
-                ->orWhere(static function (Builder $builder) use ($year) {
-                    $builder->whereYear('start_date', '<=', $year);
-                    $builder->whereHas('logs', static function (Builder $builder) use ($year) {
-                        $builder->where('event', Fund::EVENT_FUND_ENDED);
-                        $builder->whereYear('created_at', $year);
-                    });
-                });
-        });
-
-        return $request->isAuthenticated() ? new JsonResponse([
-            'funds' => Fund::getFundTotals($fundsQuery->get(), $year),
-            'budget_funds' => Fund::getFundTotals($budgetFundsQuery->get(), $year),
-        ]) : new JsonResponse([], 403);
+        return $request->isAuthenticated() ? new JsonResponse(
+            (new FinancialOverviewStatistic())->getStatistics($organization, $request->input('year'))
+        ) : new JsonResponse([], 403);
     }
 
     /**
@@ -406,6 +389,9 @@ class FundsController extends Controller
         $this->authorize('showFinances', $organization);
 
         $detailed = $request->input('detailed', false);
+        $year = $request->input('year', now()->year);
+        $from = Carbon::createFromFormat('Y', $year)->startOfYear();
+        $to = $year < now()->year ? Carbon::createFromFormat('Y', $year)->endOfYear() : today();
         $exportType = $request->input('export_type', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
 
@@ -414,7 +400,7 @@ class FundsController extends Controller
             'type' => Fund::TYPE_BUDGET,
         ])->where('state', '=', Fund::STATE_ACTIVE);
 
-        $exportData = new FundsExport(($detailed ? $activeFundsQuery : $fundsQuery)->get(), $detailed);
+        $exportData = new FundsExport(($detailed ? $activeFundsQuery : $fundsQuery)->get(), $from, $to, $detailed);
 
         return resolve('excel')->download($exportData, $fileName);
     }

@@ -28,9 +28,9 @@ use App\Services\Forus\Notification\EmailFrom;
 use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Statistics\Funds\FinancialOverviewStatisticQueries;
 use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -726,7 +726,15 @@ class Fund extends BaseModel
      */
     public function getBudgetTotalAttribute(): float
     {
-        return $this->getBudgetTotal();
+        if ($this->balance_provider === static::BALANCE_PROVIDER_TOP_UPS) {
+            return round($this->top_up_transactions->sum('amount'), 2);
+        }
+
+        if ($this->balance_provider === static::BALANCE_PROVIDER_BANK_CONNECTION) {
+            return round(floatval($this->balance) + $this->budget_used, 2);
+        }
+
+        return 0;
     }
 
     /**
@@ -735,7 +743,7 @@ class Fund extends BaseModel
      */
     public function getBudgetUsedAttribute(): float
     {
-        return $this->getBudgetUsed();
+        return round($this->voucher_transactions()->sum('voucher_transactions.amount'), 2);
     }
 
     /**
@@ -744,7 +752,9 @@ class Fund extends BaseModel
      */
     public function getBudgetUsedActiveVouchersAttribute(): float
     {
-        return $this->getBudgetUsedActiveVouchers();
+        return round($this->voucher_transactions()
+            ->where('vouchers.expire_at', '>', now())
+            ->sum('voucher_transactions.amount'), 2);
     }
 
     /**
@@ -753,7 +763,15 @@ class Fund extends BaseModel
      */
     public function getBudgetLeftAttribute(): float
     {
-        return $this->getBudgetLeft();
+        if ($this->balance_provider === static::BALANCE_PROVIDER_TOP_UPS) {
+            return round($this->budget_total - $this->budget_used, 2);
+        }
+
+        if ($this->balance_provider === static::BALANCE_PROVIDER_BANK_CONNECTION) {
+            return round($this->balance, 2);
+        }
+
+        return 0;
     }
 
     /**
@@ -1609,15 +1627,16 @@ class Fund extends BaseModel
 
     /**
      * @param Builder $vouchersQuery
-     * @param int|null $year
+     * @param Carbon $from
+     * @param Carbon $to
      * @return array
      */
-    public static function getFundDetails(Builder $vouchersQuery, ?int $year = null) : array
+    public static function getFundDetails(Builder $vouchersQuery, Carbon $from, Carbon $to) : array
     {
-        $vouchersQuery = VoucherQuery::whereNotExpired($vouchersQuery, $year);
-        $activeVouchersQuery = VoucherQuery::whereNotExpiredAndActive((clone $vouchersQuery), $year);
-        $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery), $year);
-        $deactivatedVouchersQuery = VoucherQuery::whereNotExpiredAndDeactivated((clone $vouchersQuery), $year);
+        $vouchersQuery = FinancialOverviewStatisticQueries::whereNotExpired($vouchersQuery, $from, $to);
+        $activeVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndActive((clone $vouchersQuery), $from, $to);
+        $inactiveVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndPending((clone $vouchersQuery), $from, $to);
+        $deactivatedVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndDeactivated((clone $vouchersQuery), $from, $to);
 
         $vouchers_count = $vouchersQuery->count();
         $inactive_count = $inactiveVouchersQuery->count();
@@ -1650,72 +1669,6 @@ class Fund extends BaseModel
             ->whereRelation('record_type', 'key', 'children_nth')
             ->whereIn('voucher_id', $vouchersQuery->select('id'))
             ->sum('value');
-    }
-
-    /**
-     * @param Collection|Fund[] $funds
-     * @param int $year
-     * @return array
-     */
-    public static function getFundTotals(Collection|Arrayable $funds, int $year) : array
-    {
-        $budget = 0;
-        $budget_left = 0;
-        $budget_used = 0;
-        $budget_used_active_vouchers = 0;
-        $transaction_costs = 0;
-
-        $query = Voucher::query()->whereNull('parent_id')->whereIn('fund_id', $funds->pluck('id'));
-        $vouchersQuery = VoucherQuery::whereNotExpired($query, $year);
-        $activeVouchersQuery = VoucherQuery::whereNotExpiredAndActive((clone $vouchersQuery), $year);
-        $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery), $year);
-        $deactivatedVouchersQuery = VoucherQuery::whereNotExpiredAndDeactivated((clone $vouchersQuery), $year);
-
-        $vouchersAmount = $vouchersQuery->sum('amount');
-        $activeVouchersAmount = $activeVouchersQuery->sum('amount');
-        $inactiveVouchersAmount = $inactiveVouchersQuery->sum('amount');
-        $deactivatedVouchersAmount = $deactivatedVouchersQuery->sum('amount');
-
-        $vouchers_amount = currency_format($vouchersAmount);
-        $active_vouchers_amount = currency_format($activeVouchersAmount);
-        $inactive_vouchers_amount = currency_format($inactiveVouchersAmount);
-        $deactivated_vouchers_amount = currency_format($deactivatedVouchersAmount);
-
-        $vouchers_amount_locale = currency_format_locale($vouchersAmount);
-        $active_vouchers_amount_locale = currency_format_locale($activeVouchersAmount);
-        $inactive_vouchers_amount_locale = currency_format_locale($inactiveVouchersAmount);
-        $deactivated_vouchers_amount_locale = currency_format_locale($deactivatedVouchersAmount);
-
-        $vouchers_count = $vouchersQuery->count();
-        $active_vouchers_count = $activeVouchersQuery->count();
-        $inactive_vouchers_count = $inactiveVouchersQuery->count();
-        $deactivated_vouchers_count = $deactivatedVouchersQuery->count();
-
-        foreach ($funds as $fund) {
-            $budget += $fund->getBudgetTotal($year);
-            $budget_left += $fund->getBudgetLeft($year);
-            $budget_used += $fund->getBudgetUsed($year);
-            $budget_used_active_vouchers += $fund->getBudgetUsedActiveVouchers($year);
-            $transaction_costs += $fund->getTransactionCosts($year);
-        }
-
-        $budget_locale = currency_format_locale($budget);
-        $budget_left_locale = currency_format_locale($budget_left);
-        $budget_used_locale = currency_format_locale($budget_used);
-        $budget_used_active_vouchers_locale = currency_format_locale($budget_used_active_vouchers);
-        $transaction_costs_locale = currency_format_locale($transaction_costs);
-
-        return compact(
-            'budget', 'budget_left',
-            'budget_used', 'budget_used_active_vouchers', 'transaction_costs',
-            'vouchers_amount', 'vouchers_count', 'active_vouchers_amount', 'active_vouchers_count',
-            'inactive_vouchers_amount', 'inactive_vouchers_count',
-            'deactivated_vouchers_amount', 'deactivated_vouchers_count',
-            'vouchers_amount_locale', 'active_vouchers_amount_locale',
-            'inactive_vouchers_amount_locale', 'deactivated_vouchers_amount_locale',
-            'budget_locale', 'budget_left_locale', 'budget_used_locale',
-            'budget_used_active_vouchers_locale', 'transaction_costs_locale',
-        );
     }
 
     /**
@@ -2078,66 +2031,5 @@ class Fund extends BaseModel
             'fund_id' => $this->id,
             ...$data,
         ]));
-    }
-
-    /**
-     * @param null $year
-     * @return float
-     */
-    public function getBudgetUsedActiveVouchers($year = null): float
-    {
-        $year = $year ?: now()->year;
-
-        return round($this->voucher_transactions()
-            ->whereYear('voucher_transactions.created_at', $year)
-            ->where('vouchers.expire_at', '>=', $year)
-            ->sum('voucher_transactions.amount'), 2);
-    }
-
-    /**
-     * @param null $year
-     * @return float
-     */
-    public function getBudgetTotal($year = null): float
-    {
-        if ($this->balance_provider === static::BALANCE_PROVIDER_TOP_UPS) {
-            return round($this->top_up_transactions()->whereYear(
-                'fund_top_up_transactions.created_at', $year ?: now()->year
-            )->sum('amount'), 2);
-        }
-
-        if ($this->balance_provider === static::BALANCE_PROVIDER_BANK_CONNECTION) {
-            return round(floatval($this->balance) + $this->getBudgetUsed($year), 2);
-        }
-
-        return 0;
-    }
-
-    /**
-     * @param null $year
-     * @return float
-     */
-    public function getBudgetUsed($year = null): float
-    {
-        return round($this->voucher_transactions()->whereYear(
-            'voucher_transactions.created_at', $year ?: now()->year
-        )->sum('voucher_transactions.amount'), 2);
-    }
-
-    /**
-     * @param null $year
-     * @return float
-     */
-    public function getBudgetLeft($year = null): float
-    {
-        if ($this->balance_provider === static::BALANCE_PROVIDER_TOP_UPS) {
-            return round($this->getBudgetTotal($year) - $this->getBudgetUsed($year), 2);
-        }
-
-        if ($this->balance_provider === static::BALANCE_PROVIDER_BANK_CONNECTION) {
-            return round($this->balance, 2);
-        }
-
-        return 0;
     }
 }
