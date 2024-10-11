@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('email_logs', function (Blueprint $table) {
-             DB::statement('CREATE INDEX id_email_logs_mailable_event_log_id ON email_logs (mailable(255))');
+            $table->string('mailable', 250)->nullable()->index()->change();
         });
     }
 
@@ -26,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('email_logs', function (Blueprint $table) {
-             $table->dropIndex('id_email_logs_mailable_event_log_id');
+             $table->dropIndex('email_logs_mailable_index');
         });
     }
 };
