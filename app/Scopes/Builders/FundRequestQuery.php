@@ -172,7 +172,7 @@ class FundRequestQuery
     public static function whereGroupStatePending(
         Builder|Relation|FundRequest $builder,
     ): Builder|Relation|FundRequest {
-        return $builder->whereNull('employee_id');
+        return $builder->where('state', FundRequest::STATE_PENDING)->whereNull('employee_id');
     }
 
     /**
