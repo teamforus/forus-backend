@@ -80,6 +80,7 @@ class ImplementationPreChecksResource extends BaseJsonResource
         $fundCriteria = FundCriterion::query()
             ->where('optional', false)
             ->whereRelation('fund.fund_config', 'implementation_id', $implementation->id)
+            ->whereRelation('fund.fund_config', 'pre_check_excluded', false)
             ->whereRelation('fund', 'archived', false)
             ->whereHas('fund', fn (Builder $q) => FundQuery::whereActiveFilter($q))
             ->whereRelation('record_type', 'pre_check', true)

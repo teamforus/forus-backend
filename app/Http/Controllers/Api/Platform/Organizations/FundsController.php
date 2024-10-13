@@ -19,7 +19,9 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
+use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\PreCheck;
 use App\Scopes\Builders\FundQuery;
 use App\Searches\FundSearch;
 use App\Statistics\Funds\FinancialStatistic;
@@ -49,7 +51,7 @@ class FundsController extends Controller
 
         $query = (new FundSearch($request->only([
             'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id', 'order_by',
-            'order_dir', 'with_archived', 'with_external', 'configured', 'state',
+            'order_dir', 'with_archived', 'with_external', 'configured', 'state', 'pre_check_excluded',
         ]), $organization->funds()->getQuery()))->query();
 
         if (!$request->isAuthenticated()) {
@@ -504,6 +506,32 @@ class FundsController extends Controller
         $this->authorize('unarchive', [$fund, $organization]);
 
         $fund->unArchive($organization->findEmployee($request->auth_address()));
+
+        return FundResource::create($fund);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return FundResource
+     */
+    public function updatePreCheckSettings(
+        BaseFormRequest $request,
+        Organization $organization,
+        Fund $fund
+    ): FundResource {
+        $this->authorize('show', $organization);
+
+        $manageFund = Gate::allows('update', [$fund, $organization]);
+
+        if ($manageFund) {
+            $fund->fund_config->update($request->only('pre_check_excluded'));
+
+            $fund->update($request->only('pre_check_note'));
+
+            PreCheck::syncPreCheckRecords($organization, $fund);
+        }
 
         return FundResource::create($fund);
     }

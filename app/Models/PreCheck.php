@@ -90,6 +90,7 @@ class PreCheck extends BaseModel
             'q', 'tag_id', 'organization_id',
         ]), [
             'with_external' => true,
+            'pre_check_excluded' => false,
         ]), $fundsQuery))->query()->get();
     }
 
@@ -157,5 +158,26 @@ class PreCheck extends BaseModel
                 'amount_for_identity_locale' => currency_format_locale($amountIdentity),
             ];
         })->toArray();
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return void
+     */
+    public static function syncPreCheckRecords(Organization $organization, Fund $fund): void
+    {
+        if (!$fund->fund_config->pre_check_excluded) {
+            return;
+        }
+
+        $organization->implementations()->each(function (Implementation $implementation) use ($fund) {
+            forEach($implementation->pre_checks as $preCheck) {
+                $preCheck->pre_check_records()->whereIn(
+                    'record_type_key',
+                    $fund->criteria->pluck('record_type_key')->toArray()
+                )->delete();
+            }
+        });
     }
 }
