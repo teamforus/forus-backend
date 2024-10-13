@@ -54,6 +54,10 @@ class FundSearch extends BaseSearch
             $builder->where('organization_id', $this->getFilter('organization_id'));
         }
 
+        if ($this->hasFilter('pre_check_excluded')) {
+            $builder->whereRelation('fund_config', 'pre_check_excluded', $this->getFilter('pre_check_excluded'));
+        }
+
         if ($this->getFilter('fund_id')) {
             $builder->where('id', $this->getFilter('fund_id'));
         }
