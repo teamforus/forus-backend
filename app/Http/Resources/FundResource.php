@@ -179,6 +179,7 @@ class FundResource extends BaseJsonResource
                 'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
                 'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
                 'help_description_html',
+                'criteria_label_requirement_show',
             ]) : [],
             ...$isDashboard && $fund->fund_config ? $fund->fund_config->only([
                 'allow_custom_amounts', 'allow_preset_amounts',

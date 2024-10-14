@@ -83,6 +83,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string $iconnect_cert_pass
  * @property string $iconnect_cert_trust
  * @property bool $provider_products_required
+ * @property string $criteria_label_requirement_show
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property bool $help_enabled
@@ -144,6 +145,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoMessageText($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCriteriaLabelRequirementShow($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCsvPrimaryKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCustomAmountMax($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCustomAmountMin($value)
@@ -237,10 +239,10 @@ class FundConfig extends BaseModel
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'hide_meta', 'voucher_amount_visible',
         'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
         'allow_custom_amounts', 'allow_preset_amounts', 'custom_amount_min', 'custom_amount_max',
-        'provider_products_required', 'help_enabled', 'help_title', 'help_block_text',
+        'help_enabled', 'help_title', 'help_block_text', 'help_show_chat',
         'help_button_text', 'help_email', 'help_phone', 'help_website', 'help_chat',
         'help_description', 'help_show_email', 'help_show_phone', 'help_show_website',
-        'help_show_chat',
+        'provider_products_required', 'criteria_label_requirement_show',
     ];
 
     /**

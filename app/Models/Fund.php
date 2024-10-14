@@ -499,6 +499,7 @@ class Fund extends BaseModel
             'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
             'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
             'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
+            'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
@@ -1502,7 +1503,7 @@ class Fund extends BaseModel
         /** @var FundCriterion|null $db_criteria */
         $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
-            'description', 'title', 'optional', 'min', 'max',
+            'description', 'title', 'optional', 'min', 'max', 'label',
         ] : ['show_attachment', 'description', 'title']);
 
         if ($this->criteriaIsEditable()) {
