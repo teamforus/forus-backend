@@ -7,6 +7,7 @@ use App\Http\Resources\FundRequestClarificationResource;
 use App\Http\Resources\Tiny\FundTinyResource;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
+use Illuminate\Http\Request;
 
 /**
  * @property FundRequest $resource
@@ -29,7 +30,7 @@ class FundRequestResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return array_merge($this->resource->only([
             'id', 'fund_id', 'contact_information', 'note', 'state', 'state_locale',
@@ -53,7 +54,7 @@ class FundRequestResource extends BaseJsonResource
             return !in_array($record->record_type_key, $bsnFields, true);
         })->map(function(FundRequestRecord $record) {
             return array_merge($record->only([
-                'id', 'state', 'record_type_key', 'fund_request_id', 'value',
+                'id', 'record_type_key', 'fund_request_id', 'value',
             ]), [
                 'record_type' => $record->record_type->only('id', 'key', 'type', 'system', 'name'),
                 'clarifications' => FundRequestClarificationResource::collection(

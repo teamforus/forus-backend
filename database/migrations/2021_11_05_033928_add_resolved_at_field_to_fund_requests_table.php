@@ -20,7 +20,7 @@ return new class extends Migration
 
         $fundRequests = FundRequest::query()
             ->whereNull('resolved_at')
-            ->whereIn('state', FundRequest::STATES_RESOLVED)
+            ->whereIn('state', ['approved', 'declined', 'disregarded', 'approved_partly'])
             ->with('logs')
             ->get();
 

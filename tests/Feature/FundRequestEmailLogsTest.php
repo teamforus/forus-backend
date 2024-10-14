@@ -9,7 +9,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
@@ -62,11 +61,6 @@ class FundRequestEmailLogsTest extends TestCase
         DB::rollBack();
 
         DB::beginTransaction();
-        $questionToken = $this->declineFundRequestRecord($organization, $fundRequest);
-        $this->assertFundRequestRecordDeclinedEmailLog($organization, $fundRequest, $questionToken);
-        DB::rollBack();
-
-        DB::beginTransaction();
         $this->approveFundRequest($organization, $fundRequest);
         $this->assertFundRequestApprovedEmailLog($organization, $fundRequest);
         DB::rollBack();
@@ -80,61 +74,6 @@ class FundRequestEmailLogsTest extends TestCase
         $this->disregardFundRequest($organization, $fundRequest, false);
         $this->assertFundRequestDisregardedEmailLog($organization, $fundRequest, false);
         DB::rollBack();
-    }
-
-    /**
-     * @param Organization $organization
-     * @param FundRequest $fundRequest
-     * @return string
-     */
-    protected function declineFundRequestRecord(
-        Organization $organization,
-        FundRequest $fundRequest,
-    ): string {
-        $noteToken = token_generator()->generate(200);
-        $fundRequestRecord = $fundRequest->records[0];
-
-        $response = $this->patch(
-            join([
-                "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id",
-                "/records/$fundRequestRecord->id/decline",
-            ]),
-            [ 'note' => $noteToken ],
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
-        );
-
-        $response->assertSuccessful();
-
-        return $noteToken;
-    }
-
-    /**
-     * @param Organization $organization
-     * @param FundRequest $fundRequest
-     * @param string $noteToken
-     * @return void
-     */
-    protected function assertFundRequestRecordDeclinedEmailLog(
-        Organization $organization,
-        FundRequest $fundRequest,
-        string $noteToken,
-    ): void {
-        // assert email log exists
-        $response = $this->getJson(
-            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
-            $this->makeApiHeaders($organization->identity),
-        );
-
-        $response->assertSuccessful();
-        $data = $response->json('data');
-
-        self::assertCount(3, $data);
-        self::assertCount(1, Arr::where($data, fn ($item) => $item['type'] == 'fund_request_denied'));
-        self::assertCount(1, Arr::where($data, function ($item) use ($noteToken) {
-            return
-                $item['type'] == 'fund_request_record_declined' &&
-                Str::contains($item['content'], $noteToken);
-        }));
     }
 
     /**
