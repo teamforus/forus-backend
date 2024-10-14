@@ -83,7 +83,7 @@ class VoucherTransactionTransferDaysTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ], $headers);
 

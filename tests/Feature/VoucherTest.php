@@ -917,9 +917,6 @@ class VoucherTest extends TestCase
      */
     protected function getIdentityApiUrl(Voucher $voucher, string $append = ''): string
     {
-        return sprintf(
-            $this->apiBaseUrl . '/vouchers/%s',
-            $voucher->token_without_confirmation->address,
-        ) . $append;
+        return "$this->apiBaseUrl/vouchers/$voucher->number" . $append;
     }
 }
