@@ -183,7 +183,7 @@ class FundRequest extends BaseModel
             self::STATE_APPROVED => 'Geaccepteerd',
             self::STATE_APPROVED_PARTLY => 'Deels geaccepteerd',
             self::STATE_DECLINED => 'Geweigerd',
-            self::STATE_DISREGARDED => 'Niet beoordeeld',
+            self::STATE_DISREGARDED => 'Buiten behandeling geplaatst',
         ][$this->state] ?? '';
     }
 
