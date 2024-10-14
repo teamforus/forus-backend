@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Helpers\Markdown;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use League\CommonMark\Exception\CommonMarkException;
 
 /**
  * App\Models\FundConfig
@@ -83,7 +85,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $provider_products_required
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property bool $help_enabled
+ * @property string|null $help_title
+ * @property string|null $help_block_text
+ * @property string|null $help_button_text
+ * @property string|null $help_email
+ * @property string|null $help_phone
+ * @property string|null $help_website
+ * @property string|null $help_chat
+ * @property string|null $help_description
+ * @property bool $help_show_email
+ * @property bool $help_show_phone
+ * @property bool $help_show_website
+ * @property bool $help_show_chat
  * @property-read \App\Models\Fund $fund
+ * @property-read string $help_description_html
  * @property-read \App\Models\Implementation|null $implementation
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newQuery()
@@ -138,6 +154,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsn($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsnSalt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashPartnerDeny($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpBlockText($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpButtonText($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpChat($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpPhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpShowChat($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpShowEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpShowPhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpShowWebsite($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpWebsite($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHideMeta($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIbanNameRecordKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIbanRecordKey($value)
@@ -208,7 +237,10 @@ class FundConfig extends BaseModel
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'hide_meta', 'voucher_amount_visible',
         'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
         'allow_custom_amounts', 'allow_preset_amounts', 'custom_amount_min', 'custom_amount_max',
-        'provider_products_required',
+        'provider_products_required', 'help_enabled', 'help_title', 'help_block_text',
+        'help_button_text', 'help_email', 'help_phone', 'help_website', 'help_chat',
+        'help_description', 'help_show_email', 'help_show_phone', 'help_show_website',
+        'help_show_chat',
     ];
 
     /**
@@ -273,6 +305,11 @@ class FundConfig extends BaseModel
         'allow_custom_amounts_validator' => 'boolean',
         'allow_preset_amounts_validator' => 'boolean',
         'provider_products_required' => 'boolean',
+        'help_enabled' => 'boolean',
+        'help_show_email' => 'boolean',
+        'help_show_phone' => 'boolean',
+        'help_show_website' => 'boolean',
+        'help_show_chat' => 'boolean',
     ];
 
     /**
@@ -333,5 +370,15 @@ class FundConfig extends BaseModel
     public function isPayoutOutcome(): bool
     {
         return $this->outcome_type === self::OUTCOME_TYPE_PAYOUT;
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     * @throws CommonMarkException
+     */
+    public function getHelpDescriptionHtmlAttribute(): string
+    {
+        return Markdown::convert($this->help_description ?: '');
     }
 }

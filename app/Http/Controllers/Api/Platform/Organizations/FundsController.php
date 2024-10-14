@@ -207,6 +207,9 @@ class FundsController extends Controller
                     'email_required', 'contact_info_enabled', 'contact_info_required',
                     'contact_info_message_custom', 'contact_info_message_text',
                     'hide_meta', 'voucher_amount_visible', 'provider_products_required',
+                    'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
+                    'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
+                    'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
                 ]),
                 ...($fund->organization->allow_payouts ? $request->only([
                     'custom_amount_min', 'custom_amount_max',

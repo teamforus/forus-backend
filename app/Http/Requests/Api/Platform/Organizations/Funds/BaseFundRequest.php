@@ -65,6 +65,53 @@ abstract class BaseFundRequest extends BaseFormRequest
             'auth_2fa_restrict_auth_sessions' => 'nullable|boolean',
             'auth_2fa_restrict_reimbursements' => 'nullable|boolean',
             'provider_products_required' => 'nullable|boolean',
+
+            // help columns
+            ...$this->fundConfigHelpRules(),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    private function fundConfigHelpRules(): array
+    {
+        return [
+            'help_enabled' => 'nullable|boolean',
+            'help_title' => 'nullable|required_if_accepted:help_enabled|string|max:191',
+            'help_block_text' => 'nullable|required_if_accepted:help_enabled|string|max:191',
+            'help_button_text' => 'nullable|required_if_accepted:help_enabled|string|max:191',
+            'help_description' => 'nullable|required_if_accepted:help_enabled|string',
+            'help_show_email' => 'nullable|boolean',
+            'help_show_phone' => 'nullable|boolean',
+            'help_show_website' => 'nullable|boolean',
+            'help_show_chat' => 'nullable|boolean',
+
+            ...$this->get('help_enabled', false)
+                ? [
+                    'help_email' => 'nullable|required_if_accepted:help_show_email|email|max:191',
+                    'help_phone' => 'nullable|required_if_accepted:help_show_phone|string|max:191',
+                    'help_website' => [
+                        'nullable',
+                        'required_if_accepted:help_show_website',
+                        'url',
+                        'max:191',
+                        'starts_with:https://',
+                    ],
+                    'help_chat' => [
+                        'nullable',
+                        'required_if_accepted:help_show_chat',
+                        'url',
+                        'max:191',
+                        'starts_with:https://',
+                    ],
+                ]
+                : [
+                    'help_email' => 'nullable|email|max:191',
+                    'help_phone' => 'nullable|string|max:191',
+                    'help_website' => 'nullable|url|max:191|starts_with:https://',
+                    'help_chat' => 'nullable|url|max:191|starts_with:https://',
+                ],
         ];
     }
 
