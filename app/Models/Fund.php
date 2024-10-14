@@ -496,7 +496,7 @@ class Fund extends BaseModel
             'allow_custom_amounts', 'allow_custom_amounts_validator',
             'allow_preset_amounts', 'allow_preset_amounts_validator',
             'custom_amount_min', 'custom_amount_max',
-            'provider_products_required',
+            'provider_products_required', 'criteria_label_requirement_show',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
@@ -1500,7 +1500,7 @@ class Fund extends BaseModel
         /** @var FundCriterion|null $db_criteria */
         $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
-            'description', 'title', 'optional', 'min', 'max',
+            'description', 'title', 'optional', 'min', 'max', 'label',
         ] : ['show_attachment', 'description', 'title']);
 
         if ($this->criteriaIsEditable()) {

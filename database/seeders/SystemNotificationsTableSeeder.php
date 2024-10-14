@@ -34,7 +34,6 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.fund_request_denied" => ["database", "mail"],
         "notifications_identities.fund_request_approved" => ["database", "mail"],
         "notifications_identities.fund_request_disregarded" => ["database", "mail"],
-        "notifications_identities.fund_request_record_declined" => ["database", "mail"],
         "notifications_identities.fund_request_feedback_requested" => ["database", "mail"],
 
         "notifications_identities.reimbursement_submitted" => ["database", "mail"],
@@ -192,7 +191,6 @@ class SystemNotificationsTableSeeder extends Seeder
             "notifications_identities.fund_request_approved",
             "notifications_identities.fund_request_denied",
             "notifications_identities.fund_request_disregarded",
-            "notifications_identities.fund_request_record_declined",
             "notifications_identities.fund_request_feedback_requested"
         ],
         "requester_reimbursements" => [
