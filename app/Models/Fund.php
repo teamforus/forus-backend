@@ -1500,7 +1500,7 @@ class Fund extends BaseModel
         /** @var FundCriterion|null $db_criteria */
         $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
-            'description', 'title', 'optional', 'min', 'max',
+            'description', 'title', 'optional', 'min', 'max', 'label',
         ] : ['show_attachment', 'description', 'title']);
 
         if ($this->criteriaIsEditable()) {

@@ -94,6 +94,7 @@ abstract class BaseFundRequest extends BaseFormRequest
             'criteria.*.max' => ['nullable', new FundCriteriaMaxRule($this, $organization)],
 
             'criteria.*.title' => 'nullable|string|max:100',
+            'criteria.*.label' => 'nullable|string|min:1|max:200',
             'criteria.*.description' => 'nullable|string|max:4000',
         ] : [];
     }
