@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-
 /**
  * App\Models\FundRequestRecord
  *
@@ -18,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $fund_criterion_id
  * @property string $record_type_key
  * @property string $value
+ * @property string $note
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Services\FileService\Models\File[] $files
@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereFundCriterionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereFundRequestId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereRecordTypeKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereValue($value)

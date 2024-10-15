@@ -495,8 +495,11 @@ class Fund extends BaseModel
             'auth_2fa_restrict_reimbursements', 'hide_meta', 'voucher_amount_visible',
             'allow_custom_amounts', 'allow_custom_amounts_validator',
             'allow_preset_amounts', 'allow_preset_amounts_validator',
-            'custom_amount_min', 'custom_amount_max',
-            'provider_products_required', 'criteria_label_requirement_show',
+            'custom_amount_min', 'custom_amount_max', 'provider_products_required',
+            'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
+            'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
+            'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
+            'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
