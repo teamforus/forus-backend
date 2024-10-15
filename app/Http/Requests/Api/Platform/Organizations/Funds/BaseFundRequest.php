@@ -143,6 +143,7 @@ abstract class BaseFundRequest extends BaseFormRequest
             'criteria.*.title' => 'nullable|string|max:100',
             'criteria.*.label' => 'nullable|string|min:1|max:200',
             'criteria.*.description' => 'nullable|string|max:4000',
+            'criteria.*.extra_description' => 'nullable|string|max:4000',
         ] : [];
     }
 
