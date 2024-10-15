@@ -99,7 +99,7 @@ trait MakesProductReservations
                 'identity_address' => $voucher->identity_address,
             ]),
             $voucher->fund_id
-        );
+        )->where('limit_total_available', '>', 0);
 
         if ($voucher->fund->isTypeSubsidy()) {
             $product

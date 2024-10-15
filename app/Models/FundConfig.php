@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $auth_2fa_restrict_auth_sessions
  * @property bool $auth_2fa_restrict_reimbursements
  * @property int|null $record_validity_days
+ * @property \Illuminate\Support\Carbon|null $record_validity_start_date
  * @property bool $hash_bsn
  * @property string|null $hash_bsn_salt
  * @property bool $hash_partner_deny
@@ -80,6 +81,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $iconnect_cert_pass
  * @property string $iconnect_cert_trust
  * @property bool $provider_products_required
+ * @property string $criteria_label_requirement_show
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -127,6 +129,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoMessageText($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCriteriaLabelRequirementShow($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCsvPrimaryKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCustomAmountMax($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCustomAmountMin($value)
@@ -159,6 +162,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereOutcomeType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereProviderProductsRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVoucherAmountVisible($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVouchersType($value)
@@ -206,7 +210,7 @@ class FundConfig extends BaseModel
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'hide_meta', 'voucher_amount_visible',
         'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
         'allow_custom_amounts', 'allow_preset_amounts', 'custom_amount_min', 'custom_amount_max',
-        'provider_products_required',
+        'provider_products_required', 'criteria_label_requirement_show',
     ];
 
     /**
@@ -247,6 +251,7 @@ class FundConfig extends BaseModel
         'allow_voucher_top_ups' => 'boolean',
         'allow_voucher_records' => 'boolean',
         'backoffice_check_partner' => 'boolean',
+        'record_validity_start_date' => 'date',
         'employee_can_see_product_vouchers' => 'boolean',
         'email_required' => 'boolean',
         'contact_info_enabled' => 'boolean',

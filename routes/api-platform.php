@@ -468,16 +468,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             "Api\Platform\Organizations\FundRequestsController@disregardUndo"
         );
 
-        $router->patch(
-            'organizations/{organization}/fund-requests/{fund_request}/records/{fund_request_record}/approve',
-            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController@approve"
-        );
-
-        $router->patch(
-            'organizations/{organization}/fund-requests/{fund_request}/records/{fund_request_record}/decline',
-            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController@decline"
-        );
-
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/records',
             "Api\Platform\Organizations\FundRequests\FundRequestRecordsController"
