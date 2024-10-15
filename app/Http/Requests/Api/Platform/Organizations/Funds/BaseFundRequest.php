@@ -57,6 +57,7 @@ abstract class BaseFundRequest extends BaseFormRequest
             'contact_info_required' => 'nullable|boolean',
             'contact_info_message_custom' => 'nullable|boolean',
             'contact_info_message_text' => 'nullable|string|max:8000',
+            'criteria_label_requirement_show' => 'nullable|in:both,optional,required',
 
             // auth 2fa
             'auth_2fa_policy' => "nullable|in:$auth2FAPolicies",
@@ -93,6 +94,7 @@ abstract class BaseFundRequest extends BaseFormRequest
             'criteria.*.max' => ['nullable', new FundCriteriaMaxRule($this, $organization)],
 
             'criteria.*.title' => 'nullable|string|max:100',
+            'criteria.*.label' => 'nullable|string|min:1|max:200',
             'criteria.*.description' => 'nullable|string|max:4000',
         ] : [];
     }

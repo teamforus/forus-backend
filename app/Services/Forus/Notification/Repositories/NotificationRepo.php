@@ -31,7 +31,6 @@ use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotifica
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRequestedNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationAcceptedNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCanceledNotification;
@@ -112,7 +111,6 @@ class NotificationRepo implements INotificationRepo
         IdentityFundRequestDeniedNotification::class,
         IdentityFundRequestApprovedNotification::class,
         IdentityFundRequestDisregardedNotification::class,
-        IdentityFundRequestRecordDeclinedNotification::class,
         IdentityFundRequestRecordFeedbackRequestedNotification::class,
 
         // funds
