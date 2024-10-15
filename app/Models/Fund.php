@@ -1308,13 +1308,13 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identityAddress
-     * @param array $extraFields
+     * @param array $voucherFields
      * @param Carbon|null $expireAt
      * @return Voucher[]
      */
     public function makeFundFormulaProductVouchers(
         string $identityAddress = null,
-        array $extraFields = [],
+        array $voucherFields = [],
         Carbon $expireAt = null
     ): array {
         $vouchers = [];
@@ -1328,7 +1328,7 @@ class Fund extends BaseModel
 
             $vouchers = array_merge($vouchers, array_map(fn () => $this->makeProductVoucher(
                 $identityAddress,
-                $extraFields,
+                $voucherFields,
                 $formulaProduct->product->id,
                 $voucherExpireAt,
                 $formulaProduct->price
@@ -1340,7 +1340,7 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identity_address
-     * @param array $extraFields
+     * @param array $voucherFields
      * @param int|null $product_id
      * @param Carbon|null $expire_at
      * @param float|null $price
@@ -1348,7 +1348,7 @@ class Fund extends BaseModel
      */
     public function makeProductVoucher(
         string $identity_address = null,
-        array $extraFields = [],
+        array $voucherFields = [],
         int $product_id = null,
         Carbon $expire_at = null,
         float $price = null,
@@ -1361,7 +1361,7 @@ class Fund extends BaseModel
         $voucher = Voucher::create(array_merge(compact(
             'identity_address', 'amount', 'expire_at',
             'product_id','fund_id', 'returnable'
-        ), $extraFields));
+        ), $voucherFields));
 
         VoucherCreated::dispatch($voucher, false);
 
