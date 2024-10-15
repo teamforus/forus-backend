@@ -44,6 +44,8 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
         ]), $this->getIbanFields($transaction), [
             'amount' => currency_format($transaction->amount),
             'amount_locale' => currency_format_locale($transaction->amount),
+            'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
+            'amount_extra_cash_locale' => currency_format_locale($transaction->amount_extra_cash),
             'timestamp' => $transaction->created_at->timestamp,
             'transfer_in' => $transaction->daysBeforeTransaction(),
             'transfer_in_pending' => $transaction->transfer_at?->isFuture() && $transaction->isPending(),

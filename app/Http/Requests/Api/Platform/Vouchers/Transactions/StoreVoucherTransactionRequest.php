@@ -114,6 +114,14 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
                 'min:.02',
                 'max:' . number_format($voucher->amount_available, 2, '.', ''),
             ],
+            'amount_extra_cash' => [
+                'nullable',
+                'numeric',
+                'min:.02',
+                'max:' . number_format(
+                    config('forus.transactions.max_amount_extra_cash'), 2, '.', ''
+                ),
+            ],
             'organization_id' => [
                 $this->has('amount') ? 'required' :  'nullable',
                 'exists:organizations,id',

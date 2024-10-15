@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\Log;
  * @property int|null $fund_provider_product_id
  * @property int|null $voucher_transaction_bulk_id
  * @property string $amount
+ * @property string|null $amount_extra_cash
  * @property string|null $iban_from
  * @property string|null $iban_to
  * @property string|null $iban_to_name
@@ -88,6 +89,7 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder|VoucherTransaction query()
  * @method static Builder|VoucherTransaction whereAddress($value)
  * @method static Builder|VoucherTransaction whereAmount($value)
+ * @method static Builder|VoucherTransaction whereAmountExtraCash($value)
  * @method static Builder|VoucherTransaction whereAttempts($value)
  * @method static Builder|VoucherTransaction whereBranchId($value)
  * @method static Builder|VoucherTransaction whereBranchName($value)
@@ -203,6 +205,7 @@ class VoucherTransaction extends BaseModel
         'voucher_transaction_bulk_id', 'payment_description', 'initiator', 'reimbursement_id',
         'target', 'target_iban', 'target_name', 'target_reimbursement_id', 'uid',
         'branch_id', 'branch_name', 'branch_number', 'upload_batch_id', 'description',
+        'amount_extra_cash',
     ];
 
     protected $hidden = [
@@ -455,6 +458,7 @@ class VoucherTransaction extends BaseModel
         $data = $data->map(fn (VoucherTransaction $transaction) => array_only([
             'id' => $transaction->id,
             'amount' => currency_format($transaction->amount),
+            'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
             'method' => $transaction->product_reservation?->amount_extra > 0
                 ? 'iDeal + Tegoed'
                 : 'Tegoed',
