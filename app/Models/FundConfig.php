@@ -83,9 +83,6 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string $iconnect_cert_pass
  * @property string $iconnect_cert_trust
  * @property bool $provider_products_required
- * @property string $criteria_label_requirement_show
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
  * @property bool $help_enabled
  * @property string|null $help_title
  * @property string|null $help_block_text
@@ -99,6 +96,9 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $help_show_phone
  * @property bool $help_show_website
  * @property bool $help_show_chat
+ * @property string $criteria_label_requirement_show
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
  * @property-read string $help_description_html
  * @property-read \App\Models\Implementation|null $implementation

@@ -79,40 +79,26 @@ abstract class BaseFundRequest extends BaseFormRequest
     {
         return [
             'help_enabled' => 'nullable|boolean',
-            'help_title' => 'nullable|required_if_accepted:help_enabled|string|max:191',
-            'help_block_text' => 'nullable|required_if_accepted:help_enabled|string|max:191',
-            'help_button_text' => 'nullable|required_if_accepted:help_enabled|string|max:191',
+            'help_title' => 'nullable|required_if_accepted:help_enabled|string|max:200',
+            'help_block_text' => 'nullable|required_if_accepted:help_enabled|string|max:200',
+            'help_button_text' => 'nullable|required_if_accepted:help_enabled|string|max:200',
             'help_description' => 'nullable|required_if_accepted:help_enabled|string',
             'help_show_email' => 'nullable|boolean',
             'help_show_phone' => 'nullable|boolean',
             'help_show_website' => 'nullable|boolean',
             'help_show_chat' => 'nullable|boolean',
 
-            ...$this->get('help_enabled', false)
-                ? [
-                    'help_email' => 'nullable|required_if_accepted:help_show_email|email|max:191',
-                    'help_phone' => 'nullable|required_if_accepted:help_show_phone|string|max:191',
-                    'help_website' => [
-                        'nullable',
-                        'required_if_accepted:help_show_website',
-                        'url',
-                        'max:191',
-                        'starts_with:https://',
-                    ],
-                    'help_chat' => [
-                        'nullable',
-                        'required_if_accepted:help_show_chat',
-                        'url',
-                        'max:191',
-                        'starts_with:https://',
-                    ],
-                ]
-                : [
-                    'help_email' => 'nullable|email|max:191',
-                    'help_phone' => 'nullable|string|max:191',
-                    'help_website' => 'nullable|url|max:191|starts_with:https://',
-                    'help_chat' => 'nullable|url|max:191|starts_with:https://',
-                ],
+            ...$this->get('help_enabled', false) ? [
+                'help_email' => 'nullable|required_if_accepted:help_show_email|email|max:200',
+                'help_phone' => 'nullable|required_if_accepted:help_show_phone|string|max:200',
+                'help_website' => 'nullable|required_if_accepted:help_show_website|url|max:200|starts_with:https://',
+                'help_chat' => 'nullable|required_if_accepted:help_show_chat|url|max:200|starts_with:https://',
+            ] : [
+                'help_email' => 'nullable|email|max:200',
+                'help_phone' => 'nullable|string|max:200',
+                'help_website' => 'nullable|url|max:200|starts_with:https://',
+                'help_chat' => 'nullable|url|max:200|starts_with:https://',
+            ],
         ];
     }
 
