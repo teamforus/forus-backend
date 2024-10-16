@@ -31,6 +31,7 @@ class FinanceOverviewRequest extends BaseFormRequest
         return [
             'export_type'       => 'nullable|in:xls,csv',
             'detailed'          => 'nullable|boolean',
+            'year'              => 'nullable|integer',
         ];
     }
 }
