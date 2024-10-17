@@ -797,7 +797,7 @@ class Implementation extends BaseModel
             'outcome_type' => FundConfig::OUTCOME_TYPE_PAYOUT,
         ]);
 
-        return $this->organization->allow_payouts && $payoutFunds->exists();
+        return $this->organization?->allow_payouts && $payoutFunds->exists();
     }
 
     /**
