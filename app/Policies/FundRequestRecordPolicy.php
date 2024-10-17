@@ -122,35 +122,6 @@ class FundRequestRecordPolicy
     }
 
     /**
-     * Resolve fundRequestRecord as validator.
-     *
-     * @param Identity $identity
-     * @param FundRequestRecord $requestRecord
-     * @param FundRequest $request
-     * @param Organization $organization
-     * @return Response|bool
-     * @noinspection PhpUnused
-     */
-    public function resolveAsValidator(
-        Identity $identity,
-        FundRequestRecord $requestRecord,
-        FundRequest $request,
-        Organization $organization,
-    ): Response|bool {
-        if (!$this->checkIntegrityValidator($organization, $request, $requestRecord)) {
-            return $this->deny('fund_requests.invalid_endpoint');
-        }
-
-        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
-            return $this->deny('fund_requests.invalid_validator');
-        }
-
-        return
-            $requestRecord->isPending() &&
-            ($requestRecord->fund_request->employee->identity_address === $identity->address);
-    }
-
-    /**
      * Determine whether the validator can resolve the fundRequest.
      *
      * @param Identity $identity
@@ -166,9 +137,18 @@ class FundRequestRecordPolicy
         FundRequest $request,
         Organization $organization,
     ): Response|bool {
-        $result = $this->resolveAsValidator($identity, $requestRecord, $request, $organization);
+        if (!$this->checkIntegrityValidator($organization, $request, $requestRecord)) {
+            return $this->deny('fund_requests.invalid_endpoint');
+        }
 
-        return $result === true ? $request->fund->organization->allow_fund_request_record_edit : $result;
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
+            return $this->deny('fund_requests.invalid_validator');
+        }
+
+        return
+            $request->isPending() &&
+            $request->fund->organization->allow_fund_request_record_edit &&
+            ($requestRecord->fund_request->employee->identity_address === $identity->address);
     }
 
     /**

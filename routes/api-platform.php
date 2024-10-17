@@ -477,16 +477,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             "Api\Platform\Organizations\FundRequestsController@disregardUndo"
         );
 
-        $router->patch(
-            'organizations/{organization}/fund-requests/{fund_request}/records/{fund_request_record}/approve',
-            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController@approve"
-        );
-
-        $router->patch(
-            'organizations/{organization}/fund-requests/{fund_request}/records/{fund_request_record}/decline',
-            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController@decline"
-        );
-
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/records',
             "Api\Platform\Organizations\FundRequests\FundRequestRecordsController"
@@ -531,7 +521,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             ]
         ]);
 
-        // requester route
         $router->resource('fund-requests', "Api\Platform\FundRequestsController")->only([
             'index', 'show',
         ]);
@@ -543,6 +532,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             'clarifications' => 'fund_request_clarification',
         ])->only('update');
     }
+
+    $router->resource('payouts', "Api\Platform\PayoutsController")->only([
+        'index'
+    ]);
 
     $router->get(
         'organizations/{organization}/providers/export',

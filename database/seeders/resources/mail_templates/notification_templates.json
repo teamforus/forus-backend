@@ -243,14 +243,6 @@
             "content_informal": ":sponsor_name heeft uw aanvraag voor :fund_name niet behandelen."
         }
     },
-    "notifications_identities.fund_request_record_declined": {
-        "mail": {
-            "title": "Uw aanvraag voor :fund_name is afgewezen",
-            "template": "notifications_identities/fund_request_record_declined.md"
-        },
-        "push": {},
-        "database": {}
-    },
     "notifications_identities.fund_request_feedback_requested": {
         "mail": {
             "title": "Uw aanvraag voor :fund_name aanvullen",

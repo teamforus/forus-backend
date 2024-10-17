@@ -68,14 +68,18 @@ trait DoesTesting
     }
 
     /**
-     * @param IdentityProxy|bool|null $authProxy
+     * @param IdentityProxy|Identity|bool $authProxy
      * @param array $headers
      * @return array
      */
-    protected function makeApiHeaders(IdentityProxy|bool $authProxy = false, array $headers = []): array
-    {
-        if ($authProxy === true) {
-            $authProxy = $this->makeIdentityProxy($this->makeIdentity());
+    protected function makeApiHeaders(
+        IdentityProxy|Identity|bool $authProxy = false,
+        array $headers = [],
+    ): array {
+        if ($authProxy instanceof Identity || $authProxy === true) {
+            $authProxy = $this->makeIdentityProxy(
+                $authProxy instanceof Identity ? $authProxy : $this->makeIdentity()
+            );
         }
 
         return array_merge([

@@ -52,6 +52,18 @@ trait AssertsSentEmails
     }
 
     /**
+     * @param string $email
+     * @param Carbon|null $after
+     * @return EmailLog|null
+     */
+    public function findFirstFundRequestClarificationEmail(
+        string $email,
+        ?Carbon $after = null
+    ): ?EmailLog {
+        return $this->emailsWithLink($email, 'fund-request/', $after)->first();
+    }
+
+    /**
      * Assert that email confirmation was sent to the identity after given time
      *
      * @param string $email
@@ -266,6 +278,21 @@ trait AssertsSentEmails
         return $this->getEmailLink(
             $this->findFirstEmailVerificationEmail($email, $startTime)?->content ?: '',
             'email-verification'
+        );
+    }
+
+    /**
+     * @param mixed $email
+     * @param Carbon|null $startTime
+     * @return string|null
+     */
+    private function findFirstEmailFundRequestClarificationLink(
+        mixed $email,
+        ?Carbon $startTime
+    ): ?string {
+        return $this->getEmailLink(
+            $this->findFirstFundRequestClarificationEmail($email, $startTime)?->content ?: '',
+            'fund-request/'
         );
     }
 }
