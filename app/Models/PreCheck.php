@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Http\Resources\FundFormulaProductResource;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\MediaResource;
 use App\Rules\FundRequests\BaseFundRequestRule;
@@ -12,6 +13,7 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Arr;
 
 /**
  * App\Models\PreCheck
@@ -136,6 +138,9 @@ class PreCheck extends BaseModel
                     'is_knock_out' => $setting?->is_knock_out ?? false,
                     'impact_level' => $setting?->impact_level ?? 100,
                     'knock_out_description' => $setting?->description ?? '',
+                    'product_count' => $fund->fund_formula_products()->where(
+                        'record_type_key_multiplier', $criterion->record_type->key
+                    )->count(),
                 ];
             });
 
@@ -155,7 +160,40 @@ class PreCheck extends BaseModel
                 'amount_total_locale' => currency_format_locale($amountIdentityTotal),
                 'amount_for_identity' => currency_format($amountIdentity),
                 'amount_for_identity_locale' => currency_format_locale($amountIdentity),
+                'fund_formula_products' => self::getFundFormulaProducts($fund, $records),
+                'product_count' => $fund->fund_formula_products()->count(),
+                'products_amount_total' => array_sum(array_pluck($fund->fund_formula_products, 'price')),
             ];
         })->toArray();
+    }
+
+    /**
+     * @param Fund $fund
+     * @param array|null $records
+     * @return array
+     */
+    public static function getFundFormulaProducts(Fund $fund, array $records = null): array
+    {
+        $products = $fund->fund_formula_products->sortByDesc('product_id')->map(fn ($formula) => [
+            'record' => $formula->record_type ? $formula->record_type->name : 'Product tegoed',
+            'type' => $formula->record_type_key_multiplier ? 'Multiply' : 'Vastgesteld',
+            'name' => $formula->product->name,
+            'count' => $formula->record_type_key_multiplier ? Arr::get($records, $formula->record_type_key_multiplier) : 1,
+        ]);
+
+        $formula = $fund->fund_formulas->map(fn ($formula) => [
+            'record' => $formula->record_type ? $formula->record_type->name : 'Vastbedrag',
+            'type' => $formula->type_locale,
+            'value' => $formula->amount_locale,
+            'count' => $formula->record_type_key ? Arr::get($records, $formula->record_type_key) : 1,
+            'total' => currency_format_locale($formula->amount),
+            'amount' => currency_format($formula->amount),
+        ]);
+
+        return [
+            'total_amount' => currency_format_locale($formula->sum('amount')),
+            'products' => $products->toArray(),
+            'items' => $formula,
+        ];
     }
 }

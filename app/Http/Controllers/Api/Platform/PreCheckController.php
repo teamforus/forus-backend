@@ -38,6 +38,8 @@ class PreCheckController extends Controller
 
         $amountTotal = array_sum(array_pluck($funds, 'amount_total'));
         $amountTotalValid = array_sum(array_pluck($fundsValid, 'amount_total'));
+        $products_count_total = array_sum(array_pluck($funds, 'product_count'));
+        $products_amount_total = array_sum(array_pluck($funds, 'products_amount_total'));
 
         return new JsonResponse([
             'funds' => $funds,
@@ -45,6 +47,8 @@ class PreCheckController extends Controller
             'amount_total' => $amountTotal,
             'amount_total_locale' => currency_format_locale($amountTotal),
             'amount_total_valid' => $amountTotalValid,
+            'products_count_total' => $products_count_total,
+            'products_amount_total' => currency_format_locale($products_amount_total),
             'amount_total_valid_locale' => currency_format_locale($amountTotalValid),
         ]);
     }
