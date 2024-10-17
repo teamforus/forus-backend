@@ -159,8 +159,9 @@ class FundRequest extends BaseModel
     {
         return ($this->resolved_at ?: now())->diffForHumans($this->created_at, [
             'parts' => 5,
+            'join' => ', ',
             'syntax' => CarbonInterface::DIFF_ABSOLUTE,
-            'skip' => ['seconds'],
+            'skip' => ['seconds', 'weeks'],
         ]);
     }
 
