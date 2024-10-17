@@ -793,13 +793,11 @@ class Implementation extends BaseModel
      */
     public function hasPayouts(): bool
     {
-        $payout_funds = self::queryFunds()->whereRelation('fund_config', [
+        $payoutFunds = self::queryFunds()->whereRelation('fund_config', [
             'outcome_type' => FundConfig::OUTCOME_TYPE_PAYOUT,
         ]);
 
-        return $this->organization->allow_payouts &&
-            $this->organization->fund_request_resolve_policy != Organization::FUND_REQUEST_POLICY_MANUAL &&
-            $payout_funds->exists();
+        return $this->organization->allow_payouts && $payoutFunds->exists();
     }
 
     /**
