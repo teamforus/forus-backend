@@ -7,29 +7,20 @@ use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Database\Eloquent\Builder;
 
-/**
- * Class IdentityVoucherAddressRule
- * @package App\Rules\Vouchers
- */
 class IdentityVoucherAddressRule implements Rule
 {
-    private $identity_address;
-    private $voucher_type;
-    private $fund_type;
-
     /**
      * Create a new rule instance.
      *
-     * @param $identity_address
-     * @param null $voucher_type
-     * @param null $fund_type
+     * @param string|null $identity_address
+     * @param string|null $voucher_type
+     * @param string|null $fund_type
      */
-    public function __construct($identity_address, $voucher_type = null, $fund_type = null)
-    {
-        $this->identity_address = $identity_address;
-        $this->voucher_type = $voucher_type;
-        $this->fund_type = $fund_type;
-    }
+    public function __construct(
+        protected ?string $identity_address,
+        protected ?string $voucher_type = null,
+        protected ?string $fund_type = null,
+    ) {}
 
     /**
      * Determine if the validation rule passes.
@@ -40,11 +31,9 @@ class IdentityVoucherAddressRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        $query = VoucherQuery::whereNotExpiredAndActive(
-            Voucher::whereIdentityAddress($this->identity_address)
-        )->whereHas('tokens', function(Builder $builder) use ($value) {
-            $builder->where('address', $value);
-        });
+        $query = VoucherQuery::whereNotExpiredAndActive(Voucher::query()
+            ->where('identity_address', $this->identity_address)
+            ->where('id', $value));
 
         if (!is_null($this->fund_type)) {
             $query->whereHas('fund', function(Builder $builder) {

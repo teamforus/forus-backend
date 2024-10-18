@@ -162,6 +162,7 @@ class EventLog extends Model
 
             $attributes = array_merge([
                 'id' => Arr::get($this->data, 'voucher_id'),
+                'number' => Arr::get($this->data, 'voucher_number'),
                 'amount_locale' => Arr::get($this->data, 'voucher_transaction_amount_locale'),
                 'transaction_type' => $transactionType,
             ]);

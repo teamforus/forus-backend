@@ -20,12 +20,12 @@ class ProductIdToReservationRule extends BaseRule
     /**
      * Create a new rule instance.
      *
-     * @param string|null $voucherAddress
+     * @param int|null $voucherId
      * @param bool $throttle
      * @param bool $allowExtraPayment
      */
     public function __construct(
-        private readonly ?string $voucherAddress,
+        private readonly ?int $voucherId,
         private readonly bool $throttle = false,
         private readonly bool $allowExtraPayment = false,
     ) {
@@ -44,12 +44,12 @@ class ProductIdToReservationRule extends BaseRule
     public function passes($attribute, $value): bool
     {
         /** @var Product $product */
-        $voucher = Voucher::findByAddressOrPhysicalCard($this->voucherAddress);
+        $voucher = Voucher::whereId($this->voucherId)->first();
         $product = ProductSubQuery::appendReservationStats([
             'voucher_id' => $voucher->id ?? null,
         ], Product::whereId($value))->first();
 
-        if (!$this->voucherAddress || !$voucher) {
+        if (!$this->voucherId || !$voucher) {
             return $this->rejectTrans('voucher_address_required');
         }
 

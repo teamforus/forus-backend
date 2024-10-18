@@ -74,7 +74,7 @@ class VoucherResource extends BaseJsonResource
         $deactivationDate = $voucher->deactivated ? $this->getDeactivationDate($voucher) : null;
 
         return array_merge($voucher->only([
-            'id', 'identity_address', 'fund_id', 'returnable', 'transactions_count',
+            'id', 'number', 'identity_address', 'fund_id', 'returnable', 'transactions_count',
             'expired', 'deactivated', 'type', 'state', 'state_locale', 'is_external',
         ]), $this->getBaseFields($voucher), $this->getOptionalFields($voucher), [
             'deactivated_at' => $deactivationDate?->format('Y-m-d'),

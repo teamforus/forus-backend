@@ -9,7 +9,6 @@ use App\Http\Resources\VoucherCollectionResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\FundConfig;
 use App\Models\Voucher;
-use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
 use App\Searches\VouchersSearch;
 use Illuminate\Http\JsonResponse;
@@ -52,30 +51,29 @@ class VouchersController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param VoucherToken $voucherToken
+     * @param Voucher $voucher
      * @return VoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(VoucherToken $voucherToken): VoucherResource
+    public function show(Voucher $voucher): VoucherResource
     {
-        $this->authorize('show', $voucherToken->voucher);
+        $this->authorize('show', $voucher);
 
-        return VoucherResource::create($voucherToken->voucher);
+        return VoucherResource::create($voucher);
     }
 
     /**
      * Send target voucher to user email.
      *
-     * @param VoucherToken $voucherToken
+     * @param Voucher $voucher
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
-    public function sendEmail(VoucherToken $voucherToken): JsonResponse
+    public function sendEmail(Voucher $voucher): JsonResponse
     {
-        $this->authorize('sendEmail', $voucherToken->voucher);
+        $this->authorize('sendEmail', $voucher);
 
-        $voucher = $voucherToken->voucher;
         $voucher->sendToEmail($voucher->identity->email);
 
         return new JsonResponse([]);
@@ -84,22 +82,22 @@ class VouchersController extends Controller
     /**
      * Share product voucher to email.
      *
-     * @param VoucherToken $voucherToken
      * @param ShareProductVoucherRequest $request
+     * @param Voucher $voucher
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
     public function shareVoucher(
-        VoucherToken $voucherToken,
-        ShareProductVoucherRequest $request
+        ShareProductVoucherRequest $request,
+        Voucher $voucher,
     ): JsonResponse {
-        $this->authorize('shareVoucher', $voucherToken->voucher);
+        $this->authorize('shareVoucher', $voucher);
 
         $reason = $request->input('reason');
         $sendCopy = (bool) $request->get('send_copy', false);
 
-        $voucherToken->voucher->shareVoucherEmail($reason, $sendCopy);
+        $voucher->shareVoucherEmail($reason, $sendCopy);
 
         return new JsonResponse([]);
     }
@@ -108,32 +106,32 @@ class VouchersController extends Controller
      * Deactivate voucher
      *
      * @param DeactivateVoucherRequest $request
-     * @param VoucherToken $voucherToken
+     * @param Voucher $voucher
      * @return VoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function deactivate(
         DeactivateVoucherRequest $request,
-        VoucherToken $voucherToken
+        Voucher $voucher,
     ): VoucherResource {
-        $this->authorize('deactivateRequester', $voucherToken->voucher);
-        $voucherToken->voucher->deactivate($request->input('note') ?: '');
+        $this->authorize('deactivateRequester', $voucher);
+        $voucher->deactivate($request->input('note') ?: '');
 
-        return VoucherResource::create($voucherToken->voucher);
+        return VoucherResource::create($voucher);
     }
 
     /**
-     * @param VoucherToken $voucherToken
+     * @param Voucher $voucher
      * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Exception
      */
-    public function destroy(VoucherToken $voucherToken): JsonResponse
+    public function destroy(Voucher $voucher): JsonResponse
     {
-        $this->authorize('destroy', $voucherToken->voucher);
+        $this->authorize('destroy', $voucher);
 
         return new JsonResponse([
-            'success' => $voucherToken->voucher->delete() === true
+            'success' => $voucher->delete() === true
         ]);
     }
 }

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests\StorePhysicalCardRequestRequest;
 use App\Http\Resources\PhysicalCardRequestResource;
 use App\Models\PhysicalCardRequest;
-use App\Models\VoucherToken;
+use App\Models\Voucher;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -24,14 +24,12 @@ class PhysicalCardRequestsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param VoucherToken $voucherToken
+     * @param Voucher $voucher
      * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(VoucherToken $voucherToken): AnonymousResourceCollection
+    public function index(Voucher $voucher): AnonymousResourceCollection
     {
-        $voucher = $voucherToken->voucher;
-
         $this->authorize('show', $voucher);
         $this->authorize('showAny', [PhysicalCardRequest::class, $voucher]);
 
@@ -44,19 +42,19 @@ class PhysicalCardRequestsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param StorePhysicalCardRequestRequest $request
-     * @param VoucherToken $voucherToken
+     * @param Voucher $voucher
      * @return PhysicalCardRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \App\Exceptions\AuthorizationJsonException
      */
     public function store(
         StorePhysicalCardRequestRequest $request,
-        VoucherToken $voucherToken
+        Voucher $voucher,
     ): PhysicalCardRequestResource {
-        $this->authorize('requestPhysicalCard', $voucherToken->voucher);
+        $this->authorize('requestPhysicalCard', $voucher);
         $this->throttleWithKey('to_many_attempts', $request, 'physical_card_requests');
 
-        $cardRequest = $voucherToken->voucher->makePhysicalCardRequest($request->only([
+        $cardRequest = $voucher->makePhysicalCardRequest($request->only([
             'address', 'house', 'house_addition', 'postcode', 'city',
         ]), true);
 
@@ -67,27 +65,27 @@ class PhysicalCardRequestsController extends Controller
      * Validate store a physical card
      *
      * @param StorePhysicalCardRequestRequest $request
-     * @param VoucherToken $voucherToken
+     * @param Voucher $voucher
      * @noinspection PhpUnused
      */
     public function storeValidate(
         StorePhysicalCardRequestRequest $request,
-        VoucherToken $voucherToken
+        Voucher $voucher,
     ): void {}
 
     /**
      * Display the specified resource.
      *
-     * @param VoucherToken $voucherToken
+     * @param Voucher $voucher
      * @param PhysicalCardRequest $physicalCardRequest
      * @return PhysicalCardRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
-        VoucherToken $voucherToken,
+        Voucher $voucher,
         PhysicalCardRequest  $physicalCardRequest
     ): PhysicalCardRequestResource {
-        $this->authorize('show', $voucherToken->voucher);
+        $this->authorize('show', $voucher);
         $this->authorize('show', $physicalCardRequest);
 
         return new PhysicalCardRequestResource($physicalCardRequest);
