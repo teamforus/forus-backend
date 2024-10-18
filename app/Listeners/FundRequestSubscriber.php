@@ -129,7 +129,12 @@ class FundRequestSubscriber
                         );
                     }
 
-                    $fund->makeFundFormulaProductVouchers($fundRequest->identity_address);
+                    $fund->makeFundFormulaProductVouchers(
+                        $fundRequest->identity_address,
+                        voucherFields: [
+                            'fund_request_id' => $fundRequest->id,
+                        ]
+                    );
                 }
             }
 

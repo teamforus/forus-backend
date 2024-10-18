@@ -79,6 +79,7 @@ use ZipArchive;
  * @property-read int|null $backoffice_logs_count
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
+ * @property-read \App\Models\FundRequest|null $fund_request
  * @property-read bool $activated
  * @property-read string $amount_available
  * @property-read string $amount_available_cached
@@ -255,6 +256,15 @@ class Voucher extends BaseModel
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function fund_request(): BelongsTo
+    {
+        return $this->belongsTo(FundRequest::class);
     }
 
     /**
