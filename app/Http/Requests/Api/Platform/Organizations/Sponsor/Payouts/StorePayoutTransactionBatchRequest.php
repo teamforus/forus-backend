@@ -36,4 +36,29 @@ class StorePayoutTransactionBatchRequest extends StorePayoutTransactionRequest
             'payouts.*.description' => $this->descriptionRules(),
         ];
     }
+
+    /**
+     * @return string[]
+     */
+    public function attributes(): array
+    {
+        return [
+            'payouts.*.bsn' => 'BSN',
+            'payouts.*.amount' => 'Bedrag',
+            'payouts.*.amount_preset' => 'Bedrag voorinstelling',
+            'payouts.*.target_iban' => 'IBAN',
+            'payouts.*.target_name' => 'Naam rekeninghouder',
+            'payouts.*.email' => 'E-mailadres',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'payouts.*.email' => 'Vul een geldig e-mailadres in, bijvoorbeeld naam@voorbeeld.com',
+        ];
+    }
 }

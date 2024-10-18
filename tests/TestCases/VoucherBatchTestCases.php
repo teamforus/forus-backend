@@ -295,27 +295,39 @@ class VoucherBatchTestCases
     ];
 
     /** @var array|array[] */
+    public static array $browserTestCaseLowAmounts = [
+        'assign_by' => 'email',
+        'vouchers_count' => 1,
+        'low_amounts' => true,
+        'same_code_for_fund' => false,
+    ];
+
+    /** @var array|array[] */
     public static array $browserTestCaseAssignByEmail = [
         'assign_by' => 'email',
         'vouchers_count' => 5,
+        'low_amounts' => false,
         'same_code_for_fund' => false,
     ];
 
     public static array $browserTestCaseAssignByBSN = [
         'assign_by' => 'bsn',
         'vouchers_count' => 2,
+        'low_amounts' => false,
         'same_code_for_fund' => false,
     ];
 
     public static array $browserTestCaseAssignByClientUID = [
         'assign_by' => 'client_uid',
         'vouchers_count' => 2,
+        'low_amounts' => false,
         'same_code_for_fund' => false,
     ];
 
     public static array $browserTestCaseAssignByClientUIDSameCode = [
         'assign_by' => 'client_uid',
         'vouchers_count' => 2,
+        'low_amounts' => false,
         'same_code_for_fund' => true,
     ];
 }
