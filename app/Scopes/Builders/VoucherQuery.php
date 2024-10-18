@@ -8,7 +8,6 @@ use App\Models\ProductReservation;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use App\Models\VoucherTransactionBulk;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -98,15 +97,6 @@ class VoucherQuery
      * @param Builder $builder
      * @return Builder
      */
-    public static function wherePending(Builder $builder): Builder
-    {
-        return $builder->where('state', Voucher::STATE_PENDING);
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
     public static function whereDeactivated(Builder $builder): Builder
     {
         return $builder->where('state', Voucher::STATE_DEACTIVATED);
@@ -120,24 +110,6 @@ class VoucherQuery
         Builder|Relation|Voucher $builder
     ): Builder|Relation|Voucher {
         return self::whereNotExpired(self::whereActive($builder));
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    public static function whereNotExpiredAndPending(Builder $builder): Builder
-    {
-        return self::whereNotExpired(self::wherePending($builder));
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    public static function whereNotExpiredAndDeactivated(Builder $builder): Builder
-    {
-        return self::whereNotExpired(self::whereDeactivated($builder));
     }
 
     /**
