@@ -175,6 +175,11 @@ class FundResource extends BaseJsonResource
                 'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',
                 'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails',
                 'hide_meta', 'voucher_amount_visible', 'provider_products_required',
+                'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
+                'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
+                'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
+                'help_description_html',
+                'criteria_label_requirement_show',
             ]) : [],
             ...$isDashboard && $fund->fund_config ? $fund->fund_config->only([
                 'allow_custom_amounts', 'allow_preset_amounts',

@@ -726,6 +726,7 @@ class Implementation extends BaseModel
                 'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
                 'has_reimbursements' => $implementation->hasReimbursements(),
+                'has_payouts' => $implementation->hasPayouts(),
                 'announcements' => AnnouncementResource::collection((new AnnouncementSearch([
                     'client_type' => $request->client_type(),
                     'implementation_id' => $implementation->id,
@@ -785,6 +786,18 @@ class Implementation extends BaseModel
         return self::queryFunds()->whereRelation('fund_config', [
             'allow_reimbursements' => true,
         ])->exists();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasPayouts(): bool
+    {
+        $payoutFunds = self::queryFunds()->whereRelation('fund_config', [
+            'outcome_type' => FundConfig::OUTCOME_TYPE_PAYOUT,
+        ]);
+
+        return $this->organization?->allow_payouts && $payoutFunds->exists();
     }
 
     /**

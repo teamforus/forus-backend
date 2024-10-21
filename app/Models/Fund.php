@@ -495,8 +495,11 @@ class Fund extends BaseModel
             'auth_2fa_restrict_reimbursements', 'hide_meta', 'voucher_amount_visible',
             'allow_custom_amounts', 'allow_custom_amounts_validator',
             'allow_preset_amounts', 'allow_preset_amounts_validator',
-            'custom_amount_min', 'custom_amount_max',
-            'provider_products_required',
+            'custom_amount_min', 'custom_amount_max', 'provider_products_required',
+            'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
+            'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
+            'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
+            'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
@@ -1308,13 +1311,13 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identityAddress
-     * @param array $extraFields
+     * @param array $voucherFields
      * @param Carbon|null $expireAt
      * @return Voucher[]
      */
     public function makeFundFormulaProductVouchers(
         string $identityAddress = null,
-        array $extraFields = [],
+        array $voucherFields = [],
         Carbon $expireAt = null
     ): array {
         $vouchers = [];
@@ -1328,7 +1331,7 @@ class Fund extends BaseModel
 
             $vouchers = array_merge($vouchers, array_map(fn () => $this->makeProductVoucher(
                 $identityAddress,
-                $extraFields,
+                $voucherFields,
                 $formulaProduct->product->id,
                 $voucherExpireAt,
                 $formulaProduct->price
@@ -1340,7 +1343,7 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identity_address
-     * @param array $extraFields
+     * @param array $voucherFields
      * @param int|null $product_id
      * @param Carbon|null $expire_at
      * @param float|null $price
@@ -1348,7 +1351,7 @@ class Fund extends BaseModel
      */
     public function makeProductVoucher(
         string $identity_address = null,
-        array $extraFields = [],
+        array $voucherFields = [],
         int $product_id = null,
         Carbon $expire_at = null,
         float $price = null,
@@ -1361,7 +1364,7 @@ class Fund extends BaseModel
         $voucher = Voucher::create(array_merge(compact(
             'identity_address', 'amount', 'expire_at',
             'product_id','fund_id', 'returnable'
-        ), $extraFields));
+        ), $voucherFields));
 
         VoucherCreated::dispatch($voucher, false);
 
@@ -1500,8 +1503,9 @@ class Fund extends BaseModel
         /** @var FundCriterion|null $db_criteria */
         $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
-            'description', 'title', 'optional', 'min', 'max',
-        ] : ['show_attachment', 'description', 'title']);
+            'description', 'title', 'optional', 'min', 'max', 'label',
+            'extra_description',
+        ] : ['show_attachment', 'description', 'title', 'extra_description']);
 
         if ($this->criteriaIsEditable()) {
             $data_criterion['value'] = Arr::get($data_criterion, 'value', '') ?: '';
@@ -1510,7 +1514,7 @@ class Fund extends BaseModel
 
         if ($fundCriterion) {
             $fundCriterion->update($textsOnly ? array_only($data_criterion, [
-                'title', 'description',
+                'title', 'description', 'extra_description',
             ]): $data_criterion);
         } elseif (!$textsOnly) {
             $this->criteria()->create($data_criterion);
