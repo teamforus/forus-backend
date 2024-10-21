@@ -13,7 +13,6 @@ use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeSelectNumberRule;
 use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeSelectRule;
 use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeStringRule;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Validation\Rule;
@@ -38,6 +37,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string $description
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $label
  * @property-read \App\Models\Fund $fund
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterionRule[] $fund_criterion_rules
  * @property-read int|null $fund_criterion_rules_count
@@ -52,6 +52,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereFundCriteriaStepId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereLabel($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereMax($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereMin($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereOperator($value)
@@ -72,8 +73,9 @@ class FundCriterion extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'record_type_key', 'operator', 'value', 'show_attachment',
+        'fund_id', 'record_type_key', 'operator', 'value', 'show_attachment', 'label',
         'description', 'title', 'optional', 'min', 'max', 'order', 'fund_criteria_step_id',
+        'extra_description',
     ];
 
     protected $casts = [
@@ -125,6 +127,16 @@ class FundCriterion extends BaseModel
     public function getDescriptionHtmlAttribute(): string
     {
         return Markdown::convert($this->description ?: '');
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     * @throws CommonMarkException
+     */
+    public function getExtraDescriptionHtmlAttribute(): string
+    {
+        return Markdown::convert($this->extra_description ?: '');
     }
 
     /**
