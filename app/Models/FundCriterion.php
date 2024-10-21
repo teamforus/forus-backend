@@ -75,6 +75,7 @@ class FundCriterion extends BaseModel
     protected $fillable = [
         'fund_id', 'record_type_key', 'operator', 'value', 'show_attachment', 'label',
         'description', 'title', 'optional', 'min', 'max', 'order', 'fund_criteria_step_id',
+        'extra_description',
     ];
 
     protected $casts = [
@@ -126,6 +127,16 @@ class FundCriterion extends BaseModel
     public function getDescriptionHtmlAttribute(): string
     {
         return Markdown::convert($this->description ?: '');
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     * @throws CommonMarkException
+     */
+    public function getExtraDescriptionHtmlAttribute(): string
+    {
+        return Markdown::convert($this->extra_description ?: '');
     }
 
     /**
