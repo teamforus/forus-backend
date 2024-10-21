@@ -184,7 +184,7 @@ class VoucherQuery
     public static function whereSearchSponsorQuery(Builder|Voucher $builder, string $q): Builder|Voucher
     {
         return $builder->where(static function (Builder|Voucher $builder) use ($q) {
-            $builder->where('number', 'LIKE', "%$q%");
+            $builder->where('number', 'LIKE', "%" . ltrim($q, '#') ."%");
             $builder->orWhere('note', 'LIKE', "%$q%");
             $builder->orWhere('activation_code', 'LIKE', "%$q%");
             $builder->orWhere('client_uid', 'LIKE', "%$q%");
