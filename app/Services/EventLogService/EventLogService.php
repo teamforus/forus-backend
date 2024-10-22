@@ -278,6 +278,7 @@ class EventLogService implements IEventLogService
     {
         return $this->keyPrepend([
             'id' => $voucher->id,
+            'number' => $voucher->number,
             'amount' => currency_format($voucher->amount_available),
             'amount_locale' => currency_format_locale(
                 $voucher->amount_available,

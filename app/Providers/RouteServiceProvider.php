@@ -98,6 +98,10 @@ class RouteServiceProvider extends ServiceProvider
             return FundProviderInvitation::where(compact('token'))->firstOrFail();
         });
 
+        $router->bind('voucher_number', static function ($value) {
+            return $value ? Voucher::whereNumber($value)->firstOrFail() : null;
+        });
+
         $router->bind('voucher_address_or_physical_code', static function ($value) {
             $isCard = is_string($value) && strlen($value) === 12;
 
