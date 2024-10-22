@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
+use App\Models\Identity;
 use App\Models\IdentityEmail;
 use App\Scopes\Builders\FundRequestQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -108,13 +109,12 @@ class FundRequestSearch extends BaseSearch
                 ->select('name')
                 ->limit(1),
             'assignee_email' => IdentityEmail::query()
-                ->whereHas('identity.employees', function(Builder $builder) {
-                    $builder->where('organization_id', $this->employee->organization_id);
-                    $builder->whereHas('fund_request_records', function(Builder $builder) {
-                        $builder->whereColumn('fund_request_id', 'fund_requests.id');
+                ->whereHas('identity', function(Builder|Identity $builder) {
+                    $builder->whereHas('employees', function(Builder|Employee $builder) {
+                        $builder->where('organization_id', $this->employee->organization_id);
+                        $builder->whereColumn('id', 'fund_requests.employee_id');
                     });
                 })
-                ->where('verified', true)
                 ->where('primary', true)
                 ->select('email')
                 ->limit(1),
