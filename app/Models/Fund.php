@@ -1509,7 +1509,8 @@ class Fund extends BaseModel
         $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
             'description', 'title', 'optional', 'min', 'max', 'label',
-        ] : ['show_attachment', 'description', 'title']);
+            'extra_description',
+        ] : ['show_attachment', 'description', 'title', 'extra_description']);
 
         if ($this->criteriaIsEditable()) {
             $data_criterion['value'] = Arr::get($data_criterion, 'value', '') ?: '';
@@ -1518,7 +1519,7 @@ class Fund extends BaseModel
 
         if ($fundCriterion) {
             $fundCriterion->update($textsOnly ? array_only($data_criterion, [
-                'title', 'description',
+                'title', 'description', 'extra_description',
             ]): $data_criterion);
         } elseif (!$textsOnly) {
             $this->criteria()->create($data_criterion);
