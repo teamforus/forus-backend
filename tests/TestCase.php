@@ -17,7 +17,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected $defaultHeaders = [
         'Accept' => 'application/json',
-        'client_type' => 'webshop',
+        'Client-Type' => 'webshop',
     ];
 
     /**

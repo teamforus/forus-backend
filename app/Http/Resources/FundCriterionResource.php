@@ -32,8 +32,9 @@ class FundCriterionResource extends BaseJsonResource
 
         return array_merge($criterion->only([
             'id', 'record_type_key', 'operator', 'show_attachment', 'order',
-            'title', 'description', 'description_html', 'record_type',
+            'title', 'description', 'description_html', 'record_type', 'label',
             'min', 'max', 'optional', 'value', 'fund_criteria_step_id',
+            'extra_description', 'extra_description_html',
         ]), [
             'rules' => $criterion->fund_criterion_rules->map(fn ($criterion) => $criterion->only([
                 'record_type_key', 'operator', 'value',

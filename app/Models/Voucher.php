@@ -18,6 +18,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Traits\HasFormattedTimestamps;
+use App\Models\Traits\HasUniqueNumber;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Scopes\Builders\VoucherSubQuery;
@@ -48,6 +49,7 @@ use ZipArchive;
  * App\Models\Voucher
  *
  * @property int $id
+ * @property string|null $number
  * @property int $fund_id
  * @property int|null $fund_request_id
  * @property string $voucher_type
@@ -77,6 +79,7 @@ use ZipArchive;
  * @property-read int|null $backoffice_logs_count
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
+ * @property-read \App\Models\FundRequest|null $fund_request
  * @property-read bool $activated
  * @property-read string $amount_available
  * @property-read string $amount_available_cached
@@ -154,6 +157,7 @@ use ZipArchive;
  * @method static Builder|Voucher whereIdentityAddress($value)
  * @method static Builder|Voucher whereLimitMultiplier($value)
  * @method static Builder|Voucher whereNote($value)
+ * @method static Builder|Voucher whereNumber($value)
  * @method static Builder|Voucher whereParentId($value)
  * @method static Builder|Voucher whereProductId($value)
  * @method static Builder|Voucher whereProductReservationId($value)
@@ -165,7 +169,10 @@ use ZipArchive;
  */
 class Voucher extends BaseModel
 {
-    use HasLogs, HasFormattedTimestamps, HasDbTokens;
+    use HasLogs;
+    use HasDbTokens;
+    use HasUniqueNumber;
+    use HasFormattedTimestamps;
 
     public const EVENT_CREATED_BUDGET = 'created_budget';
     public const EVENT_CREATED_PRODUCT = 'created_product';
@@ -225,7 +232,7 @@ class Voucher extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id',
+        'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id', 'number',
         'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'state',
         'activation_code', 'client_uid', 'fund_backoffice_log_id',
         'product_reservation_id', 'voucher_type', 'fund_request_id', 'fund_amount_preset_id',
@@ -237,6 +244,7 @@ class Voucher extends BaseModel
      * @var array
      */
     protected $casts = [
+        'number' => 'string',
         'expire_at' => 'datetime',
         'returnable' => 'boolean',
     ];
@@ -248,6 +256,15 @@ class Voucher extends BaseModel
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function fund_request(): BelongsTo
+    {
+        return $this->belongsTo(FundRequest::class);
     }
 
     /**

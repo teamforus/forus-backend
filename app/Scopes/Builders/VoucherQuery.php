@@ -113,11 +113,12 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder|Relation $builder
-     * @return Builder|Relation
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereNotExpiredAndActive(Builder|Relation $builder): Builder|Relation
-    {
+    public static function whereNotExpiredAndActive(
+        Builder|Relation|Voucher $builder
+    ): Builder|Relation|Voucher {
         return self::whereNotExpired(self::whereActive($builder));
     }
 
@@ -183,7 +184,8 @@ class VoucherQuery
     public static function whereSearchSponsorQuery(Builder|Voucher $builder, string $q): Builder|Voucher
     {
         return $builder->where(static function (Builder|Voucher $builder) use ($q) {
-            $builder->where('note', 'LIKE', "%$q%");
+            $builder->where('number', 'LIKE', "%" . ltrim($q, '#') ."%");
+            $builder->orWhere('note', 'LIKE', "%$q%");
             $builder->orWhere('activation_code', 'LIKE', "%$q%");
             $builder->orWhere('client_uid', 'LIKE', "%$q%");
 

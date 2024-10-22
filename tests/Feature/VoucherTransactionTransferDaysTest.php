@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\Traits\MakesProductReservations;
+use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 
@@ -18,6 +19,7 @@ class VoucherTransactionTransferDaysTest extends TestCase
     use DatabaseTransactions;
     use MakesTestOrganizations;
     use MakesProductReservations;
+    use MakesTestFundProviders;
 
     /**
      * @return void
@@ -25,11 +27,13 @@ class VoucherTransactionTransferDaysTest extends TestCase
      */
     public function testTransactionTransferDays(): void
     {
-        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $providerOrganization = $this->makeTestOrganization($this->makeIdentity());
 
-        $fund = $this->makeTestFund($organization);
+        $fund = $this->makeTestFund($sponsorOrganization);
+        $this->makeTestFundProvider($providerOrganization, $fund);
 
-        $voucher = $this->findVoucherForReservation($organization, $fund->type);
+        $voucher = $this->findVoucherForReservation($sponsorOrganization, $fund->type);
         $product = $this->findProductForReservation($voucher);
 
         $this->checkTransactionTransferDays($voucher, $product);
@@ -83,7 +87,7 @@ class VoucherTransactionTransferDaysTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ], $headers);
 

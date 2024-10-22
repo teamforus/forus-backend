@@ -167,9 +167,7 @@ class EventLogService implements IEventLogService
     {
         return $this->keyPrepend([
             'id' => $fundRequestRecord->id,
-            'note' => $fundRequestRecord->note,
             'value' => $fundRequestRecord->value,
-            'state' => $fundRequestRecord->state,
             'record_type_key' => $fundRequestRecord->record_type_key,
             'fund_criterion_id' => $fundRequestRecord->fund_criterion_id,
         ], 'fund_request_record_');
@@ -280,6 +278,7 @@ class EventLogService implements IEventLogService
     {
         return $this->keyPrepend([
             'id' => $voucher->id,
+            'number' => $voucher->number,
             'amount' => currency_format($voucher->amount_available),
             'amount_locale' => currency_format_locale(
                 $voucher->amount_available,
@@ -332,7 +331,6 @@ class EventLogService implements IEventLogService
         return $this->keyPrepend([
             'id' => $transaction->id,
             'value' => $transaction->value,
-            'note' => $transaction->note,
             'voucher_id' => $transaction->voucher_id,
             'record_type_id' => $transaction->record_type_id,
             'record_type_key' => $transaction->record_type?->key,

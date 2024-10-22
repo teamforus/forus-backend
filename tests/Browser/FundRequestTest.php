@@ -45,7 +45,7 @@ class FundRequestTest extends DuskTestCase
             $identity = $fundRequest->identity;
 
             $this->loginIdentity($browser, $identity);
-            $browser->waitFor('@headerTitle');
+            $browser->waitFor('@headerTitle', 15);
 
             $fundRequests = (new FundRequestSearch($search))->query()->where([
                 'identity_address' => $identity->address
@@ -55,11 +55,11 @@ class FundRequestTest extends DuskTestCase
 
             foreach ($fundRequests as $request) {
                 $element = '@fundRequestsItem' . $request->id;
-                $browser->waitFor($element);
+                $browser->waitFor($element, 15);
                 $browser->assertSeeIn($element, $request->fund->name);
 
                 $browser->click($element);
-                $browser->waitFor('@fundRequestFund');
+                $browser->waitFor('@fundRequestFund', 10);
                 $browser->assertSeeIn('@fundRequestFund', $request->fund->name);
 
                 $browser->back();

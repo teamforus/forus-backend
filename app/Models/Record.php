@@ -126,13 +126,13 @@ class Record extends BaseModel
      * @param Builder|Relation|null $builder
      * @param array $filters
      * @param bool $hideSystemRecords
-     * @return Builder|Relation
+     * @return Builder|Relation|Record
      */
     public static function search(
         Builder|Relation $builder = null,
         array $filters = [],
         bool $hideSystemRecords = false
-    ): Builder|Relation {
+    ): Builder|Relation|Record {
         $builder = $builder ?: static::query();
 
         if (Arr::has($filters, 'type')) {

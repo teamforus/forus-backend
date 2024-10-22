@@ -70,6 +70,12 @@ class ProductQuery
     public static function whereFundNotExcluded(
         Builder|Relation|Product $builder, $fund_id
     ): Builder|Relation|Product {
+        $relevantFundsQuery = Fund::query()->whereHas('fund_providers', function(Builder $builder) use ($fund_id) {
+            $builder->whereColumn('fund_providers.organization_id', 'products.organization_id');
+            $builder->whereIn('fund_providers.fund_id', (array) $fund_id);
+        })
+            ->whereIn('id', (array) $fund_id);
+
         $builder->where(function(Builder $builder) use ($fund_id) {
             $builder->whereNull('sponsor_organization_id');
             $builder->orWhereHas('sponsor_organization', function(Builder|Organization $builder) use ($fund_id) {
@@ -83,7 +89,7 @@ class ProductQuery
             $builder->whereHas('fund_provider', function (Builder|FundProvider $builder) use ($fund_id) {
                 $builder->whereIn('fund_id', (array) $fund_id);
             });
-        }, '<', count((array) $fund_id));
+        }, '<', $relevantFundsQuery->selectRaw('count(*)'));
 
         return $builder;
     }
