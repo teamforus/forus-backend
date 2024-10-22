@@ -43,12 +43,11 @@ class StorePayoutTransactionBatchRequest extends StorePayoutTransactionRequest
     public function attributes(): array
     {
         return [
-            'payouts.*.bsn' => 'BSN',
-            'payouts.*.amount' => 'Bedrag',
-            'payouts.*.amount_preset' => 'Bedrag voorinstelling',
-            'payouts.*.target_iban' => 'IBAN',
-            'payouts.*.target_name' => 'Naam rekeninghouder',
-            'payouts.*.email' => 'E-mailadres',
+            'payouts.*.amount' => trans('validation.attributes.amount'),
+            'payouts.*.email' => trans('validation.attributes.email'),
+            'payouts.*.target_iban' => trans('validation.attributes.iban'),
+            'payouts.*.target_name' => trans('validation.attributes.iban_name'),
+            'payouts.*.description' => trans('validation.attributes.description'),
         ];
     }
 
