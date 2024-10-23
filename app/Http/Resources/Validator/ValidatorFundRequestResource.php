@@ -184,7 +184,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         $is_assignable = !$is_assigned && !$record->fund_request->employee_id && $record->fund_request->isPending();
 
         $baseFields = array_merge($record->only([
-            'id', 'state', 'record_type_key', 'fund_request_id', 'note', 'fund_criterion_id',
+            'id', 'record_type_key', 'fund_request_id', 'fund_criterion_id',
         ]), [
             'value' => $is_assignable || $is_assigned ? $record->value : null,
         ]);

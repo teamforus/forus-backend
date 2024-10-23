@@ -54,11 +54,11 @@ class UpdateFundRequest extends BaseFundRequest
                 'nullable',
                 Rule::in($availableValidators->toArray()),
             ],
-            'start_date' => [
+            'start_date' => $this->fund->isWaiting() ? [
                 'nullable',
                 'date_format:Y-m-d',
                 'after:' . $this->fund->created_at->addDays(5)->format('Y-m-d')
-            ],
+            ] : [],
             'end_date' => [
                 'nullable',
                 'date_format:Y-m-d',

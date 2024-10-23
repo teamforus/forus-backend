@@ -212,11 +212,6 @@ class FundRequestPolicy
             return $this->deny('not_pending');
         }
 
-        // should not have any disregarded records
-        if ($fundRequest->records_disregarded()->exists()) {
-            return $this->deny('has_disregarded_records');
-        }
-
         // should be properly configured
         if ($checkResolvingIssues && ($error = $fundRequest->getResolvingError())) {
             $fundRequest->fund->logError($error, ['fund_request_id' => $fundRequest->id]);
@@ -336,7 +331,7 @@ class FundRequestPolicy
             return $this->deny('approved_request_exists');
         }
 
-        return true;
+        return $fundRequest->isDisregarded();
     }
 
     /**

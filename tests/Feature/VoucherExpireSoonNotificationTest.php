@@ -2,11 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\Fund;
-use App\Models\Organization;
-use App\Models\SystemNotification;
 use App\Models\Voucher;
-use Carbon\Carbon;
+use App\Services\EventLogService\Models\EventLog;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -22,15 +20,129 @@ class VoucherExpireSoonNotificationTest extends TestCase
     use MakesTestFunds;
     use MakesTestOrganizations;
 
-    public function testVoucherExpireSoonNotificationSent(): void
+    public function testNoVoucherExpireNotificationSentToSoon(): void
     {
+        $voucher = $this->makeVoucherForTest();
+        $expireDate = $voucher->expire_at->clone();
+
+        $this->travelTo($expireDate->clone()->subWeeks(6)->subDay());
+        $this->artisan('forus.voucher:check-expire');
+
+        self::assertEquals(
+            0,
+            $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRING_SOON_BUDGET)->count(),
+            'No expire soon notification was sent before time.',
+        );
+
+        self::assertEquals(
+            0,
+            $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRED_BUDGET)->count(),
+            'No expired notification sent before time.',
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function testOnlyOneExpireSoonVoucherNotificationSentFor6Weeks(): void
+    {
+        $voucher = $this->makeVoucherForTest();
+        $expireDate = $voucher->expire_at->clone();
+
+        $this->travelTo($expireDate->clone()->subWeeks(6));
+        $this->artisan('forus.voucher:check-expire');
+
+        $this->travelTo($expireDate->clone()->subWeeks(6)->addDay());
+        $this->artisan('forus.voucher:check-expire');
+
+        $this->travelTo($expireDate->clone()->subWeeks(6)->addDays(2));
+        $this->artisan('forus.voucher:check-expire');
+
+        self::assertEquals(
+            1,
+            $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRING_SOON_BUDGET)->count(),
+            'Only one expire soon notification sent for 6 weeks.',
+        );
+
+        self::assertEquals(
+            0,
+            $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRED_BUDGET)->count(),
+            'No expired notification sent before time.',
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function testOnlyOneExpireSoonVoucherNotificationSentFor3Weeks(): void
+    {
+        $voucher = $this->makeVoucherForTest();
+        $expireDate = $voucher->expire_at->clone();
+
+        $this->travelTo($expireDate->clone()->subWeeks(3));
+        $this->artisan('forus.voucher:check-expire');
+
+        $this->travelTo($expireDate->clone()->subWeeks(3)->addDays(2));
+        $this->artisan('forus.voucher:check-expire');
+
+        $this->travelTo($expireDate->clone());
+        $this->artisan('forus.voucher:check-expire');
+
+        self::assertEquals(
+            1,
+            $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRING_SOON_BUDGET)->count(),
+            'Only one expire soon notification sent for 3 weeks.',
+        );
+
+        self::assertEquals(
+            1,
+            $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRED_BUDGET)->count(),
+            'No expired notification sent before time.',
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function testOnlyOneExpiredAndExpireSoonNotificationSentFor3and6Weeks(): void
+    {
+        $voucher = $this->makeVoucherForTest();
+        $date = $voucher->expire_at->clone()->subWeeks(8);
+
+        while ($date->isBefore($voucher->expire_at->clone()->addWeek())) {
+            $date->addDay();
+            $this->travelTo($date);
+            $this->artisan('forus.voucher:check-expire');
+        }
+
+        /** @var EventLog[]|Collection $events */
+        $events = $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRING_SOON_BUDGET)->get();
+
+        self::assertEquals(
+            2,
+            $events->count(),
+            'Only 2 expire soon notifications sent in total.'
+        );
+
+        self::assertEquals(
+            1,
+            $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRED_BUDGET)->count(),
+            'Only one expired notification sent in total.'
+        );
+
+        self::assertTrue($events[0]->created_at->isSameDay($voucher->expire_at->clone()->subWeeks(6)));
+        self::assertTrue($events[1]->created_at->isSameDay($voucher->expire_at->clone()->subWeeks(3)));
+    }
+
+    /**
+     * @return Voucher
+     */
+    protected function makeVoucherForTest(): voucher {
         $identityRequester = $this->makeIdentity($this->makeUniqueEmail());
         $identitySponsor = $this->makeIdentity($this->makeUniqueEmail());
 
         $organization = $this->makeTestOrganization($identitySponsor);
-
         $fund = $this->makeTestFund($organization);
-
         $expireDate = $fund->end_date->clone();
 
         $response = $this->postJson("/api/v1/platform/organizations/$organization->id/sponsor/vouchers", [
@@ -44,100 +156,7 @@ class VoucherExpireSoonNotificationTest extends TestCase
         ], $this->makeApiHeaders($this->makeIdentityProxy($identitySponsor)));
 
         $response->assertSuccessful();
-        $voucher = $fund->vouchers[0];
 
-        self::assertEquals(
-            $expireDate->format('Y-m-d'),
-            $voucher->expire_at->format('Y-m-d'),
-        );
-
-        $this->assertExpireSoonNotificationSent($voucher->fresh(), $expireDate->clone(), 6);
-        $this->assertExpireSoonNotificationSent($voucher->fresh(), $expireDate->clone(), 6);
-        $this->assertLastExpireSoonDateIsToday($organization, $fund, $expireDate->clone(), 6);
-
-        $this->assertExpireSoonNotificationSent($voucher->fresh(), $expireDate->clone(), 3);
-        $this->assertExpireSoonNotificationSent($voucher->fresh(), $expireDate->clone(), 3);
-        $this->assertLastExpireSoonDateIsToday($organization, $fund, $expireDate->clone(), 3);
-
-        self::assertTrue(
-            $voucher->fresh()->logs->where('event', 'expiring_soon_budget')->count() == 2,
-            'Failed to assert that no duplicated notifications sent.',
-        );
-
-        $this->assertVoucherExpired($voucher->fresh());
-    }
-
-    /**
-     * @param Organization $organization
-     * @param Fund $fund
-     * @param Carbon $date
-     * @param int $weeks
-     * @return void
-     */
-    protected function assertLastExpireSoonDateIsToday(
-        Organization $organization,
-        Fund $fund,
-        Carbon $date,
-        int $weeks
-    ): void {
-        $systemNotification = SystemNotification::query()
-            ->where('key', 'notifications_identities.voucher_expire_soon_budget')
-            ->first();
-
-        $response = $this->getJson(implode('', [
-                "/api/v1/platform/organizations/$organization->id",
-                "/implementations/{$fund->fund_config->implementation_id}",
-                "/system-notifications/$systemNotification->id",
-            ]) . "?fund_id=$fund->id", $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
-
-        $response->assertSuccessful();
-
-        self::assertEquals(
-            $date->subWeeks($weeks)->format('Y-m-d'),
-            $response->json('data.last_sent_date'),
-            'Failed to assert that last sent `voucher_expire_soon_budget` is correct',
-        );
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @param Carbon $date
-     * @param int $weeks
-     * @return void
-     */
-    protected function assertExpireSoonNotificationSent(Voucher $voucher, Carbon $date, int $weeks): void
-    {
-        $this->travelTo($date->subWeeks($weeks));
-        $this->artisan('forus.voucher:check-expire');
-
-        $systemNotification = SystemNotification::query()
-            ->where('key', 'notifications_identities.voucher_expire_soon_budget')
-            ->first();
-
-        self::assertTrue(
-            $voucher->logs[$voucher->logs->count() - 1]->event === 'expiring_soon_budget',
-            "Expire soon event not fired for $weeks weeks.",
-        );
-
-        self::assertEquals(
-            $systemNotification->getLastSentDate((array) $voucher->fund_id)?->format('Y-m-d'),
-            now()->format('Y-m-d'),
-            "Expire soon notification failed for $weeks weeks.",
-        );
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @return void
-     */
-    protected function assertVoucherExpired(Voucher $voucher): void
-    {
-        $this->travelTo($voucher->expire_at->clone()->addDay());
-        $this->artisan('forus.voucher:check-expire');
-
-        self::assertTrue(
-            $voucher->logs[$voucher->logs->count() - 1]->event === 'expired',
-            'Expired event not fired for test fund.',
-        );
+        return $fund->vouchers[0];
     }
 }

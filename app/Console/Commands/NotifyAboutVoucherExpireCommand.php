@@ -6,10 +6,9 @@ use App\Events\Vouchers\VoucherExpired;
 use App\Events\Vouchers\VoucherExpireSoon;
 use App\Models\Voucher;
 use App\Scopes\Builders\VoucherQuery;
-use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class NotifyAboutVoucherExpireCommand extends Command
 {
@@ -34,90 +33,78 @@ class NotifyAboutVoucherExpireCommand extends Command
      */
     public function handle(): void
     {
-        $interval3Weeks = [now()->startOfDay(), now()->addWeeks(3)->endOfDay()];
-        $interval6Weeks = [now()->startOfDay(), now()->addWeeks(6)->endOfDay()];
+        /** @var Voucher[] $vouchers */
+        $vouchers = $this->queryVouchers(VoucherQuery::whereNotExpiredAndActive(Voucher::query()))->get();
 
-        foreach ($this->getExpiringVouchers($interval3Weeks) as $voucher) {
-            VoucherExpireSoon::dispatch($voucher);
-        }
+        foreach ($vouchers as $voucher) {
+            $expireInWeeks = ceil(now()->diffInWeeks($voucher->expire_at));
+            $expireInDays = ceil(now()->diffInDays($voucher->expire_at));
 
-        foreach ($this->getExpiringVouchers($interval6Weeks) as $voucher) {
-            VoucherExpireSoon::dispatch($voucher);
-        }
+            $has6weeksLogs = $voucher->logs()->where(function(Builder $builder) use ($voucher) {
+                $builder->whereIn('event', [
+                    Voucher::EVENT_EXPIRING_SOON_BUDGET,
+                    Voucher::EVENT_EXPIRING_SOON_PRODUCT,
+                ]);
+                $builder->whereBetween('created_at', [
+                    $voucher->expire_at->clone()->subWeeks(6)->startOfDay(),
+                    $voucher->expire_at->clone()->subWeeks(3)->startOfDay(),
+                ]);
+            })->exists();
 
-        foreach ($this->getExpiredVouchers() as $voucher) {
-            VoucherExpired::dispatch($voucher);
+            if (!$has6weeksLogs && ($expireInWeeks <= 6 && $expireInWeeks > 3) ) {
+                VoucherExpireSoon::dispatch($voucher);
+            }
+
+            $has3weeksLogs = $voucher->logs()->where(function(Builder $builder) use ($voucher) {
+                $builder->whereIn('event', [
+                    Voucher::EVENT_EXPIRING_SOON_BUDGET,
+                    Voucher::EVENT_EXPIRING_SOON_PRODUCT,
+                ]);
+                $builder->whereBetween('created_at', [
+                    $voucher->expire_at->clone()->subWeeks(3)->startOfDay(),
+                    $voucher->expire_at->clone()->endOfDay(),
+                ]);
+            })->exists();
+
+            if (!$has3weeksLogs && ($expireInWeeks <= 3 && $expireInWeeks > 0) ) {
+                VoucherExpireSoon::dispatch($voucher);
+            }
+
+            $hasExpiredLog = $voucher->logs()->where(function(Builder $builder) use ($voucher) {
+                $builder->whereIn('event', [
+                    Voucher::EVENT_EXPIRED_BUDGET,
+                    Voucher::EVENT_EXPIRED_PRODUCT,
+                ]);
+            })->exists();
+
+            if (!$hasExpiredLog && ($expireInDays <= 0) ) {
+                VoucherExpired::dispatch($voucher);
+            }
         }
     }
 
     /**
-     * @param Carbon[] $between
-     * @return Collection
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public function getExpiringVouchers(array $between): Collection
+    protected function queryVouchers(Builder|Relation|Voucher $builder): Builder|Relation|Voucher
     {
-        $builder = $this->queryVouchers(
-            VoucherQuery::whereNotExpiredAndActive(Voucher::query()),
-            Voucher::EVENT_EXPIRING_SOON_BUDGET,
-            Voucher::EVENT_EXPIRING_SOON_PRODUCT,
-            $between,
-        )->whereBetween('expire_at', $between);
-
-        return $builder->with('fund', 'fund.organization')->get();
-    }
-
-    /**
-     * @return Collection
-     */
-    private function getExpiredVouchers(): Collection
-    {
-        $builder = $this->queryVouchers(
-            Voucher::query(),
-            Voucher::EVENT_EXPIRED_BUDGET,
-            Voucher::EVENT_EXPIRED_PRODUCT,
-        )->whereDate('expire_at', now()->subDay()->format('Y-m-d'));
-
-        return $builder->with('fund', 'fund.organization')->get();
-    }
-
-    /**
-     * @param Builder|Voucher $builder
-     * @param string $budgetEvent
-     * @param string $productEvent
-     * @param Carbon[] $logBetween
-     * @return Builder
-     */
-    protected function queryVouchers(
-        Builder|Voucher $builder,
-        string $budgetEvent,
-        string $productEvent,
-        array $logBetween = null,
-    ): Builder {
-        $builder->where(function(Builder $builder) use ($budgetEvent, $productEvent, $logBetween) {
+        $builder->where(function(Builder $builder) {
             // budget vouchers
-            $builder->where(function(Builder $builder) use ($budgetEvent, $logBetween) {
+            $builder->where(function(Builder $builder) {
                 $builder->whereNull('product_id');
-                $builder->whereDoesntHave('logs', function(Builder $builder) use ($budgetEvent, $logBetween) {
-                    $builder->where('event', $budgetEvent);
-                    $logBetween && $builder->whereBetween('created_at', $logBetween);
-                });
             });
 
             // product vouchers
-            $builder->orWhere(function(Builder $builder) use ($productEvent, $logBetween) {
+            $builder->orWhere(function(Builder $builder) {
                 $builder->whereNotNull('product_id');
                 $builder->whereDoesntHave('transactions');
-
-                $builder->whereDoesntHave('logs', function(Builder $builder) use ($productEvent, $logBetween) {
-                    $builder->where('event', $productEvent);
-                    $logBetween && $builder->whereBetween('created_at', $logBetween);
-                });
             });
         });
 
         return $builder
             ->whereNull('parent_id')
-            ->whereNull('product_reservation_id')
+            ->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER)
             ->whereNotNull('identity_address')
             ->whereHas('fund.fund_config.implementation');
     }

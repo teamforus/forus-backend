@@ -64,7 +64,7 @@ class VoucherExportData
         $export_data = array_merge($this->onlyData ? [] : [
             'name' => $this->name,
         ], [
-            'id' => $this->voucher->id,
+            'number' => $this->voucher->number,
             ...$bsnData,
             'identity_email' => $assigned ? ($identity?->email) : null,
             'activation_code' => $this->voucher->activation_code ?? null,
