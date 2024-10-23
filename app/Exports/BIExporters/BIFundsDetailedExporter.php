@@ -6,6 +6,7 @@ use App\Exports\FundsExport;
 use App\Models\Fund;
 use App\Scopes\Builders\FundQuery;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
+use Illuminate\Support\Carbon;
 
 class BIFundsDetailedExporter extends BaseBIExporter
 {
@@ -21,7 +22,11 @@ class BIFundsDetailedExporter extends BaseBIExporter
             ->where('type', Fund::TYPE_BUDGET)
             ->get();
 
-        $data = new FundsExport($activeFunds, true, false);
+        $data = new FundsExport(
+            $activeFunds,
+            Carbon::createFromFormat('Y', 2000),
+            now()->endOfYear(),
+        );
 
         return $data->collection()->toArray();
     }

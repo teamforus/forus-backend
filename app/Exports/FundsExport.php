@@ -4,6 +4,9 @@ namespace App\Exports;
 
 use App\Exports\Traits\FormatsExportedData;
 use App\Models\Fund;
+use App\Statistics\Funds\FinancialOverviewStatistic;
+use App\Statistics\Funds\FinancialOverviewStatisticQueries;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -56,23 +59,21 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
 
     protected Collection $data;
 
-    protected bool $detailed;
-
-    protected bool $withTotal;
-
     /**
      * FundsExport constructor.
      * @param EloquentCollection $funds
      * @param bool $detailed
      * @param bool $withTotal
+     * @param Carbon $from
+     * @param Carbon $to
      */
     public function __construct(
         EloquentCollection $funds,
-        bool $detailed = true,
-        bool $withTotal = true
+        protected Carbon $from,
+        protected Carbon $to,
+        protected bool $detailed = true,
+        protected bool $withTotal = true,
     ) {
-        $this->detailed = $detailed;
-        $this->withTotal = $withTotal;
         $this->data = $this->exportTransform($funds);
     }
 
@@ -129,10 +130,18 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
         if (!$this->detailed) {
             return $funds->map(fn(Fund $fund) => [
                 "name" => $fund->name,
-                "total_top_up" => currency_format($fund->budget_total),
-                "expenses" => currency_format($fund->budget_used),
-                "balance" => currency_format($fund->budget_left),
-                "transactions" => currency_format($fund->getTransactionCosts()),
+                "total_top_up" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetTotal(
+                    $fund, $this->from, $this->to,
+                )),
+                "expenses" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetUsed(
+                    $fund, $this->from, $this->to,
+                )),
+                "balance" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetLeft(
+                    $fund, $this->from, $this->to,
+                )),
+                "transactions" => currency_format(FinancialOverviewStatisticQueries::getFundTransactionCosts(
+                    $fund, $this->from, $this->to,
+                )),
             ]);
         }
 
@@ -156,8 +165,8 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
     protected function getVoucherData(Fund $fund): array
     {
         $detailsByType = [
-            'budget'  => Fund::getFundDetails($fund->budget_vouchers()->getQuery()),
-            'product' => Fund::getFundDetails($fund->product_vouchers()->getQuery()),
+            'budget'  => FinancialOverviewStatistic::getFundDetails($fund->budget_vouchers(), $this->from, $this->to),
+            'product' => FinancialOverviewStatistic::getFundDetails($fund->product_vouchers(), $this->from, $this->to),
         ];
 
         $voucherData = [
