@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Http\Resources\FundFormulaProductResource;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\MediaResource;
 use App\Rules\FundRequests\BaseFundRequestRule;
@@ -105,6 +104,8 @@ class PreCheck extends BaseModel
         $funds->load([
             'logo.presets',
             'criteria.record_type',
+            'fund_formula_products.product',
+            'fund_formula_products.record_type.translations',
             'fund_config.implementation.pre_checks_records.settings',
         ]);
 
@@ -130,6 +131,10 @@ class PreCheck extends BaseModel
                 $value = $records[$criterion->record_type_key] ?? null;
                 $rule = BaseFundRequestRule::validateRecordValue($criterion, $value);
 
+                $productCount = $fund->fund_formula_products
+                    ->where('record_type_key_multiplier', $criterion->record_type->key)
+                    ->count();
+
                 return [
                     'id' => $criterion->id,
                     'name' => $criterion->record_type->name,
@@ -138,9 +143,7 @@ class PreCheck extends BaseModel
                     'is_knock_out' => $setting?->is_knock_out ?? false,
                     'impact_level' => $setting?->impact_level ?? 100,
                     'knock_out_description' => $setting?->description ?? '',
-                    'product_count' => $fund->fund_formula_products()->where(
-                        'record_type_key_multiplier', $criterion->record_type->key
-                    )->count(),
+                    'product_count' => $productCount,
                 ];
             });
 
@@ -161,7 +164,7 @@ class PreCheck extends BaseModel
                 'amount_for_identity' => currency_format($amountIdentity),
                 'amount_for_identity_locale' => currency_format_locale($amountIdentity),
                 'fund_formula_products' => self::getFundFormulaProducts($fund, $records),
-                'product_count' => $fund->fund_formula_products()->count(),
+                'product_count' => $fund->fund_formula_products->count(),
                 'products_amount_total' => array_sum(array_pluck($fund->fund_formula_products, 'price')),
             ];
         })->toArray();

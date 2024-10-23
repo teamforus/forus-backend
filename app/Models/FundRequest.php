@@ -433,7 +433,7 @@ class FundRequest extends BaseModel
     /**
      * @return array
      */
-    public function getTrustedAndPendingRecordValues(): array
+    private function getTrustedAndPendingRecordValues(): array
     {
         $recordTypes = array_unique([
             ...$this->fund->fund_formula_products->pluck('record_type_key_multiplier')->filter(),
