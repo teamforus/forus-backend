@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'url_webshop' => "http://forus-frontend:3000/#!/",
-    'url_sponsor' => "http://forus-frontend:4000/#!/",
-    'url_provider' => "http://forus-frontend:5000/#!/",
-    'url_validator' => "http://forus-frontend:5500/#!/",
+    'url_webshop' => "http://forus-frontend-apache:3000/webshop.general/#/",
+    'url_sponsor' => "http://forus-frontend-apache:3000/dashboard.sponsor/#/",
+    'url_provider' => "http://forus-frontend-apache:3000/dashboard.provider/#/",
+    'url_validator' => "http://forus-frontend-apache:3000/dashboard.validator/#/",
 ];

@@ -19,7 +19,7 @@ class FundRequestRecordResource extends BaseJsonResource
     public function toArray(Request $request): array
     {
         return array_merge($this->resource->only([
-            'id', 'state', 'record_type_key', 'fund_request_id', 'value',
+            'id', 'record_type_key', 'fund_request_id', 'value',
             'fund_criterion_id',
         ]), [
             'record_type' => [

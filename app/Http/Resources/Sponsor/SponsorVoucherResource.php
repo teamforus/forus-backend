@@ -6,6 +6,7 @@ use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Models\Voucher;
+use Illuminate\Http\Request;
 
 /**
  * @property Voucher $resource
@@ -38,7 +39,7 @@ class SponsorVoucherResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $voucher = $this->resource;
         $address = $voucher->token_without_confirmation->address ?? null;
@@ -54,7 +55,7 @@ class SponsorVoucherResource extends BaseJsonResource
         }
 
         return array_merge($voucher->only([
-            'id', 'note', 'identity_address', 'state', 'state_locale',
+            'id', 'number', 'note', 'identity_address', 'state', 'state_locale',
             'is_granted', 'expired', 'activation_code', 'client_uid', 'has_transactions',
             'in_use', 'limit_multiplier', 'fund_id', 'is_external',
         ]), [

@@ -36,4 +36,18 @@ class StorePayoutTransactionBatchRequest extends StorePayoutTransactionRequest
             'payouts.*.description' => $this->descriptionRules(),
         ];
     }
+
+    /**
+     * @return string[]
+     */
+    public function attributes(): array
+    {
+        return [
+            'payouts.*.amount' => trans('validation.attributes.amount'),
+            'payouts.*.email' => trans('validation.attributes.email'),
+            'payouts.*.target_iban' => trans('validation.attributes.iban'),
+            'payouts.*.target_name' => trans('validation.attributes.iban_name'),
+            'payouts.*.description' => trans('validation.attributes.description'),
+        ];
+    }
 }

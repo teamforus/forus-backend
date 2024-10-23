@@ -77,7 +77,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'key' => 'uid',
         'name' => 'UID',
         'system' => true,
-        'criterion' => true,
+        'criteria' => true,
     ], [
         'key' => 'bsn_hash',
         'name' => 'BSN Hash',

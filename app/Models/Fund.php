@@ -495,8 +495,11 @@ class Fund extends BaseModel
             'auth_2fa_restrict_reimbursements', 'hide_meta', 'voucher_amount_visible',
             'allow_custom_amounts', 'allow_custom_amounts_validator',
             'allow_preset_amounts', 'allow_preset_amounts_validator',
-            'custom_amount_min', 'custom_amount_max',
-            'provider_products_required',
+            'custom_amount_min', 'custom_amount_max', 'provider_products_required',
+            'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
+            'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
+            'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
+            'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
@@ -988,17 +991,18 @@ class Fund extends BaseModel
     ): Record|Model|null {
         $fund = $this;
         $daysTrusted = $this->getTrustedDays($record_type);
+        $startDate = $this->fund_config?->record_validity_start_date;
 
         $builder = Record::search(Identity::findByAddress($identity_address)->records(), [
             'type' => $record_type,
-        ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund) {
-            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted);
+        ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund, $startDate) {
+            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
             RecordValidationQuery::whereTrustedByQuery($query, $fund);
         });
 
-        $validationSubQuery = RecordValidation::where(function(Builder $query) use ($daysTrusted, $fund) {
+        $validationSubQuery = RecordValidation::where(function(Builder $query) use ($daysTrusted, $fund, $startDate) {
             $query->whereColumn('records.id', '=', 'record_validations.record_id');
-            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted);
+            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
             RecordValidationQuery::whereTrustedByQuery($query, $fund);
         });
 
@@ -1162,7 +1166,8 @@ class Fund extends BaseModel
      * @param string $state
      * @return $this
      */
-    public function changeState(string $state): self {
+    public function changeState(string $state): self
+    {
         if (in_array($state, self::STATES)) {
             $this->update(compact('state'));
         }
@@ -1173,7 +1178,8 @@ class Fund extends BaseModel
     /**
      * Update fund state by the start and end dates
      */
-    public static function checkStateQueue(): void {
+    public static function checkStateQueue(): void
+    {
         $funds = static::where(function(Builder $builder) {
             FundQuery::whereIsConfiguredByForus($builder);
         })->whereDate('start_date', '<=', now())->get();
@@ -1201,8 +1207,9 @@ class Fund extends BaseModel
      * @param string $email
      * @return void
      */
-    public static function sendUserStatisticsReport(string $email): void {
-        $funds = self::whereHas('fund_config', static function (Builder $query) {
+    public static function sendUserStatisticsReport(string $email): void
+    {
+        $funds = Fund::whereHas('fund_config', static function (Builder $query) {
             return $query->where('is_configured', true);
         })->whereIn('state', [
             self::STATE_ACTIVE, self::STATE_PAUSED
@@ -1253,24 +1260,26 @@ class Fund extends BaseModel
     ): ?Voucher {
         $presetModel = $amount instanceof FundAmountPreset ? $amount : null;
 
-        $voucher = null;
+        if ($this->fund_formulas->count() === 0 && $amount === null) {
+            return null;
+        }
+
         $amount = $presetModel ? $presetModel->amount : $amount;
         $amount = $amount === null ? $this->amountForIdentity($identity_address) : $amount;
 
-        if ($this->fund_formulas->count() > 0) {
-            $voucher = Voucher::create([
-                'identity_address' => $identity_address,
-                'amount' => $amount,
-                'expire_at' => $expire_at ?: $this->end_date,
-                'fund_id' => $this->id,
-                'returnable' => false,
-                'limit_multiplier' => $limit_multiplier ?: $this->multiplierForIdentity($identity_address),
-                'fund_amount_preset_id' => $presetModel?->id,
-                ...$voucherFields,
-            ]);
+        $voucher = Voucher::create([
+            'number' => Voucher::makeUniqueNumber(),
+            'identity_address' => $identity_address,
+            'amount' => $amount,
+            'expire_at' => $expire_at ?: $this->end_date,
+            'fund_id' => $this->id,
+            'returnable' => false,
+            'limit_multiplier' => $limit_multiplier ?: $this->multiplierForIdentity($identity_address),
+            'fund_amount_preset_id' => $presetModel?->id,
+            ...$voucherFields,
+        ]);
 
-            VoucherCreated::dispatch($voucher);
-        }
+        VoucherCreated::dispatch($voucher);
 
         return $voucher;
     }
@@ -1309,13 +1318,13 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identityAddress
-     * @param array $extraFields
+     * @param array $voucherFields
      * @param Carbon|null $expireAt
      * @return Voucher[]
      */
     public function makeFundFormulaProductVouchers(
         string $identityAddress = null,
-        array $extraFields = [],
+        array $voucherFields = [],
         Carbon $expireAt = null
     ): array {
         $vouchers = [];
@@ -1329,7 +1338,7 @@ class Fund extends BaseModel
 
             $vouchers = array_merge($vouchers, array_map(fn () => $this->makeProductVoucher(
                 $identityAddress,
-                $extraFields,
+                $voucherFields,
                 $formulaProduct->product->id,
                 $voucherExpireAt,
                 $formulaProduct->price
@@ -1341,7 +1350,7 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identity_address
-     * @param array $extraFields
+     * @param array $voucherFields
      * @param int|null $product_id
      * @param Carbon|null $expire_at
      * @param float|null $price
@@ -1349,20 +1358,21 @@ class Fund extends BaseModel
      */
     public function makeProductVoucher(
         string $identity_address = null,
-        array $extraFields = [],
+        array $voucherFields = [],
         int $product_id = null,
         Carbon $expire_at = null,
         float $price = null,
     ): Voucher {
-        $amount = $price ?: Product::findOrFail($product_id)->price;
-        $expire_at = $expire_at ?: $this->end_date;
-        $fund_id = $this->id;
-        $returnable = false;
-
-        $voucher = Voucher::create(array_merge(compact(
-            'identity_address', 'amount', 'expire_at',
-            'product_id','fund_id', 'returnable'
-        ), $extraFields));
+        $voucher = Voucher::create([
+            'number' => Voucher::makeUniqueNumber(),
+            'amount' => $price ?: Product::findOrFail($product_id)->price,
+            'fund_id' => $this->id,
+            'expire_at' => $expire_at ?: $this->end_date,
+            'product_id' => $product_id,
+            'returnable' => false,
+            'identity_address' => $identity_address,
+            ...$voucherFields,
+        ]);
 
         VoucherCreated::dispatch($voucher, false);
 
@@ -1501,8 +1511,9 @@ class Fund extends BaseModel
         /** @var FundCriterion|null $db_criteria */
         $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
-            'description', 'title', 'optional', 'min', 'max',
-        ] : ['show_attachment', 'description', 'title']);
+            'description', 'title', 'optional', 'min', 'max', 'label',
+            'extra_description',
+        ] : ['show_attachment', 'description', 'title', 'extra_description']);
 
         if ($this->criteriaIsEditable()) {
             $data_criterion['value'] = Arr::get($data_criterion, 'value', '') ?: '';
@@ -1511,7 +1522,7 @@ class Fund extends BaseModel
 
         if ($fundCriterion) {
             $fundCriterion->update($textsOnly ? array_only($data_criterion, [
-                'title', 'description',
+                'title', 'description', 'extra_description',
             ]): $data_criterion);
         } elseif (!$textsOnly) {
             $this->criteria()->create($data_criterion);
