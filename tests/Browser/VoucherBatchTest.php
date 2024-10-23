@@ -65,6 +65,14 @@ class VoucherBatchTest extends DuskTestCase
     }
 
     /**
+     * @throws \Throwable
+     */
+    public function testUploadBatchCaseLowAmounts(): void
+    {
+        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCaseLowAmounts);
+    }
+
+    /**
      * @param $testCase
      * @return void
      * @throws \Throwable
@@ -190,7 +198,18 @@ class VoucherBatchTest extends DuskTestCase
         $browser->waitFor('@uploadFileButton');
         $browser->element('@uploadFileButton')->click();
 
-        $browser->waitFor('@successUploadIcon', 20);
+        if ($testCase['low_amounts']) {
+            for ($i = 0; $i < $funds->count(); $i++) {
+                $browser->waitFor('@modalDuplicatesPicker');
+
+                $browser->waitFor('@modalDuplicatesPickerConfirm');
+                $browser->element('@modalDuplicatesPickerConfirm')->click();
+            }
+
+            $browser->waitUntilMissing('@modalDuplicatesPicker');
+        }
+
+        $browser->waitFor('@successUploadIcon', 25);
 
         $browser->element('@closeModalButton')->click();
         $browser->waitUntilMissing('@modalVoucherUpload');
@@ -209,6 +228,7 @@ class VoucherBatchTest extends DuskTestCase
         $type = $testCase['assign_by'];
         $count = $testCase['vouchers_count'];
         $sameCode = $testCase['same_code_for_fund'];
+        $lowAmounts = $testCase['low_amounts'];
 
         $filename = Storage::path($this->csvPath);
         $handle = fopen($filename, 'w');
@@ -224,6 +244,8 @@ class VoucherBatchTest extends DuskTestCase
         /** @var Fund $fund */
         foreach ($funds as $fund) {
             for ($i = 1; $i <= $count; $i++) {
+                $amount = $lowAmounts ? rand(1, 5) : rand(6, min($fund->getMaxAmountPerVoucher(), 50));
+
                 fputcsv($handle, array_merge([
                     'fund_id' => $fund->id,
                     'bsn' => $type === 'bsn' ? (string) $this->randomFakeBsn() : null,
@@ -231,7 +253,7 @@ class VoucherBatchTest extends DuskTestCase
                     'client_uid' => $type === 'client_uid' ? ($sameCode ? $baseClientUid : Str::random()) : null,
                     'activate' => true,
                     'activation_code' => true,
-                    'amount' => rand(1, min($fund->getMaxAmountPerVoucher(), 50)),
+                    'amount' => $amount,
                     'limit_multiplier' => rand(1, 3),
                     'expire_at' => now()->addDays(30)->format('Y-m-d'),
                     'note' => $this->faker()->sentence(),
