@@ -122,6 +122,10 @@ class VoucherBatchTest extends DuskTestCase
 
             foreach ($vouchers->groupBy('fund_id') as $fundId => $list) {
                 $this->switchToFund($browser, $fundId);
+
+                $browser->waitFor('@searchVoucher');
+                $browser->waitFor("@vouchersCard$fundId");
+
                 $list->each(fn(Voucher $item) => $this->searchVoucher($browser, $item, $type));
                 $list->each(fn(Voucher $item) => $item->delete());
             }
@@ -151,24 +155,6 @@ class VoucherBatchTest extends DuskTestCase
 
         $browser->waitFor("@voucherItem$voucher->id");
         $browser->assertSeeIn("@voucherItem$voucher->id", $search);
-    }
-
-    /**
-     * @param Browser $browser
-     * @param int $fundId
-     * @return void
-     * @throws TimeOutException
-     */
-    private function switchToFund(Browser $browser, int $fundId): void
-    {
-        $browser->waitFor("@selectControlFunds");
-        $browser->element("@selectControlFunds")->click();
-
-        $browser->waitFor("@selectControlFundItem$fundId");
-        $browser->element("@selectControlFundItem$fundId")->click();
-
-        $browser->waitFor('@searchVoucher');
-        $browser->waitFor("@vouchersCard$fundId");
     }
 
     /**
