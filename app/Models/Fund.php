@@ -28,7 +28,6 @@ use App\Services\Forus\Notification\EmailFrom;
 use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
-use App\Statistics\Funds\FinancialOverviewStatisticQueries;
 use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -41,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -1623,52 +1623,6 @@ class Fund extends BaseModel
     public function criteriaIsEditable(): bool {
         return ($this->state === self::STATE_WAITING) || (
             ($this->state === self::STATE_ACTIVE) && $this->criteria_editable_after_start);
-    }
-
-    /**
-     * @param Builder $vouchersQuery
-     * @param Carbon $from
-     * @param Carbon $to
-     * @return array
-     */
-    public static function getFundDetails(Builder $vouchersQuery, Carbon $from, Carbon $to) : array
-    {
-        $vouchersQuery = FinancialOverviewStatisticQueries::whereNotExpired($vouchersQuery, $from, $to);
-        $activeVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndActive((clone $vouchersQuery), $from, $to);
-        $inactiveVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndPending((clone $vouchersQuery), $from, $to);
-        $deactivatedVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndDeactivated((clone $vouchersQuery), $from, $to);
-
-        $vouchers_count = $vouchersQuery->count();
-        $inactive_count = $inactiveVouchersQuery->count();
-        $active_count = $activeVouchersQuery->count();
-        $deactivated_count = $deactivatedVouchersQuery->count();
-        $inactive_percentage = $inactive_count ? $inactive_count / $vouchers_count * 100 : 0;
-
-        return [
-            'reserved'              => $activeVouchersQuery->sum('amount'),
-            'vouchers_amount'       => $vouchersQuery->sum('amount'),
-            'vouchers_count'        => $vouchers_count,
-            'active_amount'         => $activeVouchersQuery->sum('amount'),
-            'active_count'          => $active_count,
-            'inactive_amount'       => $inactiveVouchersQuery->sum('amount'),
-            'inactive_count'        => $inactive_count,
-            'inactive_percentage'   => currency_format($inactive_percentage),
-            'deactivated_amount'    => $deactivatedVouchersQuery->sum('amount'),
-            'deactivated_count'     => $deactivated_count,
-            'children_count'        => self::getVoucherChildrenCount($vouchersQuery),
-        ];
-    }
-
-    /**
-     * @param Builder $vouchersQuery
-     * @return mixed
-     */
-    protected static function getVoucherChildrenCount(Builder $vouchersQuery): mixed
-    {
-        return VoucherRecord::query()
-            ->whereRelation('record_type', 'key', 'children_nth')
-            ->whereIn('voucher_id', $vouchersQuery->select('id'))
-            ->sum('value');
     }
 
     /**

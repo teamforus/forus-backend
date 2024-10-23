@@ -360,14 +360,15 @@ class FundsController extends Controller
      */
     public function financesOverview(
         FinanceOverviewRequest $request,
-        Organization $organization
+        Organization $organization,
     ): JsonResponse {
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);
 
-        return $request->isAuthenticated() ? new JsonResponse(
-            (new FinancialOverviewStatistic())->getStatistics($organization, $request->input('year'))
-        ) : new JsonResponse([], 403);
+        $year = $request->input('year');
+        $statistics = new FinancialOverviewStatistic();
+
+        return new JsonResponse($statistics->getStatistics($organization, $year));
     }
 
     /**
@@ -400,7 +401,8 @@ class FundsController extends Controller
             'type' => Fund::TYPE_BUDGET,
         ])->where('state', '=', Fund::STATE_ACTIVE);
 
-        $exportData = new FundsExport(($detailed ? $activeFundsQuery : $fundsQuery)->get(), $from, $to, $detailed);
+        $exportDataQuery = $detailed ? $activeFundsQuery : $fundsQuery;
+        $exportData = new FundsExport($exportDataQuery->get(), $from, $to, $detailed);
 
         return resolve('excel')->download($exportData, $fileName);
     }

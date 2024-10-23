@@ -11,10 +11,6 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-/**
- * Class FinancialStatistic
- * @package App\Statistics
- */
 class FinancialOverviewStatisticQueries
 {
     /**
@@ -102,8 +98,11 @@ class FinancialOverviewStatisticQueries
      * @param Carbon $to
      * @return Builder
      */
-    public static function whereNotExpiredAndDeactivated(Builder $builder, Carbon $from, Carbon $to): Builder
-    {
+    public static function whereNotExpiredAndDeactivated(
+        Builder $builder,
+        Carbon $from,
+        Carbon $to,
+    ): Builder {
         return self::whereNotExpired(self::whereDeactivated($builder), $from, $to);
     }
 
@@ -116,11 +115,10 @@ class FinancialOverviewStatisticQueries
     public static function getFundBudgetTotal(Fund $fund, Carbon $from, Carbon $to): float
     {
         if ($fund->balance_provider === Fund::BALANCE_PROVIDER_TOP_UPS) {
-            return round($fund->top_up_transactions()->where(
-                'fund_top_up_transactions.created_at', '>=', $from
-            )->where(
-                'fund_top_up_transactions.created_at', '<=', $to
-            )->sum('amount'), 2);
+            return round($fund->top_up_transactions()
+                ->where('fund_top_up_transactions.created_at', '>=', $from)
+                ->where('fund_top_up_transactions.created_at', '<=', $to)
+                ->sum('amount'), 2);
         }
 
         if ($fund->balance_provider === Fund::BALANCE_PROVIDER_BANK_CONNECTION) {
@@ -138,11 +136,10 @@ class FinancialOverviewStatisticQueries
      */
     public static function getFundBudgetUsed(Fund $fund, Carbon $from, Carbon $to): float
     {
-        return round($fund->voucher_transactions()->where(
-            'voucher_transactions.created_at', '>=', $from
-        )->where(
-            'voucher_transactions.created_at', '<=', $to
-        )->sum('voucher_transactions.amount'), 2);
+        return round($fund->voucher_transactions()
+            ->where('voucher_transactions.created_at', '>=', $from)
+            ->where('voucher_transactions.created_at', '<=', $to)
+            ->sum('voucher_transactions.amount'), 2);
     }
 
     /**

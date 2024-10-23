@@ -3,17 +3,19 @@
 
 namespace App\Statistics\Funds;
 
+use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Organization;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\Voucher;
+use App\Models\VoucherRecord;
 use Carbon\Carbon;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
-/**
- * Class FinancialStatistic
- * @package App\Statistics
- */
 class FinancialOverviewStatistic
 {
     /**
@@ -115,5 +117,167 @@ class FinancialOverviewStatistic
             'budget_locale', 'budget_left_locale', 'budget_used_locale',
             'budget_used_active_vouchers_locale', 'transaction_costs_locale',
         );
+    }
+
+    /**
+     * @param Fund $fund
+     * @param string|null $stats
+     * @param int|null $year
+     * @return array
+     */
+    public static function getFinancialData(Fund $fund, ?string $stats = null, ?int $year = null): array
+    {
+        $from = Carbon::createFromFormat('Y', $year ?: now()->year)->startOfYear();
+        $to = Carbon::createFromFormat('Y', $year ?: now()->year)->endOfYear();
+
+        if ($stats == 'min') {
+            return [
+                'budget' => [
+                    'used' => currency_format(
+                        FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $from, $to),
+                    ),
+                    'total' => currency_format(
+                        FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $from, $to),
+                    ),
+                ]
+            ];
+        }
+
+        $approvedCount = $fund->provider_organizations_approved;
+        $providersEmployeeCount = $approvedCount->map(function (Organization $organization) {
+            return $organization->employees->count();
+        })->sum();
+
+        $validatorsCount = $fund->organization->employees->filter(function (Employee $employee) {
+            return $employee->roles->filter(function (Role $role) {
+                return $role->permissions->where('key', Permission::VALIDATE_RECORDS)->isNotEmpty();
+            });
+        })->count();
+
+        $loadBudgetStats = $stats == 'all' || $stats == 'budget';
+        $loadProductVouchersStats = $stats == 'all' || $stats == 'product_vouchers';
+
+        return [
+            'sponsor_count' => $fund->organization->employees->count(),
+            'provider_organizations_count' => $fund->provider_organizations_approved->count(),
+            'provider_employees_count' => $providersEmployeeCount,
+            'validators_count' => $validatorsCount,
+            'budget' => $loadBudgetStats ?
+                self::getVoucherData($fund, 'budget', $from, $to) : null,
+            'product_vouchers' => $loadProductVouchersStats ?
+                self::getVoucherData($fund, 'product', $from, $to) : null,
+        ];
+    }
+
+    /**
+     * @param Fund $fund
+     * @param string $type
+     * @param Carbon $from
+     * @param Carbon $to
+     * @return array
+     */
+    protected static function getVoucherData(Fund $fund, string $type, Carbon $from, Carbon $to): array
+    {
+        $details = match($type) {
+            'budget' => self::getFundDetails($fund->budget_vouchers()->getQuery(), $from, $to),
+            'product' => self::getFundDetails($fund->product_vouchers()->getQuery(), $from, $to),
+        };
+
+        $budgetData = $type == 'budget' ? self::getVoucherDataBudget($fund, $from, $to) : [];
+
+        return [
+            ...$budgetData,
+            'children_count' => $details['children_count'],
+            'vouchers_count' => $details['vouchers_count'],
+            'vouchers_amount' => currency_format($details['vouchers_amount']),
+            'vouchers_amount_locale' => currency_format_locale($details['vouchers_amount']),
+            'active_vouchers_amount' => currency_format($details['active_amount']),
+            'active_vouchers_amount_locale' => currency_format_locale($details['active_amount']),
+            'active_vouchers_count' => $details['active_count'],
+            'inactive_vouchers_amount' => currency_format($details['inactive_amount']),
+            'inactive_vouchers_amount_locale' => currency_format_locale($details['inactive_amount']),
+            'inactive_vouchers_count' => $details['inactive_count'],
+            'deactivated_vouchers_amount' => currency_format($details['deactivated_amount']),
+            'deactivated_vouchers_amount_locale' => currency_format_locale($details['deactivated_amount']),
+            'deactivated_vouchers_count' => $details['deactivated_count'],
+        ];
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Carbon $from
+     * @param Carbon $to
+     * @return array
+     */
+    protected static function getVoucherDataBudget(Fund $fund, Carbon $from, Carbon $to): array
+    {
+        $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $from, $to);
+        $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $from, $to);
+        $usedActiveVouchers = FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $from, $to);
+        $left = FinancialOverviewStatisticQueries::getFundBudgetLeft($fund, $from, $to);
+        $transactionCosts = FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $from, $to);
+
+        return [
+            'total' => currency_format($total),
+            'total_locale' => currency_format_locale($total),
+            'validated' => currency_format($fund->budget_validated),
+            'used' => currency_format($used),
+            'used_locale' => currency_format_locale($used),
+            'used_active_vouchers' => currency_format($usedActiveVouchers),
+            'used_active_vouchers_locale' => currency_format_locale($usedActiveVouchers),
+            'left' => currency_format($left),
+            'left_locale' => currency_format_locale($left),
+            'transaction_costs' => currency_format($transactionCosts),
+            'transaction_costs_locale' => currency_format_locale($transactionCosts),
+        ];
+    }
+
+    /**
+     * @param Builder|Relation $vouchersQuery
+     * @param Carbon $from
+     * @param Carbon $to
+     * @return array
+     */
+    public static function getFundDetails(
+        Builder|Relation $vouchersQuery,
+        Carbon $from,
+        Carbon $to,
+    ) : array {
+        $vouchersQuery = FinancialOverviewStatisticQueries::whereNotExpired($vouchersQuery, $from, $to);
+        $activeVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndActive((clone $vouchersQuery), $from, $to);
+        $inactiveVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndPending((clone $vouchersQuery), $from, $to);
+        $deactivatedVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndDeactivated((clone $vouchersQuery), $from, $to);
+
+        $vouchers_count = $vouchersQuery->count();
+        $inactive_count = $inactiveVouchersQuery->count();
+        $active_count = $activeVouchersQuery->count();
+        $deactivated_count = $deactivatedVouchersQuery->count();
+        $inactive_percentage = $inactive_count ? $inactive_count / $vouchers_count * 100 : 0;
+
+        return [
+            'reserved'              => $activeVouchersQuery->sum('amount'),
+            'vouchers_amount'       => $vouchersQuery->sum('amount'),
+            'vouchers_count'        => $vouchers_count,
+            'active_amount'         => $activeVouchersQuery->sum('amount'),
+            'active_count'          => $active_count,
+            'inactive_amount'       => $inactiveVouchersQuery->sum('amount'),
+            'inactive_count'        => $inactive_count,
+            'inactive_percentage'   => currency_format($inactive_percentage),
+            'deactivated_amount'    => $deactivatedVouchersQuery->sum('amount'),
+            'deactivated_count'     => $deactivated_count,
+            'children_count'        => self::getVoucherChildrenCount($vouchersQuery),
+        ];
+    }
+
+    /**
+     * @param Builder $vouchersQuery
+     * @return mixed
+     */
+    protected static function getVoucherChildrenCount(Builder $vouchersQuery): mixed
+    {
+        return VoucherRecord::query()
+            ->whereRelation('record_type', 'key', 'children_nth')
+            ->whereIn('voucher_id', $vouchersQuery->select('id'))
+            ->sum('value');
     }
 }
