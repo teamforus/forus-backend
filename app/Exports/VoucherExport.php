@@ -12,7 +12,7 @@ class VoucherExport extends BaseFieldedExport
      * @var array|\string[][]
      */
     protected static array $exportFields = [
-        'id' => 'ID',
+        'number' => 'Nummer',
         'granted' => 'Toegekend',
         'identity_email' => 'E-mailadres',
         'in_use' => 'In gebruik',

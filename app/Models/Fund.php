@@ -1166,7 +1166,8 @@ class Fund extends BaseModel
      * @param string $state
      * @return $this
      */
-    public function changeState(string $state): self {
+    public function changeState(string $state): self
+    {
         if (in_array($state, self::STATES)) {
             $this->update(compact('state'));
         }
@@ -1177,7 +1178,8 @@ class Fund extends BaseModel
     /**
      * Update fund state by the start and end dates
      */
-    public static function checkStateQueue(): void {
+    public static function checkStateQueue(): void
+    {
         $funds = static::where(function(Builder $builder) {
             FundQuery::whereIsConfiguredByForus($builder);
         })->whereDate('start_date', '<=', now())->get();
@@ -1205,8 +1207,9 @@ class Fund extends BaseModel
      * @param string $email
      * @return void
      */
-    public static function sendUserStatisticsReport(string $email): void {
-        $funds = self::whereHas('fund_config', static function (Builder $query) {
+    public static function sendUserStatisticsReport(string $email): void
+    {
+        $funds = Fund::whereHas('fund_config', static function (Builder $query) {
             return $query->where('is_configured', true);
         })->whereIn('state', [
             self::STATE_ACTIVE, self::STATE_PAUSED
@@ -1265,6 +1268,7 @@ class Fund extends BaseModel
         $amount = $amount === null ? $this->amountForIdentity($identity_address) : $amount;
 
         $voucher = Voucher::create([
+            'number' => Voucher::makeUniqueNumber(),
             'identity_address' => $identity_address,
             'amount' => $amount,
             'expire_at' => $expire_at ?: $this->end_date,
@@ -1359,15 +1363,16 @@ class Fund extends BaseModel
         Carbon $expire_at = null,
         float $price = null,
     ): Voucher {
-        $amount = $price ?: Product::findOrFail($product_id)->price;
-        $expire_at = $expire_at ?: $this->end_date;
-        $fund_id = $this->id;
-        $returnable = false;
-
-        $voucher = Voucher::create(array_merge(compact(
-            'identity_address', 'amount', 'expire_at',
-            'product_id','fund_id', 'returnable'
-        ), $voucherFields));
+        $voucher = Voucher::create([
+            'number' => Voucher::makeUniqueNumber(),
+            'amount' => $price ?: Product::findOrFail($product_id)->price,
+            'fund_id' => $this->id,
+            'expire_at' => $expire_at ?: $this->end_date,
+            'product_id' => $product_id,
+            'returnable' => false,
+            'identity_address' => $identity_address,
+            ...$voucherFields,
+        ]);
 
         VoucherCreated::dispatch($voucher, false);
 

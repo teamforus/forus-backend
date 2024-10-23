@@ -185,11 +185,33 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->post('funds/{fund}/apply', "Api\Platform\FundsController@apply")->name('fund.apply');
     $router->post('funds/{fund}/check', "Api\Platform\FundsController@check")->name('fund.check');
 
-    $router->resource('vouchers', "Api\Platform\VouchersController")
-        ->parameter('vouchers', 'voucher_token_address')
+    $router
+        ->resource('vouchers/{voucher_number}/physical-cards', 'Api\Platform\Vouchers\PhysicalCardsController')
+        ->parameter('physical-cards', 'physical_card')
+        ->only('store', 'destroy');
+
+    $router
+        ->resource('vouchers/{voucher_number}/physical-card-requests', 'Api\Platform\Vouchers\PhysicalCardRequestsController')
+        ->parameter('physical-cards', 'physical_card')
+        ->only('index', 'store', 'show');
+
+
+    $router->post(
+        'vouchers/{voucher_number}/physical-card-requests/validate',
+        'Api\Platform\Vouchers\PhysicalCardRequestsController@storeValidate',
+    );
+
+    $router
+        ->resource('vouchers', "Api\Platform\VouchersController")
+        ->parameter('vouchers', 'voucher_number')
         ->only('index', 'show', 'destroy');
 
-    $router->resource('reimbursements', "Api\Platform\ReimbursementsController")
+    $router->post('vouchers/{voucher_number}/send-email', "Api\Platform\VouchersController@sendEmail");
+    $router->post('vouchers/{voucher_number}/share', "Api\Platform\VouchersController@shareVoucher");
+    $router->post('vouchers/{voucher_number}/deactivate', "Api\Platform\VouchersController@deactivate");
+
+    $router
+        ->resource('reimbursements', "Api\Platform\ReimbursementsController")
         ->only('index', 'store', 'show', 'update', 'destroy');
 
     $router->post(
@@ -234,37 +256,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->post('funds/redeem', "Api\Platform\FundsController@redeem");
 
     $router->resource(
-        'vouchers/{voucher_token_address}/physical-cards',
-        "Api\Platform\Vouchers\PhysicalCardsController", [
-        'only' => [
-            'store', 'destroy'
-        ],
-        'params' => [
-            'physical-cards' => 'physical_card',
-        ]
-    ]);
-
-    $router->resource(
         'sponsor/{organization_id}/vouchers/{voucher}/physical-cards',
         "Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCardsController", [
         'only' => [
             'store', 'destroy',
-        ],
-        'params' => [
-            'physical-cards' => 'physical_card',
-        ]
-    ]);
-
-    $router->post(
-        'vouchers/{voucher_token_address}/physical-card-requests/validate',
-        "Api\Platform\Vouchers\PhysicalCardRequestsController@storeValidate"
-    );
-
-    $router->resource(
-        'vouchers/{voucher_token_address}/physical-card-requests',
-        "Api\Platform\Vouchers\PhysicalCardRequestsController", [
-        'only' => [
-            'index', 'store', 'show'
         ],
         'params' => [
             'physical-cards' => 'physical_card',
@@ -282,10 +277,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->parameters([
         'physical-cards' => 'physical_card',
     ])->only('index', 'store');
-
-    $router->post('vouchers/{voucher_token_address}/send-email', "Api\Platform\VouchersController@sendEmail");
-    $router->post('vouchers/{voucher_token_address}/share', "Api\Platform\VouchersController@shareVoucher");
-    $router->post('vouchers/{voucher_token_address}/deactivate', "Api\Platform\VouchersController@deactivate");
 
     // todo: deprecated, moved store endpoint to separate route provider/vouchers.transactions
     if (!env('DISABLE_FALLBACK_TRANSACTIONS', false)) {
