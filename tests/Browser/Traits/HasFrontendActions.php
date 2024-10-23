@@ -116,4 +116,19 @@ trait HasFrontendActions
         $browser->waitFor("@headerOrganizationItem$organization->id");
         $browser->press("@headerOrganizationItem$organization->id");
     }
+
+    /**
+     * @param Browser $browser
+     * @param int $fundId
+     * @return void
+     * @throws TimeOutException
+     */
+    private function switchToFund(Browser $browser, int $fundId): void
+    {
+        $browser->waitFor("@selectControlFunds");
+        $browser->element("@selectControlFunds")->click();
+
+        $browser->waitFor("@selectControlFundItem$fundId");
+        $browser->element("@selectControlFundItem$fundId")->click();
+    }
 }

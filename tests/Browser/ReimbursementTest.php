@@ -418,14 +418,9 @@ class ReimbursementTest extends DuskTestCase
      */
     private function searchDashboardReimbursement(
         Browser $browser,
-        Reimbursement $reimbursement
+        Reimbursement $reimbursement,
     ): void {
-        $fundSelector = "@fundSelectorOption" . $reimbursement->voucher->fund_id;
-
-        $browser->waitFor($fundSelector, 10);
-        $browser->element($fundSelector)->click();
-
-        $browser->refresh();
+        $this->switchToFund($browser, $reimbursement->voucher->fund_id);
         $this->selectReimbursementTabByState($browser, $reimbursement);
 
         if ($reimbursement->voucher?->identity?->email) {
