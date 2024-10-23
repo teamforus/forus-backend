@@ -29,6 +29,11 @@ class VoucherTransactionResource extends BaseJsonResource
                 $transaction->amount,
                 $transaction->voucher->fund->getImplementation(),
             ),
+            'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
+            'amount_extra_cash_locale' => currency_format_locale(
+                $transaction->amount_extra_cash,
+                $transaction->voucher->fund->getImplementation(),
+            ),
             'timestamp' => $transaction->created_at->timestamp,
             'organization' => $transaction->provider ? array_merge($transaction->provider->only([
                 'id', 'name'
