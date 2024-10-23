@@ -108,6 +108,10 @@ $router->group([], static function() use ($router) {
     ]);
 
     $router->post(
+        'organizations/{organization}/funds/{fund}/update-pre-check-settings',
+        "Api\Platform\Organizations\FundsController@updatePreCheckSettings");
+
+    $router->post(
         'organizations/{organization}/funds/{fund}/archive',
         "Api\Platform\Organizations\FundsController@archive");
 
