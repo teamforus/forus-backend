@@ -62,12 +62,8 @@ class ProductReservationsController extends Controller
 
         try {
             $product = Product::find($request->input('product_id'));
+            $voucher = Voucher::find($request->input('voucher_id'));
             $postCode = $request->input('postal_code') ?: '';
-
-            $voucher = Voucher::findByAddress(
-                $request->input('voucher_address'),
-                $request->auth_address(),
-            );
 
             $extraPaymentRequired =
                 $voucher->fund->isTypeBudget() &&

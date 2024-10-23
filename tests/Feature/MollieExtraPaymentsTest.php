@@ -357,7 +357,7 @@ class MollieExtraPaymentsTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ], $headers);
 
@@ -408,7 +408,7 @@ class MollieExtraPaymentsTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ], $headers);
 
@@ -447,7 +447,7 @@ class MollieExtraPaymentsTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ], $headers);
 
@@ -521,7 +521,7 @@ class MollieExtraPaymentsTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ], $headers);
 
@@ -740,7 +740,7 @@ class MollieExtraPaymentsTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ], $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity)));
     }
