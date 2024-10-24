@@ -188,8 +188,7 @@ if (!function_exists('json_pretty')) {
     {
         try {
             return json_encode($value, JSON_THROW_ON_ERROR | $options + JSON_PRETTY_PRINT, $depth);
-        } catch (Throwable) {
-        }
+        } catch (Throwable) {}
 
         return $value;
     }
