@@ -199,7 +199,7 @@ class IdentityEmailTest extends DuskTestCase
      */
     private function setEmailAsPrimary(Browser $browser, IdentityEmail $identityEmail): void
     {
-        $browser->waitFor('#email_' . $identityEmail->id, 10);
+        $browser->waitFor('#email_' . $identityEmail->id);
         $browser->within('#email_' . $identityEmail->id, function(Browser $browser) use ($identityEmail) {
             $browser->assertSeeIn('@identityEmailListItemEmail', $identityEmail->email);
             $browser->assertNotPresent('@identityEmailListItemNotVerified');
@@ -248,7 +248,7 @@ class IdentityEmailTest extends DuskTestCase
         $startTime = now();
         $email = $this->makeUniqueEmail();
 
-        $browser->waitFor('@btnIdentityNewEmail', 10);
+        $browser->waitFor('@btnIdentityNewEmail');
         $browser->element('@btnIdentityNewEmail')->click();
 
         $browser->waitFor('@identityNewEmailForm');

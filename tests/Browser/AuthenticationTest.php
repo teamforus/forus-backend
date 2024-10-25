@@ -39,7 +39,7 @@ class AuthenticationTest extends DuskTestCase
 
             // Visit the implementation webshop and wait for the page to load
             $browser->visit($implementation->urlWebshop());
-            $browser->waitFor('@header', 10);
+            $browser->waitFor('@header');
             $browser->assertSeeIn('@headerTitle', $implementation->name);
 
             // Click on the navbar start button to go to the auth page
@@ -96,7 +96,7 @@ class AuthenticationTest extends DuskTestCase
 
             // Visit the implementation webshop and wait for the page to load
             $browser->visit($implementation->urlWebshop());
-            $browser->waitFor('@header', 15);
+            $browser->waitFor('@header');
             $browser->assertSeeIn('@headerTitle', $implementation->name);
 
             // Click on the navbar start button to go to the auth page
