@@ -190,7 +190,7 @@ class VoucherBatchTest extends DuskTestCase
         $browser->waitFor('@uploadFileButton');
         $browser->element('@uploadFileButton')->click();
 
-        $browser->waitFor('@successUploadIcon', 20);
+        $browser->waitFor('@successUploadIcon');
 
         $browser->element('@closeModalButton')->click();
         $browser->waitUntilMissing('@modalVoucherUpload');

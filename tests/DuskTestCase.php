@@ -6,6 +6,8 @@ use App\Traits\DoesTesting;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Illuminate\Support\Facades\Config;
+use Laravel\Dusk\Browser;
 use Laravel\Dusk\Dusk;
 use Laravel\Dusk\TestCase as BaseTestCase;
 
@@ -16,7 +18,9 @@ abstract class DuskTestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Dusk::selectorHtmlAttribute('data-dusk');
+
+        Dusk::selectorHtmlAttribute(Config::get('forus.tests.dusk_selector'));
+        Browser::$waitSeconds = Config::get('forus.tests.dusk_wait_for_time');
     }
 
     /**
