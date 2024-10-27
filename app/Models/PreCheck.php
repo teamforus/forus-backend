@@ -95,6 +95,17 @@ class PreCheck extends BaseModel
     }
 
     /**
+     * @param BaseFormRequest $request
+     * @return Collection
+     */
+    public static function getIncludedFunds(BaseFormRequest $request): Collection
+    {
+        return self::getAvailableFunds($request)->filter(function (Fund $fund) {
+            return !$fund->fund_config->pre_check_note && !$fund->fund_config->pre_check_excluded;
+        });
+    }
+
+    /**
      * @param Collection $funds
      * @param array $records
      * @return array
@@ -108,6 +119,22 @@ class PreCheck extends BaseModel
         ]);
 
         return $funds->map(function (Fund $fund) use ($records) {
+            if ($fund->fund_config->pre_check_excluded || $fund->fund_config->pre_check_note) {
+                return [
+                    ...$fund->only([
+                        'id', 'name', 'description', 'description_short',
+                        'external_link_text', 'external_link_url', 'is_external',
+                    ]),
+                    'logo' => new MediaResource($fund->logo),
+                    'parent' => $fund->parent ? new FundResource($fund->parent) : null,
+                    'children' => $fund->children ? FundResource::collection($fund->children) : [],
+                    'pre_check_excluded' => $fund->fund_config->pre_check_excluded,
+                    'pre_check_note' => $fund->fund_config->pre_check_note,
+                    'is_valid' => false,
+                    'criteria' => [],
+                ];
+            }
+
             $criteria = $fund->criteria
                 ->where('optional', false)
                 ->where('record_type.pre_check', true)
@@ -167,16 +194,27 @@ class PreCheck extends BaseModel
      */
     public static function syncPreCheckRecords(Organization $organization, Fund $fund): void
     {
-        if (!$fund->fund_config->pre_check_excluded) {
+        if (!$fund->fund_config->pre_check_excluded && !$fund->fund_config->pre_check_note) {
             return;
         }
 
-        $organization->implementations()->each(function (Implementation $implementation) use ($fund) {
+        // Remaining included pre-check funds
+        $includedFunds = PreCheck::getIncludedFunds(new BaseFormRequest([
+            'organization_id' => $organization->id
+        ]))->where(
+            'id', '!=', $fund->id
+        );
+
+        $organization->implementations()->each(function (Implementation $implementation) use ($fund, $includedFunds) {
             forEach($implementation->pre_checks as $preCheck) {
-                $preCheck->pre_check_records()->whereIn(
-                    'record_type_key',
-                    $fund->criteria->pluck('record_type_key')->toArray()
-                )->delete();
+                $recordIds = $preCheck->pre_check_records()->whereNotIn(
+                    'record_type_key', $implementation->getPreCheckFundCriteria($includedFunds)
+                )->whereIn(
+                    'record_type_key', $fund->criteria->pluck('record_type_key')->toArray()
+                )->pluck('id')->toArray();
+
+                PreCheckRecordSetting::whereIn('pre_check_record_id', $recordIds)->delete();
+                PreCheckRecord::whereIn('id', $recordIds)->delete();
             }
         });
     }

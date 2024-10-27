@@ -7,9 +7,7 @@ use App\Models\FundCriterion;
 use App\Models\Implementation;
 use App\Models\PreCheck;
 use App\Models\PreCheckRecord;
-use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 
 /**
@@ -77,16 +75,7 @@ class ImplementationPreChecksResource extends BaseJsonResource
     {
         $preChecksRecords = $implementation->pre_checks_records;
 
-        $fundCriteria = FundCriterion::query()
-            ->where('optional', false)
-            ->whereRelation('fund.fund_config', 'implementation_id', $implementation->id)
-            ->whereRelation('fund.fund_config', 'pre_check_excluded', false)
-            ->whereRelation('fund', 'archived', false)
-            ->whereHas('fund', fn (Builder $q) => FundQuery::whereActiveFilter($q))
-            ->whereRelation('record_type', 'pre_check', true)
-            ->with('fund.fund_config.implementation')
-            ->get()
-            ->groupBy('record_type_key');
+        $fundCriteria = $implementation->getPreCheckFundCriteria();
 
         // todo: handle record types with multiple values
         return $fundCriteria->map(function (Collection $fundCriteria) use ($preChecksRecords) {

@@ -62,7 +62,6 @@ use Illuminate\Support\Facades\Log;
  * @property string $external_link_text
  * @property bool $external_page
  * @property string|null $external_page_url
- * @property string $pre_check_note
  * @property string|null $type
  * @property string $state
  * @property string $balance
@@ -188,7 +187,6 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder|Fund whereNotifiedAt($value)
  * @method static Builder|Fund whereOrganizationId($value)
  * @method static Builder|Fund whereParentId($value)
- * @method static Builder|Fund wherePreCheckNote($value)
  * @method static Builder|Fund wherePublic($value)
  * @method static Builder|Fund whereRequestBtnText($value)
  * @method static Builder|Fund whereStartDate($value)

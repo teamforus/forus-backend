@@ -37,6 +37,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 /**
  * App\Models\Implementation
@@ -1004,6 +1005,34 @@ class Implementation extends BaseModel
         }
 
         return Implementation::general()->urlFrontend($frontend, $uri);
+    }
+
+    /**
+     * @param EloquentCollection|null $funds
+     * @return EloquentCollection
+     */
+    public function getPreCheckFundCriteria(EloquentCollection $funds = null): \Illuminate\Database\Eloquent\Collection
+    {
+        return FundCriterion::query()
+            ->where('optional', false)
+            ->whereRelation('fund.fund_config', 'implementation_id', $this->id)
+            ->whereRelation('fund.fund_config', function (Builder $builder) {
+                return $builder->where('pre_check_excluded', false)
+                    ->whereNull('pre_check_note');
+            })
+            ->whereRelation('fund.fund_config', 'pre_check_excluded', false)
+            ->whereRelation('fund', 'archived', false)
+            ->whereHas('fund', function (Builder $q) use ($funds) {
+                if ($funds) {
+                    $q = $q->whereIn('id', $funds->pluck('id')->toArray());
+                }
+
+                return FundQuery::whereActiveFilter($q);
+            })
+            ->whereRelation('record_type', 'pre_check', true)
+            ->with('fund.fund_config.implementation')
+            ->get()
+            ->groupBy('record_type_key');
     }
 
     /**

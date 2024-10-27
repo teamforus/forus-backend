@@ -83,6 +83,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string $iconnect_cert_pass
  * @property string $iconnect_cert_trust
  * @property bool $provider_products_required
+ * @property int $pre_check_excluded
+ * @property string|null $pre_check_note
  * @property bool $help_enabled
  * @property string|null $help_title
  * @property string|null $help_block_text
@@ -97,8 +99,6 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $help_show_website
  * @property bool $help_show_chat
  * @property string $criteria_label_requirement_show
- * @property int $pre_check_excluded
- * @property string $shown_criteria_label_details
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -192,10 +192,10 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereOutcomeType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig wherePreCheckExcluded($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig wherePreCheckNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereProviderProductsRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityStartDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereShownCriteriaLabelDetails($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVoucherAmountVisible($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVouchersType($value)
@@ -246,7 +246,8 @@ class FundConfig extends BaseModel
         'help_enabled', 'help_title', 'help_block_text', 'help_show_chat',
         'help_button_text', 'help_email', 'help_phone', 'help_website', 'help_chat',
         'help_description', 'help_show_email', 'help_show_phone', 'help_show_website',
-        'provider_products_required', 'criteria_label_requirement_show', 'pre_check_excluded',
+        'provider_products_required', 'criteria_label_requirement_show',
+        'pre_check_excluded', 'pre_check_note',
     ];
 
     /**

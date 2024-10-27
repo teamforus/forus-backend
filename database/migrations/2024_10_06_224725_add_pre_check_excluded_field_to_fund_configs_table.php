@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->boolean('pre_check_excluded')->default(true)->after('provider_products_required');
+            $table->boolean('pre_check_excluded')->default(false)->after('provider_products_required');
+            $table->string('pre_check_note', 2000)->nullable()->after('pre_check_excluded');
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->dropColumn('pre_check_excluded');
+            $table->dropColumn('pre_check_note');
         });
     }
 };
