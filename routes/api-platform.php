@@ -186,29 +186,29 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->post('funds/{fund}/check', "Api\Platform\FundsController@check")->name('fund.check');
 
     $router
-        ->resource('vouchers/{voucher_number}/physical-cards', 'Api\Platform\Vouchers\PhysicalCardsController')
+        ->resource('vouchers/{voucher_number_or_address}/physical-cards', 'Api\Platform\Vouchers\PhysicalCardsController')
         ->parameter('physical-cards', 'physical_card')
         ->only('store', 'destroy');
 
     $router
-        ->resource('vouchers/{voucher_number}/physical-card-requests', 'Api\Platform\Vouchers\PhysicalCardRequestsController')
+        ->resource('vouchers/{voucher_number_or_address}/physical-card-requests', 'Api\Platform\Vouchers\PhysicalCardRequestsController')
         ->parameter('physical-cards', 'physical_card')
         ->only('index', 'store', 'show');
 
 
     $router->post(
-        'vouchers/{voucher_number}/physical-card-requests/validate',
+        'vouchers/{voucher_number_or_address}/physical-card-requests/validate',
         'Api\Platform\Vouchers\PhysicalCardRequestsController@storeValidate',
     );
 
     $router
         ->resource('vouchers', "Api\Platform\VouchersController")
-        ->parameter('vouchers', 'voucher_number')
+        ->parameter('vouchers', 'voucher_number_or_address')
         ->only('index', 'show', 'destroy');
 
-    $router->post('vouchers/{voucher_number}/send-email', "Api\Platform\VouchersController@sendEmail");
-    $router->post('vouchers/{voucher_number}/share', "Api\Platform\VouchersController@shareVoucher");
-    $router->post('vouchers/{voucher_number}/deactivate', "Api\Platform\VouchersController@deactivate");
+    $router->post('vouchers/{voucher_number_or_address}/send-email', "Api\Platform\VouchersController@sendEmail");
+    $router->post('vouchers/{voucher_number_or_address}/share', "Api\Platform\VouchersController@shareVoucher");
+    $router->post('vouchers/{voucher_number_or_address}/deactivate', "Api\Platform\VouchersController@deactivate");
 
     $router
         ->resource('reimbursements', "Api\Platform\ReimbursementsController")
