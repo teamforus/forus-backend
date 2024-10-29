@@ -311,7 +311,7 @@ class Kernel extends ConsoleKernel
      */
     private function scheduleAuthExpiration(Schedule $schedule): void
     {
-        if (Config::get('disable_auth_expiration', false)) {
+        if (Config::get('forus.kernel.disable_auth_expiration', false)) {
             return;
         }
 
