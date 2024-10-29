@@ -24,12 +24,12 @@ class FinancialOverviewStatisticQueries
         return $builder->where(static function(Builder $builder) use ($from, $to) {
             $builder->where('vouchers.created_at', '>=', $from);
             $builder->where('vouchers.created_at', '<=', $to);
-            $builder->where('vouchers.expire_at', '>=', $to);
+            $builder->where('vouchers.expire_at', '>=', $from);
 
             $builder->whereHas('fund', static function(Builder $builder) use ($from, $to) {
                 $builder->where('created_at', '>=', $from);
                 $builder->where('created_at', '<=', $to);
-                $builder->where('end_date', '>=', $to);
+                $builder->where('end_date', '>=', $from);
             });
         });
     }
@@ -58,7 +58,7 @@ class FinancialOverviewStatisticQueries
             $builder->orWhere(static function (Builder $builder) use ($from, $to) {
                 $builder->where('created_at', '>=', $from);
                 $builder->where('created_at', '<=', $to);
-                $builder->where('expire_at', '>=', $to);
+                $builder->where('expire_at', '>=', $from);
             });
         });
     }
@@ -175,7 +175,7 @@ class FinancialOverviewStatisticQueries
         return round($fund->voucher_transactions()
             ->where('voucher_transactions.created_at', '>=', $from)
             ->where('voucher_transactions.created_at', '<=', $to)
-            ->where('vouchers.expire_at', '>=', $to)
+            ->where('vouchers.expire_at', '>=', $from)
             ->sum('voucher_transactions.amount'), 2);
     }
 

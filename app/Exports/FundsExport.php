@@ -165,8 +165,8 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
     protected function getVoucherData(Fund $fund): array
     {
         $detailsByType = [
-            'budget'  => FinancialOverviewStatistic::getFundDetails($fund->budget_vouchers(), $this->from, $this->to),
-            'product' => FinancialOverviewStatistic::getFundDetails($fund->product_vouchers(), $this->from, $this->to),
+            'budget'  => FinancialOverviewStatistic::getFundDetails($fund->budget_vouchers()->getQuery(), $this->from, $this->to),
+            'product' => FinancialOverviewStatistic::getFundDetails($fund->product_vouchers()->getQuery(), $this->from, $this->to),
         ];
 
         $voucherData = [
