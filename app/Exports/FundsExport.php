@@ -99,8 +99,8 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
         return (!$this->detailed && $this->withTotal) ? [[
             "name" => $this->trans("total"),
             "total_top_up" => currency_format($this->data->sum('total_top_up')),
-            "balance" => currency_format($this->data->sum('balance')),
             "expenses" => currency_format($this->data->sum('expenses')),
+            "balance" => currency_format($this->data->sum('balance')),
             "transactions" => currency_format($this->data->sum('transactions')),
         ]] : [];
     }
