@@ -3,9 +3,6 @@
 namespace App\Models;
 
 use App\Events\Funds\FundArchivedEvent;
-use App\Events\Funds\FundEndedEvent;
-use App\Events\Funds\FundExpiringEvent;
-use App\Events\Funds\FundStartedEvent;
 use App\Events\Funds\FundUnArchivedEvent;
 use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
@@ -14,7 +11,6 @@ use App\Models\Traits\HasFaq;
 use App\Models\Traits\HasTags;
 use App\Rules\FundRequests\BaseFundRequestRule;
 use App\Scopes\Builders\FundProviderQuery;
-use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\RecordValidationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
@@ -111,6 +107,8 @@ use Illuminate\Support\Facades\Log;
  * @property-read int|null $fund_formulas_count
  * @property-read Collection|\App\Models\FundLimitMultiplier[] $fund_limit_multipliers
  * @property-read int|null $fund_limit_multipliers_count
+ * @property-read Collection|\App\Models\FundPeriod[] $fund_periods
+ * @property-read int|null $fund_periods_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $fund_request_records
@@ -221,6 +219,7 @@ class Fund extends BaseModel
     public const EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
     public const EVENT_VOUCHERS_EXPORTED = 'vouchers_exported';
     public const EVENT_SPONSOR_NOTIFICATION_CREATED = 'sponsor_notification_created';
+    public const EVENT_PERIOD_EXTENDED = 'period_extended';
 
     public const STATE_ACTIVE = 'active';
     public const STATE_CLOSED = 'closed';
@@ -318,6 +317,15 @@ class Fund extends BaseModel
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_periods(): HasMany
+    {
+        return $this->hasMany(FundPeriod::class);
     }
 
     /**
@@ -1173,33 +1181,6 @@ class Fund extends BaseModel
         }
 
         return $this;
-    }
-
-    /**
-     * Update fund state by the start and end dates
-     */
-    public static function checkStateQueue(): void
-    {
-        $funds = static::where(function(Builder $builder) {
-            FundQuery::whereIsConfiguredByForus($builder);
-        })->whereDate('start_date', '<=', now())->get();
-
-        foreach ($funds as $fund) {
-            if ($fund->isPaused() && $fund->start_date->startOfDay()->isPast()) {
-                FundStartedEvent::dispatch($fund->changeState(self::STATE_ACTIVE));
-            }
-
-            $expirationNotified = $fund->logs()->where('event', self::EVENT_FUND_EXPIRING)->exists();
-            $isTimeToNotify = $fund->end_date->clone()->subDays(14)->isPast();
-
-            if (!$expirationNotified && !$fund->isClosed() && $isTimeToNotify) {
-                FundExpiringEvent::dispatch($fund);
-            }
-
-            if (!$fund->isClosed() && $fund->end_date->clone()->addDay()->isPast()) {
-                FundEndedEvent::dispatch($fund->changeState(self::STATE_CLOSED));
-            }
-        }
     }
 
     /**
