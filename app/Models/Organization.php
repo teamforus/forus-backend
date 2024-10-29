@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Events\Employees\EmployeeCreated;
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundQuery;
@@ -359,110 +358,9 @@ class Organization extends BaseModel
     /**
      * @return HasMany
      */
-    public function reimbursement_categories(): HasMany {
-        return $this->hasMany(ReimbursementCategory::class);
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param EloquentBuilder|null $builder
-     * @return EloquentBuilder
-     */
-    public static function searchQuery(
-        BaseFormRequest $request,
-        EloquentBuilder $builder = null
-    ): EloquentBuilder {
-        $query = $builder ?: self::query();
-        $fund_type = $request->input('fund_type', 'budget');
-        $has_products = $request->input('has_products');
-        $has_reservations = $request->input('has_reservations');
-
-        if ($request->input('is_employee', true)) {
-            if ($request->isAuthenticated()) {
-                $query = OrganizationQuery::whereIsEmployee($query, $request->auth_address());
-            } else {
-                $query = $query->whereIn('id', []);
-            }
-        }
-
-        if ($request->has('is_sponsor')) {
-            $query->where($request->only('is_sponsor'));
-        }
-
-        if ($request->has('is_provider')) {
-            $query->where($request->only('is_provider'));
-        }
-
-        if ($request->has('is_validator')) {
-            $query->where($request->only('is_validator'));
-        }
-
-        if ($q = $request->input('q')) {
-            return $query->where(function(EloquentBuilder $builder) use ($q) {
-                $builder->where('name', 'LIKE', "%$q%");
-                $builder->orWhere('description_text', 'LIKE', "%$q%");
-
-                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
-                    $builder->where('email_public', true);
-                    $builder->where('email', 'LIKE', "%$q%");
-                });
-
-                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
-                    $builder->where('phone_public', true);
-                    $builder->where('phone', 'LIKE', "%$q%");
-                });
-
-                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
-                    $builder->where('website_public', true);
-                    $builder->where('website', 'LIKE', "%$q%");
-                });
-            });
-        }
-
-        if ($request->input('implementation', false)) {
-            $query->whereHas('funds', static function(EloquentBuilder $builder) {
-                $builder->whereIn('funds.id', Implementation::activeFundsQuery()->select('id'));
-            });
-        }
-
-        if ($has_reservations && $request->isAuthenticated()) {
-            $query->whereHas('products.product_reservations', function(EloquentBuilder $builder) use ($request) {
-                $builder->whereHas('voucher', function(EloquentBuilder $builder) use ($request) {
-                    $builder->where('identity_address', $request->auth_address());
-                });
-            });
-        }
-
-        if ($has_products) {
-            $query->whereHas('products', static function(EloquentBuilder $builder) use ($fund_type) {
-                $activeFunds = Implementation::activeFundsQuery()->where(
-                    'type', $fund_type
-                )->pluck('id')->toArray();
-
-                // only in stock and not expired
-                $builder = ProductQuery::inStockAndActiveFilter($builder);
-
-                // only approved by at least one sponsor
-                return ProductQuery::approvedForFundsFilter($builder, $activeFunds);
-            });
-        } else if ($has_products !== null) {
-            $query->whereDoesntHave('products');
-        }
-
-        return $query->orderBy(
-            $request->get('order_by', 'created_at'),
-            $request->get('order_dir', 'asc'),
-        );
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @return EloquentBuilder[]|Collection
-     * @noinspection PhpUnused
-     */
-    public static function search(BaseFormRequest $request): Collection|Arrayable
+    public function reimbursement_categories(): HasMany
     {
-        return self::searchQuery($request)->get();
+        return $this->hasMany(ReimbursementCategory::class);
     }
 
     /**

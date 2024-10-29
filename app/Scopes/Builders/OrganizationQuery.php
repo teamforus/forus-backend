@@ -8,6 +8,7 @@ use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 
@@ -253,5 +254,35 @@ class OrganizationQuery
         }
 
         return $query;
+    }
+
+    /**
+     * @param EloquentBuilder|Organization $query
+     * @param string|null $q
+     * @return EloquentBuilder|Organization
+     */
+    public static function queryFilterPublic(
+        Builder|Organization $query,
+        string $q = null,
+    ): Builder|Organization {
+        return $query->where(function(EloquentBuilder $builder) use ($q) {
+            $builder->where('name', 'LIKE', "%$q%");
+            $builder->orWhere('description_text', 'LIKE', "%$q%");
+
+            $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
+                $builder->where('email_public', true);
+                $builder->where('email', 'LIKE', "%$q%");
+            });
+
+            $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
+                $builder->where('phone_public', true);
+                $builder->where('phone', 'LIKE', "%$q%");
+            });
+
+            $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
+                $builder->where('website_public', true);
+                $builder->where('website', 'LIKE', "%$q%");
+            });
+        });
     }
 }
