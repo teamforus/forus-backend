@@ -20,6 +20,7 @@ class OrganizationWithPrivateResource extends OrganizationResource
         $organization = $this->resource;
 
         return array_merge(parent::toArray($request), [
+            'kvk' => $organization->email ?? null,
             'email' => $organization->email ?? null,
             'phone' => $organization->phone ?? null,
             'website' => $organization->website ?? null,
