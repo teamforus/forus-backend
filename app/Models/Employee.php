@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Helpers\Arr;
+use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\UploadedFile;
 
 /**
  * App\Models\Employee
@@ -44,11 +47,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Employee extends BaseModel
 {
-    use SoftDeletes, HasLogs;
+    use HasLogs;
+    use SoftDeletes;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_UPDATED = 'updated';
     public const EVENT_DELETED = 'deleted';
+
+    public const EVENT_UPLOADED_PAYOUTS = 'uploaded_payouts';
+    public const EVENT_UPLOADED_VOUCHERS = 'uploaded_vouchers';
+    public const EVENT_UPLOADED_TRANSACTIONS = 'uploaded_transactions';
+    public const EVENT_UPLOADED_PREVALIDATIONS = 'uploaded_prevalidations';
 
     public const EVENT_FUND_REQUEST_ASSIGNED = 'fund_request_assigned';
 
@@ -97,5 +106,73 @@ class Employee extends BaseModel
     public function fund_request_records(): HasMany
     {
         return $this->hasMany(FundRequestRecord::class);
+    }
+
+    /**
+     * @param array $fileData
+     * @param array $itemsData
+     * @return array
+     */
+    protected function storeUploadedCsvFile(array $fileData, array $itemsData): array
+    {
+        $file = tmpfile();
+
+        $meta = [
+            'total' => Arr::get($fileData, 'total'),
+            'chunk' => Arr::get($fileData, 'chunk'),
+            'chunks' => Arr::get($fileData, 'chunks'),
+            'chunkSize' => Arr::get($fileData, 'chunkSize'),
+        ];
+
+        fwrite($file, json_pretty([
+            'name' => Arr::get($fileData, 'name'),
+            'content' => Arr::get($fileData, 'content'),
+            ...$meta,
+            'data' => $itemsData,
+        ]));
+
+        $filePath = stream_get_meta_data($file)['uri'];
+        $fileName = token_generator()->generate(32) . '.json';
+        $uploadedFile = new UploadedFile($filePath, $fileName, 'application/json');
+
+        $fileModel = resolve('file')->uploadSingle($uploadedFile, 'uploaded_csv_details', [
+            'storage_prefix' => '/uploaded_csv_details',
+        ]);
+
+        fclose($file);
+
+        $fileModel->update([
+            'fileable_id' => $this->id,
+            'fileable_type' => $this->getMorphClass(),
+            'identity_address' => $this->identity_address,
+        ]);
+
+        return [
+            ...$meta,
+            'file_id' => $fileModel->id,
+        ];
+    }
+
+    /**
+     * @param string $event
+     * @param array $fileData
+     * @param array $itemsData
+     * @return EventLog
+     */
+    public function logCsvUpload(
+        string $event,
+        array $fileData = [],
+        array $itemsData = [],
+    ): EventLog {
+        $fileMeta = $fileData ? $this->storeUploadedCsvFile($fileData, $itemsData) : [];
+
+        return $this->log($event, [
+            'employee' => $this,
+        ],  $fileMeta ? [
+            'uploaded_file_meta' => [
+                ...$fileMeta,
+                'state' => 'pending',
+            ]
+        ] : []);
     }
 }

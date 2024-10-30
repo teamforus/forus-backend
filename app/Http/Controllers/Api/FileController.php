@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\File\StoreFileRequest;
-use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FileResource;
 use App\Services\FileService\FileService;
 use App\Services\FileService\Models\File;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -29,15 +27,11 @@ class FileController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     *
-     * @param BaseFormRequest $request
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @return JsonResponse
      */
-    public function index(BaseFormRequest $request): AnonymousResourceCollection {
-        return FileResource::queryCollection(File::where([
-            'identity_address' => $request->auth_address(),
-        ]));
+    public function index(): JsonResponse
+    {
+        return new JsonResponse([]);
     }
 
     /**
@@ -62,19 +56,23 @@ class FileController extends Controller
             ])->passes();
 
             if ($isImage) {
-                $file
-                    ->makePreview($request->file('file'), 'reimbursement_file_preview')
-                    ->updateModelValue('identity_address', $request->auth_address());
+                $file->makePreview($request->file('file'), 'reimbursement_file_preview')->update([
+                    'identity_address' => $request->auth_address(),
+                ]);
             }
 
             if ($isPdf && $request->has('file_preview')) {
-                $file
-                    ->makePreview($request->file('file_preview'), 'reimbursement_file_preview')
-                    ->updateModelValue('identity_address', $request->auth_address());
+                $file->makePreview($request->file('file_preview'), 'reimbursement_file_preview')->update([
+                    'identity_address' => $request->auth_address(),
+                ]);
             }
         }
 
-        return new FileResource($file->updateModelValue('identity_address', $request->auth_address()));
+        $file->update([
+            'identity_address' => $request->auth_address(),
+        ]);
+
+        return new FileResource($file);
     }
 
     /**
