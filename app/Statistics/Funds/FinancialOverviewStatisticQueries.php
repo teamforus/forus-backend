@@ -24,11 +24,10 @@ class FinancialOverviewStatisticQueries
         return $builder->where(static function(Builder $builder) use ($from, $to) {
             $builder->where('vouchers.created_at', '>=', $from);
             $builder->where('vouchers.created_at', '<=', $to);
-            $builder->where('vouchers.expire_at', '>=', $from);
+            $builder->where('vouchers.expire_at', '>=', $to);
 
             $builder->whereHas('fund', static function(Builder $builder) use ($from, $to) {
-                $builder->where('created_at', '>=', $from);
-                $builder->where('created_at', '<=', $to);
+                $builder->where('start_date', '<=', $to);
                 $builder->where('end_date', '>=', $from);
             });
         });

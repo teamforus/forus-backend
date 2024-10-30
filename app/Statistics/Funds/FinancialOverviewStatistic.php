@@ -128,7 +128,7 @@ class FinancialOverviewStatistic
     public static function getFinancialData(Fund $fund, ?string $stats = null, ?int $year = null): array
     {
         $from = Carbon::createFromFormat('Y', $year ?: now()->year)->startOfYear();
-        $to = Carbon::createFromFormat('Y', $year ?: now()->year)->endOfYear();
+        $to = $year < now()->year ? Carbon::createFromFormat('Y', $year)->endOfYear() : now();
 
         if ($stats == 'min') {
             return [

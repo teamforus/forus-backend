@@ -25,7 +25,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
      * @var array[]
      */
     protected array $formats = [
-        NumberFormat::FORMAT_CURRENCY_EUR_SIMPLE => [
+        NumberFormat::FORMAT_CURRENCY_EUR => [
             'balance',
             'expenses',
             'transactions',
