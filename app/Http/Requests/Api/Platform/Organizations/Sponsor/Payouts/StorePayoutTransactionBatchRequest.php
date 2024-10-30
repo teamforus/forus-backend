@@ -50,4 +50,14 @@ class StorePayoutTransactionBatchRequest extends StorePayoutTransactionRequest
             'payouts.*.description' => trans('validation.attributes.description'),
         ];
     }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'payouts.*.email' => 'Vul een geldig e-mailadres in, bijvoorbeeld naam@voorbeeld.com',
+        ];
+    }
 }
