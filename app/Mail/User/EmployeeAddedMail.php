@@ -30,8 +30,8 @@ class EmployeeAddedMail extends ImplementationMail
 
         return [
             'download_me_app_link' => $this->makeLink($appLink, 'https://forus.io/DL'),
-            'dashboard_auth_link' => $this->makeLink($authLink, 'Ga naar het dashboard'),
-            'dashboard_auth_button' => $this->makeButton($authLink, 'Ga naar het dashboard'),
+            'dashboard_auth_link' => $this->makeLink($authLink, ' Ga naar de beheeromgeving'),
+            'dashboard_auth_button' => $this->makeButton($authLink, 'Ga naar de beheeromgeving'),
         ];
     }
 }
