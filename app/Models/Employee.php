@@ -155,13 +155,13 @@ class Employee extends BaseModel
 
     /**
      * @param string $event
-     * @param array $fileData
+     * @param ?array $fileData
      * @param array $itemsData
      * @return EventLog
      */
     public function logCsvUpload(
         string $event,
-        array $fileData = [],
+        ?array $fileData = null,
         array $itemsData = [],
     ): EventLog {
         $fileMeta = $fileData ? $this->storeUploadedCsvFile($fileData, $itemsData) : [];
