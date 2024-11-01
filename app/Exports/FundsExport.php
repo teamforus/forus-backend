@@ -168,6 +168,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
             'budget'  => FinancialOverviewStatistic::getFundDetails($fund->budget_vouchers()->getQuery(), $this->from, $this->to),
             'product' => FinancialOverviewStatistic::getFundDetails($fund->product_vouchers()->getQuery(), $this->from, $this->to),
         ];
+        $usedActiveVouchers = FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $this->from, $this->to);
 
         $voucherData = [
             "name" => $fund->name,
@@ -195,7 +196,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
                 $voucherData = array_merge($voucherData, [
                     "budget_amount_per_voucher"            => currency_format($fund->fund_formulas->sum('amount')),
                     "budget_average_per_voucher"           => currency_format($averagePerVoucher),
-                    "budget_total_spent_amount"            => currency_format($fund->budget_used_active_vouchers),
+                    "budget_total_spent_amount"            => currency_format($usedActiveVouchers),
                     "budget_total_left_amount"             => currency_format($budgetLeftAmount),
                     "budget_total_spent_percentage"        => currency_format($budgetUsedPercentage / 100, 4),
                     "budget_total_left_percentage"         => currency_format($budgetLeftPercentage / 100, 4),

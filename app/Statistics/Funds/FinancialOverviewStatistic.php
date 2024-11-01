@@ -31,6 +31,7 @@ class FinancialOverviewStatistic
         return [
             'funds' => $this->getFundTotals($this->getFunds($organization), $from, $to),
             'budget_funds' => $this->getFundTotals($this->getBudgetFunds($organization), $from, $to),
+            'year' => $year,
         ];
     }
 
