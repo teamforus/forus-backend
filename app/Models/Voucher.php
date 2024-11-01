@@ -18,6 +18,8 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Traits\HasFormattedTimestamps;
+use App\Models\Traits\HasUniqueNumber;
+use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Scopes\Builders\VoucherSubQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
@@ -47,10 +49,14 @@ use ZipArchive;
  * App\Models\Voucher
  *
  * @property int $id
+ * @property string|null $number
  * @property int $fund_id
+ * @property int|null $fund_request_id
+ * @property string $voucher_type
  * @property string|null $identity_address
  * @property string $state
  * @property string $amount
+ * @property int|null $fund_amount_preset_id
  * @property int $limit_multiplier
  * @property bool $returnable
  * @property int|null $product_reservation_id
@@ -73,6 +79,7 @@ use ZipArchive;
  * @property-read int|null $backoffice_logs_count
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
+ * @property-read \App\Models\FundRequest|null $fund_request
  * @property-read bool $activated
  * @property-read string $amount_available
  * @property-read string $amount_available_cached
@@ -142,23 +149,30 @@ use ZipArchive;
  * @method static Builder|Voucher whereCreatedAt($value)
  * @method static Builder|Voucher whereEmployeeId($value)
  * @method static Builder|Voucher whereExpireAt($value)
+ * @method static Builder|Voucher whereFundAmountPresetId($value)
  * @method static Builder|Voucher whereFundBackofficeLogId($value)
  * @method static Builder|Voucher whereFundId($value)
+ * @method static Builder|Voucher whereFundRequestId($value)
  * @method static Builder|Voucher whereId($value)
  * @method static Builder|Voucher whereIdentityAddress($value)
  * @method static Builder|Voucher whereLimitMultiplier($value)
  * @method static Builder|Voucher whereNote($value)
+ * @method static Builder|Voucher whereNumber($value)
  * @method static Builder|Voucher whereParentId($value)
  * @method static Builder|Voucher whereProductId($value)
  * @method static Builder|Voucher whereProductReservationId($value)
  * @method static Builder|Voucher whereReturnable($value)
  * @method static Builder|Voucher whereState($value)
  * @method static Builder|Voucher whereUpdatedAt($value)
+ * @method static Builder|Voucher whereVoucherType($value)
  * @mixin \Eloquent
  */
 class Voucher extends BaseModel
 {
-    use HasLogs, HasFormattedTimestamps, HasDbTokens;
+    use HasLogs;
+    use HasDbTokens;
+    use HasUniqueNumber;
+    use HasFormattedTimestamps;
 
     public const EVENT_CREATED_BUDGET = 'created_budget';
     public const EVENT_CREATED_PRODUCT = 'created_product';
@@ -182,6 +196,9 @@ class Voucher extends BaseModel
 
     public const TYPE_BUDGET = 'regular';
     public const TYPE_PRODUCT = 'product';
+
+    public const VOUCHER_TYPE_PAYOUT = 'payout';
+    public const VOUCHER_TYPE_VOUCHER = 'voucher';
 
     public const STATE_ACTIVE = 'active';
     public const STATE_PENDING = 'pending';
@@ -215,10 +232,10 @@ class Voucher extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id',
+        'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id', 'number',
         'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'state',
         'activation_code', 'client_uid', 'fund_backoffice_log_id',
-        'product_reservation_id',
+        'product_reservation_id', 'voucher_type', 'fund_request_id', 'fund_amount_preset_id',
     ];
 
     /**
@@ -226,11 +243,9 @@ class Voucher extends BaseModel
      *
      * @var array
      */
-    protected $dates = [
-        'expire_at',
-    ];
-
     protected $casts = [
+        'number' => 'string',
+        'expire_at' => 'datetime',
         'returnable' => 'boolean',
     ];
 
@@ -241,6 +256,15 @@ class Voucher extends BaseModel
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function fund_request(): BelongsTo
+    {
+        return $this->belongsTo(FundRequest::class);
     }
 
     /**
@@ -509,6 +533,14 @@ class Voucher extends BaseModel
     public function isInternal(): bool
     {
         return !$this->fund->fund_config->usesExternalVouchers();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTypePayout(): bool
+    {
+        return $this->voucher_type === self::VOUCHER_TYPE_PAYOUT;
     }
 
     /**
@@ -795,6 +827,8 @@ class Voucher extends BaseModel
         $state = $request->input('state');
         $in_use_from = $request->input('in_use_from');
         $in_use_to = $request->input('in_use_to');
+
+        $query->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER);
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -1272,9 +1306,11 @@ class Voucher extends BaseModel
      */
     public static function findByAddress(
         string $address,
-        ?string $identity_address = null
+        ?string $identity_address = null,
     ): ?Voucher {
-        return self::whereHas('tokens', static function(Builder $builder) use ($address) {
+        return self::query()->where([
+            'voucher_type' => Voucher::VOUCHER_TYPE_VOUCHER,
+        ])->whereHas('tokens', static function(Builder $builder) use ($address) {
             $builder->where('address', '=', $address);
         })->where(static function(Builder $builder) use ($identity_address) {
             $identity_address && $builder->where('identity_address', '=', $identity_address);
@@ -1288,9 +1324,11 @@ class Voucher extends BaseModel
      */
     public static function findByPhysicalCardQuery(
         string $number,
-        ?string $identity_address = null
+        ?string $identity_address = null,
     ): Builder|Voucher {
-        return self::whereHas('fund.fund_config', static function (Builder $builder) {
+        return self::query()->where([
+            'voucher_type' => Voucher::VOUCHER_TYPE_VOUCHER,
+        ])->whereHas('fund.fund_config', static function (Builder $builder) {
             $builder->where('allow_physical_cards', '=', true);
         })->whereHas('physical_cards', static function (Builder $builder) use ($number) {
             $builder->where('code', '=', $number);
@@ -1344,16 +1382,16 @@ class Voucher extends BaseModel
             return null;
         }
 
-        /** @var Builder $query */
-        $query = self::whereNull('identity_address');
+        $vouchers = VoucherQuery::whereNotExpired(self::query())
+            ->whereNull('identity_address')
+            ->whereHas('fund', fn (Builder $q) => FundQuery::whereActiveFilter($q))
+            ->whereRelation('fund.organization', fn (Builder $q) => $q->where('bsn_enabled', true))
+            ->whereHas('voucher_relation', fn (Builder $q) => $q->where('bsn', $identity->bsn))
+            ->get();
 
-        return $query->whereHas('fund.organization', function(Builder $builder) {
-            $builder->where('bsn_enabled', true);
-        })->whereHas('voucher_relation', static function(Builder $builder) use ($identity) {
-            $builder->where('bsn', '=', $identity->bsn);
-        })->get()->each(static function(Voucher $voucher) {
-            $voucher->voucher_relation->assignByBsnIfExists();
-        })->count();
+        return $vouchers
+            ->each(fn (Voucher $voucher) => $voucher->voucher_relation->assignByBsnIfExists())
+            ->count();
     }
 
     /**
@@ -1605,18 +1643,20 @@ class Voucher extends BaseModel
     /**
      * @param Employee $employee
      * @param array $attributes
+     * @param string|null $note
+     * @param bool|null $noteShared
      * @return VoucherTransaction
      */
     public function makeTransactionBySponsor(
         Employee $employee,
         array $attributes,
+        ?string $note = null,
+        ?bool $noteShared = false,
     ): VoucherTransaction {
         $isTopUp = Arr::get($attributes, 'target') === VoucherTransaction::TARGET_TOP_UP;
         $state = $isTopUp ? VoucherTransaction::STATE_SUCCESS : VoucherTransaction::STATE_PENDING;
-        $note = Arr::get($attributes, 'note');
-        $note_shared = Arr::get($attributes, 'note_shared', false);
 
-        $transaction = $this->makeTransaction(array_merge(Arr::except($attributes, 'note'), [
+        $transaction = $this->makeTransaction(array_merge($attributes, [
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
             'employee_id' => $employee->id,
             'branch_id' => $employee->office?->branch_id,
@@ -1627,7 +1667,7 @@ class Voucher extends BaseModel
         ]));
 
         if ($note) {
-            $transaction->addNote('sponsor', $note, $note_shared);
+            $transaction->addNote('sponsor', $note, $noteShared);
         }
 
         Event::dispatch(new VoucherTransactionCreated($transaction, $note ? [

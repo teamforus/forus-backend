@@ -13,14 +13,14 @@ use Illuminate\Notifications\DatabaseNotification;
  * App\Models\Notification
  *
  * @property string $id
+ * @property string|null $key
+ * @property string|null $scope
+ * @property int|null $organization_id
+ * @property int|null $event_id
  * @property string $type
  * @property string $notifiable_type
  * @property int $notifiable_id
  * @property array $data
- * @property string $key
- * @property string $scope
- * @property int|null $organization_id
- * @property int|null $event_id
  * @property \Illuminate\Support\Carbon|null $read_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -32,8 +32,8 @@ use Illuminate\Notifications\DatabaseNotification;
  * @method static Builder|Notification newModelQuery()
  * @method static Builder|Notification newQuery()
  * @method static Builder|Notification query()
- * @method static Builder|DatabaseNotification read()
- * @method static Builder|DatabaseNotification unread()
+ * @method static Builder|Notification read()
+ * @method static Builder|Notification unread()
  * @method static Builder|Notification whereCreatedAt($value)
  * @method static Builder|Notification whereData($value)
  * @method static Builder|Notification whereEventId($value)

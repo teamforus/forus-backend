@@ -9,7 +9,7 @@ use App\Models\FundConfig;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\PhysicalCard;
-use App\Models\RecordType;
+use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundProviderQuery;
@@ -17,11 +17,14 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+use Random\RandomException;
 use Tests\TestCase;
 use Tests\TestCases\VoucherTestCases;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\VoucherTestTrait;
+use Throwable;
 
 class VoucherTest extends TestCase
 {
@@ -41,63 +44,63 @@ class VoucherTest extends TestCase
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase1(): void
+    public function testVoucherCaseBudgetVouchers(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase1);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseBudgetVouchers);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase2(): void
+    public function testVoucherCaseProductVouchers(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase2);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseProductVouchers);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase3(): void
+    public function testVoucherCaseBudgetVouchersExceedAmount(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase3);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseBudgetVouchersExceedAmount);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase4(): void
+    public function testVoucherCaseBudgetVouchersNoBSNExceedAmount(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase4);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseBudgetVouchersNoBSNExceedAmount);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase5(): void
+    public function testVoucherCaseProductVouchersEdgeCases(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase5);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseProductVouchersEdgeCases);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase6(): void
+    public function testVoucherCaseSubsidyFundBudgetVouchers(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase6);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseSubsidyFundBudgetVouchers);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherCase7(): void
+    public function testVoucherCaseBudgetVouchersExcludedFields(): void
     {
-        $this->processVoucherTestCase(VoucherTestCases::$featureTestCase7);
+        $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseBudgetVouchersExcludedFields);
     }
 
     /**
@@ -106,38 +109,26 @@ class VoucherTest extends TestCase
      */
     public function testVoucherFundFormulaProductMultiplier(): void
     {
-        Cache::clear();
-
-        // create custom record type for vouchers
-        $recordType = RecordType::create([
-            'key' => 'test_number_record_type',
-            'type' => 'number',
-            'vouchers' => true,
-        ]);
-
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $fund = $this->makeTestFund($organization, [
-            'criteria' => [[
-                'value' => random_int(2, 6),
-                'operator' => '>',
-                'show_attachment' => false,
-                'record_type_key' => $recordType->key,
-            ]],
-        ], [
+        $identity->setBsnRecord('123456789');
+        $fund = $this->makeTestFund($organization, [], [
             'limit_generator_amount' => 100,
             'limit_voucher_total_amount' => 100,
             'generator_ignore_fund_budget' => true,
             'allow_prevalidations' => true,
         ]);
 
-        $this->makeProviderAndProducts($fund, $recordType->key);
+        $this->addTestCriteriaToFund($fund);
 
-        // make prevalidations and assign custom records
-        $this->makePrevalidation($fund, $identity);
-        $validator = $fund->organization->identity;
-        $this->makeRecords($identity, $validator);
+        $prevalidation = $this->makePrevalidationForTestCriteria($organization, $fund);
+        $products = $this->makeProviderAndProducts($fund);
 
+        if ($fund->isTypeBudget()) {
+            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+        }
+
+        $prevalidation->assignToIdentity($identity);
         $this->makeVoucherForFundFormulaProduct($fund, $identity);
     }
 
@@ -175,11 +166,11 @@ class VoucherTest extends TestCase
         $voucher = $this->getVouchersBuilder($fund, $startDate, 'budget')->first();
 
         $this->assertNotNull($voucher);
-        $this->assertFundFormulaProducts($voucher, $startDate, 'email');
+        $this->assertFundFormulaProductVouchersCreatedByMainVoucher($voucher);
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     protected function processVoucherTestCase(array $testCase): void
     {
@@ -191,30 +182,27 @@ class VoucherTest extends TestCase
         $fund->fund_config->forceFill($testCase['fund_config'] ?? [])->save();
         $fund->organization->forceFill($testCase['organization'] ?? [])->save();
 
-        $this->makeProviderAndProducts($fund);
-        $this->makeVoucher($fund, $testCase);
-    }
+        $this->addTestCriteriaToFund($fund);
+        $products = $this->makeProviderAndProducts($fund);
 
-    /**
-     * @param Fund $fund
-     * @param array $testCase
-     * @return void
-     * @throws \Throwable
-     */
-    protected function makeVoucher(Fund $fund, array $testCase): void
-    {
+        if ($fund->isTypeBudget()) {
+            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+        }
+
         foreach ($testCase['asserts'] as $assert) {
-            $this->storeVoucher($fund, $assert);
+            $this->storeVoucher($fund, $assert, $products[$assert['product'] ?? 'approved']);
         }
     }
 
     /**
      * @param Fund $fund
      * @param array $assert
+     * @param Product[] $products
      * @return void
-     * @throws \Throwable
+     * @throws Throwable
+     * @throws RandomException
      */
-    protected function storeVoucher(Fund $fund, array $assert): void
+    protected function storeVoucher(Fund $fund, array $assert, array $products): void
     {
         $assert['vouchers_count'] = 1;
         $startDate = now();
@@ -223,7 +211,7 @@ class VoucherTest extends TestCase
         $data = [
             'fund_id' => $fund->id,
             'assign_by_type' => $assert['assign_by'] === 'client_uid' ? 'activation_code' : $assert['assign_by'],
-            ...$this->makeVoucherData($fund, $assert)[0],
+            ...$this->makeVoucherData($fund, $assert, $products)[0],
         ];
 
         $validateResponse = $this->postJson($this->getApiUrl($fund, '/validate'), $data, $headers);
@@ -322,7 +310,7 @@ class VoucherTest extends TestCase
                 };
             }
 
-            $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+            $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
             $url = $this->getSponsorApiUrl($voucher, '/assign');
 
             $response = $this->patch($url, $params, $headers);
@@ -354,7 +342,7 @@ class VoucherTest extends TestCase
     {
         $voucher->refresh();
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+        $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
         $url = $this->getSponsorApiUrl($voucher, '/activate');
 
         $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
@@ -371,7 +359,7 @@ class VoucherTest extends TestCase
     {
         $voucher->refresh();
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+        $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
         $url = $this->getSponsorApiUrl($voucher, '/deactivate');
 
         $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
@@ -389,7 +377,7 @@ class VoucherTest extends TestCase
         $voucher->refresh();
 
         if ($voucher->isDeactivated()) {
-            $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+            $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
             $url = $this->getSponsorApiUrl($voucher, '/activate');
 
             $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
@@ -410,7 +398,7 @@ class VoucherTest extends TestCase
 
         if ($voucher->fund->isTypeSubsidy()) {
             $limitMultiplier = $voucher->limit_multiplier + random_int(1, 10);
-            $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+            $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
             $url = $this->getSponsorApiUrl($voucher);
 
             $response = $this->patch($url, ['limit_multiplier' => $limitMultiplier], $headers);
@@ -433,7 +421,7 @@ class VoucherTest extends TestCase
         $voucher->refresh();
 
         if (!$voucher->is_granted && !$voucher->activation_code && !$voucher->isDeactivated()) {
-            $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+            $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
             $url = $this->getSponsorApiUrl($voucher, '/activation-code');
 
             $response = $this->patch($url, [], $headers);
@@ -479,7 +467,7 @@ class VoucherTest extends TestCase
         $amount = random_int(1, round($voucher->amount_available / 2));
         $organization = $voucher->fund->organization;
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $headers = $this->makeApiHeaders($organization->identity);
         $url = sprintf($this->apiOrganizationUrl . '/sponsor/transactions', $organization->id);
 
         $response = $this->post($url, [
@@ -525,7 +513,7 @@ class VoucherTest extends TestCase
         $this->assertNotNull($fundProvider->organization);
         $provider = $fundProvider->organization;
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $headers = $this->makeApiHeaders($organization->identity);
         $url = sprintf($this->apiOrganizationUrl . '/sponsor/transactions', $organization->id);
 
         $response = $this->post($url, [
@@ -582,7 +570,7 @@ class VoucherTest extends TestCase
         ]);
         $amount = random_int(1, round($maxAmount / 2));
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
+        $headers = $this->makeApiHeaders($organization->identity);
         $url = sprintf($this->apiOrganizationUrl . '/sponsor/transactions', $organization->id);
         $params = [
             'voucher_id' => $voucher->id,
@@ -671,7 +659,7 @@ class VoucherTest extends TestCase
         $card = $voucher->physical_cards()->first();
         $this->assertNotNull($card);
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+        $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
         $url = $this->getSponsorApiUrlPhysicalCards($voucher, "/$card->id");
 
         $response = $this->delete($url, [], $headers);
@@ -689,7 +677,7 @@ class VoucherTest extends TestCase
     protected function assertAbilityCreatePhysicalCardRequest(Voucher $voucher): void
     {
         $startDate = now();
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->fund->organization->identity));
+        $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
 
         $url = sprintf(
             $this->apiOrganizationUrl . '/sponsor/vouchers/%s/physical-card-requests',
@@ -698,8 +686,8 @@ class VoucherTest extends TestCase
         );
 
         $response = $this->post($url, [
-            'city' => $this->faker()->city,
-            'house' => $this->faker()->numberBetween(1, 100),
+            'city' => Str::substr($this->faker()->city, 0, 20),
+            'house' => $this->faker()->numberBetween(1, 200),
             'address' => $this->faker()->address,
             'postcode' => $this->faker()->postcode,
             'house_addition' => $this->faker()->word,
@@ -929,9 +917,6 @@ class VoucherTest extends TestCase
      */
     protected function getIdentityApiUrl(Voucher $voucher, string $append = ''): string
     {
-        return sprintf(
-            $this->apiBaseUrl . '/vouchers/%s',
-            $voucher->token_without_confirmation->address,
-        ) . $append;
+        return "$this->apiBaseUrl/vouchers/$voucher->number" . $append;
     }
 }

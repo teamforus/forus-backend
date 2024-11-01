@@ -6,6 +6,8 @@ use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\Tiny\ProductTinyResource;
 use App\Http\Resources\VoucherTransactionNoteResource;
 use App\Models\VoucherTransaction;
+use App\Searches\VoucherTransactionsSearch;
+use Illuminate\Http\Request;
 
 /**
  * @property VoucherTransaction $resource
@@ -28,24 +30,28 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $transaction = $this->resource;
 
         return array_merge($transaction->only([
             'id', 'organization_id', 'product_id', 'state_locale', 'updated_at', 'address', 'state',
-            'payment_id', 'voucher_transaction_bulk_id', 'attempts',
-            'transfer_at', 'iban_final', 'target', 'target_locale', 'uid', 'voucher_id',
+            'payment_id', 'voucher_transaction_bulk_id', 'attempts', 'iban_final',
+            'target', 'target_locale', 'uid', 'voucher_id', 'description',
         ]), $this->getIbanFields($transaction), [
             'amount' => currency_format($transaction->amount),
             'amount_locale' => currency_format_locale($transaction->amount),
             'timestamp' => $transaction->created_at->timestamp,
-            'transaction_in' => $transaction->daysBeforeTransaction(),
+            'transfer_in' => $transaction->daysBeforeTransaction(),
+            'transfer_in_pending' => $transaction->transfer_at?->isFuture() && $transaction->isPending(),
             'organization' => $transaction->provider?->only('id', 'name'),
-            'fund' => $transaction->voucher->fund->only('id', 'name', 'organization_id'),
+            'fund' => [
+                ...$transaction->voucher->fund->only('id', 'name', 'organization_id'),
+                'organization_name' => $transaction->voucher->fund->organization?->name,
+            ],
             'notes' => VoucherTransactionNoteResource::collection($transaction->notes_sponsor),
             'bulk_status_locale' => $transaction->bulk_status_locale,
             'transaction_cost' => currency_format($transaction->transaction_cost),
@@ -57,7 +63,8 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'non_cancelable_at_locale' => format_date_locale($transaction->non_cancelable_at),
             'bulk_state' => $transaction->voucher_transaction_bulk?->state,
             'bulk_state_locale' => $transaction->voucher_transaction_bulk?->state_locale,
-        ], $this->timestamps($transaction, 'created_at', 'updated_at'));
+            'payment_type_locale' => $this->getPaymentTypeLocale($transaction),
+        ], $this->timestamps($transaction, 'created_at', 'transfer_at', 'updated_at'));
     }
 
     /**
@@ -70,6 +77,25 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
             'iban_from' => $transaction->voucher->fund->organization->bank_connection_active->iban ?? null,
             'iban_to' => $transaction->getTargetIban(),
             'iban_to_name' => $transaction->getTargetName(),
+        ];
+    }
+
+    /**
+     * @param VoucherTransaction $transaction
+     * @return array
+     */
+    public function getPaymentTypeLocale(VoucherTransaction $transaction): array
+    {
+        $key = $transaction['payment_type'];
+        $params = ['product' => $transaction->product?->name];
+
+        $key = $key ?: VoucherTransactionsSearch::appendSelectPaymentType(
+            VoucherTransaction::whereId($transaction->id),
+        )->pluck('payment_type')->first();
+
+        return [
+            'title' => trans("transaction.payment_type.$key.title", $params),
+            'subtitle' => trans("transaction.payment_type.$key.subtitle", $params),
         ];
     }
 }

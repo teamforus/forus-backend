@@ -18,8 +18,11 @@ class BankConnectionExpiringNotification extends BaseBankConnectionsNotification
     {
         $implementation = Implementation::general();
 
-        $this->sendMailNotification($identity->email, new BankConnectionExpiringMail(array_merge([
+        $mailable = new BankConnectionExpiringMail([
             'url_sponsor' => $implementation->urlSponsorDashboard(),
-        ], $this->eventLog->data), $implementation->emailFrom()));
+            ...$this->eventLog->data,
+        ], $implementation->emailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

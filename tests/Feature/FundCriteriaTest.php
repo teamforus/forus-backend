@@ -4,45 +4,43 @@ namespace Tests\Feature;
 
 use App\Models\Employee;
 use App\Models\Fund;
-use App\Models\FundCriterion;
 use App\Models\FundRequest;
 use App\Models\Identity;
-use App\Models\Organization;
-use App\Models\Prevalidation;
 use App\Models\RecordType;
+use App\Models\Voucher;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\FundFormulaProductTestTrait;
+use Tests\Traits\MakesTestFundProviders;
+use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
 
 class FundCriteriaTest extends TestCase
 {
-    use WithFaker, DatabaseTransactions, MakesTestFunds, MakesTestIdentities, MakesTestOrganizations;
-
-    /**
-     * @var string
-     */
-    protected string $apiUrlCriteria = '/api/v1/platform/organizations/%s/funds/%s/criteria';
-
-    /**
-     * @var string
-     */
-    protected string $apiUrlFundRequest = '/api/v1/platform/funds/%s/requests';
-
-    /**
-     * @var string
-     */
-    protected string $apiUrlPrevalidations = '/api/v1/platform/prevalidations';
+    use WithFaker;
+    use MakesTestFunds;
+    use MakesTestIdentities;
+    use DatabaseTransactions;
+    use MakesTestFundRequests;
+    use MakesTestOrganizations;
+    use MakesTestFundProviders;
+    use FundFormulaProductTestTrait;
 
     /**
      * @var string
      */
     protected string $apiUrlFundsApply = '/api/v1/platform/funds/%s/apply';
+
+    /**
+     * @var string
+     */
+    protected string $apiUrlFundsCheck = '/api/v1/platform/funds/%s/check';
 
     /**
      * @var string
@@ -297,13 +295,14 @@ class FundCriteriaTest extends TestCase
 
     /**
      * @return void
+     * @throws \Throwable
      */
     public function testFundRequestRecordsApplySuccess(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFund($fund);
+        $this->addTestCriteriaToFund($fund);
 
         $response = $this->makeFundRequest($identity, $fund, [
             $this->makeRequestCriterionValue($fund, "test_bool", 'Ja'),
@@ -319,6 +318,9 @@ class FundCriteriaTest extends TestCase
 
         $response->assertSuccessful();
 
+        $products = $this->makeProviderAndProducts($fund);
+        $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+
         /** @var Employee $employee */
         $fundRequest = FundRequest::find($response->json('data.id'));
         $employee = $fundRequest->fund->organization->employees->first();
@@ -327,54 +329,115 @@ class FundCriteriaTest extends TestCase
         $this->assertNotNull($employee);
 
         $fundRequest->assignEmployee($employee);
-        $fundRequest->approve($employee);
+        $fundRequest->approve();
         $fundRequest->refresh();
 
-        $vouchers = $fundRequest->identity->vouchers;
-
         $this->assertTrue($fundRequest->isApproved());
-        $this->assertCount(1, $vouchers);
-        $this->assertEquals($vouchers[0]?->amount, $fund->fund_formulas[0]?->amount);
+
+        $budgetVoucher = $fundRequest->identity->vouchers->whereNull('product_id')[0] ?? null;
+        $totalFormulaAmount = $fund->fund_formulas[0]?->amount;
+        $totalFormulaProductsAmount = $fund->fund_formula_products->pluck('price')->sum();
+
+        $this->assertNotNull($budgetVoucher);
+        $this->assertEquals($budgetVoucher->amount, $totalFormulaAmount + $totalFormulaProductsAmount);
+        $this->assertFundFormulaProductVouchersCreatedByMainVoucher($budgetVoucher);
+}
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testStoreSinglePrevalidationByRedeem()
+    {
+        $this->assertPrevalidationSuccess();
     }
 
     /**
      * @return void
+     * @throws \Throwable
      */
-    public function testStoreSinglePrevalidationSuccess(): void
+    public function testStoreSinglePrevalidationByApply()
+    {
+        $this->assertPrevalidationSuccess(false);
+    }
+
+    /**
+     * @param bool $assertRedeem
+     * @return void
+     * @throws \Throwable
+     */
+    public function assertPrevalidationSuccess(bool $assertRedeem = true): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $identity->setBsnRecord('123456789');
-        $identityHeaders = $this->makeApiHeaders($this->makeIdentityProxy($identity));
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFund($fund);
 
-        // create prevalidation
-        $response = $this->makeStorePrevalidationRequest($organization->identity, $fund, [
-            $this->makeRequestCriterionValue($fund, "test_bool", 'Ja'),
-            $this->makeRequestCriterionValue($fund, "test_iban", fake()->iban),
-            $this->makeRequestCriterionValue($fund, "test_date", '01-01-2010'),
-            $this->makeRequestCriterionValue($fund, "test_email", fake()->email),
-            $this->makeRequestCriterionValue($fund, "test_string", 'lorem_ipsum'),
-            $this->makeRequestCriterionValue($fund, "test_string_any", 'ipsum_lorem'),
-            $this->makeRequestCriterionValue($fund, "test_number", 7),
-            $this->makeRequestCriterionValue($fund, "test_select", 'foo'),
-            $this->makeRequestCriterionValue($fund, "test_select_number", 2),
-        ], [
-            'uid' => token_generator()->generate(32),
-        ]);
+        $identityHeaders = [
+            ...$this->makeApiHeaders($identity),
+            'Client-Type' => 'webshop',
+            'Client-Key' => $fund->fund_config->implementation->key,
+        ];
 
+        $this->addTestCriteriaToFund($fund);
+        $prevalidation = $this->makePrevalidationForTestCriteria($organization, $fund);
+        $products = $this->makeProviderAndProducts($fund);
+
+        if ($fund->isTypeBudget()) {
+            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+        }
+
+        if ($assertRedeem) {
+            $code = $prevalidation->uid;
+            $response = $this->postJson($this->apiUrlFundsRedeem, compact('code'), $identityHeaders);
+            $response->assertSuccessful();
+            $voucher = $identity->vouchers()->whereNull('product_id')->first();
+        } else {
+            $prevalidation->assignToIdentity($identity);
+            $response = $this->postJson(sprintf($this->apiUrlFundsApply, $fund->id), [], $identityHeaders);
+            $response->assertSuccessful();
+            $voucher = Voucher::find($response->json('data.id'));
+        }
+
+        $this->assertNotNull($voucher);
+        $this->assertFundFormulaProductVouchersCreatedByMainVoucher($voucher);
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testPrevalidationCheckSuccess(): void
+    {
+        $bsn = '123456789';
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['bsn_enabled' => true]);
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $identity->setBsnRecord($bsn);
+        $fund = $this->makeTestFund($organization, [], ['csv_primary_key' => 'bsn']);
+
+        $identityHeaders = [
+            ...$this->makeApiHeaders($identity),
+            'Client-Type' => 'webshop',
+            'Client-Key' => $fund->fund_config->implementation->key,
+        ];
+
+        $this->addTestCriteriaToFund($fund);
+        $this->makePrevalidationForTestCriteria($organization, $fund, $bsn);
+
+        $products = $this->makeProviderAndProducts($fund);
+
+        if ($fund->isTypeBudget()) {
+            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+        }
+
+        $response = $this->postJson(sprintf($this->apiUrlFundsCheck, $fund->id), [], $identityHeaders);
         $response->assertSuccessful();
-        $prevalidation = Prevalidation::find($response->json('data.id'));
-        $code = $prevalidation->uid;
 
-        // redeem the prevalidation
-        $response = $this->postJson($this->apiUrlFundsRedeem, compact('code'), $identityHeaders);
-        $response->assertSuccessful();
+        /** @var Voucher $voucher */
+        $voucher = $identity->vouchers()->whereNull('product_id')->first();
 
-        // assert is possible to apply
-        $response = $this->postJson(sprintf($this->apiUrlFundsApply, $fund->id), [], $identityHeaders);
-        $response->assertSuccessful();
+        $this->assertNotNull($voucher);
+        $this->assertFundFormulaProductVouchersCreatedByMainVoucher($voucher);
     }
 
     /**
@@ -385,7 +448,7 @@ class FundCriteriaTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFund($fund);
+        $this->addTestCriteriaToFund($fund);
 
         $records = [
             $this->makeRequestCriterionValue($fund, "test_bool", 'Nee'),
@@ -412,7 +475,7 @@ class FundCriteriaTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFund($fund);
+        $this->addTestCriteriaToFund($fund);
 
         $records = [
             $this->makeRequestCriterionValue($fund, "test_date", '01-01-1995'),
@@ -435,7 +498,7 @@ class FundCriteriaTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFund($fund);
+        $this->addTestCriteriaToFund($fund);
 
         $records = [
             $this->makeRequestCriterionValue($fund, "test_date", '01-01-2030'),
@@ -458,7 +521,7 @@ class FundCriteriaTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFund($fund);
+        $this->addTestCriteriaToFund($fund);
         $fund->criteria()->update([
             'optional' => true,
         ]);
@@ -487,7 +550,7 @@ class FundCriteriaTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->prepareTestFund($fund);
+        $this->addTestCriteriaToFund($fund);
 
         $fund->criteria()->update([
             'show_attachment' => true,
@@ -506,127 +569,6 @@ class FundCriteriaTest extends TestCase
 
         $response = $this->makeFundRequest($identity, $fund, $records, false);
         $response->assertSuccessful();
-    }
-
-    /**
-     * @param Fund $fund
-     * @return void
-     */
-    protected function prepareTestFund(Fund $fund): void
-    {
-        $fund->criteria()->forceDelete();
-
-        $this->makeRecordType($fund->organization, RecordType::TYPE_BOOL, "test_bool");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_IBAN, "test_iban");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_DATE, "test_date");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_EMAIL, "test_email");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_STRING, "test_string");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_STRING, "test_string_any");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_NUMBER, "test_number");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_SELECT, "test_select");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_SELECT_NUMBER, "test_select_number");
-
-        $response = $this->updateCriteriaRequest([
-            $this->makeCriterion("test_bool", 'Ja', '='),
-            $this->makeCriterion("test_iban", null, '*'),
-            $this->makeCriterion("test_date", '01-01-2000', '>=', '01-01-1990', '01-01-2020'),
-            $this->makeCriterion("test_email", null, '*'),
-            $this->makeCriterion("test_string", 'lorem_ipsum', '=', 5, 20),
-            $this->makeCriterion("test_string_any", null, '*', 5, 20),
-            $this->makeCriterion("test_number", '7', '>=', 5, 10),
-            $this->makeCriterion("test_select", 'foo', '='),
-            $this->makeCriterion("test_select_number", 2, '>='),
-        ], $fund);
-
-        $fund->organization->forceFill([
-            'fund_request_resolve_policy' => $fund->organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        $response->assertSuccessful();
-    }
-
-    /**
-     * @param Organization $organization
-     * @param string $type
-     * @param string $key
-     * @return RecordType
-     */
-    protected function makeRecordType(
-        Organization $organization,
-        string $type,
-        string $key,
-    ): RecordType {
-         $recordType = RecordType::create([
-            'organization_id' => $organization->id,
-            'criteria' => true,
-            'type' => $type,
-            'key' => $key,
-        ]);
-
-         if ($type === $recordType::TYPE_SELECT) {
-             $recordType->record_type_options()->createMany([[
-                 'value' => 'foo',
-                 'name' => 'Foo',
-             ], [
-                 'value' => 'bar',
-                 'name' => 'Bar',
-             ]]);
-         }
-
-        if ($type === $recordType::TYPE_SELECT_NUMBER) {
-            $recordType->record_type_options()->createMany([[
-                'value' => 1,
-                'name' => 'Foo',
-            ], [
-                'value' => 2,
-                'name' => 'Bar',
-            ]]);
-        }
-
-         return $recordType;
-    }
-
-    /**
-     * @param string $key
-     * @param string|null $value
-     * @param string $operator
-     * @param string|null $min
-     * @param string|null $max
-     * @return array
-     */
-    protected function makeCriterion(
-        string $key,
-        ?string $value,
-        string $operator,
-        string $min = null,
-        string $max = null,
-    ): array {
-        return [
-            'max' => $max,
-            'min' => $min,
-            'value' => $value,
-            'operator' => $operator,
-            'record_type_key' => $key,
-            'show_attachment' => false,
-        ];
-    }
-
-    /**
-     * @param Fund $fund
-     * @param string $key
-     * @param string|null $value
-     * @return array
-     */
-    protected function makeRequestCriterionValue(Fund $fund, string $key, ?string $value): array
-    {
-        /** @var FundCriterion|null $criterion */
-        $criterion = $fund->criteria->firstWhere('record_type_key', $key);
-
-        return [
-            'fund_criterion_id' => $criterion?->id,
-            'value' => $value,
-            'files' => [],
-        ];
     }
 
     /**
@@ -704,68 +646,6 @@ class FundCriteriaTest extends TestCase
     }
 
     /**
-     * @param Identity $identity
-     * @param Fund $fund
-     * @param mixed $records
-     * @param bool $validate
-     * @return TestResponse
-     */
-    protected function makeFundRequest(
-        Identity $identity,
-        Fund $fund,
-        mixed $records,
-        bool $validate,
-    ): TestResponse {
-        $url = sprintf($this->apiUrlFundRequest, $fund->id) . ($validate ? "/validate" : "");
-        $proxy = $this->makeIdentityProxy($identity);
-        $identity->setBsnRecord('123456789');
-
-        return $this->postJson($url, compact('records'), $this->makeApiHeaders($proxy));
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Fund $fund
-     * @param array $records
-     * @param array $extraData
-     * @return TestResponse
-     */
-    protected function makeStorePrevalidationRequest(
-        Identity $identity,
-        Fund $fund,
-        array $records,
-        array $extraData = [],
-    ): TestResponse {
-        $proxy = $this->makeIdentityProxy($identity);
-        $criteria = $fund->criteria()->pluck('record_type_key', 'id')->toArray();
-
-        return $this->postJson($this->apiUrlPrevalidations, [
-            'fund_id' => $fund->id,
-            'data' => [
-                ...array_reduce($records, fn ($list, $record) => [
-                    ...$list,
-                    $criteria[$record['fund_criterion_id']] => $record['value'],
-                    ], []),
-                ...$extraData,
-            ],
-        ], $this->makeApiHeaders($proxy));
-    }
-
-    /**
-     * @param array $criteria
-     * @param Fund $fund
-     * @return TestResponse
-     */
-    protected function updateCriteriaRequest(array $criteria, Fund $fund): TestResponse
-    {
-        $url = sprintf($this->apiUrlCriteria, $fund->organization_id, $fund->id);
-
-        return $this->patchJson($url, [
-            'criteria' => $criteria,
-        ], $this->makeApiHeaders($this->makeIdentityProxy($fund->organization?->identity)));
-    }
-
-    /**
      * @param array $criteria
      * @param Fund $fund
      * @return TestResponse
@@ -776,6 +656,6 @@ class FundCriteriaTest extends TestCase
 
         return $this->patchJson($url, [
             'criteria' => [$criteria],
-        ], $this->makeApiHeaders($this->makeIdentityProxy($fund->organization?->identity)));
+        ], $this->makeApiHeaders($fund->organization?->identity));
     }
 }

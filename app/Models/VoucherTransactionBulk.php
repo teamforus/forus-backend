@@ -9,6 +9,7 @@ use App\Models\Traits\HasDbTokens;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherTransactionBulkQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
+use App\Searches\VoucherTransactionBulksSearch;
 use App\Services\BNGService\BNGService;
 use App\Services\BNGService\Data\PaymentInfoData;
 use App\Services\BNGService\Exceptions\ApiException;
@@ -57,8 +58,8 @@ use Throwable;
  * @property int|null $implementation_id
  * @property array|null $auth_params
  * @property string $state
- * @property int $accepted_manually
- * @property int $is_exported
+ * @property bool $accepted_manually
+ * @property bool $is_exported
  * @property int $state_fetched_times
  * @property string|null $state_fetched_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -139,12 +140,10 @@ class VoucherTransactionBulk extends BaseModel
         'id', 'amount', 'created_at', 'state', 'voucher_transactions_count',
     ];
 
-    protected $dates = [
-        'execution_date',
-    ];
-
     protected $casts = [
         'auth_params' => 'array',
+        'is_exported' => 'boolean',
+        'execution_date' => 'datetime',
         'accepted_manually' => 'boolean',
     ];
 
@@ -301,9 +300,9 @@ class VoucherTransactionBulk extends BaseModel
                 ) : null;
 
                 $transaction->forceFill([
-                    'state'             => VoucherTransaction::STATE_SUCCESS,
-                    'payment_id'        => $payment?->getId(),
-                    'payment_time'      => now(),
+                    'state' => VoucherTransaction::STATE_SUCCESS,
+                    'payment_id' => $payment?->getId(),
+                    'payment_time' => now(),
                 ])->save();
 
                 VoucherTransactionBunqSuccess::dispatch($transaction);
@@ -615,7 +614,7 @@ class VoucherTransactionBulk extends BaseModel
 
         $transactionsBulk->log(self::EVENT_CREATED, $transactionsBulk->getLogModels($employee));
 
-        $query->take($perBulk)->update([
+        VoucherTransaction::whereIn('id', $query->take($perBulk)->pluck('id')->toArray())->update([
             'voucher_transaction_bulk_id' => $transactionsBulk->id,
         ]);
 
@@ -732,47 +731,11 @@ class VoucherTransactionBulk extends BaseModel
             'bank_connections.organization_id' => $organization->id,
         ]));
 
-        if ($request->has('from')) {
-            $query->where('created_at', '>=', Carbon::createFromFormat(
-                'Y-m-d',
-                $request->input('from')
-            )->startOfDay()->format('Y-m-d H:i:s'));
-        }
+        $builder = new VoucherTransactionBulksSearch($request->only([
+            'state', 'from', 'to', 'amount_min', 'amount_max', 'quantity_min', 'quantity_max',
+        ]), $query);
 
-        if ($request->has('to')) {
-            $query->where('created_at', '<=', Carbon::createFromFormat(
-                'Y-m-d',
-                $request->input('to')
-            )->endOfDay()->format('Y-m-d H:i:s'));
-        }
-
-        if ($request->has('state')) {
-            $query->where('state', $request->input('state'));
-        }
-
-        if ($request->has('quantity_min')) {
-            $query->has('voucher_transactions', '>=', $request->input('quantity_min'));
-        }
-
-        if ($request->has('quantity_max')) {
-            $query->has('voucher_transactions', '<=', $request->input('quantity_max'));
-        }
-
-        if ($request->has('amount_min')) {
-            $query->whereHas('voucher_transactions', function (Builder $builder) use ($request) {
-                $builder->selectRaw('SUM(`voucher_transactions`.`amount`) as `total_amount`');
-                $builder->having('total_amount', '>=', $request->input('amount_min'));
-            });
-        }
-
-        if ($request->has('amount_max')) {
-            $query->whereHas('voucher_transactions', function (Builder $builder) use ($request) {
-                $builder->selectRaw('SUM(`voucher_transactions`.`amount`) as `total_amount`');
-                $builder->having('total_amount', '<=', $request->input('amount_max'));
-            });
-        }
-
-        return $query;
+        return $builder->query();
     }
 
     /**

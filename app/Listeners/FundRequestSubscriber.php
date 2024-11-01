@@ -4,15 +4,12 @@ namespace App\Listeners;
 
 use App\Events\FundRequestClarifications\FundRequestClarificationReceived;
 use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
-use App\Events\FundRequestRecords\FundRequestRecordApproved;
-use App\Events\FundRequestRecords\FundRequestRecordAssigned;
 use App\Events\FundRequestRecords\FundRequestRecordUpdated;
-use App\Events\FundRequestRecords\FundRequestRecordDeclined;
-use App\Events\FundRequestRecords\FundRequestRecordResigned;
 use App\Events\FundRequests\FundRequestAssigned;
 use App\Events\FundRequests\FundRequestCreated;
 use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
+use App\Models\Data\BankAccount;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
@@ -22,7 +19,6 @@ use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotifica
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRequestedNotification;
 use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
 use App\Notifications\Organizations\FundRequests\FundRequestRecordFeedbackReceivedNotification;
@@ -50,7 +46,7 @@ class FundRequestSubscriber
 
         // auto approve request if required
         if (!empty($identityBsn) && $fund->isAutoValidatingRequests()) {
-            $fundRequest->approve($fund->default_validator_employee);
+            $fundRequest->approve();
         }
 
         $event = $fundRequest->log(
@@ -79,7 +75,6 @@ class FundRequestSubscriber
             $fundRequest::EVENT_DECLINED,
             $fundRequest::EVENT_APPROVED,
             $fundRequest::EVENT_DISREGARDED,
-            $fundRequest::EVENT_APPROVED_PARTLY,
         ];
 
         if (in_array($fundRequest::EVENTS, $eventsList)) {
@@ -91,6 +86,7 @@ class FundRequestSubscriber
         if ($fundRequest->isDisregarded() && $fundRequest->disregard_notify) {
             IdentityFundRequestDisregardedNotification::send($eventLog);
         }
+
 
         if ($fundRequest->isApproved()) {
             /** @var Fund[] $funds */
@@ -108,8 +104,37 @@ class FundRequestSubscriber
 
             foreach ($funds as $fund) {
                 if (Gate::forUser($fundRequest->identity)->allows('apply', [$fund, $logScope])) {
-                    $fund->makeVoucher($fundRequest->identity_address);
-                    $fund->makeFundFormulaProductVouchers($fundRequest->identity_address);
+                    $amount = $fund->id === $fundRequest->fund_id ? $fundRequest->getPaymentAmount() : null;
+
+                    if ($fund->fund_config->isPayoutOutcome()) {
+                        $fund->makePayout(
+                            amount: $amount,
+                            employee: $fundRequest->employee,
+                            bankAccount: new BankAccount(
+                                $fundRequest->getIban(),
+                                $fundRequest->getIbanName(),
+                            ),
+                            voucherFields: [
+                                'fund_request_id' => $fundRequest->id,
+                                'identity_address' => $fundRequest->identity_address,
+                            ],
+                        );
+                    } else {
+                        $fund->makeVoucher(
+                            $fundRequest->identity_address,
+                            voucherFields: [
+                                'fund_request_id' => $fundRequest->id,
+                            ],
+                            amount: $amount,
+                        );
+                    }
+
+                    $fund->makeFundFormulaProductVouchers(
+                        $fundRequest->identity_address,
+                        voucherFields: [
+                            'fund_request_id' => $fundRequest->id,
+                        ]
+                    );
                 }
             }
 
@@ -153,68 +178,6 @@ class FundRequestSubscriber
         ]);
 
         $fundRequest->log($fundRequest::EVENT_RESIGNED, $eventModels, array_merge(
-            $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [],
-        ));
-    }
-
-    /**
-     * @param FundRequestRecordApproved $requestRecordEvent
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestRecordApproved(FundRequestRecordApproved $requestRecordEvent): void
-    {
-        $fundRequestRecord = $requestRecordEvent->getFundRequestRecord();
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
-
-        $fundRequestRecord->log($fundRequestRecord::EVENT_APPROVED, $eventModels);
-    }
-
-    /**
-     * @param FundRequestRecordDeclined $requestRecordEvent
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestRecordDeclined(FundRequestRecordDeclined $requestRecordEvent): void
-    {
-        $fundRequestRecord = $requestRecordEvent->getFundRequestRecord();
-        $notifyRequester = $requestRecordEvent->getNotifyRequester();
-
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
-
-        $event = $fundRequestRecord->log($fundRequestRecord::EVENT_DECLINED, $eventModels, [
-            'rejection_note' => $fundRequestRecord->note,
-        ]);
-
-        if ($notifyRequester) {
-            IdentityFundRequestRecordDeclinedNotification::send($event);
-        }
-    }
-
-    /**
-     * @param FundRequestRecordAssigned $event
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestRecordAssigned(FundRequestRecordAssigned $event): void
-    {
-        $fundRequestRecord = $event->getFundRequestRecord();
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
-        $supervisorEmployee = $event->getSupervisorEmployee();
-
-        $fundRequestRecord->log($fundRequestRecord::EVENT_ASSIGNED, $eventModels, array_merge(
-            $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [],
-        ));
-    }
-
-    /**
-     * @param FundRequestRecordResigned $event
-     * @noinspection PhpUnused
-     */
-    public function onFundRequestRecordResigned(FundRequestRecordResigned $event): void
-    {
-        $fundRequestRecord = $event->getFundRequestRecord();
-        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
-        $supervisorEmployee = $event->getSupervisorEmployee();
-
-        $fundRequestRecord->log($fundRequestRecord::EVENT_RESIGNED, $eventModels, array_merge(
             $supervisorEmployee ? $this->getSupervisorFields($supervisorEmployee) : [],
         ));
     }
@@ -335,10 +298,6 @@ class FundRequestSubscriber
         $events->listen(FundRequestAssigned::class, "$class@onFundRequestAssigned");
         $events->listen(FundRequestResigned::class, "$class@onFundRequestResigned");
 
-        $events->listen(FundRequestRecordDeclined::class, "$class@onFundRequestRecordDeclined");
-        $events->listen(FundRequestRecordApproved::class, "$class@onFundRequestRecordApproved");
-        $events->listen(FundRequestRecordAssigned::class, "$class@onFundRequestRecordAssigned");
-        $events->listen(FundRequestRecordResigned::class, "$class@onFundRequestRecordResigned");
         $events->listen(FundRequestRecordUpdated::class, "$class@onFundRequestRecordUpdated");
 
         $events->listen(FundRequestClarificationRequested::class, "$class@onFundRequestClarificationRequested");

@@ -3,19 +3,14 @@
 namespace App\Models;
 
 use App\Events\Funds\FundArchivedEvent;
-use App\Events\Funds\FundEndedEvent;
-use App\Events\Funds\FundExpiringEvent;
-use App\Events\Funds\FundStartedEvent;
 use App\Events\Funds\FundUnArchivedEvent;
 use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
+use App\Models\Data\BankAccount;
 use App\Models\Traits\HasFaq;
 use App\Models\Traits\HasTags;
 use App\Rules\FundRequests\BaseFundRequestRule;
-use App\Scopes\Builders\FundCriteriaQuery;
-use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
-use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\RecordValidationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
@@ -44,6 +39,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * App\Models\Fund
@@ -55,6 +51,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $description_text
  * @property string|null $description_short
  * @property string $description_position
+ * @property int|null $parent_id
  * @property string|null $faq_title
  * @property string $request_btn_text
  * @property string|null $external_link_url
@@ -71,12 +68,13 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $notification_amount
  * @property \Illuminate\Support\Carbon|null $notified_at
  * @property \Illuminate\Support\Carbon|null $start_date
- * @property \Illuminate\Support\Carbon $end_date
+ * @property \Illuminate\Support\Carbon|null $end_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
- * @property int|null $parent_id
+ * @property-read Collection|\App\Models\FundAmountPreset[] $amount_presets
+ * @property-read int|null $amount_presets_count
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
@@ -85,6 +83,8 @@ use Illuminate\Support\Facades\DB;
  * @property-read int|null $children_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
+ * @property-read Collection|\App\Models\FundCriteriaStep[] $criteria_steps
+ * @property-read int|null $criteria_steps_count
  * @property-read \App\Models\Employee|null $default_validator_employee
  * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
  * @property-read int|null $digests_count
@@ -107,6 +107,8 @@ use Illuminate\Support\Facades\DB;
  * @property-read int|null $fund_formulas_count
  * @property-read Collection|\App\Models\FundLimitMultiplier[] $fund_limit_multipliers
  * @property-read int|null $fund_limit_multipliers_count
+ * @property-read Collection|\App\Models\FundPeriod[] $fund_periods
+ * @property-read int|null $fund_periods_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $fund_request_records
@@ -217,6 +219,7 @@ class Fund extends BaseModel
     public const EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
     public const EVENT_VOUCHERS_EXPORTED = 'vouchers_exported';
     public const EVENT_SPONSOR_NOTIFICATION_CREATED = 'sponsor_notification_created';
+    public const EVENT_PERIOD_EXTENDED = 'period_extended';
 
     public const STATE_ACTIVE = 'active';
     public const STATE_CLOSED = 'closed';
@@ -234,8 +237,8 @@ class Fund extends BaseModel
     ];
 
     public const TYPE_BUDGET = 'budget';
-    public const TYPE_SUBSIDIES = 'subsidies';
     public const TYPE_EXTERNAL = 'external';
+    public const TYPE_SUBSIDIES = 'subsidies';
 
     public const TYPES = [
         self::TYPE_BUDGET,
@@ -274,20 +277,12 @@ class Fund extends BaseModel
     protected $casts = [
         'public' => 'boolean',
         'archived' => 'boolean',
+        'end_date' => 'datetime',
+        'start_date' => 'datetime',
+        'notified_at' => 'datetime',
         'external_page' => 'boolean',
         'auto_requests_validation' => 'boolean',
         'criteria_editable_after_start' => 'boolean',
-    ];
-
-    /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = [
-        'start_date',
-        'end_date',
-        'notified_at',
     ];
 
     /**
@@ -310,9 +305,27 @@ class Fund extends BaseModel
      * @return HasMany
      * @noinspection PhpUnused
      */
+    public function criteria_steps(): HasMany
+    {
+        return $this->hasMany(FundCriteriaStep::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_periods(): HasMany
+    {
+        return $this->hasMany(FundPeriod::class);
     }
 
     /**
@@ -467,6 +480,7 @@ class Fund extends BaseModel
 
         $this->fund_config()->create()->forceFill($preApprove ? [
             'key' => str_slug($this->name, '_') . '_' . resolve('token_generator')->generate(8),
+            'outcome_type' => Arr::get($attributes, 'outcome_type', FundConfig::OUTCOME_TYPE_VOUCHER),
             'is_configured' => 1,
             'implementation_id' => $this->organization->implementations[0]->id ?? null,
         ] : [])->save();
@@ -486,7 +500,14 @@ class Fund extends BaseModel
             'contact_info_message_custom', 'contact_info_message_text',
             'auth_2fa_policy', 'auth_2fa_remember_ip',
             'auth_2fa_restrict_emails', 'auth_2fa_restrict_auth_sessions',
-            'auth_2fa_restrict_reimbursements', 'hide_meta',
+            'auth_2fa_restrict_reimbursements', 'hide_meta', 'voucher_amount_visible',
+            'allow_custom_amounts', 'allow_custom_amounts_validator',
+            'allow_preset_amounts', 'allow_preset_amounts_validator',
+            'custom_amount_min', 'custom_amount_max', 'provider_products_required',
+            'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
+            'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
+            'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
+            'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
@@ -494,6 +515,25 @@ class Fund extends BaseModel
         ], false) : [];
 
         $this->fund_config->forceFill(array_merge($values, $replaceValues))->save();
+    }
+
+    /**
+     * @param array $presets
+     * @return void
+     */
+    public function syncAmountPresets(array $presets): void
+    {
+        $this->amount_presets()
+            ->whereNotIn('id', array_filter(Arr::pluck($presets, 'id')))
+            ->delete();
+
+        foreach ($presets as $preset) {
+            $data = array_only($preset, ['name', 'amount']);
+
+            $preset['id'] ?? null ?
+                $this->amount_presets()->find($preset['id'])->update($data) :
+                $this->amount_presets()->create($data);
+        }
     }
 
     /**
@@ -846,7 +886,7 @@ class Fund extends BaseModel
             'organization_id',
             'id'
         )->whereHas('roles.permissions', static function(Builder $builder) {
-            $builder->where('key', 'validate_records');
+            $builder->where('key', Permission::VALIDATE_RECORDS);
         });
     }
 
@@ -864,7 +904,7 @@ class Fund extends BaseModel
             'organization_id',
             'id'
         )->whereHas('roles.permissions', static function(Builder $builder) {
-            $builder->where('key', 'manage_validators');
+            $builder->where('key', Permission::MANAGE_VALIDATORS);
         });
     }
 
@@ -899,6 +939,15 @@ class Fund extends BaseModel
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
+    public function amount_presets(): HasMany
+    {
+        return $this->hasMany(FundAmountPreset::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
     public function fund_limit_multipliers(): HasMany
     {
         return $this->hasMany(FundLimitMultiplier::class);
@@ -913,44 +962,53 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return BelongsToMany
      * @noinspection PhpUnused
      */
-    public function formula_products(): HasManyThrough
+    public function formula_products(): BelongsToMany
     {
-        return $this->hasManyThrough(
-            Product::class,
-            FundFormulaProduct::class,
-            'fund_id',
-            'id'
-        );
+        return $this->belongsToMany(Product::class, 'fund_formula_products');
+    }
+
+    /**
+     * @param string $identity_address
+     * @param array $record_types
+     * @return array|Record[]
+     */
+    public function getTrustedRecordOfTypes(
+        string $identity_address,
+        array $record_types,
+    ): array {
+        return array_combine($record_types, array_map(fn ($record_type) => $this->getTrustedRecordOfType(
+            $identity_address,
+            $record_type,
+        )?->value, $record_types));
     }
 
     /**
      * @param string $identity_address
      * @param string $record_type
-     * @param FundCriterion|null $criterion
      * @return Model|Record|null
      */
     public function getTrustedRecordOfType(
         string $identity_address,
         string $record_type,
-        FundCriterion $criterion = null,
     ): Record|Model|null {
         $fund = $this;
         $daysTrusted = $this->getTrustedDays($record_type);
+        $startDate = $this->fund_config?->record_validity_start_date;
 
         $builder = Record::search(Identity::findByAddress($identity_address)->records(), [
             'type' => $record_type,
-        ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund, $criterion) {
-            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted);
-            RecordValidationQuery::whereTrustedByQuery($query, $fund, $criterion);
+        ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund, $startDate) {
+            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
+            RecordValidationQuery::whereTrustedByQuery($query, $fund);
         });
 
-        $validationSubQuery = RecordValidation::where(function(Builder $query) use ($daysTrusted, $fund, $criterion) {
+        $validationSubQuery = RecordValidation::where(function(Builder $query) use ($daysTrusted, $fund, $startDate) {
             $query->whereColumn('records.id', '=', 'record_validations.record_id');
-            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted);
-            RecordValidationQuery::whereTrustedByQuery($query, $fund, $criterion);
+            RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
+            RecordValidationQuery::whereTrustedByQuery($query, $fund);
         });
 
         $builder->addSelect([
@@ -1015,7 +1073,7 @@ class Fund extends BaseModel
                     } else {
                         $record = $this->getTrustedRecordOfType(
                             $identityAddress,
-                            $formula->record_type_key
+                            $formula->record_type_key,
                         );
 
                         $value = $record?->value;
@@ -1047,7 +1105,7 @@ class Fund extends BaseModel
             } else {
                 $record = $this->getTrustedRecordOfType(
                     $identityAddress,
-                    $multiplier->record_type_key
+                    $multiplier->record_type_key,
                 );
 
                 $value = (int) ($record ? $record->value: 1);
@@ -1077,16 +1135,19 @@ class Fund extends BaseModel
 
     /**
      * @param bool $withOptional
+     * @param array $values
      * @return array
      */
-    public function requiredPrevalidationKeys(bool $withOptional = false): array
+    public function requiredPrevalidationKeys(bool $withOptional, array $values): array
     {
         $criteriaKeys = $withOptional ?
             $this->criteria
                 ?->pluck('record_type_key')
                 ?->toArray() ?? [] :
             $this->criteria
-                ?->where('optional', false)
+                ?->filter(function (FundCriterion $criterion) use ($values) {
+                    return !$criterion->optional && !$criterion->isExcludedByRules($values);
+                })
                 ?->pluck('record_type_key')
                 ?->toArray() ?? [];
 
@@ -1101,7 +1162,7 @@ class Fund extends BaseModel
             ...$formulaKeys,
         ]);
 
-        return array_unique($list);
+        return array_values(array_unique($list));
     }
 
     /**
@@ -1110,7 +1171,8 @@ class Fund extends BaseModel
      * @param string $state
      * @return $this
      */
-    public function changeState(string $state): self {
+    public function changeState(string $state): self
+    {
         if (in_array($state, self::STATES)) {
             $this->update(compact('state'));
         }
@@ -1119,38 +1181,13 @@ class Fund extends BaseModel
     }
 
     /**
-     * Update fund state by the start and end dates
-     */
-    public static function checkStateQueue(): void {
-        $funds = static::where(function(Builder $builder) {
-            FundQuery::whereIsConfiguredByForus($builder);
-        })->whereDate('start_date', '<=', now())->get();
-
-        foreach ($funds as $fund) {
-            if ($fund->isPaused() && $fund->start_date->startOfDay()->isPast()) {
-                FundStartedEvent::dispatch($fund->changeState(self::STATE_ACTIVE));
-            }
-
-            $expirationNotified = $fund->logs()->where('event', self::EVENT_FUND_EXPIRING)->exists();
-            $isTimeToNotify = $fund->end_date->clone()->subDays(14)->isPast();
-
-            if (!$expirationNotified && !$fund->isClosed() && $isTimeToNotify) {
-                FundExpiringEvent::dispatch($fund);
-            }
-
-            if (!$fund->isClosed() && $fund->end_date->clone()->addDay()->isPast()) {
-                FundEndedEvent::dispatch($fund->changeState(self::STATE_CLOSED));
-            }
-        }
-    }
-
-    /**
      * Send funds user count statistic to email
      * @param string $email
      * @return void
      */
-    public static function sendUserStatisticsReport(string $email): void {
-        $funds = self::whereHas('fund_config', static function (Builder $query) {
+    public static function sendUserStatisticsReport(string $email): void
+    {
+        $funds = Fund::whereHas('fund_config', static function (Builder $query) {
             return $query->where('is_configured', true);
         })->whereIn('state', [
             self::STATE_ACTIVE, self::STATE_PAUSED
@@ -1186,47 +1223,86 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identity_address
-     * @param array $extraFields
-     * @param float|null $voucherAmount
+     * @param array $voucherFields
+     * @param string|FundAmountPreset|null $amount
      * @param Carbon|null $expire_at
      * @param int|null $limit_multiplier
      * @return Voucher|null
      */
     public function makeVoucher(
         string $identity_address = null,
-        array $extraFields = [],
-        float $voucherAmount = null,
+        array $voucherFields = [],
+        string|FundAmountPreset $amount = null,
         Carbon $expire_at = null,
         ?int $limit_multiplier = null,
     ): ?Voucher {
-        $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
-        $returnable = false;
-        $expire_at = $expire_at ?: $this->end_date;
-        $fund_id = $this->id;
-        $limit_multiplier = $limit_multiplier ?: $this->multiplierForIdentity($identity_address);
-        $voucher = null;
+        $presetModel = $amount instanceof FundAmountPreset ? $amount : null;
 
-        if ($this->fund_formulas->count() > 0) {
-            $voucher = Voucher::create(array_merge(compact(
-                'identity_address', 'amount', 'expire_at', 'fund_id',
-                'returnable', 'limit_multiplier'
-            ), $extraFields));
-
-            VoucherCreated::dispatch($voucher);
+        if ($this->fund_formulas->count() === 0 && $amount === null) {
+            return null;
         }
+
+        $amount = $presetModel ? $presetModel->amount : $amount;
+        $amount = $amount === null ? $this->amountForIdentity($identity_address) : $amount;
+
+        $voucher = Voucher::create([
+            'number' => Voucher::makeUniqueNumber(),
+            'identity_address' => $identity_address,
+            'amount' => $amount,
+            'expire_at' => $expire_at ?: $this->end_date,
+            'fund_id' => $this->id,
+            'returnable' => false,
+            'limit_multiplier' => $limit_multiplier ?: $this->multiplierForIdentity($identity_address),
+            'fund_amount_preset_id' => $presetModel?->id,
+            ...$voucherFields,
+        ]);
+
+        VoucherCreated::dispatch($voucher);
 
         return $voucher;
     }
 
     /**
+     * @param FundAmountPreset|string|null $amount
+     * @param Employee $employee
+     * @param BankAccount $bankAccount
+     * @param array $voucherFields
+     * @param array $transactionFields
+     * @return VoucherTransaction
+     */
+    public function makePayout(
+        FundAmountPreset|string|null $amount,
+        Employee $employee,
+        BankAccount $bankAccount,
+        array $voucherFields = [],
+        array $transactionFields = [],
+    ): VoucherTransaction {
+        $voucher = $this->makeVoucher(null, [
+            'voucher_type' => Voucher::VOUCHER_TYPE_PAYOUT,
+            'employee_id' => $employee->id,
+            ...$voucherFields,
+        ], $amount);
+
+        return $voucher->makeTransactionBySponsor($employee, [
+            'amount' => $voucher->amount,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'target_iban' => $bankAccount->getIban(),
+            'target_name' => $bankAccount->getName(),
+            'employee_id' => $employee->id,
+            'transfer_at' => now()->addDay(),
+            ...$transactionFields,
+        ]);
+    }
+
+    /**
      * @param string|null $identityAddress
-     * @param array $extraFields
+     * @param array $voucherFields
      * @param Carbon|null $expireAt
      * @return Voucher[]
      */
     public function makeFundFormulaProductVouchers(
         string $identityAddress = null,
-        array $extraFields = [],
+        array $voucherFields = [],
         Carbon $expireAt = null
     ): array {
         $vouchers = [];
@@ -1240,7 +1316,7 @@ class Fund extends BaseModel
 
             $vouchers = array_merge($vouchers, array_map(fn () => $this->makeProductVoucher(
                 $identityAddress,
-                $extraFields,
+                $voucherFields,
                 $formulaProduct->product->id,
                 $voucherExpireAt,
                 $formulaProduct->price
@@ -1252,7 +1328,7 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identity_address
-     * @param array $extraFields
+     * @param array $voucherFields
      * @param int|null $product_id
      * @param Carbon|null $expire_at
      * @param float|null $price
@@ -1260,20 +1336,21 @@ class Fund extends BaseModel
      */
     public function makeProductVoucher(
         string $identity_address = null,
-        array $extraFields = [],
+        array $voucherFields = [],
         int $product_id = null,
         Carbon $expire_at = null,
         float $price = null,
     ): Voucher {
-        $amount = $price ?: Product::findOrFail($product_id)->price;
-        $expire_at = $expire_at ?: $this->end_date;
-        $fund_id = $this->id;
-        $returnable = false;
-
-        $voucher = Voucher::create(array_merge(compact(
-            'identity_address', 'amount', 'expire_at',
-            'product_id','fund_id', 'returnable'
-        ), $extraFields));
+        $voucher = Voucher::create([
+            'number' => Voucher::makeUniqueNumber(),
+            'amount' => $price ?: Product::findOrFail($product_id)->price,
+            'fund_id' => $this->id,
+            'expire_at' => $expire_at ?: $this->end_date,
+            'product_id' => $product_id,
+            'returnable' => false,
+            'identity_address' => $identity_address,
+            ...$voucherFields,
+        ]);
 
         VoucherCreated::dispatch($voucher, false);
 
@@ -1329,31 +1406,11 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param FundCriterion|null $fundCriterion
      * @return array
      */
-    public function validatorEmployees(?FundCriterion $fundCriterion = null): array
+    public function validatorEmployees(): array
     {
-        $employees = $this->employees_validators()->pluck('employees.identity_address');
-        $externalEmployees = [];
-
-        /** @var Organization[] $external_validators */
-        $external_validators = $fundCriterion ? (
-            $this->organization->external_validators()->whereIn(
-                'organizations.id',
-                $fundCriterion->external_validator_organizations->pluck(
-                    'validator_organization_id'
-                )->toArray()
-            )->get()
-        ) : $this->organization->external_validators;
-
-        foreach ($external_validators as $external_validator) {
-            $externalEmployees[] = $external_validator->employeesWithPermissions(
-                'validate_records'
-            )->pluck('identity_address')->toArray();
-        }
-
-        return array_merge($employees->toArray(), array_flatten($externalEmployees, 1));
+        return $this->employees_validators()->pluck('employees.identity_address')->toArray();
     }
 
     /**
@@ -1423,8 +1480,6 @@ class Fund extends BaseModel
      */
     protected function syncCriterion(array $criterion, bool $textsOnly = false): void
     {
-        /** @var FundCriterion $fundCriterion */
-        $validators = $criterion['validators'] ?? null;
         $fundCriterion = $this->criteria()->find($criterion['id'] ?? null);
 
         if (!$fundCriterion && !$this->criteriaIsEditable()) {
@@ -1434,8 +1489,9 @@ class Fund extends BaseModel
         /** @var FundCriterion|null $db_criteria */
         $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
-            'description', 'title', 'optional', 'min', 'max',
-        ] : ['show_attachment', 'description', 'title']);
+            'description', 'title', 'optional', 'min', 'max', 'label',
+            'extra_description',
+        ] : ['show_attachment', 'description', 'title', 'extra_description']);
 
         if ($this->criteriaIsEditable()) {
             $data_criterion['value'] = Arr::get($data_criterion, 'value', '') ?: '';
@@ -1444,55 +1500,11 @@ class Fund extends BaseModel
 
         if ($fundCriterion) {
             $fundCriterion->update($textsOnly ? array_only($data_criterion, [
-                'title', 'description',
+                'title', 'description', 'extra_description',
             ]): $data_criterion);
         } elseif (!$textsOnly) {
-            $fundCriterion = $this->criteria()->create($data_criterion);
+            $this->criteria()->create($data_criterion);
         }
-
-        if (!$textsOnly && is_array($validators)) {
-            $this->syncCriterionValidators($fundCriterion, $validators);
-        }
-    }
-
-    /**
-     * Update fund criterion validators
-     * @param FundCriterion $criterion
-     * @param array $externalValidators
-     */
-    protected function syncCriterionValidators(
-        FundCriterion $criterion,
-        array $externalValidators,
-    ): void {
-        $fund = $this;
-        $currentValidators = [];
-
-        /** @var OrganizationValidator[] $validators */
-        $validators = array_map(static function($organization_validator_id) use ($fund) {
-            return $fund->organization->organization_validators()->where([
-                'organization_validators.id' => $organization_validator_id
-            ])->first();
-        }, array_unique(array_values($externalValidators)));
-
-        foreach ($validators as $organizationValidator) {
-            $currentValidators[] = $criterion->fund_criterion_validators()->firstOrCreate([
-                'organization_validator_id' => $organizationValidator->id
-            ], [
-                'accepted' => $organizationValidator->validator_organization
-                    ->validator_auto_accept_funds
-            ])->getKey();
-        }
-
-        $criterionValidators = $criterion->fund_criterion_validators()->whereNotIn(
-            'fund_criterion_validators.id', $currentValidators
-        )->get();
-
-        $this->resignCriterionValidators($criterionValidators);
-
-        $criterion->fund_criterion_validators()->whereIn(
-            'fund_criterion_validators.id',
-            $criterionValidators->pluck('id')->toArray()
-        )->delete();
     }
 
     /**
@@ -1505,33 +1517,14 @@ class Fund extends BaseModel
         FundCriterion $criterion,
     ): bool {
         $record_type = $criterion->record_type;
-        $value = $this->getTrustedRecordOfType($identity->address, $record_type->key, $criterion)?->value;
+        $value = $this->getTrustedRecordOfType($identity->address, $record_type->key)?->value;
 
-        return BaseFundRequestRule::validateRecordValue($criterion, $value)->passes();
-    }
+        $records = $criterion->fund_criterion_rules->pluck('record_type_key')->unique()->toArray();
+        $recordsValues = $this->getTrustedRecordOfTypes($identity->address, $records);
 
-    /**
-     * Resign fund request record employees be criterion validator
-     * @param FundCriterionValidator[]|Collection $criterionValidators
-     */
-    protected function resignCriterionValidators(Collection|Arrayable $criterionValidators): void
-    {
-        foreach ($criterionValidators as $criterionValidator) {
-            $validator_organization = $criterionValidator
-                ->external_validator->validator_organization;
-
-            foreach ($validator_organization->employees as $employee) {
-                /** @var FundRequest[] $fund_requests */
-                $fund_requests = $this->fund_requests()->whereIn('state', [
-                    FundRequest::STATE_PENDING,
-                    FundRequest::STATE_APPROVED_PARTLY,
-                ])->get();
-
-                foreach ($fund_requests as $fund_request) {
-                    $fund_request->resignEmployee($employee, $criterionValidator->fund_criterion);
-                }
-            }
-        }
+        return
+            $criterion->isExcludedByRules($recordsValues) ||
+            BaseFundRequestRule::validateRecordValue($criterion, $value)->passes();
     }
 
     /**
@@ -1622,46 +1615,6 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param Organization $validatorOrganization
-     */
-    public function detachExternalValidator(
-        Organization $validatorOrganization
-    ): void {
-        /** @var FundCriterion[] $fundCriteria */
-        $fundCriteria = FundCriteriaQuery::whereHasExternalValidatorFilter(
-            $this->criteria()->getQuery(),
-            $validatorOrganization->id
-        )->get();
-
-        // delete validator organization from all fund criteria
-        foreach ($fundCriteria as $criterion) {
-            FundCriteriaValidatorQuery::whereHasExternalValidatorFilter(
-                $criterion->fund_criterion_validators()->getQuery(),
-                $validatorOrganization->id
-            )->delete();
-        }
-
-        /**
-          All pending fund requests which have records assigned to external validator employees
-         * @var FundRequest[] $fundRequests
-         */
-        $fundRequests = FundRequest::whereHas('records.employee', static function(
-            Builder $builder
-        ) use ($validatorOrganization) {
-            $builder->where('organization_id', $validatorOrganization->id);
-        })->where('state', [
-            FundRequest::STATE_PENDING,
-            FundRequest::STATE_APPROVED_PARTLY
-        ])->get();
-
-        foreach ($fundRequests as $fundRequest) {
-            foreach ($validatorOrganization->employees as $employee) {
-                $fundRequest->resignEmployee($employee);
-            }
-        }
-    }
-
-    /**
      * @param Builder $vouchersQuery
      * @return array
      */
@@ -1723,10 +1676,20 @@ class Fund extends BaseModel
         $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery));
         $deactivatedVouchersQuery = VoucherQuery::whereNotExpiredAndDeactivated((clone $vouchersQuery));
 
-        $vouchers_amount = currency_format($vouchersQuery->sum('amount'));
-        $active_vouchers_amount = currency_format($activeVouchersQuery->sum('amount'));
-        $inactive_vouchers_amount = currency_format($inactiveVouchersQuery->sum('amount'));
-        $deactivated_vouchers_amount = currency_format($deactivatedVouchersQuery->sum('amount'));
+        $vouchersAmount = $vouchersQuery->sum('amount');
+        $activeVouchersAmount = $activeVouchersQuery->sum('amount');
+        $inactiveVouchersAmount = $inactiveVouchersQuery->sum('amount');
+        $deactivatedVouchersAmount = $deactivatedVouchersQuery->sum('amount');
+
+        $vouchers_amount = currency_format($vouchersAmount);
+        $active_vouchers_amount = currency_format($activeVouchersAmount);
+        $inactive_vouchers_amount = currency_format($inactiveVouchersAmount);
+        $deactivated_vouchers_amount = currency_format($deactivatedVouchersAmount);
+
+        $vouchers_amount_locale = currency_format_locale($vouchersAmount);
+        $active_vouchers_amount_locale = currency_format_locale($activeVouchersAmount);
+        $inactive_vouchers_amount_locale = currency_format_locale($inactiveVouchersAmount);
+        $deactivated_vouchers_amount_locale = currency_format_locale($deactivatedVouchersAmount);
 
         $vouchers_count = $vouchersQuery->count();
         $active_vouchers_count = $activeVouchersQuery->count();
@@ -1741,12 +1704,22 @@ class Fund extends BaseModel
             $transaction_costs += $fund->getTransactionCosts();
         }
 
+        $budget_locale = currency_format_locale($budget);
+        $budget_left_locale = currency_format_locale($budget_left);
+        $budget_used_locale = currency_format_locale($budget_used);
+        $budget_used_active_vouchers_locale = currency_format_locale($budget_used_active_vouchers);
+        $transaction_costs_locale = currency_format_locale($transaction_costs);
+
         return compact(
             'budget', 'budget_left',
             'budget_used', 'budget_used_active_vouchers', 'transaction_costs',
             'vouchers_amount', 'vouchers_count', 'active_vouchers_amount', 'active_vouchers_count',
             'inactive_vouchers_amount', 'inactive_vouchers_count',
-            'deactivated_vouchers_amount', 'deactivated_vouchers_count'
+            'deactivated_vouchers_amount', 'deactivated_vouchers_count',
+            'vouchers_amount_locale', 'active_vouchers_amount_locale',
+            'inactive_vouchers_amount_locale', 'deactivated_vouchers_amount_locale',
+            'budget_locale', 'budget_left_locale', 'budget_used_locale',
+            'budget_used_active_vouchers_locale', 'transaction_costs_locale',
         );
     }
 
@@ -2077,5 +2050,38 @@ class Fund extends BaseModel
             $this->isTypeBudget() &&
             $this->fund_config?->allow_direct_payments &&
             $this->fund_config?->allow_generator_direct_payments;
+    }
+
+    /**
+     * @return ?string
+     */
+    public function getResolvingError(): ?string
+    {
+        if ($this->fund_config->isPayoutOutcome()) {
+            if (!$this->fund_config->iban_record_key || !$this->fund_config->iban_name_record_key) {
+                return "invalid_iban_record_keys";
+            }
+
+            if ($this->organization->fund_request_resolve_policy ===
+                Organization::FUND_REQUEST_POLICY_MANUAL) {
+                return "invalid_fund_request_manual_policy";
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $error
+     * @param array $data
+     * @return void
+     */
+    public function logError(string $error, array $data = []): void
+    {
+        Log::channel('funds')->error(json_pretty([
+            'error' => "[$error]",
+            'fund_id' => $this->id,
+            ...$data,
+        ]));
     }
 }

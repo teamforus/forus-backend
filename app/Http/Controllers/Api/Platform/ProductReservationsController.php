@@ -62,12 +62,8 @@ class ProductReservationsController extends Controller
 
         try {
             $product = Product::find($request->input('product_id'));
+            $voucher = Voucher::find($request->input('voucher_id'));
             $postCode = $request->input('postal_code') ?: '';
-
-            $voucher = Voucher::findByAddress(
-                $request->input('voucher_address'),
-                $request->auth_address(),
-            );
 
             $extraPaymentRequired =
                 $voucher->fund->isTypeBudget() &&
@@ -98,6 +94,7 @@ class ProductReservationsController extends Controller
                     DB::commit();
 
                     return new JsonResponse([
+                        'id' => $reservation->id,
                         'checkout_url' => $payment->getCheckoutUrl(),
                     ], 200);
                 }
@@ -106,7 +103,7 @@ class ProductReservationsController extends Controller
 
                 return new JsonResponse([
                     'message' => "Could prepare the extra payment.",
-                ], 200);
+                ], 503);
             }
 
             if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
@@ -121,7 +118,7 @@ class ProductReservationsController extends Controller
 
         return new JsonResponse([
             'message' => "Something went wrong, please try again later.",
-        ], 200);
+        ], 503);
     }
 
     /**

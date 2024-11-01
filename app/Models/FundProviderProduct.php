@@ -23,11 +23,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\FundProvider $fund_provider
+ * @property-read \App\Models\FundProvider|null $fund_provider
  * @property-read bool $active
  * @property-read float $user_price
  * @property-read string $user_price_locale
- * @property-read \App\Models\Product $product
+ * @property-read \App\Models\Product|null $product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservation[] $product_reservations
  * @property-read int|null $product_reservations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservation[] $product_reservations_pending
@@ -36,7 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $voucher_transactions_count
  * @method static Builder|FundProviderProduct newModelQuery()
  * @method static Builder|FundProviderProduct newQuery()
- * @method static \Illuminate\Database\Query\Builder|FundProviderProduct onlyTrashed()
+ * @method static Builder|FundProviderProduct onlyTrashed()
  * @method static Builder|FundProviderProduct query()
  * @method static Builder|FundProviderProduct whereAmount($value)
  * @method static Builder|FundProviderProduct whereCreatedAt($value)
@@ -50,8 +50,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static Builder|FundProviderProduct wherePrice($value)
  * @method static Builder|FundProviderProduct whereProductId($value)
  * @method static Builder|FundProviderProduct whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|FundProviderProduct withTrashed()
- * @method static \Illuminate\Database\Query\Builder|FundProviderProduct withoutTrashed()
+ * @method static Builder|FundProviderProduct withTrashed()
+ * @method static Builder|FundProviderProduct withoutTrashed()
  * @mixin \Eloquent
  */
 class FundProviderProduct extends BaseModel
@@ -70,14 +70,8 @@ class FundProviderProduct extends BaseModel
      * @var string[]
      */
     protected $casts = [
+        'expire_at' => 'datetime',
         'limit_total_unlimited' => 'bool',
-    ];
-
-    /**
-     * @var string[]
-     */
-    protected $dates = [
-        'expire_at'
     ];
 
     /**

@@ -10,10 +10,14 @@ use App\Events\MollieConnections\MollieConnectionUpdated;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Services\MollieService\Data\ForusTokenData;
 use App\Services\MollieService\Data\MollieConnectionTokenData;
 use App\Services\MollieService\Exceptions\MollieException;
-use App\Services\MollieService\MollieService;
+use App\Services\MollieService\Interfaces\MollieServiceInterface;
+use App\Services\MollieService\MollieServiceLogger;
+use App\Services\MollieService\Objects\ResourceOwner;
 use Carbon\Carbon;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,8 +27,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use League\OAuth2\Client\Token\AccessToken;
-use Mollie\Api\Resources\Payment;
-use Mollie\Api\Resources\Profile;
+use App\Services\MollieService\Objects\Payment;
+use App\Services\MollieService\Objects\Profile;
 
 /**
  * App\Services\MollieService\Models\MollieConnection
@@ -122,8 +126,8 @@ class MollieConnection extends Model
     /**
      * @var string[]
      */
-    protected $dates = [
-        'completed_at',
+    protected $casts = [
+        'completed_at' => 'datetime',
     ];
 
     /**
@@ -251,6 +255,7 @@ class MollieConnection extends Model
     ): MollieConnectionProfile {
         $profile->update([
             'mollie_id' => $profileResponse->id,
+            'current' => true,
             'name' => $profileResponse->name,
             'email' => $profileResponse->email,
             'phone' => $profileResponse->phone,
@@ -265,11 +270,29 @@ class MollieConnection extends Model
     }
 
     /**
-     * @return MollieService
+     * @return MollieServiceInterface|null
+     * @throws MollieException
      */
-    public function getMollieService(): MollieService
+    public function getMollieService(): ?MollieServiceInterface
     {
-        return MollieService::make(new MollieConnectionTokenData($this));
+        try {
+            return app()->makeWith('mollie_service', ['token' => new MollieConnectionTokenData($this)]);
+        } catch (BindingResolutionException $e) {
+            throw new MollieException('Onbekende foutmelding!', $e->getCode());
+        }
+    }
+
+    /**
+     * @return MollieServiceInterface|null
+     * @throws MollieException
+     */
+    public static function getMollieServiceByForusToken(): ?MollieServiceInterface
+    {
+        try {
+            return app()->makeWith('mollie_service', ['token' => new ForusTokenData()]);
+        } catch (BindingResolutionException $e) {
+            throw new MollieException('Onbekende foutmelding!', $e->getCode());
+        }
     }
 
     /**
@@ -296,24 +319,24 @@ class MollieConnection extends Model
         $organization = $service->getOrganization();
 
         $becomeComplete =
-            $oldState !== $state->status &&
-            $state->status === self::ONBOARDING_STATE_COMPLETED;
+            $oldState !== $state &&
+            $state === self::ONBOARDING_STATE_COMPLETED;
 
         $this->update([
-            'city' => $organization->address->city ?? '',
-            'street' => $organization->address->streetAndNumber ?? '',
-            'country' => $organization->address->country ?? '',
-            'postcode' => $organization->address->postalCode ?? '',
             'organization_name' => $organization->name,
             'mollie_organization_id' => $organization->id,
             'completed_at' => $becomeComplete ? now() : $this->completed_at,
-            'onboarding_state' => $state->status,
+            'onboarding_state' => $state,
+            'city' => $organization->city,
+            'street' => $organization->street,
+            'country' => $organization->country,
+            'postcode' => $organization->postcode,
         ]);
 
         try {
             $this->updateProfiles();
         } catch (MollieException $e) {
-            MollieService::logError("Update profile error in fetchAndUpdateConnection", $e);
+            MollieServiceLogger::logError("Update profile error in fetchAndUpdateConnection", $e);
         }
 
         Event::dispatch(new MollieConnectionUpdated($this, $employee));
@@ -344,11 +367,11 @@ class MollieConnection extends Model
             $this->profiles()->updateOrCreate([
                 'mollie_id' => $profile->id,
             ], [
+                'state' => MollieConnectionProfile::STATE_ACTIVE,
                 'name' => $profile->name,
                 'email' => $profile->email,
                 'phone' => $profile->phone,
                 'website' => $profile->website,
-                'state' => MollieConnectionProfile::STATE_ACTIVE,
             ]);
 
             if ($this->onboardingComplete()) {
@@ -368,10 +391,10 @@ class MollieConnection extends Model
 
     /**
      * @param AccessToken $token
-     * @param array $attributes
+     * @param ResourceOwner $owner
      * @return MollieConnection
      */
-    public function updateConnectionByToken(AccessToken $token, array $attributes): MollieConnection
+    public function updateConnectionByToken(AccessToken $token, ResourceOwner $owner): MollieConnection
     {
         self::query()
             ->where('organization_id', $this->organization_id)
@@ -381,16 +404,18 @@ class MollieConnection extends Model
             ->each(fn (MollieConnection $connection) => $connection->delete());
 
         $this->update([
-            'city' => $attributes['address']['city'] ?? '',
-            'street' => $attributes['address']['streetAndNumber'] ?? '',
-            'country' => $attributes['address']['country'] ?? '',
-            'postcode' => $attributes['address']['postalCode'] ?? '',
-            'last_name' => $attributes['first_name'] ?? $this->last_name,
-            'first_name' => $attributes['last_name'] ?? $this->first_name,
+            'city' => $owner->city,
+            'street' => $owner->street,
+            'country' => $owner->country,
+            'postcode' => $owner->postcode,
+            'vat_number' => $owner->vat_number,
+            'last_name' => $owner->first_name ?? $this->last_name,
+            'first_name' => $owner->last_name ?? $this->first_name,
+            'registration_number' => $owner->registration_number,
             'state_code' => null,
             'connection_state' => self::STATE_ACTIVE,
-            'organization_name' => $attributes['name'] ?? '',
-            'mollie_organization_id' => $attributes['id'],
+            'organization_name' => $owner->name ?? '',
+            'mollie_organization_id' => $owner->id,
         ]);
 
         $this->tokens()->delete();
@@ -407,7 +432,7 @@ class MollieConnection extends Model
         try {
             $this->updateProfiles(true);
         } catch (MollieException $e) {
-            MollieService::logError("Update profile error in updateConnectionByToken", $e);
+            MollieServiceLogger::logError("Update profile error in updateConnectionByToken", $e);
         }
 
         Event::dispatch(new MollieConnectionUpdated($this));
@@ -478,6 +503,7 @@ class MollieConnection extends Model
     /**
      * @param Employee $employee
      * @return void
+     * @throws MollieException
      */
     public function revoke(Employee $employee): void
     {

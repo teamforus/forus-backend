@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Platform\Organizations\Provider\StoreFundProviderReque
 use App\Http\Requests\Api\Platform\Organizations\Provider\UpdateFundProviderRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\Provider\ProviderFundProviderResource;
+use App\Http\Resources\Small\FundSmallResource;
 use App\Http\Resources\TagResource;
 use App\Models\Fund;
 use App\Models\Implementation;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use App\Models\Tag;
 use App\Scopes\Builders\FundProviderQuery;
+use App\Scopes\Builders\FundQuery;
 use App\Searches\FundSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -65,6 +67,23 @@ class FundProviderController extends Controller
         return FundResource::collection($query->paginate(
             $request->input('per_page', 10))
         )->additional(compact('meta'));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param IndexFundsRequest $request,
+     * @return AnonymousResourceCollection
+     */
+    public function fundsProductRequired(
+        IndexFundsRequest $request,
+        Organization $organization,
+    ): AnonymousResourceCollection {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
+
+        $query = FundQuery::whereProviderProductsRequired(Fund::query(), $organization->id);
+
+        return FundSmallResource::queryCollection($query->orderBy('name'), $request);
     }
 
     /**

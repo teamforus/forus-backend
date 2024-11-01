@@ -24,11 +24,11 @@ class IdentityFundRequestRecordFeedbackRequestedNotification extends BaseIdentit
             $this->eventLog->data['fund_request_id'],
         ));
 
-        $this->sendMailNotification(
-            $identity->email,
-            new FundRequestClarificationRequestedMail(array_merge($this->eventLog->data, [
-                'webshop_clarification_link' => $linkClarification,
-            ]), $fundRequest->fund->getEmailFrom())
-        );
+        $mailable = new FundRequestClarificationRequestedMail([
+            ...$this->eventLog->data,
+            'webshop_clarification_link' => $linkClarification,
+        ], $fundRequest->fund->getEmailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

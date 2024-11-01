@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Exceptions\AuthorizationJsonException;
 use App\Models\Identity;
+use App\Models\Permission;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Scopes\Builders\VoucherQuery;
@@ -71,7 +72,7 @@ class PrevalidationPolicy extends BasePolicy
     {
         $organization = $prevalidation->organization;
         $isCreator = $prevalidation->identity_address === $identity->address;
-        $isValidator = $organization?->identityCan($identity, 'validate_records');
+        $isValidator = $organization?->identityCan($identity, Permission::VALIDATE_RECORDS);
 
         return ($isCreator || $isValidator) && !$prevalidation->is_used;
     }

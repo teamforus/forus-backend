@@ -107,17 +107,6 @@ $router->group([], static function() use ($router) {
         ]
     ]);
 
-    $router->resource(
-        'organizations.external-funds',
-        "Api\Platform\Organizations\ExternalFundsController", [
-        'only' => [
-            'index', 'update'
-        ],
-        'parameters' => [
-            'external-funds' => 'fund'
-        ]
-    ]);
-
     $router->post(
         'organizations/{organization}/funds/{fund}/archive',
         "Api\Platform\Organizations\FundsController@archive");
@@ -192,11 +181,33 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->post('funds/{fund}/apply', "Api\Platform\FundsController@apply")->name('fund.apply');
     $router->post('funds/{fund}/check', "Api\Platform\FundsController@check")->name('fund.check');
 
-    $router->resource('vouchers', "Api\Platform\VouchersController")
-        ->parameter('vouchers', 'voucher_token_address')
+    $router
+        ->resource('vouchers/{voucher_number_or_address}/physical-cards', 'Api\Platform\Vouchers\PhysicalCardsController')
+        ->parameter('physical-cards', 'physical_card')
+        ->only('store', 'destroy');
+
+    $router
+        ->resource('vouchers/{voucher_number_or_address}/physical-card-requests', 'Api\Platform\Vouchers\PhysicalCardRequestsController')
+        ->parameter('physical-cards', 'physical_card')
+        ->only('index', 'store', 'show');
+
+
+    $router->post(
+        'vouchers/{voucher_number_or_address}/physical-card-requests/validate',
+        'Api\Platform\Vouchers\PhysicalCardRequestsController@storeValidate',
+    );
+
+    $router
+        ->resource('vouchers', "Api\Platform\VouchersController")
+        ->parameter('vouchers', 'voucher_number_or_address')
         ->only('index', 'show', 'destroy');
 
-    $router->resource('reimbursements', "Api\Platform\ReimbursementsController")
+    $router->post('vouchers/{voucher_number_or_address}/send-email', "Api\Platform\VouchersController@sendEmail");
+    $router->post('vouchers/{voucher_number_or_address}/share', "Api\Platform\VouchersController@shareVoucher");
+    $router->post('vouchers/{voucher_number_or_address}/deactivate', "Api\Platform\VouchersController@deactivate");
+
+    $router
+        ->resource('reimbursements', "Api\Platform\ReimbursementsController")
         ->only('index', 'store', 'show', 'update', 'destroy');
 
     $router->post(
@@ -241,37 +252,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->post('funds/redeem', "Api\Platform\FundsController@redeem");
 
     $router->resource(
-        'vouchers/{voucher_token_address}/physical-cards',
-        "Api\Platform\Vouchers\PhysicalCardsController", [
-        'only' => [
-            'store', 'destroy'
-        ],
-        'params' => [
-            'physical-cards' => 'physical_card',
-        ]
-    ]);
-
-    $router->resource(
         'sponsor/{organization_id}/vouchers/{voucher}/physical-cards',
         "Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCardsController", [
         'only' => [
             'store', 'destroy',
-        ],
-        'params' => [
-            'physical-cards' => 'physical_card',
-        ]
-    ]);
-
-    $router->post(
-        'vouchers/{voucher_token_address}/physical-card-requests/validate',
-        "Api\Platform\Vouchers\PhysicalCardRequestsController@storeValidate"
-    );
-
-    $router->resource(
-        'vouchers/{voucher_token_address}/physical-card-requests',
-        "Api\Platform\Vouchers\PhysicalCardRequestsController", [
-        'only' => [
-            'index', 'store', 'show'
         ],
         'params' => [
             'physical-cards' => 'physical_card',
@@ -289,10 +273,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->parameters([
         'physical-cards' => 'physical_card',
     ])->only('index', 'store');
-
-    $router->post('vouchers/{voucher_token_address}/send-email', "Api\Platform\VouchersController@sendEmail");
-    $router->post('vouchers/{voucher_token_address}/share', "Api\Platform\VouchersController@shareVoucher");
-    $router->post('vouchers/{voucher_token_address}/deactivate', "Api\Platform\VouchersController@deactivate");
 
     // todo: deprecated, moved store endpoint to separate route provider/vouchers.transactions
     if (!env('DISABLE_FALLBACK_TRANSACTIONS', false)) {
@@ -447,6 +427,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     ])->only('index', 'show', 'store');
 
     if (config('forus.features.dashboard.organizations.funds.fund_requests', FALSE)) {
+        $router->get(
+            'organizations/{organization}/fund-requests/{fund_request}/formula',
+            "Api\Platform\Organizations\FundRequestsController@formula"
+        );
+
         $router->patch(
             'organizations/{organization}/fund-requests/{fund_request}/assign',
             "Api\Platform\Organizations\FundRequestsController@assign"
@@ -487,16 +472,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             "Api\Platform\Organizations\FundRequestsController@disregardUndo"
         );
 
-        $router->patch(
-            'organizations/{organization}/fund-requests/{fund_request}/records/{fund_request_record}/approve',
-            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController@approve"
-        );
-
-        $router->patch(
-            'organizations/{organization}/fund-requests/{fund_request}/records/{fund_request_record}/decline',
-            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController@decline"
-        );
-
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/records',
             "Api\Platform\Organizations\FundRequests\FundRequestRecordsController"
@@ -526,6 +501,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             $router->get('notes', "Api\Platform\Organizations\FundRequestsController@notes");
             $router->post('notes', "Api\Platform\Organizations\FundRequestsController@storeNote");
             $router->delete('notes/{note}', "Api\Platform\Organizations\FundRequestsController@destroyNote");
+            $router->get('email-logs', "Api\Platform\Organizations\FundRequestsController@emailLogs");
+            $router->post('email-logs/{emailLog}/export', "Api\Platform\Organizations\FundRequestsController@exportEmailLog");
         });
 
         $router->resource(
@@ -539,7 +516,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             ]
         ]);
 
-        // requester route
         $router->resource('fund-requests', "Api\Platform\FundRequestsController")->only([
             'index', 'show',
         ]);
@@ -551,6 +527,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             'clarifications' => 'fund_request_clarification',
         ])->only('update');
     }
+
+    $router->resource('payouts', "Api\Platform\PayoutsController")->only([
+        'index'
+    ]);
 
     $router->get(
         'organizations/{organization}/providers/export',
@@ -717,17 +697,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ->parameter('bank-connections', 'bankConnection')
         ->only('index', 'show', 'store', 'update');
 
-    $router->resource(
-        'organizations.validators',
-        "Api\Platform\Organizations\ValidatorOrganizationsController", [
-        'only' => [
-            'index', 'show', 'store', 'destroy'
-        ],
-        'parameters' => [
-            'validators' => 'validator_organization'
-        ]
-    ]);
-
     $router->get(
         'organizations/{organization}/employees/export',
         'Api\Platform\Organizations\EmployeesController@export'
@@ -745,6 +714,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations/{organization}/provider/funds-available',
         'Api\Platform\Organizations\Provider\FundProviderController@availableFunds'
     );
+
+    $router->get(
+        'organizations/{organization}/provider/funds-product-required',
+        "Api\Platform\Organizations\Provider\FundProviderController@fundsProductRequired");
 
     $router->resource(
         'organizations/{organization}/provider/funds',
@@ -800,13 +773,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->get('data-types', 'Api\Platform\Organizations\BIConnectionController@getAvailableDataTypes');
     });
 
-    /*$router->resource(
-        'organizations.bi-connections',
-        'Api\Platform\Organizations\BIConnectionController',
-    )->parameters([
-        'bi-connections' => 'connection',
-    ])->only('store', 'update');*/
-
     $router->get(
         'organizations/{organization}/sponsor/finances',
         "Api\Platform\Organizations\FundsController@finances");
@@ -842,10 +808,27 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations/{organization}/sponsor/transactions',
-        "Api\Platform\Organizations\Sponsor\TransactionsController"
+        'Api\Platform\Organizations\Sponsor\TransactionsController'
     )->parameters([
         'transactions' => 'transaction_address',
     ])->only('index', 'show', 'store');
+
+    $router->post(
+        'organizations/{organization}/sponsor/payouts/batch',
+        "Api\Platform\Organizations\Sponsor\PayoutsController@storeBatch"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/payouts/batch/validate',
+        "Api\Platform\Organizations\Sponsor\PayoutsController@storeBatchValidate"
+    );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/payouts',
+        'Api\Platform\Organizations\Sponsor\PayoutsController'
+    )->parameters([
+        'payouts' => 'transaction_address',
+    ])->only('index', 'show', 'store', 'update');
 
     $router->get(
         'organizations/{organization}/sponsor/transaction-bulks/export-fields',

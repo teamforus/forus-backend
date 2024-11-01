@@ -81,9 +81,6 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         "notifications_identities.fund_request_disregarded" => [
             "fund_name", "sponsor_email", "sponsor_name", "sponsor_phone",
         ],
-        "notifications_identities.fund_request_record_declined" => [
-            "fund_name", "rejection_note", "webshop_link", "webshop_button",
-        ],
         "notifications_identities.fund_request_feedback_requested" => [
             "fund_name", "fund_request_clarification_question", "sponsor_name",
             "webshop_clarification_link", "webshop_clarification_button",
@@ -305,11 +302,16 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     /**
      * @param string $email
      * @param Mailable $mailable
+     * @param ?EventLog $eventLog
      * @return bool
      */
-    public function sendMailNotification(string $email, Mailable $mailable): bool
-    {
+    public function sendMailNotification(
+        string $email,
+        Mailable $mailable,
+        ?EventLog $eventLog = null,
+    ): bool {
         if ($mailable instanceof ImplementationMail) {
+            $mailable->setEventLog($eventLog);
             $mailable->setPreferencesLink($this->implementation?->makePreferencesLink(static::$scope));
         }
 

@@ -2,15 +2,15 @@
 
 return [
     'not_pending' => [
-        'title' => "Not pending.",
-        'message' => "The reimbursement request is not pending.",
+        'title' => "Niet langer in behandeling",
+        'message' => "Het declaratieverzoek is niet meer in behandeling.",
     ],
     'not_assigned' => [
-        'title' => 'Not assigned!',
-        'message' => "The reimbursement request is not assigned to to you.",
+        'title' => 'Declaratieverzoek niet toegewezen',
+        'message' => "Het declaratieverzoek is niet (langer) aan jou toegewezen.",
     ],
     'already_assigned' => [
-        'title' => 'Not assigned!',
-        'message' => "The reimbursement request is already assigned to someone.",
+        'title' => 'Declaratieverzoek reeds toegewezen',
+        'message' => "Het declaratieverzoek is al aan iemand anders toegewezen.",
     ],
 ];

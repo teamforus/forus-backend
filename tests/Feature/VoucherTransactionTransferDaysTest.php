@@ -9,22 +9,17 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\Traits\MakesProductReservations;
+use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 
 class VoucherTransactionTransferDaysTest extends TestCase
 {
-    use DatabaseTransactions, MakesTestFunds, MakesTestOrganizations, MakesProductReservations;
-
-    /**
-     * @var string
-     */
-    protected string $apiUrl = '/api/v1/platform/product-reservations';
-
-    /**
-     * @var string
-     */
-    protected string $sponsorApiUrl = '/api/v1/platform/organizations/%s/sponsor/transactions/%s';
+    use MakesTestFunds;
+    use DatabaseTransactions;
+    use MakesTestOrganizations;
+    use MakesProductReservations;
+    use MakesTestFundProviders;
 
     /**
      * @return void
@@ -32,11 +27,13 @@ class VoucherTransactionTransferDaysTest extends TestCase
      */
     public function testTransactionTransferDays(): void
     {
-        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $providerOrganization = $this->makeTestOrganization($this->makeIdentity());
 
-        $fund = $this->makeTestFund($organization);
+        $fund = $this->makeTestFund($sponsorOrganization);
+        $this->makeTestFundProvider($providerOrganization, $fund);
 
-        $voucher = $this->findVoucherForReservation($organization, $fund->type);
+        $voucher = $this->findVoucherForReservation($sponsorOrganization, $fund->type);
         $product = $this->findProductForReservation($voucher);
 
         $this->checkTransactionTransferDays($voucher, $product);
@@ -57,13 +54,13 @@ class VoucherTransactionTransferDaysTest extends TestCase
         $this->assertNotNull($transaction);
 
         $organization = $voucher->fund->organization;
-        $voucherEndpoint = sprintf($this->sponsorApiUrl, $organization->id, $transaction->address);
+        $voucherEndpoint = "/api/v1/platform/organizations/$organization->id/sponsor/transactions/$transaction->address";
         $sponsorAuthHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
         $response = $this->getJson($voucherEndpoint, $sponsorAuthHeaders);
         $response->assertSuccessful();
 
-        $transactionIn = $response->json('data.transaction_in');
+        $transactionIn = $response->json('data.transfer_in');
         $this->assertGreaterThan(0, $transactionIn);
 
         Carbon::setTestNow(now()->addDays($transactionIn + 5));
@@ -71,7 +68,7 @@ class VoucherTransactionTransferDaysTest extends TestCase
         $response = $this->getJson($voucherEndpoint, $sponsorAuthHeaders);
         $response->assertSuccessful();
 
-        $transactionIn = $response->json('data.transaction_in');
+        $transactionIn = $response->json('data.transfer_in');
         $this->assertEquals(0, $transactionIn);
     }
 
@@ -86,11 +83,11 @@ class VoucherTransactionTransferDaysTest extends TestCase
         $proxy = $this->makeIdentityProxy($identity);
         $headers = $this->makeApiHeaders($proxy);
 
-        $response = $this->post($this->apiUrl, [
+        $response = $this->post("/api/v1/platform/product-reservations", [
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ], $headers);
 

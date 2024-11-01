@@ -34,7 +34,7 @@ class UpdateFundRequest extends BaseFundRequest
         $availableValidators = $this->organization->employeesOfRoleQuery('validation')->pluck('id');
         $descriptionPositions = implode(',', Fund::DESCRIPTION_POSITIONS);
 
-        return array_merge([
+        return [
             'name'                      => 'nullable|between:2,200',
             'media_uid'                 => ['nullable', new MediaUidRule('fund_logo')],
             'description'               => 'nullable|string|max:15000',
@@ -54,22 +54,83 @@ class UpdateFundRequest extends BaseFundRequest
                 'nullable',
                 Rule::in($availableValidators->toArray()),
             ],
-        ], ($this->fund && $this->fund->state === Fund::STATE_WAITING) ? [
-            'start_date' => [
-                'required',
+            'start_date' => $this->fund->isWaiting() ? [
+                'nullable',
                 'date_format:Y-m-d',
                 'after:' . $this->fund->created_at->addDays(5)->format('Y-m-d')
-            ],
+            ] : [],
             'end_date' => [
-                'required',
+                'nullable',
                 'date_format:Y-m-d',
                 'after:start_date'
             ],
-        ] : [], array_merge(
-            $this->faqRules($this->fund->faq()->pluck('id')->toArray()),
-            $this->criteriaRule($this->fund->criteria()->pluck('id')->toArray()),
-            $this->funConfigsRules(),
-            $this->fundFormulaProductsRule(),
-        ));
+            ...$this->customAndPresetAmountRules(),
+            ...$this->faqRules($this->fund->faq()->pluck('id')->toArray()),
+            ...$this->criteriaRule($this->fund->criteria()->pluck('id')->toArray()),
+            ...$this->funConfigsRules(),
+            ...$this->fundFormulaProductsRule(),
+
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function customAndPresetAmountRules(): array
+    {
+        $maxPerVoucherAmount = currency_format($this->fund?->fund_config?->limit_voucher_total_amount ?: 0);
+
+        return [
+            'allow_custom_amounts' => 'nullable|boolean',
+            'allow_preset_amounts' => 'nullable|boolean',
+            'allow_custom_amounts_validator' => 'nullable|boolean',
+            'allow_preset_amounts_validator' => 'nullable|boolean',
+            'custom_amount_min' => [
+                'nullable',
+                'required_if_accepted:allow_custom_amounts',
+                'required_if_accepted:allow_custom_amounts_validator',
+                'numeric',
+                'min:0',
+                'lte:custom_amount_max',
+                "max:$maxPerVoucherAmount",
+            ],
+            'custom_amount_max' => [
+                'nullable',
+                'required_if_accepted:allow_custom_amounts',
+                'required_if_accepted:allow_custom_amounts_validator',
+                'numeric',
+                'min:0',
+                'gte:custom_amount_min',
+                "max:$maxPerVoucherAmount",
+            ],
+            'amount_presets' => 'nullable|array',
+            'amount_presets.*.id' => 'nullable|in:' . $this->fund->amount_presets()->pluck('id')->join(','),
+            'amount_presets.*.name' => 'required|string|max:200',
+            'amount_presets.*.amount' => "required|numeric|min:0|max:$maxPerVoucherAmount",
+        ];
+    }
+
+    /**
+     * @return array|string[]
+     */
+    public function attributes(): array
+    {
+        return [
+            ...parent::attributes(),
+            'custom_amount_min' => 'Minimaal bedrag',
+            'custom_amount_max' => 'Maximaal bedrag',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            ...parent::messages(),
+            'custom_amount_min.required_if_accepted' => trans('validation.required'),
+            'custom_amount_max.required_if_accepted' => trans('validation.required'),
+        ];
     }
 }

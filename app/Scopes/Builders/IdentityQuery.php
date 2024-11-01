@@ -4,6 +4,7 @@
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
+use App\Models\Identity;
 use App\Models\IdentityEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -37,5 +38,35 @@ class IdentityQuery
                 clone $vouchersQuery
             )->selectRaw('count(*)'),
         ]);
+    }
+
+    /**
+     * @param Builder|Relation|Identity $builder
+     * @param string $bsn
+     * @return Builder|Relation|Identity
+     */
+    public static function whereBsn(
+        Builder|Relation|Identity $builder,
+        string $bsn,
+    ): Builder|Relation|Identity  {
+        return $builder->whereHas('records', function(Builder $builder) use ($bsn) {
+            $builder->where('value', '=', $bsn);
+            $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
+        });
+    }
+
+    /**
+     * @param Builder|Relation|Identity $builder
+     * @param string $bsn
+     * @return Builder|Relation|Identity
+     */
+    public static function whereBsnLike(
+        Builder|Relation|Identity $builder,
+        string $bsn,
+    ): Builder|Relation|Identity  {
+        return $builder->whereHas('records', function(Builder $builder) use ($bsn) {
+            $builder->where('value', 'LIKE', "%$bsn%");
+            $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
+        });
     }
 }

@@ -42,7 +42,7 @@ use Illuminate\Support\Collection;
  * @property-read int|null $records_count
  * @method static Builder|Prevalidation newModelQuery()
  * @method static Builder|Prevalidation newQuery()
- * @method static \Illuminate\Database\Query\Builder|Prevalidation onlyTrashed()
+ * @method static Builder|Prevalidation onlyTrashed()
  * @method static Builder|Prevalidation query()
  * @method static Builder|Prevalidation whereCreatedAt($value)
  * @method static Builder|Prevalidation whereDeletedAt($value)
@@ -58,8 +58,8 @@ use Illuminate\Support\Collection;
  * @method static Builder|Prevalidation whereUidHash($value)
  * @method static Builder|Prevalidation whereUpdatedAt($value)
  * @method static Builder|Prevalidation whereValidatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|Prevalidation withTrashed()
- * @method static \Illuminate\Database\Query\Builder|Prevalidation withoutTrashed()
+ * @method static Builder|Prevalidation withTrashed()
+ * @method static Builder|Prevalidation withoutTrashed()
  * @mixin \Eloquent
  */
 class Prevalidation extends BaseModel
@@ -77,8 +77,8 @@ class Prevalidation extends BaseModel
     /**
      * @var string[]
      */
-    protected $dates = [
-        'validated_at'
+    protected $casts = [
+        'validated_at' => 'datetime',
     ];
 
     /**
@@ -185,15 +185,17 @@ class Prevalidation extends BaseModel
 
         // list of funds where you can manage funds
         $managedFunds = Fund::whereRelation('organization', function(Builder $builder) use ($identity_address) {
-            OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');
+            OrganizationQuery::whereHasPermissions($builder, $identity_address, Permission::MANAGE_FUNDS);
         })->pluck('id')->toArray();
 
         // list of identities who can validate records for funds where you can manage funds
         $relatedIdentities = Identity::whereHas('employees', function(Builder $builder) use ($identity_address) {
-            EmployeeQuery::whereHasPermissionFilter($builder, 'validate_records');
+            EmployeeQuery::whereHasPermissionFilter($builder, [
+                Permission::VALIDATE_RECORDS,
+            ]);
 
             $builder->whereHas('organization', function(Builder $builder) use ($identity_address) {
-                OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');
+                OrganizationQuery::whereHasPermissions($builder, $identity_address, Permission::MANAGE_FUNDS);
             });
         })->pluck('address')->toArray();
 

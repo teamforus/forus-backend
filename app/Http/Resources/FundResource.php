@@ -5,12 +5,16 @@ namespace App\Http\Resources;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\FundConfig;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Role;
+use App\Models\Voucher;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -26,9 +30,9 @@ class FundResource extends BaseJsonResource
         'children',
         'logo.presets',
         'criteria.fund',
+        'criteria.fund_criterion_rules',
         'criteria.record_type.translation',
         'criteria.record_type.record_type_options',
-        'criteria.fund_criterion_validators.external_validator',
         'organization.tags',
         'organization.offices',
         'organization.contacts',
@@ -41,6 +45,7 @@ class FundResource extends BaseJsonResource
         'fund_formula_products',
         'provider_organizations_approved.employees',
         'tags_webshop',
+        'fund_formulas.record_type.translations',
         'fund_formulas.fund.fund_config.implementation',
         'top_up_transactions',
     ];
@@ -51,7 +56,7 @@ class FundResource extends BaseJsonResource
      * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $fund = $this->resource;
         $organization = $fund->organization;
@@ -62,9 +67,8 @@ class FundResource extends BaseJsonResource
         $isDashboard = $baseRequest->isDashboard();
         $fundAmount = $fund->amountFixedByFormula();
 
-        $fundConfigData = $this->getFundConfigData($fund);
+        $fundConfigData = $this->getFundConfigData($fund, $isDashboard);
         $financialData = $this->getFinancialData($fund, $this->stats);
-        $criteriaData = $isWebShop ? $this->getCriteriaData($fund, $baseRequest) : [];
         $generatorData = $isDashboard ? $this->getVoucherGeneratorData($fund) : [];
         $prevalidationCsvData = $isDashboard ? $this->getPrevalidationCsvData($fund) : [];
         $organizationFunds2FAData = $this->organizationFunds2FAData($organization);
@@ -75,6 +79,7 @@ class FundResource extends BaseJsonResource
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
             'balance_provider', 'external_page', 'external_page_url',
         ]), [
+            'outcome_type' => $fund->fund_config?->outcome_type ?: FundConfig::OUTCOME_TYPE_VOUCHER,
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
             'tags' => TagResource::collection($fund->tags_webshop),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
@@ -86,18 +91,18 @@ class FundResource extends BaseJsonResource
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationResource($organization),
             'criteria' => FundCriterionResource::collection($fund->criteria),
-            'formulas' => FundFormulaResource::collection($fund->fund_formulas),
+            'criteria_steps' => FundCriteriaStepResource::collection($fund->criteria_steps->sortBy('order')),
             'faq' => FaqResource::collection($fund->faq),
+            'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'formula_products' => FundFormulaProductResource::collection($fund->fund_formula_products),
             'fund_amount' => $fundAmount ? currency_format($fundAmount) : null,
             'fund_amount_locale' => $fundAmount ? currency_format_locale($fundAmount) : null,
-            'has_pending_fund_requests' => $isWebShop && $this->hadPendingRequests($baseRequest->identity(), $fund),
             'organization_funds_2fa' => $organizationFunds2FAData,
             'parent' => $fund->parent?->only(['id', 'name']),
             'children' => $fund->children->map(fn (Fund $child) => $child->only(['id', 'name'])),
-        ], $fundConfigData, $criteriaData, $financialData, $generatorData, $prevalidationCsvData);
+        ], $fundConfigData, $financialData, $generatorData, $prevalidationCsvData);
 
-        if ($isDashboard && $organization->identityCan($identity, ['manage_funds', 'manage_fund_texts'], false)) {
+        if ($isDashboard && $organization->identityCan($identity, [Permission::MANAGE_FUNDS, Permission::MANAGE_FUND_TEXTS], false)) {
             $requesterCount = VoucherQuery::whereNotExpiredAndActive($fund->vouchers())
                 ->whereNull('parent_id')
                 ->count();
@@ -110,8 +115,20 @@ class FundResource extends BaseJsonResource
             ]);
         }
 
-        if ($isDashboard && $organization->identityCan($identity, 'manage_funds')) {
+        if ($isDashboard && $organization->identityCan($identity, Permission::MANAGE_FUNDS)) {
             $data['backoffice'] = $this->getBackofficeData($fund);
+        }
+
+        if ($isDashboard && $organization->identityCan($identity, [
+            Permission::MANAGE_FUNDS, Permission::VALIDATE_RECORDS, Permission::MANAGE_PAYOUTS,
+        ], false)) {
+            $data['amount_presets'] = FundAmountPresetResource::collection($fund->amount_presets);
+        }
+
+        if ($isWebShop) {
+            $data['received'] = $this->fundReceived($baseRequest->identity(), $fund);
+            $data['has_pending_fund_requests'] = $this->hadPendingRequests($baseRequest->identity(), $fund);
+            $data = [...$data, ...$this->getCriteriaData($fund, $baseRequest)];
         }
 
         return array_merge($data, $fund->only(array_keys($this->select ?? [])));
@@ -130,19 +147,46 @@ class FundResource extends BaseJsonResource
     }
 
     /**
+     * @param Identity|null $identity
      * @param Fund $fund
+     * @return bool
+     */
+    protected function fundReceived(?Identity $identity, Fund $fund): bool
+    {
+        return $identity && $fund->vouchers()->where(function (Builder|Voucher $builder) use ($identity) {
+            VoucherQuery::whereNotExpiredAndActive($builder);
+            $builder->whereIdentityAddress($identity->address);
+        })->exists();
+    }
+
+    /**
+     * @param Fund $fund
+     * @param bool $isDashboard
      * @return array
      */
-    protected function getFundConfigData(Fund $fund): array
+    protected function getFundConfigData(Fund $fund, bool $isDashboard): array
     {
-        return $fund->fund_config?->only([
-            'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
-            'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
-            'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
-            'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
-            'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',
-            'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails', 'hide_meta',
-        ]) ?: [];
+        return [
+            ...$fund->fund_config ? $fund->fund_config->only([
+                'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+                'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
+                'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
+                'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
+                'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',
+                'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails',
+                'hide_meta', 'voucher_amount_visible', 'provider_products_required',
+                'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
+                'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
+                'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
+                'help_description_html',
+                'criteria_label_requirement_show',
+            ]) : [],
+            ...$isDashboard && $fund->fund_config ? $fund->fund_config->only([
+                'allow_custom_amounts', 'allow_preset_amounts',
+                'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
+                'custom_amount_min', 'custom_amount_max',
+            ]) : [],
+        ];
     }
 
     /**
@@ -181,13 +225,17 @@ class FundResource extends BaseJsonResource
     public function getVoucherGeneratorData(Fund $fund): array
     {
         $isVoucherManager = Gate::allows('funds.manageVouchers', [$fund, $fund->organization]);
+        $limitPerVoucher = $fund->getMaxAmountPerVoucher();
+        $limitSumVoucher = $fund->getMaxAmountSumVouchers();
 
         return $isVoucherManager ? array_merge($fund->fund_config->only([
             'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
             'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
         ]), [
-            'limit_per_voucher' => $fund->getMaxAmountPerVoucher(),
-            'limit_sum_vouchers' => $fund->getMaxAmountSumVouchers(),
+            'limit_per_voucher' => currency_format($limitPerVoucher),
+            'limit_per_voucher_locale' => currency_format_locale($limitPerVoucher),
+            'limit_sum_vouchers' => currency_format($limitSumVoucher),
+            'limit_sum_vouchers_locale' => currency_format_locale($limitSumVoucher),
         ]) : [];
     }
 
@@ -222,7 +270,7 @@ class FundResource extends BaseJsonResource
 
         $validatorsCount = $fund->organization->employees->filter(function (Employee $employee) {
             return $employee->roles->filter(function (Role $role) {
-                return $role->permissions->where('key', 'validate_records')->isNotEmpty();
+                return $role->permissions->where('key', Permission::VALIDATE_RECORDS)->isNotEmpty();
             });
         })->count();
 
@@ -252,22 +300,31 @@ class FundResource extends BaseJsonResource
         };
 
         return array_merge($type == 'budget' ? [
-            'total'                         => currency_format($fund->budget_total),
-            'validated'                     => currency_format($fund->budget_validated),
-            'used'                          => currency_format($fund->budget_used),
-            'used_active_vouchers'          => currency_format($fund->budget_used_active_vouchers),
-            'left'                          => currency_format($fund->budget_left),
-            'transaction_costs'             => currency_format($fund->getTransactionCosts()),
+            'total'                             => currency_format($fund->budget_total),
+            'total_locale'                      => currency_format_locale($fund->budget_total),
+            'validated'                         => currency_format($fund->budget_validated),
+            'used'                              => currency_format($fund->budget_used),
+            'used_locale'                       => currency_format_locale($fund->budget_used),
+            'used_active_vouchers'              => currency_format($fund->budget_used_active_vouchers),
+            'used_active_vouchers_locale'       => currency_format_locale($fund->budget_used_active_vouchers),
+            'left'                              => currency_format($fund->budget_left),
+            'left_locale'                       => currency_format_locale($fund->budget_left),
+            'transaction_costs'                 => currency_format($fund->getTransactionCosts()),
+            'transaction_costs_locale'          => currency_format_locale($fund->getTransactionCosts()),
         ] : [], [
-            'children_count'                => $details['children_count'],
-            'vouchers_amount'               => currency_format($details['vouchers_amount']),
-            'vouchers_count'                => $details['vouchers_count'],
-            'active_vouchers_amount'        => currency_format($details['active_amount']),
-            'active_vouchers_count'         => $details['active_count'],
-            'inactive_vouchers_amount'      => currency_format($details['inactive_amount']),
-            'inactive_vouchers_count'       => $details['inactive_count'],
-            'deactivated_vouchers_amount'   => currency_format($details['deactivated_amount']),
-            'deactivated_vouchers_count'    => $details['deactivated_count'],
+            'children_count'                    => $details['children_count'],
+            'vouchers_count'                    => $details['vouchers_count'],
+            'vouchers_amount'                   => currency_format($details['vouchers_amount']),
+            'vouchers_amount_locale'            => currency_format_locale($details['vouchers_amount']),
+            'active_vouchers_amount'            => currency_format($details['active_amount']),
+            'active_vouchers_amount_locale'     => currency_format_locale($details['active_amount']),
+            'active_vouchers_count'             => $details['active_count'],
+            'inactive_vouchers_amount'          => currency_format($details['inactive_amount']),
+            'inactive_vouchers_amount_locale'   => currency_format_locale($details['inactive_amount']),
+            'inactive_vouchers_count'           => $details['inactive_count'],
+            'deactivated_vouchers_amount'       => currency_format($details['deactivated_amount']),
+            'deactivated_vouchers_amount_locale'=> currency_format_locale($details['deactivated_amount']),
+            'deactivated_vouchers_count'        => $details['deactivated_count'],
         ]);
     }
 
@@ -292,7 +349,7 @@ class FundResource extends BaseJsonResource
     {
         return [
             'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',
-            'csv_required_keys' => $fund->requiredPrevalidationKeys(),
+            'csv_required_keys' => $fund->requiredPrevalidationKeys(false, []),
         ];
     }
 

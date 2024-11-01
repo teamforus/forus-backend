@@ -3,13 +3,9 @@
 namespace App\Policies;
 
 use App\Models\Employee;
-use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Scopes\Builders\FundQuery;
-use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
 
 class OrganizationPolicy
@@ -74,38 +70,6 @@ class OrganizationPolicy
     public function updateIban(Identity $identity, Organization $organization): bool
     {
         return $this->update($identity, $organization) && $organization->isOwner($identity);
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Organization $organization
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    public function viewExternalFunds(Identity $identity, Organization $organization): bool
-    {
-        return $organization->identityCan($identity, 'manage_organization');
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Organization $organization
-     * @param Fund $externalFund
-     * @return Response|bool
-     * @noinspection PhpUnused
-     */
-    public function updateExternalFunds(
-        Identity $identity,
-        Organization $organization,
-        Fund $externalFund
-    ): Response|bool {
-        if (!FundQuery::whereExternalValidatorFilter(Fund::query(), $organization->id)->where([
-            'funds.id' => $externalFund->id,
-        ])->exists()) {
-            return $this->deny("Invalid fund id.");
-        }
-
-        return $organization->identityCan($identity, 'manage_organization');
     }
 
     /**

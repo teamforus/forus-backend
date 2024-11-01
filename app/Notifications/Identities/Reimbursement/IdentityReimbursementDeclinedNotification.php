@@ -20,6 +20,6 @@ class IdentityReimbursementDeclinedNotification extends BaseIdentityReimbursemen
         $emailFrom = $reimbursement->voucher->fund->getEmailFrom();
         $mailable = new ReimbursementDeclinedMail($this->eventLog->data, $emailFrom);
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

@@ -2,25 +2,20 @@
 
 namespace Tests\Feature;
 
-use App\Models\Fund;
-use App\Models\Implementation;
 use App\Models\Organization;
-use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Database\Eloquent\Builder;
 use Tests\TestCase;
+use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestOrganizations;
 
 class VoucherTransactionNoteTest extends TestCase
 {
-    use DatabaseTransactions, MakesTestFunds;
-
-    /**
-     * @var string
-     */
-    protected string $apiUrl = '/api/v1/platform/organizations/%s/%s/transactions';
+    use MakesTestFunds;
+    use DatabaseTransactions;
+    use MakesTestOrganizations;
+    use MakesTestFundProviders;
 
     /**
      * @var string
@@ -37,18 +32,20 @@ class VoucherTransactionNoteTest extends TestCase
      */
     public function testCheckTransactionNoteByProvider(): void
     {
-        $organization = $this->getOrganization();
-        $fund = $this->getFund($organization);
-        $provider = $this->getProvider($fund);
-        $voucher = $this->getVoucher($fund);
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $providerOrganization = $this->makeTestOrganization($this->makeIdentity());
 
+        $fund = $this->makeTestFund($sponsorOrganization);
+        $this->makeTestFundProvider($providerOrganization, $fund);
+
+        $voucher = $fund->makeVoucher($this->makeIdentity());
         $address = $voucher->token_without_confirmation->address;
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($provider->identity));
+        $headers = $this->makeApiHeaders($providerOrganization->identity);
         $response = $this->post("/api/v1/platform/provider/vouchers/$address/transactions", [
             'note' => $this->note,
             'amount' => round($voucher->amount_available / 2),
-            'organization_id' => $provider->id,
+            'organization_id' => $providerOrganization->id,
         ], $headers);
 
         $response->assertSuccessful();
@@ -56,8 +53,8 @@ class VoucherTransactionNoteTest extends TestCase
         $transaction = VoucherTransaction::find($response->json('data.id'));
         $this->assertNotNull($transaction);
 
-        $this->checkNoteVisibility($provider, $transaction, 'provider');
-        $this->checkNoteVisibility($organization, $transaction, 'sponsor', false);
+        $this->checkNoteVisibility($providerOrganization, $transaction, 'provider', true);
+        $this->checkNoteVisibility($sponsorOrganization, $transaction, 'sponsor', false);
     }
 
     /**
@@ -82,19 +79,21 @@ class VoucherTransactionNoteTest extends TestCase
      */
     private function makeTransactionNoteBySponsor(bool $share = true): void
     {
-        $organization = $this->getOrganization();
-        $fund = $this->getFund($organization);
-        $provider = $this->getProvider($fund);
-        $voucher = $this->getVoucher($fund);
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $providerOrganization = $this->makeTestOrganization($this->makeIdentity());
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
-        $response = $this->post(sprintf($this->apiUrl, $organization->id, 'sponsor'), [
+        $fund = $this->makeTestFund($sponsorOrganization);
+        $this->makeTestFundProvider($providerOrganization, $fund);
+        $voucher = $fund->makeVoucher($this->makeIdentity());
+
+        $headers = $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity));
+        $response = $this->post("/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/transactions", [
             'note' => $this->note,
             'amount' => round($voucher->amount_available / 2),
             'target' => VoucherTransaction::TARGET_PROVIDER,
             'voucher_id' => $voucher->id,
             'note_shared' => $share,
-            'organization_id' => $provider->id,
+            'organization_id' => $providerOrganization->id,
         ], $headers);
 
         $response->assertSuccessful();
@@ -102,8 +101,8 @@ class VoucherTransactionNoteTest extends TestCase
         $transaction = VoucherTransaction::find($response->json('data.id'));
         $this->assertNotNull($transaction);
 
-        $this->checkNoteVisibility($organization, $transaction);
-        $this->checkNoteVisibility($provider, $transaction, 'provider', $share);
+        $this->checkNoteVisibility($sponsorOrganization, $transaction, 'sponsor', true);
+        $this->checkNoteVisibility($providerOrganization, $transaction, 'provider', $share);
     }
 
     /**
@@ -116,15 +115,15 @@ class VoucherTransactionNoteTest extends TestCase
     private function checkNoteVisibility(
         Organization $organization,
         VoucherTransaction $transaction,
-        string $type = 'sponsor',
-        bool $assertVisible = true
+        string $type,
+        bool $assertVisible
     ): void {
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
         $response = $this->getJson(
-            sprintf($this->apiUrl, $organization->id, $type) . "/$transaction->address", $headers
+            "/api/v1/platform/organizations/$organization->id/$type/transactions/$transaction->address",
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
         );
-        $response->assertSuccessful();
 
+        $response->assertSuccessful();
         $note = $response->json('data.notes.0');
 
         if ($assertVisible) {
@@ -133,61 +132,5 @@ class VoucherTransactionNoteTest extends TestCase
         } else {
             $this->assertEmpty($note);
         }
-    }
-
-    /**
-     * @return Organization|null
-     */
-    private function getOrganization(): ?Organization
-    {
-        $implementation = Implementation::byKey($this->implementationName);
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
-
-        return $implementation->organization;
-    }
-
-    /**
-     * @param Organization $organization
-     * @return Fund
-     */
-    private function getFund(Organization $organization): Fund
-    {
-        /** @var Fund $fund */
-        $fund = $organization->funds()->where('type', Fund::TYPE_BUDGET)->first();
-        $this->assertNotNull($fund);
-
-        return $fund;
-    }
-
-    /**
-     * @param Fund $fund
-     * @return Organization
-     */
-    private function getProvider(Fund $fund): Organization
-    {
-        /** @var Organization $provider */
-        $provider = $fund->provider_organizations_approved()->first();
-        $this->assertNotNull($provider);
-
-        return $provider;
-    }
-
-    /**
-     * @param Fund $fund
-     * @return Voucher
-     */
-    private function getVoucher(Fund $fund): Voucher
-    {
-        /** @var Voucher $voucher */
-        $voucher = $fund->vouchers()
-            ->where(fn(Builder $builder) => VoucherQuery::whereNotExpiredAndActive($builder))
-            ->where(fn(Builder $builder) => VoucherQuery::whereHasBalance($builder))
-            ->whereNull('product_id')
-            ->first();
-
-        $this->assertNotNull($voucher);
-
-        return $voucher;
     }
 }

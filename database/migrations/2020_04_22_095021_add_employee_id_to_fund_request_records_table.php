@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\FundRequest;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -18,11 +18,9 @@ return new class extends Migration
             $table->unsignedInteger('employee_id')->nullable()->after('state');
         });
 
-        $fundRequests = FundRequest::get();
-
-        foreach ($fundRequests as $fundRequest) {
-            $fundRequest->records()->update([
-                'employee_id' => $fundRequest->employee_id
+        foreach (DB::table('fund_requests')->get() as $fundRequest) {
+            DB::table('fund_request_records')->where('fund_request_id', $fundRequest->id)->update([
+                'employee_id' => $fundRequest->employee_id,
             ]);
         }
     }

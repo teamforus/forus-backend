@@ -126,12 +126,13 @@ class PreCheck extends BaseModel
 
                 $setting = $preCheckRecord?->settings?->firstWhere('fund_id', $fund->id);
                 $value = $records[$criterion->record_type_key] ?? null;
+                $rule = BaseFundRequestRule::validateRecordValue($criterion, $value);
 
                 return [
                     'id' => $criterion->id,
                     'name' => $criterion->record_type->name,
                     'value' => $value,
-                    'is_valid' => BaseFundRequestRule::validateRecordValue($criterion, $value)->passes(),
+                    'is_valid' => $criterion->isExcludedByRules($records) || $rule->passes(),
                     'is_knock_out' => $setting?->is_knock_out ?? false,
                     'impact_level' => $setting?->impact_level ?? 100,
                     'knock_out_description' => $setting?->description ?? '',

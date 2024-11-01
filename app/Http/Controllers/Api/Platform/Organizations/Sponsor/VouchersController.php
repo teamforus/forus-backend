@@ -69,7 +69,7 @@ class VouchersController extends Controller
      */
     public function store(
         StoreVoucherRequest $request,
-        Organization        $organization
+        Organization $organization,
     ): SponsorVoucherResource {
         $fund = Fund::find($request->post('fund_id'));
 
@@ -78,7 +78,7 @@ class VouchersController extends Controller
 
         $note = $request->input('note');
         $email = $request->input('email', false);
-        $amount = $fund->isTypeBudget() ? $request->input('amount', 0) : 0;
+        $amount = currency_format($fund->isTypeBudget() ? $request->input('amount', 0) : 0);
         $identity = $email ? Identity::findOrMake($email)->address : null;
         $expire_at = $request->input('expire_at', false);
         $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
@@ -164,7 +164,7 @@ class VouchersController extends Controller
         )->map(function($voucher) use ($fund, $organization, $request, $employee, $allowVoucherRecords) {
             $note       = $voucher['note'] ?? null;
             $email      = $voucher['email'] ?? false;
-            $amount     = $fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0;
+            $amount     = currency_format($fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0);
             $records    = isset($voucher['records']) && is_array($voucher['records']) ? $voucher['records'] : [];
             $identity   = $email ? Identity::findOrMake($email)->address : null;
             $expire_at  = $voucher['expire_at'] ?? false;
@@ -410,7 +410,7 @@ class VouchersController extends Controller
         Organization $organization
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
-        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
+        $this->authorize('export', [Voucher::class, $organization]);
 
         return ExportFieldVoucherArrResource::collection(VoucherExport::getExportFields(
             $request->input('type', 'budget')
@@ -428,7 +428,7 @@ class VouchersController extends Controller
         Organization $organization
     ): VoucherExportArrResource {
         $this->authorize('show', $organization);
-        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
+        $this->authorize('export', [Voucher::class, $organization]);
 
         $fundId = $request->get('fund_id');
         $fields = $request->input('fields', VoucherExport::getExportFields('product'));

@@ -265,6 +265,7 @@ class NotificationService
         $mailable->with(array_merge([
             'email' => $email,
             'mailable' => get_class($mailable),
+            'eventLog' => $mailable instanceof ImplementationMail ? $mailable->getEventLog() : null,
             'unsubscribeLink' => $this->notificationRepo->makeUnsubLink($email),
         ], $mailable instanceof ImplementationMail && $this->isUnsubscribable($mailable) ? [
             'notificationPreferencesLink' => $mailable->getPreferencesLink(),
@@ -338,7 +339,7 @@ class NotificationService
     private function logFailure(?string $message): void
     {
         if ($logger = logger()) {
-            $logger->error("Error sending notification: `${$message}`");
+            $logger->error("Error sending notification: `$message`");
         }
     }
 }

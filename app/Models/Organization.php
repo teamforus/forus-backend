@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Events\Employees\EmployeeCreated;
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundQuery;
@@ -29,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
@@ -56,7 +56,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $is_sponsor
  * @property bool $is_provider
  * @property bool $is_validator
- * @property bool $validator_auto_accept_funds
  * @property bool $reservations_budget_enabled
  * @property bool $reservations_subsidy_enabled
  * @property bool $reservations_auto_accept
@@ -74,8 +73,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_bi_connection
  * @property bool $allow_provider_extra_payments
  * @property bool $allow_pre_checks
+ * @property bool $allow_payouts
  * @property bool $reservation_allow_extra_payments
- * @property bool $pre_approve_external_funds
+ * @property int $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
@@ -98,6 +98,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $bank_branch_name
  * @property bool $bank_fund_name
  * @property bool $bank_note
+ * @property string $bank_separator
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -113,14 +114,14 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $employees_count
  * @property-read Collection|\App\Models\Employee[] $employees_with_trashed
  * @property-read int|null $employees_with_trashed_count
- * @property-read Collection|Organization[] $external_validators
- * @property-read int|null $external_validators_count
  * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers_allowed_extra_payments
  * @property-read int|null $fund_providers_allowed_extra_payments_count
+ * @property-read Collection|\App\Models\FundProvider[] $fund_providers_allowed_extra_payments_full
+ * @property-read int|null $fund_providers_allowed_extra_payments_full_count
  * @property-read Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read Collection|\App\Models\Fund[] $funds
@@ -142,8 +143,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $mollie_connections_count
  * @property-read Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
- * @property-read Collection|\App\Models\OrganizationValidator[] $organization_validators
- * @property-read int|null $organization_validators_count
  * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @property-read Collection|\App\Models\Product[] $products_as_sponsor
@@ -160,8 +159,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $supplied_funds_count
  * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
- * @property-read Collection|\App\Models\OrganizationValidator[] $validated_organizations
- * @property-read int|null $validated_organizations_count
  * @property-read Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
  * @property-read int|null $voucher_transaction_bulks_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
@@ -178,6 +175,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder|Organization whereAllowPayouts($value)
  * @method static EloquentBuilder|Organization whereAllowPreChecks($value)
  * @method static EloquentBuilder|Organization whereAllowProviderExtraPayments($value)
  * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
@@ -196,6 +194,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereBankFundName($value)
  * @method static EloquentBuilder|Organization whereBankNote($value)
  * @method static EloquentBuilder|Organization whereBankReservationNumber($value)
+ * @method static EloquentBuilder|Organization whereBankSeparator($value)
  * @method static EloquentBuilder|Organization whereBankTransactionDate($value)
  * @method static EloquentBuilder|Organization whereBankTransactionId($value)
  * @method static EloquentBuilder|Organization whereBankTransactionTime($value)
@@ -230,7 +229,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder|Organization whereReservationsSubsidyEnabled($value)
  * @method static EloquentBuilder|Organization whereShowProviderTransactions($value)
  * @method static EloquentBuilder|Organization whereUpdatedAt($value)
- * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
  * @method static EloquentBuilder|Organization whereWebsite($value)
  * @method static EloquentBuilder|Organization whereWebsitePublic($value)
  * @mixin \Eloquent
@@ -265,6 +263,8 @@ class Organization extends BaseModel
         self::AUTH_2FA_FUNDS_POLICY_RESTRICT,
     ];
 
+    public const BANK_SEPARATORS = ['-', '/', '+', ':', '--', '//', '++', '::'];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -274,7 +274,7 @@ class Organization extends BaseModel
         'identity_address', 'name', 'iban', 'email', 'email_public',
         'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
-        'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
+        'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'allow_bi_connection',
@@ -285,7 +285,7 @@ class Organization extends BaseModel
         'auth_2fa_restrict_bi_connections',
         'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time',
         'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
-        'bank_note', 'bank_reservation_number',
+        'bank_note', 'bank_reservation_number', 'bank_separator',
     ];
 
     /**
@@ -301,7 +301,6 @@ class Organization extends BaseModel
         'is_validator'                              => 'boolean',
         'backoffice_available'                      => 'boolean',
         'manage_provider_products'                  => 'boolean',
-        'validator_auto_accept_funds'               => 'boolean',
         'reservations_budget_enabled'               => 'boolean',
         'reservations_subsidy_enabled'              => 'boolean',
         'reservations_auto_accept'                  => 'boolean',
@@ -312,7 +311,6 @@ class Organization extends BaseModel
         'allow_2fa_restrictions'                    => 'boolean',
         'allow_fund_request_record_edit'            => 'boolean',
         'allow_bi_connection'                       => 'boolean',
-        'pre_approve_external_funds'                => 'boolean',
         'bsn_enabled'                               => 'boolean',
         'auth_2fa_remember_ip'                      => 'boolean',
         'auth_2fa_funds_remember_ip'                => 'boolean',
@@ -322,6 +320,7 @@ class Organization extends BaseModel
         'auth_2fa_restrict_bi_connections'          => 'boolean',
         'allow_provider_extra_payments'             => 'boolean',
         'allow_pre_checks'                          => 'boolean',
+        'allow_payouts'                             => 'boolean',
         'reservation_allow_extra_payments'          => 'boolean',
         'show_provider_transactions'                => 'boolean',
         'bank_transaction_id'                       => 'boolean',
@@ -359,110 +358,9 @@ class Organization extends BaseModel
     /**
      * @return HasMany
      */
-    public function reimbursement_categories(): HasMany {
-        return $this->hasMany(ReimbursementCategory::class);
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param EloquentBuilder|null $builder
-     * @return EloquentBuilder
-     */
-    public static function searchQuery(
-        BaseFormRequest $request,
-        EloquentBuilder $builder = null
-    ): EloquentBuilder {
-        $query = $builder ?: self::query();
-        $fund_type = $request->input('fund_type', 'budget');
-        $has_products = $request->input('has_products');
-        $has_reservations = $request->input('has_reservations');
-
-        if ($request->input('is_employee', true)) {
-            if ($request->isAuthenticated()) {
-                $query = OrganizationQuery::whereIsEmployee($query, $request->auth_address());
-            } else {
-                $query = $query->whereIn('id', []);
-            }
-        }
-
-        if ($request->has('is_sponsor')) {
-            $query->where($request->only('is_sponsor'));
-        }
-
-        if ($request->has('is_provider')) {
-            $query->where($request->only('is_provider'));
-        }
-
-        if ($request->has('is_validator')) {
-            $query->where($request->only('is_validator'));
-        }
-
-        if ($q = $request->input('q')) {
-            return $query->where(function(EloquentBuilder $builder) use ($q) {
-                $builder->where('name', 'LIKE', "%$q%");
-                $builder->orWhere('description_text', 'LIKE', "%$q%");
-
-                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
-                    $builder->where('email_public', true);
-                    $builder->where('email', 'LIKE', "%$q%");
-                });
-
-                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
-                    $builder->where('phone_public', true);
-                    $builder->where('phone', 'LIKE', "%$q%");
-                });
-
-                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
-                    $builder->where('website_public', true);
-                    $builder->where('website', 'LIKE', "%$q%");
-                });
-            });
-        }
-
-        if ($request->input('implementation', false)) {
-            $query->whereHas('funds', static function(EloquentBuilder $builder) {
-                $builder->whereIn('funds.id', Implementation::activeFundsQuery()->select('id'));
-            });
-        }
-
-        if ($has_reservations && $request->isAuthenticated()) {
-            $query->whereHas('products.product_reservations', function(EloquentBuilder $builder) use ($request) {
-                $builder->whereHas('voucher', function(EloquentBuilder $builder) use ($request) {
-                    $builder->where('identity_address', $request->auth_address());
-                });
-            });
-        }
-
-        if ($has_products) {
-            $query->whereHas('products', static function(EloquentBuilder $builder) use ($fund_type) {
-                $activeFunds = Implementation::activeFundsQuery()->where(
-                    'type', $fund_type
-                )->pluck('id')->toArray();
-
-                // only in stock and not expired
-                $builder = ProductQuery::inStockAndActiveFilter($builder);
-
-                // only approved by at least one sponsor
-                return ProductQuery::approvedForFundsFilter($builder, $activeFunds);
-            });
-        } else if ($has_products !== null) {
-            $query->whereDoesntHave('products');
-        }
-
-        return $query->orderBy(
-            $request->get('order_by', 'created_at'),
-            $request->get('order_dir', 'asc'),
-        );
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @return EloquentBuilder[]|Collection
-     * @noinspection PhpUnused
-     */
-    public static function search(BaseFormRequest $request): Collection|Arrayable
+    public function reimbursement_categories(): HasMany
     {
-        return self::searchQuery($request)->get();
+        return $this->hasMany(ReimbursementCategory::class);
     }
 
     /**
@@ -548,36 +446,6 @@ class Organization extends BaseModel
     public function products_sponsor(): HasMany
     {
         return $this->hasMany(Product::class)->whereNotNull('sponsor_organization_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
-     */
-    public function validated_organizations(): HasMany
-    {
-        return $this->hasMany(OrganizationValidator::class, 'validator_organization_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function organization_validators(): HasMany {
-        return $this->hasMany(OrganizationValidator::class);
-    }
-
-    /**
-     * @return BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function external_validators(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            self::class,
-            OrganizationValidator::class,
-            'organization_id',
-            'validator_organization_id'
-        );
     }
 
     /**
@@ -693,10 +561,10 @@ class Organization extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return HasOneThrough
      * @noinspection PhpUnused
      */
-    public function last_employee_session(): HasManyThrough
+    public function last_employee_session(): HasOneThrough
     {
         return $this->hasOneThrough(
             Session::class,
@@ -763,6 +631,18 @@ class Organization extends BaseModel
         return $this
             ->hasMany(FundProvider::class)
             ->where('allow_extra_payments', true);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_providers_allowed_extra_payments_full(): HasMany
+    {
+        return $this
+            ->hasMany(FundProvider::class)
+            ->where('allow_extra_payments', true)
+            ->where('allow_extra_payments_full', true);
     }
 
     /**
@@ -954,27 +834,6 @@ class Organization extends BaseModel
                 });
             })->orWhere('identity_address', $identityAddress);
         });
-    }
-
-    /**
-     * @param Organization $validatorOrganization
-     */
-    public function detachExternalValidator(
-        Organization $validatorOrganization
-    ): void {
-        /** @var Fund[] $fundsAffected */
-        $fundsAffected = FundQuery::whereExternalValidatorFilter(
-            $this->funds()->getQuery(),
-            $validatorOrganization->id
-        )->get();
-
-        foreach ($fundsAffected as $fund) {
-            $fund->detachExternalValidator($validatorOrganization);
-        }
-
-        $this->organization_validators()->where([
-            'validator_organization_id' => $validatorOrganization->id,
-        ])->delete();
     }
 
     /**

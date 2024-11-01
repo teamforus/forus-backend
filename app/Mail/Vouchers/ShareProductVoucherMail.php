@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class ShareProductVoucherMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = 'notifications_identities.product_voucher_shared';
+    public ?string $notificationTemplateKey = 'notifications_identities.product_voucher_shared';
 
     /**
      * @return Mailable

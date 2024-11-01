@@ -107,7 +107,9 @@ class EventLog extends Model
      */
     public function getLoggableLocaleDashboardAttribute(): ?string
     {
-        $attributes = array_dot($this->data);
+        $attributes = array_filter(array_dot($this->data), function ($value) {
+            return is_string($value) || is_numeric($value);
+        });
 
         foreach ($attributes as $key => $attribute) {
             $attributes[$key] = e($attribute);
@@ -160,6 +162,7 @@ class EventLog extends Model
 
             $attributes = array_merge([
                 'id' => Arr::get($this->data, 'voucher_id'),
+                'number' => Arr::get($this->data, 'voucher_number'),
                 'amount_locale' => Arr::get($this->data, 'voucher_transaction_amount_locale'),
                 'transaction_type' => $transactionType,
             ]);

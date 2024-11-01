@@ -5,6 +5,7 @@ namespace App\Scopes\Builders;
 
 use App\Models\Fund;
 use App\Models\FundProvider;
+use App\Models\Organization;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -21,6 +22,19 @@ class FundQuery
         return $query
             ->where('state', Fund::STATE_ACTIVE)
             ->whereDate('end_date', '>=', today());
+    }
+
+    /**
+     * @param Builder|Relation|Fund $query
+     * @return Builder|Relation|Fund
+     */
+    public static function whereNotActiveFilter(
+        Builder|Relation|Fund $query
+    ): Builder|Relation|Fund {
+        return $query->where(function(Builder $builder) {
+            $builder->where('state', '!=', Fund::STATE_ACTIVE);
+            $builder->orWhereDate('end_date', '<', today());
+        });
     }
 
     /**
@@ -99,44 +113,6 @@ class FundQuery
         Product $product
     ): Builder {
         return self::whereProductsAreApprovedFilter(self::whereActiveFilter($query), $product);
-    }
-
-    /**
-     * @param Builder $query
-     * @param int|array $organization_id External validator organization id
-     * @param bool|null $accepted
-     * @return Builder
-     */
-    public static function whereExternalValidatorFilter(
-        Builder $query,
-        $organization_id,
-        ?bool $accepted = null
-    ): Builder {
-        return $query->whereHas('criteria.fund_criterion_validators', static function(
-            Builder $builder
-        ) use ($organization_id, $accepted) {
-            if (!is_null($accepted)) {
-                $builder->where(compact('accepted'));
-            }
-
-            $builder->whereHas('external_validator.validator_organization', static function(
-                Builder $builder
-            ) use ($organization_id) {
-                $builder->whereIn('organizations.id', (array) $organization_id);
-            });
-        });
-    }
-
-    /**
-     * @param Builder $query
-     * @param array|int $implementation_id
-     * @return Builder
-     */
-    public static function whereImplementationIdFilter(Builder $query, $implementation_id): Builder
-    {
-        return $query->whereHas('fund_config', static function(Builder $builder) use ($implementation_id) {
-            $builder->whereIn('implementation_id', (array) $implementation_id);
-        });
     }
 
     /**
@@ -253,5 +229,24 @@ class FundQuery
 
             $builder->where('balance_provider', $balanceProvider);
         });
+    }
+
+    /**
+     * @param Builder|Relation|Fund $query
+     * @param int|int[] $organizationId
+     * @return Relation|Builder|Fund
+     */
+    public static function whereProviderProductsRequired(
+        Builder|Relation|Fund $query,
+        int | array $organizationId,
+    ): Relation|Builder|Fund {
+        return $query
+            ->where('archived', false)
+            ->whereRelation('fund_config', 'provider_products_required', true)
+            ->whereHas('fund_providers', function (Builder $builder) use ($organizationId) {
+                $builder->where('state', '!=', FundProvider::STATE_REJECTED);
+                $builder->whereIn('organization_id', (array) $organizationId);
+                $builder->doesntHave('organization.products');
+            });
     }
 }

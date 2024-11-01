@@ -11,6 +11,7 @@ use App\Models\Organization;
 use App\Services\MollieService\Models\MollieConnection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Http\Request;
 
 /**
  * @property Organization $resource
@@ -66,7 +67,7 @@ class OrganizationResource extends JsonResource
      * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $baseRequest = BaseFormRequest::createFrom($request);
         $organization = $this->resource;
@@ -84,7 +85,7 @@ class OrganizationResource extends JsonResource
         $permissionsData = $permissionsCountDep ? $this->getIdentityPermissions($organization, $baseRequest->identity()) : null;
 
         return array_filter(array_merge($organization->only([
-            'id', 'identity_address', 'name', 'kvk', 'business_type_id',
+            'id', 'identity_address', 'name', 'business_type_id',
             'email_public', 'phone_public', 'website_public',
             'description', 'description_html', 'reservation_phone',
             'reservation_address', 'reservation_birth_date',
@@ -133,14 +134,14 @@ class OrganizationResource extends JsonResource
         return $request->identity() && $organization->isEmployee($request->identity(), false) ? [
             'has_bank_connection' => !empty($organization->bank_connection_active),
             ...$organization->only([
-                'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
-                'allow_custom_fund_notifications', 'validator_auto_accept_funds',
+                'manage_provider_products', 'backoffice_available',
+                'reservations_auto_accept', 'allow_custom_fund_notifications',
                 'reservations_budget_enabled', 'reservations_subsidy_enabled',
                 'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled',
                 'allow_batch_reservations', 'allow_budget_fund_limits',
                 'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
                 'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
-                'allow_provider_extra_payments', 'allow_pre_checks',
+                'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts',
             ]),
             ...$request->isProviderDashboard() ? [
                 'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),
@@ -150,6 +151,7 @@ class OrganizationResource extends JsonResource
             'bank_statement_details' => $organization->only([
                 'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time', 'bank_branch_number', 'bank_branch_id',
                 'bank_branch_name', 'bank_fund_name', 'bank_note', 'bank_reservation_number',
+                'bank_separator',
             ]),
         ] : [];
     }
@@ -189,7 +191,7 @@ class OrganizationResource extends JsonResource
         $canUpdate = Gate::allows('update', $organization);
 
         return $canUpdate ? array_merge($organization->only([
-            'iban', 'btw', 'phone', 'email', 'website', 'email_public',
+            'kvk', 'iban', 'btw', 'phone', 'email', 'website', 'email_public',
             'phone_public', 'website_public',
         ]), [
             'contacts' => OrganizationContactResource::collection($organization->contacts),

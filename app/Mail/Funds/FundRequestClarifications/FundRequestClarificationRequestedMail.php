@@ -11,7 +11,7 @@ use League\CommonMark\Exception\CommonMarkException;
  */
 class FundRequestClarificationRequestedMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = "notifications_identities.fund_request_feedback_requested";
+    public ?string $notificationTemplateKey = "notifications_identities.fund_request_feedback_requested";
 
     /**
      * @return Mailable
@@ -28,7 +28,7 @@ class FundRequestClarificationRequestedMail extends ImplementationMail
      */
     protected function getMailExtraData(array $data): array
     {
-        $linkTitle = $this->informalCommunication ? 'Ga naar je aanvraag' : 'Ga naar uw aanvraag';
+        $linkTitle = 'Bekijk de aanvraag';
         $question = $data['fund_request_clarification_question'] ?? '';
         $link = $data['webshop_clarification_link'];
 

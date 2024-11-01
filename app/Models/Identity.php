@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Scopes\Builders\IdentityQuery;
 use App\Services\Forus\Auth2FAService\Auth2FAService;
 use App\Services\Forus\Auth2FAService\Data\Auth2FASecret;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
@@ -294,6 +295,14 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
+     * @return string
+     */
+    public function getAuthPasswordName(): string
+    {
+        return 'password';
+    }
+
+    /**
      * @param string|null $address
      * @return Identity|BaseModel|null
      */
@@ -321,10 +330,7 @@ class Identity extends Model implements Authenticatable
             return null;
         }
 
-        return static::whereHas('records', function(Builder $builder) use ($bsn) {
-            $builder->where('value', $bsn);
-            $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
-        })->first();
+        return IdentityQuery::whereBsn(Identity::query(), $bsn)->first();
     }
 
     /**

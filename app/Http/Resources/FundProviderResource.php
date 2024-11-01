@@ -15,7 +15,6 @@ class FundProviderResource extends BaseJsonResource
         'fund.tags',
         'fund.logo.presets',
         'fund.criteria.fund',
-        'fund.criteria.fund_criterion_validators.external_validator',
         'fund.organization.logo.presets',
         'fund.organization.employees',
         'fund.organization.employees.roles.permissions',
@@ -51,8 +50,9 @@ class FundProviderResource extends BaseJsonResource
         $lastActivity = $fundProvider->getLastActivity();
 
         return array_merge($fundProvider->only([
-            'id', 'organization_id', 'fund_id', 'state', 'state_locale', 'allow_extra_payments',
+            'id', 'organization_id', 'fund_id', 'state', 'state_locale',
             'allow_products', 'allow_some_products', 'allow_budget', 'excluded',
+            'allow_extra_payments', 'allow_extra_payments_full',
         ]), $this->productFields($fundProvider), [
             'fund' => new FundResource($fundProvider->fund),
             'offices' => OfficeResource::collection($fundProvider->organization->offices),

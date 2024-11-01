@@ -44,7 +44,7 @@ class StoreReimbursementRequest extends BaseFormRequest
                 ...$this->emailRules(),
             ],
             'iban' => ['required', 'string', new IbanRule()],
-            'iban_name' => 'required|string|min:5|max:100',
+            'iban_name' => 'required|string|regex:/^[a-zA-Z ]+$/|min:3|max:100',
             'voucher_id' => $this->voucherIdRule(),
             'state' => 'nullable|in:' . implode(',', [
                 Reimbursement::STATE_DRAFT,
@@ -78,7 +78,7 @@ class StoreReimbursementRequest extends BaseFormRequest
             ->availableVouchers($identity, $reimbursement)
             ->find($this->input('voucher_id'));
 
-        return "required|numeric|min:.1|max:" . currency_format($voucher?->amount_available ?: 0);
+        return "required|numeric|min:0.1|max:" . currency_format($voucher?->amount_available ?: 0);
     }
 
     /**
@@ -102,6 +102,7 @@ class StoreReimbursementRequest extends BaseFormRequest
     {
         return [
             'voucher_address' => 'tegoeden',
+            'amount' => 'bedrag',
             'files.*' => trans('validation.attributes.file'),
         ];
     }
@@ -112,6 +113,24 @@ class StoreReimbursementRequest extends BaseFormRequest
     public function messages(): array
     {
         return [
+            'amount.min' => trans('validation.min.numeric', [
+                'attribute' => ucfirst($this->attributes()['amount'] ?? 'bedrag'),
+            ]),
+            'description.min' => trans('validation.min.numeric', [
+                'attribute' => ucfirst(trans('validation.attributes.description')),
+            ]),
+            'iban_name.min' => trans('validation.min.numeric', [
+                'attribute' => ucfirst(trans('validation.attributes.iban_name')),
+            ]),
+            'voucher_id.required' => trans('validation.required_not_filled'),
+            'title.required' => trans('validation.required_not_filled'),
+            'amount.required' => trans('validation.required_not_filled'),
+            'iban.required' => trans('validation.required_not_filled'),
+            'iban_name.required' => trans('validation.required_not_filled'),
+            'iban_name.regex' => sprintf(
+                'De %s mag alleen letters en spaties bevatten',
+                trans('validation.attributes.iban_name')
+            ),
             'files.required' => trans('validation.reimbursement.files.required'),
         ];
     }

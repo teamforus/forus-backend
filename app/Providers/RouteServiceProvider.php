@@ -14,7 +14,6 @@ use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity2FA;
 use App\Models\Implementation;
-use App\Models\ImplementationSocialMedia;
 use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Product;
@@ -99,6 +98,13 @@ class RouteServiceProvider extends ServiceProvider
             return FundProviderInvitation::where(compact('token'))->firstOrFail();
         });
 
+        $router->bind('voucher_number_or_address', static function ($value) {
+            return $value ? Voucher::where(function(Builder $builder) use ($value) {
+                $builder->where('number', $value);
+                $builder->orWhereRelation('tokens', 'address', $value);
+            })->firstOrFail() : null;
+        });
+
         $router->bind('voucher_address_or_physical_code', static function ($value) {
             $isCard = is_string($value) && strlen($value) === 12;
 
@@ -124,6 +130,7 @@ class RouteServiceProvider extends ServiceProvider
         $router->bind('budget_voucher_token_address', static function ($address) {
             return VoucherToken::whereAddress($address)->whereHas('voucher', static function(Builder $builder) {
                 $builder->whereNull('parent_id');
+                $builder->where('type', '!=', Voucher::VOUCHER_TYPE_PAYOUT);
             })->firstOrFail();
         });
 

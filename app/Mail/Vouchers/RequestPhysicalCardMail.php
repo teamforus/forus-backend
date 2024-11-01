@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class RequestPhysicalCardMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = 'notifications_identities.voucher_physical_card_requested';
+    public ?string $notificationTemplateKey = 'notifications_identities.voucher_physical_card_requested';
 
     /**
      * @return Mailable

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -27,6 +28,8 @@ use Illuminate\Support\Facades\Log;
  * @property int $voucher_id
  * @property int|null $organization_id
  * @property int|null $employee_id
+ * @property string|null $description
+ * @property int|null $upload_batch_id
  * @property string|null $branch_id
  * @property string|null $branch_name
  * @property string|null $branch_number
@@ -71,6 +74,8 @@ use Illuminate\Support\Facades\Log;
  * @property-read int|null $notes_provider_count
  * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes_sponsor
  * @property-read int|null $notes_sponsor_count
+ * @property-read Collection|\App\Models\PayoutRelation[] $payout_relations
+ * @property-read int|null $payout_relations_count
  * @property-read \App\Models\Product|null $product
  * @property-read \App\Models\ProductReservation|null $product_reservation
  * @property-read \App\Models\Organization|null $provider
@@ -90,6 +95,7 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder|VoucherTransaction whereCanceledAt($value)
  * @method static Builder|VoucherTransaction whereCreatedAt($value)
  * @method static Builder|VoucherTransaction whereDeletedAt($value)
+ * @method static Builder|VoucherTransaction whereDescription($value)
  * @method static Builder|VoucherTransaction whereEmployeeId($value)
  * @method static Builder|VoucherTransaction whereFundProviderProductId($value)
  * @method static Builder|VoucherTransaction whereIbanFrom($value)
@@ -112,6 +118,7 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder|VoucherTransaction whereTransferAt($value)
  * @method static Builder|VoucherTransaction whereUid($value)
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
+ * @method static Builder|VoucherTransaction whereUploadBatchId($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
  * @method static Builder|VoucherTransaction whereVoucherTransactionBulkId($value)
  * @method static Builder|VoucherTransaction withTrashed()
@@ -124,11 +131,18 @@ class VoucherTransaction extends BaseModel
 
     protected $perPage = 25;
 
-    public const EVENT_BUNQ_TRANSACTION_SUCCESS = 'bunq_transaction_success';
     public const TRANSACTION_COST_OLD = .11;
 
+    public const EVENT_UPDATED = 'updated';
+    public const EVENT_CANCELED_SPONSOR = 'canceled_sponsor';
+    public const EVENT_CANCELED_PROVIDER = 'canceled_provider';
+    public const EVENT_TRANSFER_DELAY_SKIPPED = 'transfer_delay_skipped';
+
     public const EVENTS = [
-        self::EVENT_BUNQ_TRANSACTION_SUCCESS,
+        self::EVENT_UPDATED,
+        self::EVENT_CANCELED_SPONSOR,
+        self::EVENT_CANCELED_PROVIDER,
+        self::EVENT_TRANSFER_DELAY_SKIPPED,
     ];
 
     public const STATE_PENDING = 'pending';
@@ -151,16 +165,19 @@ class VoucherTransaction extends BaseModel
 
     public const TARGET_PROVIDER = 'provider';
     public const TARGET_TOP_UP = 'top_up';
+    public const TARGET_PAYOUT = 'payout';
     public const TARGET_IBAN = 'iban';
 
     public const TARGETS = [
         self::TARGET_PROVIDER,
+        self::TARGET_PAYOUT,
         self::TARGET_TOP_UP,
         self::TARGET_IBAN,
     ];
 
     public const TARGETS_OUTGOING = [
         self::TARGET_PROVIDER,
+        self::TARGET_PAYOUT,
         self::TARGET_IBAN,
     ];
 
@@ -169,8 +186,9 @@ class VoucherTransaction extends BaseModel
     ];
 
     public const SORT_BY_FIELDS = [
-        'id', 'amount', 'created_at', 'state', 'transaction_in', 'fund_name',
+        'id', 'amount', 'created_at', 'state', 'transfer_in', 'fund_name',
         'provider_name', 'product_name', 'target', 'uid', 'date_non_cancelable', 'bulk_state',
+        'payment_type', 'employee_email', 'relation', 'transfer_at', 'target_iban', 'description',
     ];
 
     /**
@@ -184,15 +202,16 @@ class VoucherTransaction extends BaseModel
         'iban_from', 'iban_to', 'iban_to_name', 'payment_time', 'employee_id', 'transfer_at',
         'voucher_transaction_bulk_id', 'payment_description', 'initiator', 'reimbursement_id',
         'target', 'target_iban', 'target_name', 'target_reimbursement_id', 'uid',
-        'branch_id', 'branch_name', 'branch_number',
+        'branch_id', 'branch_name', 'branch_number', 'upload_batch_id', 'description',
     ];
 
     protected $hidden = [
         'voucher_id', 'last_attempt_at', 'attempts', 'notes',
     ];
 
-    protected $dates = [
-        'transfer_at', 'non_cancelable_at',
+    protected $casts = [
+        'transfer_at' => 'datetime',
+        'non_cancelable_at' => 'datetime',
     ];
 
     /**
@@ -269,6 +288,15 @@ class VoucherTransaction extends BaseModel
     public function notes(): HasMany
     {
         return $this->hasMany(VoucherTransactionNote::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function payout_relations(): HasMany
+    {
+        return $this->hasMany(PayoutRelation::class)->orderBy('type');
     }
 
     /**
@@ -352,6 +380,7 @@ class VoucherTransaction extends BaseModel
         return [
             self::TARGET_PROVIDER => trans("transaction.target.$this->target"),
             self::TARGET_TOP_UP => trans("transaction.target.$this->target"),
+            self::TARGET_PAYOUT => trans("transaction.target.$this->target"),
             self::TARGET_IBAN => trans("transaction.target.$this->target"),
         ][$this->target] ?? $this->target;
     }
@@ -426,6 +455,15 @@ class VoucherTransaction extends BaseModel
         $data = $data->map(fn (VoucherTransaction $transaction) => array_only([
             'id' => $transaction->id,
             'amount' => currency_format($transaction->amount),
+            'method' => $transaction->product_reservation?->amount_extra > 0
+                ? 'iDeal + Tegoed'
+                : 'Tegoed',
+            'branch_name' => $transaction->branch_name,
+            'branch_id' => $transaction->branch_id,
+            'branch_number' => $transaction->branch_number,
+            'amount_extra' => $transaction->product_reservation?->amount_extra > 0 ?
+                currency_format($transaction->product_reservation?->amount_extra)
+                : '',
             'date_transaction' => format_datetime_locale($transaction->created_at),
             'date_payment' => format_datetime_locale($transaction->payment_time),
             'fund_name' => $transaction->voucher->fund->name,
@@ -540,6 +578,17 @@ class VoucherTransaction extends BaseModel
     /**
      * @return bool
      */
+    public function isEditablePayout(): bool
+    {
+        return
+            $this->targetIsPayout() &&
+            $this->isPending() &&
+            !$this->voucher_transaction_bulk_id;
+    }
+
+    /**
+     * @return bool
+     */
     public function isCancelable(): bool
     {
         return !$this->voucher_transaction_bulk &&
@@ -548,14 +597,11 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
-     * @return VoucherTransaction
+     * @return bool
      */
-    public function cancelPending(): VoucherTransaction
+    public function isCancelableBySponsor(): bool
     {
-        return $this->updateModel([
-            'state' => self::STATE_CANCELED,
-            'canceled_at' => now(),
-        ]);
+        return $this->isCancelable();
     }
 
     /**
@@ -567,7 +613,7 @@ class VoucherTransaction extends BaseModel
             return null;
         }
 
-        return max(now()->diffInDays($this->transfer_at, false), 0);
+        return max(now()->diffInDays($this->transfer_at), 0);
     }
 
     /**
@@ -588,15 +634,21 @@ class VoucherTransaction extends BaseModel
     public function makePaymentDescription(int $maxLength = 2000): string
     {
         if ($this->targetIsIban()) {
-            return '';
+            return trans('bunq.transaction.from_fund', [
+                'fund_name' => $this->voucher->fund->name,
+                'transaction_id' => $this->id
+            ]);
         }
 
         if (!$this->provider) {
             Log::channel('bng')->error("Unexpected transaction without provider found $this->id.");
-            return '';
+            return trans('bunq.transaction.from_fund', [
+                'fund_name' => $this->voucher->fund->name,
+                'transaction_id' => $this->id
+            ]);
         }
 
-        $separator = ' | ';
+        $separator = " {$this->provider->bank_separator} ";
         $description = $separator . trim(implode($separator, array_filter([
             $this->provider->bank_transaction_id ? $this->id : null,
             $this->provider->bank_transaction_date ? $this->created_at?->format('Y-m-d') : null,
@@ -658,11 +710,19 @@ class VoucherTransaction extends BaseModel
 
     /**
      * @return bool
+     */
+    public function targetIsPayout(): bool
+    {
+        return $this->target === self::TARGET_PAYOUT;
+    }
+
+    /**
+     * @return bool
      * @noinspection PhpUnused
      */
     public function targetIsIban(): bool
     {
-        return $this->target === self::TARGET_IBAN;
+        return in_array($this->target, [self::TARGET_IBAN, self::TARGET_PAYOUT]);
     }
 
     /**
@@ -689,5 +749,128 @@ class VoucherTransaction extends BaseModel
     public function isIncoming(): bool
     {
         return in_array($this->target, self::TARGETS_INCOMING);
+    }
+
+    /**
+     * @return int
+     * @throws \Random\RandomException
+     */
+    public static function makeBatchUploadId(): int
+    {
+        do {
+            $batchId = random_int(100_000_000_000, 900_000_000_000);
+        } while (VoucherTransaction::whereUploadBatchId($batchId)->exists());
+
+        return $batchId;
+    }
+
+    /**
+     * @param Employee $employee
+     * @param array $data
+     * @return void
+     */
+    public function updatePayout(Employee $employee, array $data): void
+    {
+        $amount = Arr::get($data, 'amount');
+        $voucher = $this->voucher;
+        $amountPreset = $voucher->fund->amount_presets?->find(Arr::get($data, 'amount_preset_id'));
+
+        if ($amountPreset) {
+            if (($amountPreset->id !== $voucher->fund_amount_preset_id) ||
+                ($amountPreset->amount !== $voucher->amount)) {
+                $voucher->update([
+                    'amount' => $amountPreset->amount,
+                    'fund_amount_preset_id' => $amountPreset->id,
+                ]);
+
+                $this->update([ 'amount' => $voucher->amount ]);
+            }
+        }
+
+        if ($amount && ($amount !== $voucher->amount)) {
+            if ($amount !== $voucher->amount) {
+                $voucher->update([
+                    'amount' => $amount,
+                    'fund_amount_preset_id' => null,
+                ]);
+
+                $this->update([
+                    'amount' => $voucher->amount,
+                ]);
+            }
+        }
+
+        $this->update(Arr::only($data, [
+            'target_iban', 'target_name', 'description',
+        ]));
+
+        $this->log(
+            event: self::EVENT_UPDATED,
+            models: self::getLogModels($employee),
+            identity_address: $employee->identity_address,
+        );
+    }
+
+    /**
+     * @param ?Employee $employee
+     * @param bool $sponsor
+     * @return VoucherTransaction
+     */
+    public function cancelPending(?Employee $employee, bool $sponsor): VoucherTransaction
+    {
+        $this->update([
+            'state' => self::STATE_CANCELED,
+            'canceled_at' => now(),
+        ]);
+
+        $this->log(
+            event: $sponsor ? self::EVENT_CANCELED_SPONSOR : self::EVENT_CANCELED_PROVIDER,
+            models: $this->getLogModels($employee),
+            identity_address: $employee?->identity_address,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @param Employee $employee
+     * @return VoucherTransaction
+     */
+    public function skipTransferDelay(Employee $employee): VoucherTransaction
+    {
+        $this->update([
+            'transfer_at' => now(),
+        ]);
+
+        $this->log(
+            event: self::EVENT_TRANSFER_DELAY_SKIPPED,
+            models: $this->getLogModels($employee),
+            identity_address: $employee->identity_address);
+
+        return $this;
+    }
+
+    /**
+     * @return VoucherTransaction[]
+     */
+    protected function getLogModels(?Employee $employee): array
+    {
+        return [
+            'employee' => $employee,
+            'voucher_transaction' => $this,
+        ];
+    }
+
+    /**
+     * @param string $type
+     * @param string $value
+     * @return PayoutRelation
+     */
+    public function addPayoutRelation(string $type, string $value): PayoutRelation
+    {
+        return $this->payout_relations()->create([
+            'type' => $type,
+            'value' => $value,
+        ]);
     }
 }

@@ -260,7 +260,7 @@ class ReimbursementTest extends TestCase
         Employee $employee,
     ): void {
         $endpoint = "/api/v1/platform/organizations/$employee->organization_id/reimbursements";
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($employee->identity));
+        $headers = $this->makeApiHeaders($employee->identity);
 
         $response = $this->getJson("$endpoint?" . http_build_query([
             'q' => $reimbursement->voucher->identity->email,
@@ -279,7 +279,7 @@ class ReimbursementTest extends TestCase
         Employee $employee,
     ): void {
         $endpoint = "/api/v1/platform/organizations/$employee->organization_id/reimbursements";
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($employee->identity));
+        $headers = $this->makeApiHeaders($employee->identity);
 
         $response = $this->getJson("$endpoint?" . http_build_query([
             'q' => $reimbursement->voucher->identity->email,
@@ -298,7 +298,7 @@ class ReimbursementTest extends TestCase
         Employee $employee
     ): void {
         $endpoint = "/api/v1/platform/organizations/$employee->organization_id/reimbursements";
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($employee->identity));
+        $headers = $this->makeApiHeaders($employee->identity);
 
         $response = $this->postJson("$endpoint/$reimbursement->id/assign", [], $headers);
         $response->assertSuccessful();
@@ -316,7 +316,7 @@ class ReimbursementTest extends TestCase
         Employee $employee
     ): void {
         $endpoint = "/api/v1/platform/organizations/$employee->organization_id/reimbursements";
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($employee->identity));
+        $headers = $this->makeApiHeaders($employee->identity);
 
         $response = $this->postJson("$endpoint/$reimbursement->id/resign", [], $headers);
         $response->assertSuccessful();
@@ -335,7 +335,7 @@ class ReimbursementTest extends TestCase
         Employee $employee,
         bool $approve
     ): void {
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($employee->identity));
+        $headers = $this->makeApiHeaders($employee->identity);
         $assertState = $approve ? $reimbursement::STATE_APPROVED : $reimbursement::STATE_DECLINED;
 
         $endpoint = "/api/v1/platform/organizations/$employee->organization_id/reimbursements";
@@ -358,7 +358,7 @@ class ReimbursementTest extends TestCase
         Employee $employee,
         bool $approve
     ): void {
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($employee->identity));
+        $headers = $this->makeApiHeaders($employee->identity);
 
         $endpoint = "/api/v1/platform/organizations/$employee->organization_id/reimbursements";
         $endpoint = "$endpoint/$reimbursement->id/" . ($approve ? 'approve' : 'decline');
@@ -379,7 +379,7 @@ class ReimbursementTest extends TestCase
         Employee $unassignedEmployee
     ): void {
         $endpoint = "/api/v1/platform/organizations/$employee->organization_id/reimbursements";
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($employee->identity));
+        $headers = $this->makeApiHeaders($employee->identity);
         $headersUnassigned = $this->makeApiHeaders($this->makeIdentityProxy($unassignedEmployee->identity));
 
         // assert unassigned employee can't add notes
@@ -505,7 +505,7 @@ class ReimbursementTest extends TestCase
             'description' => $this->faker->text(600),
             'amount' => random_int(1, 10),
             'iban' => $this->faker()->iban('NL'),
-            'iban_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,
+            'iban_name' => 'John Doe',
             'voucher_id' => $voucher?->id,
             'files' => [
                 $this->makeReimbursementProofFile($headers)->json('data.uid'),

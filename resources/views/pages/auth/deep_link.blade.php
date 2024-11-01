@@ -1,17 +1,19 @@
 @extends('pages.layout')
 
 @section('content')
-    <div class="wrapper" ng-controller="BaseController">
-        <auth2-f-a-component
-            token="{{ $exchangeToken ?? '' }}"
-            type="{{ $type }}"
-            mobile="{{ request()->userAgent() && user_agent_data(request()->userAgent())->isMobile() ? 'true' : 'false' }}" />
-    </div>
+    <div class="wrapper">
 
-    <modals-root />
+        <div id="root"></div>
+
+        <div id="params"
+             data-exchange-token="{{ $exchangeToken ?? '' }}"
+             data-type="{{ $type }}"
+             data-mobile="{{ request()->userAgent() && user_agent_data(request()->userAgent())->isMobile() ? 'true' : 'false' }}"
+             data-api-url="{{ url('api/v1') }}"
+        />
+    </div>
 @endsection
 
 @section('scripts')
-    <script src="{{ asset('/assets/dist/bundle/js/bundle.min.js') }}"></script>
-    <script src="{{ asset('/assets/js/app.min.js?time=' . time()) }}"></script>
+    <script src="{{ asset('/assets/js/app.js?time=' . time()) }}"></script>
 @endsection

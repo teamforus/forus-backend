@@ -22,23 +22,27 @@ class IdentityProductVoucherSharedNotification extends BaseIdentityVoucherNotifi
         $voucher = $this->eventLog->loggable;
 
         if ($this->eventLog->data['voucher_share_send_copy'] ?? false) {
-            $this->sendMailNotification(
-                $identity->email,
-                new ShareProductVoucherMail(array_merge($this->eventLog->data, [
-                    'reason'   => $this->eventLog->data['voucher_share_message'] ?? '',
-                    'qr_token' => $voucher->token_without_confirmation->address,
-                    'requester_email' => $identity->email
-                ]), $voucher->fund->fund_config->implementation->getEmailFrom())
-            );
+            $mailable = new ShareProductVoucherMail([
+                ...$this->eventLog->data,
+                'reason' => $this->eventLog->data['voucher_share_message'] ?? '',
+                'qr_token' => $voucher->token_without_confirmation->address,
+                'requester_email' => $identity->email
+            ], $voucher->fund->fund_config->implementation->getEmailFrom());
+
+            $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
         }
+
+        $mailable = new ShareProductVoucherMail([
+            ...$this->eventLog->data,
+            'reason' => $this->eventLog->data['voucher_share_message'] ?? '',
+            'qr_token' => $voucher->token_without_confirmation->address,
+            'requester_email' => $identity->email
+        ], $voucher->fund->fund_config->implementation->getEmailFrom());
 
         $this->sendMailNotification(
             $voucher->product->organization->email,
-            new ShareProductVoucherMail(array_merge($this->eventLog->data, [
-                'reason'   => $this->eventLog->data['voucher_share_message'] ?? '',
-                'qr_token' => $voucher->token_without_confirmation->address,
-                'requester_email' => $identity->email
-            ]), $voucher->fund->fund_config->implementation->getEmailFrom())
+            $mailable,
+            $this->eventLog,
         );
     }
 }

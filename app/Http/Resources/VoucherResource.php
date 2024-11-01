@@ -12,8 +12,8 @@ use App\Services\EventLogService\Models\EventLog;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * @property Voucher $resource
@@ -70,11 +70,11 @@ class VoucherResource extends BaseJsonResource
     public function toArray($request): array
     {
         $voucher = $this->resource;
-        $physical_cards = $voucher->physical_cards[0] ?? null;
-        $deactivationDate = $voucher->deactivated ? $this->getDeactivationDate($voucher): null;
+        $physicalCard = $voucher->physical_cards[0] ?? null;
+        $deactivationDate = $voucher->deactivated ? $this->getDeactivationDate($voucher) : null;
 
         return array_merge($voucher->only([
-            'id', 'identity_address', 'fund_id', 'returnable', 'transactions_count',
+            'id', 'number', 'identity_address', 'fund_id', 'returnable', 'transactions_count',
             'expired', 'deactivated', 'type', 'state', 'state_locale', 'is_external',
         ]), $this->getBaseFields($voucher), $this->getOptionalFields($voucher), [
             'deactivated_at' => $deactivationDate?->format('Y-m-d'),
@@ -98,11 +98,11 @@ class VoucherResource extends BaseJsonResource
             'parent' => $voucher->parent ? array_merge($voucher->parent->only('identity_address', 'fund_id'), [
                 'created_at' => $voucher->parent->created_at_string
             ]) : null,
-            'physical_card' => $physical_cards ? $physical_cards->only('id', 'code') : false,
+            'physical_card' => new PhysicalCardResource($physicalCard),
             'product_vouchers' => $this->getProductVouchers($voucher->product_vouchers),
             'query_product' => $this->queryProduct($voucher, $request->get('product_id')),
         ], array_merge(
-             $this->getRecords($voucher),
+            $this->getRecords($voucher),
             $this->timestamps($voucher, 'created_at'),
         ));
     }
@@ -136,19 +136,18 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Voucher $voucher
-     * @return \Illuminate\Support\Collection
+     * @return SupportCollection
      */
-    protected function getStateHistory(Voucher $voucher): \Illuminate\Support\Collection
+    protected function getStateHistory(Voucher $voucher): SupportCollection
     {
         $logs = $voucher->requesterHistoryLogs();
 
-        return $logs->map(function(EventLog $eventLog) use ($voucher) {
-            return array_merge($eventLog->only('id', 'event'), [
-                'event_locale' => $eventLog->eventDescriptionLocaleWebshop(),
-                'created_at' => $eventLog->created_at->format('Y-m-d'),
-                'created_at_locale' => format_date_locale($eventLog->created_at),
-            ]);
-        })->values();
+        return $logs->map(fn (EventLog $eventLog) => [
+            ...$eventLog->only('id', 'event'),
+            'event_locale' => $eventLog->eventDescriptionLocaleWebshop(),
+            'created_at' => $eventLog->created_at->format('Y-m-d'),
+            'created_at_locale' => format_date_locale($eventLog->created_at),
+        ])->values();
     }
 
     /**
@@ -164,18 +163,19 @@ class VoucherResource extends BaseJsonResource
         } elseif ($voucher->type === 'product') {
             $used = $voucher->transactions_count > 0;
             $amount = $voucher->amount;
-            $productResource = array_merge($voucher->product->only([
-                'id', 'name', 'description', 'description_html', 'price', 'price_locale',
-                'total_amount', 'sold_amount', 'product_category_id',
-                'organization_id'
-            ]), [
+            $productResource = [
+                ...$voucher->product->only([
+                    'id', 'name', 'description', 'description_html', 'price', 'price_locale',
+                    'total_amount', 'sold_amount', 'product_category_id',
+                    'organization_id',
+                ]),
                 'price_locale' => $voucher->product->priceLocale($voucher->fund->getImplementation()),
                 'product_category' => $voucher->product->product_category,
                 'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : '',
                 'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
                 'photo' => new MediaResource($voucher->product->photo),
                 'organization' => new OrganizationBasicWithPrivateResource($voucher->product->organization),
-            ]);
+            ];
         } else {
             abort("Unknown voucher type!", 403);
         }
@@ -219,7 +219,7 @@ class VoucherResource extends BaseJsonResource
 
         $expire_at = $voucher->calcExpireDateForProduct($product);
         $reservable_count = $product['limit_available'] ?? null;
-        $reservable_count = is_numeric($reservable_count) ? (int) $reservable_count : null;
+        $reservable_count = is_numeric($reservable_count) ? (int)$reservable_count : null;
         $reservable_expire_at = $expire_at?->format('Y-m-d');
         $allow_reservations = $voucher->fund->fund_config->allow_reservations;
         $reservable_enabled = $allow_reservations && $product->reservationsEnabled($voucher->fund);
@@ -234,7 +234,7 @@ class VoucherResource extends BaseJsonResource
         if (!$voucher->fund->isTypeSubsidy()) {
             $reservable = $reservable && (
                 $voucher->amount_available >= $product->price ||
-                ($voucher->amount_available >= 0.1 && $product->reservationExtraPaymentsEnabled($voucher->fund))
+                $product->reservationExtraPaymentsEnabled($voucher->fund, $voucher->amount_available)
             );
         }
 
@@ -270,11 +270,11 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Collection|Voucher[]|null $product_vouchers
-     * @return Voucher[]|\Illuminate\Support\Collection|null
+     * @return Voucher[]|SupportCollection|null
      */
     protected function getProductVouchers(
         Collection|array|null $product_vouchers
-    ): \Illuminate\Support\Collection|array|null {
+    ): SupportCollection|array|null {
         return $product_vouchers?->map(function (Voucher $product_voucher) {
             return array_merge($product_voucher->only([
                 'identity_address', 'fund_id', 'returnable',
@@ -317,7 +317,7 @@ class VoucherResource extends BaseJsonResource
         $hideOnMeApp = Config::get('forus.features.me_app.hide_non_provider_transactions');
 
         if ($hideOnMeApp && BaseFormRequest::createFromBase(request())->isMeApp()) {
-            return  VoucherTransactionResource::collection(
+            return VoucherTransactionResource::collection(
                 $voucher->all_transactions->where('target', 'provider')
             );
         }

@@ -6,13 +6,17 @@ use App\Helpers\Markdown;
 use App\Models\Implementation;
 use App\Models\NotificationTemplate;
 use App\Models\SystemNotification;
+use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
 use League\CommonMark\Exception\CommonMarkException;
+use Mews\Purifier\Facades\Purifier;
 
 /**
  * Class ImplementationMail
@@ -29,15 +33,16 @@ class ImplementationMail extends Mailable implements ShouldQueue
     public ?int $fundId = null;
     public bool $informalCommunication = false;
     public string $communicationType;
+    public ?string $notificationTemplateKey = null;
 
     protected array $mailData = [];
     protected string $globalBuilderStyles = 'text_center';
-    protected string $notificationTemplateKey;
 
     protected string $subjectKey = "";
     protected string $viewKey = "";
 
     protected ?string $preferencesLink = null;
+    protected ?EventLog $eventLog = null;
 
     /**
      * @var array|false|null
@@ -50,8 +55,9 @@ class ImplementationMail extends Mailable implements ShouldQueue
      */
     public function __construct(array $data = [], ?EmailFrom $emailFrom = null)
     {
-        $this->setMailFrom($emailFrom ?: Implementation::general()->getEmailFrom());
         $this->mailData = $this->escapeData($data);
+        $this->fundId = $this->mailData['fund_id'] ?? null;
+        $this->setMailFrom($emailFrom ?: Implementation::general()->getEmailFrom());
     }
 
     /**
@@ -68,6 +74,22 @@ class ImplementationMail extends Mailable implements ShouldQueue
     public function setPreferencesLink(?string $preferencesLink): void
     {
         $this->preferencesLink = $preferencesLink;
+    }
+
+    /**
+     * @param EventLog|null $eventLog
+     */
+    public function setEventLog(?EventLog $eventLog): void
+    {
+        $this->eventLog = $eventLog;
+    }
+
+    /**
+     * @return EventLog|null
+     */
+    public function getEventLog(): ?EventLog
+    {
+        return $this->eventLog;
     }
 
     /**
@@ -136,16 +158,16 @@ class ImplementationMail extends Mailable implements ShouldQueue
      */
     protected function escapeData(array $data): array
     {
-        $data = array_filter($data, fn ($value) => $this->dataValueIsValid($value));
+        $data = Arr::where($data, fn ($value) => $this->dataValueIsValid($value));
 
         foreach ($data as $key => $value) {
-            if (!ends_with($key, '_html')) {
-                $data[$key] = e($value);
-            }
-
             if (is_null($value)) {
                 $data[$key] = '';
             }
+
+            $data[$key] = !Str::endsWith($key, '_html') ?
+                Purifier::clean($value, Config::get('forus.mail_purifier_config')) :
+                e($value);
         }
 
         ksort($data);
@@ -317,14 +339,6 @@ class ImplementationMail extends Mailable implements ShouldQueue
     /**
      * @return string|null
      */
-    protected function fundId(): ?string
-    {
-        return $this->fundId ?: ($this->mailData['fund_id'] ?? null);
-    }
-
-    /**
-     * @return string|null
-     */
     protected function implementationKey(): ?string
     {
         return $this->implementationKey ?: $this->mailData['implementation_key'];
@@ -385,7 +399,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
     {
         return SystemNotification::findByKey($key)->findTemplate(
             Implementation::byKey($this->implementationKey()),
-            $this->fundId(),
+            $this->fundId,
             'mail',
         );
     }

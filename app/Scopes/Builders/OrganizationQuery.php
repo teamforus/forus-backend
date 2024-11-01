@@ -8,6 +8,8 @@ use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 
 /**
@@ -87,28 +89,6 @@ class OrganizationQuery
 
     /**
      * @param Builder $query
-     * @param Fund $fund
-     * @return Builder
-     */
-    public static function whereIsExternalValidator(Builder $query, Fund $fund): Builder
-    {
-        return $query->where(static function(Builder $builder) use ($fund) {
-            $builder->where('is_validator', true);
-
-            $builder->whereHas('validated_organizations.fund_criteria_validators', static function(
-                Builder $builder
-            ) use ($fund) {
-                $builder->whereHas('fund_criterion', static function(
-                    Builder $builder
-                ) use ($fund) {
-                    $builder->where('fund_id', $fund->id);
-                });
-            });
-        });
-    }
-
-    /**
-     * @param Builder $query
      * @param Organization $sponsor
      * @return Builder
      */
@@ -144,6 +124,107 @@ class OrganizationQuery
     }
 
     /**
+     * @param Builder|Relation|Organization $builder
+     * @param Organization $sponsorOrganization
+     * @param string|null $stateGroup
+     * @return Builder
+     */
+    public static function whereGroupState(
+        Builder|Relation|Organization $builder,
+        Organization $sponsorOrganization,
+        ?string $stateGroup = null
+    ): Builder {
+        return match ($stateGroup) {
+            'pending' => self::whereGroupStatePending($builder, $sponsorOrganization),
+            'active' => self::whereGroupStateActive($builder, $sponsorOrganization),
+            'rejected' => self::whereGroupStateRejected($builder, $sponsorOrganization),
+            default => $builder,
+        };
+    }
+
+    /**
+     * @param Builder|Relation|Organization $builder
+     * @param Organization $sponsorOrganization
+     * @return Builder
+     */
+    public static function whereGroupStatePending(
+        Builder|Relation|Organization $builder,
+        Organization $sponsorOrganization,
+    ): Builder {
+        $fundsBuilder = FundQuery::whereActiveFilter($sponsorOrganization->funds());
+
+        return $builder->whereHas('fund_providers', function (Builder $query) use ($fundsBuilder) {
+            $query->where('state', FundProvider::STATE_PENDING);
+
+            $query->whereHas('fund', function(Builder|Fund $builder) use ($fundsBuilder) {
+                $builder->whereIn('id', $fundsBuilder->select('id'));
+                $builder->where(fn (Builder|Fund $builder) => FundQuery::whereActiveFilter($builder));
+            });
+        });
+    }
+
+    /**
+     * @param Builder|Relation|Organization $builder
+     * @param Organization $sponsorOrganization
+     * @return Builder
+     */
+    public static function whereGroupStateActive(
+        Builder|Relation|Organization $builder,
+        Organization $sponsorOrganization,
+    ): Builder {
+        $fundsBuilder = FundQuery::whereActiveFilter($sponsorOrganization->funds());
+
+        return $builder->where(function (Builder $builder) use ($fundsBuilder) {
+            $builder->whereHas('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                $query->where('state', FundProvider::STATE_ACCEPTED);
+                $query->whereIn('fund_id', $fundsBuilder->select('id'));
+            });
+
+            $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                $query->where('state', FundProvider::STATE_PENDING);
+                $query->whereIn('fund_id', $fundsBuilder->select('id'));
+            });
+        });
+    }
+
+    /**
+     * @param Builder|Relation|Organization $builder
+     * @param Organization $sponsorOrganization
+     * @return Builder
+     */
+    public static function whereGroupStateRejected(
+        Builder|Relation|Organization $builder,
+        Organization $sponsorOrganization,
+    ): Builder {
+        return $builder->where(function (Builder $builder) use ($sponsorOrganization) {
+            $builder->where(function (Builder $builder) use ($sponsorOrganization) {
+                $fundsBuilder = clone FundQuery::whereActiveFilter($sponsorOrganization->funds());
+
+                $builder->whereHas('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                    $query->where('state', FundProvider::STATE_REJECTED);
+                    $query->whereIn('fund_id', $fundsBuilder->select('id'));
+                });
+
+                $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                    $query->where('state', FundProvider::STATE_ACCEPTED);
+                    $query->whereIn('fund_id', $fundsBuilder->select('id'));
+                });
+
+                $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                    $query->where('state', FundProvider::STATE_PENDING);
+                    $query->whereIn('fund_id', $fundsBuilder->select('id'));
+                });
+            });
+
+            $builder->orWhereHas('fund_providers', function (Builder $query) use ($sponsorOrganization) {
+                $fundsBuilder = clone FundQuery::whereNotActiveFilter($sponsorOrganization->funds());
+
+                $query->whereIn('fund_id', $fundsBuilder->select('id'));
+            });
+        });
+    }
+
+    /**
      * @param Builder $query
      * @param Organization $sponsor
      * @param array $options fields: $order_by: name/application_date, $order_dir: asc/desc
@@ -173,5 +254,35 @@ class OrganizationQuery
         }
 
         return $query;
+    }
+
+    /**
+     * @param EloquentBuilder|Organization $query
+     * @param string|null $q
+     * @return EloquentBuilder|Organization
+     */
+    public static function queryFilterPublic(
+        Builder|Organization $query,
+        string $q = null,
+    ): Builder|Organization {
+        return $query->where(function(EloquentBuilder $builder) use ($q) {
+            $builder->where('name', 'LIKE', "%$q%");
+            $builder->orWhere('description_text', 'LIKE', "%$q%");
+
+            $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
+                $builder->where('email_public', true);
+                $builder->where('email', 'LIKE', "%$q%");
+            });
+
+            $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
+                $builder->where('phone_public', true);
+                $builder->where('phone', 'LIKE', "%$q%");
+            });
+
+            $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
+                $builder->where('website_public', true);
+                $builder->where('website', 'LIKE', "%$q%");
+            });
+        });
     }
 }

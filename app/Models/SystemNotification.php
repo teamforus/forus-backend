@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Services\MailDatabaseLoggerService\Models\EmailLog;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -28,21 +31,21 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read \App\Models\NotificationTemplate|null $templates_database
  * @property-read \App\Models\NotificationTemplate|null $templates_mail
  * @property-read \App\Models\NotificationTemplate|null $templates_push
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification query()
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification whereDatabase($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification whereEditable($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification whereGroup($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification whereMail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification whereOptional($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification wherePush($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotification whereVisible($value)
+ * @method static Builder|SystemNotification newModelQuery()
+ * @method static Builder|SystemNotification newQuery()
+ * @method static Builder|SystemNotification query()
+ * @method static Builder|SystemNotification whereCreatedAt($value)
+ * @method static Builder|SystemNotification whereDatabase($value)
+ * @method static Builder|SystemNotification whereEditable($value)
+ * @method static Builder|SystemNotification whereGroup($value)
+ * @method static Builder|SystemNotification whereId($value)
+ * @method static Builder|SystemNotification whereKey($value)
+ * @method static Builder|SystemNotification whereMail($value)
+ * @method static Builder|SystemNotification whereOptional($value)
+ * @method static Builder|SystemNotification whereOrder($value)
+ * @method static Builder|SystemNotification wherePush($value)
+ * @method static Builder|SystemNotification whereUpdatedAt($value)
+ * @method static Builder|SystemNotification whereVisible($value)
  * @mixin \Eloquent
  */
 class SystemNotification extends Model
@@ -185,5 +188,19 @@ class SystemNotification extends Model
             ($this->mail && (!$config || $config->enable_mail)) ? 'mail' : false,
             ($this->push && (!$config || $config->enable_push)) ? 'push' : false,
         ]);
+    }
+
+    /**
+     * @param array $fundIds
+     * @return Carbon|null
+     */
+    public function getLastSentDate(array $fundIds): ?Carbon
+    {
+        return EmailLog::query()
+            ->where('system_notification_key', $this->key)
+            ->whereHas('event_log', fn (Builder $builder) => $builder->whereIn('data->fund_id', $fundIds))
+            ->latest('created_at')
+            ->first()
+            ?->created_at;
     }
 }

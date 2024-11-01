@@ -10,16 +10,15 @@ use App\Events\ReservationExtraPayments\ReservationExtraPaymentCreated;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MollieService\Exceptions\MollieException;
-use App\Services\MollieService\MollieService;
+use App\Services\MollieService\Interfaces\MollieServiceInterface;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Mollie\Api\Resources\Payment;
+use App\Services\MollieService\Objects\Payment;
 
 /**
  * App\Models\ProductReservation
@@ -65,7 +64,6 @@ use Mollie\Api\Resources\Payment;
  * @property-read string $state_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read \App\Models\ReservationExtraPayment|null $mollie_extra_payment
  * @property-read \App\Models\Product $product
  * @property-read \App\Models\Voucher|null $product_voucher
  * @property-read \App\Models\Voucher $voucher
@@ -77,6 +75,7 @@ use Mollie\Api\Resources\Payment;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAcceptedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAmountExtra($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereArchived($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereBirthDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCanceledAt($value)
@@ -86,7 +85,6 @@ use Mollie\Api\Resources\Payment;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereExpireAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereExtraAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFirstName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFundProviderProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereHouseNr($value)
@@ -199,15 +197,12 @@ class ProductReservation extends BaseModel
      */
     protected $casts = [
         'archived' => 'boolean',
+        'expire_at' => 'datetime',
+        'birth_date' => 'datetime',
+        'accepted_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        'canceled_at' => 'datetime',
     ];
-
-    /**
-     * @var string[]
-     */
-    protected $dates = [
-        'accepted_at', 'rejected_at', 'canceled_at', 'expire_at', 'birth_date',
-    ];
-
     /**
      * @throws \Exception
      */
@@ -486,7 +481,7 @@ class ProductReservation extends BaseModel
             ]);
 
             if ($this->voucher_transaction && $this->voucher_transaction->isCancelable()) {
-                $this->voucher_transaction->cancelPending();
+                $this->voucher_transaction->cancelPending($employee, false);
             }
 
             if ($isRefund) {
@@ -684,7 +679,7 @@ class ProductReservation extends BaseModel
         }
 
         $payment = $this->product->organization->mollie_connection->createPayment([
-            'method' => MollieService::PAYMENT_METHOD_IDEAL,
+            'method' => MollieServiceInterface::PAYMENT_METHOD_IDEAL,
             'amount' => $amount,
             'currency' => $currency,
             'description' => trans('extra-payments.payment.description'),
@@ -696,15 +691,13 @@ class ProductReservation extends BaseModel
             return null;
         }
 
-        $expireAt = $payment->expiresAt ? Carbon::parse($payment->expiresAt, 'UTC') : null;
-
         $extraPayment = $this->extra_payment()->create([
             'type' => ReservationExtraPayment::TYPE_MOLLIE,
             'state' => $payment->status,
             'amount' => $amount,
             'currency' => $currency,
             'method' => $payment->method,
-            'expires_at' => $expireAt?->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s'),
+            'expires_at' => $payment->expires_at?->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s'),
             'payment_id' => $payment->id,
         ]);
 

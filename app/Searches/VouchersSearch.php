@@ -27,6 +27,7 @@ class VouchersSearch extends BaseSearch
     {
         /** @var Builder|Voucher $builder */
         $builder = parent::query();
+        $builder->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER);
 
         if ($this->getFilter('type') === Voucher::TYPE_BUDGET) {
             $builder->whereNull('product_id');

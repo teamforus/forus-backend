@@ -20,10 +20,12 @@ class IdentityVoucherDeactivatedNotification extends BaseIdentityVoucherNotifica
         $voucher = $this->eventLog->loggable;
 
         if ($this->eventLog->data['notify_by_email'] ?? false) {
-            $this->sendMailNotification(
-                $voucher->identity->email,
-                new DeactivationVoucherMail($this->eventLog->data, $voucher->fund->getEmailFrom())
+            $mailable = new DeactivationVoucherMail(
+                $this->eventLog->data,
+                $voucher->fund->getEmailFrom(),
             );
+
+            $this->sendMailNotification($voucher->identity->email, $mailable, $this->eventLog);
         }
     }
 }

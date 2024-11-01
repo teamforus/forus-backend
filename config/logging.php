@@ -68,6 +68,12 @@ return [
             'level' => 'debug',
         ],
 
+        'funds' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/funds.log'),
+            'level' => 'debug',
+        ],
+
         'digid' => [
             'driver' => 'single',
             'path' => storage_path('logs/digid-service.log'),

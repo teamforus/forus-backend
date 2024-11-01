@@ -119,7 +119,7 @@ class ProductReservationTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ])->assertUnauthorized();
     }
@@ -141,7 +141,7 @@ class ProductReservationTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ])->assertUnauthorized();
     }
@@ -158,7 +158,8 @@ class ProductReservationTest extends TestCase
 
         $identity = $organization->identity;
 
-        Organization::where('reservations_subsidy_enabled', true)
+        Organization::query()
+            ->where('reservations_subsidy_enabled', true)
             ->update(['reservations_subsidy_enabled' => false]);
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
@@ -172,7 +173,7 @@ class ProductReservationTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ], $headers)->assertJsonValidationErrorFor('product_id');
 
@@ -206,7 +207,7 @@ class ProductReservationTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ], $headers)->assertJsonValidationErrorFor('product_id');
 
@@ -392,7 +393,7 @@ class ProductReservationTest extends TestCase
 
         $this->post($this->apiUrl, [
             'user_note' => [],
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ], $headers)->assertJsonValidationErrors([
             'first_name',
@@ -404,7 +405,7 @@ class ProductReservationTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
+            'voucher_id' => $voucher->id,
             'product_id' => $product->id
         ], $headers);
 

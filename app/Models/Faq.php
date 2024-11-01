@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $description_html
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Services\MediaService\Models\Media> $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
  * @method static Builder|Faq newModelQuery()
  * @method static Builder|Faq newQuery()

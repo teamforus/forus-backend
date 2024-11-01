@@ -4,12 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * Class CreateMediaSizesTable
- * @noinspection PhpIllegalPsrClassPathInspection
- * @noinspection PhpUnused
- */
-class CreateMediaSizesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -40,4 +35,4 @@ class CreateMediaSizesTable extends Migration
     {
         Schema::dropIfExists('media_sizes');
     }
-}
+};

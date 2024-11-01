@@ -44,7 +44,6 @@ return [
             'pending' => 'Wachtend',
             'declined' => 'Geweigerd',
             'approved' => 'Geaccepteerd',
-            'approved_partly' => 'Deels geaccepteerd',
         ],
         'validator' => 'Validator',
         'created_at' => 'Indien datum',
@@ -141,8 +140,8 @@ return [
         'branch_number' => 'Vestigingsnummer',
         'branch_name' => 'Vestigingsnaam',
         'branch_id' => 'VestigingID',
-        'created_at' => 'Created at',
-        'updated_at' => 'Updated at',
+        'created_at' => 'Gemaakt op',
+        'updated_at' => 'Bijgewerkt op',
         'is_2fa_configured' => '2FA',
     ],
 ];

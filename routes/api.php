@@ -159,14 +159,12 @@ Route::group(['middleware' => ['api.auth']], static function()  {
         ->only('index', 'show', 'store', 'destroy')
         ->parameter('medias', 'media_uid');
 
-    if (config('file.enabled', false)) {
-        Route::resource('files', 'Api\FileController')
-            ->only('index', 'show', 'store')
-            ->parameter('files', 'file_uid');
+    Route::resource('files', 'Api\FileController')
+        ->only('index', 'show', 'store')
+        ->parameter('files', 'file_uid');
 
-        Route::get('files/{file_uid}/download', 'Api\FileController@download');
-        Route::post('files/validate', 'Api\FileController@storeValidate');
-    }
+    Route::get('files/{file_uid}/download', 'Api\FileController@download');
+    Route::post('files/validate', 'Api\FileController@storeValidate');
 });
 
 Route::get('/status', 'Api\StatusController@getStatus')->name('status');

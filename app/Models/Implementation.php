@@ -48,6 +48,7 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $title
  * @property string|null $description
  * @property string $description_alignment
+ * @property string|null $page_title_suffix
  * @property bool $overlay_enabled
  * @property string $overlay_type
  * @property string $header_text_color
@@ -87,7 +88,7 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $digid_trusted_cert
  * @property string|null $digid_cgi_tls_key
  * @property string|null $digid_cgi_tls_cert
- * @property int $pre_check_enabled
+ * @property bool $pre_check_enabled
  * @property string $pre_check_title
  * @property string $pre_check_banner_title
  * @property string $pre_check_description
@@ -163,6 +164,7 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder|Implementation whereOverlayEnabled($value)
  * @method static Builder|Implementation whereOverlayOpacity($value)
  * @method static Builder|Implementation whereOverlayType($value)
+ * @method static Builder|Implementation wherePageTitleSuffix($value)
  * @method static Builder|Implementation wherePreCheckBannerDescription($value)
  * @method static Builder|Implementation wherePreCheckBannerLabel($value)
  * @method static Builder|Implementation wherePreCheckBannerState($value)
@@ -230,6 +232,7 @@ class Implementation extends BaseModel
         'currency_sign', 'currency_round', 'digid_cgi_tls_key', 'digid_cgi_tls_cert',
         'pre_check_enabled', 'pre_check_title', 'pre_check_banner_state', 'pre_check_banner_title',
         'pre_check_description', 'pre_check_banner_description', 'pre_check_banner_label',
+        'page_title_suffix',
     ];
 
     /**
@@ -715,7 +718,7 @@ class Implementation extends BaseModel
         if (is_array($config)) {
             $implementation = self::active() ?? abort(403);
             $banner = $implementation->banner;
-            $request = BaseFormRequest::createFromGlobals();
+            $request = BaseFormRequest::createFromBase(request());
             $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
 
             $config = array_merge($config, [
@@ -723,6 +726,7 @@ class Implementation extends BaseModel
                 'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
                 'has_reimbursements' => $implementation->hasReimbursements(),
+                'has_payouts' => $implementation->hasPayouts(),
                 'announcements' => AnnouncementResource::collection((new AnnouncementSearch([
                     'client_type' => $request->client_type(),
                     'implementation_id' => $implementation->id,
@@ -757,7 +761,7 @@ class Implementation extends BaseModel
                 ...$implementation->isGeneral() ? [] : $implementation->getPreCheckFields(),
                 ...$implementation->only([
                     'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
-                    'show_office_map', 'show_voucher_map', 'show_product_map',
+                    'show_office_map', 'show_voucher_map', 'show_product_map', 'page_title_suffix',
                 ])
             ]);
         }
@@ -782,6 +786,18 @@ class Implementation extends BaseModel
         return self::queryFunds()->whereRelation('fund_config', [
             'allow_reimbursements' => true,
         ])->exists();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasPayouts(): bool
+    {
+        $payoutFunds = self::queryFunds()->whereRelation('fund_config', [
+            'outcome_type' => FundConfig::OUTCOME_TYPE_PAYOUT,
+        ]);
+
+        return $this->organization?->allow_payouts && $payoutFunds->exists();
     }
 
     /**

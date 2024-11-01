@@ -25,8 +25,16 @@ class Permission extends BaseModel
 {
     protected static Collection|null $memCache = null;
 
+    const VALIDATE_RECORDS = 'validate_records';
+    const MANAGE_VALIDATORS = 'manage_validators';
+
+    const MANAGE_FUNDS = 'manage_funds';
+    const MANAGE_FUND_TEXTS = 'manage_fund_texts';
+
+    const MANAGE_PAYOUTS = 'manage_payouts';
+
     protected $fillable = [
-        'key', 'name'
+        'key', 'name',
     ];
 
     public $timestamps = false;
@@ -42,7 +50,8 @@ class Permission extends BaseModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function roles(): BelongsToMany {
+    public function roles(): BelongsToMany
+    {
         return $this->belongsToMany(Role::class, (new RolePermission)->getTable());
     }
 }

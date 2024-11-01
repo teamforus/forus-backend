@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection as SupportCollection;
 
 class MediaService
 {
@@ -76,7 +77,8 @@ class MediaService
      * @param string $name
      * @return MediaConfig|mixed|null
      */
-    public static function getMediaConfig(string $name) {
+    public static function getMediaConfig(string $name): mixed
+    {
         return self::$mediaConfigs[$name] ?? null;
     }
 
@@ -94,7 +96,7 @@ class MediaService
      * @param $type
      * @return PresetModel|Model|null
      */
-    public function getSize(Media $media, $type): ?PresetModel
+    public function getSize(Media $media, $type): PresetModel|Model|null
     {
         return $media->presets()->where('type', $type)->first();
     }
@@ -104,7 +106,7 @@ class MediaService
      *
      * @throws \Exception
      */
-    public function clear()
+    public function clear(): void
     {
         $this->clearMediasWithoutMediable();
         $this->clearExpiredMedias();
@@ -119,59 +121,55 @@ class MediaService
      */
     public function clearMediasWithoutMediable(): int
     {
-        $medias = $this->getMediaWithoutMediableList();
-
-        foreach ($medias as $media) {
-            $this->unlink($media);
-        }
-
-        return $medias->count();
+        return $this
+            ->getMediaWithoutMediableList()
+            ->each(fn (Media $media) => $this->unlink($media))
+            ->count();
     }
 
     /**
      * Get all media with missing mediable
      *
-     * @return Media[]|Builder[]|Collection|\Illuminate\Database\Query\Builder[]|\Illuminate\Support\Collection
+     * @return Media[]|Builder[]|Collection|SupportCollection
      */
-    public function getMediaWithoutMediableList()
+    public function getMediaWithoutMediableList(): array|Collection|SupportCollection
     {
-        return $this->model->newQuery()->with('mediable')->whereNotNull(
-            'mediable_id'
-        )->whereNotNull('mediable_type')->get()->filter(function(Media $media) {
-            return is_null($media->mediable);
-        });
+        return $this->model
+            ->newQuery()
+            ->with('mediable')
+            ->whereNotNull('mediable_id')
+            ->whereNotNull('mediable_type')
+            ->get()
+            ->filter(fn (Media $media) => is_null($media->mediable));
     }
 
     /**
      * Clear media that are created but not assigned to any resource
      *
-     * @param float|int $minutes_to_expire
+     * @param float|int $minutesToExpire
      * @return int
      * @throws \Exception
      */
-    public function clearExpiredMedias($minutes_to_expire = 5 * 60): int
+    public function clearExpiredMedias(float|int $minutesToExpire = 5 * 60): int
     {
-        $expiredMedias = $this->getExpiredList($minutes_to_expire);
-
-        foreach ($expiredMedias as $media) {
-            $this->unlink($media);
-        }
-
-        return count($expiredMedias);
+        return $this
+            ->getExpiredList($minutesToExpire)
+            ->each(fn (Media $media) => $this->unlink($media))
+            ->count();
     }
 
     /**
      * Returns list of all files uploaded to storage but not assigned to any entity
      *
-     * @param float|int $minutes_to_expire
+     * @param float|int $minutesToExpire
      * @return Media[]|Builder[]|Collection
      */
-    public function getExpiredList($minutes_to_expire = 5 * 60)
+    public function getExpiredList(float|int $minutesToExpire = 5 * 60): Collection|array
     {
         $expiredMedias = $this->model->newQuery()->where(function(Builder $query) {
             $query->whereNull('mediable_type');
             $query->orWhereNull('mediable_id');
-        })->where('created_at', '<', Carbon::now()->subMinutes($minutes_to_expire));
+        })->where('created_at', '<', Carbon::now()->subMinutes($minutesToExpire));
 
         // query to filter media without user
         return $expiredMedias->get();
@@ -184,14 +182,11 @@ class MediaService
      */
     public function clearStorage(): int
     {
-        $unusedFiles = $this->getUnusedFilesList();
         $storage = $this->storage();
 
-        foreach ($unusedFiles as $unusedFile) {
-            $storage->delete($unusedFile);
-        }
-
-        return count($unusedFiles);
+        return collect($this->getUnusedFilesList())
+            ->each(fn (string $filePath) => $storage->delete($filePath))
+            ->count();
     }
 
     /**
@@ -204,9 +199,7 @@ class MediaService
         $storage = $this->storage();
         $dbFiles = PresetModel::query()->pluck('path');
 
-        return array_filter($storage->allFiles(
-            $this->storagePath
-        ), function($file) use ($dbFiles) {
+        return array_filter($storage->allFiles($this->storagePath), function($file) use ($dbFiles) {
             return $dbFiles->search(str_start($file, '/')) === false;
         });
     }

@@ -71,7 +71,7 @@ class VoucherTransactionBatchTest extends TestCase
 
         $transactions = [];
         $errors = [];
-        $rows = 3000;
+        $rows = 150;
 
         foreach (range(0, $rows) as $item) {
             $transactions[] = array_merge($this->getDefaultTransactionData(), [

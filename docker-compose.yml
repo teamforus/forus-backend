@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   app:
     build:
@@ -36,6 +35,7 @@ services:
       SERVICE_NAME: mysql
     volumes:
       - ./docker/docker-compose/mysql:/docker-entrypoint-initdb.d
+      - mysql_data:/var/lib/mysql
     ports:
       - "33061:3306"
     networks:
@@ -45,6 +45,8 @@ services:
     depends_on:
       - forus-backend-db
     image: phpmyadmin/phpmyadmin
+    profiles:
+      - phpmyadmin
     container_name: forus-backend-phpmyadmin
     restart: unless-stopped
     ports:
@@ -70,4 +72,9 @@ services:
 
 networks:
   forus-network:
+    name: forus-network
     driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local

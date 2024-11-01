@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
  * @property-read string|null $amount_locale
+ * @property-read string|null $type_locale
+ * @property-read \App\Models\RecordType|null $record_type
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormula newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormula newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormula query()
@@ -44,10 +46,28 @@ class FundFormula extends BaseModel
     }
 
     /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getTypeLocaleAttribute(): ?string
+    {
+        return $this->type === 'fixed' ? 'Vastgesteld' : 'Multiply';
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function record_type(): BelongsTo
+    {
+        return $this->belongsTo(RecordType::class, 'record_type_key', 'key');
     }
 }

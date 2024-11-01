@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Organization $organization
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Reimbursement> $reimbursements
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Reimbursement[] $reimbursements
  * @property-read int|null $reimbursements_count
  * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory newQuery()

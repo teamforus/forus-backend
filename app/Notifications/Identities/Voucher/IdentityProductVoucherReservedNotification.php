@@ -23,11 +23,11 @@ class IdentityProductVoucherReservedNotification extends BaseIdentityVoucherNoti
         /** @var Voucher $voucher */
         $voucher = $this->eventLog->loggable;
 
-        $this->sendMailNotification(
-            $identity->email,
-            new ProductReservedRequesterMail(array_merge($this->eventLog->data, [
-                'qr_token'  => $voucher->token_without_confirmation->address,
-            ]), Implementation::emailFrom($this->eventLog->data['implementation_key']))
-        );
+        $mailable = new ProductReservedRequesterMail([
+            ...$this->eventLog->data,
+            'qr_token'  => $voucher->token_without_confirmation->address,
+        ], Implementation::emailFrom($this->eventLog->data['implementation_key']));
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }
