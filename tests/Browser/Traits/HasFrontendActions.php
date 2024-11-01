@@ -92,11 +92,11 @@ trait HasFrontendActions
      */
     private function logout(Browser $browser): void
     {
-        $browser->waitFor('@userProfile')->waitFor('@userProfile', 10);
+        $browser->waitFor('@userProfile')->waitFor('@userProfile');
         $browser->element('@userProfile')->click();
 
-        $browser->waitFor('@btnUserLogout')->waitFor('@btnUserLogout', 20);
-        $browser->pause(500)->element('@btnUserLogout')->click();
+        $browser->waitFor('@btnUserLogout')->waitFor('@btnUserLogout');
+        $browser->pause(100)->element('@btnUserLogout')->click();
 
         $browser->waitUntilMissing('@userProfile');
     }
@@ -115,5 +115,20 @@ trait HasFrontendActions
         $browser->press('@headerOrganizationSwitcher');
         $browser->waitFor("@headerOrganizationItem$organization->id");
         $browser->press("@headerOrganizationItem$organization->id");
+    }
+
+    /**
+     * @param Browser $browser
+     * @param int $fundId
+     * @return void
+     * @throws TimeOutException
+     */
+    private function switchToFund(Browser $browser, int $fundId): void
+    {
+        $browser->waitFor("@selectControlFunds");
+        $browser->element("@selectControlFunds")->click();
+
+        $browser->waitFor("@selectControlFundItem$fundId");
+        $browser->element("@selectControlFundItem$fundId")->click();
     }
 }

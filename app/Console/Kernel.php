@@ -10,8 +10,9 @@ use App\Console\Commands\BankVoucherTransactionBulksBuildCommand;
 use App\Console\Commands\BankVoucherTransactionBulksUpdateStateCommand;
 use App\Console\Commands\BankVoucherTransactionProcessZeroAmountCommand;
 use App\Console\Commands\CalculateFundUsersCommand;
-use App\Console\Commands\CheckFundStateCommand;
+use App\Console\Commands\FundsUpdateStateCommand;
 use App\Console\Commands\CheckProductExpirationCommand;
+use App\Console\Commands\FundsExtendPeriodCommand;
 use App\Console\Commands\Digests\SendAllDigestsCommand;
 use App\Console\Commands\Digests\SendProviderFundsDigestCommand;
 use App\Console\Commands\Digests\SendProviderProductsDigestCommand;
@@ -61,7 +62,8 @@ class Kernel extends ConsoleKernel
         FilesCleanupCommand::class,
 
         // funds
-        CheckFundStateCommand::class,
+        FundsUpdateStateCommand::class,
+        FundsExtendPeriodCommand::class,
 
         // statistics
         CalculateFundUsersCommand::class,
@@ -136,10 +138,16 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         /**
-         * CheckFundStateCommand:
+         * FundsUpdateStateCommand:
          */
-        $schedule->command('forus.fund:check')
+        $schedule->command('forus.funds:update-state')
             ->hourlyAt(1)->withoutOverlapping()->onOneServer();
+
+        /**
+         * FundsExtendPeriodCommand:
+         */
+        $schedule->command('forus.funds:extend-periods')
+            ->everyMinute()->withoutOverlapping()->onOneServer();
 
         /**
          * CalculateFundUsersCommand:
@@ -303,7 +311,7 @@ class Kernel extends ConsoleKernel
      */
     private function scheduleAuthExpiration(Schedule $schedule): void
     {
-        if (Config::get('disable_auth_expiration', false)) {
+        if (Config::get('forus.kernel.disable_auth_expiration', false)) {
             return;
         }
 

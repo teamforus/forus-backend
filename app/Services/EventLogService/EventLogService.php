@@ -7,6 +7,7 @@ use App\Models\BankConnectionAccount;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundConfig;
+use App\Models\FundPeriod;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
@@ -25,34 +26,11 @@ use App\Models\VoucherTransactionBulk;
 use App\Models\VoucherTransaction;
 use App\Services\BankService\Models\Bank;
 use App\Services\BIConnectionService\Models\BIConnection;
-use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Interfaces\IEventLogService;
-use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MollieService\Models\MollieConnection;
-use Illuminate\Database\Eloquent\Model;
 
 class EventLogService implements IEventLogService
 {
-    /**
-     * @param HasLogs|Model|mixed $loggable
-     * @param string $action
-     * @param array $models
-     * @param array $raw_meta
-     * @return mixed
-     */
-    public function log(
-        Model $loggable,
-        string $action,
-        array $models = [],
-        array $raw_meta = []
-    ): EventLog {
-        $meta = array_reduce(array_keys($models), function($carry, $key) use ($models) {
-            return array_merge($carry, $this->modelToMeta($key, $models[$key]));
-        }, []);
-
-        return $loggable->log($action, array_merge($meta, $raw_meta));
-    }
-
     /**
      * @param string $type
      * @param $model
@@ -63,6 +41,7 @@ class EventLogService implements IEventLogService
         $modelMeta = [
             'fund' => fn() => $this->fundMeta($model),
             'fund_config' => fn() => $this->fundConfigMeta($model),
+            'fund_period' => fn() => $this->fundPeriodMeta($model),
             'fund_request' => fn() => $this->fundRequestMeta($model),
             'fund_request_record' => fn() => $this->fundRequestRecordMeta($model),
             'fund_request_clarification' => fn() => $this->fundRequestClarificationMeta($model),
@@ -160,6 +139,19 @@ class EventLogService implements IEventLogService
     }
 
     /**
+     * @param FundPeriod $fundPeriod
+     * @return array
+     */
+    protected function fundPeriodMeta(FundPeriod $fundPeriod): array
+    {
+        return $this->keyPrepend([
+            ...$fundPeriod->only('id', 'state', 'fund_id'),
+            'start_date' => $fundPeriod->start_date?->format('Y-m-d'),
+            'end_date' => $fundPeriod->end_date?->format('Y-m-d'),
+        ], 'fund_period_');
+    }
+
+    /**
      * @param FundRequestRecord $fundRequestRecord
      * @return array
      */
@@ -167,9 +159,7 @@ class EventLogService implements IEventLogService
     {
         return $this->keyPrepend([
             'id' => $fundRequestRecord->id,
-            'note' => $fundRequestRecord->note,
             'value' => $fundRequestRecord->value,
-            'state' => $fundRequestRecord->state,
             'record_type_key' => $fundRequestRecord->record_type_key,
             'fund_criterion_id' => $fundRequestRecord->fund_criterion_id,
         ], 'fund_request_record_');
@@ -280,6 +270,7 @@ class EventLogService implements IEventLogService
     {
         return $this->keyPrepend([
             'id' => $voucher->id,
+            'number' => $voucher->number,
             'amount' => currency_format($voucher->amount_available),
             'amount_locale' => currency_format_locale(
                 $voucher->amount_available,
@@ -332,7 +323,6 @@ class EventLogService implements IEventLogService
         return $this->keyPrepend([
             'id' => $transaction->id,
             'value' => $transaction->value,
-            'note' => $transaction->note,
             'voucher_id' => $transaction->voucher_id,
             'record_type_id' => $transaction->record_type_id,
             'record_type_key' => $transaction->record_type?->key,

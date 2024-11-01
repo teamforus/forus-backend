@@ -49,7 +49,7 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
             'amount_extra_cash_locale' => currency_format_locale($transaction->amount_extra_cash),
             'timestamp' => $transaction->created_at->timestamp,
             'cancelable' => $transaction->isCancelable(),
-            'transaction_in' => $transaction->daysBeforeTransaction(),
+            'transfer_in' => $transaction->daysBeforeTransaction(),
             "fund" => new FundTinyResource($transaction->voucher->fund),
             'notes' => VoucherTransactionNoteResource::collection($transaction->notes_provider),
             "product" => new ProductResource($transaction->product),

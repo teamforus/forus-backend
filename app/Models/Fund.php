@@ -3,9 +3,6 @@
 namespace App\Models;
 
 use App\Events\Funds\FundArchivedEvent;
-use App\Events\Funds\FundEndedEvent;
-use App\Events\Funds\FundExpiringEvent;
-use App\Events\Funds\FundStartedEvent;
 use App\Events\Funds\FundUnArchivedEvent;
 use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
@@ -14,7 +11,6 @@ use App\Models\Traits\HasFaq;
 use App\Models\Traits\HasTags;
 use App\Rules\FundRequests\BaseFundRequestRule;
 use App\Scopes\Builders\FundProviderQuery;
-use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\RecordValidationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
@@ -111,6 +107,8 @@ use Illuminate\Support\Facades\Log;
  * @property-read int|null $fund_formulas_count
  * @property-read Collection|\App\Models\FundLimitMultiplier[] $fund_limit_multipliers
  * @property-read int|null $fund_limit_multipliers_count
+ * @property-read Collection|\App\Models\FundPeriod[] $fund_periods
+ * @property-read int|null $fund_periods_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $fund_request_records
@@ -221,6 +219,7 @@ class Fund extends BaseModel
     public const EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
     public const EVENT_VOUCHERS_EXPORTED = 'vouchers_exported';
     public const EVENT_SPONSOR_NOTIFICATION_CREATED = 'sponsor_notification_created';
+    public const EVENT_PERIOD_EXTENDED = 'period_extended';
 
     public const STATE_ACTIVE = 'active';
     public const STATE_CLOSED = 'closed';
@@ -318,6 +317,15 @@ class Fund extends BaseModel
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_periods(): HasMany
+    {
+        return $this->hasMany(FundPeriod::class);
     }
 
     /**
@@ -495,8 +503,11 @@ class Fund extends BaseModel
             'auth_2fa_restrict_reimbursements', 'hide_meta', 'voucher_amount_visible',
             'allow_custom_amounts', 'allow_custom_amounts_validator',
             'allow_preset_amounts', 'allow_preset_amounts_validator',
-            'custom_amount_min', 'custom_amount_max',
-            'provider_products_required',
+            'custom_amount_min', 'custom_amount_max', 'provider_products_required',
+            'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
+            'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
+            'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
+            'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
@@ -1160,7 +1171,8 @@ class Fund extends BaseModel
      * @param string $state
      * @return $this
      */
-    public function changeState(string $state): self {
+    public function changeState(string $state): self
+    {
         if (in_array($state, self::STATES)) {
             $this->update(compact('state'));
         }
@@ -1169,38 +1181,13 @@ class Fund extends BaseModel
     }
 
     /**
-     * Update fund state by the start and end dates
-     */
-    public static function checkStateQueue(): void {
-        $funds = static::where(function(Builder $builder) {
-            FundQuery::whereIsConfiguredByForus($builder);
-        })->whereDate('start_date', '<=', now())->get();
-
-        foreach ($funds as $fund) {
-            if ($fund->isPaused() && $fund->start_date->startOfDay()->isPast()) {
-                FundStartedEvent::dispatch($fund->changeState(self::STATE_ACTIVE));
-            }
-
-            $expirationNotified = $fund->logs()->where('event', self::EVENT_FUND_EXPIRING)->exists();
-            $isTimeToNotify = $fund->end_date->clone()->subDays(14)->isPast();
-
-            if (!$expirationNotified && !$fund->isClosed() && $isTimeToNotify) {
-                FundExpiringEvent::dispatch($fund);
-            }
-
-            if (!$fund->isClosed() && $fund->end_date->clone()->addDay()->isPast()) {
-                FundEndedEvent::dispatch($fund->changeState(self::STATE_CLOSED));
-            }
-        }
-    }
-
-    /**
      * Send funds user count statistic to email
      * @param string $email
      * @return void
      */
-    public static function sendUserStatisticsReport(string $email): void {
-        $funds = self::whereHas('fund_config', static function (Builder $query) {
+    public static function sendUserStatisticsReport(string $email): void
+    {
+        $funds = Fund::whereHas('fund_config', static function (Builder $query) {
             return $query->where('is_configured', true);
         })->whereIn('state', [
             self::STATE_ACTIVE, self::STATE_PAUSED
@@ -1259,6 +1246,7 @@ class Fund extends BaseModel
         $amount = $amount === null ? $this->amountForIdentity($identity_address) : $amount;
 
         $voucher = Voucher::create([
+            'number' => Voucher::makeUniqueNumber(),
             'identity_address' => $identity_address,
             'amount' => $amount,
             'expire_at' => $expire_at ?: $this->end_date,
@@ -1308,13 +1296,13 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identityAddress
-     * @param array $extraFields
+     * @param array $voucherFields
      * @param Carbon|null $expireAt
      * @return Voucher[]
      */
     public function makeFundFormulaProductVouchers(
         string $identityAddress = null,
-        array $extraFields = [],
+        array $voucherFields = [],
         Carbon $expireAt = null
     ): array {
         $vouchers = [];
@@ -1328,7 +1316,7 @@ class Fund extends BaseModel
 
             $vouchers = array_merge($vouchers, array_map(fn () => $this->makeProductVoucher(
                 $identityAddress,
-                $extraFields,
+                $voucherFields,
                 $formulaProduct->product->id,
                 $voucherExpireAt,
                 $formulaProduct->price
@@ -1340,7 +1328,7 @@ class Fund extends BaseModel
 
     /**
      * @param string|null $identity_address
-     * @param array $extraFields
+     * @param array $voucherFields
      * @param int|null $product_id
      * @param Carbon|null $expire_at
      * @param float|null $price
@@ -1348,20 +1336,21 @@ class Fund extends BaseModel
      */
     public function makeProductVoucher(
         string $identity_address = null,
-        array $extraFields = [],
+        array $voucherFields = [],
         int $product_id = null,
         Carbon $expire_at = null,
         float $price = null,
     ): Voucher {
-        $amount = $price ?: Product::findOrFail($product_id)->price;
-        $expire_at = $expire_at ?: $this->end_date;
-        $fund_id = $this->id;
-        $returnable = false;
-
-        $voucher = Voucher::create(array_merge(compact(
-            'identity_address', 'amount', 'expire_at',
-            'product_id','fund_id', 'returnable'
-        ), $extraFields));
+        $voucher = Voucher::create([
+            'number' => Voucher::makeUniqueNumber(),
+            'amount' => $price ?: Product::findOrFail($product_id)->price,
+            'fund_id' => $this->id,
+            'expire_at' => $expire_at ?: $this->end_date,
+            'product_id' => $product_id,
+            'returnable' => false,
+            'identity_address' => $identity_address,
+            ...$voucherFields,
+        ]);
 
         VoucherCreated::dispatch($voucher, false);
 
@@ -1500,8 +1489,9 @@ class Fund extends BaseModel
         /** @var FundCriterion|null $db_criteria */
         $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
-            'description', 'title', 'optional', 'min', 'max',
-        ] : ['show_attachment', 'description', 'title']);
+            'description', 'title', 'optional', 'min', 'max', 'label',
+            'extra_description',
+        ] : ['show_attachment', 'description', 'title', 'extra_description']);
 
         if ($this->criteriaIsEditable()) {
             $data_criterion['value'] = Arr::get($data_criterion, 'value', '') ?: '';
@@ -1510,7 +1500,7 @@ class Fund extends BaseModel
 
         if ($fundCriterion) {
             $fundCriterion->update($textsOnly ? array_only($data_criterion, [
-                'title', 'description',
+                'title', 'description', 'extra_description',
             ]): $data_criterion);
         } elseif (!$textsOnly) {
             $this->criteria()->create($data_criterion);
