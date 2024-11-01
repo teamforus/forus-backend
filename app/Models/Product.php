@@ -31,6 +31,8 @@ use Illuminate\Support\Arr;
  * @property int $organization_id
  * @property int $product_category_id
  * @property string $name
+ * @property string|null $sku
+ * @property string|null $ean
  * @property string $description
  * @property string|null $description_text
  * @property string|null $alternative_text
@@ -98,6 +100,7 @@ use Illuminate\Support\Arr;
  * @method static Builder|Product whereDeletedAt($value)
  * @method static Builder|Product whereDescription($value)
  * @method static Builder|Product whereDescriptionText($value)
+ * @method static Builder|Product whereEan($value)
  * @method static Builder|Product whereExpireAt($value)
  * @method static Builder|Product whereId($value)
  * @method static Builder|Product whereName($value)
@@ -114,6 +117,7 @@ use Illuminate\Support\Arr;
  * @method static Builder|Product whereReservationPhone($value)
  * @method static Builder|Product whereReservationPolicy($value)
  * @method static Builder|Product whereShowOnWebshop($value)
+ * @method static Builder|Product whereSku($value)
  * @method static Builder|Product whereSoldOut($value)
  * @method static Builder|Product whereSponsorOrganizationId($value)
  * @method static Builder|Product whereTotalAmount($value)
@@ -201,7 +205,7 @@ class Product extends BaseModel
         'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id',
         'reservation_enabled', 'reservation_policy', 'reservation_extra_payments',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'alternative_text',
-        'reservation_fields',
+        'reservation_fields', 'sku', 'ean',
     ];
 
     /**
@@ -845,7 +849,7 @@ class Product extends BaseModel
                 'name', 'description', 'price', 'product_category_id', 'expire_at',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
-                'reservation_fields',
+                'reservation_fields', 'sku', 'ean',
             ]),
             ...$organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',
@@ -884,7 +888,7 @@ class Product extends BaseModel
                 'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
-                'reservation_fields',
+                'reservation_fields', 'sku', 'ean',
             ]),
             ...$this->organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',

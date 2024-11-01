@@ -46,6 +46,8 @@ class StoreProductRequest extends BaseProductRequest
 
             'expire_at' => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id' => 'required|exists:product_categories,id',
+            'sku' => 'nullable|string|max:191',
+            'ean' => 'nullable|string|max:191',
             ...$this->reservationRules(),
         ];
     }

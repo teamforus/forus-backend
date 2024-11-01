@@ -42,7 +42,7 @@ class SponsorProviderProductResource extends BaseJsonResource
         return array_merge($product->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',
             'organization_id', 'price_type', 'price_type_discount', 'sponsor', 'sponsor_organization_id',
-            'reservation_enabled', 'reservation_policy', 'alternative_text',
+            'reservation_enabled', 'reservation_policy', 'alternative_text', 'ean',
         ]), [
             'description_html' => $product->description_html,
             'organization' => new OrganizationBasicResource($product->organization),

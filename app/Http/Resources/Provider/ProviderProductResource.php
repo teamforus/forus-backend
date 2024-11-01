@@ -29,6 +29,7 @@ class ProviderProductResource extends ProductResource
             })->select([
                 'id', 'name', 'state'
             ])->get(),
+            ...$this->resource->only('sku', 'ean'),
             ...$this->extraPaymentConfigs(),
         ];
     }
