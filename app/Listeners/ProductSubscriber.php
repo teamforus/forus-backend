@@ -12,6 +12,7 @@ use App\Events\Products\ProductReserved;
 use App\Events\Products\ProductRevoked;
 use App\Events\Products\ProductSoldOut;
 use App\Events\Products\ProductUpdated;
+use App\Events\Products\ProductUpdatedDigest;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderChat;
@@ -71,6 +72,20 @@ class ProductSubscriber
         }
 
         $product->updateSoldOutState();
+    }
+
+    /**
+     * @param ProductUpdatedDigest $productUpdatedDigest
+     * @noinspection PhpUnused
+     */
+    public function onProductUpdatedDigest(ProductUpdatedDigest $productUpdatedDigest): void
+    {
+        $product = $productUpdatedDigest->getProduct();
+
+        $product->log($product::EVENT_UPDATED_DIGEST, [
+            'product' => $product,
+            'provider' => $product->organization,
+        ]);
     }
 
     /**
@@ -183,5 +198,6 @@ class ProductSubscriber
         $events->listen(ProductExpired::class, "$class@onProductExpired");
         $events->listen(ProductReserved::class, "$class@onProductReserved");
         $events->listen(ProductApproved::class, "$class@onProductApproved");
+        $events->listen(ProductUpdatedDigest::class, "$class@onProductUpdatedDigest");
     }
 }

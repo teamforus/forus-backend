@@ -175,6 +175,34 @@ class ProductPolicy
 
     /**
      * @param Identity $identity
+     * @param Organization $sponsor
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function listAllSponsorProduct(
+        Identity $identity,
+        Organization $sponsor
+    ): bool {
+        return $sponsor->identityCan($identity, 'manage_providers');
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $sponsor
+     * @param Product|null $product
+     * @return bool
+     */
+    public function showAllSponsorProduct(
+        Identity $identity,
+        Organization $sponsor,
+        ?Product $product = null
+    ): bool {
+        return $sponsor->identityCan($identity, 'manage_providers') &&
+            (!$product || $product->sponsor_organization_id === $sponsor->id);
+    }
+
+    /**
+     * @param Identity $identity
      * @param Organization $provider
      * @param Organization $sponsor
      * @return bool

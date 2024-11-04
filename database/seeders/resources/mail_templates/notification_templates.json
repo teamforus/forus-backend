@@ -504,6 +504,17 @@
             "content": "Aanbod :product_name is uitverkocht."
         }
     },
+    "notifications_products.product_updated": {
+        "mail": {
+            "title": "Wijzigingen in aanbiedingen",
+            "template": "notifications_products/product_updated.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanbod :product_name is uitverkocht.",
+            "content": "Aanbieders hebben wijzigingen aangebracht in eerder geaccepteerde aanbiedingen. Er zijn :nr_changes nieuwe wijzigingen. Bekijk en beoordeel de wijzigingen in de beheeromgeving."
+        }
+    },
     "notifications_identities.product_voucher_shared": {
         "mail": {
             "title": "Aanbod QR-code gedeeld door :requester_email",

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Events\Products\ProductCreated;
 use App\Events\Products\ProductUpdated;
+use App\Events\Products\ProductUpdatedDigest;
 use App\Http\Requests\Api\Platform\Organizations\Products\IndexProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\StoreProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductExclusionsRequest;
@@ -100,6 +101,13 @@ class ProductsController extends Controller
 
         $product->updateFromRequest($request);
         ProductUpdated::dispatch($product);
+
+        $digestFields = ['title', 'description', 'price'];
+        if ($request->hasAny($digestFields) &&
+            !empty(array_intersect($digestFields, array_keys($product->getChanges())))
+        ) {
+            ProductUpdatedDigest::dispatch($product);
+        }
 
         return new ProviderProductResource($product);
     }

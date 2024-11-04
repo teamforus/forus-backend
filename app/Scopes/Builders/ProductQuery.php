@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Lang;
@@ -358,5 +359,20 @@ class ProductQuery
         return Product::query()->fromSub(Product::fromSub($query, 'products')->selectRaw(
             "*, IF(`unlimited_stock`, NULL, `total_amount` - (`reservations_count` + `transactions_count`)) as `stock_amount`"
         ), 'products');
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function sortByDigestLogs(Builder $query): Builder
+    {
+        return (clone $query)->addSelect([
+            'log_created_at' => EventLog::where([
+                'loggable_type' => 'product',
+                'loggable_id'   => 'products.id',
+                'event'         => Product::EVENT_UPDATED_DIGEST,
+            ])->select('event_logs.created_at')
+        ])->orderByDesc('log_created_at');
     }
 }

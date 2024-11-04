@@ -128,6 +128,7 @@ class Product extends BaseModel
     use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription, HasBookmarks;
 
     public const EVENT_CREATED = 'created';
+    public const EVENT_UPDATED_DIGEST = 'updated_digest';
     public const EVENT_SOLD_OUT = 'sold_out';
     public const EVENT_EXPIRED = 'expired';
     public const EVENT_RESERVED = 'reserved';
@@ -625,9 +626,10 @@ class Product extends BaseModel
     /**
      * @param Request $request
      * @param Builder|null $query
+     * @param bool $order
      * @return Builder
      */
-    public static function searchAny(Request $request, Builder $query = null): Builder {
+    public static function searchAny(Request $request, Builder $query = null, bool $order = true): Builder {
         $query = $query ?: self::query();
 
         // filter by unlimited stock
@@ -649,6 +651,10 @@ class Product extends BaseModel
             } elseif ($source === 'archive') {
                 $query = TrashedQuery::onlyTrashed($query);
             }
+        }
+
+        if (!$order) {
+            return $query;
         }
 
         $orderBy = $request->get('order_by', 'created_at');
