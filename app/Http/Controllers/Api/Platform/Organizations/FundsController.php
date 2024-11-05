@@ -402,11 +402,11 @@ class FundsController extends Controller
         $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
 
         $fundsQuery = $organization->funds()->where('state', '!=', Fund::STATE_WAITING);
-        $activeFundsQuery = $organization->funds()->where([
+        $budgetFundsQuery = $organization->funds()->where([
             'type' => Fund::TYPE_BUDGET,
-        ])->where('state', '=', Fund::STATE_ACTIVE);
+        ]);
 
-        $exportDataQuery = $detailed ? $activeFundsQuery : $fundsQuery;
+        $exportDataQuery = $detailed ? $budgetFundsQuery : $fundsQuery;
         $exportData = new FundsExport($exportDataQuery->get(), $from, $to, $detailed);
 
         return resolve('excel')->download($exportData, $fileName);

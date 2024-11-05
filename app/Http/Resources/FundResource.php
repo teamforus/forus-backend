@@ -70,7 +70,7 @@ class FundResource extends BaseJsonResource
 
         $fundConfigData = $this->getFundConfigData($fund, $isDashboard);
 
-        $financialData = $loadStats ? FinancialOverviewStatistic::getFinancialData($fund, $this->stats, $this->year) : [];
+        $financialData = $loadStats ? FinancialOverviewStatistic::getFinancialData($fund, $this->stats, $this->year ?: now()->year) : [];
         $generatorData = $isDashboard ? $this->getVoucherGeneratorData($fund) : [];
         $prevalidationCsvData = $isDashboard ? $this->getPrevalidationCsvData($fund) : [];
         $organizationFunds2FAData = $this->organizationFunds2FAData($organization);
