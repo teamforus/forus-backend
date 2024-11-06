@@ -17,10 +17,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as BaseCollection;
 
-/**
- * Class FinancialStatistic
- * @package App\Statistics
- */
 class FinancialStatisticQueries
 {
     /**
