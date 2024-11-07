@@ -84,6 +84,7 @@ class VoucherTransactionQuery
             'provider_name' => self::orderProviderNameQuery(),
             'transfer_in' => self::orderVoucherTransferIn(),
             'bulk_state' => self::orderBulkState(),
+            'bulk_id' => self::orderBulkId(),
             'employee_email' => self::orderEmployeeEmail(),
         ]);
 
@@ -131,6 +132,16 @@ class VoucherTransactionQuery
         return VoucherTransactionBulk::query()
             ->whereColumn('id', 'voucher_transaction_bulk_id')
             ->select('state');
+    }
+
+    /**
+     * @return Builder|QBuilder
+     */
+    protected static function orderBulkId(): Builder|QBuilder
+    {
+        return VoucherTransactionBulk::query()
+            ->whereColumn('id', 'voucher_transaction_bulk_id')
+            ->select('id');
     }
 
     /**
