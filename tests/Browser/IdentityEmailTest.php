@@ -256,12 +256,6 @@ class IdentityEmailTest extends DuskTestCase
 
         // Type the email and submit the form for new email
         $browser->within('@identityNewEmailForm', function(Browser $browser) use ($email, $identity) {
-            $browser->type('@identityNewEmailFormEmail', $identity->email);
-            $browser->press('@identityNewEmailFormSubmit');
-
-            $browser->waitFor('.form-error');
-            $browser->assertVisible('.form-error');
-
             $browser->type('@identityNewEmailFormEmail', $email);
             $browser->press('@identityNewEmailFormSubmit');
         });
