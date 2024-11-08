@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Identity\Emails\ResendIdentityEmailRequest;
 use App\Http\Requests\Api\Identity\Emails\StoreIdentityEmailRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\IdentityEmailResource;
+use App\Models\Identity;
 use App\Models\IdentityEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -39,24 +40,29 @@ class IdentityEmailsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param StoreIdentityEmailRequest $request
-     * @return IdentityEmailResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return IdentityEmailResource|JsonResponse
      */
-    public function store(StoreIdentityEmailRequest $request): IdentityEmailResource
+    public function store(StoreIdentityEmailRequest $request): IdentityEmailResource|JsonResponse
     {
         $this->authorize('create', [
             IdentityEmail::class,
             $request->identityProxy2FAConfirmed(),
         ]);
 
-        $identityEmail = $request->identity()->addEmail($request->input('email'));
-        $identityEmail->redirect()->create([
-            'target' => $request->input('target'),
-            'client_type' => $request->client_type(),
-            'implementation_id' => $request->implementation()->id,
-        ]);
+        $email = $request->input('email');
 
-        return new IdentityEmailResource($identityEmail->sendVerificationEmail());
+        if (Identity::isEmailAvailable($email)) {
+            $identityEmail = $request->identity()->addEmail($email);
+            $identityEmail->redirect()->create([
+                'target' => $request->input('target'),
+                'client_type' => $request->client_type(),
+                'implementation_id' => $request->implementation()->id,
+            ]);
+
+            return new IdentityEmailResource($identityEmail->sendVerificationEmail());
+        }
+
+        return response()->json();
     }
 
     /**
