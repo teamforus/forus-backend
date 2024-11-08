@@ -10,13 +10,14 @@ use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Scopes\Builders\FundProviderProductQuery;
+use Illuminate\Http\Request;
 
 /**
  * @property Product $resource
  */
 class SponsorProviderProductResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'photo.presets',
         'product_reservations_pending',
         'product_category.translations',
@@ -33,7 +34,7 @@ class SponsorProviderProductResource extends BaseJsonResource
      * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         /** @var FundProvider $fundProvider */
         $fundProvider = $request->route('fund_provider');

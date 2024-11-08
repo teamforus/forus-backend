@@ -131,63 +131,63 @@ class Product extends BaseModel
 {
     use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription, HasBookmarks;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_SOLD_OUT = 'sold_out';
-    public const EVENT_EXPIRED = 'expired';
-    public const EVENT_RESERVED = 'reserved';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_SOLD_OUT = 'sold_out';
+    public const string EVENT_EXPIRED = 'expired';
+    public const string EVENT_RESERVED = 'reserved';
 
-    public const EVENT_APPROVED = 'approved';
-    public const EVENT_REVOKED = 'revoked';
+    public const string EVENT_APPROVED = 'approved';
+    public const string EVENT_REVOKED = 'revoked';
 
-    public const PRICE_TYPE_FREE = 'free';
-    public const PRICE_TYPE_REGULAR = 'regular';
-    public const PRICE_TYPE_DISCOUNT_FIXED = 'discount_fixed';
-    public const PRICE_TYPE_DISCOUNT_PERCENTAGE = 'discount_percentage';
+    public const string PRICE_TYPE_FREE = 'free';
+    public const string PRICE_TYPE_REGULAR = 'regular';
+    public const string PRICE_TYPE_DISCOUNT_FIXED = 'discount_fixed';
+    public const string PRICE_TYPE_DISCOUNT_PERCENTAGE = 'discount_percentage';
 
-    public const RESERVATION_POLICY_ACCEPT = 'accept';
-    public const RESERVATION_POLICY_REVIEW = 'review';
-    public const RESERVATION_POLICY_GLOBAL = 'global';
+    public const string RESERVATION_POLICY_ACCEPT = 'accept';
+    public const string RESERVATION_POLICY_REVIEW = 'review';
+    public const string RESERVATION_POLICY_GLOBAL = 'global';
 
-    public const RESERVATION_FIELD_REQUIRED = 'required';
-    public const RESERVATION_FIELD_OPTIONAL = 'optional';
-    public const RESERVATION_FIELD_GLOBAL = 'global';
-    public const RESERVATION_FIELD_NO = 'no';
+    public const string RESERVATION_FIELD_REQUIRED = 'required';
+    public const string RESERVATION_FIELD_OPTIONAL = 'optional';
+    public const string RESERVATION_FIELD_GLOBAL = 'global';
+    public const string RESERVATION_FIELD_NO = 'no';
 
-    public const RESERVATION_EXTRA_PAYMENT_GLOBAL = 'global';
-    public const RESERVATION_EXTRA_PAYMENT_YES = 'yes';
-    public const RESERVATION_EXTRA_PAYMENT_NO = 'no';
+    public const string RESERVATION_EXTRA_PAYMENT_GLOBAL = 'global';
+    public const string RESERVATION_EXTRA_PAYMENT_YES = 'yes';
+    public const string RESERVATION_EXTRA_PAYMENT_NO = 'no';
 
-    public const RESERVATION_FIELDS_PRODUCT = [
+    public const array RESERVATION_FIELDS_PRODUCT = [
         self::RESERVATION_FIELD_REQUIRED,
         self::RESERVATION_FIELD_OPTIONAL,
         self::RESERVATION_FIELD_GLOBAL,
         self::RESERVATION_FIELD_NO,
     ];
 
-    public const RESERVATION_FIELDS_ORGANIZATION = [
+    public const array RESERVATION_FIELDS_ORGANIZATION = [
         self::RESERVATION_FIELD_REQUIRED,
         self::RESERVATION_FIELD_OPTIONAL,
         self::RESERVATION_FIELD_NO,
     ];
 
-    public const RESERVATION_POLICIES = [
+    public const array RESERVATION_POLICIES = [
         self::RESERVATION_POLICY_ACCEPT,
         self::RESERVATION_POLICY_REVIEW,
         self::RESERVATION_POLICY_GLOBAL,
     ];
 
-    public const RESERVATION_EXTRA_PAYMENT_OPTIONS = [
+    public const array RESERVATION_EXTRA_PAYMENT_OPTIONS = [
         self::RESERVATION_EXTRA_PAYMENT_GLOBAL,
         self::RESERVATION_EXTRA_PAYMENT_YES,
         self::RESERVATION_EXTRA_PAYMENT_NO,
     ];
 
-    public const PRICE_DISCOUNT_TYPES = [
+    public const array PRICE_DISCOUNT_TYPES = [
         self::PRICE_TYPE_DISCOUNT_FIXED,
         self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
     ];
 
-    public const PRICE_TYPES = [
+    public const array PRICE_TYPES = [
         self::PRICE_TYPE_FREE,
         self::PRICE_TYPE_REGULAR,
         self::PRICE_TYPE_DISCOUNT_FIXED,

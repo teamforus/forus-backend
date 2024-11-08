@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->string('sku')->nullable()->after('name');
-            $table->string('ean')->nullable()->after('sku');
+            $table->string('sku', 200)->nullable()->after('name');
+            $table->string('ean', 200)->nullable()->after('sku');
         });
     }
 
