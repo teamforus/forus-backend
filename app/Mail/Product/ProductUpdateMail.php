@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class ProductUpdateMail extends ImplementationMail
 {
-    public ?string $notificationTemplateKey = 'notifications_products.product_updated';
+    protected string $subjectKey = 'mails/system_mails.product_updated.title';
 
     /**
      * @return Mailable
@@ -16,7 +16,7 @@ class ProductUpdateMail extends ImplementationMail
      */
     public function build(): Mailable
     {
-        return $this->buildNotificationTemplatedMail();
+        return $this->buildSystemMail('product_updated');
     }
 
     /**

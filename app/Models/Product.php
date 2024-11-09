@@ -14,6 +14,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Traits\HasMarkdownDescription;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -650,6 +651,36 @@ class Product extends BaseModel
                 $query->whereNull('sponsor_organization_id');
             } elseif ($source === 'archive') {
                 $query = TrashedQuery::onlyTrashed($query);
+            }
+        }
+
+        if ($request->has('price_min')) {
+            $query->where('price', '>=', $request->get('price_min'));
+        }
+
+        if ($request->has('price_max')) {
+            $query->where('price', '<=', $request->get('price_max'));
+        }
+
+        if ($request->has('updated_from')) {
+            $updated_from = $request->get('updated_from');
+            ProductQuery::searchByDigestLogsDate($query, Carbon::parse($updated_from)->startOfDay());
+        }
+
+        if ($request->has('updated_to')) {
+            $updated_to = $request->get('updated_to');
+            ProductQuery::searchByDigestLogsDate($query, Carbon::parse($updated_to)->startOfDay());
+        }
+
+        if ($request->has('has_reservations')) {
+            $has_reservations = $request->get('has_reservations');
+
+            if ($has_reservations) {
+                $query->whereHas('product_reservations');
+            }
+
+            if (!is_null($has_reservations) && !$has_reservations) {
+                $query->whereDoesntHave('product_reservations');
             }
         }
 

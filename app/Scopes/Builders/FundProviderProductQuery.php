@@ -3,10 +3,13 @@
 
 namespace App\Scopes\Builders;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
+use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
+use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
@@ -102,5 +105,45 @@ class FundProviderProductQuery
             $builder->orWhereNotNull('limit_per_identity');
             $builder->orWhere('limit_total_unlimited', true);
         });
+    }
+
+    /**
+     * @param Builder $builder
+     * @param Organization $organization
+     * @param int|null $product_id
+     * @param int|null $fund_id
+     * @return Builder
+     */
+    public static function whereHasSponsorDigestLogs(
+        Builder $builder,
+        Organization $organization,
+        int $product_id = null,
+        int $fund_id = null,
+    ): Builder
+    {
+        $fundProvidersQuery = FundProvider::search(new BaseFormRequest(), $organization);
+
+        $productIds = $product_id ? [$product_id] : ProductQuery::whereNotExpired(
+            (clone $builder)->whereIn(
+                'organization_id',
+                $fundProvidersQuery->pluck('organization_id')->toArray()
+            )
+        )->pluck('id')->toArray();
+
+        $productDigestLogs = EventLog::whereIn('loggable_id', $productIds)->where([
+            'event' => Product::EVENT_UPDATED_DIGEST,
+            'loggable_type' => 'product',
+        ])->orderBy('created_at');
+
+        $fundProvidersProductsQuery = FundProviderProduct::query()->whereIn(
+            'product_id',
+            $productDigestLogs->pluck('loggable_id')->toArray()
+        );
+
+        if ($fund_id) {
+            $fundProvidersProductsQuery->whereRelation('fund_provider', 'fund_id', $fund_id);
+        }
+
+        return $fundProvidersProductsQuery;
     }
 }

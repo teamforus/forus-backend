@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Products\IndexProductsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Products\ProductDigestLogsRequest;
 use App\Http\Requests\BaseFormRequest;
-use App\Http\Resources\SponsorProductEventLogs;
+use App\Http\Resources\FundProviderProductDigestResource;
 use App\Http\Resources\SponsorProductResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\ProductQuery;
-use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
@@ -22,12 +23,12 @@ class ProductsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param BaseFormRequest $request
+     * @param IndexProductsRequest $request
      * @param Organization $organization
      * @return AnonymousResourceCollection
      */
     public function index(
-        BaseFormRequest $request,
+        IndexProductsRequest $request,
         Organization $organization,
     ): AnonymousResourceCollection {
         $this->authorize('listAllSponsorProduct', [Product::class, $organization]);
@@ -45,23 +46,6 @@ class ProductsController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param Organization $organization
-     * @param Product $product
-     * @return SponsorProductResource
-     */
-    public function show(
-        Organization $organization,
-        Product $product,
-    ): SponsorProductResource {
-        $this->authorize('show', $organization);
-        $this->authorize('showAllSponsorProduct', [$product, $organization]);
-
-        return SponsorProductResource::create($product);
-    }
-
-    /**
      * @param ProductDigestLogsRequest $request
      * @param Organization $organization
      * @return AnonymousResourceCollection
@@ -73,25 +57,17 @@ class ProductsController extends Controller
         $this->authorize('listAllSponsorProduct', [Product::class, $organization]);
 
         $productQuery = Product::searchAny($request, null, false);
-        $fundProviders = FundProvider::search(
-            new BaseFormRequest(), $organization
-        )->pluck('organization_id')->toArray();
-
-        $productQuery = ProductQuery::whereNotExpired(
-            (clone $productQuery)->whereIn('organization_id', $fundProviders)
+        $query = FundProviderProductQuery::whereHasSponsorDigestLogs(
+            $productQuery,
+            $organization,
+            $request->get('product_id'),
+            $request->get('fund_id'),
         );
-        $productIds = $request->has('product_id') ?
-            [$request->get('product_id')] : $productQuery->pluck('id')->toArray();
-
-        $query = EventLog::whereIn('loggable_id', $productIds)->where([
-            'loggable_type' => 'product',
-            'event' => Product::EVENT_UPDATED_DIGEST
-        ])->orderBy('created_at');
 
         if ($request->get('group_by') == 'per_product') {
-            $query->groupBy('loggable_id');
+            $query->groupBy('product_id');
         }
 
-        return SponsorProductEventLogs::queryCollection($query, $request);
+        return FundProviderProductDigestResource::queryCollection($query, $request);
     }
 }

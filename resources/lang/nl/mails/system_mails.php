@@ -40,4 +40,7 @@ return [
     'fund_request_assigned_by_supervisor' => [
         'title' => 'Er is een aanvraag aan u toegewezen'
     ],
+    'product_updated' => [
+        'title' => 'Wijzigingen in aanbiedingen',
+    ],
 ];

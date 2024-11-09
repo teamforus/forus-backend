@@ -4,36 +4,55 @@ namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
+use App\Models\FundProviderProduct;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use App\Services\EventLogService\Models\EventLog;
+use Illuminate\Http\Request;
 
 /**
- * @property EventLog $resource
+ * @property FundProviderProduct $resource
  * @property Organization $organization
  */
-class SponsorProductEventLogs extends BaseJsonResource
+class FundProviderProductDigestResource extends BaseJsonResource
 {
-    public const LOAD = [];
+    public const LOAD = [
+        'product.logs',
+        'product.photo.presets',
+        'product.product_category.translations',
+        'product.organization.offices.photo.presets',
+        'product.organization.offices.schedules',
+        'product.organization.offices.organization',
+        'product.organization.offices.organization.logo.presets',
+        'product.organization.logo.presets',
+        'fund_provider.fund',
+    ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $baseRequest = BaseFormRequest::createFrom($request);
-        $eventLog = $this->resource;
-        $product = Product::find($eventLog->loggable_id);
 
-        $updatedAt = $eventLog->created_at ?: $product->created_at;
+        $fundProviderProduct = $this->resource;
+        $product = $fundProviderProduct->product;
+
+        $lastDigestLog = $product->logs()->where(
+            'event', Product::EVENT_UPDATED_DIGEST
+        )->orderByDesc('event_logs.created_at')->first();
+
+        $updatedAt = $lastDigestLog ? $lastDigestLog->created_at : $product->created_at;
 
         return array_merge($this->baseFields($product), [
+            'fund_provider_id' => $fundProviderProduct->fund_provider_id,
+            'fund_id' => $fundProviderProduct->fund_provider->fund->id,
+            'fund' => new FundResource($fundProviderProduct->fund_provider->fund),
             'photo' => new MediaResource($product->photo),
             'organization' => new OrganizationBasicResource($product->organization),
             'description_html' => $product->description_html,
@@ -55,8 +74,8 @@ class SponsorProductEventLogs extends BaseJsonResource
             'digest_logs_count' => $product->logs()->where('event', Product::EVENT_UPDATED_DIGEST)->count(),
             'updated_at' => $updatedAt,
             'updated_at_locale' => format_datetime_locale($updatedAt),
-            'created_at' => $eventLog->created_at,
-            'created_at_locale' => format_datetime_locale($eventLog->created_at),
+            'created_at' => $product->created_at,
+            'created_at_locale' => format_datetime_locale($product->created_at),
         ], array_merge(
             $this->priceFields($product),
         ));
@@ -109,26 +128,16 @@ class SponsorProductEventLogs extends BaseJsonResource
             'organization', 'logo',
         ]);
 
-        return $fundsQuery->get()->map(function(Fund $fund) use ($product) {
-            $data = [
+        return $fundsQuery->get()->map(function(Fund $fund) {
+            return [
                 'id' => $fund->id,
                 'name' => $fund->name,
                 'logo' => new MediaResource($fund->logo),
                 'type' => $fund->type,
                 'organization' => $fund->organization->only('id', 'name'),
-                'fund_providers' => FundProviderResource::collection($fund->fund_providers),
                 'end_at' => $fund->end_date?->format('Y-m-d'),
                 'end_at_locale' => format_date_locale($fund->end_date ?? null),
             ];
-
-            $fundProviderProduct = $product->getFundProviderProduct($fund);
-
-            return array_merge($data, [
-                'limit_per_identity' => $fundProviderProduct?->limit_per_identity,
-            ], $fund->isTypeSubsidy() ? [
-                'price' => $fundProviderProduct->user_price,
-                'price_locale' => $fundProviderProduct->user_price_locale,
-            ] : []);
         })->values();
     }
 }

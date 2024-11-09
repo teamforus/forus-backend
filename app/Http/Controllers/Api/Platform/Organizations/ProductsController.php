@@ -99,12 +99,17 @@ class ProductsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('update', [$product, $organization]);
 
+        $digestFields = ['name', 'description', 'price'];
+        $oldDigestFieldValues = array_merge($product->only($digestFields), [
+            'price' => floatval($product->price),
+        ]);
+        $newDigestFieldValues = $request->only($digestFields);
+
         $product->updateFromRequest($request);
         ProductUpdated::dispatch($product);
 
-        $digestFields = ['title', 'description', 'price'];
         if ($request->hasAny($digestFields) &&
-            !empty(array_intersect($digestFields, array_keys($product->getChanges())))
+            count(array_intersect($oldDigestFieldValues, $newDigestFieldValues)) != count($digestFields)
         ) {
             ProductUpdatedDigest::dispatch($product);
         }

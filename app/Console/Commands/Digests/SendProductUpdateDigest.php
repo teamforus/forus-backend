@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands\Digests;
 
-use App\Http\Requests\BaseFormRequest;
 use App\Mail\Product\ProductUpdateMail;
 use App\Models\FundProvider;
 use App\Models\Implementation;
@@ -10,7 +9,6 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Scopes\Builders\ProductQuery;
 use Illuminate\Console\Command;
-use Illuminate\Database\Query\Builder;
 
 /**
  * Class SendAllDigestsCommand
@@ -41,18 +39,24 @@ class SendProductUpdateDigest extends Command
     {
         $sponsorOrganizations = Organization::query()->where(
             'is_sponsor', true
-        )->whereHas('fund_providers')->get();
+        )->whereHas('funds_active.fund_providers')->get();
 
         $emailFrom = Implementation::general()->getEmailFrom();
 
         foreach ($sponsorOrganizations as $sponsor) {
-            $fundProviders = FundProvider::search(
-                new BaseFormRequest(), $sponsor
-            )->pluck('organization_id')->toArray();
+            /** @var Organization $sponsor */
+            $fundProviders = FundProvider::where([
+                'fund_id' => $sponsor->funds_active->pluck('id')->toArray(),
+                'state' => FundProvider::STATE_ACCEPTED,
+            ])->get()->pluck('organization_id')->toArray();
+
+            if (!count($fundProviders)) {
+                return;
+            }
 
             $updatedProducts = ProductQuery::whereNotExpired(
                 Product::query()->whereIn('organization_id', $fundProviders)
-            )->whereHas('logs', function (Builder $query) {
+            )->whereHas('logs', function (\Illuminate\Database\Eloquent\Builder $query) {
                 $query->where('event', Product::EVENT_UPDATED_DIGEST);
                 $query->whereDay('created_at', today());
             })->get();
