@@ -45,6 +45,8 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
         ]), $this->getIbanFields($transaction), [
             'amount' => currency_format($transaction->amount),
             'amount_locale' => currency_format_locale($transaction->amount),
+            'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
+            'amount_extra_cash_locale' => currency_format_locale($transaction->amount_extra_cash),
             'timestamp' => $transaction->created_at->timestamp,
             'cancelable' => $transaction->isCancelable(),
             'transfer_in' => $transaction->daysBeforeTransaction(),
