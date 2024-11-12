@@ -119,8 +119,7 @@ class FundProviderProductQuery
         Organization $organization,
         int $product_id = null,
         int $fund_id = null,
-    ): Builder
-    {
+    ): Builder {
         $fundProvidersQuery = FundProvider::search(new BaseFormRequest(), $organization);
 
         $productIds = $product_id ? [$product_id] : ProductQuery::whereNotExpired(
@@ -131,7 +130,7 @@ class FundProviderProductQuery
         )->pluck('id')->toArray();
 
         $productDigestLogs = EventLog::whereIn('loggable_id', $productIds)->where([
-            'event' => Product::EVENT_UPDATED_DIGEST,
+            'event' => Product::EVENT_MONITORED_FEILDS_UPDATED,
             'loggable_type' => 'product',
         ])->orderBy('created_at');
 

@@ -14,7 +14,6 @@ use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Services\EventLogService\Models\EventLog;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Lang;
@@ -366,44 +365,17 @@ class ProductQuery
      * @param Builder $query
      * @return Builder
      */
-    public static function addLastDigestLogField(Builder $query): Builder
+    public static function addSelectLastMonitoredChangedDate(Builder $query): Builder
     {
+        $subQuery = EventLog::where([
+            'loggable_type' => 'product',
+            'event' => Product::EVENT_MONITORED_FEILDS_UPDATED,
+        ])->whereColumn([
+            'loggable_id' => 'products.id',
+        ])->select('event_logs.created_at')->limit(1);
+
         return $query->addSelect([
-            'log_created_at' => EventLog::where([
-                'loggable_type' => 'product',
-                'loggable_id'   => 'products.id',
-                'event'         => Product::EVENT_UPDATED_DIGEST,
-            ])->select('event_logs.created_at')
+            'last_monitored_change_at' => $subQuery,
         ]);
-    }
-
-    /**
-     * @param Builder $query
-     * @return Builder
-     */
-    public static function sortByDigestLogs(Builder $query): Builder
-    {
-        return self::addLastDigestLogField($query)->orderByDesc('log_created_at');
-    }
-
-    /**
-     * @param Builder $query
-     * @param Carbon|null $from
-     * @param Carbon|null $to
-     * @return Builder
-     */
-    public static function searchByDigestLogsDate(Builder $query, Carbon $from = null, Carbon $to = null): Builder
-    {
-        $query = self::addLastDigestLogField($query);
-
-        if ($from) {
-            $query->where('log_created_at', '>=', $from);
-        }
-
-        if ($to) {
-            $query->where('log_created_at', '<=', $to);
-        }
-
-        return $query;
     }
 }

@@ -12,15 +12,17 @@ class IndexProductsRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'q' => $this->qRule(),
             'to' => 'nullable|date:Y-m-d',
             'from' => 'nullable|date:Y-m-d',
+            'fund_id' => 'nullable|exists:funds,id',
             'updated_to' => 'nullable|date:Y-m-d',
             'updated_from' => 'nullable|date:Y-m-d',
             'price_min' => 'nullable|numeric|min:0',
             'price_max' => 'nullable|numeric|min:0',
             'has_reservations' => 'nullable|boolean',
-            'per_page' => $this->perPageRule(),
+            ...$this->sortableResourceRules(100, [
+                'name', 'last_monitored_change_at',
+            ])
         ];
     }
 }

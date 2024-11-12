@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Events\Products\ProductCreated;
 use App\Events\Products\ProductUpdated;
-use App\Events\Products\ProductUpdatedDigest;
 use App\Http\Requests\Api\Platform\Organizations\Products\IndexProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\StoreProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductExclusionsRequest;
@@ -16,10 +15,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class ProductsController
- * @package App\Http\Controllers\Api\Platform\Organizations
- */
 class ProductsController extends Controller
 {
     /**
@@ -99,20 +94,7 @@ class ProductsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('update', [$product, $organization]);
 
-        $digestFields = ['name', 'description', 'price'];
-        $oldDigestFieldValues = array_merge($product->only($digestFields), [
-            'price' => floatval($product->price),
-        ]);
-        $newDigestFieldValues = $request->only($digestFields);
-
         $product->updateFromRequest($request);
-        ProductUpdated::dispatch($product);
-
-        if ($request->hasAny($digestFields) &&
-            count(array_intersect($oldDigestFieldValues, $newDigestFieldValues)) != count($digestFields)
-        ) {
-            ProductUpdatedDigest::dispatch($product);
-        }
 
         return new ProviderProductResource($product);
     }
@@ -156,6 +138,6 @@ class ProductsController extends Controller
 
         $product->delete();
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 }

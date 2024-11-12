@@ -4,20 +4,14 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Products\IndexProductsRequest;
-use App\Http\Requests\Api\Platform\Organizations\Sponsor\Products\ProductDigestLogsRequest;
-use App\Http\Requests\BaseFormRequest;
-use App\Http\Resources\FundProviderProductDigestResource;
-use App\Http\Resources\SponsorProductResource;
-use App\Models\FundProvider;
+use App\Http\Resources\Sponsor\SponsorProductResource;
 use App\Models\Organization;
 use App\Models\Product;
-use App\Scopes\Builders\FundProviderProductQuery;
+use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
+use App\Searches\ProductSearch;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * @noinspection PhpUnused
- */
 class ProductsController extends Controller
 {
     /**
@@ -31,43 +25,38 @@ class ProductsController extends Controller
         IndexProductsRequest $request,
         Organization $organization,
     ): AnonymousResourceCollection {
-        $this->authorize('listAllSponsorProduct', [Product::class, $organization]);
+        $this->authorize('listAllSponsorProducts', [Product::class, $organization]);
 
-        $query = Product::searchAny($request, null, false);
-        $fundProviders = FundProvider::search(
-            new BaseFormRequest(), $organization
-        )->pluck('organization_id')->toArray();
+        $fundsQuery = FundQuery::whereIsConfiguredByForus($organization->funds())->pluck('id');
+        $builder = ProductQuery::approvedForFundsFilter(Product::query(), $fundsQuery->toArray());
 
-        $query = ProductQuery::sortByDigestLogs(
-            ProductQuery::whereNotExpired((clone $query)->whereIn('organization_id', $fundProviders))
-        );
+        $search = new ProductSearch($request->only([
+            'q', 'to', 'from', 'updated_to', 'updated_from', 'price_min', 'price_max',
+            'has_reservations', 'fund_id', 'order_by', 'order_dir',
+        ]), $builder);
 
-        return SponsorProductResource::queryCollection($query, $request);
+        $query = $search->query();
+
+        return SponsorProductResource::queryCollection($query, $request, [
+            'sponsor_organization' => $organization,
+        ]);
     }
 
     /**
-     * @param ProductDigestLogsRequest $request
      * @param Organization $organization
-     * @return AnonymousResourceCollection
+     * @param Product $product
+     * @return SponsorProductResource
      */
-    public function getDigestLogs(
-        ProductDigestLogsRequest $request,
-        Organization $organization
-    ): AnonymousResourceCollection {
-        $this->authorize('listAllSponsorProduct', [Product::class, $organization]);
+    public function show(
+        Organization $organization,
+        Product $product,
+    ) {
+        $this->authorize('listAllSponsorProducts', [Product::class, $organization]);
+        $this->authorize('viewSponsorProduct', [$product, $organization]);
 
-        $productQuery = Product::searchAny($request, null, false);
-        $query = FundProviderProductQuery::whereHasSponsorDigestLogs(
-            $productQuery,
-            $organization,
-            $request->get('product_id'),
-            $request->get('fund_id'),
-        );
-
-        if ($request->get('group_by') == 'per_product') {
-            $query->groupBy('product_id');
-        }
-
-        return FundProviderProductDigestResource::queryCollection($query, $request);
+        return SponsorProductResource::create($product, [
+            'sponsor_organization' => $organization,
+            'with_monitored_history' => true,
+        ]);
     }
 }

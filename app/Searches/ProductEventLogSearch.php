@@ -109,7 +109,7 @@ class ProductEventLogSearch extends BaseSearch
         }
 
         $builder->where(function (Builder $builder) {
-            $builder->where('event', Product::EVENT_UPDATED_DIGEST);
+            $builder->where('event', Product::EVENT_MONITORED_FEILDS_UPDATED);
         });
     }
 }

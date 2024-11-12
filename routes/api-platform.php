@@ -937,15 +937,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'providers' => 'organization_id',
     ])->only('index', 'show', 'store', 'update', 'destroy');
 
-    $router->get(
-        'organizations/{organization}/sponsor/products/logs',
-        'Api\Platform\Organizations\Sponsor\ProductsController@getDigestLogs',
-    );
-
     $router->resource(
         'organizations/{organization}/sponsor/products',
         'Api\Platform\Organizations\Sponsor\ProductsController',
-    )->only('index');
+    )->only('index', 'show');
 
     $router->resource(
         'organizations/{organization}/sponsor/reservation-extra-payments',

@@ -10,10 +10,6 @@ use App\Models\Product;
 use App\Scopes\Builders\ProductQuery;
 use Illuminate\Console\Command;
 
-/**
- * Class SendAllDigestsCommand
- * @package App\Console\Commands
- */
 class SendProductUpdateDigest extends Command
 {
     /**
@@ -57,7 +53,7 @@ class SendProductUpdateDigest extends Command
             $updatedProducts = ProductQuery::whereNotExpired(
                 Product::query()->whereIn('organization_id', $fundProviders)
             )->whereHas('logs', function (\Illuminate\Database\Eloquent\Builder $query) {
-                $query->where('event', Product::EVENT_UPDATED_DIGEST);
+                $query->where('event', Product::EVENT_MONITORED_FEILDS_UPDATED);
                 $query->whereDay('created_at', today());
             })->get();
 

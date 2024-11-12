@@ -12,7 +12,7 @@ use App\Events\Products\ProductReserved;
 use App\Events\Products\ProductRevoked;
 use App\Events\Products\ProductSoldOut;
 use App\Events\Products\ProductUpdated;
-use App\Events\Products\ProductUpdatedDigest;
+use App\Events\Products\ProductMonitoredFieldsUpdated;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderChat;
@@ -75,26 +75,29 @@ class ProductSubscriber
     }
 
     /**
-     * @param ProductUpdatedDigest $productUpdatedDigest
+     * @param ProductMonitoredFieldsUpdated $event
      * @noinspection PhpUnused
      */
-    public function onProductUpdatedDigest(ProductUpdatedDigest $productUpdatedDigest): void
+    public function onProductMonitoredFieldsUpdated(ProductMonitoredFieldsUpdated $event): void
     {
-        $product = $productUpdatedDigest->getProduct();
+        $product = $event->getProduct();
 
-        $product->log($product::EVENT_UPDATED_DIGEST, [
+        $product->log($product::EVENT_MONITORED_FEILDS_UPDATED, [
             'product' => $product,
             'provider' => $product->organization,
+        ], [
+            'product_updated_fields' => $event->getUpdateFields(),
+            'product_updated_by_sponsor' => $event->isUpdateBySponsor(),
         ]);
     }
 
     /**
-     * @param ProductSoldOut $productSoldOut
+     * @param ProductSoldOut $event
      * @noinspection PhpUnused
      */
-    public function onProductSoldOut(ProductSoldOut $productSoldOut): void
+    public function onProductSoldOut(ProductSoldOut $event): void
     {
-        $product = $productSoldOut->getProduct();
+        $product = $event->getProduct();
 
         ProductSoldOutNotification::send($product->log($product::EVENT_SOLD_OUT, [
             'product' => $product,
@@ -198,6 +201,6 @@ class ProductSubscriber
         $events->listen(ProductExpired::class, "$class@onProductExpired");
         $events->listen(ProductReserved::class, "$class@onProductReserved");
         $events->listen(ProductApproved::class, "$class@onProductApproved");
-        $events->listen(ProductUpdatedDigest::class, "$class@onProductUpdatedDigest");
+        $events->listen(ProductMonitoredFieldsUpdated::class, "$class@onProductMonitoredFieldsUpdated");
     }
 }

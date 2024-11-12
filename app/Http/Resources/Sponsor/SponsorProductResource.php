@@ -6,17 +6,26 @@ use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductCategoryResource;
+use App\Http\Resources\Tiny\FundTinyResource;
 use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
+use App\Models\Organization;
 use App\Models\Product;
 use App\Scopes\Builders\FundProviderProductQuery;
+use App\Scopes\Builders\FundQuery;
+use App\Services\EventLogService\Models\EventLog;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 /**
+ * @property int $sponsor_id
  * @property Product $resource
+ * @property bool|null $with_monitored_history
+ * @property Organization|null $sponsor_organization
  */
-class SponsorProviderProductResource extends BaseJsonResource
+class SponsorProductResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'photo.presets',
         'product_reservations_pending',
         'product_category.translations',
@@ -25,6 +34,7 @@ class SponsorProviderProductResource extends BaseJsonResource
         'sponsor_organization.logo.presets',
         'sponsor_organization.business_type.translations',
         'product_exclusions',
+        'logs_last_monitored_field_changed',
     ];
 
     /**
@@ -33,17 +43,19 @@ class SponsorProviderProductResource extends BaseJsonResource
      * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         /** @var FundProvider $fundProvider */
         $fundProvider = $request->route('fund_provider');
         $product = $this->resource;
+        $funds = $this->getProductFunds($product, $this->sponsor_organization);
 
-        return array_merge($product->only([
-            'id', 'name', 'description', 'product_category_id', 'sold_out',
-            'organization_id', 'price_type', 'price_type_discount', 'sponsor', 'sponsor_organization_id',
-            'reservation_enabled', 'reservation_policy', 'alternative_text',
-        ]), [
+        return [
+            ...$product->only([
+                'id', 'name', 'description', 'product_category_id', 'sold_out',
+                'organization_id', 'price_type', 'price_type_discount', 'sponsor', 'sponsor_organization_id',
+                'reservation_enabled', 'reservation_policy', 'alternative_text',
+            ]),
             'description_html' => $product->description_html,
             'organization' => new OrganizationBasicResource($product->organization),
             'sponsor_organization' => new OrganizationBasicResource($this->resource->sponsor_organization),
@@ -56,17 +68,54 @@ class SponsorProviderProductResource extends BaseJsonResource
             'price_locale' => $product->price_locale,
             'price_type' => $product->price_type,
             'price_discount' => $product->price_discount ? currency_format($product->price_discount) : null,
-            'expire_at' => $product->expire_at ? $product->expire_at->format('Y-m-d') : '',
-            'expire_at_locale' => format_date_locale($product->expire_at ?? null),
             'expired' => $product->expired,
-            'deleted_at' => $product->deleted_at ? $product->deleted_at->format('Y-m-d') : null,
-            'deleted_at_locale' => format_date_locale($product->deleted_at ?? null),
             'deleted' => !is_null($product->deleted_at),
             'photo' => new MediaResource($product->photo),
             'product_category' => new ProductCategoryResource($product->product_category),
             'is_available' => $this->isAvailable($product, $fundProvider) ,
             'deals_history' => $fundProvider ? $this->getDealsHistory($product, $fundProvider) : null,
-        ], $this->productReservationFieldSettings($product));
+            'funds' => FundTinyResource::collection($funds ?: []),
+            'monitored_changes_count' => $product->logs_monitored_field_changed()->count(),
+            'monitored_history' => $this->with_monitored_history ? $this->getMonitoredHistory($product) : null,
+            ...$this->productReservationFieldSettings($product),
+            ...$this->makeTimestamps($product->only([
+                'expire_at', 'deleted_at',
+            ]), true),
+            ...$this->makeTimestamps([
+                'created_at' => $product->created_at,
+                'last_monitored_changed_at' => $product->logs_last_monitored_field_changed?->created_at,
+            ])
+        ];
+    }
+
+    /**
+     * @param Product $product
+     * @return array|null
+     */
+    protected function getMonitoredHistory(Product $product): ?array
+    {
+        return $product->logs_monitored_field_changed->map(fn (EventLog $log) => [
+            ...$log->only([
+                'id',
+            ]),
+            ...$this->makeTimestamps($log->only([
+                'created_at',
+            ]))
+        ])->toArray();
+    }
+
+    /**
+     * @param Product $product
+     * @param Organization|null $sponsor
+     * @return Collection|null
+     */
+    private function getProductFunds(Product $product, ?Organization $sponsor): ?Collection
+    {
+        if (!$sponsor) {
+            return null;
+        }
+
+        return FundQuery::whereProductsAreApprovedAndActiveFilter($sponsor->funds(), $product)->get();
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
+use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -179,9 +180,9 @@ class ProductPolicy
      * @return bool
      * @noinspection PhpUnused
      */
-    public function listAllSponsorProduct(
+    public function listAllSponsorProducts(
         Identity $identity,
-        Organization $sponsor
+        Organization $sponsor,
     ): bool {
         return $sponsor->identityCan($identity, 'manage_providers');
     }
@@ -189,16 +190,20 @@ class ProductPolicy
     /**
      * @param Identity $identity
      * @param Organization $sponsor
-     * @param Product|null $product
+     * @param Product $product
      * @return bool
      */
-    public function showAllSponsorProduct(
+    public function viewSponsorProduct(
         Identity $identity,
+        Product $product,
         Organization $sponsor,
-        ?Product $product = null
     ): bool {
-        return $sponsor->identityCan($identity, 'manage_providers') &&
-            (!$product || $product->sponsor_organization_id === $sponsor->id);
+        $fundsQuery = FundQuery::whereIsConfiguredByForus($sponsor->funds())->pluck('id');
+        $builder = ProductQuery::approvedForFundsFilter(Product::query(), $fundsQuery->toArray());
+
+        return
+            $sponsor->identityCan($identity, 'manage_providers') &&
+            $builder->where('id', $product->id)->exists();
     }
 
     /**
