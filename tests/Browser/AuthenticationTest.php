@@ -69,6 +69,7 @@ class AuthenticationTest extends DuskTestCase
             // Get and follow the auth link from the email then check if the user is authenticated
             $browser->visit($this->findFirstEmailRestoreLink($identity->email, $startTime));
             $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+            $browser->waitFor('#main-content');
 
             // Logout identity
             $this->logout($browser);
