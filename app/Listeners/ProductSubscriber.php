@@ -87,7 +87,6 @@ class ProductSubscriber
             'provider' => $product->organization,
         ], [
             'product_updated_fields' => $event->getUpdateFields(),
-            'product_updated_by_sponsor' => $event->isUpdateBySponsor(),
         ]);
     }
 

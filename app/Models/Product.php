@@ -935,7 +935,9 @@ class Product extends BaseModel
 
         ProductUpdated::dispatch($this);
 
-        $this->logChangedMonitoredFields($prevMonitoredValues, $bySponsor);
+        if (!$bySponsor) {
+            $this->logChangedMonitoredFields($prevMonitoredValues);
+        }
 
         return $this;
     }
@@ -990,15 +992,14 @@ class Product extends BaseModel
 
     /**
      * @param array $prevMonitoredValues
-     * @param bool $bySponsor
      * @return void
      */
-    protected function logChangedMonitoredFields(array $prevMonitoredValues, bool $bySponsor): void
+    protected function logChangedMonitoredFields(array $prevMonitoredValues): void
     {
         $changedMonitoredFields = array_diff($prevMonitoredValues, $this->getMonitoredFields());
 
         if (count($changedMonitoredFields) > 0) {
-            ProductMonitoredFieldsUpdated::dispatch($this, $changedMonitoredFields, $bySponsor);
+            ProductMonitoredFieldsUpdated::dispatch($this, $changedMonitoredFields);
         }
     }
 }
