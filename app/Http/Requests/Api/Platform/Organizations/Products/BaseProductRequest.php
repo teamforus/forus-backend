@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Products;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Rules\EanCodeRule;
 use App\Rules\MediaUidRule;
 use Illuminate\Validation\Rule;
 
@@ -35,8 +36,8 @@ abstract class BaseProductRequest extends BaseFormRequest
 
             'expire_at' => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id' => 'required|exists:product_categories,id',
-            'sku' => 'nullable|string|max:200',
-            'ean' => 'nullable|string|max:200',
+            'sku' => 'nullable|string|alpha_num|max:200',
+            'ean' => ['nullable', 'string', new EanCodeRule()],
         ];
     }
 
