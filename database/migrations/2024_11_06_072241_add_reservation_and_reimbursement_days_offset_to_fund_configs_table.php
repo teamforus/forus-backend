@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->integer('reservation_approve_offset')
-                ->default(7)
+                ->default(0)
                 ->after('csv_primary_key');
 
             $table->integer('reimbursement_approve_offset')
-                ->default(7)
+                ->default(0)
                 ->after('reservation_approve_offset');
         });
     }
