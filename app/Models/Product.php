@@ -996,10 +996,14 @@ class Product extends BaseModel
      */
     protected function logChangedMonitoredFields(array $prevMonitoredValues): void
     {
-        $changedMonitoredFields = array_diff($prevMonitoredValues, $this->getMonitoredFields());
+        $monitoredFields = $this->getMonitoredFields();
+        $changedMonitoredFields = array_diff($prevMonitoredValues, $monitoredFields);
 
         if (count($changedMonitoredFields) > 0) {
-            ProductMonitoredFieldsUpdated::dispatch($this, $changedMonitoredFields);
+            ProductMonitoredFieldsUpdated::dispatch($this, [
+                'from' => array_only($prevMonitoredValues, array_keys($changedMonitoredFields)),
+                'to' => array_only($monitoredFields, array_keys($changedMonitoredFields)),
+            ]);
         }
     }
 }
