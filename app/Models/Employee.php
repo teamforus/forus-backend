@@ -111,9 +111,10 @@ class Employee extends BaseModel
     /**
      * @param array $fileData
      * @param array $itemsData
+     * @param string $type
      * @return array
      */
-    protected function storeUploadedCsvFile(array $fileData, array $itemsData): array
+    protected function storeUploadedCsvFile(array $fileData, array $itemsData, string $type): array
     {
         $file = tmpfile();
 
@@ -135,7 +136,7 @@ class Employee extends BaseModel
         $fileName = token_generator()->generate(32) . '.json';
         $uploadedFile = new UploadedFile($filePath, $fileName, 'application/json');
 
-        $fileModel = resolve('file')->uploadSingle($uploadedFile, 'uploaded_csv_details', [
+        $fileModel = resolve('file')->uploadSingle($uploadedFile, $type, [
             'storage_prefix' => '/uploaded_csv_details',
         ]);
 
@@ -164,7 +165,7 @@ class Employee extends BaseModel
         ?array $fileData = null,
         array $itemsData = [],
     ): EventLog {
-        $fileMeta = $fileData ? $this->storeUploadedCsvFile($fileData, $itemsData) : [];
+        $fileMeta = $fileData ? $this->storeUploadedCsvFile($fileData, $itemsData, $event) : [];
 
         return $this->log($event, [
             'employee' => $this,
