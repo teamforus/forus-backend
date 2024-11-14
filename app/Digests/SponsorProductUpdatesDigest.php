@@ -32,6 +32,10 @@ class SponsorProductUpdatesDigest extends BaseOrganizationDigest
         Organization $organization,
         NotificationService $notificationService,
     ): void {
+        if (!$organization->allow_product_updates) {
+            return;
+        }
+
         $emailBody = new MailBodyBuilder();
         $emailBody->h1(trans('digests/sponsor_product_updates.title'), ['text_center']);
 
