@@ -369,7 +369,7 @@ class ProductQuery
     {
         $subQuery = EventLog::where([
             'loggable_type' => 'product',
-            'event' => Product::EVENT_MONITORED_FEILDS_UPDATED,
+            'event' => Product::EVENT_MONITORED_FIELDS_UPDATED,
         ])->whereColumn([
             'loggable_id' => 'products.id',
         ])->select('event_logs.created_at')->limit(1);

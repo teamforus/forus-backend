@@ -107,6 +107,7 @@ use Illuminate\Support\Arr;
  * @method static Builder<static>|Product whereDeletedAt($value)
  * @method static Builder<static>|Product whereDescription($value)
  * @method static Builder<static>|Product whereDescriptionText($value)
+ * @method static Builder<static>|Product whereEan($value)
  * @method static Builder<static>|Product whereExpireAt($value)
  * @method static Builder<static>|Product whereId($value)
  * @method static Builder<static>|Product whereName($value)
@@ -123,6 +124,7 @@ use Illuminate\Support\Arr;
  * @method static Builder<static>|Product whereReservationPhone($value)
  * @method static Builder<static>|Product whereReservationPolicy($value)
  * @method static Builder<static>|Product whereShowOnWebshop($value)
+ * @method static Builder<static>|Product whereSku($value)
  * @method static Builder<static>|Product whereSoldOut($value)
  * @method static Builder<static>|Product whereSponsorOrganizationId($value)
  * @method static Builder<static>|Product whereTotalAmount($value)
@@ -144,7 +146,7 @@ class Product extends BaseModel
     public const string EVENT_APPROVED = 'approved';
     public const string EVENT_REVOKED = 'revoked';
 
-    public const string EVENT_MONITORED_FEILDS_UPDATED = 'monitored_fields_updated';
+    public const string EVENT_MONITORED_FIELDS_UPDATED = 'monitored_fields_updated';
 
     public const string PRICE_TYPE_FREE = 'free';
     public const string PRICE_TYPE_REGULAR = 'regular';
@@ -351,7 +353,7 @@ class Product extends BaseModel
     public function logs_monitored_field_changed(): MorphMany
     {
         return $this->morphMany(EventLog::class, 'loggable')->where([
-            'event' => static::EVENT_MONITORED_FEILDS_UPDATED,
+            'event' => static::EVENT_MONITORED_FIELDS_UPDATED,
         ])->latest();
     }
 
@@ -362,7 +364,7 @@ class Product extends BaseModel
     public function logs_last_monitored_field_changed(): MorphOne
     {
         return $this->morphOne(EventLog::class, 'loggable')->where([
-            'event' => static::EVENT_MONITORED_FEILDS_UPDATED,
+            'event' => static::EVENT_MONITORED_FIELDS_UPDATED,
         ]);
     }
 
