@@ -6,7 +6,7 @@ use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductCategoryResource;
-use App\Http\Resources\Tiny\FundTinyResource;
+use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
 use App\Models\Organization;
@@ -74,7 +74,15 @@ class SponsorProductResource extends BaseJsonResource
             'product_category' => new ProductCategoryResource($product->product_category),
             'is_available' => $this->isAvailable($product, $fundProvider) ,
             'deals_history' => $fundProvider ? $this->getDealsHistory($product, $fundProvider) : null,
-            'funds' => FundTinyResource::collection($funds ?: []),
+            'funds' => $funds ? $funds->map(fn (Fund $fund) => [
+                ...$fund->only([
+                    "id", "type", "name", "organization_id",
+                ]),
+                'logo' => new MediaResource($fund->logo),
+                'url' => $fund->urlWebshop(),
+                'url_product' => $fund->urlWebshop('/aanbod/' . $product->id),
+                'organization_name' => $fund->organization->name,
+            ]) : [],
             'monitored_changes_count' => $product->logs_monitored_field_changed()->count(),
             'monitored_history' => $this->with_monitored_history ? $this->getMonitoredHistory($product) : null,
             ...$this->productReservationFieldSettings($product),
@@ -115,7 +123,9 @@ class SponsorProductResource extends BaseJsonResource
             return null;
         }
 
-        return FundQuery::whereProductsAreApprovedAndActiveFilter($sponsor->funds(), $product)->get();
+        return FundQuery::whereProductsAreApprovedAndActiveFilter($sponsor->funds(), $product)->with([
+            'fund_config.implementation',
+        ])->get();
     }
 
     /**
