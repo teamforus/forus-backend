@@ -82,7 +82,7 @@ class ProductSubscriber
     {
         $product = $event->getProduct();
 
-        $product->log($product::EVENT_MONITORED_FEILDS_UPDATED, [
+        $product->log($product::EVENT_MONITORED_FIELDS_UPDATED, [
             'product' => $product,
             'provider' => $product->organization,
         ], [
