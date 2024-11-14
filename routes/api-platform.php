@@ -938,6 +938,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     ])->only('index', 'show', 'store', 'update', 'destroy');
 
     $router->resource(
+        'organizations/{organization}/sponsor/products',
+        'Api\Platform\Organizations\Sponsor\ProductsController',
+    )->only('index', 'show');
+
+    $router->resource(
         'organizations/{organization}/sponsor/reservation-extra-payments',
         'Api\Platform\Organizations\Sponsor\ReservationExtraPaymentsController'
     )->parameters([
