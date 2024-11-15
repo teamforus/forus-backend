@@ -7,7 +7,6 @@ use App\Events\Reimbursements\ReimbursementResigned;
 use App\Events\Reimbursements\ReimbursementResolved;
 use App\Models\Traits\HasNotes;
 use App\Models\Traits\HasTags;
-use App\Models\Traits\UpdatesModel;
 use App\Searches\ReimbursementsSearch;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Traits\HasFiles;
@@ -93,7 +92,7 @@ use Throwable;
  */
 class Reimbursement extends Model
 {
-    use SoftDeletes, HasFiles, HasNotes, HasTags, UpdatesModel, HasLogs;
+    use SoftDeletes, HasFiles, HasNotes, HasTags, HasLogs;
 
     public const string STATE_DRAFT = 'draft';
     public const string STATE_PENDING = 'pending';
@@ -342,9 +341,11 @@ class Reimbursement extends Model
      */
     public function assign(Employee $employee): self
     {
-        ReimbursementAssigned::broadcast($this->updateModel([
+        $this->update([
             'employee_id' => $employee->id,
-        ]), $employee);
+        ]);
+
+        ReimbursementAssigned::broadcast($this, $employee);
 
         return $this;
     }
@@ -354,9 +355,11 @@ class Reimbursement extends Model
      */
     public function resign(): self
     {
-        ReimbursementResigned::broadcast($this->updateModel([
+        $this->update([
             'employee_id' => null,
-        ]));
+        ]);
+
+        ReimbursementResigned::broadcast($this);
 
         return $this;
     }
