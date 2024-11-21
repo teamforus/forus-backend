@@ -33,7 +33,7 @@ class ProductsController extends Controller
         $search = new ProductSearch([
             ...$request->only([
                 'q', 'to', 'from', 'updated_to', 'updated_from', 'price_min', 'price_max',
-                'has_reservations', 'fund_id', 'order_by', 'order_dir',
+                'has_reservations', 'fund_id', 'order_by', 'order_dir', 'state',
             ]),
             'fund_ids' => $fundsIds,
         ], ProductQuery::hasPendingOrAcceptedProviderForFund(Product::query(), $fundsIds));
