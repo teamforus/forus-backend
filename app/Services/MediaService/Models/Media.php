@@ -3,7 +3,6 @@
 namespace App\Services\MediaService\Models;
 
 use App\Helpers\Color;
-use App\Models\Traits\UpdatesModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -49,8 +48,6 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class Media extends Model
 {
-    use UpdatesModel;
-
     /**
      * The attributes that are mass assignable.
      *

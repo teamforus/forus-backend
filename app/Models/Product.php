@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Events\Products\ProductSoldOut;
+use App\Events\Products\ProductUpdated;
+use App\Events\Products\ProductMonitoredFieldsUpdated;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasBookmarks;
 use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
@@ -10,6 +12,7 @@ use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\TrashedQuery;
+use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
@@ -19,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
@@ -31,6 +35,8 @@ use Illuminate\Support\Arr;
  * @property int $organization_id
  * @property int $product_category_id
  * @property string $name
+ * @property string|null $sku
+ * @property string|null $ean
  * @property string $description
  * @property string|null $description_text
  * @property string|null $alternative_text
@@ -71,8 +77,11 @@ use Illuminate\Support\Arr;
  * @property-read bool $reservation_birth_date_is_required
  * @property-read bool $reservation_phone_is_required
  * @property-read int|null $stock_amount
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read \Illuminate\Database\Eloquent\Collection|EventLog[] $logs
  * @property-read int|null $logs_count
+ * @property-read EventLog|null $logs_last_monitored_field_changed
+ * @property-read \Illuminate\Database\Eloquent\Collection|EventLog[] $logs_monitored_field_changed
+ * @property-read int|null $logs_monitored_field_changed_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
@@ -89,105 +98,113 @@ use Illuminate\Support\Arr;
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static Builder|Product newModelQuery()
- * @method static Builder|Product newQuery()
- * @method static Builder|Product onlyTrashed()
- * @method static Builder|Product query()
- * @method static Builder|Product whereAlternativeText($value)
- * @method static Builder|Product whereCreatedAt($value)
- * @method static Builder|Product whereDeletedAt($value)
- * @method static Builder|Product whereDescription($value)
- * @method static Builder|Product whereDescriptionText($value)
- * @method static Builder|Product whereExpireAt($value)
- * @method static Builder|Product whereId($value)
- * @method static Builder|Product whereName($value)
- * @method static Builder|Product whereOrganizationId($value)
- * @method static Builder|Product wherePrice($value)
- * @method static Builder|Product wherePriceDiscount($value)
- * @method static Builder|Product wherePriceType($value)
- * @method static Builder|Product whereProductCategoryId($value)
- * @method static Builder|Product whereReservationAddress($value)
- * @method static Builder|Product whereReservationBirthDate($value)
- * @method static Builder|Product whereReservationEnabled($value)
- * @method static Builder|Product whereReservationExtraPayments($value)
- * @method static Builder|Product whereReservationFields($value)
- * @method static Builder|Product whereReservationPhone($value)
- * @method static Builder|Product whereReservationPolicy($value)
- * @method static Builder|Product whereShowOnWebshop($value)
- * @method static Builder|Product whereSoldOut($value)
- * @method static Builder|Product whereSponsorOrganizationId($value)
- * @method static Builder|Product whereTotalAmount($value)
- * @method static Builder|Product whereUnlimitedStock($value)
- * @method static Builder|Product whereUpdatedAt($value)
- * @method static Builder|Product withTrashed()
- * @method static Builder|Product withoutTrashed()
+ * @method static Builder<static>|Product newModelQuery()
+ * @method static Builder<static>|Product newQuery()
+ * @method static Builder<static>|Product onlyTrashed()
+ * @method static Builder<static>|Product query()
+ * @method static Builder<static>|Product whereAlternativeText($value)
+ * @method static Builder<static>|Product whereCreatedAt($value)
+ * @method static Builder<static>|Product whereDeletedAt($value)
+ * @method static Builder<static>|Product whereDescription($value)
+ * @method static Builder<static>|Product whereDescriptionText($value)
+ * @method static Builder<static>|Product whereEan($value)
+ * @method static Builder<static>|Product whereExpireAt($value)
+ * @method static Builder<static>|Product whereId($value)
+ * @method static Builder<static>|Product whereName($value)
+ * @method static Builder<static>|Product whereOrganizationId($value)
+ * @method static Builder<static>|Product wherePrice($value)
+ * @method static Builder<static>|Product wherePriceDiscount($value)
+ * @method static Builder<static>|Product wherePriceType($value)
+ * @method static Builder<static>|Product whereProductCategoryId($value)
+ * @method static Builder<static>|Product whereReservationAddress($value)
+ * @method static Builder<static>|Product whereReservationBirthDate($value)
+ * @method static Builder<static>|Product whereReservationEnabled($value)
+ * @method static Builder<static>|Product whereReservationExtraPayments($value)
+ * @method static Builder<static>|Product whereReservationFields($value)
+ * @method static Builder<static>|Product whereReservationPhone($value)
+ * @method static Builder<static>|Product whereReservationPolicy($value)
+ * @method static Builder<static>|Product whereShowOnWebshop($value)
+ * @method static Builder<static>|Product whereSku($value)
+ * @method static Builder<static>|Product whereSoldOut($value)
+ * @method static Builder<static>|Product whereSponsorOrganizationId($value)
+ * @method static Builder<static>|Product whereTotalAmount($value)
+ * @method static Builder<static>|Product whereUnlimitedStock($value)
+ * @method static Builder<static>|Product whereUpdatedAt($value)
+ * @method static Builder<static>|Product withTrashed()
+ * @method static Builder<static>|Product withoutTrashed()
  * @mixin \Eloquent
  */
 class Product extends BaseModel
 {
     use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription, HasBookmarks;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_SOLD_OUT = 'sold_out';
-    public const EVENT_EXPIRED = 'expired';
-    public const EVENT_RESERVED = 'reserved';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_SOLD_OUT = 'sold_out';
+    public const string EVENT_EXPIRED = 'expired';
+    public const string EVENT_RESERVED = 'reserved';
 
-    public const EVENT_APPROVED = 'approved';
-    public const EVENT_REVOKED = 'revoked';
+    public const string EVENT_APPROVED = 'approved';
+    public const string EVENT_REVOKED = 'revoked';
 
-    public const PRICE_TYPE_FREE = 'free';
-    public const PRICE_TYPE_REGULAR = 'regular';
-    public const PRICE_TYPE_DISCOUNT_FIXED = 'discount_fixed';
-    public const PRICE_TYPE_DISCOUNT_PERCENTAGE = 'discount_percentage';
+    public const string EVENT_MONITORED_FIELDS_UPDATED = 'monitored_fields_updated';
 
-    public const RESERVATION_POLICY_ACCEPT = 'accept';
-    public const RESERVATION_POLICY_REVIEW = 'review';
-    public const RESERVATION_POLICY_GLOBAL = 'global';
+    public const string PRICE_TYPE_FREE = 'free';
+    public const string PRICE_TYPE_REGULAR = 'regular';
+    public const string PRICE_TYPE_DISCOUNT_FIXED = 'discount_fixed';
+    public const string PRICE_TYPE_DISCOUNT_PERCENTAGE = 'discount_percentage';
 
-    public const RESERVATION_FIELD_REQUIRED = 'required';
-    public const RESERVATION_FIELD_OPTIONAL = 'optional';
-    public const RESERVATION_FIELD_GLOBAL = 'global';
-    public const RESERVATION_FIELD_NO = 'no';
+    public const string RESERVATION_POLICY_ACCEPT = 'accept';
+    public const string RESERVATION_POLICY_REVIEW = 'review';
+    public const string RESERVATION_POLICY_GLOBAL = 'global';
 
-    public const RESERVATION_EXTRA_PAYMENT_GLOBAL = 'global';
-    public const RESERVATION_EXTRA_PAYMENT_YES = 'yes';
-    public const RESERVATION_EXTRA_PAYMENT_NO = 'no';
+    public const string RESERVATION_FIELD_REQUIRED = 'required';
+    public const string RESERVATION_FIELD_OPTIONAL = 'optional';
+    public const string RESERVATION_FIELD_GLOBAL = 'global';
+    public const string RESERVATION_FIELD_NO = 'no';
 
-    public const RESERVATION_FIELDS_PRODUCT = [
+    public const string RESERVATION_EXTRA_PAYMENT_GLOBAL = 'global';
+    public const string RESERVATION_EXTRA_PAYMENT_YES = 'yes';
+    public const string RESERVATION_EXTRA_PAYMENT_NO = 'no';
+
+    public const array RESERVATION_FIELDS_PRODUCT = [
         self::RESERVATION_FIELD_REQUIRED,
         self::RESERVATION_FIELD_OPTIONAL,
         self::RESERVATION_FIELD_GLOBAL,
         self::RESERVATION_FIELD_NO,
     ];
 
-    public const RESERVATION_FIELDS_ORGANIZATION = [
+    public const array RESERVATION_FIELDS_ORGANIZATION = [
         self::RESERVATION_FIELD_REQUIRED,
         self::RESERVATION_FIELD_OPTIONAL,
         self::RESERVATION_FIELD_NO,
     ];
 
-    public const RESERVATION_POLICIES = [
+    public const array RESERVATION_POLICIES = [
         self::RESERVATION_POLICY_ACCEPT,
         self::RESERVATION_POLICY_REVIEW,
         self::RESERVATION_POLICY_GLOBAL,
     ];
 
-    public const RESERVATION_EXTRA_PAYMENT_OPTIONS = [
+    public const array RESERVATION_EXTRA_PAYMENT_OPTIONS = [
         self::RESERVATION_EXTRA_PAYMENT_GLOBAL,
         self::RESERVATION_EXTRA_PAYMENT_YES,
         self::RESERVATION_EXTRA_PAYMENT_NO,
     ];
 
-    public const PRICE_DISCOUNT_TYPES = [
+    public const array PRICE_DISCOUNT_TYPES = [
         self::PRICE_TYPE_DISCOUNT_FIXED,
         self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
     ];
 
-    public const PRICE_TYPES = [
+    public const array PRICE_TYPES = [
         self::PRICE_TYPE_FREE,
         self::PRICE_TYPE_REGULAR,
         self::PRICE_TYPE_DISCOUNT_FIXED,
         self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
+    ];
+
+    public const array MONITORED_FIELDS = [
+        'name', 'description', 'price',
     ];
 
     /**
@@ -201,7 +218,7 @@ class Product extends BaseModel
         'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id',
         'reservation_enabled', 'reservation_policy', 'reservation_extra_payments',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'alternative_text',
-        'reservation_fields',
+        'reservation_fields', 'sku', 'ean',
     ];
 
     /**
@@ -327,6 +344,28 @@ class Product extends BaseModel
     public function fund_provider_chats(): HasMany
     {
         return $this->hasMany(FundProviderChat::class);
+    }
+
+    /**
+     * @return MorphMany
+     * @noinspection PhpUnused
+     */
+    public function logs_monitored_field_changed(): MorphMany
+    {
+        return $this->morphMany(EventLog::class, 'loggable')->where([
+            'event' => static::EVENT_MONITORED_FIELDS_UPDATED,
+        ])->latest();
+    }
+
+    /**
+     * @return MorphOne
+     * @noinspection PhpUnused
+     */
+    public function logs_last_monitored_field_changed(): MorphOne
+    {
+        return $this->morphOne(EventLog::class, 'loggable')->where([
+            'event' => static::EVENT_MONITORED_FIELDS_UPDATED,
+        ]);
     }
 
     /**
@@ -845,7 +884,7 @@ class Product extends BaseModel
                 'name', 'description', 'price', 'product_category_id', 'expire_at',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
-                'reservation_fields',
+                'reservation_fields', 'sku', 'ean',
             ]),
             ...$organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',
@@ -860,13 +899,18 @@ class Product extends BaseModel
 
     /**
      * @param BaseFormRequest $request
+     * @param bool $bySponsor
      * @return $this
      */
-    public function updateFromRequest(BaseFormRequest $request): self
-    {
+    public function updateFromRequest(
+        BaseFormRequest $request,
+        bool $bySponsor = false,
+    ): self {
         $price_type = $request->input('price_type');
         $total_amount = $request->input('total_amount');
         $price = $price_type === self::PRICE_TYPE_REGULAR ? $request->input('price') : 0;
+
+        $prevMonitoredValues = $this->getMonitoredFields();
 
         $price_discount = in_array($price_type, [
             self::PRICE_TYPE_DISCOUNT_FIXED,
@@ -879,12 +923,12 @@ class Product extends BaseModel
             $this->resetSubsidyApprovals();
         }
 
-        return $this->updateModel([
+        $this->update([
             ...$request->only([
                 'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
-                'reservation_fields',
+                'reservation_fields', 'sku', 'ean',
             ]),
             ...$this->organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',
@@ -892,6 +936,14 @@ class Product extends BaseModel
             'total_amount' => $this->unlimited_stock ? 0 : $total_amount,
             ...compact('price', 'price_type', 'price_discount')
         ]);
+
+        ProductUpdated::dispatch($this);
+
+        if (!$bySponsor) {
+            $this->logChangedMonitoredFields($prevMonitoredValues);
+        }
+
+        return $this;
     }
 
     /**
@@ -929,5 +981,33 @@ class Product extends BaseModel
     public function isBookmarkedBy(?Identity $identity = null): bool
     {
         return $identity && $this->bookmarks->where('identity_address', $identity->address)->isNotEmpty();
+    }
+
+    /**
+     * @return array
+     */
+    public function getMonitoredFields(): array
+    {
+        return [
+            ...$this->only(static::MONITORED_FIELDS),
+            'price' => floatval($this->price),
+        ];
+    }
+
+    /**
+     * @param array $prevMonitoredValues
+     * @return void
+     */
+    protected function logChangedMonitoredFields(array $prevMonitoredValues): void
+    {
+        $monitoredFields = $this->getMonitoredFields();
+        $changedMonitoredFields = array_diff($prevMonitoredValues, $monitoredFields);
+
+        if (count($changedMonitoredFields) > 0) {
+            ProductMonitoredFieldsUpdated::dispatch($this, [
+                'from' => array_only($prevMonitoredValues, array_keys($changedMonitoredFields)),
+                'to' => array_only($monitoredFields, array_keys($changedMonitoredFields)),
+            ]);
+        }
     }
 }

@@ -137,9 +137,13 @@ class PayoutsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('storePayoutsSponsor', [VoucherTransaction::class, $organization]);
 
+        $file = $request->post('file');
         $fund = $organization->funds()->find($request->input('fund_id'));
+        $payouts = $request->input('payouts');
         $batchId = $request->input('upload_batch_id') ?: VoucherTransaction::makeBatchUploadId();
         $employee = $request->employee($organization);
+
+        $event = $employee->logCsvUpload($employee::EVENT_UPLOADED_PAYOUTS, $file, $payouts);
 
         $payouts = array_map(function ($payout) use ($fund, $employee, $batchId) {
             $amount = Arr::get($payout, 'amount_preset') ?
@@ -168,7 +172,12 @@ class PayoutsController extends Controller
             }
 
             return $transaction;
-        }, $request->input('payouts'));
+        }, $payouts);
+
+        $event->forceFill([
+            'data->uploaded_file_meta->state' => 'success',
+            'data->uploaded_file_meta->created_ids' => Arr::pluck($payouts, 'id'),
+        ])->update();
 
         return VoucherTransactionPayoutResource::collection($payouts);
     }

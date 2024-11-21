@@ -136,6 +136,7 @@ return [
     'house_number' => 'Het lijkt erop dat het :attribute niet klopt.',
     'house_addition' => 'Het lijkt erop dat de :attribute niet klopt.',
     'postcode' => 'Het lijkt erop dat de :attribute niet klopt.',
+    'ean_code' => 'Het :attribute is geen geldige EAN-code.',
 
     /*
     |--------------------------------------------------------------------------
@@ -291,6 +292,9 @@ return [
         'help_show_phone' => 'toon telefoonnummer',
         'help_show_website' => 'toon website',
         'help_show_chat' => 'toon chat',
+
+        'ean' => 'EAN',
+        'sku' => 'SKU',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',
