@@ -20,6 +20,7 @@ class IndexProductsRequest extends BaseFormRequest
             'price_min' => 'nullable|numeric|min:0',
             'price_max' => 'nullable|numeric|min:0',
             'has_reservations' => 'nullable|boolean',
+            'state' => 'nullable|in:approved,pending',
             ...$this->sortableResourceRules(100, [
                 'name', 'last_monitored_change_at',
             ])
