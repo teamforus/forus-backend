@@ -67,7 +67,8 @@ class Handler extends ExceptionHandler
      * @throws Throwable
      */
     public function render(
-        $request, Throwable $e
+        $request, 
+        Throwable $e,
     ): ResponseFactory|Application|Response|SymfonyResponse {
         if ($e instanceof ModelNotFoundException) {
             $reflection = new ReflectionClass($e->getModel());
