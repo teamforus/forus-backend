@@ -16,4 +16,5 @@ return [
 
     'email-preferences-link' => env('EMAIL_PREFERENCES_LINK'),
     'email-not-you-link' => env('EMAIL_NOT_YOU_LINK'),
+    'max_identity_emails' => env('MAX_IDENTITY_EMAILS', 4),
 ];
