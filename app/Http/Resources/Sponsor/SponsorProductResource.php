@@ -105,7 +105,7 @@ class SponsorProductResource extends BaseJsonResource
             ...$fund->only([
                 "id", "type", 'type_locale', "name", "organization_id",
             ]),
-            'implementation' => $fund->fund_config?->implementation->only([
+            'implementation' => $fund->fund_config?->implementation?->only([
                 'id', 'name',
             ]),
             'fund_provider_id' => $fund->providers->where('organization_id', $product->organization_id)->first()?->id,
