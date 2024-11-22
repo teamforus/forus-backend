@@ -15,13 +15,11 @@ use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundBackofficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
-use App\Http\Requests\Api\Platform\Organizations\Implementations\PreChecks\UpdateFundPreCheckSettings;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
 use App\Models\Organization;
-use App\Models\PreCheck;
 use App\Scopes\Builders\FundQuery;
 use App\Searches\FundSearch;
 use App\Statistics\Funds\FinancialOverviewStatistic;
@@ -53,7 +51,7 @@ class FundsController extends Controller
 
         $query = (new FundSearch($request->only([
             'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id', 'order_by',
-            'order_dir', 'with_archived', 'with_external', 'configured', 'state', 'pre_check_excluded_state',
+            'order_dir', 'with_archived', 'with_external', 'configured', 'state',
         ]), $organization->funds()->getQuery()))->query();
 
         if (!$request->isAuthenticated()) {
@@ -511,29 +509,6 @@ class FundsController extends Controller
         $this->authorize('unarchive', [$fund, $organization]);
 
         $fund->unArchive($organization->findEmployee($request->auth_address()));
-
-        return FundResource::create($fund);
-    }
-
-    /**
-     * @param UpdateFundPreCheckSettings $request
-     * @param Organization $organization
-     * @param Fund $fund
-     * @return FundResource
-     */
-    public function updatePreCheckSettings(
-        UpdateFundPreCheckSettings $request,
-        Organization $organization,
-        Fund $fund
-    ): FundResource {
-        $this->authorize('show', $organization);
-        $this->authorize('update', [$fund, $organization]);
-
-        $fund->fund_config->update(
-            $request->only('pre_check_excluded', 'pre_check_note')
-        );
-
-        PreCheck::syncPreCheckRecords($organization, $fund);
 
         return FundResource::create($fund);
     }

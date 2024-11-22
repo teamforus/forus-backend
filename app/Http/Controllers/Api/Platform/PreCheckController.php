@@ -32,9 +32,9 @@ class PreCheckController extends Controller
     public function calculateTotals(CalculatePreCheckRequest $request): JsonResponse
     {
         $records = array_pluck($request->input('records', []), 'value', 'key');
-        $availableFunds = PreCheck::getAvailableFunds($request)->filter(
-            fn (Fund $fund) => !$fund->fund_config->pre_check_excluded
-        );
+        $availableFunds = PreCheck::getAvailableFunds($request->identity(), $request->only([
+            'q', 'tag_id', 'organization_id',
+        ]));
 
         $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
         $fundsValid = array_where($funds, fn ($fund) => $fund['is_valid']);
@@ -60,7 +60,9 @@ class PreCheckController extends Controller
     public function downloadPDF(CalculatePreCheckRequest $request): Response
     {
         $records = array_pluck($request->input('records', []), 'value', 'key');
-        $availableFunds = PreCheck::getAvailableFunds($request);
+        $availableFunds = PreCheck::getAvailableFunds($request->identity(), $request->only([
+            'q', 'tag_id', 'organization_id',
+        ]));
 
         $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
 

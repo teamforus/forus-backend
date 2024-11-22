@@ -9,13 +9,14 @@ use App\Models\PreCheck;
 use App\Models\PreCheckRecord;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
+use Illuminate\Http\Request;
 
 /**
  * @property-read Implementation $resource
  */
 class ImplementationPreChecksResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'pre_checks',
         'pre_checks_records.settings.fund.logo.presets',
         'pre_checks_records.settings.fund.fund_config.implementation',
@@ -27,7 +28,7 @@ class ImplementationPreChecksResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $implementation = $this->resource;
         $preChecks = $this->getPreChecks($implementation);

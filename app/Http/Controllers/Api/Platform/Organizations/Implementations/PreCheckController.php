@@ -50,7 +50,20 @@ class PreCheckController extends Controller
             'pre_check_enabled', 'pre_check_title', 'pre_check_description'
         ]));
 
-        $implementation->syncPreChecks($request->input('pre_checks'));
+        if ($request->get('pre_checks')) {
+            $implementation->syncPreChecks($request->input('pre_checks'));
+        }
+
+        if ($request->get('fund_exclusion')) {
+            $fund = $organization->funds()->where([
+                'id' => $request->input('fund_exclusion.fund_id'),
+            ])->first();
+
+            $fund?->updatePreCheckExclusion(
+                $request->boolean('fund_exclusion.excluded'),
+                $request->string('fund_exclusion.note') ?: null,
+            );
+        }
 
         return ImplementationPreChecksResource::create($implementation);
     }

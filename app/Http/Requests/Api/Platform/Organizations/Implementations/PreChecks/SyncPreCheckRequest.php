@@ -3,11 +3,13 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations\PreChecks;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Implementation;
 use App\Models\Organization;
 use Illuminate\Validation\Rule;
 
 /**
  * @property-read Organization $organization
+ * @property-read Implementation $implementation
  */
 class SyncPreCheckRequest extends BaseFormRequest
 {
@@ -29,12 +31,13 @@ class SyncPreCheckRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'pre_check_title' => 'required|string|max:50',
+            'pre_check_title' => 'sometimes|required|string|max:50',
             'pre_check_enabled' => 'nullable|boolean',
             'pre_check_description' => 'nullable|string|max:1000',
             ...$this->preCheckRules(),
             ...$this->preCheckRecordRules(),
             ...$this->preCheckRecordSettingRules(),
+            ...$this->preCheckFundExclusionRules(),
         ];
     }
 
@@ -65,7 +68,7 @@ class SyncPreCheckRequest extends BaseFormRequest
     private function preCheckRecordRules(): array
     {
         return [
-            'pre_checks.*.record_types.*'=> 'nullable|array',
+            'pre_checks.*.record_types.*' => 'nullable|array',
             'pre_checks.*.record_types.*.title' => 'required|string|max:100',
             'pre_checks.*.record_types.*.title_short' => 'required|string|max:40',
             'pre_checks.*.record_types.*.description' => 'nullable|string|max:1000',
@@ -83,14 +86,38 @@ class SyncPreCheckRequest extends BaseFormRequest
     private function preCheckRecordSettingRules(): array
     {
         return [
-            'pre_checks.*.record_types.*.record_settings.*'=> 'nullable|array',
-            'pre_checks.*.record_types.*.record_settings.*.fund_id'=> [
+            'pre_checks.*.record_types.*.record_settings.*' => 'nullable|array',
+            'pre_checks.*.record_types.*.record_settings.*.fund_id' => [
                 'nullable',
                 Rule::exists('funds', 'id')->where('organization_id', $this->organization->id),
             ],
-            'pre_checks.*.record_types.*.record_settings.*.is_knock_out'=> 'required|boolean',
-            'pre_checks.*.record_types.*.record_settings.*.description'=> 'nullable|string|max:1000',
-            'pre_checks.*.record_types.*.record_settings.*.impact_level'=> 'required|int|min:0|max:100',
+            'pre_checks.*.record_types.*.record_settings.*.is_knock_out' => 'required|boolean',
+            'pre_checks.*.record_types.*.record_settings.*.description' => 'nullable|string|max:1000',
+            'pre_checks.*.record_types.*.record_settings.*.impact_level' => 'required|int|min:0|max:100',
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    private function preCheckFundExclusionRules(): array
+    {
+        return [
+            'fund_exclusion' => 'nullable|array',
+            'fund_exclusion.fund_id' => [
+                'required_with::exclude_fund',
+                'exists:funds,id',
+                Rule::in($this->organization->funds->pluck('id')->toArray()),
+            ],
+            'fund_exclusion.excluded' => [
+                'nullable',
+                'boolean',
+            ],
+            'fund_exclusion.note' => [
+                'nullable',
+                'string',
+                'max:2000',
+            ],
         ];
     }
 

@@ -299,6 +299,7 @@ class FundConfig extends BaseModel
         'contact_info_enabled' => 'boolean',
         'contact_info_required' => 'boolean',
         'contact_info_message_custom' => 'boolean',
+        'pre_check_excluded' => 'boolean',
         'allow_reservations' => 'boolean',
         'allow_reimbursements' => 'boolean',
         'limit_generator_amount' => 'string',

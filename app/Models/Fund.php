@@ -508,6 +508,7 @@ class Fund extends BaseModel
             'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
             'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
             'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
+            'pre_check_excluded', 'pre_check_note',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
@@ -1963,6 +1964,19 @@ class Fund extends BaseModel
         }
 
         return null;
+    }
+
+    /**
+     * @param bool $excluded
+     * @param string $note
+     * @return void
+     */
+    public function updatePreCheckExclusion(bool $excluded, string $note): void
+    {
+        $this->updateFundsConfig([
+            'pre_check_note' => $note,
+            'pre_check_excluded' => $excluded,
+        ]);
     }
 
     /**

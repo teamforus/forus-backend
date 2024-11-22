@@ -45,7 +45,6 @@ class IndexFundRequest extends BaseFormRequest
             'stats' => 'nullable|string|in:all,budget,product_vouchers,min',
             'per_page' => $this->perPageRule(),
             'state' => 'nullable|in:' . implode(',', Fund::STATES),
-            'pre_check_excluded_state' => 'nullable|boolean',
             'year' => 'nullable|integer',
         ];
     }
