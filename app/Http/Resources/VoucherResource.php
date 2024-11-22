@@ -279,7 +279,7 @@ class VoucherResource extends BaseJsonResource
             return array_merge($product_voucher->only([
                 'identity_address', 'fund_id', 'returnable',
             ]), [
-                'address' => $product_voucher->token_with_confirmation->address,
+                'address' => $product_voucher->token_with_confirmation?->address,
                 'amount' => currency_format($product_voucher->amount),
                 'amount_locale' => currency_format_locale(
                     $product_voucher->amount,

@@ -266,9 +266,15 @@ class FundRequestRuleTest extends TestCase
      */
     protected function makeFundRequestFile(Identity $identity): File
     {
-        return resolve('file')->uploadSingle(
+        $file = resolve('file')->uploadSingle(
             UploadedFile::fake()->image(Str::random() . '.jpg', 50, 50),
             'fund_request_record_proof',
-        )->updateModelValue('identity_address', $identity->address);
+        );
+
+        $file->update([
+            'identity_address' => $identity->address,
+        ]);
+
+        return $file;
     }
 }

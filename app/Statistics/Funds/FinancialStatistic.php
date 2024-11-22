@@ -11,10 +11,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-/**
- * Class FinancialStatistic
- * @package App\Statistics
- */
 class FinancialStatistic
 {
     /**
