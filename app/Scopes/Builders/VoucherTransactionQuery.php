@@ -82,8 +82,9 @@ class VoucherTransactionQuery
             'fund_name' => self::orderFundNameQuery(),
             'product_name' => self::orderProductNameQuery(),
             'provider_name' => self::orderProviderNameQuery(),
-            'transaction_in' => self::orderVoucherTransactionIn(),
+            'transfer_in' => self::orderVoucherTransferIn(),
             'bulk_state' => self::orderBulkState(),
+            'bulk_id' => self::orderBulkId(),
             'employee_email' => self::orderEmployeeEmail(),
         ]);
 
@@ -136,6 +137,16 @@ class VoucherTransactionQuery
     /**
      * @return Builder|QBuilder
      */
+    protected static function orderBulkId(): Builder|QBuilder
+    {
+        return VoucherTransactionBulk::query()
+            ->whereColumn('id', 'voucher_transaction_bulk_id')
+            ->select('id');
+    }
+
+    /**
+     * @return Builder|QBuilder
+     */
     protected static function orderEmployeeEmail(): Builder|QBuilder
     {
         return IdentityEmail::query()
@@ -167,14 +178,14 @@ class VoucherTransactionQuery
     /**
      * @return \Illuminate\Database\Query\Expression
      */
-    private static function orderVoucherTransactionIn(): Expression
+    private static function orderVoucherTransferIn(): Expression
     {
         return DB::raw(implode(" ", [
             "IF(",
             "`state` = '" . VoucherTransaction::STATE_PENDING . "' AND `transfer_at` IS NOT NULL,",
             "GREATEST((UNIX_TIMESTAMP(`transfer_at`) - UNIX_TIMESTAMP(current_date)) / 86400, 0), 
             IF(`voucher_transaction_bulk_id` IS NOT NULL, -1, -2)",
-            ") as `transaction_in`",
+            ") as `transfer_in`",
         ]));
     }
 

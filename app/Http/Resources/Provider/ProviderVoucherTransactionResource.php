@@ -45,9 +45,11 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
         ]), $this->getIbanFields($transaction), [
             'amount' => currency_format($transaction->amount),
             'amount_locale' => currency_format_locale($transaction->amount),
+            'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
+            'amount_extra_cash_locale' => currency_format_locale($transaction->amount_extra_cash),
             'timestamp' => $transaction->created_at->timestamp,
             'cancelable' => $transaction->isCancelable(),
-            'transaction_in' => $transaction->daysBeforeTransaction(),
+            'transfer_in' => $transaction->daysBeforeTransaction(),
             "fund" => new FundTinyResource($transaction->voucher->fund),
             'notes' => VoucherTransactionNoteResource::collection($transaction->notes_provider),
             "product" => new ProductResource($transaction->product),

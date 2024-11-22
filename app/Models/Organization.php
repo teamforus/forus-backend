@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Events\Employees\EmployeeCreated;
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundQuery;
@@ -75,6 +74,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_provider_extra_payments
  * @property bool $allow_pre_checks
  * @property bool $allow_payouts
+ * @property bool $allow_product_updates
  * @property bool $reservation_allow_extra_payments
  * @property int $pre_approve_external_funds
  * @property int $provider_throttling_value
@@ -166,72 +166,73 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $voucher_transactions_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static EloquentBuilder|Organization newModelQuery()
- * @method static EloquentBuilder|Organization newQuery()
- * @method static EloquentBuilder|Organization query()
- * @method static EloquentBuilder|Organization whereAllow2faRestrictions($value)
- * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
- * @method static EloquentBuilder|Organization whereAllowBiConnection($value)
- * @method static EloquentBuilder|Organization whereAllowBudgetFundLimits($value)
- * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
- * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
- * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
- * @method static EloquentBuilder|Organization whereAllowPayouts($value)
- * @method static EloquentBuilder|Organization whereAllowPreChecks($value)
- * @method static EloquentBuilder|Organization whereAllowProviderExtraPayments($value)
- * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
- * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
- * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
- * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictEmails($value)
- * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictReimbursements($value)
- * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
- * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
- * @method static EloquentBuilder|Organization whereAuth2faRestrictBiConnections($value)
- * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
- * @method static EloquentBuilder|Organization whereBankBranchId($value)
- * @method static EloquentBuilder|Organization whereBankBranchName($value)
- * @method static EloquentBuilder|Organization whereBankBranchNumber($value)
- * @method static EloquentBuilder|Organization whereBankCronTime($value)
- * @method static EloquentBuilder|Organization whereBankFundName($value)
- * @method static EloquentBuilder|Organization whereBankNote($value)
- * @method static EloquentBuilder|Organization whereBankReservationNumber($value)
- * @method static EloquentBuilder|Organization whereBankSeparator($value)
- * @method static EloquentBuilder|Organization whereBankTransactionDate($value)
- * @method static EloquentBuilder|Organization whereBankTransactionId($value)
- * @method static EloquentBuilder|Organization whereBankTransactionTime($value)
- * @method static EloquentBuilder|Organization whereBsnEnabled($value)
- * @method static EloquentBuilder|Organization whereBtw($value)
- * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
- * @method static EloquentBuilder|Organization whereCreatedAt($value)
- * @method static EloquentBuilder|Organization whereDescription($value)
- * @method static EloquentBuilder|Organization whereDescriptionText($value)
- * @method static EloquentBuilder|Organization whereEmail($value)
- * @method static EloquentBuilder|Organization whereEmailPublic($value)
- * @method static EloquentBuilder|Organization whereFundRequestResolvePolicy($value)
- * @method static EloquentBuilder|Organization whereIban($value)
- * @method static EloquentBuilder|Organization whereId($value)
- * @method static EloquentBuilder|Organization whereIdentityAddress($value)
- * @method static EloquentBuilder|Organization whereIsProvider($value)
- * @method static EloquentBuilder|Organization whereIsSponsor($value)
- * @method static EloquentBuilder|Organization whereIsValidator($value)
- * @method static EloquentBuilder|Organization whereKvk($value)
- * @method static EloquentBuilder|Organization whereManageProviderProducts($value)
- * @method static EloquentBuilder|Organization whereName($value)
- * @method static EloquentBuilder|Organization wherePhone($value)
- * @method static EloquentBuilder|Organization wherePhonePublic($value)
- * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
- * @method static EloquentBuilder|Organization whereProviderThrottlingValue($value)
- * @method static EloquentBuilder|Organization whereReservationAddress($value)
- * @method static EloquentBuilder|Organization whereReservationAllowExtraPayments($value)
- * @method static EloquentBuilder|Organization whereReservationBirthDate($value)
- * @method static EloquentBuilder|Organization whereReservationPhone($value)
- * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
- * @method static EloquentBuilder|Organization whereReservationsBudgetEnabled($value)
- * @method static EloquentBuilder|Organization whereReservationsSubsidyEnabled($value)
- * @method static EloquentBuilder|Organization whereShowProviderTransactions($value)
- * @method static EloquentBuilder|Organization whereUpdatedAt($value)
- * @method static EloquentBuilder|Organization whereWebsite($value)
- * @method static EloquentBuilder|Organization whereWebsitePublic($value)
+ * @method static EloquentBuilder<static>|Organization newModelQuery()
+ * @method static EloquentBuilder<static>|Organization newQuery()
+ * @method static EloquentBuilder<static>|Organization query()
+ * @method static EloquentBuilder<static>|Organization whereAllow2faRestrictions($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowBatchReservations($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowBiConnection($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowBudgetFundLimits($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowCustomFundNotifications($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowFundRequestRecordEdit($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowPayouts($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowPreChecks($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProductUpdates($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProviderExtraPayments($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faFundsPolicy($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faFundsRememberIp($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faFundsRestrictAuthSessions($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faFundsRestrictEmails($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faFundsRestrictReimbursements($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faPolicy($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faRememberIp($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faRestrictBiConnections($value)
+ * @method static EloquentBuilder<static>|Organization whereBackofficeAvailable($value)
+ * @method static EloquentBuilder<static>|Organization whereBankBranchId($value)
+ * @method static EloquentBuilder<static>|Organization whereBankBranchName($value)
+ * @method static EloquentBuilder<static>|Organization whereBankBranchNumber($value)
+ * @method static EloquentBuilder<static>|Organization whereBankCronTime($value)
+ * @method static EloquentBuilder<static>|Organization whereBankFundName($value)
+ * @method static EloquentBuilder<static>|Organization whereBankNote($value)
+ * @method static EloquentBuilder<static>|Organization whereBankReservationNumber($value)
+ * @method static EloquentBuilder<static>|Organization whereBankSeparator($value)
+ * @method static EloquentBuilder<static>|Organization whereBankTransactionDate($value)
+ * @method static EloquentBuilder<static>|Organization whereBankTransactionId($value)
+ * @method static EloquentBuilder<static>|Organization whereBankTransactionTime($value)
+ * @method static EloquentBuilder<static>|Organization whereBsnEnabled($value)
+ * @method static EloquentBuilder<static>|Organization whereBtw($value)
+ * @method static EloquentBuilder<static>|Organization whereBusinessTypeId($value)
+ * @method static EloquentBuilder<static>|Organization whereCreatedAt($value)
+ * @method static EloquentBuilder<static>|Organization whereDescription($value)
+ * @method static EloquentBuilder<static>|Organization whereDescriptionText($value)
+ * @method static EloquentBuilder<static>|Organization whereEmail($value)
+ * @method static EloquentBuilder<static>|Organization whereEmailPublic($value)
+ * @method static EloquentBuilder<static>|Organization whereFundRequestResolvePolicy($value)
+ * @method static EloquentBuilder<static>|Organization whereIban($value)
+ * @method static EloquentBuilder<static>|Organization whereId($value)
+ * @method static EloquentBuilder<static>|Organization whereIdentityAddress($value)
+ * @method static EloquentBuilder<static>|Organization whereIsProvider($value)
+ * @method static EloquentBuilder<static>|Organization whereIsSponsor($value)
+ * @method static EloquentBuilder<static>|Organization whereIsValidator($value)
+ * @method static EloquentBuilder<static>|Organization whereKvk($value)
+ * @method static EloquentBuilder<static>|Organization whereManageProviderProducts($value)
+ * @method static EloquentBuilder<static>|Organization whereName($value)
+ * @method static EloquentBuilder<static>|Organization wherePhone($value)
+ * @method static EloquentBuilder<static>|Organization wherePhonePublic($value)
+ * @method static EloquentBuilder<static>|Organization wherePreApproveExternalFunds($value)
+ * @method static EloquentBuilder<static>|Organization whereProviderThrottlingValue($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationAddress($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationAllowExtraPayments($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationBirthDate($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationPhone($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationsAutoAccept($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationsBudgetEnabled($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationsSubsidyEnabled($value)
+ * @method static EloquentBuilder<static>|Organization whereShowProviderTransactions($value)
+ * @method static EloquentBuilder<static>|Organization whereUpdatedAt($value)
+ * @method static EloquentBuilder<static>|Organization whereWebsite($value)
+ * @method static EloquentBuilder<static>|Organization whereWebsitePublic($value)
  * @mixin \Eloquent
  */
 class Organization extends BaseModel
@@ -312,6 +313,7 @@ class Organization extends BaseModel
         'allow_2fa_restrictions'                    => 'boolean',
         'allow_fund_request_record_edit'            => 'boolean',
         'allow_bi_connection'                       => 'boolean',
+        'allow_product_updates'                     => 'boolean',
         'bsn_enabled'                               => 'boolean',
         'auth_2fa_remember_ip'                      => 'boolean',
         'auth_2fa_funds_remember_ip'                => 'boolean',
@@ -359,110 +361,9 @@ class Organization extends BaseModel
     /**
      * @return HasMany
      */
-    public function reimbursement_categories(): HasMany {
-        return $this->hasMany(ReimbursementCategory::class);
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param EloquentBuilder|null $builder
-     * @return EloquentBuilder
-     */
-    public static function searchQuery(
-        BaseFormRequest $request,
-        EloquentBuilder $builder = null
-    ): EloquentBuilder {
-        $query = $builder ?: self::query();
-        $fund_type = $request->input('fund_type', 'budget');
-        $has_products = $request->input('has_products');
-        $has_reservations = $request->input('has_reservations');
-
-        if ($request->input('is_employee', true)) {
-            if ($request->isAuthenticated()) {
-                $query = OrganizationQuery::whereIsEmployee($query, $request->auth_address());
-            } else {
-                $query = $query->whereIn('id', []);
-            }
-        }
-
-        if ($request->has('is_sponsor')) {
-            $query->where($request->only('is_sponsor'));
-        }
-
-        if ($request->has('is_provider')) {
-            $query->where($request->only('is_provider'));
-        }
-
-        if ($request->has('is_validator')) {
-            $query->where($request->only('is_validator'));
-        }
-
-        if ($q = $request->input('q')) {
-            return $query->where(function(EloquentBuilder $builder) use ($q) {
-                $builder->where('name', 'LIKE', "%$q%");
-                $builder->orWhere('description_text', 'LIKE', "%$q%");
-
-                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
-                    $builder->where('email_public', true);
-                    $builder->where('email', 'LIKE', "%$q%");
-                });
-
-                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
-                    $builder->where('phone_public', true);
-                    $builder->where('phone', 'LIKE', "%$q%");
-                });
-
-                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
-                    $builder->where('website_public', true);
-                    $builder->where('website', 'LIKE', "%$q%");
-                });
-            });
-        }
-
-        if ($request->input('implementation', false)) {
-            $query->whereHas('funds', static function(EloquentBuilder $builder) {
-                $builder->whereIn('funds.id', Implementation::activeFundsQuery()->select('id'));
-            });
-        }
-
-        if ($has_reservations && $request->isAuthenticated()) {
-            $query->whereHas('products.product_reservations', function(EloquentBuilder $builder) use ($request) {
-                $builder->whereHas('voucher', function(EloquentBuilder $builder) use ($request) {
-                    $builder->where('identity_address', $request->auth_address());
-                });
-            });
-        }
-
-        if ($has_products) {
-            $query->whereHas('products', static function(EloquentBuilder $builder) use ($fund_type) {
-                $activeFunds = Implementation::activeFundsQuery()->where(
-                    'type', $fund_type
-                )->pluck('id')->toArray();
-
-                // only in stock and not expired
-                $builder = ProductQuery::inStockAndActiveFilter($builder);
-
-                // only approved by at least one sponsor
-                return ProductQuery::approvedForFundsFilter($builder, $activeFunds);
-            });
-        } else if ($has_products !== null) {
-            $query->whereDoesntHave('products');
-        }
-
-        return $query->orderBy(
-            $request->get('order_by', 'created_at'),
-            $request->get('order_dir', 'asc'),
-        );
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @return EloquentBuilder[]|Collection
-     * @noinspection PhpUnused
-     */
-    public static function search(BaseFormRequest $request): Collection|Arrayable
+    public function reimbursement_categories(): HasMany
     {
-        return self::searchQuery($request)->get();
+        return $this->hasMany(ReimbursementCategory::class);
     }
 
     /**

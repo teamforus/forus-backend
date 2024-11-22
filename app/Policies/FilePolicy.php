@@ -34,6 +34,10 @@ class FilePolicy
             return false;
         }
 
+        if ($file->type === 'uploaded_csv_details') {
+            return false;
+        }
+
         // is file owner/creator
         if ($file->identity_address === $identity->address) {
             return true;

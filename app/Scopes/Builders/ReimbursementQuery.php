@@ -16,7 +16,25 @@ class ReimbursementQuery
     public static function whereExpired(
         Builder|Reimbursement|Relation $builder
     ): Builder|Reimbursement|Relation {
-        return $builder->whereHas('voucher', fn(Builder $q) => VoucherQuery::whereExpired($q));
+        $now = now()->format('Y-m-d');
+
+        return $builder->whereHas('voucher', function (Builder $builder) use ($now) {
+            $builder->where('expire_at', '<', function ($query) use ($now) {
+                $query->selectRaw('DATE_SUB(?, INTERVAL `reimbursement_approve_offset` DAY)', [$now])
+                    ->from('fund_configs')
+                    ->whereColumn('fund_configs.fund_id', 'vouchers.fund_id')
+                    ->limit(1);
+            });
+
+            $builder->orWhereHas('fund', function (Builder $builder) use ($now) {
+                $builder->where('end_date', '<', function ($query) use ($now) {
+                    $query->selectRaw('DATE_SUB(?, INTERVAL `reimbursement_approve_offset` DAY)', [$now])
+                        ->from('fund_configs')
+                        ->whereColumn('fund_configs.fund_id', 'funds.id')
+                        ->limit(1);
+                });
+            });
+        });
     }
 
     /**

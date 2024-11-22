@@ -40,16 +40,28 @@ class PrevalidationController extends Controller
      * @noinspection PhpUnused
      */
     public function storeCollection(
-        UploadPrevalidationsRequest $request
+        UploadPrevalidationsRequest $request,
     ): AnonymousResourceCollection {
         $this->authorize('store', Prevalidation::class);
 
+        $file = $request->post('file');
+        $fund = Fund::find($request->input('fund_id'));
+        $data = $request->input('data', []);
+
+        $employee = $fund?->organization?->findEmployee($request->auth_address());
+        $event = $employee?->logCsvUpload($employee::EVENT_UPLOADED_PREVALIDATIONS, $file, $data);
+
         $prevalidations = Prevalidation::storePrevalidations(
             $request->identity(),
-            Fund::find($request->input('fund_id')),
-            $request->input('data', []),
+            $fund,
+            $data,
             $request->input('overwrite', [])
         )->load(PrevalidationResource::LOAD);
+
+        $event?->forceFill([
+            'data->uploaded_file_meta->state' => 'success',
+            'data->uploaded_file_meta->created_ids' => $prevalidations->pluck('id')->toArray(),
+        ])?->update();
 
         return PrevalidationResource::collection($prevalidations);
     }

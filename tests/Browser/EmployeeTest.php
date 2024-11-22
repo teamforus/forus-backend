@@ -105,7 +105,10 @@ class EmployeeTest extends DuskTestCase
 
         // Find and press employee edit button
         $browser->waitFor("@employeeRow$employee->id");
-        $browser->within("@employeeRow$employee->id", fn(Browser $b) => $b->press("@btnEmployeeEdit"));
+        $browser->within("@employeeRow$employee->id", fn(Browser $b) => $b->press("@btnEmployeeMenu"));
+
+        $browser->waitFor("@btnEmployeeEdit$employee->id");
+        $browser->press("@btnEmployeeEdit$employee->id");
 
         // Update employee roles
         $this->selectEmployeeRoles($browser, $roles, $employee->roles);
@@ -167,9 +170,10 @@ class EmployeeTest extends DuskTestCase
     private function employeeDelete(Browser $browser, Employee $employee): void
     {
         $browser->waitFor("@employeeRow$employee->id");
-        $browser->within("@employeeRow$employee->id", function (Browser $browser) {
-            $browser->press("@btnEmployeeDelete");
-        });
+        $browser->within("@employeeRow$employee->id", fn(Browser $b) => $b->press("@btnEmployeeMenu"));
+
+        $browser->waitFor("@btnEmployeeDelete$employee->id");
+        $browser->press("@btnEmployeeDelete$employee->id");
 
         $browser->waitFor('@modalDangerZone');
         $browser->waitFor('@btnDangerZoneSubmit');
