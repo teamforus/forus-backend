@@ -101,21 +101,27 @@ class SponsorProductResource extends BaseJsonResource
             $product,
         )->pluck('id')->toArray();
 
-        return $funds->map(fn (Fund $fund) => [
-            ...$fund->only([
-                "id", "type", 'type_locale', "name", "organization_id",
-            ]),
-            'implementation' => $fund->fund_config?->implementation?->only([
-                'id', 'name',
-            ]),
-            'fund_provider_id' => $fund->providers->where('organization_id', $product->organization_id)->first()?->id,
-            'state' => in_array($fund->id, $approvedIds) ? 'approved' : 'pending',
-            'state_locale' => in_array($fund->id, $approvedIds) ? 'Goedgekeurd' : 'In behandeling',
-            'logo' => new MediaResource($fund->logo),
-            'url' => $fund->urlWebshop(),
-            'url_product' => $product ? $fund->urlWebshop('/aanbod/' . $product->id) : null,
-            'organization_name' => $fund->organization->name,
-        ])->toArray();
+        return $funds->map(function (Fund $fund) use ($product, $approvedIds) {
+            $fundProviderId = $fund->providers->where('organization_id', $product->organization_id)->first()?->id;
+
+            return [
+                ...$fund->only([
+                    "id", "type", 'type_locale', "name", "organization_id",
+                ]),
+                'implementation' => $fund->fund_config?->implementation?->only([
+                    'id', 'name',
+                ]),
+                'fund_provider_id' => $fundProviderId,
+                'state' => in_array($fund->id, $approvedIds) ? 'approved' : ($fundProviderId ? 'pending' : 'not_applied'),
+                'state_locale' => in_array($fund->id, $approvedIds) ? 'Goedgekeurd' : (
+                    $fundProviderId ? 'In behandeling' : 'Niet van toepassing'
+                ),
+                'logo' => new MediaResource($fund->logo),
+                'url' => $fund->urlWebshop(),
+                'url_product' => $product ? $fund->urlWebshop('/aanbod/' . $product->id) : null,
+                'organization_name' => $fund->organization->name,
+            ];
+        })->toArray();
     }
 
     /**
