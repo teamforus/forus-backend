@@ -3,16 +3,15 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundConfig;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
-use App\Models\Role;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\VoucherQuery;
+use App\Statistics\Funds\FinancialOverviewStatistic;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -20,6 +19,7 @@ use Illuminate\Support\Facades\Gate;
 /**
  * @property Fund $resource
  * @property ?string $stats
+ * @property ?int $year
  */
 class FundResource extends BaseJsonResource
 {
@@ -66,9 +66,11 @@ class FundResource extends BaseJsonResource
         $isWebShop = $baseRequest->isWebshop();
         $isDashboard = $baseRequest->isDashboard();
         $fundAmount = $fund->amountFixedByFormula();
+        $loadStats = $this->stats && Gate::allows('funds.showFinances', [$fund, $fund->organization]);
 
         $fundConfigData = $this->getFundConfigData($fund, $isDashboard);
-        $financialData = $this->getFinancialData($fund, $this->stats);
+
+        $financialData = $loadStats ? FinancialOverviewStatistic::getFinancialData($fund, $this->stats, $this->year ?: now()->year) : [];
         $generatorData = $isDashboard ? $this->getVoucherGeneratorData($fund) : [];
         $prevalidationCsvData = $isDashboard ? $this->getPrevalidationCsvData($fund) : [];
         $organizationFunds2FAData = $this->organizationFunds2FAData($organization);
@@ -237,95 +239,6 @@ class FundResource extends BaseJsonResource
             'limit_sum_vouchers' => currency_format($limitSumVoucher),
             'limit_sum_vouchers_locale' => currency_format_locale($limitSumVoucher),
         ]) : [];
-    }
-
-    /**
-     * @param Fund $fund
-     * @param string|null $stats
-     * @return array
-     */
-    public function getFinancialData(Fund $fund, ?string $stats = null): array
-    {
-        if ($stats == null) {
-            return [];
-        }
-
-        if (!Gate::allows('funds.showFinances', [$fund, $fund->organization])) {
-            return [];
-        }
-
-        if ($stats == 'min') {
-            return [
-                'budget' => [
-                    'used' => currency_format($fund->budget_used),
-                    'total' => currency_format($fund->budget_total),
-                ]
-            ];
-        }
-
-        $approvedCount = $fund->provider_organizations_approved;
-        $providersEmployeeCount = $approvedCount->map(function (Organization $organization) {
-            return $organization->employees->count();
-        })->sum();
-
-        $validatorsCount = $fund->organization->employees->filter(function (Employee $employee) {
-            return $employee->roles->filter(function (Role $role) {
-                return $role->permissions->where('key', Permission::VALIDATE_RECORDS)->isNotEmpty();
-            });
-        })->count();
-
-        $loadBudgetStats = $stats == 'all' || $stats == 'budget';
-        $loadProductVouchersStats = $stats == 'all' || $stats == 'product_vouchers';
-
-        return [
-            'sponsor_count'                 => $fund->organization->employees->count(),
-            'provider_organizations_count'  => $fund->provider_organizations_approved->count(),
-            'provider_employees_count'      => $providersEmployeeCount,
-            'validators_count'              => $validatorsCount,
-            'budget'                        => $loadBudgetStats ? $this->getVoucherData($fund, 'budget') : null,
-            'product_vouchers'              => $loadProductVouchersStats ? $this->getVoucherData($fund, 'product') : null,
-        ];
-    }
-
-    /**
-     * @param Fund $fund
-     * @param string $type
-     * @return array
-     */
-    public function getVoucherData(Fund $fund, string $type): array
-    {
-        $details = match($type) {
-            'budget' => Fund::getFundDetails($fund->budget_vouchers()->getQuery()),
-            'product' => Fund::getFundDetails($fund->product_vouchers()->getQuery()),
-        };
-
-        return array_merge($type == 'budget' ? [
-            'total'                             => currency_format($fund->budget_total),
-            'total_locale'                      => currency_format_locale($fund->budget_total),
-            'validated'                         => currency_format($fund->budget_validated),
-            'used'                              => currency_format($fund->budget_used),
-            'used_locale'                       => currency_format_locale($fund->budget_used),
-            'used_active_vouchers'              => currency_format($fund->budget_used_active_vouchers),
-            'used_active_vouchers_locale'       => currency_format_locale($fund->budget_used_active_vouchers),
-            'left'                              => currency_format($fund->budget_left),
-            'left_locale'                       => currency_format_locale($fund->budget_left),
-            'transaction_costs'                 => currency_format($fund->getTransactionCosts()),
-            'transaction_costs_locale'          => currency_format_locale($fund->getTransactionCosts()),
-        ] : [], [
-            'children_count'                    => $details['children_count'],
-            'vouchers_count'                    => $details['vouchers_count'],
-            'vouchers_amount'                   => currency_format($details['vouchers_amount']),
-            'vouchers_amount_locale'            => currency_format_locale($details['vouchers_amount']),
-            'active_vouchers_amount'            => currency_format($details['active_amount']),
-            'active_vouchers_amount_locale'     => currency_format_locale($details['active_amount']),
-            'active_vouchers_count'             => $details['active_count'],
-            'inactive_vouchers_amount'          => currency_format($details['inactive_amount']),
-            'inactive_vouchers_amount_locale'   => currency_format_locale($details['inactive_amount']),
-            'inactive_vouchers_count'           => $details['inactive_count'],
-            'deactivated_vouchers_amount'       => currency_format($details['deactivated_amount']),
-            'deactivated_vouchers_amount_locale'=> currency_format_locale($details['deactivated_amount']),
-            'deactivated_vouchers_count'        => $details['deactivated_count'],
-        ]);
     }
 
     /**

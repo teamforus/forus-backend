@@ -24,7 +24,9 @@ use App\Models\Organization;
 use App\Models\PreCheck;
 use App\Scopes\Builders\FundQuery;
 use App\Searches\FundSearch;
+use App\Statistics\Funds\FinancialOverviewStatistic;
 use App\Statistics\Funds\FinancialStatistic;
+use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -69,7 +71,7 @@ class FundsController extends Controller
 
         return FundResource::queryCollection(FundQuery::sortByState($query, [
             'active', 'waiting', 'paused', 'closed',
-        ]), $request, $request->only('stats'))->additional(compact('meta'));
+        ]), $request, $request->only('stats', 'year'))->additional(compact('meta'));
     }
 
     /**
@@ -365,21 +367,15 @@ class FundsController extends Controller
      */
     public function financesOverview(
         FinanceOverviewRequest $request,
-        Organization $organization
+        Organization $organization,
     ): JsonResponse {
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);
 
-        $query = $organization->funds()->where('archived', false);
-        $fundsQuery = (clone $query)->where('state', '!=', Fund::STATE_WAITING);
-        $activeFundsQuery = (clone $query)->where([
-            'type' => Fund::TYPE_BUDGET,
-        ])->where('state', '=', Fund::STATE_ACTIVE);
+        $year = $request->input('year');
+        $statistics = new FinancialOverviewStatistic();
 
-        return $request->isAuthenticated() ? new JsonResponse([
-            'funds' => Fund::getFundTotals($fundsQuery->get()),
-            'budget_funds' => Fund::getFundTotals($activeFundsQuery->get()),
-        ]) : new JsonResponse([], 403);
+        return new JsonResponse($statistics->getStatistics($organization, $year));
     }
 
     /**
@@ -401,15 +397,19 @@ class FundsController extends Controller
         $this->authorize('showFinances', $organization);
 
         $detailed = $request->input('detailed', false);
+        $year = $request->input('year', now()->year);
+        $from = Carbon::createFromFormat('Y', $year)->startOfYear();
+        $to = $year < now()->year ? Carbon::createFromFormat('Y', $year)->endOfYear() : today();
         $exportType = $request->input('export_type', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
 
         $fundsQuery = $organization->funds()->where('state', '!=', Fund::STATE_WAITING);
-        $activeFundsQuery = $organization->funds()->where([
+        $budgetFundsQuery = $organization->funds()->where([
             'type' => Fund::TYPE_BUDGET,
-        ])->where('state', '=', Fund::STATE_ACTIVE);
+        ]);
 
-        $exportData = new FundsExport(($detailed ? $activeFundsQuery : $fundsQuery)->get(), $detailed);
+        $exportDataQuery = $detailed ? $budgetFundsQuery : $fundsQuery;
+        $exportData = new FundsExport($exportDataQuery->get(), $from, $to, $detailed);
 
         return resolve('excel')->download($exportData, $fileName);
     }

@@ -5,7 +5,6 @@ namespace App\Scopes\Builders;
 
 use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
-use App\Models\Product;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;

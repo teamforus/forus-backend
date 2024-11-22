@@ -18,6 +18,7 @@ use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Organization;
+use App\Searches\OrganizationSearch;
 use App\Services\MediaService\Models\Media;
 use App\Services\MollieService\Models\MollieConnection;
 use Illuminate\Http\JsonResponse;
@@ -37,7 +38,16 @@ class OrganizationsController extends Controller
     {
         $this->authorize('viewAny', Organization::class);
 
-        $organizations = Organization::searchQuery($request)
+        $search = new OrganizationSearch([
+            ...$request->only([
+                'type', 'is_sponsor', 'is_provider', 'is_validator', 'q',
+                'has_reservations', 'fund_type', 'order_by', 'order_dir',
+            ]),
+            'auth_address' => $request->auth_address(),
+            'implementation_id' => $request->implementation()?->id,
+        ], Organization::query());
+
+        $organizations = $search->query()
             ->with(OrganizationResource::load($request))
             ->orderBy('name')
             ->paginate($request->input('per_page', 10));

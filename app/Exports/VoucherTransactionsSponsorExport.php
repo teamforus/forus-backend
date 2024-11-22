@@ -26,6 +26,7 @@ class VoucherTransactionsSponsorExport extends BaseFieldedExport
         'product_name' => 'Aanbod naam',
         'provider' => 'Aanbieder',
         'state' => 'Status',
+        'amount_extra_cash' => 'Gevraagde bijbetaling',
     ];
 
     /**

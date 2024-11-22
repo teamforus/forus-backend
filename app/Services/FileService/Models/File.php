@@ -3,7 +3,6 @@
 namespace App\Services\FileService\Models;
 
 use App\Models\Traits\HasDbTokens;
-use App\Models\Traits\UpdatesModel;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
@@ -54,7 +53,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class File extends Model
 {
-    use HasDbTokens, HasMedia, UpdatesModel;
+    use HasMedia;
+    use HasDbTokens;
 
     /**
      * @return MorphTo

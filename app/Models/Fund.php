@@ -26,7 +26,6 @@ use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -197,60 +196,60 @@ class Fund extends BaseModel
 {
     use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasFaq;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_UPDATED = 'updated';
-    public const EVENT_PROVIDER_APPLIED = 'provider_applied';
-    public const EVENT_PROVIDER_REPLIED = 'provider_replied';
-    public const EVENT_PROVIDER_APPROVED_PRODUCTS = 'provider_approved_products';
-    public const EVENT_PROVIDER_APPROVED_BUDGET = 'provider_approved_budget';
-    public const EVENT_PROVIDER_REVOKED_PRODUCTS = 'provider_revoked_products';
-    public const EVENT_PROVIDER_REVOKED_BUDGET = 'provider_revoked_budget';
-    public const EVENT_BALANCE_LOW = 'balance_low';
-    public const EVENT_BALANCE_SUPPLIED = 'balance_supplied';
-    public const EVENT_FUND_STARTED = 'fund_started';
-    public const EVENT_FUND_ENDED = 'fund_ended';
-    public const EVENT_PRODUCT_ADDED = 'fund_product_added';
-    public const EVENT_PRODUCT_APPROVED = 'fund_product_approved';
-    public const EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
-    public const EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
-    public const EVENT_FUND_EXPIRING = 'fund_expiring';
-    public const EVENT_ARCHIVED = 'archived';
-    public const EVENT_UNARCHIVED = 'unarchived';
-    public const EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
-    public const EVENT_VOUCHERS_EXPORTED = 'vouchers_exported';
-    public const EVENT_SPONSOR_NOTIFICATION_CREATED = 'sponsor_notification_created';
-    public const EVENT_PERIOD_EXTENDED = 'period_extended';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_UPDATED = 'updated';
+    public const string EVENT_PROVIDER_APPLIED = 'provider_applied';
+    public const string EVENT_PROVIDER_REPLIED = 'provider_replied';
+    public const string EVENT_PROVIDER_APPROVED_PRODUCTS = 'provider_approved_products';
+    public const string EVENT_PROVIDER_APPROVED_BUDGET = 'provider_approved_budget';
+    public const string EVENT_PROVIDER_REVOKED_PRODUCTS = 'provider_revoked_products';
+    public const string EVENT_PROVIDER_REVOKED_BUDGET = 'provider_revoked_budget';
+    public const string EVENT_BALANCE_LOW = 'balance_low';
+    public const string EVENT_BALANCE_SUPPLIED = 'balance_supplied';
+    public const string EVENT_FUND_STARTED = 'fund_started';
+    public const string EVENT_FUND_ENDED = 'fund_ended';
+    public const string EVENT_PRODUCT_ADDED = 'fund_product_added';
+    public const string EVENT_PRODUCT_APPROVED = 'fund_product_approved';
+    public const string EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
+    public const string EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
+    public const string EVENT_FUND_EXPIRING = 'fund_expiring';
+    public const string EVENT_ARCHIVED = 'archived';
+    public const string EVENT_UNARCHIVED = 'unarchived';
+    public const string EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
+    public const string EVENT_VOUCHERS_EXPORTED = 'vouchers_exported';
+    public const string EVENT_SPONSOR_NOTIFICATION_CREATED = 'sponsor_notification_created';
+    public const string EVENT_PERIOD_EXTENDED = 'period_extended';
 
-    public const STATE_ACTIVE = 'active';
-    public const STATE_CLOSED = 'closed';
-    public const STATE_PAUSED = 'paused';
-    public const STATE_WAITING = 'waiting';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_CLOSED = 'closed';
+    public const string STATE_PAUSED = 'paused';
+    public const string STATE_WAITING = 'waiting';
 
-    public const BALANCE_PROVIDER_TOP_UPS = 'top_ups';
-    public const BALANCE_PROVIDER_BANK_CONNECTION = 'bank_connection_balance';
+    public const string BALANCE_PROVIDER_TOP_UPS = 'top_ups';
+    public const string BALANCE_PROVIDER_BANK_CONNECTION = 'bank_connection_balance';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_ACTIVE,
         self::STATE_CLOSED,
         self::STATE_PAUSED,
         self::STATE_WAITING,
     ];
 
-    public const TYPE_BUDGET = 'budget';
-    public const TYPE_EXTERNAL = 'external';
-    public const TYPE_SUBSIDIES = 'subsidies';
+    public const string TYPE_BUDGET = 'budget';
+    public const string TYPE_EXTERNAL = 'external';
+    public const string TYPE_SUBSIDIES = 'subsidies';
 
-    public const TYPES = [
+    public const array TYPES = [
         self::TYPE_BUDGET,
         self::TYPE_SUBSIDIES,
         self::TYPE_EXTERNAL,
     ];
 
-    const DESCRIPTION_POSITION_AFTER = 'after';
-    const DESCRIPTION_POSITION_BEFORE = 'before';
-    const DESCRIPTION_POSITION_REPLACE = 'replace';
+    const string DESCRIPTION_POSITION_AFTER = 'after';
+    const string DESCRIPTION_POSITION_BEFORE = 'before';
+    const string DESCRIPTION_POSITION_REPLACE = 'replace';
 
-    const DESCRIPTION_POSITIONS = [
+    const array DESCRIPTION_POSITIONS = [
         self::DESCRIPTION_POSITION_AFTER,
         self::DESCRIPTION_POSITION_BEFORE,
         self::DESCRIPTION_POSITION_REPLACE,
@@ -805,9 +804,10 @@ class Fund extends BaseModel
     }
 
     /**
+     * @param int|null $year
      * @return float
      */
-    public function getTransactionCosts(): float
+    public function getTransactionCosts(int $year = null): float
     {
         $costs = 0;
         $state = VoucherTransaction::STATE_SUCCESS;
@@ -820,6 +820,7 @@ class Fund extends BaseModel
                 ->where('voucher_transactions.state', $state)
                 ->whereIn('voucher_transactions.target', $targets)
                 ->whereRelation('voucher_transaction_bulk.bank_connection', 'bank_id', $bank->id)
+                ->whereYear('voucher_transactions.created_at', $year ?: now()->year)
                 ->count() * $bank->transaction_cost;
         }
 
@@ -828,6 +829,7 @@ class Fund extends BaseModel
                 ->where('voucher_transactions.state', $state)
                 ->whereIn('voucher_transactions.target', $targets)
                 ->whereDoesntHave('voucher_transaction_bulk')
+                ->whereYear('voucher_transactions.created_at', $year ?: now()->year)
                 ->count() * $targetCostOld;
 
         return $costs;
@@ -1613,115 +1615,6 @@ class Fund extends BaseModel
     public function criteriaIsEditable(): bool {
         return ($this->state === self::STATE_WAITING) || (
             ($this->state === self::STATE_ACTIVE) && $this->criteria_editable_after_start);
-    }
-
-    /**
-     * @param Builder $vouchersQuery
-     * @return array
-     */
-    public static function getFundDetails(Builder $vouchersQuery) : array
-    {
-        $vouchersQuery = VoucherQuery::whereNotExpired($vouchersQuery);
-        $activeVouchersQuery = VoucherQuery::whereNotExpiredAndActive((clone $vouchersQuery));
-        $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery));
-        $deactivatedVouchersQuery = VoucherQuery::whereNotExpiredAndDeactivated((clone $vouchersQuery));
-
-        $vouchers_count = $vouchersQuery->count();
-        $inactive_count = $inactiveVouchersQuery->count();
-        $active_count = $activeVouchersQuery->count();
-        $deactivated_count = $deactivatedVouchersQuery->count();
-        $inactive_percentage = $inactive_count ? $inactive_count / $vouchers_count * 100 : 0;
-
-        return [
-            'reserved'              => $activeVouchersQuery->sum('amount'),
-            'vouchers_amount'       => $vouchersQuery->sum('amount'),
-            'vouchers_count'        => $vouchers_count,
-            'active_amount'         => $activeVouchersQuery->sum('amount'),
-            'active_count'          => $active_count,
-            'inactive_amount'       => $inactiveVouchersQuery->sum('amount'),
-            'inactive_count'        => $inactive_count,
-            'inactive_percentage'   => currency_format($inactive_percentage),
-            'deactivated_amount'    => $deactivatedVouchersQuery->sum('amount'),
-            'deactivated_count'     => $deactivated_count,
-            'children_count'        => self::getVoucherChildrenCount($vouchersQuery),
-        ];
-    }
-
-    /**
-     * @param Builder $vouchersQuery
-     * @return mixed
-     */
-    protected static function getVoucherChildrenCount(Builder $vouchersQuery): mixed
-    {
-        return VoucherRecord::query()
-            ->whereRelation('record_type', 'key', 'children_nth')
-            ->whereIn('voucher_id', $vouchersQuery->select('id'))
-            ->sum('value');
-    }
-
-    /**
-     * @param Collection|Fund[] $funds
-     * @return array
-     */
-    public static function getFundTotals(Collection|Arrayable $funds) : array
-    {
-        $budget = 0;
-        $budget_left = 0;
-        $budget_used = 0;
-        $budget_used_active_vouchers = 0;
-        $transaction_costs = 0;
-
-        $query = Voucher::query()->whereNull('parent_id')->whereIn('fund_id', $funds->pluck('id'));
-        $vouchersQuery = VoucherQuery::whereNotExpired($query);
-        $activeVouchersQuery = VoucherQuery::whereNotExpiredAndActive((clone $vouchersQuery));
-        $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery));
-        $deactivatedVouchersQuery = VoucherQuery::whereNotExpiredAndDeactivated((clone $vouchersQuery));
-
-        $vouchersAmount = $vouchersQuery->sum('amount');
-        $activeVouchersAmount = $activeVouchersQuery->sum('amount');
-        $inactiveVouchersAmount = $inactiveVouchersQuery->sum('amount');
-        $deactivatedVouchersAmount = $deactivatedVouchersQuery->sum('amount');
-
-        $vouchers_amount = currency_format($vouchersAmount);
-        $active_vouchers_amount = currency_format($activeVouchersAmount);
-        $inactive_vouchers_amount = currency_format($inactiveVouchersAmount);
-        $deactivated_vouchers_amount = currency_format($deactivatedVouchersAmount);
-
-        $vouchers_amount_locale = currency_format_locale($vouchersAmount);
-        $active_vouchers_amount_locale = currency_format_locale($activeVouchersAmount);
-        $inactive_vouchers_amount_locale = currency_format_locale($inactiveVouchersAmount);
-        $deactivated_vouchers_amount_locale = currency_format_locale($deactivatedVouchersAmount);
-
-        $vouchers_count = $vouchersQuery->count();
-        $active_vouchers_count = $activeVouchersQuery->count();
-        $inactive_vouchers_count = $inactiveVouchersQuery->count();
-        $deactivated_vouchers_count = $deactivatedVouchersQuery->count();
-
-        foreach ($funds as $fund) {
-            $budget += $fund->budget_total;
-            $budget_left += $fund->budget_left;
-            $budget_used += $fund->budget_used;
-            $budget_used_active_vouchers += $fund->budget_used_active_vouchers;
-            $transaction_costs += $fund->getTransactionCosts();
-        }
-
-        $budget_locale = currency_format_locale($budget);
-        $budget_left_locale = currency_format_locale($budget_left);
-        $budget_used_locale = currency_format_locale($budget_used);
-        $budget_used_active_vouchers_locale = currency_format_locale($budget_used_active_vouchers);
-        $transaction_costs_locale = currency_format_locale($transaction_costs);
-
-        return compact(
-            'budget', 'budget_left',
-            'budget_used', 'budget_used_active_vouchers', 'transaction_costs',
-            'vouchers_amount', 'vouchers_count', 'active_vouchers_amount', 'active_vouchers_count',
-            'inactive_vouchers_amount', 'inactive_vouchers_count',
-            'deactivated_vouchers_amount', 'deactivated_vouchers_count',
-            'vouchers_amount_locale', 'active_vouchers_amount_locale',
-            'inactive_vouchers_amount_locale', 'deactivated_vouchers_amount_locale',
-            'budget_locale', 'budget_left_locale', 'budget_used_locale',
-            'budget_used_active_vouchers_locale', 'transaction_costs_locale',
-        );
     }
 
     /**

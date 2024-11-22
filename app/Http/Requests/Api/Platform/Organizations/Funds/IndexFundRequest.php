@@ -46,6 +46,7 @@ class IndexFundRequest extends BaseFormRequest
             'per_page' => $this->perPageRule(),
             'state' => 'nullable|in:' . implode(',', Fund::STATES),
             'pre_check_excluded_state' => 'nullable|boolean',
+            'year' => 'nullable|integer',
         ];
     }
 }

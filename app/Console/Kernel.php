@@ -10,6 +10,7 @@ use App\Console\Commands\BankVoucherTransactionBulksBuildCommand;
 use App\Console\Commands\BankVoucherTransactionBulksUpdateStateCommand;
 use App\Console\Commands\BankVoucherTransactionProcessZeroAmountCommand;
 use App\Console\Commands\CalculateFundUsersCommand;
+use App\Console\Commands\Digests\SendSponsorProductsUpdateDigest;
 use App\Console\Commands\FundsUpdateStateCommand;
 use App\Console\Commands\CheckProductExpirationCommand;
 use App\Console\Commands\FundsExtendPeriodCommand;
@@ -87,6 +88,7 @@ class Kernel extends ConsoleKernel
         SendRequesterDigestCommand::class,
         SendValidatorDigestCommand::class,
         SendSponsorDigestCommand::class,
+        SendSponsorProductsUpdateDigest::class,
 
         // send all digests in one command
         SendAllDigestsCommand::class,
@@ -281,6 +283,9 @@ class Kernel extends ConsoleKernel
         $schedule->command(SendSponsorDigestCommand::class)
             ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
 
+        $schedule->command(SendSponsorProductsUpdateDigest::class)
+            ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
+
         // $schedule->command(SendRequesterDigestCommand::class)
         //     ->monthlyOn(1, "18:00")->withoutOverlapping()->onOneServer();
     }
@@ -311,7 +316,7 @@ class Kernel extends ConsoleKernel
      */
     private function scheduleAuthExpiration(Schedule $schedule): void
     {
-        if (Config::get('disable_auth_expiration', false)) {
+        if (Config::get('forus.kernel.disable_auth_expiration', false)) {
             return;
         }
 

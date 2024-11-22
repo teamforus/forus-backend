@@ -16,9 +16,9 @@ return [
     ]),
     'fund_details' => implode('|', [
         "U heeft :count_requests nieuwe aanvraag wachtende op uw beheeromgeving.\n" .
-        "Ga naar het dashboard om deze aanvraag goed te keuren.",
+        "Ga naar de beheeromgeving om deze aanvraag goed te keuren.",
         "U heeft :count_requests nieuwe aanvragen wachtende op uw beheeromgeving.\n" .
-        "Ga naar het dashboard om deze aanvragen goed te keuren.",
+        "Ga naar de beheeromgeving om deze aanvragen goed te keuren.",
     ]),
     'dashboard_button' => 'GA NAAR DE BEHEEROMGEVING',
 ];
