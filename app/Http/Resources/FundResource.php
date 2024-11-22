@@ -79,7 +79,7 @@ class FundResource extends BaseJsonResource
             'id', 'name', 'description', 'description_html', 'description_short', 'description_position',
             'organization_id', 'state', 'notification_amount', 'type', 'type_locale', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
-            'balance_provider', 'external_page', 'external_page_url', 'pre_check_note',
+            'balance_provider', 'external_page', 'external_page_url',
         ]), [
             'outcome_type' => $fund->fund_config?->outcome_type ?: FundConfig::OUTCOME_TYPE_VOUCHER,
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
