@@ -21,8 +21,6 @@ trait MakesTestBankConnections
     public function makeBankConnection(Organization $organization): BankConnection
     {
         /** @var Bank $bank */
-//        $bank = Bank::first();
-
         $bank = Bank::forceCreate([
             'key' => 'bunq',
             'name' => 'Bunq',
