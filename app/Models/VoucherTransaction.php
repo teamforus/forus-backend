@@ -12,7 +12,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -78,8 +80,12 @@ use Illuminate\Support\Facades\Log;
  * @property-read Collection|\App\Models\PayoutRelation[] $payout_relations
  * @property-read int|null $payout_relations_count
  * @property-read \App\Models\Product|null $product
+ * @property-read \App\Models\ProductCategory|null $product_category
  * @property-read \App\Models\ProductReservation|null $product_reservation
  * @property-read \App\Models\Organization|null $provider
+ * @property-read \App\Models\BusinessType|null $provider_business_type
+ * @property-read Collection|\App\Models\Office[] $provider_offices
+ * @property-read int|null $provider_offices_count
  * @property-read \App\Models\Reimbursement|null $reimbursement
  * @property-read \App\Models\Voucher $voucher
  * @property-read \App\Models\VoucherTransactionBulk|null $voucher_transaction_bulk
@@ -333,6 +339,49 @@ class VoucherTransaction extends BaseModel
     public function fund_provider_product(): BelongsTo
     {
         return $this->belongsTo(FundProviderProduct::class);
+    }
+
+    /**
+     * @return HasOneThrough
+     */
+    public function product_category(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            ProductCategory::class,
+            Product::class,
+            'id',
+            'id',
+            'product_id',
+            'product_category_id'
+        );
+    }
+
+    /**
+     * @return HasOneThrough
+     */
+    public function provider_business_type(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            BusinessType::class,
+            Organization::class,
+            'id',
+            'id',
+            'organization_id',
+            'business_type_id'
+        );
+    }
+
+    /**
+     * @return HasManyThrough
+     */
+    public function provider_offices(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Office::class,
+            Organization::class,
+            firstKey: 'id',
+            localKey: 'organization_id'
+        );
     }
 
     /**

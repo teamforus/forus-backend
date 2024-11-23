@@ -31,18 +31,24 @@ class FinancialStatisticQueries
         $query = $query->with('translations')->select('id');
 
         $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
+        $voucherTransactionsQuery = clone $transactionsQuery;
 
         $query->addSelect([
-            'transactions' => $transactionsQuery->where(function(Builder $builder) {
-                $builder->whereHas('product.product_category', function(Builder $builder) {
-                    $builder->whereColumn('categories.id', 'root_id');
-                });
-
-                $builder->orWhereHas('voucher.product.product_category', function(Builder $builder) {
+            'product_transactions' => $transactionsQuery->where(function(Builder $builder) {
+                $builder->whereHas('product_category', function(Builder $builder) {
                     $builder->whereColumn('categories.id', 'root_id');
                 });
             })->selectRaw('count(*)'),
-        ])->orderByDesc('transactions');
+            'voucher_transactions' => $voucherTransactionsQuery->where(function(Builder $builder) {
+                $builder->whereHas('voucher.product_category', function(Builder $builder) {
+                    $builder->whereColumn('categories.id', 'root_id');
+                });
+            })->selectRaw('count(*)'),
+        ]);
+
+        $query = ProductCategory::fromSub($query, 'categories')
+            ->selectRaw('id, product_transactions + voucher_transactions as transactions')
+            ->orderByDesc('transactions');
 
         return $this->collectionOnly($query->get(), [
             'id', 'name', 'transactions'
@@ -63,7 +69,7 @@ class FinancialStatisticQueries
 
         $query->addSelect([
             'transactions' => $transactionsQuery->where(function(Builder $builder) {
-                $builder->whereHas('provider.business_type', function(Builder $builder) {
+                $builder->whereHas('provider_business_type', function(Builder $builder) {
                     $builder->from('business_types', 'business_types2');
                     $builder->whereColumn('business_types.id', 'business_types2.id');
                 });
@@ -109,10 +115,10 @@ class FinancialStatisticQueries
         })->whereNotNull('postcode_number')->select('postcode_number');
 
         $query->addSelect([
-            'transactions' => $transactionsQuery->whereHas('provider.offices', function(Builder $builder) {
+            'transactions' => $transactionsQuery->whereHas('provider_offices', function(Builder $builder) {
                 $builder->from('offices', 'offices2');
                 $builder->whereColumn('offices.postcode_number', 'offices2.postcode_number');
-            })->groupBy('postcode_number')->selectRaw('count(*)'),
+            })->selectRaw('count(*)'),
         ])->orderByDesc('transactions');
 
         return $this->collectionOnly($query->get()->map(function(Office $office) {
