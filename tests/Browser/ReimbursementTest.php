@@ -10,6 +10,7 @@ use App\Models\Voucher;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Laravel\Dusk\Browser;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -195,9 +196,19 @@ class ReimbursementTest extends DuskTestCase
             }
 
             if ($state === 'expired') {
+                $prev = $reimbursement->voucher->fund->fund_config->reimbursement_approve_offset;
+
+                $reimbursement->voucher->fund->fund_config->update([
+                    'reimbursement_approve_offset' => 0,
+                ]);
+
                 $reimbursement->voucher->update(['expire_at' => now()->subDay()]);
                 $reimbursement->refresh();
-                $this->assertTrue($reimbursement->isExpired());
+                $this->assertTrue($reimbursement->isExpired());;
+
+                $reimbursement->voucher->fund->fund_config->update([
+                    'reimbursement_approve_offset' => $prev,
+                ]);
             }
 
             if ($state != 'expired') {

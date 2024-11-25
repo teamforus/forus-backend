@@ -11,7 +11,6 @@ return [
     'provider_products_count' => 4,
     'vouchers_per_fund_count' => 5,
 
-    'default_organization_iban' => '00000000',
     'prevalidation_bsn' => false,
 
     // amount in generated vouchers
