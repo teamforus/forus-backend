@@ -204,7 +204,7 @@ class Product extends BaseModel
     ];
 
     public const array MONITORED_FIELDS = [
-        'name', 'description', 'price',
+        'name', 'description', 'price', 'price_type', 'price_discount',
     ];
 
     /**
@@ -990,7 +990,19 @@ class Product extends BaseModel
     {
         return [
             ...$this->only(static::MONITORED_FIELDS),
-            'price' => floatval($this->price),
+            'price' => currency_format_locale(floatval($this->price)),
+            'price_type' => match ($this->price_type) {
+                'free' => 'Gratis',
+                'regular' => 'Normaal',
+                'discount_fixed' => 'Korting €',
+                'discount_percentage' => 'Korting %',
+            },
+            'price_discount' => match ($this->price_type) {
+                'free',
+                'regular' => 'Geen',
+                'discount_fixed' => currency_format_locale(floatval($this->price_discount)),
+                'discount_percentage' => number_format(floatval($this->price_discount)) . '%',
+            },
         ];
     }
 
@@ -1002,12 +1014,17 @@ class Product extends BaseModel
     {
         $monitoredFields = $this->getMonitoredFields();
         $changedMonitoredFields = array_diff($prevMonitoredValues, $monitoredFields);
+        $changedKeys = array_keys($changedMonitoredFields);
+
+        $data = array_reduce($changedKeys, fn ($data, $key) => array_merge($data, [
+            $key => [
+                'from' => $prevMonitoredValues[$key],
+                'to' => $monitoredFields[$key],
+            ],
+        ]), []);
 
         if (count($changedMonitoredFields) > 0) {
-            ProductMonitoredFieldsUpdated::dispatch($this, [
-                'from' => array_only($prevMonitoredValues, array_keys($changedMonitoredFields)),
-                'to' => array_only($monitoredFields, array_keys($changedMonitoredFields)),
-            ]);
+            ProductMonitoredFieldsUpdated::dispatch($this, $data);
         }
     }
 }
