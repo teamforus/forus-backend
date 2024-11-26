@@ -11,8 +11,8 @@ use Illuminate\Foundation\Testing\WithFaker;
 
 trait MakesTestBankConnections
 {
-    use DoesTesting;
     use WithFaker;
+    use DoesTesting;
 
     /**
      * @param Organization $organization
@@ -20,10 +20,9 @@ trait MakesTestBankConnections
      */
     public function makeBankConnection(Organization $organization): BankConnection
     {
-        /** @var Bank $bank */
         $bank = Bank::forceCreate([
-            'key' => 'bunq',
-            'name' => 'Bunq',
+            'key' => 'bng',
+            'name' => 'BNG',
             'transaction_cost' => .11,
             'data' => [],
         ]);
