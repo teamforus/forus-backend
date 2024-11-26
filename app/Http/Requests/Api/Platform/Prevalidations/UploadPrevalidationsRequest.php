@@ -55,6 +55,7 @@ class UploadPrevalidationsRequest extends BaseFormRequest
             ],
             'overwrite' => 'nullable|array',
             'overwrite.*' => 'required',
+            ...$this->uploadedCSVFileRules(),
         ];
     }
 

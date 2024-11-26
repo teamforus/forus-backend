@@ -23,7 +23,7 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
 
         return [
             'fund_id' => $this->fundIdRule(),
-            'vouchers' => 'required|array',
+            'vouchers' => 'required|array|max:1000',
             'vouchers.*' => 'required|array',
             'vouchers.*.amount' => $this->amountRule($fund),
             'vouchers.*.product_id' => $this->productIdRule($fund),
@@ -39,6 +39,7 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
             'vouchers.*.client_uid' => 'nullable|string|max:20',
             'vouchers.*.limit_multiplier' => 'nullable|numeric|min:1|max:1000',
             'vouchers.*.records' => $this->recordsRule(),
+            ...$this->uploadedCSVFileRules(),
             ...$this->directPaymentRules($fund),
         ];
     }

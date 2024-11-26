@@ -36,7 +36,6 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -197,60 +196,60 @@ class Fund extends BaseModel
 {
     use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasFaq;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_UPDATED = 'updated';
-    public const EVENT_PROVIDER_APPLIED = 'provider_applied';
-    public const EVENT_PROVIDER_REPLIED = 'provider_replied';
-    public const EVENT_PROVIDER_APPROVED_PRODUCTS = 'provider_approved_products';
-    public const EVENT_PROVIDER_APPROVED_BUDGET = 'provider_approved_budget';
-    public const EVENT_PROVIDER_REVOKED_PRODUCTS = 'provider_revoked_products';
-    public const EVENT_PROVIDER_REVOKED_BUDGET = 'provider_revoked_budget';
-    public const EVENT_BALANCE_LOW = 'balance_low';
-    public const EVENT_BALANCE_SUPPLIED = 'balance_supplied';
-    public const EVENT_FUND_STARTED = 'fund_started';
-    public const EVENT_FUND_ENDED = 'fund_ended';
-    public const EVENT_PRODUCT_ADDED = 'fund_product_added';
-    public const EVENT_PRODUCT_APPROVED = 'fund_product_approved';
-    public const EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
-    public const EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
-    public const EVENT_FUND_EXPIRING = 'fund_expiring';
-    public const EVENT_ARCHIVED = 'archived';
-    public const EVENT_UNARCHIVED = 'unarchived';
-    public const EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
-    public const EVENT_VOUCHERS_EXPORTED = 'vouchers_exported';
-    public const EVENT_SPONSOR_NOTIFICATION_CREATED = 'sponsor_notification_created';
-    public const EVENT_PERIOD_EXTENDED = 'period_extended';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_UPDATED = 'updated';
+    public const string EVENT_PROVIDER_APPLIED = 'provider_applied';
+    public const string EVENT_PROVIDER_REPLIED = 'provider_replied';
+    public const string EVENT_PROVIDER_APPROVED_PRODUCTS = 'provider_approved_products';
+    public const string EVENT_PROVIDER_APPROVED_BUDGET = 'provider_approved_budget';
+    public const string EVENT_PROVIDER_REVOKED_PRODUCTS = 'provider_revoked_products';
+    public const string EVENT_PROVIDER_REVOKED_BUDGET = 'provider_revoked_budget';
+    public const string EVENT_BALANCE_LOW = 'balance_low';
+    public const string EVENT_BALANCE_SUPPLIED = 'balance_supplied';
+    public const string EVENT_FUND_STARTED = 'fund_started';
+    public const string EVENT_FUND_ENDED = 'fund_ended';
+    public const string EVENT_PRODUCT_ADDED = 'fund_product_added';
+    public const string EVENT_PRODUCT_APPROVED = 'fund_product_approved';
+    public const string EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
+    public const string EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
+    public const string EVENT_FUND_EXPIRING = 'fund_expiring';
+    public const string EVENT_ARCHIVED = 'archived';
+    public const string EVENT_UNARCHIVED = 'unarchived';
+    public const string EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
+    public const string EVENT_VOUCHERS_EXPORTED = 'vouchers_exported';
+    public const string EVENT_SPONSOR_NOTIFICATION_CREATED = 'sponsor_notification_created';
+    public const string EVENT_PERIOD_EXTENDED = 'period_extended';
 
-    public const STATE_ACTIVE = 'active';
-    public const STATE_CLOSED = 'closed';
-    public const STATE_PAUSED = 'paused';
-    public const STATE_WAITING = 'waiting';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_CLOSED = 'closed';
+    public const string STATE_PAUSED = 'paused';
+    public const string STATE_WAITING = 'waiting';
 
-    public const BALANCE_PROVIDER_TOP_UPS = 'top_ups';
-    public const BALANCE_PROVIDER_BANK_CONNECTION = 'bank_connection_balance';
+    public const string BALANCE_PROVIDER_TOP_UPS = 'top_ups';
+    public const string BALANCE_PROVIDER_BANK_CONNECTION = 'bank_connection_balance';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_ACTIVE,
         self::STATE_CLOSED,
         self::STATE_PAUSED,
         self::STATE_WAITING,
     ];
 
-    public const TYPE_BUDGET = 'budget';
-    public const TYPE_EXTERNAL = 'external';
-    public const TYPE_SUBSIDIES = 'subsidies';
+    public const string TYPE_BUDGET = 'budget';
+    public const string TYPE_EXTERNAL = 'external';
+    public const string TYPE_SUBSIDIES = 'subsidies';
 
-    public const TYPES = [
+    public const array TYPES = [
         self::TYPE_BUDGET,
         self::TYPE_SUBSIDIES,
         self::TYPE_EXTERNAL,
     ];
 
-    const DESCRIPTION_POSITION_AFTER = 'after';
-    const DESCRIPTION_POSITION_BEFORE = 'before';
-    const DESCRIPTION_POSITION_REPLACE = 'replace';
+    const string DESCRIPTION_POSITION_AFTER = 'after';
+    const string DESCRIPTION_POSITION_BEFORE = 'before';
+    const string DESCRIPTION_POSITION_REPLACE = 'replace';
 
-    const DESCRIPTION_POSITIONS = [
+    const array DESCRIPTION_POSITIONS = [
         self::DESCRIPTION_POSITION_AFTER,
         self::DESCRIPTION_POSITION_BEFORE,
         self::DESCRIPTION_POSITION_REPLACE,
@@ -1548,39 +1547,38 @@ class Fund extends BaseModel
 
     /**
      * @param string $uri
-     * @return string
+     * @return string|null
      */
-    public function urlWebshop(string $uri = "/"): string
+    public function urlWebshop(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlWebshop($uri);
+        return $this->fund_config?->implementation?->urlWebshop($uri);
     }
 
     /**
      * @param string $uri
-     * @return string
+     * @return string|null
      */
-    public function urlSponsorDashboard(string $uri = "/"): string
+    public function urlSponsorDashboard(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlSponsorDashboard($uri);
+        return $this->fund_config?->implementation?->urlSponsorDashboard($uri);
     }
 
     /**
      * @param string $uri
-     * @return string
+     * @return string|null
      */
-    public function urlProviderDashboard(string $uri = "/"): string
+    public function urlProviderDashboard(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlProviderDashboard($uri);
+        return $this->fund_config?->implementation?->urlProviderDashboard($uri);
     }
 
     /**
      * @param string $uri
-     * @return string
-     * @noinspection PhpUnused
+     * @return string|null
      */
-    public function urlValidatorDashboard(string $uri = "/"): string
+    public function urlValidatorDashboard(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlValidatorDashboard($uri);
+        return $this->fund_config?->implementation?->urlValidatorDashboard($uri);
     }
 
     /**

@@ -102,7 +102,7 @@ class ProductReservationsController extends Controller
      */
     public function storeBatch(
         StoreProductReservationBatchRequest $request,
-        Organization $organization
+        Organization $organization,
     ): array {
         $this->authorize('createProviderBatch', [ProductReservation::class, $organization]);
 

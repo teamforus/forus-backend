@@ -199,7 +199,7 @@ class ProductPolicy
         Organization $sponsor,
     ): bool {
         $fundsQuery = FundQuery::whereIsConfiguredByForus($sponsor->funds())->pluck('id');
-        $builder = ProductQuery::approvedForFundsFilter(Product::query(), $fundsQuery->toArray());
+        $builder = ProductQuery::hasPendingOrAcceptedProviderForFund(Product::query(), $fundsQuery->toArray());
 
         return
             $sponsor->identityCan($identity, 'manage_providers') &&

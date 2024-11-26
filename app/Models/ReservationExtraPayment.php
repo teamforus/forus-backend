@@ -9,7 +9,6 @@ use App\Events\ReservationExtraPayments\ReservationExtraPaymentPaid;
 use App\Events\ReservationExtraPayments\ReservationExtraPaymentRefunded;
 use App\Events\ReservationExtraPayments\ReservationExtraPaymentRefundedApi;
 use App\Events\ReservationExtraPayments\ReservationExtraPaymentUpdated;
-use App\Models\Traits\UpdatesModel;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Models\MollieConnection;
@@ -82,7 +81,8 @@ use App\Services\MollieService\Objects\Refund;
  */
 class ReservationExtraPayment extends Model
 {
-    use UpdatesModel, HasLogs, SoftDeletes;
+    use HasLogs;
+    use SoftDeletes;
 
     public const TYPE_MOLLIE = 'mollie';
 
