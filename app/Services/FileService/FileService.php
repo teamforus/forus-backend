@@ -8,6 +8,7 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -75,16 +76,18 @@ class FileService
     /**
      * @param UploadedFile $file
      * @param string $type
+     * @param array $options
      * @return File
      */
-    public function uploadSingle(UploadedFile $file, string $type): File
+    public function uploadSingle(UploadedFile $file, string $type, array $options = []): File
     {
         return $this->doUpload(
             $file->getRealPath(),
             $file->getClientOriginalName(),
             $file->getClientOriginalExtension(),
             $type,
-            $file->getSize()
+            $file->getSize(),
+            $options,
         );
     }
 
@@ -94,6 +97,7 @@ class FileService
      * @param string $ext
      * @param string $type
      * @param string $size
+     * @param array $options
      * @return File
      */
     protected function doUpload(
@@ -101,15 +105,19 @@ class FileService
         string $original_name,
         string $ext,
         string $type,
-        string $size
+        string $size,
+        array $options = []
     ): File {
         $uid = File::makeUid();
         $name = $this->makeUniqueFileName($this->storagePath, $ext);
 
-        $path = str_start($name . '.' . $ext, '/');
-        $path = str_start($this->storagePath . $path, '/');
+        $storagePrefix = Arr::get($options, 'storage_prefix', '');
+        $visibility = Arr::get($options, 'visibility', 'private');
 
-        $this->storage()->put($path, file_get_contents($file_path), 'private');
+        $path = str_start($name . '.' . $ext, '/');
+        $path = str_start($this->storagePath . $storagePrefix . $path, '/');
+
+        $this->storage()->put($path, file_get_contents($file_path), $visibility);
 
         return File::create(compact(
             'uid', 'original_name', 'path', 'size', 'ext', 'type',

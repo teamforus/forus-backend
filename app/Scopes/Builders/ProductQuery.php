@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Lang;
@@ -47,6 +48,24 @@ class ProductQuery
                     $builder->where('excluded', false);
                 });
             });
+        });
+    }
+
+    /**
+     * @param Builder|Product $query
+     * @param Builder|array|int $fund_id
+     * @return Builder|Product
+     */
+    public static function hasPendingOrAcceptedProviderForFund(
+        Builder|Product $query,
+        Builder|array|int $fund_id
+    ): Builder|Product {
+        return $query->whereHas('organization.fund_providers', static function(Builder $builder) use ($fund_id) {
+            $builder->whereIn('fund_id', is_numeric($fund_id) ? [$fund_id] : $fund_id);
+            $builder->whereIn('state', [
+                FundProvider::STATE_PENDING,
+                FundProvider::STATE_ACCEPTED,
+            ]);
         });
     }
 
@@ -358,5 +377,23 @@ class ProductQuery
         return Product::query()->fromSub(Product::fromSub($query, 'products')->selectRaw(
             "*, IF(`unlimited_stock`, NULL, `total_amount` - (`reservations_count` + `transactions_count`)) as `stock_amount`"
         ), 'products');
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function addSelectLastMonitoredChangedDate(Builder $query): Builder
+    {
+        $subQuery = EventLog::where([
+            'loggable_type' => 'product',
+            'event' => Product::EVENT_MONITORED_FIELDS_UPDATED,
+        ])->whereColumn([
+            'loggable_id' => 'products.id',
+        ])->select('event_logs.created_at')->limit(1);
+
+        return $query->addSelect([
+            'last_monitored_change_at' => $subQuery,
+        ]);
     }
 }
