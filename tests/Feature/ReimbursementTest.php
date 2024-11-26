@@ -4,8 +4,6 @@ namespace Tests\Feature;
 
 use App\Mail\Reimbursements\ReimbursementSubmittedMail;
 use App\Models\Employee;
-use App\Models\Fund;
-use App\Models\Identity;
 use App\Models\Note;
 use App\Models\Reimbursement;
 use App\Models\Role;
@@ -17,10 +15,11 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\MakesTestVouchers;
 
 class ReimbursementTest extends TestCase
 {
-    use DatabaseTransactions, WithFaker, AssertsSentEmails;
+    use DatabaseTransactions, WithFaker, AssertsSentEmails, MakesTestVouchers;
 
     /**
      * @var string
@@ -98,7 +97,7 @@ class ReimbursementTest extends TestCase
         $implementation = $this->findImplementation('nijmegen');
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
-        $this->makeInvalidReimbursement($this->makeVoucher($identity, $implementation->funds[0]));
+        $this->makeInvalidReimbursement($this->makeTestVoucher($identity, $implementation->funds[0]));
     }
 
     /**
@@ -109,7 +108,7 @@ class ReimbursementTest extends TestCase
     {
         $implementation = $this->findImplementation('nijmegen');
         $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $voucher = $this->makeVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
 
         // create draft reimbursement
         $reimbursement = $this->makeReimbursement($voucher, false);
@@ -133,7 +132,7 @@ class ReimbursementTest extends TestCase
     {
         $implementation = $this->findImplementation('nijmegen');
         $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $voucher = $this->makeVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
 
         // make reimbursement and sponsor employee
         $reimbursement = $this->makeReimbursement($voucher, true);
@@ -156,7 +155,7 @@ class ReimbursementTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         // make reimbursement and sponsor employee
-        $voucher = $this->makeVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
         $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
@@ -164,7 +163,7 @@ class ReimbursementTest extends TestCase
         $this->assertResolveReimbursementNotAllowed($reimbursement, $employee, true);
 
         // assert that the reimbursement can be assigned by the sponsor
-        $this->assignReimbursementInDashboard($reimbursement, $employee);
+        $this->assignReimbursementInDashboard($reimbursement, $employee, true);
 
         // assert that the reimbursement can be assigned by the sponsor
         $this->resignReimbursementInDashboard($reimbursement, $employee);
@@ -183,15 +182,52 @@ class ReimbursementTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         // make reimbursement and sponsor employee
-        $voucher = $this->makeVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
         $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert that the reimbursement can be assigned by the sponsor
-        $this->assignReimbursementInDashboard($reimbursement, $employee);
+        $this->assignReimbursementInDashboard($reimbursement, $employee, true);
 
         // assert that the reimbursement can be assigned by the sponsor
-        $this->resolveReimbursementInDashboard($reimbursement, $employee, true);
+        $this->resolveReimbursementInDashboard($reimbursement, $employee, true, true);
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function testSponsorApproveReimbursementWithOffset(): void
+    {
+        $implementation = $this->findImplementation('nijmegen');
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+        // make reimbursement and sponsor employee
+        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
+        $reimbursement = $this->makeReimbursement($voucher, true);
+        $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
+
+        $this->expireVoucherAndFund($reimbursement->voucher, now()->subDay())->refresh();
+
+        $voucher->fund->fund_config->update([
+            'reimbursement_approve_offset' => 0,
+        ]);
+
+        // assert that the reimbursement can be assigned by the sponsor
+        $this->assignReimbursementInDashboard($reimbursement, $employee, false);
+
+        // assert that the reimbursement can be assigned by the sponsor
+        $this->resolveReimbursementInDashboard($reimbursement, $employee, true, false);
+
+        $voucher->fund->fund_config->update([
+            'reimbursement_approve_offset' => 1,
+        ]);
+
+        // assert that the reimbursement can be assigned by the sponsor
+        $this->assignReimbursementInDashboard($reimbursement, $employee, true);
+
+        // assert that the reimbursement can be assigned by the sponsor
+        $this->resolveReimbursementInDashboard($reimbursement, $employee, true, true);
     }
 
     /**
@@ -204,15 +240,15 @@ class ReimbursementTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         // make reimbursement and sponsor employee
-        $voucher = $this->makeVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
         $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert that the reimbursement can be assigned by the sponsor
-        $this->assignReimbursementInDashboard($reimbursement, $employee);
+        $this->assignReimbursementInDashboard($reimbursement, $employee, true);
 
         // assert that the reimbursement can be assigned by the sponsor
-        $this->resolveReimbursementInDashboard($reimbursement, $employee, false);
+        $this->resolveReimbursementInDashboard($reimbursement, $employee, false, true);
     }
 
     /**
@@ -225,13 +261,13 @@ class ReimbursementTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         // make reimbursement and sponsor employee
-        $voucher = $this->makeVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
         $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
         $unassignedEmployee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert that the reimbursement can be assigned by the sponsor
-        $this->assignReimbursementInDashboard($reimbursement, $employee);
+        $this->assignReimbursementInDashboard($reimbursement, $employee, true);
 
         // assert that the user can add notes to reimbursement
         $this->assertEmployeeCanAddNotesToReimbursement($reimbursement, $employee, $unassignedEmployee);
@@ -291,19 +327,26 @@ class ReimbursementTest extends TestCase
     /**
      * @param Reimbursement $reimbursement
      * @param Employee $employee
+     * @param bool $assertSuccess
      * @return void
      */
     protected function assignReimbursementInDashboard(
         Reimbursement $reimbursement,
-        Employee $employee
+        Employee $employee,
+        bool $assertSuccess,
     ): void {
         $endpoint = "/api/v1/platform/organizations/$employee->organization_id/reimbursements";
         $headers = $this->makeApiHeaders($employee->identity);
 
         $response = $this->postJson("$endpoint/$reimbursement->id/assign", [], $headers);
-        $response->assertSuccessful();
-        $response->assertJsonPath('data.id', $reimbursement->id);
-        $response->assertJsonPath('data.employee_id', $employee->id);
+
+        if ($assertSuccess) {
+            $response->assertSuccessful();
+            $response->assertJsonPath('data.id', $reimbursement->id);
+            $response->assertJsonPath('data.employee_id', $employee->id);
+        } else {
+            $response->assertForbidden();
+        }
     }
 
     /**
@@ -328,12 +371,14 @@ class ReimbursementTest extends TestCase
      * @param Reimbursement $reimbursement
      * @param Employee $employee
      * @param bool $approve
+     * @param bool $assertSuccess
      * @return void
      */
     protected function resolveReimbursementInDashboard(
         Reimbursement $reimbursement,
         Employee $employee,
-        bool $approve
+        bool $approve,
+        bool $assertSuccess,
     ): void {
         $headers = $this->makeApiHeaders($employee->identity);
         $assertState = $approve ? $reimbursement::STATE_APPROVED : $reimbursement::STATE_DECLINED;
@@ -342,9 +387,14 @@ class ReimbursementTest extends TestCase
         $endpoint = "$endpoint/$reimbursement->id/" . ($approve ? 'approve' : 'decline');
 
         $response = $this->postJson($endpoint, [], $headers);
-        $response->assertSuccessful();
-        $response->assertJsonPath('data.id', $reimbursement->id);
-        $response->assertJsonPath('data.state', $assertState);
+
+        if ($assertSuccess) {
+            $response->assertSuccessful();
+            $response->assertJsonPath('data.id', $reimbursement->id);
+            $response->assertJsonPath('data.state', $assertState);
+        } else {
+            $response->assertForbidden();
+        }
     }
 
     /**
@@ -527,15 +577,5 @@ class ReimbursementTest extends TestCase
         $response->assertCreated();
 
         return $response;
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Fund $fund
-     * @return Voucher
-     */
-    protected function makeVoucher(Identity $identity, Fund $fund): Voucher
-    {
-        return $fund->makeVoucher($identity->address);
     }
 }

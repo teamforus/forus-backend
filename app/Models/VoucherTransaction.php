@@ -187,9 +187,9 @@ class VoucherTransaction extends BaseModel
         self::TARGET_TOP_UP,
     ];
 
-    public const SORT_BY_FIELDS = [
+    public const array SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'transfer_in', 'fund_name',
-        'provider_name', 'product_name', 'target', 'uid', 'date_non_cancelable', 'bulk_state',
+        'provider_name', 'product_name', 'target', 'uid', 'date_non_cancelable', 'bulk_state', 'bulk_id',
         'payment_type', 'employee_email', 'relation', 'transfer_at', 'target_iban', 'description',
     ];
 

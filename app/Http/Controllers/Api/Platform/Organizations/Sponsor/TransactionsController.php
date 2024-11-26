@@ -155,16 +155,19 @@ class TransactionsController extends Controller
      */
     public function storeBatch(
         StoreTransactionBatchRequest $request,
-        Organization $organization
+        Organization $organization,
     ) {
         $this->authorize('storeBatchAsSponsor', [VoucherTransaction::class, $organization]);
 
-        $transactions = $request->input('transactions');
+        $file = $request->post('file');
         $employee = $request->employee($organization);
+        $transactions = $request->input('transactions');
 
         $index = 0;
         $createdItems = [];
         $errorsItems = [];
+
+        $event = $employee->logCsvUpload($employee::EVENT_UPLOADED_TRANSACTIONS, $file, $transactions);
 
         while (count($transactions) > $index) {
             $slice = array_slice($transactions, $index++, 1, true);
@@ -186,6 +189,11 @@ class TransactionsController extends Controller
         }
 
         $query = VoucherTransaction::query()->whereIn('id', $createdItems);
+
+        $event->forceFill([
+            'data->uploaded_file_meta->state' => 'success',
+            'data->uploaded_file_meta->created_ids' => (clone $query)->pluck('id')->toArray(),
+        ])->update();
 
         return new JsonResponse([
             'created' => SponsorVoucherTransactionResource::queryCollection($query, (clone $query)->count()),
