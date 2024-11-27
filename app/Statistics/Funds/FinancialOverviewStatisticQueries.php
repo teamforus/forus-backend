@@ -114,10 +114,7 @@ class FinancialOverviewStatisticQueries
     public static function getFundBudgetTotal(Fund $fund, Carbon $from, Carbon $to): float
     {
         if ($fund->balance_provider === Fund::BALANCE_PROVIDER_TOP_UPS) {
-            return round($fund->top_up_transactions()
-                ->where('fund_top_up_transactions.created_at', '>=', $from)
-                ->where('fund_top_up_transactions.created_at', '<=', $to)
-                ->sum('amount'), 2);
+            return round($fund->top_up_transactions()->sum('amount'), 2);
         }
 
         if ($fund->balance_provider === Fund::BALANCE_PROVIDER_BANK_CONNECTION) {
