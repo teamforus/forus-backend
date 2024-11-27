@@ -107,18 +107,16 @@ class FinancialOverviewStatisticQueries
 
     /**
      * @param Fund $fund
-     * @param Carbon $from
-     * @param Carbon $to
      * @return float
      */
-    public static function getFundBudgetTotal(Fund $fund, Carbon $from, Carbon $to): float
+    public static function getFundBudgetTotal(Fund $fund): float
     {
         if ($fund->balance_provider === Fund::BALANCE_PROVIDER_TOP_UPS) {
             return round($fund->top_up_transactions()->sum('amount'), 2);
         }
 
         if ($fund->balance_provider === Fund::BALANCE_PROVIDER_BANK_CONNECTION) {
-            return round(floatval($fund->balance) + self::getFundBudgetUsed($fund, $from, $to), 2);
+            return round(floatval($fund->balance) + self::getFundBudgetUsed($fund), 2);
         }
 
         return 0;
@@ -126,29 +124,22 @@ class FinancialOverviewStatisticQueries
 
     /**
      * @param Fund $fund
-     * @param Carbon $from
-     * @param Carbon $to
      * @return float
      */
-    public static function getFundBudgetUsed(Fund $fund, Carbon $from, Carbon $to): float
+    public static function getFundBudgetUsed(Fund $fund): float
     {
-        return round($fund->voucher_transactions()
-            ->where('voucher_transactions.created_at', '>=', $from)
-            ->where('voucher_transactions.created_at', '<=', $to)
-            ->sum('voucher_transactions.amount'), 2);
+        return round($fund->voucher_transactions()->sum('voucher_transactions.amount'), 2);
     }
 
     /**
      * @param Fund $fund
-     * @param Carbon $from
-     * @param Carbon $to
      * @return float
      */
-    public static function getFundBudgetLeft(Fund $fund, Carbon $from, Carbon $to): float
+    public static function getFundBudgetLeft(Fund $fund): float
     {
         if ($fund->balance_provider === Fund::BALANCE_PROVIDER_TOP_UPS) {
             return round(
-                self::getFundBudgetTotal($fund, $from, $to) - self::getFundBudgetUsed($fund, $from, $to),
+                self::getFundBudgetTotal($fund) - self::getFundBudgetUsed($fund),
                 2
             );
         }
@@ -177,11 +168,9 @@ class FinancialOverviewStatisticQueries
 
     /**
      * @param Fund $fund
-     * @param Carbon $from
-     * @param Carbon $to
      * @return float
      */
-    public static function getFundTransactionCosts(Fund $fund, Carbon $from, Carbon $to): float
+    public static function getFundTransactionCosts(Fund $fund): float
     {
         $costs = 0;
         $state = VoucherTransaction::STATE_SUCCESS;
@@ -190,13 +179,11 @@ class FinancialOverviewStatisticQueries
 
         foreach (Bank::get() as $bank) {
             $costs += $fund->voucher_transactions()
-                    ->where('voucher_transactions.amount', '>', 0)
-                    ->where('voucher_transactions.state', $state)
-                    ->whereIn('voucher_transactions.target', $targets)
-                    ->whereRelation('voucher_transaction_bulk.bank_connection', 'bank_id', $bank->id)
-                    ->where('voucher_transactions.created_at', '>=', $from)
-                    ->where('voucher_transactions.created_at', '<=', $to)
-                    ->count() * $bank->transaction_cost;
+                ->where('voucher_transactions.amount', '>', 0)
+                ->where('voucher_transactions.state', $state)
+                ->whereIn('voucher_transactions.target', $targets)
+                ->whereRelation('voucher_transaction_bulk.bank_connection', 'bank_id', $bank->id)
+                ->count() * $bank->transaction_cost;
         }
 
         $costs += $fund->voucher_transactions()
@@ -204,8 +191,6 @@ class FinancialOverviewStatisticQueries
                 ->where('voucher_transactions.state', $state)
                 ->whereIn('voucher_transactions.target', $targets)
                 ->whereDoesntHave('voucher_transaction_bulk')
-                ->where('voucher_transactions.created_at', '>=', $from)
-                ->where('voucher_transactions.created_at', '<=', $to)
                 ->count() * $targetCostOld;
 
         return $costs;
