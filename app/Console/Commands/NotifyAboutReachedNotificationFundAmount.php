@@ -6,7 +6,10 @@ use App\Events\Funds\FundBalanceLowEvent;
 use App\Models\Fund;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Throwable;
 
 class NotifyAboutReachedNotificationFundAmount extends Command
 {
@@ -39,14 +42,14 @@ class NotifyAboutReachedNotificationFundAmount extends Command
                     FundBalanceLowEvent::dispatch($fund);
                 }
             }
-        } catch (\Throwable) {}
+        } catch (Throwable) {}
     }
 
     /**
      * @param int $notificationInterval
-     * @return Fund[]|Builder[]|\Illuminate\Database\Eloquent\Collection
+     * @return Fund[]|Builder[]|Collection
      */
-    public function getLowBalanceFunds(int $notificationInterval = 7)
+    public function getLowBalanceFunds(int $notificationInterval = 7): Collection|Arrayable
     {
         $fundsQuery = Fund::where(function (Builder $query) {
             FundQuery::whereActiveFilter($query);
