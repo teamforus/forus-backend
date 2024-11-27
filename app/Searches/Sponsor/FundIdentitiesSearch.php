@@ -13,19 +13,24 @@ use Illuminate\Support\Arr;
 class FundIdentitiesSearch extends BaseSearch
 {
     /**
-     * ProductReservationsSearch constructor.
+     * FundIdentitiesSearch constructor.
      * @param array $filters
      * @param Fund $fund
+     * @param bool $appendCounts
      */
-    public function __construct(array $filters, Fund $fund)
-    {
+    public function __construct(
+        array $filters,
+        Fund $fund,
+        bool $appendCounts = false,
+    ) {
         $withBalance = Arr::get($filters, 'target', 'all') === 'has_balance';
         $withEmail = Arr::get($filters, 'has_email', true);
         $withReservations = Arr::get($filters, 'with_reservations', false);
         $builder = $fund->activeIdentityQuery($withBalance, $withEmail);
 
-        IdentityQuery::appendVouchersCountFields($builder, $fund, $withReservations);
-        IdentityQuery::appendEmailField($builder);
+        if ($appendCounts) {
+            IdentityQuery::appendVouchersCountFields($builder, $fund, $withReservations);
+        }
 
         parent::__construct($filters, $builder);
     }
