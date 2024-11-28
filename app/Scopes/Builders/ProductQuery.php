@@ -52,6 +52,24 @@ class ProductQuery
     }
 
     /**
+     * @param Builder|Product $query
+     * @param Builder|array|int $fund_id
+     * @return Builder|Product
+     */
+    public static function hasPendingOrAcceptedProviderForFund(
+        Builder|Product $query,
+        Builder|array|int $fund_id
+    ): Builder|Product {
+        return $query->whereHas('organization.fund_providers', static function(Builder $builder) use ($fund_id) {
+            $builder->whereIn('fund_id', is_numeric($fund_id) ? [$fund_id] : $fund_id);
+            $builder->whereIn('state', [
+                FundProvider::STATE_PENDING,
+                FundProvider::STATE_ACCEPTED,
+            ]);
+        });
+    }
+
+    /**
      * @param Builder|Relation|Product $query
      * @param array|int $fund_id
      * @return Builder|Relation|Product

@@ -27,6 +27,7 @@ class ProductSearch extends BaseSearch
     {
         /** @var Product|Builder $builder */
         $builder = parent::query();
+        $fundsIds = $this->getFilter('fund_ids', []);
 
         // filter by unlimited stock
         if ($this->hasFilter('unlimited_stock')) {
@@ -35,7 +36,15 @@ class ProductSearch extends BaseSearch
 
         // filter by string query
         if ($this->hasFilter('q') && !empty($q = $this->getFilter('q'))) {
-            ProductQuery::queryFilter($builder, $q);
+            ProductQuery::queryDeepFilter($builder, $q);
+        }
+
+        if ($this->getFilter('state') === 'approved') {
+            $builder = ProductQuery::approvedForFundsFilter($builder, $fundsIds);
+        }
+
+        if ($this->getFilter('state') === 'pending') {
+            $builder = ProductQuery::notApprovedForFundsFilter($builder, $fundsIds);
         }
 
         // filter by string query
