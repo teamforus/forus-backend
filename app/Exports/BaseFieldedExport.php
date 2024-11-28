@@ -26,7 +26,7 @@ abstract class BaseFieldedExport implements FromCollection, WithHeadings
     {
         $headings = $this->data->reduce(fn($list, $row) => array_merge($list, array_keys($row)), []);
 
-        return array_map(static function($key) use ($headings) {
+        return array_map(static function($key) {
             return static::$exportFields[$key] ?? $key;
         }, array_unique($headings));
     }
