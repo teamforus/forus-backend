@@ -1979,6 +1979,17 @@ class Fund extends BaseModel
     }
 
     /**
+     * @return void
+     */
+    public function removePreCheckExclusion(): void
+    {
+        $this->updateFundsConfig([
+            'pre_check_note' => null,
+            'pre_check_excluded' => false,
+        ]);
+    }
+
+    /**
      * @param string $error
      * @param array $data
      * @return void

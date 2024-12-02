@@ -38,6 +38,7 @@ class SyncPreCheckRequest extends BaseFormRequest
             ...$this->preCheckRecordRules(),
             ...$this->preCheckRecordSettingRules(),
             ...$this->preCheckFundExclusionRules(),
+            ...$this->preCheckFundExclusionRemoveRules(),
         ];
     }
 
@@ -103,20 +104,40 @@ class SyncPreCheckRequest extends BaseFormRequest
     private function preCheckFundExclusionRules(): array
     {
         return [
-            'fund_exclusion' => 'nullable|array',
-            'fund_exclusion.fund_id' => [
+            'exclusion' => 'nullable|array',
+            'exclusion.fund_id' => [
                 'required_with::exclude_fund',
                 'exists:funds,id',
                 Rule::in($this->organization->funds->pluck('id')->toArray()),
             ],
-            'fund_exclusion.excluded' => [
+            'exclusion.excluded' => [
                 'nullable',
                 'boolean',
             ],
-            'fund_exclusion.note' => [
+            'exclusion.remove' => [
+                'nullable',
+                'boolean',
+            ],
+            'exclusion.note' => [
+                'required_if:exclusion.excluded,false',
                 'nullable',
                 'string',
+                'min:5',
                 'max:2000',
+            ],
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    private function preCheckFundExclusionRemoveRules(): array
+    {
+        return [
+            'exclusions_remove' => 'nullable|array',
+            'exclusions_remove.*' => [
+                'exists:funds,id',
+                Rule::in($this->organization->funds->pluck('id')->toArray()),
             ],
         ];
     }
@@ -133,6 +154,17 @@ class SyncPreCheckRequest extends BaseFormRequest
             'pre_checks.*.record_types.*.title' => 'title',
             'pre_checks.*.record_types.*.title_short' => 'short title',
             'pre_checks.*.record_types.*.record_type_key' => 'key',
+            'exclusion_remove.*' => 'fonds',
+            'exclusion.fund_id' => 'fonds',
+            'exclusion.note' => 'uitleg',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            ...parent::messages(),
+            'exclusion.note.required_if' => trans('validation.required'),
         ];
     }
 }

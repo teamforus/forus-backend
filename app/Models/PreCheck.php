@@ -81,10 +81,6 @@ class PreCheck extends BaseModel
 
         $fundsQuery->whereDoesntHave('fund_config', function (Builder $builder) {
             $builder->where('pre_check_excluded', true);
-            $builder->where(function(Builder $builder) {
-                $builder->where('pre_check_note', '');
-                $builder->orWhereNull('pre_check_note');
-            });
         });
 
         if ($identity) {

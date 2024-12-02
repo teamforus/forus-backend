@@ -388,27 +388,35 @@ $baseColor = $borderColors[0] ?? '#cecece';
                         <strong>{{ $fund['name'] }} </strong>
                     </td>
                     <td>
-                        @if ($fund['is_valid'])
-                            Goede kans
+                        @if ($fund['pre_check_note'] ?? false)
+                            -
                         @else
-                            Gemiddelde of lage kans
-                        @endif     
+                            @if ($fund['is_valid'])
+                                Goede kans
+                            @else
+                                Gemiddelde of lage kans
+                            @endif
+                        @endif
                     </td>
                     <td>
-                        @if ($fund['is_valid'])
-                            De regeling kunt u aanvragen
-
-                            @if ($fund['is_external'] && $fund['external_link_url'])
-                                via
-                                <a href="{{ $fund['external_link_url'] }}">{{ $fund['external_link_text'] ?: 'Externe website bekijken' }}</a>
-                            @endif
-
+                        @if ($fund['pre_check_note'] ?? false)
+                            {{ $fund['pre_check_note'] }}
                         @else
-                            U komt waarschijnlijk niet in aanmerking voor deze regeling.
+                            @if ($fund['is_valid'])
+                                De regeling kunt u aanvragen
 
-                            @if ($fund['is_external'] && $fund['external_link_url'])
-                                Meer weten? Klik op de link:
-                                <a href="{{ $fund['external_link_url'] }}">{{ $fund['external_link_text'] ?: 'Externe website bekijken' }}</a>
+                                @if ($fund['is_external'] && $fund['external_link_url'])
+                                    via
+                                    <a href="{{ $fund['external_link_url'] }}">{{ $fund['external_link_text'] ?: 'Externe website bekijken' }}</a>
+                                @endif
+
+                            @else
+                                U komt waarschijnlijk niet in aanmerking voor deze regeling.
+
+                                @if ($fund['is_external'] && $fund['external_link_url'])
+                                    Meer weten? Klik op de link:
+                                    <a href="{{ $fund['external_link_url'] }}">{{ $fund['external_link_text'] ?: 'Externe website bekijken' }}</a>
+                                @endif
                             @endif
                         @endif
                     </td>
