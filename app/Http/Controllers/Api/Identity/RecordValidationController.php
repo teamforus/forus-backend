@@ -43,8 +43,9 @@ class RecordValidationController extends Controller
             return new JsonResponse(['message' => "Not found"], 404);
         }
 
-        $organizations = Organization::query()
-            ->queryByIdentityPermissions($identityAddress, Permission::VALIDATE_RECORDS)
+        $organizations = Organization::queryByIdentityPermissions(
+            $identityAddress, Permission::VALIDATE_RECORDS
+        )
             ->select('id', 'name')
             ->get();
 
