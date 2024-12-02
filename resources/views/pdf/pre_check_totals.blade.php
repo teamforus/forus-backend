@@ -389,7 +389,7 @@ $baseColor = $borderColors[0] ?? '#cecece';
                     </td>
                     <td>
                         @if ($fund['pre_check_note'] ?? false)
-                            -
+                            Geen advies beschikbaar
                         @else
                             @if ($fund['is_valid'])
                                 Goede kans
