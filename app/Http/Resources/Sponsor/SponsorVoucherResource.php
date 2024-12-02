@@ -16,12 +16,12 @@ class SponsorVoucherResource extends BaseJsonResource
     /**
      * @var array
      */
-    public const LOAD = [
+    public const array LOAD = [
         'token_without_confirmation',
         'transactions.voucher.fund.logo.presets',
         'transactions.provider.logo.presets',
         'transactions.product.photo.presets',
-        'product_vouchers',
+        'product_vouchers.paid_out_transactions',
         'reimbursements_pending',
         'fund.fund_config.implementation',
         'fund.organization',
