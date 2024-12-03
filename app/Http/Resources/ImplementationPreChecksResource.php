@@ -112,9 +112,9 @@ class ImplementationPreChecksResource extends BaseJsonResource
                     'id' => $fund->id,
                     'name' => $fund->name,
                     'implementation' => [
-                        'id' => $fund->fund_config->implementation->id,
-                        'name' => $fund->fund_config->implementation->name,
-                        'url_webshop' => $fund->fund_config->implementation->urlWebshop(),
+                        'id' => $fund->fund_config->implementation?->id,
+                        'name' => $fund->fund_config->implementation?->name,
+                        'url_webshop' => $fund->fund_config->implementation?->urlWebshop(),
                     ],
                 ])->toArray(),
                 'record_type' => RecordTypeResource::create($recordType)->toArray(request()),
