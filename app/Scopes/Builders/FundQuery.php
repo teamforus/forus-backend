@@ -62,13 +62,15 @@ class FundQuery
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|Relation|Fund $query
      * @param Product $product
-     * @return Builder
+     * @return Builder|Relation|Fund
      * @noinspection PhpUnused
      */
-    public static function whereProductsAreApprovedFilter(Builder $query, Product $product): Builder
-    {
+    public static function whereProductsAreApprovedFilter(
+        Builder|Relation|Fund $query,
+        Product $product
+    ): Builder|Relation|Fund {
         if ($product->sponsor_organization_id) {
             $query->where('organization_id', $product->sponsor_organization_id);
         }
@@ -104,14 +106,14 @@ class FundQuery
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|Relation|Fund $query
      * @param Product $product
-     * @return Builder
+     * @return Builder|Relation|Fund
      */
     public static function whereProductsAreApprovedAndActiveFilter(
-        Builder $query,
+        Builder|Relation|Fund $query,
         Product $product
-    ): Builder {
+    ): Builder|Relation|Fund {
         return self::whereProductsAreApprovedFilter(self::whereActiveFilter($query), $product);
     }
 

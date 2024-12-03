@@ -101,6 +101,8 @@ use ZipArchive;
  * @property-read bool $is_external
  * @property-read bool $is_granted
  * @property-read \Illuminate\Support\Carbon|null $last_active_day
+ * @property-read bool $reimbursement_approval_time_expired
+ * @property-read bool $reservation_approval_time_expired
  * @property-read string $source_locale
  * @property-read string $state_locale
  * @property-read string $type
@@ -140,31 +142,31 @@ use ZipArchive;
  * @property-read Collection|\App\Models\VoucherRecord[] $voucher_records
  * @property-read int|null $voucher_records_count
  * @property-read \App\Models\VoucherRelation|null $voucher_relation
- * @method static Builder|Voucher newModelQuery()
- * @method static Builder|Voucher newQuery()
- * @method static Builder|Voucher query()
- * @method static Builder|Voucher whereActivationCode($value)
- * @method static Builder|Voucher whereAmount($value)
- * @method static Builder|Voucher whereClientUid($value)
- * @method static Builder|Voucher whereCreatedAt($value)
- * @method static Builder|Voucher whereEmployeeId($value)
- * @method static Builder|Voucher whereExpireAt($value)
- * @method static Builder|Voucher whereFundAmountPresetId($value)
- * @method static Builder|Voucher whereFundBackofficeLogId($value)
- * @method static Builder|Voucher whereFundId($value)
- * @method static Builder|Voucher whereFundRequestId($value)
- * @method static Builder|Voucher whereId($value)
- * @method static Builder|Voucher whereIdentityAddress($value)
- * @method static Builder|Voucher whereLimitMultiplier($value)
- * @method static Builder|Voucher whereNote($value)
- * @method static Builder|Voucher whereNumber($value)
- * @method static Builder|Voucher whereParentId($value)
- * @method static Builder|Voucher whereProductId($value)
- * @method static Builder|Voucher whereProductReservationId($value)
- * @method static Builder|Voucher whereReturnable($value)
- * @method static Builder|Voucher whereState($value)
- * @method static Builder|Voucher whereUpdatedAt($value)
- * @method static Builder|Voucher whereVoucherType($value)
+ * @method static Builder<static>|Voucher newModelQuery()
+ * @method static Builder<static>|Voucher newQuery()
+ * @method static Builder<static>|Voucher query()
+ * @method static Builder<static>|Voucher whereActivationCode($value)
+ * @method static Builder<static>|Voucher whereAmount($value)
+ * @method static Builder<static>|Voucher whereClientUid($value)
+ * @method static Builder<static>|Voucher whereCreatedAt($value)
+ * @method static Builder<static>|Voucher whereEmployeeId($value)
+ * @method static Builder<static>|Voucher whereExpireAt($value)
+ * @method static Builder<static>|Voucher whereFundAmountPresetId($value)
+ * @method static Builder<static>|Voucher whereFundBackofficeLogId($value)
+ * @method static Builder<static>|Voucher whereFundId($value)
+ * @method static Builder<static>|Voucher whereFundRequestId($value)
+ * @method static Builder<static>|Voucher whereId($value)
+ * @method static Builder<static>|Voucher whereIdentityAddress($value)
+ * @method static Builder<static>|Voucher whereLimitMultiplier($value)
+ * @method static Builder<static>|Voucher whereNote($value)
+ * @method static Builder<static>|Voucher whereNumber($value)
+ * @method static Builder<static>|Voucher whereParentId($value)
+ * @method static Builder<static>|Voucher whereProductId($value)
+ * @method static Builder<static>|Voucher whereProductReservationId($value)
+ * @method static Builder<static>|Voucher whereReturnable($value)
+ * @method static Builder<static>|Voucher whereState($value)
+ * @method static Builder<static>|Voucher whereUpdatedAt($value)
+ * @method static Builder<static>|Voucher whereVoucherType($value)
  * @mixin \Eloquent
  */
 class Voucher extends BaseModel
@@ -174,53 +176,53 @@ class Voucher extends BaseModel
     use HasUniqueNumber;
     use HasFormattedTimestamps;
 
-    public const EVENT_CREATED_BUDGET = 'created_budget';
-    public const EVENT_CREATED_PRODUCT = 'created_product';
-    public const EVENT_SHARED = 'shared';
-    public const EVENT_EXPIRED_BUDGET = 'expired';
-    public const EVENT_EXPIRED_PRODUCT = 'expired';
-    public const EVENT_EXPIRING_SOON_BUDGET = 'expiring_soon_budget';
-    public const EVENT_EXPIRING_SOON_PRODUCT = 'expiring_soon_product';
-    public const EVENT_ASSIGNED = 'assigned';
-    public const EVENT_ACTIVATED = 'activated';
-    public const EVENT_DEACTIVATED = 'deactivated';
+    public const string EVENT_CREATED_BUDGET = 'created_budget';
+    public const string EVENT_CREATED_PRODUCT = 'created_product';
+    public const string EVENT_SHARED = 'shared';
+    public const string EVENT_EXPIRED_BUDGET = 'expired';
+    public const string EVENT_EXPIRED_PRODUCT = 'expired';
+    public const string EVENT_EXPIRING_SOON_BUDGET = 'expiring_soon_budget';
+    public const string EVENT_EXPIRING_SOON_PRODUCT = 'expiring_soon_product';
+    public const string EVENT_ASSIGNED = 'assigned';
+    public const string EVENT_ACTIVATED = 'activated';
+    public const string EVENT_DEACTIVATED = 'deactivated';
 
-    public const EVENT_TRANSACTION = 'transaction';
-    public const EVENT_TRANSACTION_PRODUCT = 'transaction_product';
-    public const EVENT_TRANSACTION_SUBSIDY = 'transaction_subsidy';
+    public const string EVENT_TRANSACTION = 'transaction';
+    public const string EVENT_TRANSACTION_PRODUCT = 'transaction_product';
+    public const string EVENT_TRANSACTION_SUBSIDY = 'transaction_subsidy';
 
-    public const EVENT_SHARED_BY_EMAIL = 'shared_by_email';
-    public const EVENT_PHYSICAL_CARD_REQUESTED = 'physical_card_requested';
+    public const string EVENT_SHARED_BY_EMAIL = 'shared_by_email';
+    public const string EVENT_PHYSICAL_CARD_REQUESTED = 'physical_card_requested';
 
-    public const EVENT_LIMIT_MULTIPLIER_CHANGED = 'limit_multiplier_changed';
+    public const string EVENT_LIMIT_MULTIPLIER_CHANGED = 'limit_multiplier_changed';
 
-    public const TYPE_BUDGET = 'regular';
-    public const TYPE_PRODUCT = 'product';
+    public const string TYPE_BUDGET = 'regular';
+    public const string TYPE_PRODUCT = 'product';
 
-    public const VOUCHER_TYPE_PAYOUT = 'payout';
-    public const VOUCHER_TYPE_VOUCHER = 'voucher';
+    public const string VOUCHER_TYPE_PAYOUT = 'payout';
+    public const string VOUCHER_TYPE_VOUCHER = 'voucher';
 
-    public const STATE_ACTIVE = 'active';
-    public const STATE_PENDING = 'pending';
-    public const STATE_DEACTIVATED = 'deactivated';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_DEACTIVATED = 'deactivated';
 
-    public const EVENTS_TRANSACTION = [
+    public const array EVENTS_TRANSACTION = [
         self::EVENT_TRANSACTION,
         self::EVENT_TRANSACTION_PRODUCT,
         self::EVENT_TRANSACTION_SUBSIDY,
     ];
 
-    public const EVENTS_CREATED = [
+    public const array EVENTS_CREATED = [
         self::EVENT_CREATED_BUDGET,
         self::EVENT_CREATED_PRODUCT,
     ];
 
-    public const TYPES = [
+    public const array TYPES = [
         self::TYPE_BUDGET,
         self::TYPE_PRODUCT,
     ];
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_ACTIVE,
         self::STATE_PENDING,
         self::STATE_DEACTIVATED,
@@ -663,6 +665,36 @@ class Voucher extends BaseModel
     public function getExpiredAttribute(): bool
     {
         return $this->fund->end_date->endOfDay()->isPast() || $this->expire_at->endOfDay()->isPast();
+    }
+
+    /**
+     * The voucher is expired
+     *
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getReservationApprovalTimeExpiredAttribute(): bool
+    {
+        $reservationDaysOffset = $this->fund->fund_config->reservation_approve_offset;
+
+        return
+            $this->fund->end_date->clone()->addDays($reservationDaysOffset)->endOfDay()->isPast() ||
+            $this->expire_at->clone()->addDays($reservationDaysOffset)->endOfDay()->isPast();
+    }
+
+    /**
+     * The voucher is expired
+     *
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getReimbursementApprovalTimeExpiredAttribute(): bool
+    {
+        $reservationDaysOffset = $this->fund->fund_config->reimbursement_approve_offset;
+
+        return
+            $this->fund->end_date->clone()->addDays($reservationDaysOffset)->endOfDay()->isPast() ||
+            $this->expire_at->clone()->addDays($reservationDaysOffset)->endOfDay()->isPast();
     }
 
     /**
@@ -1113,7 +1145,6 @@ class Voucher extends BaseModel
             'product_id'                => $product->id,
             'employee_id'               => $employee?->id,
             'fund_provider_product_id'  => $fundProviderProduct?->id,
-            'expire_at'                 => $this->calcExpireDateForProduct($product),
             'amount_extra'              => $extraAmount,
         ], array_only($extraData, [
             'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
@@ -1164,15 +1195,15 @@ class Voucher extends BaseModel
 
     /**
      * Calculate expiration date for product when bought using this voucher.
-     * @param Product $product
+     * @param Product|null $product
      * @return Carbon|null
      */
-    public function calcExpireDateForProduct(Product $product): ?Carbon
+    public function calcExpireDateForProduct(Product $product = null): ?Carbon
     {
         return array_first(array_sort(array_filter([
-            $product->expire_at,
-            $this->expire_at,
-            $this->fund->end_date
+            $product?->expire_at,
+            $this->expire_at->clone()->addDays($this->fund->fund_config->reservation_approve_offset),
+            $this->fund->end_date->clone()->addDays($this->fund->fund_config->reservation_approve_offset),
         ])));
     }
 

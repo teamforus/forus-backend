@@ -4,7 +4,7 @@ cp -n .env.docker .env
 rm -f public/storage
 rm -rf vendor
 
-docker compose up -d
+docker compose --profile phpmyadmin up -d
 
 echo "Composer install"
 docker compose exec app composer install

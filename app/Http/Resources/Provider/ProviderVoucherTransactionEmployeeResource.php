@@ -42,9 +42,11 @@ class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
             'created_at_locale' => format_datetime_locale($transaction->created_at),
             'updated_at_locale' => format_datetime_locale($transaction->updated_at),
             'amount' => currency_format($transaction->amount),
+            'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
+            'amount_extra_cash_locale' => currency_format_locale($transaction->amount_extra_cash),
             'product_price' => $product_price ? currency_format($product_price) : null,
             'cancelable' => $transaction->isCancelable(),
-            'transaction_in' => $transaction->daysBeforeTransaction(),
+            'transfer_in' => $transaction->daysBeforeTransaction(),
             "organization" => array_merge($transaction->provider->only([
                 "id", "name"
             ]), [

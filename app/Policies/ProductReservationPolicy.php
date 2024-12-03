@@ -196,7 +196,7 @@ class ProductReservationPolicy
             return $this->deny('The voucher used to make the reservation, is not active.');
         }
 
-        if ($productReservation->voucher->expired) {
+        if ($productReservation->voucher->reservation_approval_time_expired) {
             return $this->deny('The voucher used to make the reservation, has expired.');
         }
 

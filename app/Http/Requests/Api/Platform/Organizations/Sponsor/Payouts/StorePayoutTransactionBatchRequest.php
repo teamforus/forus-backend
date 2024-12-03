@@ -34,6 +34,7 @@ class StorePayoutTransactionBatchRequest extends StorePayoutTransactionRequest
             'payouts.*.target_iban' => $this->targetIbanRules(),
             'payouts.*.target_name' => $this->targetNameRules(),
             'payouts.*.description' => $this->descriptionRules(),
+            ...$this->uploadedCSVFileRules(),
         ];
     }
 
@@ -48,6 +49,16 @@ class StorePayoutTransactionBatchRequest extends StorePayoutTransactionRequest
             'payouts.*.target_iban' => trans('validation.attributes.iban'),
             'payouts.*.target_name' => trans('validation.attributes.iban_name'),
             'payouts.*.description' => trans('validation.attributes.description'),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'payouts.*.email' => 'Vul een geldig e-mailadres in, bijvoorbeeld naam@voorbeeld.com',
         ];
     }
 }
