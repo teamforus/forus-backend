@@ -16,6 +16,7 @@ use Illuminate\Support\Arr;
  * @property int $id
  * @property string $key
  * @property string $type
+ * @property string $control_type
  * @property int|null $organization_id
  * @property bool $system
  * @property bool $criteria
@@ -43,6 +44,7 @@ use Illuminate\Support\Arr;
  * @method static Builder|RecordType query()
  * @method static Builder|RecordType translated()
  * @method static Builder|RecordType translatedIn(?string $locale = null)
+ * @method static Builder|RecordType whereControlType($value)
  * @method static Builder|RecordType whereCreatedAt($value)
  * @method static Builder|RecordType whereCriteria($value)
  * @method static Builder|RecordType whereId($value)
@@ -88,7 +90,7 @@ class RecordType extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'key', 'type', 'system', 'criteria', 'vouchers', 'organization_id',
+        'key', 'type', 'system', 'criteria', 'vouchers', 'organization_id', 'control_type',
     ];
 
     protected $perPage = 100;
