@@ -74,6 +74,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_provider_extra_payments
  * @property bool $allow_pre_checks
  * @property bool $allow_payouts
+ * @property bool $allow_profiles
  * @property bool $allow_product_updates
  * @property bool $reservation_allow_extra_payments
  * @property int $pre_approve_external_funds
@@ -175,6 +176,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder<static>|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder<static>|Organization whereAllowFundRequestRecordEdit($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProfiles($value)
  * @method static EloquentBuilder<static>|Organization whereAllowManualBulkProcessing($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPayouts($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPreChecks($value)
@@ -324,6 +326,7 @@ class Organization extends BaseModel
         'allow_provider_extra_payments'             => 'boolean',
         'allow_pre_checks'                          => 'boolean',
         'allow_payouts'                             => 'boolean',
+        'allow_profiles'                            => 'boolean',
         'reservation_allow_extra_payments'          => 'boolean',
         'show_provider_transactions'                => 'boolean',
         'bank_transaction_id'                       => 'boolean',
@@ -449,6 +452,15 @@ class Organization extends BaseModel
     public function products_sponsor(): HasMany
     {
         return $this->hasMany(Product::class)->whereNotNull('sponsor_organization_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function profiles(): HasMany
+    {
+        return $this->hasMany(Profile::class);
     }
 
     /**
@@ -855,6 +867,19 @@ class Organization extends BaseModel
     public function findFund($fund_id = null): Fund|Model|null
     {
         return $this->funds()->where('funds.id', $fund_id)->first();
+    }
+
+    /**
+     * @param Identity $identity
+     * @return Fund|Model
+     */
+    public function findOrMakeProfile(Identity $identity): Profile|Model
+    {
+        return $identity->profiles()->where([
+            'organization_id' => $this->id,
+        ])->firstOrCreate([
+            'organization_id' => $this->id,
+        ]);
     }
 
     /**

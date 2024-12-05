@@ -86,7 +86,9 @@ class FundPolicy
         }
 
         return $fund->organization->identityCan($identity, [
-            'manage_implementation_notifications', 'manage_vouchers'
+            Permission::MANAGE_IMPLEMENTATION_NOTIFICATIONS,
+            Permission::VIEW_IDENTITIES,
+            Permission::MANAGE_IDENTITIES,
         ], false);
     }
 
@@ -116,8 +118,11 @@ class FundPolicy
      * @return bool
      * @noinspection PhpUnused
      */
-    public function sendIdentityNotifications(Identity $identity, Fund $fund, Organization $organization): bool
-    {
+    public function sendIdentityNotifications(
+        Identity $identity,
+        Fund $fund,
+        Organization $organization
+    ): bool {
         if ($fund->organization_id !== $organization->id) {
             return false;
         }
@@ -126,7 +131,7 @@ class FundPolicy
             return false;
         }
 
-        return $fund->organization->identityCan($identity, 'manage_implementation_notifications');
+        return $fund->organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION_NOTIFICATIONS);
     }
 
     /**

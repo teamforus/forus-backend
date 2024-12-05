@@ -3,20 +3,23 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
-use Illuminate\Http\Request;
 use App\Models\Identity;
+use Illuminate\Http\Request;
 
 /**
  * @property-read Identity $resource
+ * @property-read bool $profile
+ * @property-read array $records
+ * @property-read array $bank_accounts
  */
-class IdentityResource extends BaseJsonResource
+class ProfileResource extends BaseJsonResource
 {
     public static $wrap = null;
 
     /**
      * Transform the resource into an array.
      *
-     * @param Request $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      */
     public function toArray(Request $request): array
@@ -45,7 +48,19 @@ class IdentityResource extends BaseJsonResource
                 'bsn' => !empty($bsnRecord),
                 'bsn_time' => $bsnRecord ? now()->diffInSeconds($bsnRecord->created_at, true) : null,
                 'email' => $email,
-                'profile' => $request->implementation()?->organization?->allow_profiles,
+                'email_verified' => $identity->emails
+                    ->where('verified', true)
+                    ->where('primary', false)
+                    ->pluck('email'),
+                'profile' => $this->profile,
+                ...$this->profile ? [
+                    'records' => $this?->records?: [],
+                    'bank_accounts' => $this?->bank_accounts?: [],
+                ] : [],
+                ...static::makeTimestampsStatic([
+                    'created_at' => $identity->created_at,
+                    'last_activity_at' => array_first($identity->sessions)?->last_activity_at,
+                ]),
             ];
         }
 
