@@ -235,6 +235,12 @@ class Fund extends BaseModel
         self::STATE_WAITING,
     ];
 
+    public const array STATES_PUBLIC = [
+        self::STATE_ACTIVE,
+        self::STATE_PAUSED,
+        self::STATE_CLOSED,
+    ];
+
     public const string TYPE_BUDGET = 'budget';
     public const string TYPE_EXTERNAL = 'external';
     public const string TYPE_SUBSIDIES = 'subsidies';
@@ -1547,39 +1553,38 @@ class Fund extends BaseModel
 
     /**
      * @param string $uri
-     * @return string
+     * @return string|null
      */
-    public function urlWebshop(string $uri = "/"): string
+    public function urlWebshop(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlWebshop($uri);
+        return $this->fund_config?->implementation?->urlWebshop($uri);
     }
 
     /**
      * @param string $uri
-     * @return string
+     * @return string|null
      */
-    public function urlSponsorDashboard(string $uri = "/"): string
+    public function urlSponsorDashboard(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlSponsorDashboard($uri);
+        return $this->fund_config?->implementation?->urlSponsorDashboard($uri);
     }
 
     /**
      * @param string $uri
-     * @return string
+     * @return string|null
      */
-    public function urlProviderDashboard(string $uri = "/"): string
+    public function urlProviderDashboard(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlProviderDashboard($uri);
+        return $this->fund_config?->implementation?->urlProviderDashboard($uri);
     }
 
     /**
      * @param string $uri
-     * @return string
-     * @noinspection PhpUnused
+     * @return string|null
      */
-    public function urlValidatorDashboard(string $uri = "/"): string
+    public function urlValidatorDashboard(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlValidatorDashboard($uri);
+        return $this->fund_config?->implementation?->urlValidatorDashboard($uri);
     }
 
     /**

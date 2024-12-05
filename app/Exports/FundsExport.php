@@ -130,18 +130,10 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
         if (!$this->detailed) {
             return $funds->map(fn(Fund $fund) => [
                 "name" => $fund->name,
-                "total_top_up" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetTotal(
-                    $fund, $this->from, $this->to,
-                )),
-                "expenses" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetUsed(
-                    $fund, $this->from, $this->to,
-                )),
-                "balance" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetLeft(
-                    $fund, $this->from, $this->to,
-                )),
-                "transactions" => currency_format(FinancialOverviewStatisticQueries::getFundTransactionCosts(
-                    $fund, $this->from, $this->to,
-                )),
+                "total_top_up" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetTotal($fund)),
+                "expenses" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetUsed($fund)),
+                "balance" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetLeft($fund)),
+                "transactions" => currency_format(FinancialOverviewStatisticQueries::getFundTransactionCosts($fund)),
             ]);
         }
 

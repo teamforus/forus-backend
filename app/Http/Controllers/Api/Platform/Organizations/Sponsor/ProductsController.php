@@ -27,18 +27,21 @@ class ProductsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('listAllSponsorProducts', [Product::class, $organization]);
 
-        $fundsQuery = FundQuery::whereIsConfiguredByForus($organization->funds())->pluck('id');
-        $builder = ProductQuery::approvedForFundsFilter(Product::query(), $fundsQuery->toArray());
+        $funds = FundQuery::whereIsConfiguredByForus($organization->funds())->get();
+        $fundsIds = $funds->pluck('id')->toArray();
 
-        $search = new ProductSearch($request->only([
-            'q', 'to', 'from', 'updated_to', 'updated_from', 'price_min', 'price_max',
-            'has_reservations', 'fund_id', 'order_by', 'order_dir',
-        ]), $builder);
+        $search = new ProductSearch([
+            ...$request->only([
+                'q', 'to', 'from', 'updated_to', 'updated_from', 'price_min', 'price_max',
+                'has_reservations', 'fund_id', 'order_by', 'order_dir', 'state',
+            ]),
+            'fund_ids' => $fundsIds,
+        ], ProductQuery::hasPendingOrAcceptedProviderForFund(Product::query(), $fundsIds));
 
         $query = $search->query();
 
         return SponsorProductResource::queryCollection($query, $request, [
-            'sponsor_organization' => $organization,
+            'funds' => $funds->load('fund_config.implementation', 'providers'),
         ]);
     }
 
@@ -54,8 +57,10 @@ class ProductsController extends Controller
         $this->authorize('listAllSponsorProducts', [Product::class, $organization]);
         $this->authorize('viewSponsorProduct', [$product, $organization]);
 
+        $funds = FundQuery::whereIsConfiguredByForus($organization->funds())->get();
+
         return SponsorProductResource::create($product, [
-            'sponsor_organization' => $organization,
+            'funds' => $funds->load('fund_config.implementation', 'providers'),
             'with_monitored_history' => true,
         ]);
     }
