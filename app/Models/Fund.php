@@ -235,6 +235,12 @@ class Fund extends BaseModel
         self::STATE_WAITING,
     ];
 
+    public const array STATES_PUBLIC = [
+        self::STATE_ACTIVE,
+        self::STATE_PAUSED,
+        self::STATE_CLOSED,
+    ];
+
     public const string TYPE_BUDGET = 'budget';
     public const string TYPE_EXTERNAL = 'external';
     public const string TYPE_SUBSIDIES = 'subsidies';
