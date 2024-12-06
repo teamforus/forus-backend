@@ -33,9 +33,14 @@ class VoucherTransactionsSearch extends BaseSearch
         $builder = parent::query();
 
         $targets = $this->getFilter('targets', VoucherTransaction::TARGETS_OUTGOING);
+        $identity_address = $this->getFilter('identity_address');
 
         if ($this->hasFilter('q') && $this->getFilter('q')) {
             $builder = VoucherTransactionQuery::whereQueryFilter($builder, $this->getFilter('q'));
+        }
+
+        if ($identity_address) {
+            $builder->whereRelation('voucher', 'identity_address', $identity_address);
         }
 
         if ($this->hasFilter('state') && $this->getFilter('state')) {
