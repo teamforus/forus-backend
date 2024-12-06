@@ -45,7 +45,7 @@ class ProfileResource extends BaseJsonResource
 
         if ($request->auth_address() === $identity->address) {
             return [
-                'bsn' => !empty($bsnRecord),
+                'bsn' => $bsnRecord?->value,
                 'bsn_time' => $bsnRecord ? now()->diffInSeconds($bsnRecord->created_at, true) : null,
                 'email' => $email,
                 'email_verified' => $identity->emails

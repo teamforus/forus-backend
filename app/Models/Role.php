@@ -82,6 +82,19 @@ class Role extends BaseModel
         return $this->hasMany(RolePermission::class);
     }
 
+
+    /**
+     * @param array|string $permission
+     * @return void
+     * @noinspection PhpUnused
+     */
+    public function attachPermissions(array|string $permission): void
+    {
+        $this->permissions()->syncWithoutDetaching(
+            Permission::whereIn('key', (array) $permission)->pluck('id')->toArray(),
+        );
+    }
+
     /**
      * @param string $key
      * @return static|null

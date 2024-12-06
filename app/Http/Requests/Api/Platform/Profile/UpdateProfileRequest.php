@@ -18,7 +18,7 @@ class UpdateProfileRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        $this->maxAttempts = Config::get('forus.throttles.auth.attempts');
+        $this->maxAttempts = Config::get('forus.throttles.update_profile.attempts');
         $this->decayMinutes = Config::get('forus.throttles.update_profile.decay');
 
         $this->throttleWithKey('to_many_attempts', $this, 'auth');
