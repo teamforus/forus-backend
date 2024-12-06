@@ -22,7 +22,12 @@ class FundPolicy
     public function viewAny(Identity $identity, Organization $organization): bool
     {
         return $organization->identityCan($identity, [
-            Permission::MANAGE_PAYOUTS, Permission::MANAGE_FUNDS, 'view_finances', 'view_funds',
+            'view_funds',
+            Permission::MANAGE_FUNDS,
+            Permission::MANAGE_PAYOUTS,
+            Permission::VIEW_IDENTITIES,
+            Permission::MANAGE_IDENTITIES,
+            'view_finances',
         ], false);
     }
 
