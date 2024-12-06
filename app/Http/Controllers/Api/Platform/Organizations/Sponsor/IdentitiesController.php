@@ -107,7 +107,7 @@ class IdentitiesController extends Controller
         Identity $identity,
         ProfileBankAccount $profileBankAccount,
     ): SponsorIdentityResource {
-        $this->authorize('updateSponsorIdentitiesBankAccounts', [$organization, $identity]);
+        $this->authorize('updateSponsorIdentitiesBankAccounts', [$organization, $identity, $profileBankAccount]);
 
         $profileBankAccount->update([
             'name' => $request->string('name'),
@@ -128,7 +128,7 @@ class IdentitiesController extends Controller
         Identity $identity,
         ProfileBankAccount $profileBankAccount,
     ): SponsorIdentityResource {
-        $this->authorize('updateSponsorIdentitiesBankAccounts', [$organization, $identity]);
+        $this->authorize('updateSponsorIdentitiesBankAccounts', [$organization, $identity, $profileBankAccount]);
 
         $profileBankAccount->delete();
 
