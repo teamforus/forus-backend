@@ -67,7 +67,7 @@ class SponsorIdentityResource extends BaseJsonResource
             ...$this->getVoucherStats($identity),
             ...$this->detailed ? [
                 'bsn' => $this->organization?->bsn_enabled ? $identity->bsn : null,
-                'bank_accounts' => static::getBankAccounts($identity, $profile),
+                'bank_accounts' => static::getBankAccounts($identity, $this->organization, $profile),
                 'records' => static::getProfileRecords($profile, true),
                 ...static::makeTimestampsStatic([
                     'created_at' => $identity->created_at,
@@ -94,22 +94,21 @@ class SponsorIdentityResource extends BaseJsonResource
 
     /**
      * @param Identity $identity
+     * @param Organization|null $organization
      * @param Profile|null $profile
      * @return array
      */
-    public static function getBankAccounts(Identity $identity, ?Profile $profile): array
-    {
-        $reimbursements = $identity->reimbursements->filter(function ($item) use ($profile) {
-            return
-                $profile?->organization_id &&
-                $item?->voucher?->fund?->organization_id === $profile?->organization_id;
+    public static function getBankAccounts(
+        Identity $identity,
+        ?Organization $organization,
+        ?Profile $profile,
+    ): array {
+        $reimbursements = $identity->reimbursements->filter(function ($item) use ($organization) {
+            return $item?->voucher?->fund?->organization_id === $organization?->id;
         });
 
-        $payoutTransactions = $identity->vouchers->filter(function ($item) use ($profile) {
-            return
-                $item?->isTypePayout() &&
-                $profile?->organization_id &&
-                $item?->fund?->organization_id === $profile?->organization_id;
+        $payoutTransactions = $identity->vouchers->filter(function ($item) use ($organization) {
+            return $item?->isTypePayout() && $item?->fund?->organization_id === $organization?->id;
         })->reduce(function (Collection $list, Voucher $voucher) {
             return $list->merge($voucher->transactions);
         }, collect());

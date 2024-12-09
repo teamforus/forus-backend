@@ -27,8 +27,8 @@ class ProfileController extends Controller
 
         return ProfileResource::create($request->identity(), $organization?->allow_profiles ? [
             'profile' => true,
-            'records' => $profile ? SponsorIdentityResource::getProfileRecords($profile) : null,
-            'bank_accounts' => $profile ? SponsorIdentityResource::getBankAccounts($identity, $profile) : null,
+            'records' => SponsorIdentityResource::getProfileRecords($profile),
+            'bank_accounts' => SponsorIdentityResource::getBankAccounts($identity, $organization, $profile),
         ] : [
             'profile' => false,
         ]);
@@ -52,7 +52,7 @@ class ProfileController extends Controller
         return ProfileResource::create($request->identity(), $organization?->allow_profiles ? [
             'profile' => true,
             'records' => SponsorIdentityResource::getProfileRecords($profile),
-            'bank_accounts' => SponsorIdentityResource::getBankAccounts($identity, $profile),
+            'bank_accounts' => SponsorIdentityResource::getBankAccounts($identity, $organization, $profile),
         ] : [
             'profile' => false,
         ]);
