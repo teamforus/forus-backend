@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\MediaResource;
 use App\Rules\FundRequests\BaseFundRequestRule;
@@ -71,13 +70,19 @@ class PreCheck extends BaseModel
     }
 
     /**
-     * @param BaseFormRequest $request
+     * @param Identity|null $identity
+     * @param array $filters
      * @return Collection
      */
-    public static function getAvailableFunds(BaseFormRequest $request): Collection
-    {
-        $identity = $request->identity();
+    public static function getAvailableFunds(
+        Identity $identity = null,
+        array $filters = [],
+    ): Collection {
         $fundsQuery = Implementation::queryFundsByState('active');
+
+        $fundsQuery->whereDoesntHave('fund_config', function (Builder $builder) {
+            $builder->where('pre_check_excluded', true);
+        });
 
         if ($identity) {
             $fundsQuery->whereDoesntHave('vouchers', fn (
@@ -87,11 +92,10 @@ class PreCheck extends BaseModel
             ])));
         }
 
-        return (new FundSearch(array_merge($request->only([
-            'q', 'tag_id', 'organization_id',
-        ]), [
+        return (new FundSearch([
+            ...$filters,
             'with_external' => true,
-        ]), $fundsQuery))->query()->get();
+        ], $fundsQuery))->query()->get();
     }
 
     /**
@@ -110,44 +114,7 @@ class PreCheck extends BaseModel
         ]);
 
         return $funds->map(function (Fund $fund) use ($records) {
-            $criteria = $fund->criteria
-                ->where('optional', false)
-                ->where('record_type.pre_check', true)
-                ->values();
-
-            $multiplier = $fund->multiplierForIdentity(null, $records);
-            $amountIdentity = $fund->amountForIdentity(null, $records);
-            $amountIdentityTotal = $multiplier * $amountIdentity;
-
-            $criteria = $criteria->map(function (FundCriterion $criterion) use ($records, $fund) {
-                /** @var PreCheckRecordSetting|null $setting */
-                /** @var PreCheckRecord|null $preCheckRecord */
-                $preCheckRecord = $fund->fund_config
-                    ?->implementation
-                    ?->pre_checks_records
-                    ?->firstWhere('record_type_key', $criterion->record_type_key);
-
-                $setting = $preCheckRecord?->settings?->firstWhere('fund_id', $fund->id);
-                $value = $records[$criterion->record_type_key] ?? null;
-                $rule = BaseFundRequestRule::validateRecordValue($criterion, $value);
-
-                $productCount = $fund->fund_formula_products
-                    ->where('record_type_key_multiplier', $criterion->record_type->key)
-                    ->count();
-
-                return [
-                    'id' => $criterion->id,
-                    'name' => $criterion->record_type->name,
-                    'value' => $value,
-                    'is_valid' => $criterion->isExcludedByRules($records) || $rule->passes(),
-                    'is_knock_out' => $setting?->is_knock_out ?? false,
-                    'impact_level' => $setting?->impact_level ?? 100,
-                    'knock_out_description' => $setting?->description ?? '',
-                    'product_count' => $productCount,
-                ];
-            });
-
-            return [
+            $baseFields = [
                 ...$fund->only([
                     'id', 'name', 'description', 'description_short',
                     'external_link_text', 'external_link_url', 'is_external',
@@ -155,6 +122,24 @@ class PreCheck extends BaseModel
                 'logo' => new MediaResource($fund->logo),
                 'parent' => $fund->parent ? new FundResource($fund->parent) : null,
                 'children' => $fund->children ? FundResource::collection($fund->children) : [],
+            ];
+
+            if ($fund->fund_config->pre_check_note) {
+                return [
+                    ...$baseFields,
+                    'pre_check_note' => $fund->fund_config->pre_check_note,
+                    'is_valid' => false,
+                    'criteria' => [],
+                ];
+            }
+
+            $criteria = static::buildPreCheckCriteriaList($fund, $records);
+            $multiplier = $fund->multiplierForIdentity(null, $records);
+            $amountIdentity = $fund->amountForIdentity(null, $records);
+            $amountIdentityTotal = $multiplier * $amountIdentity;
+
+            return [
+                ...$baseFields,
                 'criteria' => $criteria,
                 'is_valid' => $criteria->every(fn($criterion) => $criterion['is_valid']),
                 'identity_multiplier' => $multiplier,
@@ -168,6 +153,42 @@ class PreCheck extends BaseModel
                 'products_amount_total' => array_sum(array_pluck($fund->fund_formula_products, 'price')),
             ];
         })->toArray();
+    }
+
+    protected static function buildPreCheckCriteriaList(Fund $fund, array $records)
+    {
+        $criteria = $fund->criteria
+            ->where('optional', false)
+            ->where('record_type.pre_check', true)
+            ->values();
+
+        return $criteria->map(function (FundCriterion $criterion) use ($records, $fund) {
+            /** @var PreCheckRecordSetting|null $setting */
+            /** @var PreCheckRecord|null $preCheckRecord */
+            $preCheckRecord = $fund->fund_config
+                ?->implementation
+                ?->pre_checks_records
+                ?->firstWhere('record_type_key', $criterion->record_type_key);
+
+            $setting = $preCheckRecord?->settings?->firstWhere('fund_id', $fund->id);
+            $value = $records[$criterion->record_type_key] ?? null;
+            $rule = BaseFundRequestRule::validateRecordValue($criterion, $value);
+
+            $productCount = $fund->fund_formula_products
+                ->where('record_type_key_multiplier', $criterion->record_type->key)
+                ->count();
+
+            return [
+                'id' => $criterion->id,
+                'name' => $criterion->record_type->name,
+                'value' => $value,
+                'is_valid' => $criterion->isExcludedByRules($records) || $rule->passes(),
+                'is_knock_out' => $setting?->is_knock_out ?? false,
+                'impact_level' => $setting?->impact_level ?? 100,
+                'knock_out_description' => $setting?->description ?? '',
+                'product_count' => $productCount,
+            ];
+        });
     }
 
     /**

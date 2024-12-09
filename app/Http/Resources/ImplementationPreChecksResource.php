@@ -8,16 +8,17 @@ use App\Models\Implementation;
 use App\Models\PreCheck;
 use App\Models\PreCheckRecord;
 use App\Scopes\Builders\FundQuery;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
+use Illuminate\Http\Request;
 
 /**
  * @property-read Implementation $resource
  */
 class ImplementationPreChecksResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'pre_checks',
         'pre_checks_records.settings.fund.logo.presets',
         'pre_checks_records.settings.fund.fund_config.implementation',
@@ -29,7 +30,7 @@ class ImplementationPreChecksResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $implementation = $this->resource;
         $preChecks = $this->getPreChecks($implementation);
@@ -80,6 +81,7 @@ class ImplementationPreChecksResource extends BaseJsonResource
         $fundCriteria = FundCriterion::query()
             ->where('optional', false)
             ->whereRelation('fund.fund_config', 'implementation_id', $implementation->id)
+            ->whereRelation('fund.fund_config', 'pre_check_excluded', false)
             ->whereRelation('fund', 'archived', false)
             ->whereHas('fund', fn (Builder $q) => FundQuery::whereActiveFilter($q))
             ->whereRelation('record_type', 'pre_check', true)
@@ -110,9 +112,9 @@ class ImplementationPreChecksResource extends BaseJsonResource
                     'id' => $fund->id,
                     'name' => $fund->name,
                     'implementation' => [
-                        'id' => $fund->fund_config->implementation->id,
-                        'name' => $fund->fund_config->implementation->name,
-                        'url_webshop' => $fund->fund_config->implementation->urlWebshop(),
+                        'id' => $fund->fund_config->implementation?->id,
+                        'name' => $fund->fund_config->implementation?->name,
+                        'url_webshop' => $fund->fund_config->implementation?->urlWebshop(),
                     ],
                 ])->toArray(),
                 'record_type' => RecordTypeResource::create($recordType)->toArray(request()),

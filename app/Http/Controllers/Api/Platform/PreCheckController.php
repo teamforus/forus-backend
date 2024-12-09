@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\PreChecks\CalculatePreCheckRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\ImplementationPreChecksResource;
+use App\Models\Fund;
 use App\Models\PreCheck;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -31,7 +32,9 @@ class PreCheckController extends Controller
     public function calculateTotals(CalculatePreCheckRequest $request): JsonResponse
     {
         $records = array_pluck($request->input('records', []), 'value', 'key');
-        $availableFunds = PreCheck::getAvailableFunds($request);
+        $availableFunds = PreCheck::getAvailableFunds($request->identity(), $request->only([
+            'q', 'tag_id', 'organization_id',
+        ]));
 
         $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
         $fundsValid = array_where($funds, fn ($fund) => $fund['is_valid']);
@@ -61,7 +64,9 @@ class PreCheckController extends Controller
     public function downloadPDF(CalculatePreCheckRequest $request): Response
     {
         $records = array_pluck($request->input('records', []), 'value', 'key');
-        $availableFunds = PreCheck::getAvailableFunds($request);
+        $availableFunds = PreCheck::getAvailableFunds($request->identity(), $request->only([
+            'q', 'tag_id', 'organization_id',
+        ]));
 
         $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
 
