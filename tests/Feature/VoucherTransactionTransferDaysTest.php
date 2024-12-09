@@ -12,10 +12,12 @@ use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\TestsReservations;
 
 class VoucherTransactionTransferDaysTest extends TestCase
 {
     use MakesTestFunds;
+    use TestsReservations;
     use DatabaseTransactions;
     use MakesTestOrganizations;
     use MakesProductReservations;
@@ -47,7 +49,10 @@ class VoucherTransactionTransferDaysTest extends TestCase
      */
     private function checkTransactionTransferDays(Voucher $voucher, Product $product): void
     {
-        $reservation = $this->makeReservation($voucher, $product);
+        $response = $this->makeReservationStoreRequest($voucher, $product);
+        $reservation = ProductReservation::find($response->json('data.id'));
+
+        $this->assertNotNull($reservation);
         $reservation->acceptProvider();
 
         $transaction = $reservation->voucher_transaction;
@@ -70,31 +75,5 @@ class VoucherTransactionTransferDaysTest extends TestCase
 
         $transactionIn = $response->json('data.transfer_in');
         $this->assertEquals(0, $transactionIn);
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @param Product $product
-     * @return ProductReservation
-     */
-    private function makeReservation(Voucher $voucher, Product $product): ProductReservation
-    {
-        $identity = $voucher->identity;
-        $proxy = $this->makeIdentityProxy($identity);
-        $headers = $this->makeApiHeaders($proxy);
-
-        $response = $this->post("/api/v1/platform/product-reservations", [
-            'first_name' => 'John',
-            'last_name' => 'Doe',
-            'user_note' => '',
-            'voucher_id' => $voucher->id,
-            'product_id' => $product->id
-        ], $headers);
-
-        /** @var ProductReservation $reservation */
-        $reservation = ProductReservation::find($response->json('data.id'));
-        $this->assertNotNull($reservation);
-
-        return $reservation;
     }
 }
