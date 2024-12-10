@@ -4,6 +4,7 @@ return [[
     'key' => "children_nth",
     'name' => "Number of children",
     'type' => "number",
+    'control_type' => 'step',
     'system' => false,
     'vouchers' => false,
     'criteria' => true,
@@ -11,6 +12,7 @@ return [[
     'key' => "income_level",
     'name' => "Income level",
     'type' => "number",
+    'control_type' => 'number',
     'system' => false,
     'vouchers' => false,
     'criteria' => true,
@@ -29,6 +31,7 @@ return [[
     'name' => 'Municipality',
     'type' => 'select',
     'criteria' => true,
+    'control_type' => 'select',
     'options' => [
         ['268', 'Nijmegen'],
         ['1699', 'Noordenveld'],
@@ -40,4 +43,5 @@ return [[
     'name' => 'Civil status',
     'type' => 'bool',
     'criteria' => true,
+    'control_type' => 'checkbox',
 ]];
