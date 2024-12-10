@@ -26,6 +26,7 @@ class SponsorIdentityResource extends BaseJsonResource
     public bool $detailed = false;
 
     public const array LOAD = [
+        'emails',
         'vouchers',
         'record_bsn',
         'primary_email',
@@ -64,6 +65,10 @@ class SponsorIdentityResource extends BaseJsonResource
             ...$identity->only([
                 'id', 'email', 'address',
             ]),
+            'email_verified' => $identity->emails
+                ->where('verified', true)
+                ->where('primary', false)
+                ->pluck('email'),
             ...$this->getVoucherStats($identity),
             ...$this->detailed ? [
                 'bsn' => $this->organization?->bsn_enabled ? $identity->bsn : null,

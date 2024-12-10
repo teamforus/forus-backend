@@ -31,7 +31,7 @@ class IdentitiesSearch extends BaseSearch
             );
         }
 
-        return $builder->latest();
+        return $builder->latest()->latest('id');
     }
 
     /**

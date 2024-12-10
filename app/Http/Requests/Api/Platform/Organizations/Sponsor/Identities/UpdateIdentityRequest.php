@@ -21,7 +21,7 @@ class UpdateIdentityRequest extends BaseFormRequest
             'family_name' => 'sometimes|nullable|string|min:2|max:40',
             'telephone' => 'sometimes|nullable|string|min:2|max:40',
             'mobile' => 'sometimes|nullable|string|min:2|max:40',
-            'birth_date' => 'sometimes|nullable|date_format:Y-m-d',
+            'birth_date' => 'sometimes|nullable|date_format:Y-m-d|before_or_equal:today',
             'city' => 'sometimes|nullable|string|city_name',
             'street' => 'sometimes|nullable|string|street_name',
             'house_number' => 'sometimes|nullable|string|house_number',
