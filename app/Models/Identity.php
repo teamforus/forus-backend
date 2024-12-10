@@ -7,6 +7,7 @@ use App\Scopes\Builders\IdentityQuery;
 use App\Services\Forus\Auth2FAService\Auth2FAService;
 use App\Services\Forus\Auth2FAService\Data\Auth2FASecret;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
+use App\Services\Forus\Notification\Models\NotificationToken;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -50,6 +51,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read Collection|\App\Models\Identity2FA[] $identity_2fa_active
  * @property-read int|null $identity_2fa_active_count
  * @property-read \App\Models\IdentityEmail|null $initial_email
+ * @property-read Collection|NotificationToken[] $notification_tokens
+ * @property-read int|null $notification_tokens_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\App\Models\Notification[] $notifications
  * @property-read int|null $notifications_count
  * @property-read Collection|\App\Models\PhysicalCard[] $physical_cards
@@ -64,18 +67,18 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $records_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static Builder|Identity newModelQuery()
- * @method static Builder|Identity newQuery()
- * @method static Builder|Identity query()
- * @method static Builder|Identity whereAddress($value)
- * @method static Builder|Identity whereAuth2faRememberIp($value)
- * @method static Builder|Identity whereCreatedAt($value)
- * @method static Builder|Identity whereId($value)
- * @method static Builder|Identity wherePassphrase($value)
- * @method static Builder|Identity wherePinCode($value)
- * @method static Builder|Identity wherePrivateKey($value)
- * @method static Builder|Identity wherePublicKey($value)
- * @method static Builder|Identity whereUpdatedAt($value)
+ * @method static Builder<static>|Identity newModelQuery()
+ * @method static Builder<static>|Identity newQuery()
+ * @method static Builder<static>|Identity query()
+ * @method static Builder<static>|Identity whereAddress($value)
+ * @method static Builder<static>|Identity whereAuth2faRememberIp($value)
+ * @method static Builder<static>|Identity whereCreatedAt($value)
+ * @method static Builder<static>|Identity whereId($value)
+ * @method static Builder<static>|Identity wherePassphrase($value)
+ * @method static Builder<static>|Identity wherePinCode($value)
+ * @method static Builder<static>|Identity wherePrivateKey($value)
+ * @method static Builder<static>|Identity wherePublicKey($value)
+ * @method static Builder<static>|Identity whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Identity extends Model implements Authenticatable
@@ -129,6 +132,15 @@ class Identity extends Model implements Authenticatable
     public function emails(): HasMany
     {
         return $this->hasMany(IdentityEmail::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function notification_tokens(): HasMany
+    {
+        return $this->hasMany(NotificationToken::class, 'identity_address', 'address');
     }
 
     /**
@@ -429,9 +441,9 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @param array|string[] $records
-     * @return Collection
+     * @return Collection|Record[]
      */
-    public function addRecords(array $records = []): Collection
+    public function addRecords(array $records = []): Collection|array
     {
         $recordTypes = RecordType::pluck('id', 'key')->toArray();
 
