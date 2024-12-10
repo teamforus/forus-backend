@@ -8,6 +8,7 @@ use App\Services\Forus\Auth2FAService\Auth2FAService;
 use App\Services\Forus\Auth2FAService\Data\Auth2FASecret;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
 use App\Services\Forus\Session\Models\Session;
+use App\Services\Forus\Notification\Models\NotificationToken;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -56,6 +57,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read Collection|\App\Models\Identity2FA[] $identity_2fa_active
  * @property-read int|null $identity_2fa_active_count
  * @property-read \App\Models\IdentityEmail|null $initial_email
+ * @property-read Collection|NotificationToken[] $notification_tokens
+ * @property-read int|null $notification_tokens_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\App\Models\Notification[] $notifications
  * @property-read int|null $notifications_count
  * @property-read Collection|\App\Models\PhysicalCard[] $physical_cards
@@ -147,6 +150,7 @@ class Identity extends Model implements Authenticatable
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
+
     public function emails_verified(): HasMany
     {
         return $this
@@ -161,6 +165,11 @@ class Identity extends Model implements Authenticatable
     public function profiles(): HasMany
     {
         return $this->hasMany(Profile::class);
+    }
+
+    public function notification_tokens(): HasMany
+    {
+        return $this->hasMany(NotificationToken::class, 'identity_address', 'address');
     }
 
     /**
@@ -486,9 +495,9 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @param array|string[] $records
-     * @return Collection
+     * @return Collection|Record[]
      */
-    public function addRecords(array $records = []): Collection
+    public function addRecords(array $records = []): Collection|array
     {
         $recordTypes = RecordType::pluck('id', 'key')->toArray();
 
