@@ -104,6 +104,23 @@ trait MakesTestFunds
 
     /**
      * @param Organization $organization
+     * @param array $fundData
+     * @param array $fundConfigsData
+     * @return Fund
+     */
+    protected function makeTestSubsidyFund(
+        Organization $organization,
+        array $fundData = [],
+        array $fundConfigsData = [],
+    ): Fund {
+        return $this->makeTestFund($organization, [
+            'type' => Fund::TYPE_SUBSIDIES,
+            ...$fundData,
+        ], $fundConfigsData);
+    }
+
+    /**
+     * @param Organization $organization
      * @param array $implementationData
      * @return Implementation
      */
