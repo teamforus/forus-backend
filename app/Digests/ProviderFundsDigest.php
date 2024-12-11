@@ -271,7 +271,7 @@ class ProviderFundsDigest extends BaseOrganizationDigest
                 $mailBody->text(implode("\n", array_map(static function($log) {
                     return trans(
                         'digests/provider_funds.individual_products.product',
-                        Arr::only($log, ['product_name', 'product_price_locale'])
+                        self::arrayOnlyString($log)
                     );
                 }, $logsProductApproved->toArray())) . "\n");
             }
@@ -310,7 +310,7 @@ class ProviderFundsDigest extends BaseOrganizationDigest
             foreach ($logsProductsFeedback as $logsProductFeedback) {
                 $mailBody->h5(trans(
                     'digests/provider_funds.feedback.product_title',
-                    Arr::only($logsProductFeedback[0], ['product_name', 'product_price_locale'])
+                    self::arrayOnlyString($logsProductFeedback[0])
                 ), ['margin_less']);
 
                 foreach ($logsProductFeedback->groupBy('fund_id') as $logsProductFeedbackLog) {
@@ -318,9 +318,10 @@ class ProviderFundsDigest extends BaseOrganizationDigest
                     $mailBody->text(trans_choice(
                         'digests/provider_funds.feedback.product_details',
                         $count_messages,
-                        array_merge(Arr::only($logsProductFeedback[0], [
-                            'sponsor_name', 'fund_name',
-                        ]), compact('count_messages'))
+                        self::arrayOnlyString([
+                            ...$logsProductFeedback[0],
+                            ...compact('count_messages'),
+                        ])
                     ));
                 }
             }

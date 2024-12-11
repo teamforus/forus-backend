@@ -331,7 +331,7 @@ class SponsorDigest extends BaseOrganizationDigest
 
                 foreach ($logsByProvider as $logs) {
                     $logsByProduct = collect($logs)->groupBy('product_id');
-                    $emailBody->h5(trans("digests/sponsor.feedback.item_header", $logs[0]), [
+                    $emailBody->h5(trans("digests/sponsor.feedback.item_header", self::arrayOnlyString($logs[0])), [
                         'margin_less'
                     ]);
 
@@ -340,7 +340,7 @@ class SponsorDigest extends BaseOrganizationDigest
                             $logsByProduct
                         ), array_merge([
                             'count_messages' => count($logsByProduct)
-                        ], $_logsByProduct[0])));
+                        ], self::arrayOnlyString($_logsByProduct[0]))));
                     }
                 }
 
