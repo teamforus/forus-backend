@@ -59,8 +59,6 @@ use Illuminate\Support\Facades\Log;
  * @property string|null $external_page_url
  * @property string|null $type
  * @property string $state
- * @property string $balance
- * @property string $balance_provider
  * @property bool $archived
  * @property bool $public
  * @property bool $criteria_editable_after_start
@@ -158,38 +156,36 @@ use Illuminate\Support\Facades\Log;
  * @property-read int|null $voucher_transactions_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static Builder|Fund newModelQuery()
- * @method static Builder|Fund newQuery()
- * @method static Builder|Fund query()
- * @method static Builder|Fund whereArchived($value)
- * @method static Builder|Fund whereAutoRequestsValidation($value)
- * @method static Builder|Fund whereBalance($value)
- * @method static Builder|Fund whereBalanceProvider($value)
- * @method static Builder|Fund whereCreatedAt($value)
- * @method static Builder|Fund whereCriteriaEditableAfterStart($value)
- * @method static Builder|Fund whereDefaultValidatorEmployeeId($value)
- * @method static Builder|Fund whereDescription($value)
- * @method static Builder|Fund whereDescriptionPosition($value)
- * @method static Builder|Fund whereDescriptionShort($value)
- * @method static Builder|Fund whereDescriptionText($value)
- * @method static Builder|Fund whereEndDate($value)
- * @method static Builder|Fund whereExternalLinkText($value)
- * @method static Builder|Fund whereExternalLinkUrl($value)
- * @method static Builder|Fund whereExternalPage($value)
- * @method static Builder|Fund whereExternalPageUrl($value)
- * @method static Builder|Fund whereFaqTitle($value)
- * @method static Builder|Fund whereId($value)
- * @method static Builder|Fund whereName($value)
- * @method static Builder|Fund whereNotificationAmount($value)
- * @method static Builder|Fund whereNotifiedAt($value)
- * @method static Builder|Fund whereOrganizationId($value)
- * @method static Builder|Fund whereParentId($value)
- * @method static Builder|Fund wherePublic($value)
- * @method static Builder|Fund whereRequestBtnText($value)
- * @method static Builder|Fund whereStartDate($value)
- * @method static Builder|Fund whereState($value)
- * @method static Builder|Fund whereType($value)
- * @method static Builder|Fund whereUpdatedAt($value)
+ * @method static Builder<static>|Fund newModelQuery()
+ * @method static Builder<static>|Fund newQuery()
+ * @method static Builder<static>|Fund query()
+ * @method static Builder<static>|Fund whereArchived($value)
+ * @method static Builder<static>|Fund whereAutoRequestsValidation($value)
+ * @method static Builder<static>|Fund whereCreatedAt($value)
+ * @method static Builder<static>|Fund whereCriteriaEditableAfterStart($value)
+ * @method static Builder<static>|Fund whereDefaultValidatorEmployeeId($value)
+ * @method static Builder<static>|Fund whereDescription($value)
+ * @method static Builder<static>|Fund whereDescriptionPosition($value)
+ * @method static Builder<static>|Fund whereDescriptionShort($value)
+ * @method static Builder<static>|Fund whereDescriptionText($value)
+ * @method static Builder<static>|Fund whereEndDate($value)
+ * @method static Builder<static>|Fund whereExternalLinkText($value)
+ * @method static Builder<static>|Fund whereExternalLinkUrl($value)
+ * @method static Builder<static>|Fund whereExternalPage($value)
+ * @method static Builder<static>|Fund whereExternalPageUrl($value)
+ * @method static Builder<static>|Fund whereFaqTitle($value)
+ * @method static Builder<static>|Fund whereId($value)
+ * @method static Builder<static>|Fund whereName($value)
+ * @method static Builder<static>|Fund whereNotificationAmount($value)
+ * @method static Builder<static>|Fund whereNotifiedAt($value)
+ * @method static Builder<static>|Fund whereOrganizationId($value)
+ * @method static Builder<static>|Fund whereParentId($value)
+ * @method static Builder<static>|Fund wherePublic($value)
+ * @method static Builder<static>|Fund whereRequestBtnText($value)
+ * @method static Builder<static>|Fund whereStartDate($value)
+ * @method static Builder<static>|Fund whereState($value)
+ * @method static Builder<static>|Fund whereType($value)
+ * @method static Builder<static>|Fund whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Fund extends BaseModel
@@ -215,7 +211,6 @@ class Fund extends BaseModel
     public const string EVENT_FUND_EXPIRING = 'fund_expiring';
     public const string EVENT_ARCHIVED = 'archived';
     public const string EVENT_UNARCHIVED = 'unarchived';
-    public const string EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
     public const string EVENT_VOUCHERS_EXPORTED = 'vouchers_exported';
     public const string EVENT_SPONSOR_NOTIFICATION_CREATED = 'sponsor_notification_created';
     public const string EVENT_PERIOD_EXTENDED = 'period_extended';
@@ -224,9 +219,6 @@ class Fund extends BaseModel
     public const string STATE_CLOSED = 'closed';
     public const string STATE_PAUSED = 'paused';
     public const string STATE_WAITING = 'waiting';
-
-    public const string BALANCE_PROVIDER_TOP_UPS = 'top_ups';
-    public const string BALANCE_PROVIDER_BANK_CONNECTION = 'bank_connection_balance';
 
     public const array STATES = [
         self::STATE_ACTIVE,
@@ -578,26 +570,6 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string $balance
-     * @param BankConnection $bankConnection
-     * @return $this
-     */
-    public function setBalance(string $balance, BankConnection $bankConnection): self
-    {
-        $this->update(compact('balance'));
-
-        $this->log(static::EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION, [
-            'bank_connection' => $bankConnection,
-            'bank_connection_account' => $bankConnection->bank_connection_default_account,
-        ], [
-            'fund_balance' => $this->balance,
-            'fund_balance_provider' => $this->balance_provider,
-        ]);
-
-        return $this;
-    }
-
-    /**
      * @param bool|null $withBalance
      * @param bool|null $withEmail
      * @return Builder|Identity
@@ -742,15 +714,7 @@ class Fund extends BaseModel
      */
     public function getBudgetTotalAttribute(): float
     {
-        if ($this->balance_provider === static::BALANCE_PROVIDER_TOP_UPS) {
-            return round($this->top_up_transactions->sum('amount'), 2);
-        }
-
-        if ($this->balance_provider === static::BALANCE_PROVIDER_BANK_CONNECTION) {
-            return round(floatval($this->balance) + $this->budget_used, 2);
-        }
-
-        return 0;
+        return round($this->top_up_transactions->sum('amount'), 2);
     }
 
     /**
@@ -779,15 +743,7 @@ class Fund extends BaseModel
      */
     public function getBudgetLeftAttribute(): float
     {
-        if ($this->balance_provider === static::BALANCE_PROVIDER_TOP_UPS) {
-            return round($this->budget_total - $this->budget_used, 2);
-        }
-
-        if ($this->balance_provider === static::BALANCE_PROVIDER_BANK_CONNECTION) {
-            return round($this->balance, 2);
-        }
-
-        return 0;
+        return round($this->budget_total - $this->budget_used, 2);
     }
 
     /**

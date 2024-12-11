@@ -15,49 +15,68 @@ class FinancialOverviewStatisticQueries
 {
     /**
      * @param Builder|Relation $builder
-     * @param Carbon $from
-     * @param Carbon $to
+     * @param Carbon|null $from
+     * @param Carbon|null $to
      * @return Builder|Relation
      */
-    public static function whereNotExpired(Builder|Relation $builder, Carbon $from, Carbon $to): Builder|Relation
+    public static function whereNotExpired(Builder|Relation $builder, ?Carbon $from, ?Carbon $to): Builder|Relation
     {
         return $builder->where(static function(Builder $builder) use ($from, $to) {
-            $builder->where('vouchers.created_at', '>=', $from);
-            $builder->where('vouchers.created_at', '<=', $to);
-            $builder->where('vouchers.expire_at', '>=', $to);
+            if ($from) {
+                $builder->where('vouchers.created_at', '>=', $from);
+            }
+
+            if ($to) {
+                $builder->where('vouchers.created_at', '<=', $to);
+                $builder->where('vouchers.expire_at', '>=', $to);
+            }
 
             $builder->whereHas('fund', static function(Builder $builder) use ($from, $to) {
-                $builder->where('start_date', '<=', $to);
-                $builder->where('end_date', '>=', $from);
+                if ($from) {
+                    $builder->where('end_date', '>=', $from);
+                }
+
+                if ($to) {
+                    $builder->where('start_date', '<=', $to);
+                }
             });
         });
     }
 
     /**
      * @param Builder|Relation $builder
-     * @param Carbon $from
-     * @param Carbon $to
+     * @param Carbon|null $from
+     * @param Carbon|null $to
      * @return Builder|Relation
      */
-    public static function whereNotExpiredAndActive(Builder|Relation $builder, Carbon $from, Carbon $to): Builder|Relation
+    public static function whereNotExpiredAndActive(Builder|Relation $builder, ?Carbon $from, ?Carbon $to): Builder|Relation
     {
         return self::whereNotExpired(self::whereActive($builder, $from, $to), $from, $to);
     }
 
     /**
-     * @param Builder|Relation $builder
-     * @param Carbon $from
-     * @param Carbon $to
+     * @param Builder|Relation|Voucher $builder
+     * @param Carbon|null $from
+     * @param Carbon|null $to
      * @return Builder|Relation|Voucher
      */
-    public static function whereActive(Builder|Relation $builder, Carbon $from, Carbon $to): Builder|Relation|Voucher
-    {
+    public static function whereActive(
+        Builder|Relation|Voucher $builder,
+        ?Carbon $from,
+        ?Carbon $to,
+    ): Builder|Relation|Voucher {
         return $builder->where(static function (Builder $builder) use ($from, $to) {
             $builder->where('state', Voucher::STATE_ACTIVE);
+
             $builder->orWhere(static function (Builder $builder) use ($from, $to) {
-                $builder->where('created_at', '>=', $from);
-                $builder->where('created_at', '<=', $to);
-                $builder->where('expire_at', '>=', $from);
+                if ($from) {
+                    $builder->where('expire_at', '>=', $from);
+                    $builder->where('created_at', '>=', $from);
+                }
+
+                if ($to) {
+                    $builder->where('created_at', '<=', $to);
+                }
             });
         });
     }
@@ -82,95 +101,109 @@ class FinancialOverviewStatisticQueries
 
     /**
      * @param Builder $builder
-     * @param $from
-     * @param $to
+     * @param Carbon|null $from
+     * @param Carbon|null $to
      * @return Builder
      */
-    public static function whereNotExpiredAndPending(Builder $builder, $from, $to): Builder
-    {
+    public static function whereNotExpiredAndPending(
+        Builder $builder,
+        ?Carbon $from,
+        ?Carbon $to,
+    ): Builder {
         return self::whereNotExpired(self::wherePending($builder), $from, $to);
     }
 
     /**
      * @param Builder $builder
-     * @param Carbon $from
-     * @param Carbon $to
+     * @param Carbon|null $from
+     * @param Carbon|null $to
      * @return Builder
      */
     public static function whereNotExpiredAndDeactivated(
         Builder $builder,
-        Carbon $from,
-        Carbon $to,
+        ?Carbon $from,
+        ?Carbon $to,
     ): Builder {
         return self::whereNotExpired(self::whereDeactivated($builder), $from, $to);
     }
 
     /**
      * @param Fund $fund
+     * @param Carbon|null $from
+     * @param Carbon|null $to
      * @return float
      */
-    public static function getFundBudgetTotal(Fund $fund): float
-    {
-        if ($fund->balance_provider === Fund::BALANCE_PROVIDER_TOP_UPS) {
-            return round($fund->top_up_transactions()->sum('amount'), 2);
+    public static function getFundBudgetTotal(
+        Fund $fund,
+        ?Carbon $from = null,
+        ?Carbon $to = null,
+    ): float {
+        $builder = $fund->top_up_transactions();
+
+        if ($from) {
+            $builder->where('fund_top_up_transactions.created_at', '>=', $from);
         }
 
-        if ($fund->balance_provider === Fund::BALANCE_PROVIDER_BANK_CONNECTION) {
-            return round(floatval($fund->balance) + self::getFundBudgetUsed($fund), 2);
+        if ($to) {
+            $builder->where('fund_top_up_transactions.created_at', '<=', $to);
         }
 
-        return 0;
+        return round($builder->sum('amount'), 2);
     }
 
     /**
      * @param Fund $fund
+     * @param Carbon|null $from
+     * @param Carbon|null $to
      * @return float
      */
-    public static function getFundBudgetUsed(Fund $fund): float
-    {
-        return round($fund->voucher_transactions()->sum('voucher_transactions.amount'), 2);
-    }
-
-    /**
-     * @param Fund $fund
-     * @return float
-     */
-    public static function getFundBudgetLeft(Fund $fund): float
-    {
-        if ($fund->balance_provider === Fund::BALANCE_PROVIDER_TOP_UPS) {
-            return round(
-                self::getFundBudgetTotal($fund) - self::getFundBudgetUsed($fund),
-                2
-            );
-        }
-
-        if ($fund->balance_provider === Fund::BALANCE_PROVIDER_BANK_CONNECTION) {
-            return round($fund->balance, 2);
-        }
-
-        return 0;
-    }
-
-    /**
-     * @param Fund $fund
-     * @param Carbon $from
-     * @param Carbon $to
-     * @return float
-     */
-    public static function getBudgetFundUsedActiveVouchers(Fund $fund, Carbon $from, Carbon $to): float
+    public static function getFundBudgetUsed(Fund $fund, ?Carbon $from, ?Carbon $to): float
     {
         return round($fund->voucher_transactions()
-            ->where('voucher_transactions.created_at', '>=', $from)
-            ->where('voucher_transactions.created_at', '<=', $to)
-            ->where('vouchers.expire_at', '>=', $from)
+            ->where(function (Builder $builder) use ($from, $to) {
+                if ($from) {
+                    $builder->where('voucher_transactions.created_at', '>=', $from);
+                }
+
+                if ($to) {
+                    $builder->where('voucher_transactions.created_at', '<=', $to);
+                }
+            })
             ->sum('voucher_transactions.amount'), 2);
     }
 
     /**
      * @param Fund $fund
+     * @param Carbon|null $from
+     * @param Carbon|null $to
      * @return float
      */
-    public static function getFundTransactionCosts(Fund $fund): float
+    public static function getBudgetFundUsedActiveVouchers(
+        Fund $fund,
+        ?Carbon $from = null,
+        ?Carbon $to = null,
+    ): float {
+        return round($fund->voucher_transactions()
+            ->where(function (Builder $builder) use ($from, $to) {
+                if ($from) {
+                    $builder->where('vouchers.expire_at', '>=', $from);
+                    $builder->where('voucher_transactions.created_at', '>=', $from);
+                }
+
+                if ($to) {
+                    $builder->where('voucher_transactions.created_at', '<=', $to);
+                }
+            })
+            ->sum('voucher_transactions.amount'), 2);
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Carbon|null $from
+     * @param Carbon|null $to
+     * @return float
+     */
+    public static function getFundTransactionCosts(Fund $fund, ?Carbon $from, ?Carbon $to): float
     {
         $costs = 0;
         $state = VoucherTransaction::STATE_SUCCESS;
@@ -183,6 +216,15 @@ class FinancialOverviewStatisticQueries
                 ->where('voucher_transactions.state', $state)
                 ->whereIn('voucher_transactions.target', $targets)
                 ->whereRelation('voucher_transaction_bulk.bank_connection', 'bank_id', $bank->id)
+                ->where(function(Builder $builder) use ($from, $to) {
+                    if ($from) {
+                        $builder->where('voucher_transactions.created_at', '>=', $from);
+                    }
+
+                    if ($to) {
+                        $builder->where('voucher_transactions.created_at', '<=', $to);
+                    }
+                })
                 ->count() * $bank->transaction_cost;
         }
 
@@ -191,6 +233,15 @@ class FinancialOverviewStatisticQueries
                 ->where('voucher_transactions.state', $state)
                 ->whereIn('voucher_transactions.target', $targets)
                 ->whereDoesntHave('voucher_transaction_bulk')
+                ->where(function(Builder $builder) use ($from, $to) {
+                    if ($from) {
+                        $builder->where('voucher_transactions.created_at', '>=', $from);
+                    }
+
+                    if ($to) {
+                        $builder->where('voucher_transactions.created_at', '<=', $to);
+                    }
+                })
                 ->count() * $targetCostOld;
 
         return $costs;

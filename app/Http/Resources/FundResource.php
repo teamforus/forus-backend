@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Gate;
  */
 class FundResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'faq',
         'tags',
         'parent',
@@ -70,7 +70,7 @@ class FundResource extends BaseJsonResource
 
         $fundConfigData = $this->getFundConfigData($fund, $isDashboard);
 
-        $financialData = $loadStats ? FinancialOverviewStatistic::getFinancialData($fund, $this->stats, $this->year ?: now()->year) : [];
+        $financialData = $loadStats ? FinancialOverviewStatistic::getFinancialData($fund, $this->stats, $this->year) : [];
         $generatorData = $isDashboard ? $this->getVoucherGeneratorData($fund) : [];
         $prevalidationCsvData = $isDashboard ? $this->getPrevalidationCsvData($fund) : [];
         $organizationFunds2FAData = $this->organizationFunds2FAData($organization);
@@ -79,7 +79,7 @@ class FundResource extends BaseJsonResource
             'id', 'name', 'description', 'description_html', 'description_short', 'description_position',
             'organization_id', 'state', 'notification_amount', 'type', 'type_locale', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
-            'balance_provider', 'external_page', 'external_page_url',
+            'external_page', 'external_page_url',
         ]), [
             'outcome_type' => $fund->fund_config?->outcome_type ?: FundConfig::OUTCOME_TYPE_VOUCHER,
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
