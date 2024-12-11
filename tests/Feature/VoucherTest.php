@@ -686,7 +686,7 @@ class VoucherTest extends TestCase
         );
 
         $response = $this->post($url, [
-            'city' => Str::substr($this->faker()->city, 0, 20),
+            'city' => Str::limit($this->faker()->city, 0, 15),
             'house' => $this->faker()->numberBetween(1, 200),
             'address' => $this->faker()->address,
             'postcode' => $this->faker()->postcode,
