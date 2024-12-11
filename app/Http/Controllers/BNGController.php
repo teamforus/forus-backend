@@ -41,7 +41,6 @@ class BNGController extends Controller
 
             $connection->setMonetaryAccounts($connection->fetchConnectionMonetaryAccounts());
             $connection->setActive();
-            $connection->updateFundBalances();
         } catch (Throwable $e) {
             $connection->logBngError('Connection redirect', $e);
             return redirect($connection->dashboardDetailsUrl(null, 'unknown'));

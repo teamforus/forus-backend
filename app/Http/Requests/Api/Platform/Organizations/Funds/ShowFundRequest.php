@@ -24,7 +24,7 @@ class ShowFundRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'stats' => 'nullable|string|in:all,budget,product_vouchers',
+            'stats' => 'nullable|string|in:all,budget,product_vouchers,min',
         ];
     }
 }

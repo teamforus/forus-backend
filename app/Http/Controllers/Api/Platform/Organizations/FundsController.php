@@ -370,7 +370,7 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);
 
-        $year = $request->input('year', now()->year);
+        $year = $request->input('year');
         $statistics = new FinancialOverviewStatistic();
 
         return new JsonResponse($statistics->getStatistics($organization, $year));
@@ -395,7 +395,7 @@ class FundsController extends Controller
         $this->authorize('showFinances', $organization);
 
         $detailed = $request->input('detailed', false);
-        $year = $request->input('year', now()->year);
+        $year = $request->input('year');
         $from = Carbon::createFromFormat('Y', $year)->startOfYear();
         $to = $year < now()->year ? Carbon::createFromFormat('Y', $year)->endOfYear() : today();
         $exportType = $request->input('export_type', 'xls');

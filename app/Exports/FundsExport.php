@@ -128,13 +128,19 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
     protected function exportTransform(Collection $funds): Collection
     {
         if (!$this->detailed) {
-            return $funds->map(fn(Fund $fund) => [
-                "name" => $fund->name,
-                "total_top_up" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetTotal($fund)),
-                "expenses" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetUsed($fund)),
-                "balance" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetLeft($fund)),
-                "transactions" => currency_format(FinancialOverviewStatisticQueries::getFundTransactionCosts($fund)),
-            ]);
+            return $funds->map(function (Fund $fund) {
+                $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $this->from, $this->to);
+                $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $this->from, $this->to);
+                $costs = FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $this->from, $this->to);
+
+                return [
+                    "name" => $fund->name,
+                    "total_top_up" => currency_format($total),
+                    "expenses" => currency_format($used),
+                    "balance" => currency_format(round($total - $used, 2)),
+                    "transactions" => currency_format($costs),
+                ];
+            });
         }
 
         $funds = $funds->map(fn(Fund $fund) => $this->getVoucherData($fund));

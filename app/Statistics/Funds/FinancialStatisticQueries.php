@@ -14,6 +14,7 @@ use App\Scopes\Builders\OrganizationQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as BaseCollection;
 
@@ -31,18 +32,24 @@ class FinancialStatisticQueries
         $query = $query->with('translations')->select('id');
 
         $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
+        $voucherTransactionsQuery = clone $transactionsQuery;
 
         $query->addSelect([
-            'transactions' => $transactionsQuery->where(function(Builder $builder) {
-                $builder->whereHas('product.product_category', function(Builder $builder) {
-                    $builder->whereColumn('categories.id', 'root_id');
-                });
-
-                $builder->orWhereHas('voucher.product.product_category', function(Builder $builder) {
+            'product_transactions' => $transactionsQuery->where(function(Builder $builder) {
+                $builder->whereHas('product_category', function(Builder $builder) {
                     $builder->whereColumn('categories.id', 'root_id');
                 });
             })->selectRaw('count(*)'),
-        ])->orderByDesc('transactions');
+            'voucher_transactions' => $voucherTransactionsQuery->where(function(Builder $builder) {
+                $builder->whereHas('voucher.product_category', function(Builder $builder) {
+                    $builder->whereColumn('categories.id', 'root_id');
+                });
+            })->selectRaw('count(*)'),
+        ]);
+
+        $query = ProductCategory::fromSub($query, 'categories')
+            ->selectRaw('id, product_transactions + voucher_transactions as transactions')
+            ->orderByDesc('transactions');
 
         return $this->collectionOnly($query->get(), [
             'id', 'name', 'transactions'
@@ -63,7 +70,7 @@ class FinancialStatisticQueries
 
         $query->addSelect([
             'transactions' => $transactionsQuery->where(function(Builder $builder) {
-                $builder->whereHas('provider.business_type', function(Builder $builder) {
+                $builder->whereHas('provider_business_type', function(Builder $builder) {
                     $builder->from('business_types', 'business_types2');
                     $builder->whereColumn('business_types.id', 'business_types2.id');
                 });
@@ -109,10 +116,10 @@ class FinancialStatisticQueries
         })->whereNotNull('postcode_number')->select('postcode_number');
 
         $query->addSelect([
-            'transactions' => $transactionsQuery->whereHas('provider.offices', function(Builder $builder) {
+            'transactions' => $transactionsQuery->whereHas('provider_offices', function(Builder $builder) {
                 $builder->from('offices', 'offices2');
                 $builder->whereColumn('offices.postcode_number', 'offices2.postcode_number');
-            })->groupBy('postcode_number')->selectRaw('count(*)'),
+            })->selectRaw('count(*)'),
         ])->orderByDesc('transactions');
 
         return $this->collectionOnly($query->get()->map(function(Office $office) {
@@ -160,13 +167,13 @@ class FinancialStatisticQueries
      * @param array $options
      * @param Organization $sponsor
      * @param Builder|null $query
-     * @return Builder
+     * @return Builder|Relation|VoucherTransaction
      */
     public function getFilterTransactionsQuery(
         Organization $sponsor,
         array $options = [],
         Builder $query = null
-    ): Builder {
+    ): Builder|Relation|VoucherTransaction {
         $productCategoryIds = array_get($options, 'product_category_ids');
         $businessTypeIds = array_get($options, 'business_type_ids');
         $providerIds = array_get($options, 'provider_ids');

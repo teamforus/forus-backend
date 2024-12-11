@@ -6,7 +6,6 @@ use App\Events\Funds\FundBalanceSuppliedEvent;
 use App\Models\BankConnection;
 use App\Models\Fund;
 use App\Models\FundTopUp;
-use App\Models\Organization;
 use App\Scopes\Builders\FundQuery;
 use App\Services\BankService\Values\BankPayment;
 use Illuminate\Console\Command;
@@ -45,23 +44,6 @@ class BankProcessFundTopUpsCommand extends Command
     public function handle(): void
     {
         $this->processTopUps();
-        $this->processBankConnectionBalance();
-    }
-
-    /**
-     * @return void
-     */
-    public function processBankConnectionBalance(): void
-    {
-        $organizations = Organization::whereHas('funds', function(Builder $builder) {
-            $balanceProvider = Fund::BALANCE_PROVIDER_BANK_CONNECTION;
-            FundQuery::whereTopUpAndBalanceUpdateAvailable($builder, $balanceProvider);
-        })->get();
-
-        foreach ($organizations as $organization) {
-            $organization->updateFundBalancesByBankConnection();
-            sleep($this->fetchInterval);
-        }
     }
 
     /**
@@ -69,10 +51,14 @@ class BankProcessFundTopUpsCommand extends Command
      */
     public function processTopUps(): void
     {
-        $balanceProvider = Fund::BALANCE_PROVIDER_TOP_UPS;
         $fundId = $this->option('fund');
         $funds = $fundId ? Fund::whereKey($fundId) : Fund::query();
-        $funds = FundQuery::whereTopUpAndBalanceUpdateAvailable($funds, $balanceProvider)->get();
+
+        $funds->whereHas('organization', fn (Builder $b) => $b->whereHas('bank_connection_active'));
+        $funds->whereHas('top_ups');
+
+        FundQuery::whereIsInternal($funds);
+        FundQuery::whereIsConfiguredByForus($funds);
 
         foreach ($funds as $fund) {
             DB::transaction(function() use ($fund) {
