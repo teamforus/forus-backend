@@ -41,7 +41,7 @@ class FundCriterionResource extends BaseJsonResource
             ]))->toArray(),
             'record_type' => [
                 ...$criterion->record_type->only([
-                    'name', 'key', 'type'
+                    'name', 'key', 'type', 'control_type',
                 ]),
                 'options' => $criterion->record_type->getOptions(),
             ],
