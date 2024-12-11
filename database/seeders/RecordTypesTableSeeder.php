@@ -29,6 +29,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'key' => 'children_nth',
         'name' => 'Number of children',
         'type' => 'number',
+        'control_type' => 'step',
         'vouchers' => true,
         'criteria' => true,
     ], [
@@ -54,6 +55,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'tax_id',
         'name' => 'Tax ID',
+        'control_type' => 'number',
     ], [
         'key' => 'telephone',
         'name' => 'Telephone',
@@ -62,11 +64,13 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'key' => 'net_worth',
         'name' => 'Net worth',
         'type' => 'number',
+        'control_type' => 'currency',
         'criteria' => true,
     ], [
         'key' => 'base_salary',
         'name' => 'Base salary',
         'type' => 'number',
+        'control_type' => 'currency',
         'criteria' => true,
     ], [
         'key' => 'bsn',
@@ -100,14 +104,27 @@ class RecordTypesTableSeeder extends DatabaseSeeder
      */
     public function run(): void
     {
+        $baseTypes = [
+            'bool' => 'checkbox',
+            'date' => 'date',
+            'string' => 'text',
+            'email' => 'text',
+            'bsn' => 'number',
+            'iban' => 'text',
+            'number' => 'number',
+            'select' => 'select',
+            'select_number' => 'select',
+        ];
+
         foreach ($this->recordTypes as $type) {
             $recordType = RecordType::create([
                 'type' => 'string',
                 'system' => false,
                 'vouchers' => false,
                 'criteria' => false,
+                'control_type' => $baseTypes[$type['type'] ?? null] ?? 'text',
                 ...Arr::only($type, [
-                    'key', 'name', 'type', 'required', 'criteria', 'system', 'vouchers',
+                    'key', 'name', 'type', 'required', 'criteria', 'system', 'vouchers', 'control_type',
                 ]),
             ]);
 

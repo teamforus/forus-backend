@@ -17,6 +17,7 @@ return [
             'allow_payouts' => true,
             'allow_pre_checks' => true,
             'allow_bi_connection' => true,
+            'allow_product_updates' => true,
             'allow_2fa_restrictions' => true,
             'allow_budget_fund_limits' => true,
             'allow_manual_bulk_processing' => true,
