@@ -264,8 +264,7 @@ class Fund extends BaseModel
         'default_validator_employee_id', 'auto_requests_validation',
         'criteria_editable_after_start', 'type', 'archived', 'description_short',
         'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title',
-        'balance', 'description_position', 'external_page', 'external_page_url',
-        'pre_check_note',
+        'description_position', 'external_page', 'external_page_url', 'pre_check_note',
     ];
 
     protected $hidden = [
