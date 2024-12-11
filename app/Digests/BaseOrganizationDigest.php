@@ -12,7 +12,7 @@ use Carbon\Carbon;
  * Class BaseOrganizationDigest
  * @package App\Digests
  */
-abstract class BaseOrganizationDigest
+abstract class BaseOrganizationDigest extends BaseDigest
 {
     /**
      * @var string
