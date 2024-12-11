@@ -9,22 +9,24 @@ use App\Http\Resources\ProductCategoryResource;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
-use App\Models\Organization;
 use App\Models\Product;
 use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Services\EventLogService\Models\EventLog;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Arr;
 
 /**
  * @property int $sponsor_id
  * @property Product $resource
+ * @property Collection|Fund[] $funds
  * @property bool|null $with_monitored_history
- * @property Organization|null $sponsor_organization
  */
 class SponsorProductResource extends BaseJsonResource
 {
+    protected Collection |null $funds = null;
+
     public const array LOAD = [
         'photo.presets',
         'product_reservations_pending',
@@ -48,7 +50,6 @@ class SponsorProductResource extends BaseJsonResource
         /** @var FundProvider $fundProvider */
         $fundProvider = $request->route('fund_provider');
         $product = $this->resource;
-        $funds = $this->getProductFunds($product, $this->sponsor_organization);
 
         return [
             ...$product->only([
@@ -74,15 +75,7 @@ class SponsorProductResource extends BaseJsonResource
             'product_category' => new ProductCategoryResource($product->product_category),
             'is_available' => $this->isAvailable($product, $fundProvider) ,
             'deals_history' => $fundProvider ? $this->getDealsHistory($product, $fundProvider) : null,
-            'funds' => $funds ? $funds->map(fn (Fund $fund) => [
-                ...$fund->only([
-                    "id", "type", "name", "organization_id",
-                ]),
-                'logo' => new MediaResource($fund->logo),
-                'url' => $fund->urlWebshop(),
-                'url_product' => $fund->urlWebshop('/aanbod/' . $product->id),
-                'organization_name' => $fund->organization->name,
-            ]) : [],
+            'funds' => $this->funds ? $this->getFundData($this->funds, $product) : [],
             'monitored_changes_count' => $product->logs_monitored_field_changed()->count(),
             'monitored_history' => $this->with_monitored_history ? $this->getMonitoredHistory($product) : null,
             ...$this->productReservationFieldSettings($product),
@@ -97,6 +90,41 @@ class SponsorProductResource extends BaseJsonResource
     }
 
     /**
+     * @param Collection $funds
+     * @param Product|null $product
+     * @return array
+     */
+    protected function getFundData(Collection $funds, Product $product = null): array
+    {
+        $approvedIds = FundQuery::whereProductsAreApprovedAndActiveFilter(
+            Fund::query()->whereIn('id', $funds->pluck('id')->toArray()),
+            $product,
+        )->pluck('id')->toArray();
+
+        return $funds->map(function (Fund $fund) use ($product, $approvedIds) {
+            $fundProviderId = $fund->providers->where('organization_id', $product->organization_id)->first()?->id;
+
+            return [
+                ...$fund->only([
+                    "id", "type", 'type_locale', "name", "organization_id",
+                ]),
+                'implementation' => $fund->fund_config?->implementation?->only([
+                    'id', 'name',
+                ]),
+                'fund_provider_id' => $fundProviderId,
+                'state' => in_array($fund->id, $approvedIds) ? 'approved' : ($fundProviderId ? 'pending' : 'not_applied'),
+                'state_locale' => in_array($fund->id, $approvedIds) ? 'Goedgekeurd' : (
+                    $fundProviderId ? 'In behandeling' : 'Niet van toepassing'
+                ),
+                'logo' => new MediaResource($fund->logo),
+                'url' => $fund->urlWebshop(),
+                'url_product' => $product ? $fund->urlWebshop('/aanbod/' . $product->id) : null,
+                'organization_name' => $fund->organization->name,
+            ];
+        })->toArray();
+    }
+
+    /**
      * @param Product $product
      * @return array|null
      */
@@ -106,6 +134,7 @@ class SponsorProductResource extends BaseJsonResource
             ...$log->only([
                 'id',
             ]),
+            'fields' => $this->getHistoryFields($log),
             ...$this->makeTimestamps($log->only([
                 'created_at',
             ]))
@@ -113,19 +142,25 @@ class SponsorProductResource extends BaseJsonResource
     }
 
     /**
-     * @param Product $product
-     * @param Organization|null $sponsor
-     * @return Collection|null
+     * @param EventLog $log
+     * @return array
      */
-    private function getProductFunds(Product $product, ?Organization $sponsor): ?Collection
+    protected function getHistoryFields(EventLog $log): array
     {
-        if (!$sponsor) {
-            return null;
-        }
+        $list = collect(Arr::get($log->data, 'product_updated_fields', []));
 
-        return FundQuery::whereProductsAreApprovedAndActiveFilter($sponsor->funds(), $product)->with([
-            'fund_config.implementation',
-        ])->get();
+        return $list->mapWithKeys(function($row, $key) {
+            if ($key === 'description') {
+                return [
+                    $key => [
+                        'from' =>  (new Product(['description' => $row['from'] ?? '']))->description_html,
+                        'to' => (new Product(['description' => $row['to'] ?? '']))->description_html,
+                    ]
+                ];
+            }
+
+            return [$key => $row];
+        })->toArray();
     }
 
     /**

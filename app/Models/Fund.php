@@ -235,6 +235,12 @@ class Fund extends BaseModel
         self::STATE_WAITING,
     ];
 
+    public const array STATES_PUBLIC = [
+        self::STATE_ACTIVE,
+        self::STATE_PAUSED,
+        self::STATE_CLOSED,
+    ];
+
     public const string TYPE_BUDGET = 'budget';
     public const string TYPE_EXTERNAL = 'external';
     public const string TYPE_SUBSIDIES = 'subsidies';
@@ -267,6 +273,7 @@ class Fund extends BaseModel
         'criteria_editable_after_start', 'type', 'archived', 'description_short',
         'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title',
         'balance', 'description_position', 'external_page', 'external_page_url',
+        'pre_check_note',
     ];
 
     protected $hidden = [
@@ -507,6 +514,7 @@ class Fund extends BaseModel
             'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
             'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
             'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
+            'pre_check_excluded', 'pre_check_note',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
@@ -1547,39 +1555,38 @@ class Fund extends BaseModel
 
     /**
      * @param string $uri
-     * @return string
+     * @return string|null
      */
-    public function urlWebshop(string $uri = "/"): string
+    public function urlWebshop(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlWebshop($uri);
+        return $this->fund_config?->implementation?->urlWebshop($uri);
     }
 
     /**
      * @param string $uri
-     * @return string
+     * @return string|null
      */
-    public function urlSponsorDashboard(string $uri = "/"): string
+    public function urlSponsorDashboard(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlSponsorDashboard($uri);
+        return $this->fund_config?->implementation?->urlSponsorDashboard($uri);
     }
 
     /**
      * @param string $uri
-     * @return string
+     * @return string|null
      */
-    public function urlProviderDashboard(string $uri = "/"): string
+    public function urlProviderDashboard(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlProviderDashboard($uri);
+        return $this->fund_config?->implementation?->urlProviderDashboard($uri);
     }
 
     /**
      * @param string $uri
-     * @return string
-     * @noinspection PhpUnused
+     * @return string|null
      */
-    public function urlValidatorDashboard(string $uri = "/"): string
+    public function urlValidatorDashboard(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlValidatorDashboard($uri);
+        return $this->fund_config?->implementation?->urlValidatorDashboard($uri);
     }
 
     /**
@@ -1962,6 +1969,30 @@ class Fund extends BaseModel
         }
 
         return null;
+    }
+
+    /**
+     * @param bool $excluded
+     * @param string $note
+     * @return void
+     */
+    public function updatePreCheckExclusion(bool $excluded, string $note): void
+    {
+        $this->updateFundsConfig([
+            'pre_check_note' => $note,
+            'pre_check_excluded' => $excluded,
+        ]);
+    }
+
+    /**
+     * @return void
+     */
+    public function removePreCheckExclusion(): void
+    {
+        $this->updateFundsConfig([
+            'pre_check_note' => null,
+            'pre_check_excluded' => false,
+        ]);
     }
 
     /**

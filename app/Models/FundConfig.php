@@ -85,6 +85,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string $iconnect_cert_pass
  * @property string $iconnect_cert_trust
  * @property bool $provider_products_required
+ * @property int $pre_check_excluded
+ * @property string|null $pre_check_note
  * @property bool $help_enabled
  * @property string|null $help_title
  * @property string|null $help_block_text
@@ -191,6 +193,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereLimitVoucherTopUpAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereLimitVoucherTotalAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereOutcomeType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig wherePreCheckExcluded($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig wherePreCheckNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereProviderProductsRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereRecordValidityDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereRecordValidityStartDate($value)
@@ -247,6 +251,7 @@ class FundConfig extends BaseModel
         'help_button_text', 'help_email', 'help_phone', 'help_website', 'help_chat',
         'help_description', 'help_show_email', 'help_show_phone', 'help_show_website',
         'provider_products_required', 'criteria_label_requirement_show',
+        'pre_check_excluded', 'pre_check_note',
         'reservation_approve_offset', 'reimbursement_approve_offset',
     ];
 
@@ -294,6 +299,7 @@ class FundConfig extends BaseModel
         'contact_info_enabled' => 'boolean',
         'contact_info_required' => 'boolean',
         'contact_info_message_custom' => 'boolean',
+        'pre_check_excluded' => 'boolean',
         'allow_reservations' => 'boolean',
         'allow_reimbursements' => 'boolean',
         'limit_generator_amount' => 'string',
