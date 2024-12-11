@@ -535,7 +535,11 @@ class Voucher extends BaseModel
      */
     public function getHasPayoutsAttribute(): bool
     {
-        return $this->paid_out_transactions->count() > 0;
+        return
+            $this->paid_out_transactions->count() > 0 ||
+            $this->product_vouchers->reduce(function (int $total, Voucher $voucher) {
+                return $total + $voucher->paid_out_transactions->count();
+            }, 0) > 0;
     }
 
     /**
