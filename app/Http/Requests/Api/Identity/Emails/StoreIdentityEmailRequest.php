@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Identity\Emails;
 
+use App\Rules\IdentityEmailMaxRule;
 use App\Rules\IdentityEmailUniqueRule;
 
 /**
@@ -35,6 +36,7 @@ class StoreIdentityEmailRequest extends BaseIdentityEmailRequest
             'email' => [
                 'required',
                 new IdentityEmailUniqueRule(),
+                new IdentityEmailMaxRule($this->auth_address()),
                 ...$this->emailRules(),
             ],
         ];
