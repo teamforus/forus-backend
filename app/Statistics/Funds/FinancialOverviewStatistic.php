@@ -94,11 +94,11 @@ class FinancialOverviewStatistic
         $deactivated_vouchers_count = $deactivatedVouchersQuery->count();
 
         foreach ($funds as $fund) {
-            $budget += FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $from, $to);
-            $budget_left += FinancialOverviewStatisticQueries::getFundBudgetLeft($fund, $from, $to);
-            $budget_used += FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $from, $to);
+            $budget += FinancialOverviewStatisticQueries::getFundBudgetTotal($fund);
+            $budget_left += FinancialOverviewStatisticQueries::getFundBudgetLeft($fund);
+            $budget_used += FinancialOverviewStatisticQueries::getFundBudgetUsed($fund);
             $budget_used_active_vouchers += FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $from, $to);
-            $transaction_costs += FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $from, $to);
+            $transaction_costs += FinancialOverviewStatisticQueries::getFundTransactionCosts($fund);
         }
 
         $budget_locale = currency_format_locale($budget);
@@ -135,10 +135,10 @@ class FinancialOverviewStatistic
             return [
                 'budget' => [
                     'used' => currency_format(
-                        FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $from, $to),
+                        FinancialOverviewStatisticQueries::getFundBudgetUsed($fund),
                     ),
                     'total' => currency_format(
-                        FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $from, $to),
+                        FinancialOverviewStatisticQueries::getFundBudgetTotal($fund),
                     ),
                 ]
             ];
@@ -212,11 +212,12 @@ class FinancialOverviewStatistic
      */
     protected static function getVoucherDataBudget(Fund $fund, Carbon $from, Carbon $to): array
     {
-        $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $from, $to);
-        $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $from, $to);
+        $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund);
+        $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund);
+        $left = FinancialOverviewStatisticQueries::getFundBudgetLeft($fund);
+        $transactionCosts = FinancialOverviewStatisticQueries::getFundTransactionCosts($fund);
+
         $usedActiveVouchers = FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $from, $to);
-        $left = FinancialOverviewStatisticQueries::getFundBudgetLeft($fund, $from, $to);
-        $transactionCosts = FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $from, $to);
 
         return [
             'total' => currency_format($total),

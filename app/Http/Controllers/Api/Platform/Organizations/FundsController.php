@@ -370,7 +370,7 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);
 
-        $year = $request->input('year');
+        $year = $request->input('year', now()->year);
         $statistics = new FinancialOverviewStatistic();
 
         return new JsonResponse($statistics->getStatistics($organization, $year));

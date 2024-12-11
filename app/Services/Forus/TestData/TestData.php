@@ -351,7 +351,7 @@ class TestData
     ): Organization {
         $data = [
             'kvk' => Organization::GENERIC_KVK,
-            'iban' => $this->config('default_organization_iban') ?: $this->faker->iban('NL'),
+            'iban' => $this->faker->iban('NL'),
             'phone' => '123456789',
             'email' => sprintf(
                 $this->config('organization_email_pattern'),
@@ -629,6 +629,7 @@ class TestData
         $recordType = RecordType::firstOrCreate([
             'key' => $eligibility_key,
             'type' => 'bool',
+            'control_type' => 'checkbox',
         ], [
             'name' => "$fund->name eligible",
             'system' => false,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Requests\Api\Platform\Funds\CheckFundRequest;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 use App\Http\Requests\Api\Platform\Funds\RedeemFundsRequest;
+use App\Http\Requests\Api\Platform\Funds\ViewFundRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\PrevalidationResource;
@@ -60,19 +61,13 @@ class FundsController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param ViewFundRequest $request
      * @param Fund $fund
-     * @return FundResource
+     * @return FundResource|null
      */
-    public function show(Fund $fund): FundResource {
-        if (!in_array($fund->state, [
-            Fund::STATE_ACTIVE,
-            Fund::STATE_PAUSED,
-            Fund::STATE_CLOSED
-        ], true)) {
-            abort(404);
-        }
-
-        return FundResource::create($fund);
+    public function show(ViewFundRequest $request, Fund $fund): ?FundResource
+    {
+        return $request->authorize() ? FundResource::create($fund) : null;
     }
 
     /**

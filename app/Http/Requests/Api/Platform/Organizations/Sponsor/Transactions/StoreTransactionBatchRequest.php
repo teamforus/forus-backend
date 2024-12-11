@@ -48,6 +48,7 @@ class StoreTransactionBatchRequest extends BaseFormRequest
             'transactions.*.voucher_id' => $this->voucherIdRules(),
             'transactions.*.direct_payment_iban' => ['required', new IbanRule()],
             'transactions.*.direct_payment_name' => 'required|string|min:3|max:200',
+            ...$this->uploadedCSVFileRules(),
         ];
     }
 
