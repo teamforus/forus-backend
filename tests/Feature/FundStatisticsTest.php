@@ -54,7 +54,8 @@ class FundStatisticsTest extends TestCase
 
         $fund
             ->makeVoucher($this->makeIdentity())
-            ->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 1000]);
+            ->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 1000])
+            ->setPaid(null, now());
 
         $response = $this->getJson(
             "/api/v1/platform/organizations/$fund->organization_id/funds/$fund->id?stats=min",
@@ -68,7 +69,8 @@ class FundStatisticsTest extends TestCase
 
         $fund
             ->makeVoucher($this->makeIdentity())
-            ->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 2000]);
+            ->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 2000])
+            ->setPaid(null, now());
 
         $response = $this->getJson(
             "/api/v1/platform/organizations/$fund->organization_id/funds/$fund->id?stats=all",
@@ -90,18 +92,19 @@ class FundStatisticsTest extends TestCase
         $fund->top_ups()->forceDelete();
         $this->travelTo('2020-01-01');
         $voucher = $fund->makeVoucher($this->makeIdentity());
+        $employee = $fund->organization->employees[0];
 
         $this->travelTo('2021-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => 10000]);
-        $voucher->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 1000]);
+        $voucher->makeTransactionBySponsor($employee, ['amount' => 1000])->setPaid(null, now());
 
         $this->travelTo('2022-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => 20000]);
-        $voucher->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 2000]);
+        $voucher->makeTransactionBySponsor($employee, ['amount' => 2000])->setPaid(null, now());
 
         $this->travelTo('2023-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => 40000]);
-        $voucher->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 4000]);
+        $voucher->makeTransactionBySponsor($employee, ['amount' => 4000])->setPaid(null, now());
 
         $this->getJson(
             "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all&year=2021",
@@ -117,5 +120,34 @@ class FundStatisticsTest extends TestCase
             "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all&year=2023",
             $this->makeApiHeaders($fund->organization->identity),
         )->assertJsonPath('data.0.budget.left', currency_format(36000));
+    }
+
+    /**
+     * @return void
+     */
+    public function testOnlyPaidTransactionsAreCountedTowardsBalanceSpent(): void
+    {
+        $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
+        $fund->top_ups()->forceDelete();
+        $voucher = $fund->makeVoucher($this->makeIdentity());
+
+        $fund->getOrCreateTopUp()->transactions()->create(['amount' => 10000]);
+        $transaction = $voucher->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 1000]);
+
+        $this->assertFalse($transaction->fresh()->isPaid());
+
+        $this->getJson(
+            "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all",
+            $this->makeApiHeaders($fund->organization->identity),
+        )->assertJsonPath('data.0.budget.left', currency_format(10000));
+
+        $transaction->setPaid(null, now());
+
+        $this->assertTrue($transaction->fresh()->isPaid());
+
+        $this->getJson(
+            "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all",
+            $this->makeApiHeaders($fund->organization->identity),
+        )->assertJsonPath('data.0.budget.left', currency_format(9000));
     }
 }

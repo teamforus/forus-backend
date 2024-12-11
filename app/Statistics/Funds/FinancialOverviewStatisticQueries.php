@@ -169,6 +169,7 @@ class FinancialOverviewStatisticQueries
                     $builder->where('voucher_transactions.created_at', '<=', $to);
                 }
             })
+            ->where('voucher_transactions.state', VoucherTransaction::STATE_SUCCESS)
             ->sum('voucher_transactions.amount'), 2);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
 use App\Exports\VoucherTransactionsProviderExport;
 use App\Exports\VoucherTransactionsSponsorExport;
 use App\Scopes\Builders\VoucherTransactionQuery;
@@ -621,6 +622,20 @@ class VoucherTransaction extends BaseModel
     public function isPaid(): bool
     {
         return $this->state === self::STATE_SUCCESS;
+    }
+
+    /**
+     * @param int|null $paymentId
+     * @param Carbon|null $paymentDate
+     * @return void
+     */
+    public function setPaid(?int $paymentId, ?Carbon $paymentDate): void
+    {
+        $this->forceFill([
+            'state' => self::STATE_SUCCESS,
+            'payment_id' => $paymentId,
+            'payment_time' => $paymentDate,
+        ])->save();
     }
 
     /**
