@@ -7,6 +7,7 @@ use App\Scopes\Builders\IdentityQuery;
 use App\Services\Forus\Auth2FAService\Auth2FAService;
 use App\Services\Forus\Auth2FAService\Data\Auth2FASecret;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
+use App\Services\Forus\Session\Models\Session;
 use App\Services\Forus\Notification\Models\NotificationToken;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Notifications\Notifiable;
@@ -40,8 +42,12 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $auth_2fa_providers_active_count
  * @property-read Collection|\App\Models\IdentityEmail[] $emails
  * @property-read int|null $emails_count
+ * @property-read Collection|\App\Models\IdentityEmail[] $emails_verified
+ * @property-read int|null $emails_verified_count
  * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
+ * @property-read Collection|\App\Models\FundRequest[] $fund_requests
+ * @property-read int|null $fund_requests_count
  * @property-read Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string|null $bsn
@@ -58,6 +64,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read Collection|\App\Models\PhysicalCard[] $physical_cards
  * @property-read int|null $physical_cards_count
  * @property-read \App\Models\IdentityEmail|null $primary_email
+ * @property-read Collection|\App\Models\Profile[] $profiles
+ * @property-read int|null $profiles_count
  * @property-read Collection|\App\Models\IdentityProxy[] $proxies
  * @property-read int|null $proxies_count
  * @property-read \App\Models\Record|null $record_bsn
@@ -65,6 +73,10 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $record_categories_count
  * @property-read Collection|\App\Models\Record[] $records
  * @property-read int|null $records_count
+ * @property-read Collection|\App\Models\Reimbursement[] $reimbursements
+ * @property-read int|null $reimbursements_count
+ * @property-read Collection|Session[] $sessions
+ * @property-read int|null $sessions_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
  * @method static Builder<static>|Identity newModelQuery()
@@ -89,7 +101,7 @@ class Identity extends Model implements Authenticatable
      * How much time user has to exchange their exchange_token
      * @var array
      */
-    public const expirationTimes = [
+    public const array EXPIRATION_TIMES = [
         // 1 minute
         'short_token' => 60,
         // 10 minutes
@@ -138,6 +150,23 @@ class Identity extends Model implements Authenticatable
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
+
+    public function emails_verified(): HasMany
+    {
+        return $this
+            ->hasMany(IdentityEmail::class, 'identity_address', 'address')
+            ->where('verified', true);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function profiles(): HasMany
+    {
+        return $this->hasMany(Profile::class);
+    }
+
     public function notification_tokens(): HasMany
     {
         return $this->hasMany(NotificationToken::class, 'identity_address', 'address');
@@ -243,6 +272,21 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
+     * @return HasManyThrough
+     */
+    public function sessions(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Session::class,
+            IdentityProxy::class,
+            'identity_address',
+            'identity_proxy_id',
+            'address',
+            'id',
+        );
+    }
+
+    /**
      * @return HasMany
      */
     public function employees(): HasMany
@@ -286,6 +330,29 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
+     * @return HasMany
+     */
+    public function fund_requests(): HasMany
+    {
+        return $this->hasMany(FundRequest::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return HasManyThrough
+     */
+    public function reimbursements(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Reimbursement::class,
+            Voucher::class,
+            'identity_address',
+            'voucher_id',
+            'address',
+            'id',
+        );
+    }
+
+    /**
      * @return HasOne
      * @noinspection PhpUnused
      */
@@ -294,7 +361,6 @@ class Identity extends Model implements Authenticatable
         return $this
             ->hasOne(Record::class, 'identity_address', 'address')
             ->whereRelation('record_type', 'key', 'bsn')
-            ->latest('created_at')
             ->latest();
     }
 
@@ -380,19 +446,7 @@ class Identity extends Model implements Authenticatable
      */
     public function getBsnAttribute(): ?string
     {
-        return $this->activeBsnRecord()?->value;
-    }
-
-    /**
-     * @return Record|null
-     */
-    public function activeBsnRecord(): ?Record
-    {
-        return Record::query()
-            ->where('identity_address', $this->address)
-            ->whereRelation('record_type', 'key', 'bsn')
-            ->latest('created_at')
-            ->first();
+        return $this->record_bsn?->value;
     }
 
     /**
@@ -527,7 +581,7 @@ class Identity extends Model implements Authenticatable
             abort(400);
         }
 
-        return static::createProxy($exchangeToken, $type, static::expirationTimes[$type], $identity, $state);
+        return static::createProxy($exchangeToken, $type, static::EXPIRATION_TIMES[$type], $identity, $state);
     }
 
     /**
@@ -797,12 +851,16 @@ class Identity extends Model implements Authenticatable
             abort(403,'record.exceptions.bsn_record_cant_be_changed');
         }
 
-        return $this->records()->create([
+        $record = $this->records()->create([
             'order' => 0,
             'value' => $bsnValue,
             'record_type_id' => $recordType->id,
             'record_category_id' => null,
         ]);
+
+        $this->load('record_bsn');
+
+        return $record;
     }
 
     /**
@@ -824,7 +882,7 @@ class Identity extends Model implements Authenticatable
     /**
      * @return null
      */
-    public function getAuthPassword()
+    public function getAuthPassword(): null
     {
         return null;
     }
@@ -832,7 +890,7 @@ class Identity extends Model implements Authenticatable
     /**
      * @return null
      */
-    public function getRememberToken()
+    public function getRememberToken(): null
     {
         return null;
     }
@@ -840,7 +898,7 @@ class Identity extends Model implements Authenticatable
     /**
      * @return null
      */
-    public function getRememberTokenName()
+    public function getRememberTokenName(): null
     {
         return null;
     }
@@ -849,7 +907,7 @@ class Identity extends Model implements Authenticatable
      * @param $value
      * @return null
      */
-    public function setRememberToken($value)
+    public function setRememberToken($value): null
     {
         return null;
     }

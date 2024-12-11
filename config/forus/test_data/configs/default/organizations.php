@@ -15,6 +15,7 @@ return [
         'organization' => [
             'backoffice_available' => true,
             'allow_payouts' => true,
+            'allow_profiles' => true,
             'allow_pre_checks' => true,
             'allow_bi_connection' => true,
             'allow_product_updates' => true,

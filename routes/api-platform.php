@@ -161,6 +161,9 @@ $router->post('/share/email', 'Api\Platform\ShareController@sendEmail');
  * Authorization required
  */
 $router->group(['middleware' => 'api.auth'], static function() use ($router) {
+    $router->get('/profile', "Api\Platform\ProfileController@profile");
+    $router->patch('/profile', "Api\Platform\ProfileController@updateProfile");
+
     // Organizations
     $router->group(['prefix' => 'organizations/{organization}'], function() use ($router) {
         $router->patch('roles', "Api\Platform\OrganizationsController@updateRoles");
@@ -825,6 +828,26 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->parameters([
         'payouts' => 'transaction_address',
     ])->only('index', 'show', 'store', 'update');
+
+    $router->resource(
+        'organizations/{organization}/sponsor/identities',
+        'Api\Platform\Organizations\Sponsor\IdentitiesController'
+    )->only('index', 'show', 'update');
+
+    $router->post(
+        'organizations/{organization}/sponsor/identities/{identity}/bank-accounts',
+        'Api\Platform\Organizations\Sponsor\IdentitiesController@storeBankAccount',
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/identities/{identity}/bank-accounts/{profileBankAccount}',
+        'Api\Platform\Organizations\Sponsor\IdentitiesController@updateBankAccount',
+    );
+
+    $router->delete(
+        'organizations/{organization}/sponsor/identities/{identity}/bank-accounts/{profileBankAccount}',
+        'Api\Platform\Organizations\Sponsor\IdentitiesController@deleteBankAccount',
+    );
 
     $router->get(
         'organizations/{organization}/sponsor/transaction-bulks/export-fields',

@@ -27,6 +27,8 @@ class IndexPayoutTransactionsRequest extends BaseIndexTransactionsRequest
             'fund_id' => ['nullable', 'exists:funds,id', Rule::in($fundIds)],
             'fund_state' => ['nullable', Rule::in(Fund::STATES)],
 
+            'identity_address' => 'nullable|exists:identities,address',
+
             'amount_min' => 'nullable|numeric|min:0',
             'amount_max' => 'nullable|numeric|min:0',
 
