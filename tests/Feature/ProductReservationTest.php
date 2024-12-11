@@ -12,21 +12,18 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 use Tests\Traits\MakesProductReservations;
+use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestVouchers;
 use Tests\Traits\TestsReservations;
 
 class ProductReservationTest extends TestCase
 {
+    use MakesTestFunds;
     use MakesTestVouchers;
     use TestsReservations;
     use AssertsSentEmails;
     use DatabaseTransactions;
     use MakesProductReservations;
-
-    /**
-     * @var string
-     */
-    protected string $apiOrganizationUrl = '/api/v1/platform/organizations/%s/product-reservations';
 
     /**
      * @var array
@@ -59,24 +56,15 @@ class ProductReservationTest extends TestCase
     ];
 
     /**
-     * @var string
-     */
-    protected string $organizationSubsidyName = 'Nijmegen';
-
-    /**
-     * @var string
-     */
-    protected string $organizationBudgetName = 'Nijmegen';
-
-    /**
      * @return void
      * @throws \Exception
      */
     public function testReservationWithBudgetVoucher(): void
     {
-        /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationBudgetName)->first();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
         $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
         $product = $this->findProductForReservation($voucher);
@@ -88,10 +76,12 @@ class ProductReservationTest extends TestCase
      * @return void
      * @throws \Exception
      */
-    public function testReservationWithSubsidyVoucher(): void
+    public function testReservationWithSubsidyVoucherAsUser(): void
     {
-        $organization = Organization::firstWhere('name', $this->organizationSubsidyName);
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
         $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
         $product = $this->findProductForReservation($voucher);
@@ -105,9 +95,10 @@ class ProductReservationTest extends TestCase
      */
     public function testReservationWithBudgetVoucherAsGuest(): void
     {
-        /** @var Organization $organization */
-        $organization = Organization::where('name', $this->organizationBudgetName)->first();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
         $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
         $product = $this->findProductForReservation($voucher);
@@ -121,8 +112,10 @@ class ProductReservationTest extends TestCase
      */
     public function testReservationWithSubsidyVoucherAsGuest(): void
     {
-        $organization = Organization::firstWhere('name', $this->organizationBudgetName);
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
         $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
         $product = $this->findProductForReservation($voucher);
@@ -136,8 +129,11 @@ class ProductReservationTest extends TestCase
      */
     public function testReservationWithInvalidVoucher(): void
     {
-        $organization = Organization::firstWhere('name', $this->organizationBudgetName);
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
         $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
 
         Organization::query()
             ->where('reservations_subsidy_enabled', true)
@@ -162,8 +158,11 @@ class ProductReservationTest extends TestCase
      */
     public function testReservationWithInvalidProduct(): void
     {
-        $organization = Organization::firstWhere('name', $this->organizationBudgetName);
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
         $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
 
         Organization::query()
             ->where('reservations_budget_enabled', true)
@@ -187,8 +186,10 @@ class ProductReservationTest extends TestCase
      */
     public function testReservationProviderWithBudgetVoucher(): void
     {
-        $organization = Organization::firstWhere('name', $this->organizationBudgetName);
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
         $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
         $product = $this->findProductForReservation($voucher);
@@ -202,8 +203,10 @@ class ProductReservationTest extends TestCase
      */
     public function testReservationProviderWithSubsidyVoucher(): void
     {
-        $organization = Organization::firstWhere('name', $this->organizationBudgetName);
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
         $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
         $product = $this->findProductForReservation($voucher);
@@ -217,8 +220,10 @@ class ProductReservationTest extends TestCase
      */
     public function testReservationArchiving(): void
     {
-        $organization = Organization::firstWhere('name', $this->organizationBudgetName);
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
         $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
         $product = $this->findProductForReservation($voucher);
@@ -232,8 +237,10 @@ class ProductReservationTest extends TestCase
      */
     public function testReservationExpireOffset(): void
     {
-        $organization = Organization::firstWhere('name', $this->organizationBudgetName);
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
         $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
         $product = $this->findProductForReservation($voucher);
@@ -308,10 +315,13 @@ class ProductReservationTest extends TestCase
     ): void {
         $proxy = $this->makeIdentityProxy($reservation->product->organization->identity);
         $headers = $this->makeApiHeaders($proxy);
-
         $providers = $reservation->product->organization;
-        $reservationUrl = sprintf($this->apiOrganizationUrl . '/%s', $providers->id, $reservation->id);
-        $response = $this->post("$reservationUrl/archive", [], $headers);
+
+        $response = $this->post(
+            "/api/v1/platform/organizations/$providers->id/product-reservations/$reservation->id/archive",
+            [],
+            $headers,
+        );
 
         if ($assertSuccess) {
             $response->assertSuccessful();
@@ -337,8 +347,12 @@ class ProductReservationTest extends TestCase
         bool $assertSuccess = true
     ): void {
         $providers = $reservation->product->organization;
-        $reservationUrl = sprintf($this->apiOrganizationUrl . '/%s', $providers->id, $reservation->id);
-        $response = $this->post("$reservationUrl/unarchive", [], $apiHeaders);
+
+        $response = $this->post(
+            "/api/v1/platform/organizations/$providers->id/product-reservations/$reservation->id/unarchive",
+            [],
+            $apiHeaders,
+        );
 
         if ($assertSuccess) {
             $response->assertSuccessful();
@@ -372,6 +386,7 @@ class ProductReservationTest extends TestCase
         ]);
 
         $response = $this->makeReservationStoreRequest($voucher, $product);
+        $response->assertSuccessful();
         $response->assertJsonStructure(['data' => $this->resourceStructure]);
 
         $reservation = ProductReservation::find($response->json('data.id'));
@@ -405,10 +420,11 @@ class ProductReservationTest extends TestCase
         ));
 
         // reject reservation
-        $rejectUrl = sprintf(
-            $this->apiOrganizationUrl . '/%s/reject', $product->organization->id, $reservation->id
-        );
-        $this->post($rejectUrl, [], $headers)->assertJsonFragment([
+        $this->post(
+            "/api/v1/platform/organizations/$product->organization_id/product-reservations/$reservation->id/reject",
+            [],
+            $headers
+        )->assertJsonFragment([
             'state' => ProductReservation::STATE_CANCELED_BY_PROVIDER
         ]);
 
@@ -430,15 +446,14 @@ class ProductReservationTest extends TestCase
         bool $assertSuccess,
     ): void {
         $startTime = now();
-
         $provider = $reservation->product->organization;
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy(
-            $provider->employees->first()->identity,
-        ));
 
         // accept reservation
-        $acceptUrl = sprintf($this->apiOrganizationUrl . '/%s/accept', $provider->id, $reservation->id);
-        $response = $this->post($acceptUrl, [], $headers);
+        $response = $this->post(
+            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/accept",
+            [],
+            $this->makeApiHeaders($this->makeIdentityProxy($provider->employees[0]->identity)),
+        );
 
         if ($assertSuccess) {
             $response->assertSuccessful();

@@ -487,7 +487,7 @@ class MollieExtraPaymentsTest extends TestCase
             'state' => Voucher::STATE_ACTIVE
         ], 100));
 
-        $provider = $this->makeProviderOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity($this->makeUniqueEmail()));
         $product = $this->makeTestProductForReservation($provider);
         $fundProvider = $this->makeTestFundProvider($provider, $fund);
 

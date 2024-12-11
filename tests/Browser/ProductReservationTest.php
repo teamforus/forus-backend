@@ -61,7 +61,7 @@ class ProductReservationTest extends DuskTestCase
             $browser->visit($implementation->urlWebshop());
 
             $identity = $this->makeIdentity($this->makeUniqueEmail());
-            $provider = $this->makeProviderOrganization($this->makeIdentity($this->makeUniqueEmail()));
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity($this->makeUniqueEmail()));
 
             $this->makeTestProductForReservation($provider);
 
