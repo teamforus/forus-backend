@@ -6,6 +6,7 @@ namespace App\Statistics\Funds;
 use App\Models\Fund;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Scopes\Builders\VoucherQuery;
 use App\Services\BankService\Models\Bank;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,13 +23,14 @@ class FinancialOverviewStatisticQueries
     public static function whereNotExpired(Builder|Relation $builder, ?Carbon $from, ?Carbon $to): Builder|Relation
     {
         return $builder->where(static function(Builder $builder) use ($from, $to) {
+            VoucherQuery::whereNotExpired($builder);
+
             if ($from) {
                 $builder->where('vouchers.created_at', '>=', $from);
             }
 
             if ($to) {
                 $builder->where('vouchers.created_at', '<=', $to);
-                $builder->where('vouchers.expire_at', '>=', $to);
             }
 
             $builder->whereHas('fund', static function(Builder $builder) use ($from, $to) {
