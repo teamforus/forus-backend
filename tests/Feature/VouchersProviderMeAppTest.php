@@ -41,7 +41,7 @@ class VouchersProviderMeAppTest extends TestCase
         $this->assertNotNull($voucher);
 
         $providerIdentity = $this->makeIdentity($this->makeUniqueEmail());
-        $provider = $this->makeProviderOrganization($providerIdentity);
+        $provider = $this->makeTestProviderOrganization($providerIdentity);
         $fundProvider = $this->makeTestFundProvider($provider, $fund);
 
         $this->assertNotNull($fundProvider);

@@ -34,7 +34,7 @@ trait DoesTesting
         string $tokenType = 'confirmation_code',
         ?string $ip = null
     ): IdentityProxy {
-        $this->assertContains($tokenType, array_keys($identity::expirationTimes));
+        $this->assertContains($tokenType, array_keys($identity::EXPIRATION_TIMES));
 
         if (in_array($tokenType, ['confirmation_code', 'email_code'])) {
             if ($tokenType == 'confirmation_code') {

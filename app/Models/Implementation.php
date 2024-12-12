@@ -528,9 +528,9 @@ class Implementation extends BaseModel
 
     /**
      * @param ...$states
-     * @return Builder
+     * @return Builder|Fund
      */
-    public static function queryFundsByState(...$states): Builder
+    public static function queryFundsByState(...$states): Builder|Fund
     {
         return self::queryFunds()->whereIn('state', is_array($states[0] ?? null) ? $states[0] : $states);
     }
@@ -1021,10 +1021,6 @@ class Implementation extends BaseModel
         ];
     }
 
-    /**
-     * @param array $pre_checks
-     * @return void
-     */
     public function syncPreChecks(array $pre_checks): void
     {
         $this->pre_checks()

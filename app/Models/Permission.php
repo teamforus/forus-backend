@@ -25,13 +25,18 @@ class Permission extends BaseModel
 {
     protected static Collection|null $memCache = null;
 
-    const VALIDATE_RECORDS = 'validate_records';
-    const MANAGE_VALIDATORS = 'manage_validators';
+    const string VALIDATE_RECORDS = 'validate_records';
+    const string MANAGE_VALIDATORS = 'manage_validators';
 
-    const MANAGE_FUNDS = 'manage_funds';
-    const MANAGE_FUND_TEXTS = 'manage_fund_texts';
+    const string MANAGE_FUNDS = 'manage_funds';
+    const string MANAGE_FUND_TEXTS = 'manage_fund_texts';
 
-    const MANAGE_PAYOUTS = 'manage_payouts';
+    const string MANAGE_PAYOUTS = 'manage_payouts';
+
+    const string MANAGE_IMPLEMENTATION_NOTIFICATIONS = 'manage_implementation_notifications';
+
+    const string MANAGE_IDENTITIES = 'manage_identities';
+    const string VIEW_IDENTITIES = 'view_identities';
 
     protected $fillable = [
         'key', 'name',

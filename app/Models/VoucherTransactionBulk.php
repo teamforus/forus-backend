@@ -316,10 +316,11 @@ class VoucherTransactionBulk extends BaseModel
 
     /**
      * @param Employee|null $employee
+     * @param bool $throttle
      * @return self
      * @throws Throwable
      */
-    public function setAcceptedBNG(?Employee $employee = null): self
+    public function setAcceptedBNG(?Employee $employee = null, bool $throttle = true): self
     {
         DB::transaction(function() use ($employee) {
             $this->update([
@@ -332,16 +333,18 @@ class VoucherTransactionBulk extends BaseModel
 
             foreach ($this->voucher_transactions as $transaction) {
                 $transaction->forceFill([
-                    'state'             => VoucherTransaction::STATE_SUCCESS,
-                    'payment_id'        => null,
-                    'payment_time'      => now(),
+                    'state' => VoucherTransaction::STATE_SUCCESS,
+                    'payment_id' => null,
+                    'payment_time' => now(),
                 ])->save();
 
                 VoucherTransactionBunqSuccess::dispatch($transaction);
             }
         });
 
-        sleep(1);
+        if ($throttle) {
+            sleep(1);
+        }
 
         return $this->fresh();
     }
