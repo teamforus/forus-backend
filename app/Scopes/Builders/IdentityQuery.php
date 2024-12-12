@@ -81,4 +81,34 @@ class IdentityQuery
             $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
         });
     }
+
+    /**
+     * @param Builder|Relation|Identity $builder
+     * @param array|int $organizationId
+     * @param array|int|null $fundId
+     * @return Builder|Relation|Identity
+     */
+    public static function relatedToOrganization(
+        Builder|Relation|Identity $builder,
+        array|int $organizationId,
+        array|int $fundId = null,
+    ): Builder|Relation|Identity  {
+        return $builder->where(function(Builder $builder) use ($organizationId, $fundId) {
+            $builder->whereHas('vouchers.fund', function (Builder $builder) use ($organizationId, $fundId) {
+                $builder->whereIn('organization_id', (array) $organizationId);
+
+                if ($fundId) {
+                    $builder->whereIn('id', (array) $fundId);
+                }
+            });
+
+            $builder->orWhereHas('fund_requests.fund', function (Builder $builder) use ($organizationId, $fundId) {
+                $builder->whereIn('organization_id', (array) $organizationId);
+
+                if ($fundId) {
+                    $builder->whereIn('id', (array) $fundId);
+                }
+            });
+        });
+    }
 }

@@ -1886,7 +1886,7 @@ class Fund extends BaseModel
      */
     public function identityRequireBsnConfirmation(Identity $identity): bool
     {
-        $record = $identity->activeBsnRecord();
+        $record = $identity->record_bsn;
         $recordTime = $record?->created_at?->diffInSeconds(now());
 
         if ($this->fund_config && $this->fund_config->bsn_confirmation_api_time === null) {
