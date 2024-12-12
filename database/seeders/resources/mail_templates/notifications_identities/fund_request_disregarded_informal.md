@@ -1,4 +1,4 @@
-# Uw aanvraag voor :fund_name is niet behandelen
+# Uw aanvraag voor :fund_name is niet behandeld
 
 Beste deelnemer,
 
