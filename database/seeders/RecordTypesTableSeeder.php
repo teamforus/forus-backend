@@ -19,11 +19,11 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'criteria' => true,
     ], [
         'key' => 'given_name',
-        'name' => 'Given Name',
+        'name' => 'Voornaam',
         'vouchers' => true,
     ], [
         'key' => 'family_name',
-        'name' => 'Family Name',
+        'name' => 'Achternaam',
         'vouchers' => true,
     ], [
         'key' => 'children_nth',
@@ -41,7 +41,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'vouchers' => true,
     ], [
         'key' => 'birth_date',
-        'name' => 'Birth date',
+        'name' => 'Geboortedatum',
         'type' => 'date',
         'vouchers' => true,
         'criteria' => true,
@@ -58,7 +58,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'control_type' => 'number',
     ], [
         'key' => 'telephone',
-        'name' => 'Telephone',
+        'name' => 'Vast telefoonnummer',
         'vouchers' => true,
     ], [
         'key' => 'net_worth',
@@ -94,6 +94,30 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'partner_bsn_hash',
         'name' => 'Partner BSN Hash',
+        'system' => true,
+    ], [
+        'key' => 'mobile',
+        'name' => 'Mobiele telefoonnummer',
+        'system' => true,
+    ], [
+        'key' => 'city',
+        'name' => 'Woonplaats',
+        'system' => true,
+    ], [
+        'key' => 'street',
+        'name' => 'Straatnaam',
+        'system' => true,
+    ], [
+        'key' => 'house_number',
+        'name' => 'Huisnummer',
+        'system' => true,
+    ], [
+        'key' => 'house_number_addition',
+        'name' => 'Huisnummer toevoeging',
+        'system' => true,
+    ], [
+        'key' => 'postal_code',
+        'name' => 'Postcode',
         'system' => true,
     ]];
 

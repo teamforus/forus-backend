@@ -5,6 +5,10 @@ return [
         'attempts' => env('AUTH_THROTTLE_ATTEMPTS', 10),
         'decay' => env('AUTH_THROTTLE_DECAY', 10),
     ],
+    'update_profile' => [
+        'attempts' => env('UPDATE_PROFILE_THROTTLE_ATTEMPTS', 5),
+        'decay' => env('UPDATE_PROFILE_THROTTLE_DECAY', 10),
+    ],
     'fund_check' => [
         'attempts' => env('FUND_CHECK_ATTEMPTS', 20),
         'decay' => env('FUND_CHECK_DECAY', 60),
