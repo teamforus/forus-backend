@@ -273,7 +273,14 @@ class VoucherPolicy
      */
     public function sendEmail(Identity $identity, Voucher $voucher): bool
     {
-        return $this->shareVoucher($identity, $voucher) && $voucher->identity->email;
+        return
+            $this->show($identity, $voucher) &&
+            $voucher->fund->isConfigured() &&
+            $voucher->fund->isInternal() &&
+            $voucher->isInternal() &&
+            !$voucher->deactivated &&
+            !$voucher->expired &&
+            $voucher->identity->email;
     }
 
     /**
@@ -288,6 +295,7 @@ class VoucherPolicy
             $this->show($identity, $voucher) &&
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
+            $voucher->isProductType() &&
             $voucher->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->expired;
