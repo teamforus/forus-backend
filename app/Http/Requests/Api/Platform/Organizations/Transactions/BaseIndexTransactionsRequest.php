@@ -61,6 +61,8 @@ abstract class BaseIndexTransactionsRequest extends BaseFormRequest
             'non_cancelable_to' => 'nullable|date_format:Y-m-d',
             'bulk_state' => ['nullable', Rule::in(VoucherTransactionBulk::STATES)],
 
+            'identity_address' => 'nullable|exists:identities,address',
+
             'voucher_id' => [
                 'nullable',
                 Rule::exists('vouchers', 'id')->whereIn('fund_id', $fundIds),
