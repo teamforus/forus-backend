@@ -7,7 +7,7 @@ U kunt het aanbod aanvullen of verwijderen. Als u het aanbod verwijdert kunt u d
 &nbsp;  
 &nbsp;  
 
-Dit kunt u doen door in te loggen op het dashboard. Klik :provider_dashboard_link of op de knop hieronder om naar het dashboard te gaan.
+Dit kunt u doen door in te loggen op de beheeromgeving. Klik :provider_dashboard_link of op de knop hieronder om naar de beheeromgeving te gaan.
 &nbsp;  
 &nbsp;  
 
