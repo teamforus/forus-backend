@@ -400,16 +400,6 @@ class BankConnection extends BaseModel
     /**
      * @return $this
      */
-    public function updateFundBalances(): self
-    {
-        $this->organization->updateFundBalancesByBankConnection();
-
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
     public function setRejected(): self
     {
         BankConnectionReplaced::dispatch($this->updateModel([
