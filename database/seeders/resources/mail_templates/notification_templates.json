@@ -197,8 +197,8 @@
         "push": {},
         "database": {
             "title": "Aanvraag voor :fund_name is ontvangen.",
-            "content": "De aanvraag voor :fund_name is ontvangen. U ontvangt binnen twee weken een reactie op uw aanvraag.",
-            "content_informal": "De aanvraag voor :fund_name is ontvangen. Je ontvangt binnen twee weken een reactie op jouw aanvraag."
+            "content": "De aanvraag voor :fund_name is ontvangen. U ontvangt zo snel mogelijk een reactie op uw aanvraag.",
+            "content_informal": "De aanvraag voor :fund_name is ontvangen. Je ontvangt zo snel mogelijk een reactie op jouw aanvraag."
         }
     },
     "notifications_identities.fund_request_approved": {
@@ -267,8 +267,8 @@
         "push": {},
         "database": {
             "title": "Aanvraag voor :fund_name is ontvangen.",
-            "content": "De aanvraag voor :fund_name is ontvangen. U ontvangt binnen twee weken een reactie op uw aanvraag.",
-            "content_informal": "De aanvraag voor :fund_name is ontvangen. Je ontvangt binnen twee weken een reactie op jouw aanvraag."
+            "content": "De aanvraag voor :fund_name is ontvangen. U ontvangt zo snel mogelijk een reactie op uw aanvraag.",
+            "content_informal": "De aanvraag voor :fund_name is ontvangen. Je ontvangt zo snel mogelijk een reactie op jouw aanvraag."
         }
     },
     "notifications_identities.reimbursement_approved": {
