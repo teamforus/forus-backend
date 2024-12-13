@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4290fcde5ee7d4496e7f2abf5bb4554b",
+    "content-hash": "f7691b1c69e8688d5d42f88f1bfc524f",
     "packages": [
         {
             "name": "astrotomic/laravel-translatable",
@@ -1738,16 +1738,16 @@
         },
         {
             "name": "dusterio/laravel-aws-worker",
-            "version": "v0.1.40",
+            "version": "v1.0.02",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dusterio/laravel-aws-worker.git",
-                "reference": "4429157cdc390990b93c03e187bebbbb8f92c56c"
+                "reference": "f3007eb3e2394a08e8e0efe4b92d559c5d822ce5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dusterio/laravel-aws-worker/zipball/4429157cdc390990b93c03e187bebbbb8f92c56c",
-                "reference": "4429157cdc390990b93c03e187bebbbb8f92c56c",
+                "url": "https://api.github.com/repos/dusterio/laravel-aws-worker/zipball/f3007eb3e2394a08e8e0efe4b92d559c5d822ce5",
+                "reference": "f3007eb3e2394a08e8e0efe4b92d559c5d822ce5",
                 "shasum": ""
             },
             "require": {
@@ -1792,9 +1792,9 @@
             ],
             "support": {
                 "issues": "https://github.com/dusterio/laravel-aws-worker/issues",
-                "source": "https://github.com/dusterio/laravel-aws-worker/tree/v0.1.40"
+                "source": "https://github.com/dusterio/laravel-aws-worker/tree/v1.0.02"
             },
-            "time": "2024-03-16T03:57:08+00:00"
+            "time": "2024-05-29T05:54:01+00:00"
         },
         {
             "name": "edamov/pushok",
