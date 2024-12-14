@@ -59,8 +59,6 @@ use Illuminate\Support\Facades\Log;
  * @property string|null $external_page_url
  * @property string|null $type
  * @property string $state
- * @property string $balance
- * @property string $balance_provider
  * @property bool $archived
  * @property bool $public
  * @property bool $criteria_editable_after_start
@@ -163,8 +161,6 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder<static>|Fund query()
  * @method static Builder<static>|Fund whereArchived($value)
  * @method static Builder<static>|Fund whereAutoRequestsValidation($value)
- * @method static Builder<static>|Fund whereBalance($value)
- * @method static Builder<static>|Fund whereBalanceProvider($value)
  * @method static Builder<static>|Fund whereCreatedAt($value)
  * @method static Builder<static>|Fund whereCriteriaEditableAfterStart($value)
  * @method static Builder<static>|Fund whereDefaultValidatorEmployeeId($value)
@@ -215,7 +211,6 @@ class Fund extends BaseModel
     public const string EVENT_FUND_EXPIRING = 'fund_expiring';
     public const string EVENT_ARCHIVED = 'archived';
     public const string EVENT_UNARCHIVED = 'unarchived';
-    public const string EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
     public const string EVENT_VOUCHERS_EXPORTED = 'vouchers_exported';
     public const string EVENT_SPONSOR_NOTIFICATION_CREATED = 'sponsor_notification_created';
     public const string EVENT_PERIOD_EXTENDED = 'period_extended';
@@ -224,9 +219,6 @@ class Fund extends BaseModel
     public const string STATE_CLOSED = 'closed';
     public const string STATE_PAUSED = 'paused';
     public const string STATE_WAITING = 'waiting';
-
-    public const string BALANCE_PROVIDER_TOP_UPS = 'top_ups';
-    public const string BALANCE_PROVIDER_BANK_CONNECTION = 'bank_connection_balance';
 
     public const array STATES = [
         self::STATE_ACTIVE,
@@ -272,8 +264,7 @@ class Fund extends BaseModel
         'default_validator_employee_id', 'auto_requests_validation',
         'criteria_editable_after_start', 'type', 'archived', 'description_short',
         'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title',
-        'balance', 'description_position', 'external_page', 'external_page_url',
-        'pre_check_note',
+        'description_position', 'external_page', 'external_page_url', 'pre_check_note',
     ];
 
     protected $hidden = [
@@ -580,26 +571,6 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string $balance
-     * @param BankConnection $bankConnection
-     * @return $this
-     */
-    public function setBalance(string $balance, BankConnection $bankConnection): self
-    {
-        $this->update(compact('balance'));
-
-        $this->log(static::EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION, [
-            'bank_connection' => $bankConnection,
-            'bank_connection_account' => $bankConnection->bank_connection_default_account,
-        ], [
-            'fund_balance' => $this->balance,
-            'fund_balance_provider' => $this->balance_provider,
-        ]);
-
-        return $this;
-    }
-
-    /**
      * @param bool|null $withBalance
      * @param bool|null $withEmail
      * @return Builder|Identity
@@ -744,15 +715,7 @@ class Fund extends BaseModel
      */
     public function getBudgetTotalAttribute(): float
     {
-        if ($this->balance_provider === static::BALANCE_PROVIDER_TOP_UPS) {
-            return round($this->top_up_transactions->sum('amount'), 2);
-        }
-
-        if ($this->balance_provider === static::BALANCE_PROVIDER_BANK_CONNECTION) {
-            return round(floatval($this->balance) + $this->budget_used, 2);
-        }
-
-        return 0;
+        return round($this->top_up_transactions->sum('amount'), 2);
     }
 
     /**
@@ -781,15 +744,7 @@ class Fund extends BaseModel
      */
     public function getBudgetLeftAttribute(): float
     {
-        if ($this->balance_provider === static::BALANCE_PROVIDER_TOP_UPS) {
-            return round($this->budget_total - $this->budget_used, 2);
-        }
-
-        if ($this->balance_provider === static::BALANCE_PROVIDER_BANK_CONNECTION) {
-            return round($this->balance, 2);
-        }
-
-        return 0;
+        return round($this->budget_total - $this->budget_used, 2);
     }
 
     /**

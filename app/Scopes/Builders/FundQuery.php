@@ -217,29 +217,6 @@ class FundQuery
 
     /**
      * @param Builder|Relation|Fund $query
-     * @param string $balanceProvider
-     * @return Builder|Relation|Fund
-     */
-    public static function whereTopUpAndBalanceUpdateAvailable(
-        Builder|Relation|Fund $query,
-        string $balanceProvider,
-    ): Builder|Relation|Fund{
-        return $query->whereHas('organization', function(Builder $builder) {
-            $builder->whereHas('bank_connection_active');
-        })->where(function(Builder $builder) {
-            FundQuery::whereIsInternal($builder);
-            FundQuery::whereIsConfiguredByForus($builder);
-        })->where(function(Builder $builder) use ($balanceProvider) {
-            if ($balanceProvider === Fund::BALANCE_PROVIDER_TOP_UPS) {
-                $builder->whereHas('top_ups');
-            }
-
-            $builder->where('balance_provider', $balanceProvider);
-        });
-    }
-
-    /**
-     * @param Builder|Relation|Fund $query
      * @param int|int[] $organizationId
      * @return Relation|Builder|Fund
      */

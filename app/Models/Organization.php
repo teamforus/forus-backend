@@ -964,23 +964,6 @@ class Organization extends BaseModel
     }
 
     /**
-     * @return void
-     */
-    public function updateFundBalancesByBankConnection(): void
-    {
-        /** @var Fund[] $funds */
-        $balanceProvider = Fund::BALANCE_PROVIDER_BANK_CONNECTION;
-        $funds = FundQuery::whereTopUpAndBalanceUpdateAvailable($this->funds(), $balanceProvider)->get();
-        $balance = $funds->isNotEmpty() ? $this->bank_connection_active->fetchBalance() : null;
-
-        if ($balance && $funds->isNotEmpty()) {
-            foreach ($funds as $fund) {
-                $fund->setBalance($balance->getAmount(), $this->bank_connection_active);
-            }
-        }
-    }
-
-    /**
      * @param Identity $identity
      * @param array $roles
      * @param int|null $office_id
