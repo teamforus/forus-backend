@@ -7,10 +7,6 @@ use App\Models\Product;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 
-/**
- * Class CheckProductExpirationCommand
- * @package App\Console\Commands
- */
 class CheckProductExpirationCommand extends Command
 {
     /**

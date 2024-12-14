@@ -27,19 +27,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read Carbon $expire_at
  * @property-read bool $expired
  * @property-read \App\Models\Organization|null $organization
- * @method static Builder|FundProviderInvitation newModelQuery()
- * @method static Builder|FundProviderInvitation newQuery()
- * @method static Builder|FundProviderInvitation query()
- * @method static Builder|FundProviderInvitation whereAllowBudget($value)
- * @method static Builder|FundProviderInvitation whereAllowProducts($value)
- * @method static Builder|FundProviderInvitation whereCreatedAt($value)
- * @method static Builder|FundProviderInvitation whereFromFundId($value)
- * @method static Builder|FundProviderInvitation whereFundId($value)
- * @method static Builder|FundProviderInvitation whereId($value)
- * @method static Builder|FundProviderInvitation whereOrganizationId($value)
- * @method static Builder|FundProviderInvitation whereState($value)
- * @method static Builder|FundProviderInvitation whereToken($value)
- * @method static Builder|FundProviderInvitation whereUpdatedAt($value)
+ * @method static Builder<static>|FundProviderInvitation newModelQuery()
+ * @method static Builder<static>|FundProviderInvitation newQuery()
+ * @method static Builder<static>|FundProviderInvitation query()
+ * @method static Builder<static>|FundProviderInvitation whereAllowBudget($value)
+ * @method static Builder<static>|FundProviderInvitation whereAllowProducts($value)
+ * @method static Builder<static>|FundProviderInvitation whereCreatedAt($value)
+ * @method static Builder<static>|FundProviderInvitation whereFromFundId($value)
+ * @method static Builder<static>|FundProviderInvitation whereFundId($value)
+ * @method static Builder<static>|FundProviderInvitation whereId($value)
+ * @method static Builder<static>|FundProviderInvitation whereOrganizationId($value)
+ * @method static Builder<static>|FundProviderInvitation whereState($value)
+ * @method static Builder<static>|FundProviderInvitation whereToken($value)
+ * @method static Builder<static>|FundProviderInvitation whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundProviderInvitation extends BaseModel

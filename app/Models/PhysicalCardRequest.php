@@ -20,19 +20,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Voucher $voucher
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest query()
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereCity($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereEmployeeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereHouse($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereHouseAddition($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest wherePostcode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereVoucherId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest whereAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest whereCity($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest whereEmployeeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest whereHouse($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest whereHouseAddition($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest wherePostcode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardRequest whereVoucherId($value)
  * @mixin \Eloquent
  */
 class PhysicalCardRequest extends Model

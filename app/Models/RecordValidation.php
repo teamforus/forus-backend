@@ -23,18 +23,18 @@ use Illuminate\Support\Carbon;
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\Prevalidation|null $prevalidation
  * @property-read \App\Models\Record $record
- * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation query()
- * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation wherePrevalidationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereRecordId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereUuid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordValidation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordValidation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordValidation query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordValidation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordValidation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordValidation whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordValidation whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordValidation wherePrevalidationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordValidation whereRecordId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordValidation whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordValidation whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordValidation whereUuid($value)
  * @mixin \Eloquent
  */
 class RecordValidation extends Model

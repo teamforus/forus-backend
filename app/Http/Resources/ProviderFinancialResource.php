@@ -4,15 +4,14 @@ namespace App\Http\Resources;
 
 use App\Models\Organization;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Request;
 
 /**
- * Class ProviderFinancialResource
  * @property Organization $resource
- * @package App\Http\Resources
  */
 class ProviderFinancialResource extends JsonResource
 {
-    public static $load = [
+    public static array $load = [
         'logo',
         'business_type.translations',
     ];
@@ -20,10 +19,10 @@ class ProviderFinancialResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return array_merge($this->resource->only([
             'highest_transaction', 'nr_transactions', 'total_spent',

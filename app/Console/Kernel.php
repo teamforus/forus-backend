@@ -43,10 +43,6 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\Config;
 
-/**
- * Class Kernel
- * @package App\Console
- */
 class Kernel extends ConsoleKernel
 {
     /**

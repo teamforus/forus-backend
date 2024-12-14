@@ -2,10 +2,6 @@
 
 namespace App\Services\IConnectApiService\Objects;
 
-/**
- * Class ParentPerson
- * @package App\Services\IConnectApiService\Responses
- */
 class Child extends BasePerson
 {
     /**

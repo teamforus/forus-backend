@@ -85,7 +85,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string $iconnect_cert_pass
  * @property string $iconnect_cert_trust
  * @property bool $provider_products_required
- * @property int $pre_check_excluded
+ * @property bool $pre_check_excluded
  * @property string|null $pre_check_note
  * @property bool $help_enabled
  * @property string|null $help_title

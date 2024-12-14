@@ -10,10 +10,6 @@ use App\Http\Requests\Api\Platform\Vouchers\PhysicalCards\StorePhysicalCardReque
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\Response;
 
-/**
- * Class PhysicalCardsController
- * @package App\Http\Controllers\Api\Platform\Vouchers
- */
 class PhysicalCardsController extends Controller
 {
     use ThrottleWithMeta;

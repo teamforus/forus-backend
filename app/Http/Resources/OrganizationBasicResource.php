@@ -5,21 +5,20 @@ namespace App\Http\Resources;
 use App\Models\Organization;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
+use Illuminate\Http\Request;
 
 /**
- * Class OrganizationBasicResource
  * @property Organization $resource
- * @package App\Http\Resources
  */
 class OrganizationBasicResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array|Collection
      */
-    public function toArray($request): ?array
+    public function toArray(Request $request): ?array
     {
         if (!$organization = $this->resource) {
             return null;

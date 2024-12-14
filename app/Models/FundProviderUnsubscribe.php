@@ -18,16 +18,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read bool $is_expired
  * @property-read string $state
  * @property-read string $state_locale
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderUnsubscribe newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderUnsubscribe newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderUnsubscribe query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderUnsubscribe whereCanceled($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderUnsubscribe whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderUnsubscribe whereFundProviderId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderUnsubscribe whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderUnsubscribe whereNote($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderUnsubscribe whereUnsubscribeAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderUnsubscribe whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderUnsubscribe newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderUnsubscribe newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderUnsubscribe query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderUnsubscribe whereCanceled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderUnsubscribe whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderUnsubscribe whereFundProviderId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderUnsubscribe whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderUnsubscribe whereNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderUnsubscribe whereUnsubscribeAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderUnsubscribe whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundProviderUnsubscribe extends BaseModel

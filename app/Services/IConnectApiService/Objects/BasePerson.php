@@ -5,10 +5,6 @@ namespace App\Services\IConnectApiService\Objects;
 use App\Services\IConnectApiService\Responses\ResponseData;
 use Illuminate\Support\Arr;
 
-/**
- * Class BasePerson
- * @package App\Services\IConnectApiService\Responses
- */
 abstract class BasePerson
 {
     /** @var array|null  */

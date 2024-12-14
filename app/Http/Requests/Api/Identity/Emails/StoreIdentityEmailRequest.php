@@ -5,10 +5,6 @@ namespace App\Http\Requests\Api\Identity\Emails;
 use App\Rules\IdentityEmailMaxRule;
 use App\Rules\IdentityEmailUniqueRule;
 
-/**
- * Class StoreIdentityEmailRequest
- * @package App\Http\Requests\Api\Identity\Emails
- */
 class StoreIdentityEmailRequest extends BaseIdentityEmailRequest
 {
     /**

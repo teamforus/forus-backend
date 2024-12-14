@@ -9,10 +9,6 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 
-/**
- * Class VoucherTransactionCreated
- * @package App\Events\VoucherTransactions
- */
 abstract class BaseVoucherTransactionEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;

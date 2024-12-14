@@ -4,10 +4,6 @@ namespace App\Http\Requests\Api\RecordCategories;
 
 use App\Http\Requests\BaseFormRequest;
 
-/**
- * Class RecordCategoryStoreRequest
- * @package App\Http\Requests\Api\RecordCategories
- */
 class RecordCategoryStoreRequest extends BaseFormRequest
 {
     /**

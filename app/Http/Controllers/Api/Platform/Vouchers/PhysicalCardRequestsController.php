@@ -10,10 +10,6 @@ use App\Models\Voucher;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class PhysicalCardRequestsController
- * @package App\Http\Controllers\Api\Platform\Vouchers
- */
 class PhysicalCardRequestsController extends Controller
 {
     use ThrottleWithMeta;

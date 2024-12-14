@@ -2,10 +2,6 @@
 
 namespace App\Mail\Digest;
 
-/**
- * Class DigestValidatorMail
- * @package App\Mail\Digest
- */
 class DigestValidatorMail extends BaseDigestMail
 {
     protected ?string $preferencesLinkDashboard = 'validator';

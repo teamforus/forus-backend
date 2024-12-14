@@ -12,16 +12,16 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 class IdentityQuery
 {
     /**
-     * @param Relation|Builder $builder
+     * @param Builder|Relation|Identity $builder
      * @param Fund $fund
      * @param bool $withReservations
-     * @return Relation|Builder
+     * @return Builder|Relation|Identity
      */
     public static function appendVouchersCountFields(
-        Relation|Builder $builder,
+        Builder|Relation|Identity $builder,
         Fund $fund,
-        bool $withReservations = false
-    ): Relation|Builder {
+        bool $withReservations = false,
+    ): Builder|Relation|Identity {
         $vouchersQuery = $fund
             ->vouchers()
             ->selectRaw('count(*)')
@@ -39,11 +39,12 @@ class IdentityQuery
     }
 
     /**
-     * @param Relation|Builder $builder
-     * @return Relation|Builder
+     * @param Builder|Relation|Identity $builder
+     * @return Builder|Relation|Identity
      */
-    public static function appendEmailField(Relation|Builder $builder): Relation|Builder
-    {
+    public static function appendEmailField(
+        Builder|Relation|Identity $builder,
+    ): Builder|Relation|Identity {
         return $builder->addSelect([
             'email' => IdentityEmail::query()
                 ->whereColumn('identities.address', 'identity_emails.identity_address')

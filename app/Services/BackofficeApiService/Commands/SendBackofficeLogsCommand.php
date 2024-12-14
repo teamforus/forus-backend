@@ -5,10 +5,6 @@ namespace App\Services\BackofficeApiService\Commands;
 use App\Services\BackofficeApiService\BackofficeApi;
 use Illuminate\Console\Command;
 
-/**
- * Class SendBackofficeLogsCommand
- * @package App\Services\BackofficeApiService\Commands
- */
 class SendBackofficeLogsCommand extends Command
 {
     /**
@@ -30,7 +26,7 @@ class SendBackofficeLogsCommand extends Command
      *
      * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         BackofficeApi::sendLogs();
     }

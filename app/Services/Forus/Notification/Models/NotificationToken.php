@@ -15,15 +15,15 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken query()
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken whereToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationToken newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationToken newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationToken query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationToken whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationToken whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationToken whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationToken whereToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationToken whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationToken whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class NotificationToken extends Model

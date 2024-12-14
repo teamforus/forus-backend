@@ -7,10 +7,6 @@ use GeoIp2\Database\Reader;
 use GeoIp2\Record\City;
 use GeoIp2\Record\Country;
 
-/**
- * Class GeoIp
- * @package App\Services\Forus\Session\Services
- */
 class GeoIp
 {
     /**

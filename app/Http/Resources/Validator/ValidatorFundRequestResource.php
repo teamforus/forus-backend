@@ -144,7 +144,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
     {
         return $request->isDisregarded() && FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive(
             $request->fund->fund_requests()->where('id', '!=', $request->id),
-            $request->identity_address
+            $request->id,
         )->exists();
     }
 
@@ -157,7 +157,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
     public function getRecordsDetails(
         BaseFormRequest $request,
         Organization $organization,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
     ): array {
         $employee = $request->employee($organization) or abort(403);
         $bsnFields = ['bsn', 'partner_bsn', 'bsn_hash', 'partner_bsn_hash'];

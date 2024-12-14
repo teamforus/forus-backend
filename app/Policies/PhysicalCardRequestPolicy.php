@@ -21,7 +21,7 @@ class PhysicalCardRequestPolicy
      */
     public function showAny(Identity $identity, Voucher $voucher): bool
     {
-        return $voucher->identity_address === $identity->address;
+        return $voucher->identity_id === $identity->id;
     }
 
     /**
@@ -39,7 +39,7 @@ class PhysicalCardRequestPolicy
         PhysicalCardRequest $physicalCardRequest
     ): bool {
         return
-            $voucher->identity_address === $identity->address &&
+            $voucher->identity_id === $identity->id &&
             $physicalCardRequest->voucher_id === $voucher->id;
     }
 }

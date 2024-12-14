@@ -8,10 +8,6 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 
-/**
- * Class ProductCreated
- * @package App\Events\Products
- */
 abstract class BaseProductEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;

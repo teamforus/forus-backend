@@ -15,16 +15,16 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $type_locale
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia query()
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationSocialMedia whereUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationSocialMedia newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationSocialMedia newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationSocialMedia query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationSocialMedia whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationSocialMedia whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationSocialMedia whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationSocialMedia whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationSocialMedia whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationSocialMedia whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationSocialMedia whereUrl($value)
  * @mixin \Eloquent
  */
 class ImplementationSocialMedia extends Model

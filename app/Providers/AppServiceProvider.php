@@ -46,7 +46,9 @@ use App\Models\Voucher;
 use App\Services\MediaService\MediaService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
@@ -107,6 +109,11 @@ class AppServiceProvider extends ServiceProvider
         StringHelper::setThousandsSeparator(',');
 
         FundProvider::observe(FundProviderObserver::class);
+
+        ParallelTesting::setUpTestDatabase(function () {
+            Artisan::call('db:seed');
+            Artisan::call('test-data:seed');
+        });
 
         if (Config::get('app.memory_limit')) {
             ini_set('memory_limit', Config::get('app.memory_limit'));

@@ -18,20 +18,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Identity2FA|null $identity_2fa
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode query()
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereExpireAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereIdentity2faUuid($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FACode withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode whereExpireAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode whereIdentity2faUuid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FACode withoutTrashed()
  * @mixin \Eloquent
  */
 class Identity2FACode extends Model

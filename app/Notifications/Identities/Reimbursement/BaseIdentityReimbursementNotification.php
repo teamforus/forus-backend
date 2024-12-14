@@ -20,6 +20,6 @@ abstract class BaseIdentityReimbursementNotification extends BaseIdentityNotific
      */
     public static function eligibleIdentities($loggable, EventLog $eventLog): Collection
     {
-        return Identity::whereAddress($loggable->voucher->identity_address)->get();
+        return Identity::where('id', $loggable->voucher->identity_id)->get();
     }
 }

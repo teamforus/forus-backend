@@ -9,13 +9,13 @@ namespace App\Models;
  * @property int $business_type_id
  * @property string $locale
  * @property string $name
- * @method static \Illuminate\Database\Eloquent\Builder|BusinessTypeTranslation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BusinessTypeTranslation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BusinessTypeTranslation query()
- * @method static \Illuminate\Database\Eloquent\Builder|BusinessTypeTranslation whereBusinessTypeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BusinessTypeTranslation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BusinessTypeTranslation whereLocale($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BusinessTypeTranslation whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BusinessTypeTranslation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BusinessTypeTranslation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BusinessTypeTranslation query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BusinessTypeTranslation whereBusinessTypeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BusinessTypeTranslation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BusinessTypeTranslation whereLocale($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BusinessTypeTranslation whereName($value)
  * @mixin \Eloquent
  */
 class BusinessTypeTranslation extends BaseModel

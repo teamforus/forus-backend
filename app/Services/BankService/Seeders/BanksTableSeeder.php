@@ -10,6 +10,7 @@ use bunq\Util\BunqEnumApiEnvironmentType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use App\Services\BankService\Models\Bank;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Throwable;
 
@@ -47,8 +48,12 @@ class BanksTableSeeder extends Seeder
      */
     protected function bngBank(): void
     {
+        $runningUnitTests = App::runningUnitTests();
+
         if ($this->hasBngContextFile()) {
-            echo "Using existing BNG context file from: ./storage$this->bngContextFile.\n";
+            if (!$runningUnitTests) {
+                echo "Using existing BNG context file from: ./storage$this->bngContextFile.\n";
+            }
 
             Bank::firstOrCreate([
                 'key' => 'bng',
@@ -68,12 +73,19 @@ class BanksTableSeeder extends Seeder
     protected function bunqBank(): void
     {
         $hasBunqContextFile = $this->hasBunqContextFile();
+        $runningUnitTests = App::runningUnitTests();
 
         if ($hasBunqContextFile) {
-            echo "Using existing bunq context file from: ./storage$this->bunqContextFile.\n";
+            if (!$runningUnitTests) {
+                echo "Using existing bunq context file from: ./storage$this->bunqContextFile.\n";
+            }
+
             $bank = $this->useExistingBunqBankInstallation();
         } else {
-            echo "Making new bunq context installation.\n";
+            if (!$runningUnitTests) {
+                echo "Making new bunq context installation.\n";
+            }
+
             $bank = $this->makeBunqBankInstallation();
         }
 
@@ -159,7 +171,9 @@ class BanksTableSeeder extends Seeder
         $errorPrefix = "Could not create BUNQ bank context/installation: ";
 
         if (!$bunqKey) {
-            $this->printWarning($errorPrefix . "The api key is not present in your .env file.");
+            if (App::runningUnitTests()) {
+                $this->printWarning($errorPrefix . "The api key is not present in your .env file.");
+            }
             return null;
         }
 
@@ -205,6 +219,10 @@ class BanksTableSeeder extends Seeder
      */
     public function printWarning(string $message): void
     {
+        if (App::runningUnitTests()) {
+            return;
+        }
+
         echo $this->makeHeader("WARNING");
         echo $this->makeText($message);
         echo $this->makeHeader("INFO");

@@ -6,9 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 
 /**
- * Class IndexVouchersRequest
  * @property-read Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
  */
 class IndexVouchersExportFieldsRequest extends BaseFormRequest
 {

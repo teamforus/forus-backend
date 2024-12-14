@@ -148,7 +148,7 @@ class StoreTransactionRequest extends BaseFormRequest
         return Reimbursement::query()
             ->whereHas('voucher', fn (Builder|Voucher $builder) => $builder->where([
                 'fund_id' => $voucher->fund_id,
-                'identity_address' => $voucher->identity_address,
+                'identity_id' => $voucher->identity_id,
             ]))
             ->where('state', Reimbursement::STATE_APPROVED)
             ->select('id');

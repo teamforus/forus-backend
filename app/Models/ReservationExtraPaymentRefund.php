@@ -19,17 +19,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read string $amount_locale
  * @property-read string $state_locale
  * @property-read \App\Models\ProductReservation $reservation_extra_payment
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund query()
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereCurrency($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereRefundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereReservationExtraPaymentId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPaymentRefund whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPaymentRefund newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPaymentRefund newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPaymentRefund query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPaymentRefund whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPaymentRefund whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPaymentRefund whereCurrency($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPaymentRefund whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPaymentRefund whereRefundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPaymentRefund whereReservationExtraPaymentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPaymentRefund whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPaymentRefund whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class ReservationExtraPaymentRefund extends Model

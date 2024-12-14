@@ -8,9 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Class MediaResource
  * @property Media $resource
- * @package App\Http\Resources
  */
 class MediaResource extends JsonResource
 {
@@ -20,7 +18,7 @@ class MediaResource extends JsonResource
      * @param Request $request
      * @return array|null
      */
-    public function toArray($request): ?array
+    public function toArray(Request $request): ?array
     {
         if (is_null($media = $this->resource)) {
             return null;

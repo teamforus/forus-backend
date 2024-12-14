@@ -68,7 +68,7 @@ class MeAppBasicRoutersTest extends TestCase
     public function testProviderVoucherEndpoints(): void
     {
         $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
-        $voucher = $fund->makeVoucher($this->makeIdentity()->address, [], 100);
+        $voucher = $fund->makeVoucher($this->makeIdentity(), [], 100);
         $provider = $this->makeTestFundProvider($this->makeTestOrganization($this->makeIdentity()), $fund);
         $headers = $this->makeApiHeaders($provider->organization->identity);
         $address = $voucher->token_without_confirmation->address;
@@ -89,7 +89,7 @@ class MeAppBasicRoutersTest extends TestCase
     public function testRequesterVoucherEndpoints(): void
     {
         $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
-        $voucher = $fund->makeVoucher($this->makeIdentity($this->makeUniqueEmail())->address, [], 100);
+        $voucher = $fund->makeVoucher($this->makeIdentity($this->makeUniqueEmail()), [], 100);
         $headers = $this->makeApiHeaders($voucher->identity);
         $address = $voucher->token_without_confirmation->address;
 

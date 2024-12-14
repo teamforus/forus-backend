@@ -17,16 +17,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\FundCriterion $fund_criterion
  * @property-read \App\Models\RecordType $record_type
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionRule newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionRule newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionRule query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionRule whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionRule whereFundCriterionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionRule whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionRule whereOperator($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionRule whereRecordTypeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionRule whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionRule whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterionRule newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterionRule newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterionRule query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterionRule whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterionRule whereFundCriterionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterionRule whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterionRule whereOperator($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterionRule whereRecordTypeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterionRule whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterionRule whereValue($value)
  * @mixin \Eloquent
  */
 class FundCriterionRule extends Model

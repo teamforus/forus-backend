@@ -40,7 +40,9 @@ class VoucherTransactionsSearch extends BaseSearch
         }
 
         if ($identity_address) {
-            $builder->whereRelation('voucher', 'identity_address', $identity_address);
+            $builder->whereHas('voucher', function (Builder $builder) use ($identity_address) {
+                $builder->whereRelation('identity', 'address', $identity_address);
+            });
         }
 
         if ($this->hasFilter('state') && $this->getFilter('state')) {

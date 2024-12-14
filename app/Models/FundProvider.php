@@ -56,21 +56,21 @@ use Carbon\Carbon;
  * @property-read int|null $product_exclusions_count
  * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
- * @method static Builder|FundProvider newModelQuery()
- * @method static Builder|FundProvider newQuery()
- * @method static Builder|FundProvider query()
- * @method static Builder|FundProvider whereAllowBudget($value)
- * @method static Builder|FundProvider whereAllowExtraPayments($value)
- * @method static Builder|FundProvider whereAllowExtraPaymentsFull($value)
- * @method static Builder|FundProvider whereAllowProducts($value)
- * @method static Builder|FundProvider whereAllowSomeProducts($value)
- * @method static Builder|FundProvider whereCreatedAt($value)
- * @method static Builder|FundProvider whereExcluded($value)
- * @method static Builder|FundProvider whereFundId($value)
- * @method static Builder|FundProvider whereId($value)
- * @method static Builder|FundProvider whereOrganizationId($value)
- * @method static Builder|FundProvider whereState($value)
- * @method static Builder|FundProvider whereUpdatedAt($value)
+ * @method static Builder<static>|FundProvider newModelQuery()
+ * @method static Builder<static>|FundProvider newQuery()
+ * @method static Builder<static>|FundProvider query()
+ * @method static Builder<static>|FundProvider whereAllowBudget($value)
+ * @method static Builder<static>|FundProvider whereAllowExtraPayments($value)
+ * @method static Builder<static>|FundProvider whereAllowExtraPaymentsFull($value)
+ * @method static Builder<static>|FundProvider whereAllowProducts($value)
+ * @method static Builder<static>|FundProvider whereAllowSomeProducts($value)
+ * @method static Builder<static>|FundProvider whereCreatedAt($value)
+ * @method static Builder<static>|FundProvider whereExcluded($value)
+ * @method static Builder<static>|FundProvider whereFundId($value)
+ * @method static Builder<static>|FundProvider whereId($value)
+ * @method static Builder<static>|FundProvider whereOrganizationId($value)
+ * @method static Builder<static>|FundProvider whereState($value)
+ * @method static Builder<static>|FundProvider whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundProvider extends BaseModel

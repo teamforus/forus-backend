@@ -4,10 +4,6 @@ namespace App\Services\IConnectApiService\Objects;
 
 use Illuminate\Support\Arr;
 
-/**
- * Class Person
- * @package App\Services\IConnectApiService\Responses
- */
 class Person extends BasePerson
 {
     /** @var array  */

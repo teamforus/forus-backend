@@ -18,11 +18,6 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
-/**
- * Class TransactionsController
- * @package App\Http\Controllers\Api\Platform\Organizations\Sponsor
- * @noinspection PhpUnused
- */
 class TransactionBulksController extends Controller
 {
     /**

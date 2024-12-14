@@ -32,18 +32,18 @@ use Illuminate\Support\Arr;
  * @property-read string|null $loggable_locale_dashboard
  * @property-read Identity|null $identity
  * @property-read Model|\Eloquent $loggable
- * @method static Builder|EventLog newModelQuery()
- * @method static Builder|EventLog newQuery()
- * @method static Builder|EventLog query()
- * @method static Builder|EventLog whereCreatedAt($value)
- * @method static Builder|EventLog whereData($value)
- * @method static Builder|EventLog whereEvent($value)
- * @method static Builder|EventLog whereId($value)
- * @method static Builder|EventLog whereIdentityAddress($value)
- * @method static Builder|EventLog whereLoggableId($value)
- * @method static Builder|EventLog whereLoggableType($value)
- * @method static Builder|EventLog whereOriginal($value)
- * @method static Builder|EventLog whereUpdatedAt($value)
+ * @method static Builder<static>|EventLog newModelQuery()
+ * @method static Builder<static>|EventLog newQuery()
+ * @method static Builder<static>|EventLog query()
+ * @method static Builder<static>|EventLog whereCreatedAt($value)
+ * @method static Builder<static>|EventLog whereData($value)
+ * @method static Builder<static>|EventLog whereEvent($value)
+ * @method static Builder<static>|EventLog whereId($value)
+ * @method static Builder<static>|EventLog whereIdentityAddress($value)
+ * @method static Builder<static>|EventLog whereLoggableId($value)
+ * @method static Builder<static>|EventLog whereLoggableType($value)
+ * @method static Builder<static>|EventLog whereOriginal($value)
+ * @method static Builder<static>|EventLog whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class EventLog extends Model

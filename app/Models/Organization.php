@@ -153,6 +153,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $products_provider_count
  * @property-read Collection|\App\Models\Product[] $products_sponsor
  * @property-read int|null $products_sponsor_count
+ * @property-read Collection|\App\Models\Profile[] $profiles
+ * @property-read int|null $profiles_count
  * @property-read Collection|\App\Models\ReimbursementCategory[] $reimbursement_categories
  * @property-read int|null $reimbursement_categories_count
  * @property-read Collection|\App\Models\OrganizationReservationField[] $reservation_fields
@@ -176,11 +178,11 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder<static>|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder<static>|Organization whereAllowFundRequestRecordEdit($value)
- * @method static EloquentBuilder<static>|Organization whereAllowProfiles($value)
  * @method static EloquentBuilder<static>|Organization whereAllowManualBulkProcessing($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPayouts($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPreChecks($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProductUpdates($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProfiles($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProviderExtraPayments($value)
  * @method static EloquentBuilder<static>|Organization whereAuth2faFundsPolicy($value)
  * @method static EloquentBuilder<static>|Organization whereAuth2faFundsRememberIp($value)

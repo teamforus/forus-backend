@@ -64,6 +64,14 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     }
 
     /**
+     * @return int|null
+     */
+    public function auth_id(): ?int
+    {
+        return $this->identity()?->id;
+    }
+
+    /**
      * @param string|null $default
      * @return string|null
      * @noinspection PhpUnused

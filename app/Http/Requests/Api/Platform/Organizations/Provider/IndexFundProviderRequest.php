@@ -8,9 +8,7 @@ use App\Scopes\Builders\OrganizationQuery;
 use App\Models\Organization;
 
 /**
- * Class IndexFundProviderRequest
  * @property-read Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Provider
  */
 class IndexFundProviderRequest extends BaseFormRequest
 {

@@ -29,17 +29,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\RecordType|null $record_type
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereFundCriterionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereFundRequestId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereNote($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereRecordTypeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereFundCriterionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereFundRequestId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereRecordTypeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereValue($value)
  * @mixin \Eloquent
  */
 class FundRequestRecord extends BaseModel

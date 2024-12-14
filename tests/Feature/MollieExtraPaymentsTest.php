@@ -483,7 +483,7 @@ class MollieExtraPaymentsTest extends TestCase
             'allow_reservations' => true,
         ]);
 
-        $this->assertNotNull($fund->makeVoucher($organization->identity_address, [
+        $this->assertNotNull($fund->makeVoucher($organization->identity, [
             'state' => Voucher::STATE_ACTIVE
         ], 100));
 

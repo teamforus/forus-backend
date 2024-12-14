@@ -28,18 +28,18 @@ use Illuminate\Support\Arr;
  * @property-read \App\Models\Implementation $implementation
  * @property-read Collection|\App\Models\PreCheckRecord[] $pre_check_records
  * @property-read int|null $pre_check_records_count
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheck newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheck newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheck query()
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheck whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheck whereDefault($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheck whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheck whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheck whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheck whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheck whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheck whereTitleShort($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheck whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck whereDefault($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck whereTitleShort($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class PreCheck extends BaseModel
@@ -88,7 +88,7 @@ class PreCheck extends BaseModel
             $fundsQuery->whereDoesntHave('vouchers', fn (
                 Builder|Voucher $builder
             ) => VoucherQuery::whereActive($builder->where([
-                'identity_address' => $identity->address,
+                'identity_id' => $identity->id,
             ])));
         }
 

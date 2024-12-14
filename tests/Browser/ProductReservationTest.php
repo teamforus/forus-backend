@@ -65,7 +65,7 @@ class ProductReservationTest extends DuskTestCase
 
             $this->makeTestProductForReservation($provider);
 
-            $implementation->funds->each(fn (Fund $fund) => $fund->makeVoucher($identity->address));
+            $implementation->funds->each(fn (Fund $fund) => $fund->makeVoucher($identity));
             $implementation->funds->each(fn (Fund $fund) => $this->makeTestFundProvider($provider, $fund));
 
             // Authorize identity

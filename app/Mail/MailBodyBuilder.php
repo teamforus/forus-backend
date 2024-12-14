@@ -5,10 +5,6 @@ namespace App\Mail;
 use App\Helpers\Markdown;
 use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class MailBodyBuilder
- * @package App\Mail
- */
 class MailBodyBuilder
 {
     /**

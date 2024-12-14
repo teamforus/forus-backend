@@ -53,23 +53,23 @@ use Illuminate\Support\Arr;
  * @property-read int|null $records_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static Builder|FundRequest newModelQuery()
- * @method static Builder|FundRequest newQuery()
- * @method static Builder|FundRequest query()
- * @method static Builder|FundRequest whereAmount($value)
- * @method static Builder|FundRequest whereContactInformation($value)
- * @method static Builder|FundRequest whereCreatedAt($value)
- * @method static Builder|FundRequest whereDisregardNote($value)
- * @method static Builder|FundRequest whereDisregardNotify($value)
- * @method static Builder|FundRequest whereEmployeeId($value)
- * @method static Builder|FundRequest whereFundAmountPresetId($value)
- * @method static Builder|FundRequest whereFundId($value)
- * @method static Builder|FundRequest whereId($value)
- * @method static Builder|FundRequest whereIdentityAddress($value)
- * @method static Builder|FundRequest whereNote($value)
- * @method static Builder|FundRequest whereResolvedAt($value)
- * @method static Builder|FundRequest whereState($value)
- * @method static Builder|FundRequest whereUpdatedAt($value)
+ * @method static Builder<static>|FundRequest newModelQuery()
+ * @method static Builder<static>|FundRequest newQuery()
+ * @method static Builder<static>|FundRequest query()
+ * @method static Builder<static>|FundRequest whereAmount($value)
+ * @method static Builder<static>|FundRequest whereContactInformation($value)
+ * @method static Builder<static>|FundRequest whereCreatedAt($value)
+ * @method static Builder<static>|FundRequest whereDisregardNote($value)
+ * @method static Builder<static>|FundRequest whereDisregardNotify($value)
+ * @method static Builder<static>|FundRequest whereEmployeeId($value)
+ * @method static Builder<static>|FundRequest whereFundAmountPresetId($value)
+ * @method static Builder<static>|FundRequest whereFundId($value)
+ * @method static Builder<static>|FundRequest whereId($value)
+ * @method static Builder<static>|FundRequest whereIdentityAddress($value)
+ * @method static Builder<static>|FundRequest whereNote($value)
+ * @method static Builder<static>|FundRequest whereResolvedAt($value)
+ * @method static Builder<static>|FundRequest whereState($value)
+ * @method static Builder<static>|FundRequest whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundRequest extends BaseModel
@@ -440,10 +440,7 @@ class FundRequest extends BaseModel
             ...$this->fund->fund_formulas->pluck('record_type_key')->filter(),
         ]);
 
-        $trustedValues = $this->fund->getTrustedRecordOfTypes(
-            $this->identity_address,
-            $recordTypes,
-        );
+        $trustedValues = $this->fund->getTrustedRecordOfTypes($this->identity, $recordTypes);
 
         return  [
             ...$trustedValues,
@@ -497,7 +494,7 @@ class FundRequest extends BaseModel
     public function getIban(): string
     {
         return $this->fund->getTrustedRecordOfType(
-            $this->identity_address,
+            $this->identity,
             $this->fund->fund_config->iban_record_key,
         )?->value ?: '';
     }
@@ -508,7 +505,7 @@ class FundRequest extends BaseModel
     public function getIbanName(): string
     {
         return $this->fund->getTrustedRecordOfType(
-            $this->identity_address,
+            $this->identity,
             $this->fund->fund_config->iban_name_record_key,
         )?->value ?: '';
     }

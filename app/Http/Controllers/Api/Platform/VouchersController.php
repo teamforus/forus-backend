@@ -26,7 +26,7 @@ class VouchersController extends Controller
         $this->authorize('viewAny', Voucher::class);
 
         $query = Voucher::query()
-            ->where('identity_address', $request->auth_address())
+            ->where('identity_id', $request->auth_id())
             ->whereDoesntHave('product_reservation');
 
         $search = new VouchersSearch($request->only([

@@ -2,10 +2,6 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Offices;
 
-/**
- * Class UpdateOfficeRequest
- * @package App\Http\Requests\Api\Platform\Organizations\Offices
- */
 class UpdateOfficeRequest extends BaseOfficeRequest
 {
     /**

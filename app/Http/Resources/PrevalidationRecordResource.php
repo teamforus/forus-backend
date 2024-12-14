@@ -4,11 +4,10 @@ namespace App\Http\Resources;
 
 use App\Models\PrevalidationRecord;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Request;
 
 /**
- * Class PrevalidationRecordResource
  * @property PrevalidationRecord $resource
- * @package App\Http\Resources
  */
 class PrevalidationRecordResource extends JsonResource
 {
@@ -18,7 +17,7 @@ class PrevalidationRecordResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return array_merge($this->resource->only([
             'id', 'record_type_id', 'value',

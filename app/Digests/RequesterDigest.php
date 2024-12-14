@@ -185,6 +185,7 @@ class RequesterDigest
     {
         $identityFunds = [];
 
+        /** @var Collection|Voucher[] $vouchers */
         $vouchers = Voucher::where(static function(Builder $builder) {
             $builder->whereNull('product_id');
         })->orWhere(static function(Builder $builder) {
@@ -194,12 +195,12 @@ class RequesterDigest
             return !$voucher->used;
         });
 
-        $vouchersByIdentities = $vouchers->groupBy('identity_address');
+        $vouchersByIdentities = $vouchers->groupBy('identity_id');
 
-        foreach ($vouchersByIdentities as $identity_address => $vouchersByIdentity) {
-            $identity = Identity::findByAddress($identity_address);
+        foreach ($vouchersByIdentities as $identity_id => $vouchersByIdentity) {
+            $identity = Identity::firstWhere('id', $identity_id);
 
-            if (!empty($identity) && $identity->email) {
+            if (!empty($identity?->email)) {
                 $funds = $vouchersByIdentity->pluck('fund_id')->unique()->toArray();
                 $identityFunds[] = compact('identity', 'funds');
             }

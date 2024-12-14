@@ -2,10 +2,6 @@
 
 namespace App\Mail\Digest;
 
-/**
- * Class DigestSponsorMail
- * @package App\Mail\Digest
- */
 class DigestSponsorMail extends BaseDigestMail
 {
     protected ?string $preferencesLinkDashboard = 'sponsor';

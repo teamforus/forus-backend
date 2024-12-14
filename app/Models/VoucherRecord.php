@@ -24,20 +24,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $logs_count
  * @property-read \App\Models\RecordType $record_type
  * @property-read \App\Models\Voucher $voucher
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord query()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereNote($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereRecordTypeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereValue($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereVoucherId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereRecordTypeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereVoucherId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord withoutTrashed()
  * @mixin \Eloquent
  */
 class VoucherRecord extends Model

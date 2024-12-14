@@ -20,10 +20,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 
-/**
- * Class SponsorDigest
- * @package App\Digests
- */
 class SponsorDigest extends BaseOrganizationDigest
 {
     use Dispatchable;

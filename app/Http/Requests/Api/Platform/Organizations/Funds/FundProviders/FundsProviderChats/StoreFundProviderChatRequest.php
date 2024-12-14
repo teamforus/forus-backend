@@ -8,9 +8,7 @@ use App\Models\FundProvider;
 use Illuminate\Validation\Rule;
 
 /**
- * Class StoreFundProviderChatRequest
  * @property FundProvider $fund_provider
- * @package App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\FundsProviderChats
  */
 class StoreFundProviderChatRequest extends BaseFormRequest
 {

@@ -62,7 +62,7 @@ class VoucherTransactionsSubscriber
                     'subsidy_new_limit' => $fundProviderProduct->stockAvailableForVoucher($transaction->voucher),
                 ], $logData));
 
-                if ($transaction->voucher->identity_address) {
+                if ($transaction->voucher->identity_id) {
                     IdentityVoucherSubsidyTransactionNotification::send($eventLog);
                 }
             }

@@ -78,7 +78,7 @@ class FundCriterionResource extends BaseJsonResource
         $checkCriteria = $request->get('check_criteria', false);
 
         if ($checkCriteria && $identity) {
-            return !empty($fund->getTrustedRecordOfType($identity->address, $this->resource->record_type_key));
+            return !empty($fund->getTrustedRecordOfType($identity, $this->resource->record_type_key));
         }
 
         return $checkCriteria ? false : null;

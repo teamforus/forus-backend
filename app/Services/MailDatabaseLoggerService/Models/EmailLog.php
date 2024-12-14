@@ -3,7 +3,6 @@
 namespace App\Services\MailDatabaseLoggerService\Models;
 
 use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationRequestedMail;
-use App\Mail\Funds\FundRequestRecords\FundRequestRecordDeclinedMail;
 use App\Mail\Funds\FundRequests\FundRequestApprovedMail;
 use App\Mail\Funds\FundRequests\FundRequestCreatedMail;
 use App\Mail\Funds\FundRequests\FundRequestDeniedMail;
@@ -36,22 +35,22 @@ use Mews\Purifier\Facades\Purifier;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MailDatabaseLoggerService\Models\EmailLogAttachment[] $email_log_attachments
  * @property-read int|null $email_log_attachments_count
  * @property-read EventLog|null $event_log
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog query()
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereContent($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereEventLogId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereFromAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereFromName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereHeaders($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereMailable($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereSubject($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereSystemNotificationKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereToAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereToName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLog whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereContent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereEventLogId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereFromAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereFromName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereHeaders($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereMailable($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereSubject($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereSystemNotificationKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereToAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereToName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLog whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class EmailLog extends Model
@@ -92,7 +91,6 @@ class EmailLog extends Model
             FundRequestCreatedMail::class => 'fund_request_created',
             FundRequestApprovedMail::class => 'fund_request_approved',
             FundRequestDisregardedMail::class => 'fund_request_disregarded',
-            FundRequestRecordDeclinedMail::class => 'fund_request_record_declined',
             FundRequestClarificationRequestedMail::class => 'fund_request_feedback_requested',
         ][$this->mailable] ?? null;
     }

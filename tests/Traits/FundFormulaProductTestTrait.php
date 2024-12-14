@@ -27,7 +27,7 @@ trait FundFormulaProductTestTrait
 
         foreach ($fund->fund_formula_products as $formulaProduct) {
             $productVoucherCount = Voucher::query()
-                ->where('identity_address', $identity?->address ?: null)
+                ->where('identity_id', $identity?->id ?: null)
                 ->where('product_id', $formulaProduct->product_id)
                 ->where('created_at', '>=', $startDate)
                 ->where('amount', floatval($formulaProduct->price) ?: $formulaProduct->product->price)
@@ -35,7 +35,7 @@ trait FundFormulaProductTestTrait
                 ->count();
 
             $this->assertEquals(
-                $formulaProduct->getIdentityMultiplier($identity?->address),
+                $formulaProduct->getIdentityMultiplier($identity),
                 $productVoucherCount,
             );
         }

@@ -15,10 +15,6 @@ use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
-/**
- * Class ProviderFundsDigest
- * @package App\DigestsNieuw aanbod op de webshop
- */
 class ProviderFundsDigest extends BaseOrganizationDigest
 {
     use Dispatchable;

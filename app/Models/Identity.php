@@ -227,9 +227,9 @@ class Identity extends Model implements Authenticatable
         return $this->belongsToMany(
             Fund::class,
             'vouchers',
-            'identity_address',
+            'identity_id',
             'fund_id',
-            'address',
+            'id',
         )->groupBy('funds.id');
     }
 
@@ -310,7 +310,7 @@ class Identity extends Model implements Authenticatable
      */
     public function vouchers(): HasMany
     {
-        return $this->hasMany(Voucher::class, 'identity_address', 'address');
+        return $this->hasMany(Voucher::class);
     }
 
     /**
@@ -345,9 +345,9 @@ class Identity extends Model implements Authenticatable
         return $this->hasManyThrough(
             Reimbursement::class,
             Voucher::class,
-            'identity_address',
+            'identity_id',
             'voucher_id',
-            'address',
+            'id',
             'id',
         );
     }

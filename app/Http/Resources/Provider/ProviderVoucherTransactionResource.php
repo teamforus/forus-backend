@@ -9,15 +9,14 @@ use App\Http\Resources\Tiny\FundTinyResource;
 use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Http\Resources\VoucherTransactionNoteResource;
 use App\Models\VoucherTransaction;
+use Illuminate\Http\Request;
 
 /**
- * Class ProviderVoucherTransactionResource
  * @property VoucherTransaction $resource
- * @package App\Http\Resources\Provider
  */
 class ProviderVoucherTransactionResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'provider',
         'provider.business_type.translations',
         'provider.logo.presets',
@@ -34,7 +33,7 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $transaction = $this->resource;
 

@@ -349,7 +349,7 @@ class SystemNotificationsTest extends TestCase
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
-        return $fund->makeVoucher($identity->address, [], 100);
+        return $fund->makeVoucher($identity, [], 100);
     }
 
     /**

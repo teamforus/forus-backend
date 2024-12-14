@@ -7,10 +7,6 @@ use App\Rules\IdentityEmailExistsRule;
 use App\Models\Implementation;
 use Illuminate\Support\Facades\Config;
 
-/**
- * Class IdentityAuthorizationEmailTokenRequest
- * @package App\Http\Requests\Api
- */
 class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
 {
     /**

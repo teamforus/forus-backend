@@ -10,10 +10,6 @@ use App\Models\VoucherToken;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class ProductVouchersController
- * @package App\Http\Controllers\Api\Platform\Provider\Vouchers
- */
 class ProductVouchersController extends Controller
 {
     /**

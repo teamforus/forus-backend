@@ -10,10 +10,6 @@ use App\Models\PhysicalCard;
 use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 
-/**
- * Class PhysicalCardsController
- * @package App\Http\Controllers\Api\Platform\Vouchers
- */
 class PhysicalCardsController extends Controller
 {
     /**

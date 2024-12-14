@@ -32,7 +32,7 @@ class ProductReservationsController extends Controller
         $this->authorize('viewAny', ProductReservation::class);
 
         $builder = ProductReservation::whereHas('voucher', function(Builder $builder) use ($request) {
-            $builder->where('identity_address', $request->auth_address());
+            $builder->where('identity_id', $request->auth_id());
         });
 
         $search = new ProductReservationsSearch(array_merge($request->only([

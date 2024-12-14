@@ -30,10 +30,6 @@ use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class VouchersController
- * @package App\Http\Controllers\Api\Platform\Organizations\Sponsor
- */
 class VouchersController extends Controller
 {
     /**
@@ -79,10 +75,10 @@ class VouchersController extends Controller
         $note = $request->input('note');
         $email = $request->input('email', false);
         $amount = currency_format($fund->isTypeBudget() ? $request->input('amount', 0) : 0);
-        $identity = $email ? Identity::findOrMake($email)->address : null;
         $expire_at = $request->input('expire_at', false);
         $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
+        $identity = $email ? Identity::findOrMake($email) : null;
         $multiplier = $request->input('limit_multiplier');
         $records = $request->input('records', []);
 
@@ -136,7 +132,7 @@ class VouchersController extends Controller
      */
     public function storeValidate(
         StoreVoucherRequest $request,
-        Organization        $organization
+        Organization $organization
     ): void {}
 
     /**
@@ -170,7 +166,7 @@ class VouchersController extends Controller
             $email = $voucher['email'] ?? false;
             $amount = currency_format($fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0);
             $records = isset($voucher['records']) && is_array($voucher['records']) ? $voucher['records'] : [];
-            $identity = $email ? Identity::findOrMake($email)->address : null;
+            $identity = $email ? Identity::findOrMake($email) : null;
             $expire_at = $voucher['expire_at'] ?? false;
             $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;

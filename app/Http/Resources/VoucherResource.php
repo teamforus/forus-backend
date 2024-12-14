@@ -74,7 +74,7 @@ class VoucherResource extends BaseJsonResource
         $deactivationDate = $voucher->deactivated ? $this->getDeactivationDate($voucher) : null;
 
         return array_merge($voucher->only([
-            'id', 'number', 'identity_address', 'fund_id', 'returnable', 'transactions_count',
+            'id', 'number', 'identity_id', 'fund_id', 'returnable', 'transactions_count',
             'expired', 'deactivated', 'type', 'state', 'state_locale', 'is_external',
         ]), $this->getBaseFields($voucher), $this->getOptionalFields($voucher), [
             'deactivated_at' => $deactivationDate?->format('Y-m-d'),
@@ -95,7 +95,7 @@ class VoucherResource extends BaseJsonResource
             'address_printable' => $voucher->token_without_confirmation->address,
             'timestamp' => $voucher->created_at->timestamp,
             'fund' => $this->getFundResource($voucher->fund),
-            'parent' => $voucher->parent ? array_merge($voucher->parent->only('identity_address', 'fund_id'), [
+            'parent' => $voucher->parent ? array_merge($voucher->parent->only('identity_id', 'fund_id'), [
                 'created_at' => $voucher->parent->created_at_string
             ]) : null,
             'physical_card' => new PhysicalCardResource($physicalCard),
@@ -277,7 +277,7 @@ class VoucherResource extends BaseJsonResource
     ): SupportCollection|array|null {
         return $product_vouchers?->map(function (Voucher $product_voucher) {
             return array_merge($product_voucher->only([
-                'identity_address', 'fund_id', 'returnable',
+                'identity_id', 'fund_id', 'returnable',
             ]), [
                 'address' => $product_voucher->token_with_confirmation?->address,
                 'amount' => currency_format($product_voucher->amount),

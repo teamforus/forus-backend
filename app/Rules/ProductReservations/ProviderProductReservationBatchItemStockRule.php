@@ -7,10 +7,6 @@ use App\Models\Product;
 use App\Models\Voucher;
 use App\Rules\BaseRule;
 
-/**
- * Class ProviderProductReservationBatchItemRule
- * @package App\Rules
- */
 class ProviderProductReservationBatchItemStockRule extends BaseRule
 {
     protected int $index;

@@ -147,7 +147,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
     /**
      * @return Builder|PhysicalCard
      */
-    protected function buildPhysicalCardsQuery(Fund $fund): Builder
+    protected function buildPhysicalCardsQuery(Fund $fund): Builder|PhysicalCard
     {
         $builder = PhysicalCard::where(function(Builder $builder) use ($fund) {
             // Should be assigned
@@ -173,12 +173,12 @@ class MigratePhysicalCardsCommand extends BaseCommand
 
                 if ($this->migrationSource == self::SOURCE_IDENTITY) {
                     // Should be assigned
-                    $builder->whereNotNull('identity_address');
+                    $builder->whereNotNull('identity_id');
                 }
 
                 if ($this->migrationSource == self::SOURCE_RELATION) {
                     // Should not be assigned
-                    $builder->whereNull('identity_address');
+                    $builder->whereNull('identity_id');
                     $builder->whereHas('voucher_relation');
                 }
             });
@@ -234,7 +234,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
 
                         if ($this->migrationSource == self::SOURCE_RELATION) {
                             // Should not be assigned
-                            $builder->whereNull('identity_address');
+                            $builder->whereNull('identity_id');
 
                             // And relation bsn should match
                             $builder->whereHas('voucher_relation', function(Builder $builder) {
@@ -456,7 +456,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
      * @param Fund $fund
      * @return Collection|Voucher[]
      */
-    protected function getCardReplacementVouchers(PhysicalCard $card, Fund $fund): Collection
+    protected function getCardReplacementVouchers(PhysicalCard $card, Fund $fund): Collection|array
     {
         return Voucher::where(function(Builder $builder) use ($card, $fund) {
             // Which is not expired and active
@@ -467,12 +467,12 @@ class MigratePhysicalCardsCommand extends BaseCommand
 
             if ($this->migrationSource == self::SOURCE_IDENTITY) {
                 // That belongs to the same user as the physical card
-                $builder->where('identity_address', $card->identity_address);
+                $builder->where('identity_id', $card->identity->id);
             }
 
             if ($this->migrationSource == self::SOURCE_RELATION) {
                 // Should not be assigned
-                $builder->whereNull('identity_address');
+                $builder->whereNull('identity_id');
 
                 // And relation bsn should match
                 $builder->whereHas('voucher_relation', function(Builder $builder) use ($card) {

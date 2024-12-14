@@ -14,15 +14,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Voucher $voucher
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherToken newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherToken newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherToken query()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherToken whereAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherToken whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherToken whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherToken whereNeedConfirmation($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherToken whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherToken whereVoucherId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherToken newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherToken newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherToken query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherToken whereAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherToken whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherToken whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherToken whereNeedConfirmation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherToken whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherToken whereVoucherId($value)
  * @mixin \Eloquent
  */
 class VoucherToken extends BaseModel

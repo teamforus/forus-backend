@@ -4,10 +4,6 @@ namespace App\Services\GeocodeService;
 
 use Illuminate\Support\ServiceProvider;
 
-/**
- * Class GeocodeServiceProvider
- * @package App\Services\GeocodeService
- */
 class GeocodeServiceProvider extends ServiceProvider
 {
     /**
@@ -15,7 +11,7 @@ class GeocodeServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->app->singleton('geocode_api', function () {
             return new GeocodeService(env("GOOGLE_API_KEY"));

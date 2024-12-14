@@ -53,7 +53,6 @@ use App\Services\MollieService\Objects\Payment;
  * @property Carbon|null $accepted_at
  * @property Carbon|null $canceled_at
  * @property Carbon|null $rejected_at
- * @property Carbon $expire_at
  * @property Carbon|null $deleted_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -62,6 +61,7 @@ use App\Services\MollieService\Objects\Payment;
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\ReservationExtraPayment|null $extra_payment
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read Carbon $expire_at
  * @property-read string $state_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -85,7 +85,6 @@ use App\Services\MollieService\Objects\Payment;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereEmployeeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereExpireAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereFirstName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereFundProviderProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereHouseNr($value)

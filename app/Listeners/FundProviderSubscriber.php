@@ -20,10 +20,6 @@ use App\Notifications\Organizations\FundProviders\FundProvidersStateAcceptedNoti
 use App\Notifications\Organizations\FundProviders\FundProvidersStateRejectedNotification;
 use Illuminate\Events\Dispatcher;
 
-/**
- * Class FundSubscriber
- * @package App\Listeners
- */
 class FundProviderSubscriber
 {
     /**

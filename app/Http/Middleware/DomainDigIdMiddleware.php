@@ -6,10 +6,6 @@ use App\Models\Implementation;
 use Closure;
 use Illuminate\Http\Request;
 
-/**
- * Class DomainDigIdMiddleware
- * @package App\Http\Middleware
- */
 class DomainDigIdMiddleware
 {
     /**

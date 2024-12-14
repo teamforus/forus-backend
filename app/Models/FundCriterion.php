@@ -35,6 +35,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string|null $title
  * @property bool $show_attachment
  * @property string $description
+ * @property string|null $extra_description
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $label
@@ -43,26 +44,28 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read int|null $fund_criterion_rules_count
  * @property-read \App\Models\FundRequestRecord|null $fund_request_record
  * @property-read string $description_html
+ * @property-read string $extra_description_html
  * @property-read \App\Models\RecordType|null $record_type
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereFundCriteriaStepId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereLabel($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereMax($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereMin($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereOperator($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereOptional($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereRecordTypeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereShowAttachment($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereExtraDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereFundCriteriaStepId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereLabel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereMax($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereMin($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereOperator($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereOptional($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereRecordTypeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereShowAttachment($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereValue($value)
  * @mixin \Eloquent
  */
 class FundCriterion extends BaseModel

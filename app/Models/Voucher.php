@@ -49,6 +49,7 @@ use ZipArchive;
  * App\Models\Voucher
  *
  * @property int $id
+ * @property int|null $identity_id
  * @property string|null $number
  * @property int $fund_id
  * @property int|null $fund_request_id
@@ -157,6 +158,7 @@ use ZipArchive;
  * @method static Builder<static>|Voucher whereFundRequestId($value)
  * @method static Builder<static>|Voucher whereId($value)
  * @method static Builder<static>|Voucher whereIdentityAddress($value)
+ * @method static Builder<static>|Voucher whereIdentityId($value)
  * @method static Builder<static>|Voucher whereLimitMultiplier($value)
  * @method static Builder<static>|Voucher whereNote($value)
  * @method static Builder<static>|Voucher whereNumber($value)
@@ -234,7 +236,7 @@ class Voucher extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id', 'number',
+        'fund_id', 'identity_id', 'limit_multiplier', 'amount', 'product_id', 'number',
         'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'state',
         'activation_code', 'client_uid', 'fund_backoffice_log_id',
         'product_reservation_id', 'voucher_type', 'fund_request_id', 'fund_amount_preset_id',
@@ -312,7 +314,7 @@ class Voucher extends BaseModel
      */
     public function identity(): BelongsTo
     {
-        return $this->belongsTo(Identity::class, 'identity_address', 'address');
+        return $this->belongsTo(Identity::class);
     }
 
     /**
@@ -800,9 +802,9 @@ class Voucher extends BaseModel
         $granted = $request->input('granted');
 
         if ($granted) {
-            $query->whereNotNull('identity_address');
+            $query->whereNotNull('identity_id');
         } elseif ($granted !== null) {
-            $query->whereNull('identity_address');
+            $query->whereNull('identity_id');
         }
 
         if ($request->has('amount_min')) {
@@ -883,9 +885,9 @@ class Voucher extends BaseModel
         }
 
         if ($unassignedOnly) {
-            $query->whereNull('identity_address');
+            $query->whereNull('identity_id');
         } else if ($unassignedOnly !== null) {
-            $query->whereNotNull('identity_address');
+            $query->whereNotNull('identity_id');
         }
 
         switch ($request->input('type')) {
@@ -903,16 +905,16 @@ class Voucher extends BaseModel
         }
 
         if ($request->has('email') && $email = $request->input('email')) {
-            $query->where('identity_address', Identity::findByEmail($email)?->address ?: '_');
+            $query->where('identity_id', Identity::findByEmail($email)?->id ?: '_');
         }
 
         if ($request->input('identity_address', false)) {
-            $query->where('identity_address', $request->input('identity_address'));
+            $query->whereRelation('identity', 'address', $request->input('identity_address'));
         }
 
         if ($request->has('bsn') && $bsn = $request->input('bsn')) {
             $query->where(static function(Builder $builder) use ($bsn) {
-                $builder->where('identity_address', Identity::findByBsn($bsn)?->address ?: '-');
+                $builder->where('identity_id', Identity::findByBsn($bsn)?->id ?: '-');
                 $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($bsn) {
                     $builder->where(compact('bsn'));
                 });
@@ -985,7 +987,7 @@ class Voucher extends BaseModel
      */
     public function getIsGrantedAttribute(): bool
     {
-        return !empty($this->identity_address);
+        return !empty($this->identity_id);
     }
 
     /**
@@ -1042,7 +1044,7 @@ class Voucher extends BaseModel
     public function assignToIdentity(Identity $identity): self
     {
         $this->update([
-            'identity_address' => $identity->address,
+            'identity_id' => $identity->id,
             'state' => self::STATE_ACTIVE,
         ]);
 
@@ -1068,7 +1070,7 @@ class Voucher extends BaseModel
 
         $voucher = self::create([
             'product_reservation_id'    => $productReservation?->id,
-            'identity_address'          => $this->identity_address,
+            'identity_id'               => $this->identity_id,
             'parent_id'                 => $this->id,
             'fund_id'                   => $this->fund_id,
             'product_id'                => $product->id,
@@ -1336,52 +1338,39 @@ class Voucher extends BaseModel
 
     /**
      * @param string $address
-     * @param string|null $identity_address
      * @return Voucher|null
      */
-    public static function findByAddress(
-        string $address,
-        ?string $identity_address = null,
-    ): ?Voucher {
+    public static function findByAddress(string $address): ?Voucher
+    {
         return self::query()->where([
             'voucher_type' => Voucher::VOUCHER_TYPE_VOUCHER,
         ])->whereHas('tokens', static function(Builder $builder) use ($address) {
             $builder->where('address', '=', $address);
-        })->where(static function(Builder $builder) use ($identity_address) {
-            $identity_address && $builder->where('identity_address', '=', $identity_address);
         })->firstOrFail();
     }
 
     /**
      * @param string $number
-     * @param string|null $identity_address
      * @return Builder|Voucher
      */
-    public static function findByPhysicalCardQuery(
-        string $number,
-        ?string $identity_address = null,
-    ): Builder|Voucher {
+    public static function findByPhysicalCardQuery(string $number): Builder|Voucher
+    {
         return self::query()->where([
             'voucher_type' => Voucher::VOUCHER_TYPE_VOUCHER,
         ])->whereHas('fund.fund_config', static function (Builder $builder) {
             $builder->where('allow_physical_cards', '=', true);
         })->whereHas('physical_cards', static function (Builder $builder) use ($number) {
             $builder->where('code', '=', $number);
-        })->where(static function(Builder $builder) use ($identity_address) {
-            $identity_address && $builder->where('identity_address', '=', $identity_address);
         });
     }
 
     /**
      * @param string $number
-     * @param string|null $identity_address
      * @return Voucher|null
      */
-    public static function findByPhysicalCard(
-        string $number,
-        ?string $identity_address = null
-    ): ?Voucher {
-        return static::findByPhysicalCardQuery($number, $identity_address)->first();
+    public static function findByPhysicalCard(string $number): ?Voucher
+    {
+        return static::findByPhysicalCardQuery($number)->first();
     }
 
     /**
@@ -1417,8 +1406,8 @@ class Voucher extends BaseModel
             return null;
         }
 
-        $vouchers = VoucherQuery::whereNotExpired(self::query())
-            ->whereNull('identity_address')
+        $vouchers = VoucherQuery::whereNotExpired(static::query())
+            ->whereNull('identity_id')
             ->whereHas('fund', fn (Builder $q) => FundQuery::whereActiveFilter($q))
             ->whereRelation('fund.organization', fn (Builder $q) => $q->where('bsn_enabled', true))
             ->whereHas('voucher_relation', fn (Builder $q) => $q->where('bsn', $identity->bsn))
@@ -1437,11 +1426,11 @@ class Voucher extends BaseModel
     {
         $queryUnused = self::whereHas('fund', function(Builder $builder) {
             $builder->where('organization_id', $this->fund->organization_id);
-        })->whereNull('identity_address')->where(compact('client_uid'));
+        })->whereNull('identity_id')->where(compact('client_uid'));
 
         $queryUsed = self::whereHas('fund', function(Builder $builder) {
             $builder->where('organization_id', $this->fund->organization_id);
-        })->whereNotNull('identity_address')->where(compact('client_uid'));
+        })->whereNotNull('identity_id')->where(compact('client_uid'));
 
         if (!is_null($client_uid) && $queryUnused->exists()) {
             /** @var Voucher $voucher */
@@ -1473,7 +1462,7 @@ class Voucher extends BaseModel
     {
         return $this->physical_cards()->create([
             'code' => $code,
-            'identity_address' => $this->identity_address,
+            'identity_address' => $this->identity->address,
         ]);
     }
 
@@ -1573,7 +1562,7 @@ class Voucher extends BaseModel
     {
         $voucherShouldReport =
             !$this->parent_id &&
-            $this->identity_address &&
+            $this->identity_id &&
             !$this->backoffice_log_received()->exists();
 
         if ($voucherShouldReport) {
@@ -1600,7 +1589,7 @@ class Voucher extends BaseModel
     {
         $voucherShouldReport =
             !$this->parent_id &&
-            $this->identity_address &&
+            $this->identity_id &&
             !$this->backoffice_log_first_use()->exists();
 
         if ($voucherShouldReport) {

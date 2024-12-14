@@ -2,10 +2,6 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Offices;
 
-/**
- * Class IndexOfficeRequest
- * @package App\Http\Requests\Api\Platform\Organizations\Offices
- */
 class IndexOfficeRequest extends BaseOfficeRequest
 {
     /**

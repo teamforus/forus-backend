@@ -6,10 +6,6 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-/**
- * Class KvkApi
- * @package App\Services\KvkApiService
- */
 class KvkApi
 {
     protected string $api_url = "https://api.kvk.nl/";

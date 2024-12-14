@@ -16,16 +16,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Organization $organization
- * @method static \Illuminate\Database\Eloquent\Builder|OrganizationContact newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|OrganizationContact newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|OrganizationContact query()
- * @method static \Illuminate\Database\Eloquent\Builder|OrganizationContact whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OrganizationContact whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OrganizationContact whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OrganizationContact whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OrganizationContact whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OrganizationContact whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OrganizationContact whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationContact newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationContact newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationContact query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationContact whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationContact whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationContact whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationContact whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationContact whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationContact whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationContact whereValue($value)
  * @mixin \Eloquent
  */
 class OrganizationContact extends Model

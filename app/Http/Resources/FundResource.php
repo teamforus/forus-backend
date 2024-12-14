@@ -144,7 +144,7 @@ class FundResource extends BaseJsonResource
     protected function hadPendingRequests(?Identity $identity, Fund $fund): bool
     {
         return $identity && $fund->fund_requests()->where(function (Builder $builder) use ($identity) {
-            FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, $identity->address);
+            FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, $identity->id);
         })->exists();
     }
 
@@ -157,7 +157,7 @@ class FundResource extends BaseJsonResource
     {
         return $identity && $fund->vouchers()->where(function (Builder|Voucher $builder) use ($identity) {
             VoucherQuery::whereNotExpiredAndActive($builder);
-            $builder->whereIdentityAddress($identity->address);
+            $builder->where('identity_id', $identity->id);
         })->exists();
     }
 

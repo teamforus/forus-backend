@@ -15,10 +15,6 @@ use App\Scopes\Builders\ProductQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class ProductsController
- * @package App\Http\Controllers\Api\Platform\Organizations\Sponsor\Providers
- */
 class ProductsController extends Controller
 {
     /**

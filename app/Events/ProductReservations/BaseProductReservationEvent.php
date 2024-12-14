@@ -9,10 +9,6 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-/**
- * Class BaseProductReservationEvent
- * @package App\Events\ProductReservations
- */
 class BaseProductReservationEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;

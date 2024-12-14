@@ -13,10 +13,6 @@ use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
-/**
- * Class ProviderProductsDigest
- * @package App\Digests
- */
 class ProviderProductsDigest extends BaseOrganizationDigest
 {
     use Dispatchable;

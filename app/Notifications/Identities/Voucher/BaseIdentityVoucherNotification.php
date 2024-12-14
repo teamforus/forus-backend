@@ -19,6 +19,6 @@ abstract class BaseIdentityVoucherNotification extends BaseIdentityNotification
      */
     public static function eligibleIdentities($loggable, EventLog $eventLog): Collection
     {
-        return Identity::whereAddress($loggable->identity_address)->get();
+        return Identity::where('id', $loggable->identity_id)->get();
     }
 }

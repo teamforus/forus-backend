@@ -12,13 +12,14 @@ use App\Models\Organization;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Http\Request;
 
 /**
  * @property-read Identity $resource
  */
 class Identity2FAStateResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'funds.fund_config',
         'funds.logo.presets',
         'identity_2fa_active',
@@ -28,10 +29,10 @@ class Identity2FAStateResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $request = BaseFormRequest::createFrom($request);
         $identityProxy = $request->identityProxy();

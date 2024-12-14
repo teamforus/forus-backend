@@ -6,24 +6,23 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Exception;
 
 /**
- * Class SearchResource
  * @property Model|Organization|Product|Fund $resource
- * @package App\Http\Resources
  */
 class SearchResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request$request
      * @return array
      * @throws \Throwable
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         /** @var Fund|Organization|Product $model */
         $model = $this->resource;

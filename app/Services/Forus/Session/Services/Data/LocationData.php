@@ -3,10 +3,6 @@
 
 namespace App\Services\Forus\Session\Services\Data;
 
-/**
- * Class LocationData
- * @package App\Services\Forus\Session\Services\Data
- */
 class LocationData
 {
     public $ip;
