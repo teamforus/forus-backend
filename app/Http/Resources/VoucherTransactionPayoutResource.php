@@ -2,9 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\VoucherTransaction;
-use App\Searches\VoucherTransactionsSearch;
-
 class VoucherTransactionPayoutResource extends VoucherTransactionResource
 {
     /**

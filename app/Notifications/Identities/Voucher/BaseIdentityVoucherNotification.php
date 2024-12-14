@@ -2,9 +2,9 @@
 
 namespace App\Notifications\Identities\Voucher;
 
+use App\Models\Identity;
 use App\Models\Voucher;
 use App\Notifications\Identities\BaseIdentityNotification;
-use App\Models\Identity;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Support\Collection;
 

@@ -5,10 +5,10 @@ namespace App\Services\BNGService;
 use App\Services\BNGService\Data\AuthData;
 use App\Services\BNGService\Data\ResponseData;
 use App\Services\BNGService\Exceptions\ApiException;
+use App\Services\BNGService\Responses\AccessTokenResponseValue;
 use App\Services\BNGService\Responses\AccountsValue;
 use App\Services\BNGService\Responses\Balances;
 use App\Services\BNGService\Responses\BulkPaymentValue;
-use App\Services\BNGService\Responses\AccessTokenResponseValue;
 use App\Services\BNGService\Responses\Consent\AccountConsentValue;
 use App\Services\BNGService\Responses\Consent\BulkPaymentConsentValue;
 use App\Services\BNGService\Responses\Entries\BulkPayment;
@@ -19,8 +19,8 @@ use App\Services\BNGService\Responses\TransactionValue;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use RuntimeException;
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 use Throwable;
 
 class BNGService

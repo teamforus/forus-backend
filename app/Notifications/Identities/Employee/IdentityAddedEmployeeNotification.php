@@ -4,8 +4,8 @@ namespace App\Notifications\Identities\Employee;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Mail\User\EmployeeAddedMail;
-use App\Models\Implementation;
 use App\Models\Identity;
+use App\Models\Implementation;
 
 /**
  * Notify identity about them becoming an employee for the organization

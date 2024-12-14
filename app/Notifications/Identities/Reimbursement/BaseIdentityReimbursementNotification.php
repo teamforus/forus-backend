@@ -2,10 +2,9 @@
 
 namespace App\Notifications\Identities\Reimbursement;
 
-use App\Models\FundRequest;
+use App\Models\Identity;
 use App\Models\Reimbursement;
 use App\Notifications\Identities\BaseIdentityNotification;
-use App\Models\Identity;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Support\Collection;
 

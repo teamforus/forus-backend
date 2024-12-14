@@ -2,18 +2,18 @@
 
 namespace App\Notifications;
 
+use App\Mail\ImplementationMail;
+use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
-use App\Models\Identity;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Mail\Mailable;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Notification;
-use App\Mail\ImplementationMail;
+use Illuminate\Support\Collection;
 
 abstract class BaseNotification extends Notification implements ShouldQueue
 {

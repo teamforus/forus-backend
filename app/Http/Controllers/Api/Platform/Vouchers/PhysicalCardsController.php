@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Vouchers\PhysicalCards\StorePhysicalCardRequest;
 use App\Http\Resources\PhysicalCardResource;
 use App\Models\PhysicalCard;
 use App\Models\Voucher;
-use App\Http\Requests\Api\Platform\Vouchers\PhysicalCards\StorePhysicalCardRequest;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\Response;
 

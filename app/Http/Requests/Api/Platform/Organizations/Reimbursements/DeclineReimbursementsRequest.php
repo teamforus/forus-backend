@@ -3,8 +3,6 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Reimbursements;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Organization;
-use App\Models\Reimbursement;
 
 class DeclineReimbursementsRequest extends BaseFormRequest
 {

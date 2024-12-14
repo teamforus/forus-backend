@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api\Platform\Funds\Requests;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\IndexFundRequestRecordsRequest;
 use App\Http\Resources\FundRequestRecordResource;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundRequestRecordsController extends Controller

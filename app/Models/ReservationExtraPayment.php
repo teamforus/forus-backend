@@ -12,13 +12,13 @@ use App\Events\ReservationExtraPayments\ReservationExtraPaymentUpdated;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Models\MollieConnection;
+use App\Services\MollieService\Objects\Payment;
+use App\Services\MollieService\Objects\Refund;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Event;
-use App\Services\MollieService\Objects\Payment;
-use App\Services\MollieService\Objects\Refund;
 
 /**
  * App\Models\ReservationExtraPayment

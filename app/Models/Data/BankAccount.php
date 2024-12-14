@@ -2,8 +2,6 @@
 
 namespace App\Models\Data;
 
-use App\Models\Voucher;
-
 class BankAccount
 {
     public function __construct(

@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\Implementation;
-use App\Models\ImplementationPage;
 
 class ImplementationResource extends BaseJsonResource
 {

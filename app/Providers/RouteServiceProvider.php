@@ -3,8 +3,9 @@
 namespace App\Providers;
 
 use App\Models\BankConnection;
-use App\Models\Fund;
+use App\Models\DemoTransaction;
 use App\Models\Employee;
+use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
@@ -13,6 +14,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity2FA;
+use App\Models\IdentityEmail;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
@@ -20,14 +22,12 @@ use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
-use App\Models\DemoTransaction;
 use App\Models\VoucherTransactionBulk;
 use App\Services\DigIdService\Models\DigIdSession;
-use App\Models\IdentityEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
 {

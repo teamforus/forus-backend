@@ -4,8 +4,8 @@ namespace App\Http\Requests\Api\Platform\Organizations\Provider;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\FundProvider;
-use App\Scopes\Builders\OrganizationQuery;
 use App\Models\Organization;
+use App\Scopes\Builders\OrganizationQuery;
 
 /**
  * @property-read Organization $organization

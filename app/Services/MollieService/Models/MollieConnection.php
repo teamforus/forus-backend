@@ -15,6 +15,8 @@ use App\Services\MollieService\Data\MollieConnectionTokenData;
 use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Interfaces\MollieServiceInterface;
 use App\Services\MollieService\MollieServiceLogger;
+use App\Services\MollieService\Objects\Payment;
+use App\Services\MollieService\Objects\Profile;
 use App\Services\MollieService\Objects\ResourceOwner;
 use Carbon\Carbon;
 use Illuminate\Contracts\Container\BindingResolutionException;
@@ -27,8 +29,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use League\OAuth2\Client\Token\AccessToken;
-use App\Services\MollieService\Objects\Payment;
-use App\Services\MollieService\Objects\Profile;
 
 /**
  * App\Services\MollieService\Models\MollieConnection

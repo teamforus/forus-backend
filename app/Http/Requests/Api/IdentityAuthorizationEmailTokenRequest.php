@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Api;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Rules\IdentityEmailExistsRule;
 use App\Models\Implementation;
+use App\Rules\IdentityEmailExistsRule;
 use Illuminate\Support\Facades\Config;
 
 class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest

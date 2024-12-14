@@ -3,8 +3,8 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\FundProviderProduct;
 use App\Models\BaseModel;
+use App\Models\FundProviderProduct;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;

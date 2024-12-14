@@ -7,13 +7,13 @@ use App\Services\MediaService\Models\MediaPreset;
 use App\Services\MediaService\Traits\HasMedia;
 use DOMDocument;
 use DOMElement;
+use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\MarkdownConverter;
-use Eloquent;
 
 /**
  * @property string $description

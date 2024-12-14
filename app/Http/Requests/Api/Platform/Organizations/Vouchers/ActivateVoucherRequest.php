@@ -3,9 +3,9 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Http\Requests\BaseFormRequest;
-use Illuminate\Support\Facades\Gate;
 use App\Models\Organization;
 use App\Models\Voucher;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * @property-read Organization $organization

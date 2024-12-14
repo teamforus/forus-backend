@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\DeleteDevicePushRequest;
 use App\Http\Requests\Api\Platform\RegisterDevicePushRequest;
-use App\Http\Controllers\Controller;
 use App\Services\Forus\Notification\NotificationService;
-use Illuminate\Http\JsonResponse;
 use Exception;
+use Illuminate\Http\JsonResponse;
 
 class DevicesController extends Controller
 {

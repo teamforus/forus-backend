@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests\Api\Platform\Prevalidations;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Prevalidation;
 use Illuminate\Database\Query\Builder as QBuilder;
-use App\Http\Requests\BaseFormRequest;
 use Illuminate\Validation\Rule;
 
 class SearchPrevalidationsRequest extends BaseFormRequest

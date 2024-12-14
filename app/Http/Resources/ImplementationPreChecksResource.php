@@ -10,8 +10,8 @@ use App\Models\PreCheckRecord;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 /**
  * @property-read Implementation $resource

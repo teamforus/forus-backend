@@ -12,8 +12,8 @@ use App\Services\EventLogService\Models\EventLog;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Config;
 
 /**
  * @property Voucher $resource

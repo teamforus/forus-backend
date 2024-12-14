@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
-use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Vouchers\DeactivateVoucherRequest;
+use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
 use App\Http\Resources\VoucherCollectionResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\FundConfig;
 use App\Models\Voucher;
-use App\Http\Controllers\Controller;
 use App\Searches\VouchersSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;

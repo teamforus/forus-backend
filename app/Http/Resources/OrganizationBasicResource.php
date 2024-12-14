@@ -3,9 +3,9 @@
 namespace App\Http\Resources;
 
 use App\Models\Organization;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
-use Illuminate\Http\Request;
 
 /**
  * @property Organization $resource

@@ -3,15 +3,15 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Fund;
 use App\Models\Identity;
+use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Role;
-use App\Models\Fund;
-use App\Models\Organization;
 use App\Services\MollieService\Models\MollieConnection;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Http\Request;
 
 /**
  * @property Organization $resource

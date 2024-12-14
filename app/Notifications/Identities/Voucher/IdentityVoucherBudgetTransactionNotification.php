@@ -3,8 +3,8 @@
 namespace App\Notifications\Identities\Voucher;
 
 use App\Mail\Vouchers\PaymentSuccessBudgetMail;
-use App\Models\Voucher;
 use App\Models\Identity;
+use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use Illuminate\Support\Arr;
 

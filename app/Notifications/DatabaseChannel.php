@@ -4,8 +4,8 @@
 namespace App\Notifications;
 
 
-use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Channels\DatabaseChannel as IlluminateDatabaseChannel;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Arr;
 
 class DatabaseChannel extends IlluminateDatabaseChannel

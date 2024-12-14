@@ -10,11 +10,11 @@ use App\Mail\User\IdentityEmailVerificationMail;
 use App\Models\Identity;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Notification\Models\NotificationToken;
+use Exception;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Notification;
-use Exception;
 
 class NotificationService
 {

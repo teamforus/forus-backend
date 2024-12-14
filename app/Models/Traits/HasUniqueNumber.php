@@ -2,9 +2,6 @@
 
 namespace App\Models\Traits;
 
-use App\Models\Faq;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Throwable;
 
 /**

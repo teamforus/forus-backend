@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\ProductReservations\IndexProductReservationsRequest;
+use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\ValidateProductReservationAddressRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\ValidateProductReservationFieldsRequest;
-use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
 use App\Http\Resources\ProductReservationResource;
 use App\Models\Product;
 use App\Models\ProductReservation;

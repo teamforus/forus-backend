@@ -11,7 +11,6 @@ use App\Http\Resources\OrganizationWithPrivateResource;
 use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
-use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Support\Collection;
 
 /**

@@ -6,13 +6,13 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Tiny\FundTinyResource;
 use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Models\Fund;
-use App\Models\Identity;
 use App\Models\FundConfig;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 
 /**
  * @property-read Identity $resource

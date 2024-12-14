@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\IndexVoucherTransactionsRequest;
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\StoreVoucherTransactionRequest;
 use App\Http\Resources\VoucherTransactionResource;
@@ -10,7 +11,6 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
-use App\Http\Controllers\Controller;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Config;

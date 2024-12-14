@@ -16,8 +16,8 @@ use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection as SupportCollection;
 
 class SponsorDigest extends BaseOrganizationDigest

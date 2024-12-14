@@ -16,9 +16,9 @@ use App\Models\Organization;
 use App\Notifications\Identities\Fund\IdentityRequesterSponsorCustomNotification;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Searches\Sponsor\FundIdentitiesSearch;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Database\Eloquent\Builder;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class IdentitiesController extends Controller

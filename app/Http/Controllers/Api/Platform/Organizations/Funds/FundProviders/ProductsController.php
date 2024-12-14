@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Funds\FundProviders;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\Products\IndexFundProviderProductsRequest;
-use App\Scopes\Builders\ProductQuery;
 use App\Http\Resources\Sponsor\SponsorProductResource;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Scopes\Builders\ProductQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProductsController extends Controller

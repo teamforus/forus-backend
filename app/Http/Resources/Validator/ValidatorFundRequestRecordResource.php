@@ -6,7 +6,6 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\BaseJsonResource;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
-use App\Scopes\Builders\EmployeeQuery;
 use Illuminate\Http\Request;
 
 /**

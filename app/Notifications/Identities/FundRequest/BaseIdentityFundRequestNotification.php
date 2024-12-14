@@ -3,8 +3,8 @@
 namespace App\Notifications\Identities\FundRequest;
 
 use App\Models\FundRequest;
-use App\Notifications\Identities\BaseIdentityNotification;
 use App\Models\Identity;
+use App\Notifications\Identities\BaseIdentityNotification;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Support\Collection;
 

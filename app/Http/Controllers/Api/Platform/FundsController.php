@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Funds\CheckFundRequest;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 use App\Http\Requests\Api\Platform\Funds\RedeemFundsRequest;
@@ -11,18 +12,17 @@ use App\Http\Resources\FundResource;
 use App\Http\Resources\PrevalidationResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
-use App\Http\Controllers\Controller;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Searches\FundSearch;
+use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Gate;
-use Exception;
 
 class FundsController extends Controller
 {

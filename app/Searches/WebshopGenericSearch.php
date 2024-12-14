@@ -6,8 +6,8 @@ namespace App\Searches;
 
 use App\Models\Implementation;
 use App\Models\Product;
-use Illuminate\Database\Eloquent\Builder;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 
 class WebshopGenericSearch
 {

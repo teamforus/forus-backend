@@ -2,6 +2,7 @@
 
 namespace App\Services\BankService\Seeders;
 
+use App\Services\BankService\Models\Bank;
 use bunq\Context\ApiContext;
 use bunq\Context\BunqContext;
 use bunq\Model\Generated\Endpoint\OauthCallbackUrl;
@@ -9,7 +10,6 @@ use bunq\Model\Generated\Endpoint\OauthClient;
 use bunq\Util\BunqEnumApiEnvironmentType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
-use App\Services\BankService\Models\Bank;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Throwable;

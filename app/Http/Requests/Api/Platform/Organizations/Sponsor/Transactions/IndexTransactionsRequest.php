@@ -4,8 +4,8 @@ namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions;
 
 use App\Exports\VoucherTransactionsSponsorExport;
 use App\Http\Requests\Api\Platform\Organizations\Transactions\BaseIndexTransactionsRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Arr;
+use Illuminate\Validation\Rule;
 
 class IndexTransactionsRequest extends BaseIndexTransactionsRequest
 {

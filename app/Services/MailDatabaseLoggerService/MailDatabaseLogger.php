@@ -5,10 +5,10 @@ namespace App\Services\MailDatabaseLoggerService;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use App\Services\MailDatabaseLoggerService\Models\EmailLogAttachment;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Support\Facades\Config;
 use Symfony\Component\Mime\Email;
-use Illuminate\Mail\Events\MessageSending;
-use Illuminate\Contracts\Filesystem\Filesystem;
 
 class MailDatabaseLogger
 {
