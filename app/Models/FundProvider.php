@@ -77,23 +77,23 @@ class FundProvider extends BaseModel
 {
     use HasLogs;
 
-    public const EVENT_BUNQ_TRANSACTION_SUCCESS = 'bunq_transaction_success';
-    public const EVENT_STATE_ACCEPTED = 'state_accepted';
-    public const EVENT_STATE_REJECTED = 'state_rejected';
-    public const EVENT_APPROVED_BUDGET = 'approved_budget';
-    public const EVENT_REVOKED_BUDGET = 'revoked_budget';
-    public const EVENT_APPROVED_PRODUCTS = 'approved_products';
-    public const EVENT_REVOKED_PRODUCTS = 'revoked_products';
-    public const EVENT_SPONSOR_MESSAGE = 'sponsor_message';
-    public const EVENT_FUND_EXPIRING = 'fund_expiring';
-    public const EVENT_FUND_STARTED = 'fund_started';
-    public const EVENT_FUND_ENDED = 'fund_ended';
+    public const string EVENT_BUNQ_TRANSACTION_SUCCESS = 'bunq_transaction_success';
+    public const string EVENT_STATE_ACCEPTED = 'state_accepted';
+    public const string EVENT_STATE_REJECTED = 'state_rejected';
+    public const string EVENT_APPROVED_BUDGET = 'approved_budget';
+    public const string EVENT_REVOKED_BUDGET = 'revoked_budget';
+    public const string EVENT_APPROVED_PRODUCTS = 'approved_products';
+    public const string EVENT_REVOKED_PRODUCTS = 'revoked_products';
+    public const string EVENT_SPONSOR_MESSAGE = 'sponsor_message';
+    public const string EVENT_FUND_EXPIRING = 'fund_expiring';
+    public const string EVENT_FUND_STARTED = 'fund_started';
+    public const string EVENT_FUND_ENDED = 'fund_ended';
 
-    public const STATE_PENDING = 'pending';
-    public const STATE_ACCEPTED = 'accepted';
-    public const STATE_REJECTED = 'rejected';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_ACCEPTED = 'accepted';
+    public const string STATE_REJECTED = 'rejected';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_PENDING,
         self::STATE_ACCEPTED,
         self::STATE_REJECTED,

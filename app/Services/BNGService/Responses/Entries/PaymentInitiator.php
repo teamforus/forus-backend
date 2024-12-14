@@ -4,7 +4,7 @@ namespace App\Services\BNGService\Responses\Entries;
 
 class PaymentInitiator
 {
-    protected $name;
+    protected string $name;
 
     /**
      * @param string|null $name

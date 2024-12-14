@@ -16,8 +16,8 @@ use OneLogin\Saml2\Error;
 
 class DigIdSamlRepo extends DigIdRepo
 {
-    public const DIGID_CANCELLED = '0040';
-    public const DIGID_STATUS_CANCELLED = 'AuthnFailed';
+    public const string DIGID_CANCELLED = '0040';
+    public const string DIGID_STATUS_CANCELLED = 'AuthnFailed';
     protected array $configs;
 
     /**

@@ -133,12 +133,12 @@ class Person extends BasePerson
      */
     public function geRelated(string $scope): array
     {
-        switch ($scope) {
-            case 'partners': return $this->getPartners();
-            case 'children': return $this->getChildren();
-            case 'parents': return $this->getParents();
-            default: return [];
-        }
+        return match ($scope) {
+            'partners' => $this->getPartners(),
+            'children' => $this->getChildren(),
+            'parents' => $this->getParents(),
+            default => [],
+        };
     }
 
     /**

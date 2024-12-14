@@ -34,7 +34,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
     /**
      * @var string[]
      */
-    public const LOAD = [
+    public const array LOAD = [
         'records.files.preview.presets',
         'records.record_type.translations',
         'employee.organization',

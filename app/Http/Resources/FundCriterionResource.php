@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
  */
 class FundCriterionResource extends BaseJsonResource
 {
-    const LOAD = [
+    const array LOAD = [
         'fund_criterion_rules',
         'record_type.translation',
         'record_type.record_type_options',

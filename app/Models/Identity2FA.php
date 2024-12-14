@@ -59,9 +59,9 @@ class Identity2FA extends Model
 {
     use HasUuids, SoftDeletes;
 
-    public const STATE_ACTIVE = 'active';
-    public const STATE_PENDING = 'pending';
-    public const STATE_DEACTIVATED = 'deactivated';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_DEACTIVATED = 'deactivated';
 
     protected $primaryKey = 'uuid';
 

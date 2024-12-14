@@ -28,10 +28,10 @@ use Illuminate\Database\Eloquent\Model;
  */
 class NotificationToken extends Model
 {
-    const TYPE_PUSH_IOS = 'apn';
-    const TYPE_PUSH_ANDROID = 'fcm';
+    const string TYPE_PUSH_IOS = 'apn';
+    const string TYPE_PUSH_ANDROID = 'fcm';
 
-    const TYPES = [
+    const array TYPES = [
         self::TYPE_PUSH_IOS,
         self::TYPE_PUSH_ANDROID,
     ];

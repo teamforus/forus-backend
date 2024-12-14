@@ -64,16 +64,16 @@ class RecordType extends BaseModel
 {
     use Translatable, RecordTranslationsTrait;
 
-    public const TYPE_BOOL = 'bool';
-    public const TYPE_IBAN = 'iban';
-    public const TYPE_DATE = 'date';
-    public const TYPE_EMAIL = 'email';
-    public const TYPE_STRING = 'string';
-    public const TYPE_NUMBER = 'number';
-    public const TYPE_SELECT = 'select';
-    public const TYPE_SELECT_NUMBER = 'select_number';
+    public const string TYPE_BOOL = 'bool';
+    public const string TYPE_IBAN = 'iban';
+    public const string TYPE_DATE = 'date';
+    public const string TYPE_EMAIL = 'email';
+    public const string TYPE_STRING = 'string';
+    public const string TYPE_NUMBER = 'number';
+    public const string TYPE_SELECT = 'select';
+    public const string TYPE_SELECT_NUMBER = 'select_number';
 
-    public const TYPES = [
+    public const array TYPES = [
         self::TYPE_BOOL,
         self::TYPE_IBAN,
         self::TYPE_DATE,

@@ -243,33 +243,33 @@ class Organization extends BaseModel
 {
     use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasLogs;
 
-    public const GENERIC_KVK = "00000000";
+    public const string GENERIC_KVK = "00000000";
 
-    public const FUND_REQUEST_POLICY_MANUAL = 'apply_manually';
-    public const FUND_REQUEST_POLICY_AUTO_REQUESTED = 'apply_auto_requested';
-    public const FUND_REQUEST_POLICY_AUTO_AVAILABLE = 'apply_auto_available';
+    public const string FUND_REQUEST_POLICY_MANUAL = 'apply_manually';
+    public const string FUND_REQUEST_POLICY_AUTO_REQUESTED = 'apply_auto_requested';
+    public const string FUND_REQUEST_POLICY_AUTO_AVAILABLE = 'apply_auto_available';
 
-    public const AUTH_2FA_POLICY_OPTIONAL = 'optional';
-    public const AUTH_2FA_POLICY_REQUIRED = 'required';
+    public const string AUTH_2FA_POLICY_OPTIONAL = 'optional';
+    public const string AUTH_2FA_POLICY_REQUIRED = 'required';
 
-    public const AUTH_2FA_FUNDS_POLICY_OPTIONAL = 'optional';
-    public const AUTH_2FA_FUNDS_POLICY_REQUIRED = 'required';
-    public const AUTH_2FA_FUNDS_POLICY_RESTRICT = 'restrict_features';
+    public const string AUTH_2FA_FUNDS_POLICY_OPTIONAL = 'optional';
+    public const string AUTH_2FA_FUNDS_POLICY_REQUIRED = 'required';
+    public const string AUTH_2FA_FUNDS_POLICY_RESTRICT = 'restrict_features';
 
-    public const AUTH_2FA_POLICIES = [
+    public const array AUTH_2FA_POLICIES = [
         self::AUTH_2FA_POLICY_OPTIONAL,
         self::AUTH_2FA_POLICY_REQUIRED,
     ];
 
-    public const EVENT_BI_CONNECTION_UPDATED = 'bi_connection_updated';
+    public const string EVENT_BI_CONNECTION_UPDATED = 'bi_connection_updated';
 
-    public const AUTH_2FA_FUNDS_POLICIES = [
+    public const array AUTH_2FA_FUNDS_POLICIES = [
         self::AUTH_2FA_FUNDS_POLICY_OPTIONAL,
         self::AUTH_2FA_FUNDS_POLICY_REQUIRED,
         self::AUTH_2FA_FUNDS_POLICY_RESTRICT,
     ];
 
-    public const BANK_SEPARATORS = ['-', '/', '+', ':', '--', '//', '++', '::'];
+    public const array BANK_SEPARATORS = ['-', '/', '+', ':', '--', '//', '++', '::'];
 
     /**
      * The attributes that are mass assignable.

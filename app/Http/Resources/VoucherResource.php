@@ -23,7 +23,7 @@ class VoucherResource extends BaseJsonResource
     /**
      * @var array
      */
-    public const LOAD = [
+    public const array LOAD = [
         'logs',
         'parent',
         'tokens',
@@ -56,7 +56,7 @@ class VoucherResource extends BaseJsonResource
         'voucher_records.record_type',
     ];
 
-    public const LOAD_COUNT = [
+    public const array LOAD_COUNT = [
         'transactions',
     ];
 

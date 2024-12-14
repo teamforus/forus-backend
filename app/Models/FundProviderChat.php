@@ -31,11 +31,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class FundProviderChat extends Model
 {
-    const TYPE_SYSTEM = 'system';
-    const TYPE_SPONSOR = 'sponsor';
-    const TYPE_PROVIDER = 'provider';
+    const string TYPE_SYSTEM = 'system';
+    const string TYPE_SPONSOR = 'sponsor';
+    const string TYPE_PROVIDER = 'provider';
 
-    const TYPE = [
+    const array TYPE = [
         self::TYPE_SYSTEM,
         self::TYPE_SPONSOR,
         self::TYPE_PROVIDER,

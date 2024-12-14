@@ -35,8 +35,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class EmailLogAttachment extends Model
 {
-    public const TYPE_RAW = 'raw';
-    public const TYPE_ATTACHMENT = 'attachment';
+    public const string TYPE_RAW = 'raw';
+    public const string TYPE_ATTACHMENT = 'attachment';
 
     /**
      * @var string[]

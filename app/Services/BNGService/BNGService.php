@@ -25,20 +25,20 @@ use Throwable;
 
 class BNGService
 {
-    public const ENV_SANDBOX = 'sandbox';
-    public const ENV_PRODUCTION = 'production';
+    public const string ENV_SANDBOX = 'sandbox';
+    public const string ENV_PRODUCTION = 'production';
 
-    public const URL_SANDBOX = 'https://api.xs2a-sandbox.bngbank.nl';
-    public const URL_PRODUCTION = 'https://api.xs2a.bngbank.nl';
+    public const string URL_SANDBOX = 'https://api.xs2a-sandbox.bngbank.nl';
+    public const string URL_PRODUCTION = 'https://api.xs2a.bngbank.nl';
 
-    public const ENDPOINT_TOKEN = '/token';
-    public const ENDPOINT_AUTHORISE = '/authorise';
-    public const ENDPOINT_AUTHORISE_ACCOUNT = '/authorise';
+    public const string ENDPOINT_TOKEN = '/token';
+    public const string ENDPOINT_AUTHORISE = '/authorise';
+    public const string ENDPOINT_AUTHORISE_ACCOUNT = '/authorise';
 
-    public const ENDPOINT_CONSENT = '/api/v1/consents';
-    public const ENDPOINT_ACCOUNTS = '/api/v1/accounts';
-    public const ENDPOINT_PAYMENT = '/api/v1/payments/sepa-credit-transfers';
-    public const ENDPOINT_PAYMENT_BULK = '/api/v1/bulk-payments/pain.001-sepa-credit-transfers';
+    public const string ENDPOINT_CONSENT = '/api/v1/consents';
+    public const string ENDPOINT_ACCOUNTS = '/api/v1/accounts';
+    public const string ENDPOINT_PAYMENT = '/api/v1/payments/sepa-credit-transfers';
+    public const string ENDPOINT_PAYMENT_BULK = '/api/v1/bulk-payments/pain.001-sepa-credit-transfers';
 
     protected string $env;
     protected ?string $keyId;

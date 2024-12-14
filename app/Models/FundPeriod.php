@@ -30,9 +30,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class FundPeriod extends Model
 {
-    public const STATE_PENDING = 'pending';
-    public const STATE_ACTIVE = 'active';
-    public const STATE_ENDED = 'ended';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_ENDED = 'ended';
 
     protected $fillable = [
         'state',

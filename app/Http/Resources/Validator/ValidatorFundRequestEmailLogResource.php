@@ -13,7 +13,7 @@ class ValidatorFundRequestEmailLogResource extends BaseJsonResource
     /**
      * @var string[]
      */
-    public const LOAD = [];
+    public const array LOAD = [];
 
     /**
      * Transform the resource into an array.

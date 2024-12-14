@@ -6,8 +6,8 @@ use Illuminate\Contracts\Validation\Rule;
 
 class DependencyRule implements Rule
 {
-    private $responseMessage;
-    private $dependencies;
+    private ?string $responseMessage;
+    private ?array $dependencies;
 
     /**
      * Create a new rule instance.

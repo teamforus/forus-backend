@@ -10,8 +10,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class ProviderFinancesExport implements FromCollection, WithHeadings
 {
-    protected $data;
-    protected $headers;
+    protected Collection $data;
 
     public function __construct(Organization $sponsor, EloquentCollection $providers)
     {

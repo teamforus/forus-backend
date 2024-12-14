@@ -34,13 +34,11 @@ class BulkPaymentValue extends Value {
      */
     public function getStatus(): ?string
     {
-        switch ($this->getTransactionStatus()) {
-            case 'RCVD':
-            case 'PDNG':
-            case 'PATC': return 'pending';
-            case 'RJCT': return 'rejected';
-            case 'ACTC': return 'accepted';
-            default: return null;
-        }
+        return match ($this->getTransactionStatus()) {
+            'RCVD', 'PDNG', 'PATC' => 'pending',
+            'RJCT' => 'rejected',
+            'ACTC' => 'accepted',
+            default => null,
+        };
     }
 }

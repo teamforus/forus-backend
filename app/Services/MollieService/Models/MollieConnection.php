@@ -96,23 +96,23 @@ class MollieConnection extends Model
 {
     use SoftDeletes, HasLogs;
 
-    public const STATE_ACTIVE = 'active';
-    public const STATE_PENDING = 'pending';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_PENDING = 'pending';
 
-    public const ONBOARDING_STATE_COMPLETED = 'completed';
-    public const ONBOARDING_STATE_PENDING = 'needs-data';
-    public const ONBOARDING_STATE_IN_REVIEW = 'in-review';
+    public const string ONBOARDING_STATE_COMPLETED = 'completed';
+    public const string ONBOARDING_STATE_PENDING = 'needs-data';
+    public const string ONBOARDING_STATE_IN_REVIEW = 'in-review';
 
-    public const PENDING_ONBOARDING_STATES = [
+    public const array PENDING_ONBOARDING_STATES = [
         self::ONBOARDING_STATE_PENDING,
         self::ONBOARDING_STATE_IN_REVIEW,
     ];
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_UPDATED = 'updated';
-    public const EVENT_COMPLETED = 'completed';
-    public const EVENT_DELETED = 'deleted';
-    public const EVENT_CURRENT_PROFILE_CHANGED = 'current_profile_changed';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_UPDATED = 'updated';
+    public const string EVENT_COMPLETED = 'completed';
+    public const string EVENT_DELETED = 'deleted';
+    public const string EVENT_CURRENT_PROFILE_CHANGED = 'current_profile_changed';
 
     /**
      * @var string[]

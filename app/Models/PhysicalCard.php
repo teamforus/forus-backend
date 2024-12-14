@@ -33,7 +33,7 @@ class PhysicalCard extends BaseModel
 {
     use HasLogs;
 
-    public const EVENT_MIGRATED = 'migrated';
+    public const string EVENT_MIGRATED = 'migrated';
 
     /**
      * The attributes that are mass assignable.

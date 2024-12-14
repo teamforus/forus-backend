@@ -12,7 +12,7 @@ use App\Models\FundProvider;
  */
 class ProviderFundProviderResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'fund.logo.presets',
         'fund.fund_formulas',
         'fund.organization.logo.presets',

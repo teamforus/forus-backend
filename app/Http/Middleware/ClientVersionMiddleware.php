@@ -12,7 +12,7 @@ class ClientVersionMiddleware
     /**
      * @var array
      */
-    public const EXCEPT = ClientTypeMiddleware::EXCEPT;
+    public const array EXCEPT = ClientTypeMiddleware::EXCEPT;
 
     /**
      * Handle an incoming request.

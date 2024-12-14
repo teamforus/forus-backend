@@ -11,7 +11,7 @@ class RecordTypeResource extends BaseJsonResource
 {
     public static $wrap = false;
 
-    const LOAD = [
+    const array LOAD = [
         'record_type_options',
     ];
 

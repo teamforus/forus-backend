@@ -11,7 +11,7 @@ class DomainDigIdMiddleware
     /**
      * @var bool
      */
-    protected $strictDomain = false;
+    protected bool $strictDomain = false;
 
     /**
      * Handle an incoming request.

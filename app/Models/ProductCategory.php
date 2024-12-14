@@ -124,7 +124,7 @@ class ProductCategory extends BaseModel
      * @var array
      * @noinspection PhpUnused
      */
-    public $translatedAttributes = [
+    public array $translatedAttributes = [
         'name',
     ];
 

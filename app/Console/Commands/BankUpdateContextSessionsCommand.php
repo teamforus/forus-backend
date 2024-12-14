@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\BankConnection;
+use bunq\Exception\BunqException;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -25,8 +26,7 @@ class BankUpdateContextSessionsCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
-     * @throws \bunq\Exception\BunqException
+     * @return void
      */
     public function handle(): void
     {

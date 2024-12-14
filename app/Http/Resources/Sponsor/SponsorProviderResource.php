@@ -19,7 +19,7 @@ use Illuminate\Support\Collection;
  */
 class SponsorProviderResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'tags',
         'funds',
         'logo.presets',

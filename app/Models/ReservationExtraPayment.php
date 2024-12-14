@@ -84,25 +84,25 @@ class ReservationExtraPayment extends Model
     use HasLogs;
     use SoftDeletes;
 
-    public const TYPE_MOLLIE = 'mollie';
+    public const string TYPE_MOLLIE = 'mollie';
 
-    public const STATE_PAID = 'paid';
-    public const STATE_CANCELED = 'canceled';
-    public const STATE_OPEN = 'open';
-    public const STATE_PENDING = 'pending';
-    public const STATE_FAILED = 'failed';
-    public const STATE_EXPIRED = 'expired';
+    public const string STATE_PAID = 'paid';
+    public const string STATE_CANCELED = 'canceled';
+    public const string STATE_OPEN = 'open';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_FAILED = 'failed';
+    public const string STATE_EXPIRED = 'expired';
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_UPDATED = 'updated';
-    public const EVENT_FAILED = 'failed';
-    public const EVENT_EXPIRED = 'expired';
-    public const EVENT_PAID = 'paid';
-    public const EVENT_CANCELED = 'canceled';
-    public const EVENT_REFUNDED = 'refunded';
-    public const EVENT_REFUNDED_API = 'refunded_api';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_UPDATED = 'updated';
+    public const string EVENT_FAILED = 'failed';
+    public const string EVENT_EXPIRED = 'expired';
+    public const string EVENT_PAID = 'paid';
+    public const string EVENT_CANCELED = 'canceled';
+    public const string EVENT_REFUNDED = 'refunded';
+    public const string EVENT_REFUNDED_API = 'refunded_api';
 
-    public const CANCELED_STATES = [
+    public const array CANCELED_STATES = [
         self::STATE_FAILED,
         self::STATE_EXPIRED,
         self::STATE_CANCELED,

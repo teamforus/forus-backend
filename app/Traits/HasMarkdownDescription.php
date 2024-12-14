@@ -13,6 +13,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use League\CommonMark\Environment\Environment;
+use League\CommonMark\Exception\CommonMarkException;
 use League\CommonMark\MarkdownConverter;
 
 /**
@@ -35,7 +36,7 @@ trait HasMarkdownDescription
 
     /**
      * @return string
-     * @noinspection PhpUnused
+     * @throws CommonMarkException
      */
     public function descriptionToHtml(): string
     {

@@ -36,10 +36,10 @@ class FundRequestClarification extends BaseModel
 {
     use HasFiles;
 
-    public const STATE_PENDING = 'pending';
-    public const STATE_ANSWERED = 'answered';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_ANSWERED = 'answered';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_PENDING,
         self::STATE_ANSWERED,
     ];

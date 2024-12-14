@@ -76,20 +76,20 @@ class FundRequest extends BaseModel
 {
     use HasLogs, HasNotes;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_APPROVED = 'approved';
-    public const EVENT_DECLINED = 'declined';
-    public const EVENT_RESOLVED = 'resolved';
-    public const EVENT_ASSIGNED = 'assigned';
-    public const EVENT_RESIGNED = 'resigned';
-    public const EVENT_DISREGARDED = 'disregarded';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_APPROVED = 'approved';
+    public const string EVENT_DECLINED = 'declined';
+    public const string EVENT_RESOLVED = 'resolved';
+    public const string EVENT_ASSIGNED = 'assigned';
+    public const string EVENT_RESIGNED = 'resigned';
+    public const string EVENT_DISREGARDED = 'disregarded';
 
-    public const STATE_PENDING = 'pending';
-    public const STATE_APPROVED = 'approved';
-    public const STATE_DECLINED = 'declined';
-    public const STATE_DISREGARDED = 'disregarded';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_APPROVED = 'approved';
+    public const string STATE_DECLINED = 'declined';
+    public const string STATE_DISREGARDED = 'disregarded';
 
-    public const EVENTS = [
+    public const array EVENTS = [
         self::EVENT_CREATED,
         self::EVENT_APPROVED,
         self::EVENT_DECLINED,
@@ -98,20 +98,20 @@ class FundRequest extends BaseModel
         self::EVENT_RESIGNED,
     ];
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_PENDING,
         self::STATE_APPROVED,
         self::STATE_DECLINED,
         self::STATE_DISREGARDED,
     ];
 
-    public const STATES_RESOLVED = [
+    public const array STATES_RESOLVED = [
         self::STATE_APPROVED,
         self::STATE_DECLINED,
         self::STATE_DISREGARDED,
     ];
 
-    public const STATES_ARCHIVED = [
+    public const array STATES_ARCHIVED = [
         self::STATE_DECLINED,
     ];
 

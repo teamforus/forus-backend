@@ -48,8 +48,8 @@ use Illuminate\Support\Arr;
  */
 class EventLog extends Model
 {
-    const TRANSLATION_DASHBOARD = 'dashboard';
-    const TRANSLATION_WEBSHOP = 'webshop';
+    const string TRANSLATION_DASHBOARD = 'dashboard';
+    const string TRANSLATION_WEBSHOP = 'webshop';
 
     protected $fillable = [
         'event', 'data', 'identity_address', 'original',

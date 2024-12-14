@@ -30,8 +30,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Auth2FAProvider extends Model
 {
-    public const TYPE_PHONE = 'phone';
-    public const TYPE_AUTHENTICATOR = 'authenticator';
+    public const string TYPE_PHONE = 'phone';
+    public const string TYPE_AUTHENTICATOR = 'authenticator';
 
     protected $table = 'auth_2fa_providers';
 

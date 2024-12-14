@@ -83,20 +83,20 @@ class DigIdSession extends Model
     use SoftDeletes;
 
     // Session created
-    public const STATE_CREATED         = 'created';
+    public const string STATE_CREATED = 'created';
     // Session expired
-    public const STATE_EXPIRED         = 'expired';
+    public const string STATE_EXPIRED = 'expired';
     // Session created and rid received from digid
-    public const STATE_PENDING_AUTH    = 'pending_authorization';
+    public const string STATE_PENDING_AUTH = 'pending_authorization';
     // User authorized session through on digid auth form
-    public const STATE_AUTHORIZED      = 'authorized';
+    public const string STATE_AUTHORIZED = 'authorized';
     // User canceled digid request
-    public const STATE_CANCELED        = 'canceled';
+    public const string STATE_CANCELED = 'canceled';
     // Session has error and can't be used anymore
-    public const STATE_ERROR           = 'error';
+    public const string STATE_ERROR = 'error';
 
     // List all valid states
-    public const STATES = [
+    public const array STATES = [
         self::STATE_CREATED,
         self::STATE_EXPIRED,
         self::STATE_PENDING_AUTH,
@@ -106,10 +106,10 @@ class DigIdSession extends Model
     ];
 
     // Sessions which are authorized in 10 minutes are deleted
-    public const SESSION_EXPIRATION_TIME = 10*60;
+    public const int|float SESSION_EXPIRATION_TIME = 10*60;
 
-    public const CONNECTION_TYPE_CGI = 'cgi';
-    public const CONNECTION_TYPE_SAML = 'saml';
+    public const string CONNECTION_TYPE_CGI = 'cgi';
+    public const string CONNECTION_TYPE_SAML = 'saml';
 
     protected $table = 'digid_sessions';
 

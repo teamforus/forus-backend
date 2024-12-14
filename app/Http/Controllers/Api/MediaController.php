@@ -133,6 +133,6 @@ class MediaController extends Controller
 
         $this->mediaService->unlink($media);
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 }

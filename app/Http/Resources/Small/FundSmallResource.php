@@ -14,7 +14,7 @@ use App\Models\Fund;
  */
 class FundSmallResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'logo.presets',
         'fund_formulas',
         'organization.logo.presets',

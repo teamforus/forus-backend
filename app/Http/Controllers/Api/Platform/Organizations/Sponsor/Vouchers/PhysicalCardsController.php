@@ -54,6 +54,6 @@ class PhysicalCardsController extends Controller
             'physical_cards.id' => $physicalCard->id
         ])->delete();
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 }

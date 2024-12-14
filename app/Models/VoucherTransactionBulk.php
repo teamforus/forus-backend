@@ -101,19 +101,19 @@ class VoucherTransactionBulk extends BaseModel
 {
     use HasLogs, HasDbTokens;
 
-    public const EVENT_RESET = 'reset';
-    public const EVENT_CREATED = 'created';
-    public const EVENT_SUBMITTED = 'submitted';
-    public const EVENT_ACCEPTED = 'accepted';
-    public const EVENT_ACCEPTED_MANUALLY = 'accepted_manually';
-    public const EVENT_REJECTED = 'rejected';
-    public const EVENT_ERROR = 'error';
-    public const EVENT_EXPORTED = 'exported';
+    public const string EVENT_RESET = 'reset';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_SUBMITTED = 'submitted';
+    public const string EVENT_ACCEPTED = 'accepted';
+    public const string EVENT_ACCEPTED_MANUALLY = 'accepted_manually';
+    public const string EVENT_REJECTED = 'rejected';
+    public const string EVENT_ERROR = 'error';
+    public const string EVENT_EXPORTED = 'exported';
 
     /**
      * @noinspection PhpUnused
      */
-    public const EVENTS = [
+    public const array EVENTS = [
         self::EVENT_RESET,
         self::EVENT_CREATED,
         self::EVENT_SUBMITTED,
@@ -122,13 +122,13 @@ class VoucherTransactionBulk extends BaseModel
         self::EVENT_ERROR,
     ];
 
-    public const STATE_DRAFT = 'draft';
-    public const STATE_ERROR = 'error';
-    public const STATE_PENDING = 'pending';
-    public const STATE_ACCEPTED = 'accepted';
-    public const STATE_REJECTED = 'rejected';
+    public const string STATE_DRAFT = 'draft';
+    public const string STATE_ERROR = 'error';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_ACCEPTED = 'accepted';
+    public const string STATE_REJECTED = 'rejected';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_DRAFT,
         self::STATE_ERROR,
         self::STATE_PENDING,
@@ -136,7 +136,7 @@ class VoucherTransactionBulk extends BaseModel
         self::STATE_REJECTED,
     ];
 
-    public const SORT_BY_FIELDS = [
+    public const array SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'voucher_transactions_count',
     ];
 

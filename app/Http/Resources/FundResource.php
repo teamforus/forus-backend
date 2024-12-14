@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Gate;
  */
 class FundResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'faq',
         'tags',
         'parent',

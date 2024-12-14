@@ -17,7 +17,7 @@ abstract class BaseOfficeRequest extends BaseFormRequest
     }
 
     /**
-     * @return array|mixed
+     * @return array
      */
     public function attributes(): array
     {

@@ -46,9 +46,9 @@ class FundRequestRecord extends BaseModel
 {
     use HasFiles, HasLogs;
 
-    public const EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
-    public const EVENT_CLARIFICATION_RECEIVED = 'clarification_received';
-    public const EVENT_UPDATED = 'updated';
+    public const string EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
+    public const string EVENT_CLARIFICATION_RECEIVED = 'clarification_received';
+    public const string EVENT_UPDATED = 'updated';
 
     protected $fillable = [
         'value', 'record_type_key', 'fund_request_id', 'fund_criterion_id',

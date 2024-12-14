@@ -44,11 +44,11 @@ class VoucherRecord extends Model
 {
     use SoftDeletes, HasLogs;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_UPDATED = 'updated';
-    public const EVENT_DELETED = 'deleted';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_UPDATED = 'updated';
+    public const string EVENT_DELETED = 'deleted';
 
-    public const EVENTS = [
+    public const array EVENTS = [
         self::EVENT_CREATED,
         self::EVENT_UPDATED,
         self::EVENT_DELETED,

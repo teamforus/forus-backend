@@ -63,17 +63,17 @@ class IdentityProxy extends Model
 {
     use SoftDeletes;
 
-    public const STATE_ACTIVE = 'active';
-    public const STATE_PENDING = 'pending';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_PENDING = 'pending';
 
     // User logged out
-    public const STATE_DESTROYED = 'destroyed';
+    public const string STATE_DESTROYED = 'destroyed';
 
     // Session terminated by the user
-    public const STATE_TERMINATED = 'terminated';
+    public const string STATE_TERMINATED = 'terminated';
 
     // Session expired
-    public const STATE_EXPIRED = 'expired';
+    public const string STATE_EXPIRED = 'expired';
 
     /**
      * The attributes that are mass assignable.

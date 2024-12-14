@@ -32,11 +32,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class FundProviderUnsubscribe extends BaseModel
 {
-    public const STATE_PENDING = 'pending';
-    public const STATE_APPROVED = 'approved';
-    public const STATE_CANCELED = 'canceled';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_APPROVED = 'approved';
+    public const string STATE_CANCELED = 'canceled';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_PENDING,
         self::STATE_APPROVED,
         self::STATE_CANCELED,

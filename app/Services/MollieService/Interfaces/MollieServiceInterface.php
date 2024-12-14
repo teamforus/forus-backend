@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 
 interface MollieServiceInterface
 {
-    public const PAYMENT_METHOD_IDEAL = 'ideal';
+    public const string PAYMENT_METHOD_IDEAL = 'ideal';
 
     /**
      * @param MollieToken $mollieToken

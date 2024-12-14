@@ -47,7 +47,7 @@ class NotificationUnsubscriptionToken extends Model
      *
      * @param string $token
      * @param bool $onlyActive
-     * @return null|self|Model
+     * @return NotificationUnsubscriptionToken|null
      */
     public static function findByToken(string $token, bool $onlyActive = true): ?self
     {

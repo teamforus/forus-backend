@@ -5,11 +5,11 @@ namespace App\Services\Forus\Session\Services\Data;
 
 class LocationData
 {
-    public $ip;
-    public $country;
-    public $city;
-    public $string;
-    public $detected;
+    public string $ip;
+    public ?string $country;
+    public ?string $city;
+    public ?string $string;
+    public bool $detected;
 
     /**
      * LocationData constructor.

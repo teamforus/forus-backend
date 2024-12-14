@@ -29,11 +29,11 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ImplementationSocialMedia extends Model
 {
-    const TYPE_FACEBOOK = 'facebook';
-    const TYPE_TWITTER = 'twitter';
-    const TYPE_YOUTUBE = 'youtube';
+    const string TYPE_FACEBOOK = 'facebook';
+    const string TYPE_TWITTER = 'twitter';
+    const string TYPE_YOUTUBE = 'youtube';
 
-    const TYPES = [
+    const array TYPES = [
         self::TYPE_FACEBOOK,
         self::TYPE_TWITTER,
         self::TYPE_YOUTUBE,

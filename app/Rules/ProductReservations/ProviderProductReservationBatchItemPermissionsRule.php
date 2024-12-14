@@ -15,10 +15,9 @@ use Illuminate\Support\Facades\Gate;
 
 class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
 {
-    protected $index;
-    protected $request;
-    protected $organization;
-    protected $reservationsData;
+    protected BaseFormRequest $request;
+    protected Organization $organization;
+    protected array $reservationsData;
 
     /**
      * ProviderProductReservationBatchItemRule constructor.

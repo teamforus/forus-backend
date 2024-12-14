@@ -50,33 +50,33 @@ class SearchResource extends JsonResource
      */
     public function makeResource(Model $model): JsonResource
     {
-        switch (get_class($model)) {
-            case Fund::class: return new FundResource($model);
-            case Product::class: return new ProductResource($model->load(ProductResource::load()));
-            case Organization::class: return new ProviderResource($model->load(OrganizationResource::load()));
-            default: throw new Exception('Unknown search type!');
-        }
+        return match (get_class($model)) {
+            Fund::class => new FundResource($model),
+            Product::class => new ProductResource($model->load(ProductResource::load())),
+            Organization::class => new ProviderResource($model->load(OrganizationResource::load())),
+            default => throw new Exception('Unknown search type!'),
+        };
     }
 
     /**
-     * @param Model|Fund $model
-     * @return Fund
+     * @param Model $model
+     * @return Fund|null
      */
     public function typeFund(Model $model): ?Fund {
         return Fund::find($model->id);
     }
 
     /**
-     * @param Model|Organization $model
-     * @return Organization
+     * @param Model $model
+     * @return Organization|null
      */
     public function typeOrganization(Model $model): ?Organization {
         return Organization::find($model->id);
     }
 
     /**
-     * @param Model|Product $model
-     * @return Product
+     * @param Model $model
+     * @return Product|null
      */
     public function typeProduct(Model $model): ?Product {
         return Product::find($model->id);

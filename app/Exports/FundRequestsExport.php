@@ -11,8 +11,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class FundRequestsExport implements FromCollection, WithHeadings
 {
-    protected $data;
-    protected $headers;
+    protected mixed $data;
 
     /**
      * FundRequestsExport constructor.

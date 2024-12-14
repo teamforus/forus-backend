@@ -22,11 +22,11 @@ namespace App\Models;
  */
 class DemoTransaction extends BaseModel
 {
-    const STATE_PENDING  = 'pending';
-    const STATE_ACCEPTED = 'accepted';
-    const STATE_REJECTED = 'rejected';
+    const string STATE_PENDING  = 'pending';
+    const string STATE_ACCEPTED = 'accepted';
+    const string STATE_REJECTED = 'rejected';
 
-    const STATES = [
+    const array STATES = [
         self::STATE_PENDING,
         self::STATE_ACCEPTED,
         self::STATE_REJECTED

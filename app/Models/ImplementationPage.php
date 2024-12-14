@@ -62,39 +62,39 @@ class ImplementationPage extends BaseModel
 {
     use HasMedia, HasMarkdownDescription, HasFaq, SoftDeletes;
 
-    const TYPE_HOME = 'home';
-    const TYPE_PRODUCTS = 'products';
-    const TYPE_PROVIDERS = 'providers';
-    const TYPE_FUNDS = 'funds';
-    const TYPE_EXPLANATION = 'explanation';
-    const TYPE_PROVIDER = 'provider';
-    const TYPE_PRIVACY = 'privacy';
-    const TYPE_ACCESSIBILITY = 'accessibility';
-    const TYPE_TERMS_AND_CONDITIONS = 'terms_and_conditions';
-    const TYPE_FOOTER_OPENING_TIMES = 'footer_opening_times';
-    const TYPE_FOOTER_CONTACT_DETAILS = 'footer_contact_details';
-    const TYPE_FOOTER_APP_INFO = 'footer_app_info';
-    const TYPE_BLOCK_HOME_PRODUCTS = 'block_home_products';
+    const string TYPE_HOME = 'home';
+    const string TYPE_PRODUCTS = 'products';
+    const string TYPE_PROVIDERS = 'providers';
+    const string TYPE_FUNDS = 'funds';
+    const string TYPE_EXPLANATION = 'explanation';
+    const string TYPE_PROVIDER = 'provider';
+    const string TYPE_PRIVACY = 'privacy';
+    const string TYPE_ACCESSIBILITY = 'accessibility';
+    const string TYPE_TERMS_AND_CONDITIONS = 'terms_and_conditions';
+    const string TYPE_FOOTER_OPENING_TIMES = 'footer_opening_times';
+    const string TYPE_FOOTER_CONTACT_DETAILS = 'footer_contact_details';
+    const string TYPE_FOOTER_APP_INFO = 'footer_app_info';
+    const string TYPE_BLOCK_HOME_PRODUCTS = 'block_home_products';
 
-    const STATE_DRAFT = 'draft';
-    const STATE_PUBLIC = 'public';
+    const string STATE_DRAFT = 'draft';
+    const string STATE_PUBLIC = 'public';
 
-    const STATES = [
+    const array STATES = [
         self::STATE_DRAFT,
         self::STATE_PUBLIC,
     ];
 
-    const DESCRIPTION_POSITION_AFTER = 'after';
-    const DESCRIPTION_POSITION_BEFORE = 'before';
-    const DESCRIPTION_POSITION_REPLACE = 'replace';
+    const string DESCRIPTION_POSITION_AFTER = 'after';
+    const string DESCRIPTION_POSITION_BEFORE = 'before';
+    const string DESCRIPTION_POSITION_REPLACE = 'replace';
 
-    const DESCRIPTION_POSITIONS = [
+    const array DESCRIPTION_POSITIONS = [
         self::DESCRIPTION_POSITION_AFTER,
         self::DESCRIPTION_POSITION_BEFORE,
         self::DESCRIPTION_POSITION_REPLACE,
     ];
 
-    const PAGE_TYPES = [[
+    const array PAGE_TYPES = [[
         'key' => self::TYPE_HOME,
         'type' => 'static',
         'blocks' => true,

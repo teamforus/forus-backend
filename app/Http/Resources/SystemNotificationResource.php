@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class SystemNotificationResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'templates',
         'system_notification_configs',
     ];

@@ -29,7 +29,7 @@ class IndexIdentitiesRequest extends BaseFormRequest
                 'nullable',
                 Rule::in($this->organization->funds->pluck('id')->toArray())
             ],
-            ...$this->sortableResourceRules(100, []),
+            ...$this->sortableResourceRules(),
         ];
     }
 }

@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
  */
 class ValidatorFundRequestRecordResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'files', 'fund_request_clarifications',
     ];
 

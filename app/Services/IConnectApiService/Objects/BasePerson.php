@@ -14,7 +14,7 @@ abstract class BasePerson
     /**
      * @param ResponseData|array $response
      */
-    public function __construct($response)
+    public function __construct(mixed $response)
     {
         if (is_array($response)) {
             $this->data = $response;
@@ -25,7 +25,7 @@ abstract class BasePerson
     }
 
     /**
-     * @return ResponseData
+     * @return ResponseData|null
      */
     public function response(): ?ResponseData
     {

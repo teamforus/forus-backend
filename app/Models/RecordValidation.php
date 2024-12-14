@@ -39,9 +39,9 @@ use Illuminate\Support\Carbon;
  */
 class RecordValidation extends Model
 {
-    public const STATE_PENDING = 'pending';
-    public const STATE_APPROVED = 'approved';
-    public const STATE_DECLINED = 'declined';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_APPROVED = 'approved';
+    public const string STATE_DECLINED = 'declined';
 
     /**
      * The attributes that are mass assignable.

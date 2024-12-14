@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -35,8 +34,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Redirect extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'url', 'target', 'client_type', 'implementation_id',
     ];

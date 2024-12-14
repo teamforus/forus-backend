@@ -42,10 +42,10 @@ class OrganizationReservationField extends BaseModel
 {
     use SoftDeletes;
 
-    public const TYPE_TEXT = 'text';
-    public const TYPE_NUMBER = 'number';
+    public const string TYPE_TEXT = 'text';
+    public const string TYPE_NUMBER = 'number';
 
-    public const TYPES = [
+    public const array TYPES = [
         self::TYPE_TEXT,
         self::TYPE_NUMBER,
     ];

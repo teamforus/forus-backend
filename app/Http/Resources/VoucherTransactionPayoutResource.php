@@ -7,7 +7,7 @@ class VoucherTransactionPayoutResource extends VoucherTransactionResource
     /**
      * @var string[]
      */
-    public const LOAD = [
+    public const array LOAD = [
         'voucher.fund.organization',
     ];
 

@@ -131,7 +131,7 @@ class RecordController extends Controller
         }
 
         return new JsonResponse([
-            'success' => (bool) $record?->delete(),
+            'success' => (bool) $record->delete(),
         ]);
     }
 

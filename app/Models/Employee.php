@@ -50,16 +50,16 @@ class Employee extends BaseModel
     use HasLogs;
     use SoftDeletes;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_UPDATED = 'updated';
-    public const EVENT_DELETED = 'deleted';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_UPDATED = 'updated';
+    public const string EVENT_DELETED = 'deleted';
 
-    public const EVENT_UPLOADED_PAYOUTS = 'uploaded_payouts';
-    public const EVENT_UPLOADED_VOUCHERS = 'uploaded_vouchers';
-    public const EVENT_UPLOADED_TRANSACTIONS = 'uploaded_transactions';
-    public const EVENT_UPLOADED_PREVALIDATIONS = 'uploaded_prevalidations';
+    public const string EVENT_UPLOADED_PAYOUTS = 'uploaded_payouts';
+    public const string EVENT_UPLOADED_VOUCHERS = 'uploaded_vouchers';
+    public const string EVENT_UPLOADED_TRANSACTIONS = 'uploaded_transactions';
+    public const string EVENT_UPLOADED_PREVALIDATIONS = 'uploaded_prevalidations';
 
-    public const EVENT_FUND_REQUEST_ASSIGNED = 'fund_request_assigned';
+    public const string EVENT_FUND_REQUEST_ASSIGNED = 'fund_request_assigned';
 
     protected $fillable = [
         'identity_address', 'organization_id', 'office_id',

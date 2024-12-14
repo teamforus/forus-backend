@@ -133,57 +133,57 @@ class VoucherTransaction extends BaseModel
 
     protected $perPage = 25;
 
-    public const TRANSACTION_COST_OLD = .11;
+    public const float TRANSACTION_COST_OLD = .11;
 
-    public const EVENT_UPDATED = 'updated';
-    public const EVENT_CANCELED_SPONSOR = 'canceled_sponsor';
-    public const EVENT_CANCELED_PROVIDER = 'canceled_provider';
-    public const EVENT_TRANSFER_DELAY_SKIPPED = 'transfer_delay_skipped';
+    public const string EVENT_UPDATED = 'updated';
+    public const string EVENT_CANCELED_SPONSOR = 'canceled_sponsor';
+    public const string EVENT_CANCELED_PROVIDER = 'canceled_provider';
+    public const string EVENT_TRANSFER_DELAY_SKIPPED = 'transfer_delay_skipped';
 
-    public const EVENTS = [
+    public const array EVENTS = [
         self::EVENT_UPDATED,
         self::EVENT_CANCELED_SPONSOR,
         self::EVENT_CANCELED_PROVIDER,
         self::EVENT_TRANSFER_DELAY_SKIPPED,
     ];
 
-    public const STATE_PENDING = 'pending';
-    public const STATE_SUCCESS = 'success';
-    public const STATE_CANCELED = 'canceled';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_SUCCESS = 'success';
+    public const string STATE_CANCELED = 'canceled';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_PENDING,
         self::STATE_SUCCESS,
         self::STATE_CANCELED,
     ];
 
-    public const INITIATOR_SPONSOR = 'sponsor';
-    public const INITIATOR_PROVIDER = 'provider';
+    public const string INITIATOR_SPONSOR = 'sponsor';
+    public const string INITIATOR_PROVIDER = 'provider';
 
-    public const INITIATORS = [
+    public const array INITIATORS = [
         self::INITIATOR_SPONSOR,
         self::INITIATOR_PROVIDER,
     ];
 
-    public const TARGET_PROVIDER = 'provider';
-    public const TARGET_TOP_UP = 'top_up';
-    public const TARGET_PAYOUT = 'payout';
-    public const TARGET_IBAN = 'iban';
+    public const string TARGET_PROVIDER = 'provider';
+    public const string TARGET_TOP_UP = 'top_up';
+    public const string TARGET_PAYOUT = 'payout';
+    public const string TARGET_IBAN = 'iban';
 
-    public const TARGETS = [
+    public const array TARGETS = [
         self::TARGET_PROVIDER,
         self::TARGET_PAYOUT,
         self::TARGET_TOP_UP,
         self::TARGET_IBAN,
     ];
 
-    public const TARGETS_OUTGOING = [
+    public const array TARGETS_OUTGOING = [
         self::TARGET_PROVIDER,
         self::TARGET_PAYOUT,
         self::TARGET_IBAN,
     ];
 
-    public const TARGETS_INCOMING = [
+    public const array TARGETS_INCOMING = [
         self::TARGET_TOP_UP,
     ];
 

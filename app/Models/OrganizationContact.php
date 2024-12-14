@@ -30,17 +30,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class OrganizationContact extends Model
 {
-    const TYPE_EMAIL = 'email';
+    const string TYPE_EMAIL = 'email';
 
-    const KEY_FUND_BALANCE_LOW_EMAIL = 'fund_balance_low';
-    const KEY_BANK_CONNECTION_EXPIRING = 'bank_connections_expiring';
-    const KEY_PROVIDER_APPLIED = 'provider_applied';
+    const string KEY_FUND_BALANCE_LOW_EMAIL = 'fund_balance_low';
+    const string KEY_BANK_CONNECTION_EXPIRING = 'bank_connections_expiring';
+    const string KEY_PROVIDER_APPLIED = 'provider_applied';
 
-    const TYPES = [
+    const array TYPES = [
         self::TYPE_EMAIL
     ];
 
-    const AVAILABLE_TYPES = [[
+    const array AVAILABLE_TYPES = [[
         'key' => self::KEY_FUND_BALANCE_LOW_EMAIL,
         'type' => self::TYPE_EMAIL,
     ], [

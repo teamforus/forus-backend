@@ -39,12 +39,12 @@ class MigratePhysicalCardsCommand extends BaseCommand
     /**
      * Use voucher_relations table to find the new voucher.
      */
-    public const SOURCE_RELATION = 'voucher_relation';
+    public const string SOURCE_RELATION = 'voucher_relation';
 
     /**
      * Use vouchers.identity_address column to find the new voucher.
      */
-    public const SOURCE_IDENTITY = 'voucher_identity';
+    public const string SOURCE_IDENTITY = 'voucher_identity';
 
     /**
      * Execute the console command.
@@ -145,6 +145,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
     }
 
     /**
+     * @param Fund $fund
      * @return Builder|PhysicalCard
      */
     protected function buildPhysicalCardsQuery(Fund $fund): Builder|PhysicalCard
@@ -202,7 +203,8 @@ class MigratePhysicalCardsCommand extends BaseCommand
     }
 
     /**
-     * @return Builder|PhysicalCard
+     * @param Fund $fund
+     * @return Builder
      */
     protected function buildEligiblePhysicalCardsQuery(Fund $fund): Builder
     {
@@ -290,7 +292,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
     }
 
     /**
-     * @return Fund[]|Collection
+     * @return Collection
      */
     protected function printFundsList(): Collection
     {
@@ -506,9 +508,9 @@ class MigratePhysicalCardsCommand extends BaseCommand
     }
 
     /**
-     * @param Collection|PhysicalCard[] $cards
-     * @param string $header
+     * @param Collection $cards
      * @param bool $validate
+     * @param string $header
      * @return void
      */
     protected function printCards(

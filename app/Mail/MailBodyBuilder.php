@@ -122,7 +122,6 @@ class MailBodyBuilder
      * @param string $globalStyles
      * @param string|null $textColor
      * @return false|string
-     * @noinspection PhpPossiblePolymorphicInvocationInspection
      */
     public function addStylesToMarkdownHtml(
         string $html,

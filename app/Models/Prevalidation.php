@@ -66,10 +66,10 @@ class Prevalidation extends BaseModel
 {
     use SoftDeletes, HasDbTokens;
 
-    public const STATE_PENDING = 'pending';
-    public const STATE_USED = 'used';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_USED = 'used';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_PENDING,
         self::STATE_USED
     ];

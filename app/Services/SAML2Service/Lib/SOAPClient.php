@@ -29,9 +29,9 @@ use Throwable;
  */
 class SOAPClient
 {
-    const START_SOAP_ENVELOPE = '<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">\
+    const string START_SOAP_ENVELOPE = '<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">\
         <soap-env:Header/><soap-env:Body>';
-    const END_SOAP_ENVELOPE = '</soap-env:Body></soap-env:Envelope>';
+    const string END_SOAP_ENVELOPE = '</soap-env:Body></soap-env:Envelope>';
 
     /**
      * This function sends the SOAP message to the service location and returns SOAP response
@@ -76,7 +76,7 @@ class SOAPClient
         $request = self::START_SOAP_ENVELOPE . $request->ownerDocument->saveXML($request) . self::END_SOAP_ENVELOPE;
 
         // Perform SOAP Request over HTTP
-        $action = 'http://www.oasis-open.org/committees/security';
+        $action = 'http:' . '//www.oasis-open.org/committees/security';
         $soapResponseXML = $x->__doRequest($request, $options['location'], $action, SOAP_1_1);
 
         $peerCertFile?->close();

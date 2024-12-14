@@ -82,7 +82,7 @@ class FinancialStatisticQueries
      */
     public function getFilterProviders(Organization $sponsor, array $options = []): array
     {
-        $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $sponsor)->select('id', 'name');
+        $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $sponsor)->select(['id', 'name']);
         $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
 
         $query->addSelect([
@@ -134,7 +134,7 @@ class FinancialStatisticQueries
         $query = FundQuery::whereActiveOrClosedFilter($sponsor->funds()->getQuery(), false, false);
         $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
 
-        $query->select('id', 'name')->addSelect([
+        $query->select(['id', 'name'])->addSelect([
             'transactions' => $transactionsQuery->whereHas('voucher', function(Builder $builder) {
                 $builder->whereColumn('vouchers.fund_id', 'funds.id');
             })->selectRaw('count(*)'),

@@ -34,17 +34,9 @@ class BaseProductReservationEvent
     }
 
     /**
-     * @param ProductReservation $productReservation
-     */
-    public function setProductReservation(ProductReservation $productReservation): void
-    {
-        $this->productReservation = $productReservation;
-    }
-
-    /**
      * Get the channels the event should broadcast on.
      *
-     * @return \Illuminate\Broadcasting\Channel|array
+     * @return Channel
      */
     public function broadcastOn(): Channel
     {

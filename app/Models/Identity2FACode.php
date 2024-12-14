@@ -38,8 +38,8 @@ class Identity2FACode extends Model
 {
     use SoftDeletes;
 
-    public const STATE_ACTIVE = 'active';
-    public const STATE_DEACTIVATED = 'deactivated';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_DEACTIVATED = 'deactivated';
 
     protected $table = 'identity_2fa_codes';
 

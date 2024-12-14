@@ -10,7 +10,7 @@ use App\Scopes\Builders\ProductQuery;
  */
 class FundProviderResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'fund.faq',
         'fund.tags',
         'fund.logo.presets',

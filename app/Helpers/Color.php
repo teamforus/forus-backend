@@ -79,7 +79,7 @@ class Color
      * @param int $red
      * @param int $green
      * @param int $blue
-     * @return float|int
+     * @return float
      */
     public static function rgb2luma(int $red, int $green, int $blue): float
     {

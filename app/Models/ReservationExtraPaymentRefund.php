@@ -34,14 +34,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ReservationExtraPaymentRefund extends Model
 {
-    public const STATE_QUEUED = 'queued';
-    public const STATE_REFUNDED = 'refunded';
-    public const STATE_CANCELED = 'canceled';
-    public const STATE_PROCESSING = 'processing';
-    public const STATE_PENDING = 'pending';
-    public const STATE_FAILED = 'failed';
+    public const string STATE_QUEUED = 'queued';
+    public const string STATE_REFUNDED = 'refunded';
+    public const string STATE_CANCELED = 'canceled';
+    public const string STATE_PROCESSING = 'processing';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_FAILED = 'failed';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_QUEUED,
         self::STATE_PENDING,
         self::STATE_PROCESSING,
@@ -50,13 +50,13 @@ class ReservationExtraPaymentRefund extends Model
         self::STATE_REFUNDED,
     ];
 
-    public const PENDING_STATES = [
+    public const array PENDING_STATES = [
         self::STATE_QUEUED,
         self::STATE_PENDING,
         self::STATE_PROCESSING,
     ];
 
-    public const CANCELED_STATES = [
+    public const array CANCELED_STATES = [
         self::STATE_FAILED,
         self::STATE_CANCELED,
     ];
