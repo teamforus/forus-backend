@@ -743,9 +743,14 @@ class Implementation extends BaseModel
                     'overlay_opacity' => min(max($implementation->overlay_opacity, 0), 100) / 100,
                     'banner_text_color' => $implementation->getBannerTextColor(),
                 ]),
-                'fronts' => $implementation->only([
-                    'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app',
-                ]),
+                'fronts' => [
+                    ...$implementation->only([
+                        'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app',
+                    ]),
+                    'url_sponsor_sign_up' => $implementation->urlSponsorDashboard('aanmelden'),
+                    'url_provider_sign_up' => $implementation->urlProviderDashboard('aanmelden'),
+                    'url_validator_sign_up' => $implementation->urlValidatorDashboard('aanmelden'),
+                ],
                 'map' => $implementation->only('lon', 'lat'),
                 'banner' => $banner ? array_only((new MediaResource($banner))->toArray(request()), [
                     'dominant_color', 'ext', 'sizes', 'uid', 'is_bright',
