@@ -54,7 +54,9 @@ class ProviderProductsDigest extends BaseOrganizationDigest
                 $emailBodyProducts->text(trans_choice(
                     'digests/provider_products.fund_products',
                     $count_reservations,
-                    array_merge($_logsProductReserved[0], compact('count_reservations'))
+                    self::arrayOnlyString(
+                        array_merge($_logsProductReserved[0], compact('count_reservations'))
+                    )
                 ));
             }
         }

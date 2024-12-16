@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class ProviderFundsDigest extends BaseOrganizationDigest
@@ -230,7 +231,7 @@ class ProviderFundsDigest extends BaseOrganizationDigest
             if ($fundsWithSomeProducts->count() > 0) {
                 $mailBody->text(trans_choice(
                     'digests/provider_funds.products_revoked.funds_list_individual',
-                    $fundsWithSomeProducts->toArray()
+                    $fundsWithSomeProducts->count()
                     ) . "\n- " . $fundsWithSomeProducts->implode("\n- "));
             }
 
@@ -264,7 +265,10 @@ class ProviderFundsDigest extends BaseOrganizationDigest
             foreach ($logsProductsApproved->groupBy('fund_id') as $logsProductApproved) {
                 $mailBody->h5($logsProductApproved[0]['fund_name'], ['margin_less']);
                 $mailBody->text(implode("\n", array_map(static function($log) {
-                    return trans('digests/provider_funds.individual_products.product', $log);
+                    return trans(
+                        'digests/provider_funds.individual_products.product',
+                        self::arrayOnlyString($log)
+                    );
                 }, $logsProductApproved->toArray())) . "\n");
             }
 
@@ -302,7 +306,7 @@ class ProviderFundsDigest extends BaseOrganizationDigest
             foreach ($logsProductsFeedback as $logsProductFeedback) {
                 $mailBody->h5(trans(
                     'digests/provider_funds.feedback.product_title',
-                    $logsProductFeedback[0]
+                    self::arrayOnlyString($logsProductFeedback[0])
                 ), ['margin_less']);
 
                 foreach ($logsProductFeedback->groupBy('fund_id') as $logsProductFeedbackLog) {
@@ -310,7 +314,10 @@ class ProviderFundsDigest extends BaseOrganizationDigest
                     $mailBody->text(trans_choice(
                         'digests/provider_funds.feedback.product_details',
                         $count_messages,
-                        array_merge($logsProductFeedback[0], compact('count_messages'))
+                        self::arrayOnlyString([
+                            ...$logsProductFeedback[0],
+                            ...compact('count_messages'),
+                        ])
                     ));
                 }
             }

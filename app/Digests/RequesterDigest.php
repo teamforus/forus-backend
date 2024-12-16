@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
-class RequesterDigest
+class RequesterDigest extends BaseDigest
 {
     use Dispatchable;
 
@@ -168,7 +168,10 @@ class RequesterDigest
                 foreach ($productEventsByProvider as $productEventByProvider) {
                     $array[$fund->id]->h5($productEventByProvider[0]['provider_name']);
                     $textList = $productEventByProvider->map(static function(array $data) {
-                        return trans('digests/requester.products.price', $data);
+                        return trans(
+                            'digests/requester.products.price',
+                            self::arrayOnlyString($data)
+                        );
                     })->toArray();
                     $array[$fund->id]->text(implode("\n", $textList) . "\n");
                 }

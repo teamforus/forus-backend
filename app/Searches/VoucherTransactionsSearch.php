@@ -112,7 +112,7 @@ class VoucherTransactionsSearch extends BaseSearch
         if ($transfer_in_min = $this->getFilter('transfer_in_min')) {
             $builder->where(function (Builder $builder) use ($transfer_in_min) {
                 $builder->where('state', VoucherTransaction::STATE_PENDING);
-                $builder->where('transfer_at', '>=', now()->addDays($transfer_in_min));
+                $builder->where('transfer_at', '>=', now()->addDays((float)$transfer_in_min));
                 $builder->whereNull('voucher_transaction_bulk_id');
             });
         }
