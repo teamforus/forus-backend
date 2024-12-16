@@ -5,10 +5,6 @@ namespace App\Services\MediaService;
 use App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException;
 use App\Services\MediaService\Models\Media;
 
-/**
- * Class MediaSize
- * @package App\Services\MediaService
- */
 abstract class MediaConfig
 {
     const string TYPE_SINGLE = 'single';
