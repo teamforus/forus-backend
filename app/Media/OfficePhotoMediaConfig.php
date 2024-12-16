@@ -8,9 +8,9 @@ use App\Services\MediaService\MediaImagePreset;
 class OfficePhotoMediaConfig extends MediaImageConfig
 {
     /**
-     * @var array
+     * @var ?string
      */
-    protected $name = 'office_photo';
+    protected ?string $name = 'office_photo';
 
     /**
      * OfficePhotoMediaConfig constructor.

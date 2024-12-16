@@ -8,9 +8,9 @@ use App\Services\MediaService\MediaImagePreset;
 class ProductPhotoMediaConfig extends MediaImageConfig
 {
     /**
-     * @var array
+     * @var ?string
      */
-    protected $name = 'product_photo';
+    protected ?string $name = 'product_photo';
 
     /**
      * @throws \App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException

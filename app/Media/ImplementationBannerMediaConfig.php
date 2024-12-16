@@ -8,12 +8,12 @@ use App\Services\MediaService\MediaImagePreset;
 class ImplementationBannerMediaConfig extends MediaImageConfig
 {
     /**
-     * @var array
+     * @var ?string
      */
-    protected $name = 'implementation_banner';
+    protected ?string $name = 'implementation_banner';
 
-    protected $preview_aspect_ratio = 3.33;
-    protected $save_dominant_color = true;
+    protected float $preview_aspect_ratio = 3.33;
+    protected bool $save_dominant_color = true;
 
     /**
      * FundLogoMediaConfig constructor.

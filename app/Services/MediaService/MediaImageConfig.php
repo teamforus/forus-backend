@@ -3,8 +3,8 @@
 namespace App\Services\MediaService;
 
 use App\Services\MediaService\Models\Media;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
-use Intervention\Image\Facades\Image;
+use Intervention\Image\ImageManager;
+use Throwable;
 
 /**
  * Class MediaSize
@@ -15,7 +15,7 @@ abstract class MediaImageConfig extends MediaConfig
     /**
      * @var float
      */
-    protected $preview_aspect_ratio = 1;
+    protected float $preview_aspect_ratio = 1;
 
     /**
      * @return float|null
@@ -43,7 +43,7 @@ abstract class MediaImageConfig extends MediaConfig
                 ]);
 
                 $file->close();
-            } catch (FileNotFoundException $e) {
+            } catch (Throwable $e) {
                 logger()->error(sprintf(
                     "Could not generate dominant color for media %s, go error: %s",
                     $media->id,
@@ -53,19 +53,18 @@ abstract class MediaImageConfig extends MediaConfig
         }
     }
 
-
     /**
      * @param string $sourcePath
-     * @return mixed
+     * @return string|null
      */
-    public function getDominantColor(string $sourcePath)
+    public function getDominantColor(string $sourcePath): ?string
     {
-        $image = Image::make(file_get_contents($sourcePath))->backup();
+        $image = ImageManager::gd()->read($sourcePath);
 
         // Reduce to single color and then sample
-        $color = $image->limitColors(1)->pickColor(0, 0, 'hex');
-        $image->destroy();
+        $color = $image->reduceColors(1)->scaleDown(1, 1)->pickColor(0, 0);
+        unset($image);
 
-        return $color;
+        return $color->toHex('#');
     }
 }
