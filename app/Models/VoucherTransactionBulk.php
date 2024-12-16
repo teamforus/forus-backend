@@ -285,7 +285,7 @@ class VoucherTransactionBulk extends BaseModel
      * @return VoucherTransactionBulk
      * @throws Throwable
      */
-    public function setAccepted(DraftPayment $draftPayment): self
+    public function setAcceptedBunq(DraftPayment $draftPayment): self
     {
         DB::transaction(function() use ($draftPayment) {
             $this->update([
@@ -299,12 +299,7 @@ class VoucherTransactionBulk extends BaseModel
                     $transaction, $draftPayment
                 ) : null;
 
-                $transaction->forceFill([
-                    'state' => VoucherTransaction::STATE_SUCCESS,
-                    'payment_id' => $payment?->getId(),
-                    'payment_time' => now(),
-                ])->save();
-
+                $transaction->setPaid($payment?->getId(), now());
                 VoucherTransactionBunqSuccess::dispatch($transaction);
             }
         });
@@ -316,10 +311,11 @@ class VoucherTransactionBulk extends BaseModel
 
     /**
      * @param Employee|null $employee
+     * @param bool $throttle
      * @return self
      * @throws Throwable
      */
-    public function setAcceptedBNG(?Employee $employee = null): self
+    public function setAcceptedBNG(?Employee $employee = null, bool $throttle = true): self
     {
         DB::transaction(function() use ($employee) {
             $this->update([
@@ -331,17 +327,14 @@ class VoucherTransactionBulk extends BaseModel
             $this->log($event, $this->getLogModels($employee));
 
             foreach ($this->voucher_transactions as $transaction) {
-                $transaction->forceFill([
-                    'state'             => VoucherTransaction::STATE_SUCCESS,
-                    'payment_id'        => null,
-                    'payment_time'      => now(),
-                ])->save();
-
+                $transaction->setPaid(null, now());
                 VoucherTransactionBunqSuccess::dispatch($transaction);
             }
         });
 
-        sleep(1);
+        if ($throttle) {
+            sleep(1);
+        }
 
         return $this->fresh();
     }
@@ -684,7 +677,7 @@ class VoucherTransactionBulk extends BaseModel
             case static::STATE_REJECTED: $this->setRejected(); break;
             case static::STATE_ACCEPTED: {
                 if ($this->bank_connection->bank->isBunq()) {
-                    $this->setAccepted($payment);
+                    $this->setAcceptedBunq($payment);
                 }
 
                 if ($this->bank_connection->bank->isBNG()) {

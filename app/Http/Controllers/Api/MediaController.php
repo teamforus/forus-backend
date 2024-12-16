@@ -76,7 +76,11 @@ class MediaController extends Controller
                 ]);
             }
         } catch (\Throwable $e) {
-            logger()->error(sprintf("Media uploading failed: %s", $e->getMessage()));
+            logger()->error(sprintf(
+                "Media uploading failed: %s\n%s",
+                $e->getMessage(),
+                $e->getTraceAsString(),
+            ));
         }
 
         return new MediaResource($media ?? null);
@@ -114,7 +118,11 @@ class MediaController extends Controller
                 'identity_address' => $request->auth_address(),
             ]);
         } catch (\Throwable $e) {
-            logger()->error(sprintf("Media uploading failed: %s", $e->getMessage()));
+            logger()->error(sprintf(
+                "Media uploading failed: %s\n%s",
+                $e->getMessage(),
+                $e->getTraceAsString(),
+            ));
         }
 
         return new MediaResource($media ?? null);
@@ -133,6 +141,6 @@ class MediaController extends Controller
 
         $this->mediaService->unlink($media);
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 }

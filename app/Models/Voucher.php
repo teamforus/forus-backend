@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -122,6 +123,7 @@ use ZipArchive;
  * @property-read Collection|\App\Models\PhysicalCard[] $physical_cards
  * @property-read int|null $physical_cards_count
  * @property-read \App\Models\Product|null $product
+ * @property-read \App\Models\ProductCategory|null $product_category
  * @property-read \App\Models\ProductReservation|null $product_reservation
  * @property-read Collection|\App\Models\ProductReservation[] $product_reservations
  * @property-read int|null $product_reservations_count
@@ -313,6 +315,21 @@ class Voucher extends BaseModel
     public function identity(): BelongsTo
     {
         return $this->belongsTo(Identity::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return HasOneThrough
+     */
+    public function product_category(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            ProductCategory::class,
+            Product::class,
+            'id',
+            'id',
+            'product_id',
+            'product_category_id'
+        );
     }
 
     /**
@@ -518,7 +535,11 @@ class Voucher extends BaseModel
      */
     public function getHasPayoutsAttribute(): bool
     {
-        return $this->paid_out_transactions->count() > 0;
+        return
+            $this->paid_out_transactions->count() > 0 ||
+            $this->product_vouchers->reduce(function (int $total, Voucher $voucher) {
+                return $total + $voucher->paid_out_transactions->count();
+            }, 0) > 0;
     }
 
     /**

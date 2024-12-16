@@ -5,19 +5,15 @@ namespace App\Media;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 
-/**
- * Class OrganizationLogoMediaConfig
- * @package App\Media
- */
 class ImplementationBannerMediaConfig extends MediaImageConfig
 {
     /**
-     * @var array
+     * @var ?string
      */
-    protected $name = 'implementation_banner';
+    protected ?string $name = 'implementation_banner';
 
-    protected $preview_aspect_ratio = 3.33;
-    protected $save_dominant_color = true;
+    protected float $preview_aspect_ratio = 3.33;
+    protected bool $save_dominant_color = true;
 
     /**
      * FundLogoMediaConfig constructor.

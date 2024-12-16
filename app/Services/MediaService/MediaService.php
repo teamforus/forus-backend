@@ -370,13 +370,14 @@ class MediaService
      * @param Media|null $media
      * @param bool $fromQueue
      * @param array $keepPresets
-     * @throws \Exception
+     * @param callable|null $callback
      */
     public function regenerateMedia(
         MediaConfig $mediaConfig,
         Media $media = null,
         bool $fromQueue = false,
-        array $keepPresets = []
+        array $keepPresets = [],
+        ?callable $callback = null,
     ): void {
         $sourcePresetName = $mediaConfig->getRegenerationPresetName();
         $medias = $this->model->newQuery()->where([
@@ -403,7 +404,13 @@ class MediaService
             return $mediaPreset->name;
         }, $newPresets);
 
-        foreach ($medias->get() as $mediaModel) {
+        $mediaModels = $medias->get();
+
+        foreach ($mediaModels as $index =>  $mediaModel) {
+            if ($callback) {
+                $callback($mediaModels->count(), $index + 1);
+            }
+
             $source = $mediaModel->findPreset($sourcePresetName);
 
             if (!$source) {

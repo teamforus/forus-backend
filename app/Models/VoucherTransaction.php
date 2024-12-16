@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
 use App\Exports\VoucherTransactionsProviderExport;
 use App\Exports\VoucherTransactionsSponsorExport;
 use App\Scopes\Builders\VoucherTransactionQuery;
@@ -12,7 +13,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -78,53 +81,57 @@ use Illuminate\Support\Facades\Log;
  * @property-read Collection|\App\Models\PayoutRelation[] $payout_relations
  * @property-read int|null $payout_relations_count
  * @property-read \App\Models\Product|null $product
+ * @property-read \App\Models\ProductCategory|null $product_category
  * @property-read \App\Models\ProductReservation|null $product_reservation
  * @property-read \App\Models\Organization|null $provider
+ * @property-read \App\Models\BusinessType|null $provider_business_type
+ * @property-read Collection|\App\Models\Office[] $provider_offices
+ * @property-read int|null $provider_offices_count
  * @property-read \App\Models\Reimbursement|null $reimbursement
  * @property-read \App\Models\Voucher $voucher
  * @property-read \App\Models\VoucherTransactionBulk|null $voucher_transaction_bulk
- * @method static Builder|VoucherTransaction newModelQuery()
- * @method static Builder|VoucherTransaction newQuery()
- * @method static Builder|VoucherTransaction onlyTrashed()
- * @method static Builder|VoucherTransaction query()
- * @method static Builder|VoucherTransaction whereAddress($value)
- * @method static Builder|VoucherTransaction whereAmount($value)
- * @method static Builder|VoucherTransaction whereAmountExtraCash($value)
- * @method static Builder|VoucherTransaction whereAttempts($value)
- * @method static Builder|VoucherTransaction whereBranchId($value)
- * @method static Builder|VoucherTransaction whereBranchName($value)
- * @method static Builder|VoucherTransaction whereBranchNumber($value)
- * @method static Builder|VoucherTransaction whereCanceledAt($value)
- * @method static Builder|VoucherTransaction whereCreatedAt($value)
- * @method static Builder|VoucherTransaction whereDeletedAt($value)
- * @method static Builder|VoucherTransaction whereDescription($value)
- * @method static Builder|VoucherTransaction whereEmployeeId($value)
- * @method static Builder|VoucherTransaction whereFundProviderProductId($value)
- * @method static Builder|VoucherTransaction whereIbanFrom($value)
- * @method static Builder|VoucherTransaction whereIbanTo($value)
- * @method static Builder|VoucherTransaction whereIbanToName($value)
- * @method static Builder|VoucherTransaction whereId($value)
- * @method static Builder|VoucherTransaction whereInitiator($value)
- * @method static Builder|VoucherTransaction whereLastAttemptAt($value)
- * @method static Builder|VoucherTransaction whereOrganizationId($value)
- * @method static Builder|VoucherTransaction wherePaymentDescription($value)
- * @method static Builder|VoucherTransaction wherePaymentId($value)
- * @method static Builder|VoucherTransaction wherePaymentTime($value)
- * @method static Builder|VoucherTransaction whereProductId($value)
- * @method static Builder|VoucherTransaction whereReimbursementId($value)
- * @method static Builder|VoucherTransaction whereState($value)
- * @method static Builder|VoucherTransaction whereTarget($value)
- * @method static Builder|VoucherTransaction whereTargetIban($value)
- * @method static Builder|VoucherTransaction whereTargetName($value)
- * @method static Builder|VoucherTransaction whereTargetReimbursementId($value)
- * @method static Builder|VoucherTransaction whereTransferAt($value)
- * @method static Builder|VoucherTransaction whereUid($value)
- * @method static Builder|VoucherTransaction whereUpdatedAt($value)
- * @method static Builder|VoucherTransaction whereUploadBatchId($value)
- * @method static Builder|VoucherTransaction whereVoucherId($value)
- * @method static Builder|VoucherTransaction whereVoucherTransactionBulkId($value)
- * @method static Builder|VoucherTransaction withTrashed()
- * @method static Builder|VoucherTransaction withoutTrashed()
+ * @method static Builder<static>|VoucherTransaction newModelQuery()
+ * @method static Builder<static>|VoucherTransaction newQuery()
+ * @method static Builder<static>|VoucherTransaction onlyTrashed()
+ * @method static Builder<static>|VoucherTransaction query()
+ * @method static Builder<static>|VoucherTransaction whereAddress($value)
+ * @method static Builder<static>|VoucherTransaction whereAmount($value)
+ * @method static Builder<static>|VoucherTransaction whereAmountExtraCash($value)
+ * @method static Builder<static>|VoucherTransaction whereAttempts($value)
+ * @method static Builder<static>|VoucherTransaction whereBranchId($value)
+ * @method static Builder<static>|VoucherTransaction whereBranchName($value)
+ * @method static Builder<static>|VoucherTransaction whereBranchNumber($value)
+ * @method static Builder<static>|VoucherTransaction whereCanceledAt($value)
+ * @method static Builder<static>|VoucherTransaction whereCreatedAt($value)
+ * @method static Builder<static>|VoucherTransaction whereDeletedAt($value)
+ * @method static Builder<static>|VoucherTransaction whereDescription($value)
+ * @method static Builder<static>|VoucherTransaction whereEmployeeId($value)
+ * @method static Builder<static>|VoucherTransaction whereFundProviderProductId($value)
+ * @method static Builder<static>|VoucherTransaction whereIbanFrom($value)
+ * @method static Builder<static>|VoucherTransaction whereIbanTo($value)
+ * @method static Builder<static>|VoucherTransaction whereIbanToName($value)
+ * @method static Builder<static>|VoucherTransaction whereId($value)
+ * @method static Builder<static>|VoucherTransaction whereInitiator($value)
+ * @method static Builder<static>|VoucherTransaction whereLastAttemptAt($value)
+ * @method static Builder<static>|VoucherTransaction whereOrganizationId($value)
+ * @method static Builder<static>|VoucherTransaction wherePaymentDescription($value)
+ * @method static Builder<static>|VoucherTransaction wherePaymentId($value)
+ * @method static Builder<static>|VoucherTransaction wherePaymentTime($value)
+ * @method static Builder<static>|VoucherTransaction whereProductId($value)
+ * @method static Builder<static>|VoucherTransaction whereReimbursementId($value)
+ * @method static Builder<static>|VoucherTransaction whereState($value)
+ * @method static Builder<static>|VoucherTransaction whereTarget($value)
+ * @method static Builder<static>|VoucherTransaction whereTargetIban($value)
+ * @method static Builder<static>|VoucherTransaction whereTargetName($value)
+ * @method static Builder<static>|VoucherTransaction whereTargetReimbursementId($value)
+ * @method static Builder<static>|VoucherTransaction whereTransferAt($value)
+ * @method static Builder<static>|VoucherTransaction whereUid($value)
+ * @method static Builder<static>|VoucherTransaction whereUpdatedAt($value)
+ * @method static Builder<static>|VoucherTransaction whereUploadBatchId($value)
+ * @method static Builder<static>|VoucherTransaction whereVoucherId($value)
+ * @method static Builder<static>|VoucherTransaction whereVoucherTransactionBulkId($value)
+ * @method static Builder<static>|VoucherTransaction withTrashed()
+ * @method static Builder<static>|VoucherTransaction withoutTrashed()
  * @mixin \Eloquent
  */
 class VoucherTransaction extends BaseModel
@@ -336,6 +343,52 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
+     * @return HasOneThrough
+     * @noinspection PhpUnused
+     */
+    public function product_category(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            ProductCategory::class,
+            Product::class,
+            'id',
+            'id',
+            'product_id',
+            'product_category_id',
+        );
+    }
+
+    /**
+     * @return HasOneThrough
+     * @noinspection PhpUnused
+     */
+    public function provider_business_type(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            BusinessType::class,
+            Organization::class,
+            'id',
+            'id',
+            'organization_id',
+            'business_type_id',
+        );
+    }
+
+    /**
+     * @return HasManyThrough
+     * @noinspection PhpUnused
+     */
+    public function provider_offices(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Office::class,
+            Organization::class,
+            firstKey: 'id',
+            localKey: 'organization_id',
+        );
+    }
+
+    /**
      * @return float
      * @noinspection PhpUnused
      */
@@ -400,6 +453,7 @@ class VoucherTransaction extends BaseModel
             'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
             'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
             'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
+            'identity_address',
         ]), self::query());
 
         return $builder->searchSponsor($organization);
@@ -569,6 +623,20 @@ class VoucherTransaction extends BaseModel
     public function isPaid(): bool
     {
         return $this->state === self::STATE_SUCCESS;
+    }
+
+    /**
+     * @param int|null $paymentId
+     * @param Carbon|null $paymentDate
+     * @return void
+     */
+    public function setPaid(?int $paymentId, ?Carbon $paymentDate): void
+    {
+        $this->forceFill([
+            'state' => self::STATE_SUCCESS,
+            'payment_id' => $paymentId,
+            'payment_time' => $paymentDate,
+        ])->save();
     }
 
     /**

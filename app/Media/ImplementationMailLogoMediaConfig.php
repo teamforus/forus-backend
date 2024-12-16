@@ -5,21 +5,17 @@ namespace App\Media;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 
-/**
- * Class OrganizationLogoMediaConfig
- * @package App\Media
- */
 class ImplementationMailLogoMediaConfig extends MediaImageConfig
 {
     /**
-     * @var array
+     * @var ?string
      */
-    protected $name = 'email_logo';
+    protected ?string $name = 'email_logo';
 
     /**
-     * @var int
+     * @var float
      */
-    protected $preview_aspect_ratio = 1;
+    protected float $preview_aspect_ratio = 1;
 
     /**
      * OrganizationLogoMediaConfig constructor.

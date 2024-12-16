@@ -22,6 +22,7 @@ class RolePermissionsTableSeeder extends Seeder
             "manage_reimbursements", "manage_implementation_notifications",
             "view_funds", "view_person_bsn_data", 'manage_fund_texts', "manage_validators", "make_direct_payments",
             "manage_bi_connection", "manage_payment_methods", "view_funds_extra_payments", "manage_payouts",
+            'view_identities', 'manage_identities',
         ],
         "finance" => [
             "view_finances", "manage_vouchers", "manage_reimbursements", "manage_organization",
