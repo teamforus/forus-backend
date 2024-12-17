@@ -100,8 +100,13 @@ class RouteServiceProvider extends ServiceProvider
 
         $router->bind('voucher_number_or_address', static function ($value) {
             return $value ? Voucher::where(function(Builder $builder) use ($value) {
-                $builder->where('number', $value);
-                $builder->orWhereRelation('tokens', 'address', $value);
+                $builder->whereDoesntHave('product_reservation');
+                $builder->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER);
+
+                $builder->where(function(Builder $builder) use ($value) {
+                    $builder->where('number', $value);
+                    $builder->orWhereRelation('tokens', 'address', $value);
+                });
             })->firstOrFail() : null;
         });
 

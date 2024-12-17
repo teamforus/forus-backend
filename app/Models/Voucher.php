@@ -210,12 +210,6 @@ class Voucher extends BaseModel
     public const string STATE_PENDING = 'pending';
     public const string STATE_DEACTIVATED = 'deactivated';
 
-    public const array EVENTS_TRANSACTION = [
-        self::EVENT_TRANSACTION,
-        self::EVENT_TRANSACTION_PRODUCT,
-        self::EVENT_TRANSACTION_SUBSIDY,
-    ];
-
     public const array EVENTS_CREATED = [
         self::EVENT_CREATED_BUDGET,
         self::EVENT_CREATED_PRODUCT,
@@ -1086,14 +1080,15 @@ class Voucher extends BaseModel
         ])));
 
         $voucher = self::create([
-            'product_reservation_id'    => $productReservation?->id,
-            'identity_id'               => $this->identity_id,
-            'parent_id'                 => $this->id,
-            'fund_id'                   => $this->fund_id,
-            'product_id'                => $product->id,
-            'amount'                    => $productReservation->amount ?? $product->price,
-            'returnable'                => false,
-            'expire_at'                 => $voucherExpireAt
+            'number' => self::makeUniqueNumber(),
+            'amount' => $productReservation->amount ?? $product->price,
+            'fund_id' => $this->fund_id,
+            'expire_at' => $voucherExpireAt,
+            'parent_id' => $this->id,
+            'returnable' => false,
+            'product_id' => $product->id,
+            'identity_id' => $this->identity_id,
+            'product_reservation_id' => $productReservation?->id,
         ]);
 
         VoucherCreated::dispatch($voucher, !$productReservation, !$productReservation);
@@ -1133,6 +1128,24 @@ class Voucher extends BaseModel
     public function isDeactivated(): bool
     {
         return $this->state === self::STATE_DEACTIVATED;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function isVoucherType(): bool
+    {
+        return $this->voucher_type === self::VOUCHER_TYPE_VOUCHER;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function isPayoutType(): bool
+    {
+        return $this->voucher_type === self::VOUCHER_TYPE_PAYOUT;
     }
 
     /**

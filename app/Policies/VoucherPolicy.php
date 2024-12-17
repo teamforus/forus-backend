@@ -262,7 +262,10 @@ class VoucherPolicy
      */
     public function show(Identity $identity, Voucher $voucher) : bool
     {
-        return $identity->id === $voucher->identity_id;
+        return
+            ($identity->id === $voucher->identity_id) &&
+            $voucher->isVoucherType() &&
+            !$voucher->product_reservation;
     }
 
     /**
