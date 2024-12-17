@@ -175,7 +175,7 @@ class TransactionsController extends Controller
             $validator = $request->validateRows($slice);
 
             if ($validator->passes()) {
-                $voucher = Voucher::find(Arr::get($item, 'voucher_id'));
+                $voucher = Voucher::firstWhere('number', Arr::get($item, 'voucher_number'));
 
                 $createdItems[] = $voucher->makeTransactionBySponsor($employee, [
                     'target_iban' => $item['direct_payment_iban'],
