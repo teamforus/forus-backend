@@ -24,25 +24,25 @@ use Illuminate\Http\UploadedFile;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $fund_request_records
  * @property-read int|null $fund_request_records_count
  * @property-read \App\Models\Identity|null $identity
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read \Illuminate\Database\Eloquent\Collection|EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Office|null $office
  * @property-read \App\Models\Organization $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[] $roles
  * @property-read int|null $roles_count
- * @method static \Illuminate\Database\Eloquent\Builder|Employee newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Employee newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Employee onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Employee query()
- * @method static \Illuminate\Database\Eloquent\Builder|Employee whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Employee whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Employee whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Employee whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Employee whereOfficeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Employee whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Employee whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Employee withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Employee withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereOfficeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee withoutTrashed()
  * @mixin \Eloquent
  */
 class Employee extends BaseModel
@@ -50,16 +50,16 @@ class Employee extends BaseModel
     use HasLogs;
     use SoftDeletes;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_UPDATED = 'updated';
-    public const EVENT_DELETED = 'deleted';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_UPDATED = 'updated';
+    public const string EVENT_DELETED = 'deleted';
 
-    public const EVENT_UPLOADED_PAYOUTS = 'uploaded_payouts';
-    public const EVENT_UPLOADED_VOUCHERS = 'uploaded_vouchers';
-    public const EVENT_UPLOADED_TRANSACTIONS = 'uploaded_transactions';
-    public const EVENT_UPLOADED_PREVALIDATIONS = 'uploaded_prevalidations';
+    public const string EVENT_UPLOADED_PAYOUTS = 'uploaded_payouts';
+    public const string EVENT_UPLOADED_VOUCHERS = 'uploaded_vouchers';
+    public const string EVENT_UPLOADED_TRANSACTIONS = 'uploaded_transactions';
+    public const string EVENT_UPLOADED_PREVALIDATIONS = 'uploaded_prevalidations';
 
-    public const EVENT_FUND_REQUEST_ASSIGNED = 'fund_request_assigned';
+    public const string EVENT_FUND_REQUEST_ASSIGNED = 'fund_request_assigned';
 
     protected $fillable = [
         'identity_address', 'organization_id', 'office_id',

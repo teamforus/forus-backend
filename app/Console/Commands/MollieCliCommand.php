@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Mollie\Api\Exceptions\ApiException;
 use Illuminate\Support\Facades\App;
+use Mollie\Api\Exceptions\ApiException;
 
 class MollieCliCommand extends BaseCommand
 {

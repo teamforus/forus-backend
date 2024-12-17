@@ -32,7 +32,7 @@ class ReimbursementsController extends Controller
             $request->identityProxy2FAConfirmed(),
         ]);
 
-        $builder = Reimbursement::whereRelation('voucher', 'identity_address', $request->auth_address());
+        $builder = Reimbursement::whereRelation('voucher', 'identity_id', $request->auth_id());
         $search = new ReimbursementsSearch($request->only('state', 'fund_id', 'archived'), $builder);
 
         return ReimbursementResource::queryCollection($search->query()->latest(), $request);

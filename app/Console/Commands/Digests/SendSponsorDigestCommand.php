@@ -5,10 +5,6 @@ namespace App\Console\Commands\Digests;
 use App\Digests\SponsorDigest;
 use Illuminate\Console\Command;
 
-/**
- * Class SendSponsorDigestCommand
- * @package App\Console\Commands
- */
 class SendSponsorDigestCommand extends Command
 {
     /**

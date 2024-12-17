@@ -57,7 +57,7 @@ class RedeemFundsRequest extends BaseFormRequest
      */
     public function getAvailableVouchers(): Collection|Arrayable
     {
-        return Voucher::whereNull('identity_address')->where([
+        return Voucher::whereNull('identity_id')->where([
             'activation_code' => $this->input('code'),
         ])->whereNotNull('activation_code')->get();
     }
@@ -67,7 +67,7 @@ class RedeemFundsRequest extends BaseFormRequest
      */
     public function getUsedVouchers(): Collection|Arrayable
     {
-        return Voucher::whereNotNull('identity_address')->where([
+        return Voucher::whereNotNull('identity_id')->where([
             'activation_code' => $this->input('code'),
         ])->whereNotNull('activation_code')->get();
     }

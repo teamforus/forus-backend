@@ -3,21 +3,20 @@
 namespace App\Http\Resources;
 
 use App\Models\Organization;
+use Illuminate\Http\Request;
 
 /**
- * Class OrganizationBasicResource
  * @property Organization $resource
- * @package App\Http\Resources
  */
 class OrganizationBasicWithPrivateResource extends OrganizationBasicResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $organization = $this->resource;
 

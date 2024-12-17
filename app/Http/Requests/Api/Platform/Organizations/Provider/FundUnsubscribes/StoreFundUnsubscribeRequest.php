@@ -5,7 +5,6 @@ namespace App\Http\Requests\Api\Platform\Organizations\Provider\FundUnsubscribes
 use App\Http\Requests\BaseFormRequest;
 use App\Models\FundProvider;
 use App\Models\Organization;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
 
 /**

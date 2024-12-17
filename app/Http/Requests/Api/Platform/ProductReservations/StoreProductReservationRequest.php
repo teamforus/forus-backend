@@ -54,7 +54,7 @@ class StoreProductReservationRequest extends BaseFormRequest
         return [
             'voucher_id' => [
                 'required',
-                new IdentityVoucherAddressRule($this->auth_address(), Voucher::TYPE_BUDGET),
+                new IdentityVoucherAddressRule($this->identity(), Voucher::TYPE_BUDGET),
             ],
             'product_id' => [
                 'required',

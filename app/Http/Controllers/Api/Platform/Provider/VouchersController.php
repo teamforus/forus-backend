@@ -9,10 +9,6 @@ use App\Models\VoucherToken;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
 
-/**
- * Class VouchersController
- * @package App\Http\Controllers\Api\Platform\Provider
- */
 class VouchersController extends Controller
 {
     /**

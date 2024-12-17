@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Payouts\IndexPayoutsRequest;
 use App\Http\Resources\VoucherTransactionPayoutResource;
-use App\Models\FundRequest;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Searches\VoucherTransactionsSearch;

@@ -3,8 +3,8 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
-use Illuminate\Http\Request;
 use App\Models\Identity;
+use Illuminate\Http\Request;
 
 /**
  * @property-read Identity $resource

@@ -10,10 +10,6 @@ use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
 use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 
-/**
- * Class FcmBasicNotification
- * @package App\Services\Forus\Notification\Messages
- */
 class FcmBasicNotification extends Notification implements ShouldQueue
 {
     use Queueable;
@@ -37,7 +33,7 @@ class FcmBasicNotification extends Notification implements ShouldQueue
     /**
      * @return array
      */
-    public function via()
+    public function via(): array
     {
         return [FcmChannel::class];
     }

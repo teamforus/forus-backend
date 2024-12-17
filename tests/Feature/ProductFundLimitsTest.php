@@ -492,7 +492,7 @@ class ProductFundLimitsTest extends TestCase
             $identity = $this->identities[$action['identity']] ?? null;
             $this->assertNotNull($identity, 'Identity not found');
 
-            $productVoucher = $fund->makeProductVoucher($identity->address, [], $product->id);
+            $productVoucher = $fund->makeProductVoucher($identity, [], $product->id);
             $this->assertNotNull($productVoucher, 'Product voucher not created');
 
             $this->assertProductLimits($identity, $product, $action['assert_limits']);

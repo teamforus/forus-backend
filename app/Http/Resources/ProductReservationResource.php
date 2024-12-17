@@ -12,7 +12,7 @@ use App\Models\Voucher;
  */
 class ProductReservationResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'voucher.fund.organization',
         'voucher.voucher_records',
         'product.organization',

@@ -10,8 +10,8 @@ use App\Http\Resources\FundProviderChatMessageResource;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderChat;
-use App\Models\Organization;
 use App\Models\FundProviderChatMessage;
+use App\Models\Organization;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundProviderChatMessagesController extends Controller

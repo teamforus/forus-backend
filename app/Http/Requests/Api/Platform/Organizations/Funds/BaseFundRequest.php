@@ -11,8 +11,8 @@ use App\Rules\FundCriteria\FundCriteriaMinRule;
 use App\Rules\FundCriteria\FundCriteriaOperatorRule;
 use App\Rules\FundCriteria\FundCriteriaValueRule;
 use App\Traits\ValidatesFaq;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Validation\Rule;
 
 /**
  * @property Organization|null $organization

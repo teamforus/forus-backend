@@ -1,9 +1,9 @@
 <?php
 namespace App\Services\AuthService;
 
-use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
+use Illuminate\Contracts\Auth\UserProvider;
 
 class BearerTokenGuard implements Guard
 {

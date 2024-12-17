@@ -5,10 +5,6 @@ namespace App\Console\Commands\Digests;
 use App\Digests\ProviderReservationsDigest;
 use Illuminate\Console\Command;
 
-/**
- * Class SendProviderReservationsDigestCommand
- * @package App\Console\Commands\Digests
- */
 class SendProviderReservationsDigestCommand extends Command
 {
     /**

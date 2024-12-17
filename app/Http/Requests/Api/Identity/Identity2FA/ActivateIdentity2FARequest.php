@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Identity\Identity2FA;
 
 use App\Exceptions\AuthorizationJsonException;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\Rule;
 use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
 use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;

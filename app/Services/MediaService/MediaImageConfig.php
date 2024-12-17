@@ -6,10 +6,6 @@ use App\Services\MediaService\Models\Media;
 use Intervention\Image\ImageManager;
 use Throwable;
 
-/**
- * Class MediaSize
- * @package App\Services\MediaService
- */
 abstract class MediaImageConfig extends MediaConfig
 {
     /**

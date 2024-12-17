@@ -4,8 +4,6 @@ namespace App\Rules;
 
 class SystemNotificationTemplateTitleRule extends BaseRule
 {
-    protected $error;
-
     /**
      * Determine if the validation rule passes.
      *

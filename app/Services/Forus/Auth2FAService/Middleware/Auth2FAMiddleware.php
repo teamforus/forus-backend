@@ -12,7 +12,7 @@ class Auth2FAMiddleware
     /**
      * @var array
      */
-    public const EXCEPT = [
+    public const array EXCEPT = [
         'proxyDestroy',
         'auth2FAStore',
         'auth2FAState',

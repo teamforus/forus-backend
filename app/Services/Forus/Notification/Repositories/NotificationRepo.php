@@ -84,10 +84,6 @@ use App\Services\Forus\Notification\Models\NotificationUnsubscriptionToken;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
-/**
- * Class NotificationServiceRepo
- * @package App\Services\Forus\Notification\Repositories
- */
 class NotificationRepo implements INotificationRepo
 {
     protected static array $notifications = [

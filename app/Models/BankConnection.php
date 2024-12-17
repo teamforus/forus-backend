@@ -65,45 +65,45 @@ use Throwable;
  * @property-read \App\Models\Organization $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
  * @property-read int|null $voucher_transaction_bulks_count
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection query()
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereAccessToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereAuthParams($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereAuthUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereBankConnectionAccountId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereBankId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereConsentId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereContext($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereExpireAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereRedirectToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereAccessToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereAuthParams($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereAuthUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereBankConnectionAccountId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereBankId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereConsentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereContext($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereExpireAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereRedirectToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class BankConnection extends BaseModel
 {
     use HasLogs, HasDbTokens, HasAnnouncements;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_REPLACED = 'replaced';
-    public const EVENT_REJECTED = 'rejected';
-    public const EVENT_DISABLED = 'disabled';
-    public const EVENT_ACTIVATED = 'activated';
-    public const EVENT_DISABLED_INVALID = 'disabled_invalid';
-    public const EVENT_MONETARY_ACCOUNT_CHANGED = 'monetary_account_changed';
-    public const EVENT_EXPIRING = 'expiring';
-    public const EVENT_ERROR = 'error';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_REPLACED = 'replaced';
+    public const string EVENT_REJECTED = 'rejected';
+    public const string EVENT_DISABLED = 'disabled';
+    public const string EVENT_ACTIVATED = 'activated';
+    public const string EVENT_DISABLED_INVALID = 'disabled_invalid';
+    public const string EVENT_MONETARY_ACCOUNT_CHANGED = 'monetary_account_changed';
+    public const string EVENT_EXPIRING = 'expiring';
+    public const string EVENT_ERROR = 'error';
 
     /**
      * @noinspection PhpUnused
      */
-    public const EVENTS = [
+    public const array EVENTS = [
         self::EVENT_CREATED,
         self::EVENT_REPLACED,
         self::EVENT_REJECTED,
@@ -114,16 +114,16 @@ class BankConnection extends BaseModel
         self::EVENT_ERROR,
     ];
 
-    public const STATE_ACTIVE = 'active';
-    public const STATE_EXPIRED = 'expired';
-    public const STATE_PENDING = 'pending';
-    public const STATE_REPLACED = 'replaced';
-    public const STATE_REJECTED = 'rejected';
-    public const STATE_DISABLED = 'disabled';
-    public const STATE_INVALID = 'invalid';
-    public const STATE_ERROR = 'error';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_EXPIRED = 'expired';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_REPLACED = 'replaced';
+    public const string STATE_REJECTED = 'rejected';
+    public const string STATE_DISABLED = 'disabled';
+    public const string STATE_INVALID = 'invalid';
+    public const string STATE_ERROR = 'error';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_ACTIVE,
         self::STATE_EXPIRED,
         self::STATE_PENDING,

@@ -15,10 +15,6 @@ use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
-/**
- * Class ValidatorDigest
- * @package App\Digests
- */
 class ValidatorDigest extends BaseOrganizationDigest
 {
     use Dispatchable;

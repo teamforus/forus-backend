@@ -3,8 +3,8 @@
 namespace App\Notifications\Identities\Voucher;
 
 use App\Mail\Vouchers\DeactivationVoucherMail;
-use App\Models\Voucher;
 use App\Models\Identity;
+use App\Models\Voucher;
 
 /**
  * The voucher was deactivated

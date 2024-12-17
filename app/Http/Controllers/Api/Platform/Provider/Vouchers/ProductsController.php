@@ -15,10 +15,6 @@ use App\Scopes\Builders\ProductQuery;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class ProductsController
- * @package App\Http\Controllers\Api\Platform\Provider\Vouchers
- */
 class ProductsController extends Controller
 {
     /**

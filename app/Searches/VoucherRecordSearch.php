@@ -2,7 +2,6 @@
 
 namespace App\Searches;
 
-use App\Models\RecordType;
 use App\Models\RecordTypeTranslation;
 use App\Models\VoucherRecord;
 use Illuminate\Database\Eloquent\Builder;

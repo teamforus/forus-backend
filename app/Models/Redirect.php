@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -19,24 +18,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Implementation|null $implementation
- * @method static \Illuminate\Database\Eloquent\Builder|Redirect newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Redirect newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Redirect query()
- * @method static \Illuminate\Database\Eloquent\Builder|Redirect whereClientType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Redirect whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Redirect whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Redirect whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Redirect whereRedirectableId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Redirect whereRedirectableType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Redirect whereTarget($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Redirect whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Redirect whereUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Redirect newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Redirect newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Redirect query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Redirect whereClientType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Redirect whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Redirect whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Redirect whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Redirect whereRedirectableId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Redirect whereRedirectableType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Redirect whereTarget($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Redirect whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Redirect whereUrl($value)
  * @mixin \Eloquent
  */
 class Redirect extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'url', 'target', 'client_type', 'implementation_id',
     ];

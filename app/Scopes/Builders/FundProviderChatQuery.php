@@ -3,49 +3,52 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\FundProviderChat;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class FundProviderChatQuery
 {
     /**
-     * @param Builder $query
-     * @param array|string|int $products
-     * @return Builder
+     * @param Builder|Relation|FundProviderChat $builder
+     * @param int|array $products
+     * @return Builder|Relation|FundProviderChat
      */
-    public static function whereProductFilter(Builder $query, $products) {
-        return $query->whereIn('product_id', (array) $products);
+    public static function whereProductFilter(
+        Builder|Relation|FundProviderChat $builder,
+        int|array $products,
+    ): Builder|Relation|FundProviderChat {
+        return $builder->whereIn('product_id', (array) $products);
     }
 
     /**
-     * @param Builder $query
-     * @param array|string|int $organizations
-     * @return mixed
+     * @param Builder|Relation|FundProviderChat $builder
+     * @param int|array $organizations
+     * @return Builder|Relation|FundProviderChat
      */
     public static function whereProviderOrganizationFilter(
-        Builder $query,
-        $organizations
-    ) {
-        return $query->whereHas('fund_provider', function(
-            Builder $builder
-        ) use ($organizations) {
+        Builder|Relation|FundProviderChat $builder,
+        int|array $organizations,
+    ): Builder|Relation|FundProviderChat {
+        return $builder->whereHas('fund_provider', function(Builder $builder) use ($organizations) {
             $builder->whereIn('organization_id', (array) $organizations);
         });
     }
 
     /**
-     * @param Builder $query
-     * @param array|string|int $products
-     * @param array|string|int $organizations
-     * @return mixed
+     * @param Builder|Relation|FundProviderChat $builder
+     * @param int|array $products
+     * @param int|array $organizations
+     * @return Builder|Relation|FundProviderChat
      */
     public static function whereProductAndProviderOrganizationFilter(
-        Builder $query,
-        $products,
-        $organizations
-    ) {
+        Builder|Relation|FundProviderChat $builder,
+        int|array $products,
+        int|array $organizations,
+    ): Builder|Relation|FundProviderChat {
         return self::whereProviderOrganizationFilter(
-            self::whereProductFilter($query, $products),
-            $organizations
+            self::whereProductFilter($builder, $products),
+            $organizations,
         );
     }
 }

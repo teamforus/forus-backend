@@ -4,10 +4,6 @@ namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Http\Requests\BaseFormRequest;
 
-/**
- * Class PersonBSNRequest
- * @package App\Http\Requests\Api\Platform\Organizations\Funds
- */
 class FundRequestPersonRequest extends BaseFormRequest
 {
     /**

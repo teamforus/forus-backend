@@ -16,16 +16,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnectionAccount|null $bank_connection_account
  * @property-read \App\Models\FundTopUp $fund_top_up
- * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereBankConnectionAccountId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereBankTransactionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereFundTopUpId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundTopUpTransaction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundTopUpTransaction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundTopUpTransaction query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundTopUpTransaction whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundTopUpTransaction whereBankConnectionAccountId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundTopUpTransaction whereBankTransactionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundTopUpTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundTopUpTransaction whereFundTopUpId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundTopUpTransaction whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundTopUpTransaction whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundTopUpTransaction extends BaseModel

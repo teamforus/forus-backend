@@ -7,12 +7,12 @@ use Carbon\Carbon;
 
 class Payment
 {
-    protected $amount;
-    protected $debtor;
-    protected $creditor;
-    protected $paymentId;
-    protected $description;
-    protected $requestedExecutionDate;
+    protected Amount $amount;
+    protected Account $debtor;
+    protected Account $creditor;
+    protected ?string $paymentId;
+    protected string $description;
+    protected ?string $requestedExecutionDate;
 
     /**
      * @param Amount $amount

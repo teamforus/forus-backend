@@ -5,10 +5,6 @@ namespace App\Console\Commands\Digests;
 use App\Digests\RequesterDigest;
 use Illuminate\Console\Command;
 
-/**
- * Class SendRequesterDigestCommand
- * @package App\Console\Commands
- */
 class SendRequesterDigestCommand extends Command
 {
     /**

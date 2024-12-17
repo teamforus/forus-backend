@@ -46,7 +46,7 @@ class OrganizationSearch extends BaseSearch
         if ($this->getFilter('has_reservations') && $this->getFilter('auth_address')) {
             $builder->whereHas('products.product_reservations', function(Builder $builder) {
                 $builder->whereHas('voucher', function(Builder $builder) {
-                    $builder->where('identity_address', $this->getFilter('auth_address'));
+                    $builder->whereRelation('identity', 'address', $this->getFilter('auth_address'));
                 });
             });
         }

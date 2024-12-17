@@ -5,9 +5,9 @@ namespace App\Digests;
 use App\Mail\Digest\DigestRequesterMail;
 use App\Mail\MailBodyBuilder;
 use App\Models\Fund;
+use App\Models\Identity;
 use App\Models\Voucher;
 use App\Services\EventLogService\Models\EventLog;
-use App\Models\Identity;
 use App\Services\Forus\Notification\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Support\Arrayable;
@@ -188,6 +188,7 @@ class RequesterDigest extends BaseDigest
     {
         $identityFunds = [];
 
+        /** @var Collection|Voucher[] $vouchers */
         $vouchers = Voucher::where(static function(Builder $builder) {
             $builder->whereNull('product_id');
         })->orWhere(static function(Builder $builder) {
@@ -197,12 +198,12 @@ class RequesterDigest extends BaseDigest
             return !$voucher->used;
         });
 
-        $vouchersByIdentities = $vouchers->groupBy('identity_address');
+        $vouchersByIdentities = $vouchers->groupBy('identity_id');
 
-        foreach ($vouchersByIdentities as $identity_address => $vouchersByIdentity) {
-            $identity = Identity::findByAddress($identity_address);
+        foreach ($vouchersByIdentities as $identity_id => $vouchersByIdentity) {
+            $identity = Identity::firstWhere('id', $identity_id);
 
-            if (!empty($identity) && $identity->email) {
+            if (!empty($identity?->email)) {
                 $funds = $vouchersByIdentity->pluck('fund_id')->unique()->toArray();
                 $identityFunds[] = compact('identity', 'funds');
             }

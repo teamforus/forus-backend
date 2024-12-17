@@ -9,7 +9,7 @@ use App\Models\FundTopUpTransaction;
  */
 class TopUpTransactionResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'fund_top_up',
         'bank_connection_account',
     ];

@@ -16,29 +16,29 @@ use Throwable;
 
 class DigIdCgiRepo extends DigIdRepo
 {
-    public const DIGID_SUCCESS                     = '0000';
-    public const DIGID_UNAVAILABLE                 = '0001';
-    public const DIGID_TEMPORARY_UNAVAILABLE_1     = '0003';
-    public const DIGID_VERIFICATION_FAILED_1       = '0004';
-    public const DIGID_VERIFICATION_FAILED_2       = '0007';
-    public const DIGID_ILLEGAL_REQUEST             = '0030';
-    public const DIGID_ERROR_APP_ID                = '0032';
-    public const DIGID_ERROR_ASELECT               = '0033';
-    public const DIGID_CANCELLED                   = '0040';
-    public const DIGID_BUSY                        = '0050';
-    public const DIGID_INVALID_SESSION             = '0070';
-    public const DIGID_WEBSERVICE_NOT_ACTIVE       = '0080';
-    public const DIGID_WEBSERVICE_NOT_AUTHORISED   = '0099';
-    public const DIGID_TEMPORARY_UNAVAILABLE_2     = '010c';
-    public const DIGID_API_NOT_RESPONDING          = 'API_0000';
+    public const string DIGID_SUCCESS                     = '0000';
+    public const string DIGID_UNAVAILABLE                 = '0001';
+    public const string DIGID_TEMPORARY_UNAVAILABLE_1     = '0003';
+    public const string DIGID_VERIFICATION_FAILED_1       = '0004';
+    public const string DIGID_VERIFICATION_FAILED_2       = '0007';
+    public const string DIGID_ILLEGAL_REQUEST             = '0030';
+    public const string DIGID_ERROR_APP_ID                = '0032';
+    public const string DIGID_ERROR_ASELECT               = '0033';
+    public const string DIGID_CANCELLED                   = '0040';
+    public const string DIGID_BUSY                        = '0050';
+    public const string DIGID_INVALID_SESSION             = '0070';
+    public const string DIGID_WEBSERVICE_NOT_ACTIVE       = '0080';
+    public const string DIGID_WEBSERVICE_NOT_AUTHORISED   = '0099';
+    public const string DIGID_TEMPORARY_UNAVAILABLE_2     = '010c';
+    public const string DIGID_API_NOT_RESPONDING          = 'API_0000';
 
-    public const URL_API_SANDBOX = "https://was-preprod1.digid.nl/was/server";
-    public const URL_API_PRODUCTION = "https://was.digid.nl/was/server";
+    public const string URL_API_SANDBOX = "https://was-preprod1.digid.nl/was/server";
+    public const string URL_API_PRODUCTION = "https://was.digid.nl/was/server";
 
-    public const ENV_SANDBOX = "sandbox";
-    public const ENV_PRODUCTION = "production";
+    public const string ENV_SANDBOX = "sandbox";
+    public const string ENV_PRODUCTION = "production";
 
-    public const DIGID_CERT_DISABLE = "disable";
+    public const string DIGID_CERT_DISABLE = "disable";
 
     protected ?string $app_id = null;
     protected ?string $shared_secret = null;

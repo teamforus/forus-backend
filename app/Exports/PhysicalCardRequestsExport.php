@@ -10,8 +10,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class PhysicalCardRequestsExport implements FromCollection, WithHeadings
 {
-    protected $data;
-    protected $headers;
+    protected Collection|\Illuminate\Database\Eloquent\Collection $data;
 
     public function __construct(
         $fund_id = null,

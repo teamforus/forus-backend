@@ -31,21 +31,21 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read \App\Models\NotificationTemplate|null $templates_database
  * @property-read \App\Models\NotificationTemplate|null $templates_mail
  * @property-read \App\Models\NotificationTemplate|null $templates_push
- * @method static Builder|SystemNotification newModelQuery()
- * @method static Builder|SystemNotification newQuery()
- * @method static Builder|SystemNotification query()
- * @method static Builder|SystemNotification whereCreatedAt($value)
- * @method static Builder|SystemNotification whereDatabase($value)
- * @method static Builder|SystemNotification whereEditable($value)
- * @method static Builder|SystemNotification whereGroup($value)
- * @method static Builder|SystemNotification whereId($value)
- * @method static Builder|SystemNotification whereKey($value)
- * @method static Builder|SystemNotification whereMail($value)
- * @method static Builder|SystemNotification whereOptional($value)
- * @method static Builder|SystemNotification whereOrder($value)
- * @method static Builder|SystemNotification wherePush($value)
- * @method static Builder|SystemNotification whereUpdatedAt($value)
- * @method static Builder|SystemNotification whereVisible($value)
+ * @method static Builder<static>|SystemNotification newModelQuery()
+ * @method static Builder<static>|SystemNotification newQuery()
+ * @method static Builder<static>|SystemNotification query()
+ * @method static Builder<static>|SystemNotification whereCreatedAt($value)
+ * @method static Builder<static>|SystemNotification whereDatabase($value)
+ * @method static Builder<static>|SystemNotification whereEditable($value)
+ * @method static Builder<static>|SystemNotification whereGroup($value)
+ * @method static Builder<static>|SystemNotification whereId($value)
+ * @method static Builder<static>|SystemNotification whereKey($value)
+ * @method static Builder<static>|SystemNotification whereMail($value)
+ * @method static Builder<static>|SystemNotification whereOptional($value)
+ * @method static Builder<static>|SystemNotification whereOrder($value)
+ * @method static Builder<static>|SystemNotification wherePush($value)
+ * @method static Builder<static>|SystemNotification whereUpdatedAt($value)
+ * @method static Builder<static>|SystemNotification whereVisible($value)
  * @mixin \Eloquent
  */
 class SystemNotification extends Model

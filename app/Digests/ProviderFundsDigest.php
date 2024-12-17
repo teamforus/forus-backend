@@ -7,19 +7,15 @@ use App\Mail\Digest\DigestProviderFundsMail;
 use App\Mail\MailBodyBuilder;
 use App\Models\Fund;
 use App\Models\FundProvider;
-use App\Models\Product;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Product;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
-/**
- * Class ProviderFundsDigest
- * @package App\DigestsNieuw aanbod op de webshop
- */
 class ProviderFundsDigest extends BaseOrganizationDigest
 {
     use Dispatchable;

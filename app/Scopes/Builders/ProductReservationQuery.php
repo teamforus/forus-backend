@@ -4,24 +4,21 @@
 namespace App\Scopes\Builders;
 
 use App\Models\ProductReservation;
-use App\Models\Reimbursement;
 use App\Models\ReservationExtraPayment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-/**
- * Class ProductQuery
- * @package App\Scopes\Builders
- */
 class ProductReservationQuery
 {
     /**
-     * @param Builder $query
+     * @param Builder|Relation|ProductReservation $query
      * @param string $q
-     * @return Builder
+     * @return Builder|Relation|ProductReservation
      */
-    public static function whereQueryFilter(Builder $query, string $q = ''): Builder
-    {
+    public static function whereQueryFilter(
+        Builder|Relation|ProductReservation $query,
+        string $q = '',
+    ): Builder|Relation|ProductReservation {
         return $query->where(function(Builder $builder) use ($q) {
             $builder->where('code', 'LIKE', "%$q%");
             $builder->orWhere('first_name', 'LIKE', "%$q%");
@@ -42,14 +39,14 @@ class ProductReservationQuery
     }
 
     /**
-     * @param Builder|ProductReservation|Relation $query
+     * @param Builder|Relation|ProductReservation $query
      * @param int|array|Builder $organization
-     * @return Builder|ProductReservation|Relation
+     * @return Builder|Relation|ProductReservation
      */
     public static function whereProviderFilter(
-        Builder|ProductReservation|Relation $query,
-        mixed $organization
-    ): Builder|ProductReservation|Relation {
+        Builder|Relation|ProductReservation $query,
+        mixed $organization,
+    ): Builder|Relation|ProductReservation {
         return $query->where(function(Builder $builder) use ($organization) {
             $builder->whereHas('product', function(Builder $builder) use ($organization) {
                 $builder->whereIn('organization_id', (array) $organization);
@@ -58,24 +55,24 @@ class ProductReservationQuery
     }
 
     /**
-     * @param Builder|ProductReservation|Relation $builder
-     * @return Builder|ProductReservation|Relation
+     * @param Builder|Relation|ProductReservation $builder
+     * @return Builder|Relation|ProductReservation
      */
     public static function whereNotExpired(
-        Builder|ProductReservation|Relation $builder
-    ): Builder|ProductReservation|Relation {
+        Builder|Relation|ProductReservation $builder,
+    ): Builder|Relation|ProductReservation {
         return $builder->whereNotIn('id', self::whereExpired(
             ProductReservation::query(),
         )->select('id'));
     }
 
     /**
-     * @param Builder|ProductReservation|Relation $builder
-     * @return Builder|ProductReservation|Relation
+     * @param Builder|Relation|ProductReservation $builder
+     * @return Builder|Relation|ProductReservation
      */
     public static function whereExpired(
-        Builder|ProductReservation|Relation $builder,
-    ): Builder|ProductReservation|Relation {
+        Builder|Relation|ProductReservation $builder,
+    ): Builder|Relation|ProductReservation {
         $now = now()->format('Y-m-d');
 
         return $builder->whereHas('voucher', function (Builder $builder) use ($now) {
@@ -98,21 +95,22 @@ class ProductReservationQuery
     }
 
     /**
-     * @param Builder|ProductReservation|Relation $builder
-     * @return Builder|ProductReservation|Relation
+     * @param Builder|Relation|ProductReservation $builder
+     * @return Builder|Relation|ProductReservation
      */
     public static function whereExpiredAndPending(
-        Builder|ProductReservation|Relation $builder,
-    ): Builder|ProductReservation|Relation {
+        Builder|Relation|ProductReservation $builder,
+    ): Builder|Relation|ProductReservation {
         return self::whereExpired($builder)->where('state', ProductReservation::STATE_PENDING);
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|ProductReservation $builder
+     * @return Builder|Relation|ProductReservation
      */
-    public static function whereArchived(Builder $builder): Builder
-    {
+    public static function whereArchived(
+        Builder|Relation|ProductReservation $builder,
+    ): Builder|Relation|ProductReservation {
         return $builder->where(function (Builder $builder) {
             $builder->whereIn('state', ProductReservation::STATES_CANCELED);
             $builder->orWhere(fn (Builder $builder) => self::whereExpiredAndPending($builder));
@@ -120,25 +118,26 @@ class ProductReservationQuery
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|ProductReservation $builder
+     * @return Builder|Relation|ProductReservation
      */
-    public static function whereNotArchived(Builder $builder): Builder
-    {
+    public static function whereNotArchived(
+        Builder|Relation|ProductReservation $builder
+    ): Builder|Relation|ProductReservation {
         return $builder->whereNotIn('id', self::whereArchived(
             ProductReservation::query()->select('id')
         ));
     }
 
     /**
-     * @param Builder|ProductReservation $builder
+     * @param Builder|Relation|ProductReservation $builder
      * @param int $waitingTime
-     * @return Builder|ProductReservation
+     * @return Builder|Relation|ProductReservation
      */
     public static function whereExtraPaymentExpired(
-        Builder|ProductReservation $builder,
+        Builder|Relation|ProductReservation $builder,
         int $waitingTime,
-    ): Builder|ProductReservation {
+    ): Builder|Relation|ProductReservation {
         $expiredAt = now()->subMinutes($waitingTime);
 
         return $builder->where(function (Builder $query) use ($expiredAt) {

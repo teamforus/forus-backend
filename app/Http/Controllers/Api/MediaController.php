@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Media\CloneMediaRequest;
 use App\Http\Requests\Api\Media\StoreMediaRequest;
 use App\Http\Requests\BaseFormRequest;
@@ -10,7 +11,6 @@ use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class MediaController extends Controller

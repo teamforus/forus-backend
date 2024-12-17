@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Api\Platform\Organizations\OrganizationReservationFields;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\OrganizationReservationField;
 use App\Models\Organization;
+use App\Models\OrganizationReservationField;
 use Illuminate\Support\Facades\Gate;
 
 /**

@@ -15,17 +15,17 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount query()
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereBankConnectionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereMonetaryAccountIban($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereMonetaryAccountId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereMonetaryAccountName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnectionAccount newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnectionAccount newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnectionAccount query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnectionAccount whereBankConnectionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnectionAccount whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnectionAccount whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnectionAccount whereMonetaryAccountIban($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnectionAccount whereMonetaryAccountId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnectionAccount whereMonetaryAccountName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnectionAccount whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnectionAccount whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class BankConnectionAccount extends Model

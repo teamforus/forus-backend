@@ -13,7 +13,6 @@ class ProductPhotoMediaConfig extends MediaImageConfig
     protected ?string $name = 'product_photo';
 
     /**
-     * ProductPhotoMediaConfig constructor.
      * @throws \App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException
      */
     public function __construct()

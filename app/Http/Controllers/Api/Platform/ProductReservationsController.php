@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\ProductReservations\IndexProductReservationsRequest;
+use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\ValidateProductReservationAddressRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\ValidateProductReservationFieldsRequest;
-use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
 use App\Http\Resources\ProductReservationResource;
 use App\Models\Product;
 use App\Models\ProductReservation;
@@ -32,7 +32,7 @@ class ProductReservationsController extends Controller
         $this->authorize('viewAny', ProductReservation::class);
 
         $builder = ProductReservation::whereHas('voucher', function(Builder $builder) use ($request) {
-            $builder->where('identity_address', $request->auth_address());
+            $builder->where('identity_id', $request->auth_id());
         });
 
         $search = new ProductReservationsSearch(array_merge($request->only([

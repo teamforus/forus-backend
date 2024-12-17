@@ -3,12 +3,11 @@
 namespace App\Http\Resources;
 
 use App\Models\PhysicalCard;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Class PhysicalCardResource
  * @property-read PhysicalCard $resource
- * @package App\Http\Resources
  */
 class PhysicalCardResource extends JsonResource
 {
@@ -18,7 +17,7 @@ class PhysicalCardResource extends JsonResource
      * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return $this->resource->only([
             'id', 'code'

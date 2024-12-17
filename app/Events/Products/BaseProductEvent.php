@@ -3,15 +3,11 @@
 namespace App\Events\Products;
 
 use App\Models\Product;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Queue\SerializesModels;
 
-/**
- * Class ProductCreated
- * @package App\Events\Products
- */
 abstract class BaseProductEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;

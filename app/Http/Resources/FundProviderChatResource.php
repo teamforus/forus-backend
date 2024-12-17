@@ -6,9 +6,7 @@ use App\Models\FundProviderChat;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Class FundProviderChatResource
  * @property FundProviderChat $resource
- * @package App\Http\Resources
  */
 class FundProviderChatResource extends JsonResource
 {

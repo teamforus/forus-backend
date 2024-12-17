@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\SearchProductsRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\ProductBasicResource;
 use App\Http\Resources\Requester\ProductResource;
 use App\Models\Product;
-use App\Http\Controllers\Controller;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 

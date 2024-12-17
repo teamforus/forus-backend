@@ -28,7 +28,7 @@ trait MakesTestVouchers
      */
     protected function makeTestVoucher(Identity $identity, Fund $fund): Voucher
     {
-        return $fund->makeVoucher($identity->address);
+        return $fund->makeVoucher($identity);
     }
 
     /**

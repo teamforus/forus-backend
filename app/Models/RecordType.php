@@ -34,46 +34,46 @@ use Illuminate\Support\Arr;
  * @property-read \App\Models\RecordTypeTranslation|null $translation
  * @property-read Collection|\App\Models\RecordTypeTranslation[] $translations
  * @property-read int|null $translations_count
- * @method static Builder|RecordType listsTranslations(string $translationField)
- * @method static Builder|RecordType newModelQuery()
- * @method static Builder|RecordType newQuery()
- * @method static Builder|RecordType notTranslatedIn(?string $locale = null)
- * @method static Builder|RecordType orWhereTranslation(string $translationField, $value, ?string $locale = null)
- * @method static Builder|RecordType orWhereTranslationLike(string $translationField, $value, ?string $locale = null)
- * @method static Builder|RecordType orderByTranslation(string $translationField, string $sortMethod = 'asc')
- * @method static Builder|RecordType query()
- * @method static Builder|RecordType translated()
- * @method static Builder|RecordType translatedIn(?string $locale = null)
- * @method static Builder|RecordType whereControlType($value)
- * @method static Builder|RecordType whereCreatedAt($value)
- * @method static Builder|RecordType whereCriteria($value)
- * @method static Builder|RecordType whereId($value)
- * @method static Builder|RecordType whereKey($value)
- * @method static Builder|RecordType whereOrganizationId($value)
- * @method static Builder|RecordType wherePreCheck($value)
- * @method static Builder|RecordType whereSystem($value)
- * @method static Builder|RecordType whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
- * @method static Builder|RecordType whereTranslationLike(string $translationField, $value, ?string $locale = null)
- * @method static Builder|RecordType whereType($value)
- * @method static Builder|RecordType whereUpdatedAt($value)
- * @method static Builder|RecordType whereVouchers($value)
- * @method static Builder|RecordType withTranslation(?string $locale = null)
+ * @method static Builder<static>|RecordType listsTranslations(string $translationField)
+ * @method static Builder<static>|RecordType newModelQuery()
+ * @method static Builder<static>|RecordType newQuery()
+ * @method static Builder<static>|RecordType notTranslatedIn(?string $locale = null)
+ * @method static Builder<static>|RecordType orWhereTranslation(string $translationField, $value, ?string $locale = null)
+ * @method static Builder<static>|RecordType orWhereTranslationLike(string $translationField, $value, ?string $locale = null)
+ * @method static Builder<static>|RecordType orderByTranslation(string $translationField, string $sortMethod = 'asc')
+ * @method static Builder<static>|RecordType query()
+ * @method static Builder<static>|RecordType translated()
+ * @method static Builder<static>|RecordType translatedIn(?string $locale = null)
+ * @method static Builder<static>|RecordType whereControlType($value)
+ * @method static Builder<static>|RecordType whereCreatedAt($value)
+ * @method static Builder<static>|RecordType whereCriteria($value)
+ * @method static Builder<static>|RecordType whereId($value)
+ * @method static Builder<static>|RecordType whereKey($value)
+ * @method static Builder<static>|RecordType whereOrganizationId($value)
+ * @method static Builder<static>|RecordType wherePreCheck($value)
+ * @method static Builder<static>|RecordType whereSystem($value)
+ * @method static Builder<static>|RecordType whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
+ * @method static Builder<static>|RecordType whereTranslationLike(string $translationField, $value, ?string $locale = null)
+ * @method static Builder<static>|RecordType whereType($value)
+ * @method static Builder<static>|RecordType whereUpdatedAt($value)
+ * @method static Builder<static>|RecordType whereVouchers($value)
+ * @method static Builder<static>|RecordType withTranslation(?string $locale = null)
  * @mixin \Eloquent
  */
 class RecordType extends BaseModel
 {
     use Translatable, RecordTranslationsTrait;
 
-    public const TYPE_BOOL = 'bool';
-    public const TYPE_IBAN = 'iban';
-    public const TYPE_DATE = 'date';
-    public const TYPE_EMAIL = 'email';
-    public const TYPE_STRING = 'string';
-    public const TYPE_NUMBER = 'number';
-    public const TYPE_SELECT = 'select';
-    public const TYPE_SELECT_NUMBER = 'select_number';
+    public const string TYPE_BOOL = 'bool';
+    public const string TYPE_IBAN = 'iban';
+    public const string TYPE_DATE = 'date';
+    public const string TYPE_EMAIL = 'email';
+    public const string TYPE_STRING = 'string';
+    public const string TYPE_NUMBER = 'number';
+    public const string TYPE_SELECT = 'select';
+    public const string TYPE_SELECT_NUMBER = 'select_number';
 
-    public const TYPES = [
+    public const array TYPES = [
         self::TYPE_BOOL,
         self::TYPE_IBAN,
         self::TYPE_DATE,

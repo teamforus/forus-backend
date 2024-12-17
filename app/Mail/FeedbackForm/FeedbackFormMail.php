@@ -4,6 +4,7 @@ namespace App\Mail\FeedbackForm;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
 
 class FeedbackFormMail extends ImplementationMail
 {
@@ -11,6 +12,7 @@ class FeedbackFormMail extends ImplementationMail
 
     /**
      * @return Mailable
+     * @throws CommonMarkException
      */
     public function build(): Mailable
     {

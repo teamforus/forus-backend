@@ -192,7 +192,7 @@ class VoucherPolicy
     public function deactivateRequester(Identity $identity, Voucher $voucher): bool
     {
         return
-            $identity->address === $voucher->identity_address &&
+            $voucher->identity_id === $identity->id &&
             $voucher->fund->fund_config->allow_blocking_vouchers &&
             !$voucher->deactivated &&
             !$voucher->expired;
@@ -235,7 +235,7 @@ class VoucherPolicy
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
             $voucher->activation_code &&
-            !$voucher->identity_address &&
+            !$voucher->identity_id &&
             !$voucher->deactivated;
     }
 
@@ -262,7 +262,7 @@ class VoucherPolicy
      */
     public function show(Identity $identity, Voucher $voucher) : bool
     {
-        return $identity->address === $voucher->identity_address;
+        return $identity->id === $voucher->identity_id;
     }
 
     /**

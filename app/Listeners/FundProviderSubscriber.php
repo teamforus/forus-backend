@@ -9,21 +9,17 @@ use App\Events\FundProviders\FundProviderRevokedProducts;
 use App\Events\FundProviders\FundProviderSponsorChatMessage;
 use App\Events\FundProviders\FundProviderStateUpdated;
 use App\Models\FundProvider;
+use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedBudgetNotification;
+use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedProductsNotification;
 use App\Notifications\Organizations\FundProviders\FundProvidersApprovedBudgetNotification;
 use App\Notifications\Organizations\FundProviders\FundProvidersApprovedProductsNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderSponsorChatMessageNotification;
 use App\Notifications\Organizations\FundProviders\FundProvidersRevokedBudgetNotification;
 use App\Notifications\Organizations\FundProviders\FundProvidersRevokedProductsNotification;
-use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedBudgetNotification;
-use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedProductsNotification;
 use App\Notifications\Organizations\FundProviders\FundProvidersStateAcceptedNotification;
 use App\Notifications\Organizations\FundProviders\FundProvidersStateRejectedNotification;
 use Illuminate\Events\Dispatcher;
 
-/**
- * Class FundSubscriber
- * @package App\Listeners
- */
 class FundProviderSubscriber
 {
     /**

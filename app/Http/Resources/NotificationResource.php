@@ -14,7 +14,7 @@ use Throwable;
  */
 class NotificationResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'event',
         'system_notification.templates',
     ];

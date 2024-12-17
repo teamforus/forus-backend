@@ -5,15 +5,14 @@ namespace App\Http\Resources\Provider;
 use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\MediaResource;
 use App\Models\VoucherTransaction;
+use Illuminate\Http\Request;
 
 /**
- * Class ProviderVoucherTransactionEmployeeResource
  * @property VoucherTransaction $resource
- * @package App\Http\Resources\Provider
  */
 class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'voucher.fund.logo',
         'provider.logo',
         'product.photo',
@@ -23,10 +22,10 @@ class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $transaction = $this->resource;
         $fund_provider_product = $transaction->fund_provider_product;

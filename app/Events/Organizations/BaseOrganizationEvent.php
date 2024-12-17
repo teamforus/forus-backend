@@ -3,10 +3,10 @@
 namespace App\Events\Organizations;
 
 use App\Models\Organization;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Queue\SerializesModels;
 
 abstract class BaseOrganizationEvent
 {

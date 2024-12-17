@@ -4,18 +4,13 @@ namespace App\Services\GeocodeService;
 use GuzzleHttp\Client;
 use Illuminate\Support\Arr;
 
-/**
- * Class GeocodeService
- * @package App\Services\GeocodeService
- */
 class GeocodeService
 {   
-    protected $api_url = "https://maps.googleapis.com/maps/api/";
-    protected $api_key = null;
+    protected string $api_url = "https://maps.googleapis.com/maps/api/";
+    protected ?string $api_key = null;
 
-    function __construct(
-        $api_key
-    ) {
+    function __construct(?string $api_key = null)
+    {
         $this->api_key = $api_key;
     }
 

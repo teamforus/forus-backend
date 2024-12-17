@@ -7,9 +7,9 @@ use Illuminate\Support\Arr;
 
 class FundProviderStateUpdated extends BaseFundProviderEvent
 {
-    protected $approvedBefore;
-    protected $approvedAfter;
-    protected $originalState;
+    protected mixed $approvedBefore;
+    protected mixed $approvedAfter;
+    protected mixed $originalState;
 
     /**
      * @param FundProvider $fundProvider

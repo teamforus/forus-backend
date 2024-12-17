@@ -6,10 +6,6 @@ use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
 use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class UserLoginMail
- * @package App\Mail\Auth
- */
 class UserLoginMail extends ImplementationMail
 {
     protected string $subjectKey = 'mails/system_mails.user_login.title';

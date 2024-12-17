@@ -5,16 +5,14 @@ namespace App\Http\Resources;
 use App\Models\Voucher;
 
 /**
- * Class VoucherResource
  * @property Voucher $resource
- * @package App\Http\Resources
  */
 class VoucherCollectionResource extends VoucherResource
 {
     /**
      * @var array
      */
-    public static $load = [
+    public static array $load = [
         'logs',
         'parent',
         'token_with_confirmation',
