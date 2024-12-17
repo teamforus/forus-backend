@@ -26,7 +26,7 @@ class SearchController extends Controller
 
         if (!$overview) {
             return SearchResource::collection($search->query(
-                $request->input('search_item_types', [])
+                $request->input('search_item_types', ['funds', 'providers', 'products'])
             )->orderBy(
                 $request->input('order_by', 'created_at'),
                 $request->input('order_dir', 'desc'),
