@@ -17,8 +17,6 @@ class IndexPayoutTransactionsRequest extends BaseIndexTransactionsRequest
         $fundIds = $this->organization?->funds?->pluck('id')->toArray();
 
         return [
-            ...$this->sortableResourceRules(columns: VoucherTransaction::SORT_BY_FIELDS),
-
             'to' => 'nullable|date_format:Y-m-d',
             'from' => 'nullable|date_format:Y-m-d',
 
@@ -34,6 +32,8 @@ class IndexPayoutTransactionsRequest extends BaseIndexTransactionsRequest
 
             'non_cancelable_from' => 'nullable|date_format:Y-m-d',
             'non_cancelable_to' => 'nullable|date_format:Y-m-d',
+
+            ...$this->sortableResourceRules(columns: VoucherTransaction::SORT_BY_FIELDS),
         ];
     }
 }

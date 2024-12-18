@@ -146,13 +146,6 @@ class VoucherTransaction extends BaseModel
     public const string EVENT_CANCELED_PROVIDER = 'canceled_provider';
     public const string EVENT_TRANSFER_DELAY_SKIPPED = 'transfer_delay_skipped';
 
-    public const array EVENTS = [
-        self::EVENT_UPDATED,
-        self::EVENT_CANCELED_SPONSOR,
-        self::EVENT_CANCELED_PROVIDER,
-        self::EVENT_TRANSFER_DELAY_SKIPPED,
-    ];
-
     public const string STATE_PENDING = 'pending';
     public const string STATE_SUCCESS = 'success';
     public const string STATE_CANCELED = 'canceled';
