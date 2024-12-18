@@ -988,7 +988,7 @@ class Voucher extends BaseModel
 
         return $query->orderBy(
             $request->input('order_by', 'created_at'),
-            $request->input('order_order', 'asc')
+            $request->input('order_dir', 'asc')
         );
     }
 

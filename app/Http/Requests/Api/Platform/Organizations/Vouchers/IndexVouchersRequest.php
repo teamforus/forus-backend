@@ -60,7 +60,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'amount_available_min' => 'nullable|numeric',
             'amount_available_max' => 'nullable|numeric',
             'implementation_id' => 'nullable|exists:implementations,id|in:' . $implementations->join(','),
-            ...$this->sortableResourceRules(),
+            ...$this->sortableResourceRules(100, ['created_at']),
         ];
     }
 
