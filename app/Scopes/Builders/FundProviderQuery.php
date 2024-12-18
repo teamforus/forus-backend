@@ -21,7 +21,7 @@ class FundProviderQuery extends BaseQuery
         Builder|Relation|FundProvider $query,
         $fund_id,
         $type = null,
-        $product_id = null
+        $product_id = null,
     ): Builder|Relation|FundProvider {
         return $query->where(static function(Builder $builder) use ($fund_id, $type, $product_id) {
             $builder->where('state', FundProvider::STATE_ACCEPTED);
@@ -62,12 +62,14 @@ class FundProviderQuery extends BaseQuery
     }
 
     /**
-     * @param Builder $query
-     * @param $fund_id
-     * @return Builder
+     * @param Builder|Relation|FundProvider $query
+     * @param int|array $fund_id
+     * @return Builder|Relation|FundProvider
      */
-    public static function whereHasTransactions(Builder $query, $fund_id): Builder
-    {
+    public static function whereHasTransactions(
+        Builder|Relation|FundProvider $query,
+        int|array $fund_id,
+    ): Builder|Relation|FundProvider {
         return $query->whereHas('organization', function(Builder $builder) use ($fund_id) {
             $builder->whereHas('voucher_transactions.voucher', function(Builder $builder) use ($fund_id) {
                 return $builder->whereIn('fund_id', (array) $fund_id);
@@ -99,7 +101,7 @@ class FundProviderQuery extends BaseQuery
      */
     public static function queryFilterFund(
         Builder|Relation|FundProvider $query,
-        string $q = ''
+        string $q = '',
     ): Builder|Relation|FundProvider {
         return $query->whereHas('fund', function(Builder $builder) use ($q) {
             $builder->where('name', 'LIKE', "%$q%");
@@ -111,11 +113,14 @@ class FundProviderQuery extends BaseQuery
     }
 
     /**
-     * @param Builder $query
-     * @param array|string|int $fund_id
-     * @return Builder|\Illuminate\Database\Query\Builder
+     * @param Builder|Relation|FundProvider $query
+     * @param array|int $fund_id
+     * @return Builder|Relation|FundProvider
      */
-    public static function sortByRevenue(Builder $query, mixed $fund_id) {
+    public static function sortByRevenue(
+        Builder|Relation|FundProvider $query,
+        int|array $fund_id,
+    ): Builder|Relation|FundProvider {
         return $query->select('fund_providers.*')->selectSub(VoucherTransaction::selectRaw(
             'sum(`voucher_transactions`.`amount`)'
         )->whereColumn(
@@ -127,12 +132,14 @@ class FundProviderQuery extends BaseQuery
     }
 
     /**
-     * @param Builder $builder
+     * @param Builder|Relation|FundProvider $builder
      * @param array|int $fund_id
-     * @return Builder
+     * @return Builder|Relation|FundProvider
      */
-    public static function whereDeclinedForFundsFilter(Builder $builder, array|int $fund_id): Builder
-    {
+    public static function whereDeclinedForFundsFilter(
+        Builder|Relation|FundProvider $builder,
+        array|int $fund_id,
+    ): Builder|Relation|FundProvider {
         $providersApproved = FundProviderQuery::whereApprovedForFundsFilter(FundProvider::query(), $fund_id);
 
         return $builder
@@ -141,11 +148,12 @@ class FundProviderQuery extends BaseQuery
     }
 
     /**
-     * @param Builder|FundProvider $builder
-     * @return Builder|FundProvider
+     * @param Builder|Relation|FundProvider $builder
+     * @return Builder|Relation|FundProvider
      */
-    public static function whereApproved(Builder|FundProvider $builder): Builder|FundProvider
-    {
+    public static function whereApproved(
+        Builder|Relation|FundProvider $builder
+    ): Builder|Relation|FundProvider {
         $builder->where('state', FundProvider::STATE_ACCEPTED);
         $builder->where('excluded', false);
 

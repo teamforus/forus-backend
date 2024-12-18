@@ -8,50 +8,52 @@ use App\Media\ImplementationBannerMediaConfig;
 use App\Media\ImplementationBlockMediaConfig;
 use App\Media\ImplementationMailLogoMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
+use App\Media\OrganizationLogoMediaConfig;
 use App\Media\PreCheckBannerMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ReimbursementFilePreviewMediaConfig;
 use App\Models\BankConnection;
+use App\Models\Employee;
 use App\Models\Faq;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
+use App\Models\Identity;
 use App\Models\IdentityEmail;
 use App\Models\Implementation;
 use App\Models\ImplementationBlock;
 use App\Models\ImplementationPage;
 use App\Models\NotificationTemplate;
+use App\Models\Office;
+use App\Models\Organization;
 use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
+use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
 use App\Models\ReservationExtraPayment;
+use App\Models\Voucher;
 use App\Models\VoucherRecord;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use App\Notifications\DatabaseChannel;
 use App\Observers\FundProviderObserver;
-use App\Models\Identity;
 use App\Services\BIConnectionService\Models\BIConnection;
-use Carbon\Carbon;
-use App\Media\OrganizationLogoMediaConfig;
-use App\Models\Employee;
-use App\Models\Office;
-use App\Models\Organization;
-use App\Models\Product;
-use App\Models\ProductCategory;
-use App\Models\Voucher;
 use App\Services\MediaService\MediaService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Notifications\Channels\DatabaseChannel as IlluminateDatabaseChannel;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
-use Illuminate\Notifications\Channels\DatabaseChannel as IlluminateDatabaseChannel;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -107,6 +109,11 @@ class AppServiceProvider extends ServiceProvider
         StringHelper::setThousandsSeparator(',');
 
         FundProvider::observe(FundProviderObserver::class);
+
+        ParallelTesting::setUpTestDatabase(function () {
+            Artisan::call('db:seed');
+            Artisan::call('test-data:seed');
+        });
 
         if (Config::get('app.memory_limit')) {
             ini_set('memory_limit', Config::get('app.memory_limit'));

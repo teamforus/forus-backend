@@ -6,10 +6,6 @@ use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
 use League\CommonMark\Exception\CommonMarkException;
 
-/**
- * Class FundStatisticsMail
- * @package App\Mail\Vouchers
- */
 class FundStatisticsMail extends ImplementationMail
 {
     protected string $subjectKey = 'mails/system_mails.fund_statistics.title';

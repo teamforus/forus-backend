@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Media\CloneMediaRequest;
 use App\Http\Requests\Api\Media\StoreMediaRequest;
 use App\Http\Requests\BaseFormRequest;
@@ -10,7 +11,6 @@ use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class MediaController extends Controller
@@ -76,7 +76,11 @@ class MediaController extends Controller
                 ]);
             }
         } catch (\Throwable $e) {
-            logger()->error(sprintf("Media uploading failed: %s", $e->getMessage()));
+            logger()->error(sprintf(
+                "Media uploading failed: %s\n%s",
+                $e->getMessage(),
+                $e->getTraceAsString(),
+            ));
         }
 
         return new MediaResource($media ?? null);
@@ -114,7 +118,11 @@ class MediaController extends Controller
                 'identity_address' => $request->auth_address(),
             ]);
         } catch (\Throwable $e) {
-            logger()->error(sprintf("Media uploading failed: %s", $e->getMessage()));
+            logger()->error(sprintf(
+                "Media uploading failed: %s\n%s",
+                $e->getMessage(),
+                $e->getTraceAsString(),
+            ));
         }
 
         return new MediaResource($media ?? null);
@@ -133,6 +141,6 @@ class MediaController extends Controller
 
         $this->mediaService->unlink($media);
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 }

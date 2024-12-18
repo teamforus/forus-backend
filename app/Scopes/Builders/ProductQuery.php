@@ -21,12 +21,14 @@ use Illuminate\Support\Facades\Lang;
 class ProductQuery
 {
     /**
-     * @param Builder|Product $query
+     * @param Builder|Relation|Product $query
      * @param array|int $fund_id
-     * @return Builder|Product
+     * @return Builder|Relation|Product
      */
-    public static function approvedForFundsFilter(Builder|Product $query, array|int $fund_id): Builder|Product
-    {
+    public static function approvedForFundsFilter(
+        Builder|Relation|Product $query, 
+        array|int $fund_id,
+    ): Builder|Relation|Product {
         return $query->where(static function(Builder $builder) use ($fund_id) {
             self::whereFundNotExcluded($builder, $fund_id);
 
@@ -52,14 +54,14 @@ class ProductQuery
     }
 
     /**
-     * @param Builder|Product $query
+     * @param Builder|Relation|Product $query
      * @param Builder|array|int $fund_id
-     * @return Builder|Product
+     * @return Builder|Relation|Product
      */
     public static function hasPendingOrAcceptedProviderForFund(
-        Builder|Product $query,
-        Builder|array|int $fund_id
-    ): Builder|Product {
+        Builder|Relation|Product $query,
+        Builder|array|int $fund_id,
+    ): Builder|Relation|Product {
         return $query->whereHas('organization.fund_providers', static function(Builder $builder) use ($fund_id) {
             $builder->whereIn('fund_id', is_numeric($fund_id) ? [$fund_id] : $fund_id);
             $builder->whereIn('state', [
@@ -83,11 +85,12 @@ class ProductQuery
 
     /**
      * @param Builder|Relation|Product $builder
-     * @param $fund_id
+     * @param int|array $fund_id
      * @return Builder|Relation|Product
      */
     public static function whereFundNotExcluded(
-        Builder|Relation|Product $builder, $fund_id
+        Builder|Relation|Product $builder,
+        int|array $fund_id,
     ): Builder|Relation|Product {
         $relevantFundsQuery = Fund::query()->whereHas('fund_providers', function(Builder $builder) use ($fund_id) {
             $builder->whereColumn('fund_providers.organization_id', 'products.organization_id');
@@ -114,12 +117,14 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $query
-     * @param $fund_id
-     * @return Builder
+     * @param Builder|Relation|Product $query
+     * @param int|array $fund_id
+     * @return Builder|Relation|Product
      */
-    public static function whereHasFundApprovalHistory(Builder $query, $fund_id): Builder
-    {
+    public static function whereHasFundApprovalHistory(
+        Builder|Relation|Product $query,
+        int|array $fund_id,
+    ): Builder|Relation|Product {
         return $query->whereHas('fund_provider_products', function(Builder $builder) use ($fund_id) {
             TrashedQuery::withTrashed($builder);
 
@@ -130,12 +135,14 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $query
-     * @param $fund_id
-     * @return Builder
+     * @param Builder|Relation|Product $query
+     * @param int|array $fund_id
+     * @return Builder|Relation|Product
      */
-    public static function whereFundNotExcludedOrHasHistory(Builder $query, $fund_id): Builder
-    {
+    public static function whereFundNotExcludedOrHasHistory(
+        Builder|Relation|Product $query,
+        int|array $fund_id,
+    ): Builder|Relation|Product {
         return $query->where(static function(Builder $builder) use ($fund_id) {
             $builder->where(static function(Builder $builder) use ($fund_id) {
                 self::whereFundNotExcluded($builder, $fund_id);
@@ -148,16 +155,16 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $query
-     * @param $productCategoryId
+     * @param Builder|Relation|Product $query
+     * @param int|array $productCategoryId
      * @param bool $withChildes
-     * @return Builder
+     * @return Builder|Relation|Product
      */
     public static function productCategoriesFilter(
-        Builder $query,
-        $productCategoryId,
-        bool $withChildes = true
-    ): Builder {
+        Builder|Relation|Product $query,
+        int|array $productCategoryId,
+        bool $withChildes = true,
+    ): Builder|Relation|Product {
         $query->whereHas('product_category', function(Builder $builder) use ($productCategoryId, $withChildes) {
             $categoriesQuery = $builder->whereIn('id', (array) $productCategoryId);
 
@@ -172,12 +179,14 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|Relation|Product $query
      * @param string $q
-     * @return Builder
+     * @return Builder|Relation|Product
      */
-    public static function queryFilter(Builder $query, string $q = ''): Builder
-    {
+    public static function queryFilter(
+        Builder|Relation|Product $query,
+        string $q = '',
+    ): Builder|Relation|Product {
         return $query->where(static function (Builder $query) use ($q) {
             $query->where('products.name', 'LIKE', "%$q%");
             $query->orWhere('products.description', 'LIKE', "%$q%");
@@ -185,12 +194,14 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|Relation|Product $query
      * @param string $q
-     * @return Builder
+     * @return Builder|Relation|Product
      */
-    public static function queryDeepFilter(Builder $query, string $q = ''): Builder
-    {
+    public static function queryDeepFilter(
+        Builder|Relation|Product $query,
+        string $q = '',
+    ): Builder|Relation|Product {
         return $query->where(static function (Builder $query) use ($q) {
             $query->where('products.name', 'LIKE', "%$q%");
             $query->orWhere('products.description_text', 'LIKE', "%$q%");
@@ -210,32 +221,36 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|Relation|Product $query
      * @param bool $unlimited_stock
-     * @return Builder
+     * @return Builder|Relation|Product
      */
-    public static function unlimitedStockFilter(Builder $query, bool $unlimited_stock): Builder
-    {
+    public static function unlimitedStockFilter(
+        Builder|Relation|Product $query,
+        bool $unlimited_stock,
+    ): Builder|Relation|Product {
         return $query->where('unlimited_stock', $unlimited_stock);
     }
 
     /**
-     * @param Builder $query
-     * @return Builder
+     * @param Builder|Relation|Product $query
+     * @return Builder|Relation|Product
      */
-    public static function inStockAndActiveFilter(Builder $query): Builder
-    {
+    public static function inStockAndActiveFilter(
+        Builder|Relation|Product $query
+    ): Builder|Relation|Product {
         return $query->where(static function(Builder $builder) {
             self::whereNotExpired($builder->where('sold_out', false));
         });
     }
 
     /**
-     * @param Builder|Relation $query
-     * @return Builder|Relation
+     * @param Builder|Relation|Product $query
+     * @return Builder|Relation|Product
      */
-    public static function whereNotExpired(Builder|Relation $query): Builder|Relation
-    {
+    public static function whereNotExpired(
+        Builder|Relation|Product $query,
+    ): Builder|Relation|Product {
         return $query->where(static function(Builder $builder) {
             $builder->whereNull('products.expire_at');
             $builder->orWhere('products.expire_at', '>=', today());
@@ -243,12 +258,14 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $query
-     * @param $fund_id
-     * @return Builder
+     * @param Builder|Relation|Product $query
+     * @param int|array $fund_id
+     * @return Builder|Relation|Product
      */
-    public static function approvedForFundsAndActiveFilter(Builder $query, $fund_id): Builder
-    {
+    public static function approvedForFundsAndActiveFilter(
+        Builder|Relation|Product $query,
+        int|array $fund_id,
+    ): Builder|Relation|Product {
         return self::approvedForFundsFilter(self::inStockAndActiveFilter($query), $fund_id);
     }
 
@@ -256,11 +273,12 @@ class ProductQuery
      * Add min_price column form the action funds
      * Has to be used as the last query builder operation (unless you have reasons not to)
      *
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|Product $builder
+     * @return Builder|Relation|Product
      */
-    public static function addPriceMinAndMaxColumn(Builder $builder): Builder
-    {
+    public static function addPriceMinAndMaxColumn(
+        Builder|Relation|Product $builder,
+    ): Builder|Relation|Product {
         $fundProviderProductQuery = function(string $type) {
             return FundProviderProduct::whereHas('fund_provider.fund', function(Builder $builder) {
                 $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
@@ -294,17 +312,17 @@ class ProductQuery
     }
 
     /**
-     * @param Builder|Product $builder
+     * @param Builder|Relation|Product $builder
      * @param Voucher $voucher
      * @param Builder|null $providerOrganization
      * @param bool $checkReservationFlags
      * @return Builder
      */
     public static function whereAvailableForVoucher(
-        Builder|Product $builder,
+        Builder|Relation|Product $builder,
         Voucher $voucher,
         Builder $providerOrganization = null,
-        bool $checkReservationFlags = true
+        bool $checkReservationFlags = true,
     ): Builder {
         $builder->where(function(Builder $builder) use ($voucher) {
             $builder->whereHas('fund_provider_products', function (Builder $builder) use ($voucher) {
@@ -341,12 +359,14 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $builder
+     * @param Builder|Relation|Product $builder
      * @param string $type
-     * @return Builder
+     * @return Builder|Relation|Product
      */
-    public static function whereReservationEnabled(Builder $builder, string $type = 'subsidy'): Builder
-    {
+    public static function whereReservationEnabled(
+        Builder|Relation|Product $builder,
+        string $type = 'subsidy',
+    ): Builder|Relation|Product {
         return $builder->whereHas('organization', function(Builder $builder) use ($type) {
             if ($type === 'subsidy') {
                 $builder->where('reservations_subsidy_enabled', true);
@@ -359,11 +379,12 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $query
-     * @return Builder
+     * @param Builder|Relation|Product $query
+     * @return Builder|Relation|Product
      */
-    public static function stockAmountSubQuery(Builder $query): Builder
-    {
+    public static function stockAmountSubQuery(
+        Builder|Relation|Product $query,
+    ): Builder|Relation|Product {
         $query->addSelect([
             'reservations_count' => ProductReservation::whereIn('state', [
                 ProductReservation::STATE_WAITING,
@@ -380,11 +401,12 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $query
-     * @return Builder
+     * @param Builder|Relation|Product $query
+     * @return Builder|Relation|Product
      */
-    public static function addSelectLastMonitoredChangedDate(Builder $query): Builder
-    {
+    public static function addSelectLastMonitoredChangedDate(
+        Builder|Relation|Product $query
+    ): Builder|Relation|Product {
         $subQuery = EventLog::where([
             'loggable_type' => 'product',
             'event' => Product::EVENT_MONITORED_FIELDS_UPDATED,

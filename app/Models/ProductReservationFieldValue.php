@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Models\ProductReservationFieldValue
@@ -16,15 +15,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\OrganizationReservationField $organization_reservation_field
  * @property-read \App\Models\ProductReservation $product_reservation
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservationFieldValue newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservationFieldValue newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservationFieldValue query()
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservationFieldValue whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservationFieldValue whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservationFieldValue whereOrganizationReservationFieldId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservationFieldValue whereProductReservationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservationFieldValue whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservationFieldValue whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservationFieldValue newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservationFieldValue newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservationFieldValue query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservationFieldValue whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservationFieldValue whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservationFieldValue whereOrganizationReservationFieldId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservationFieldValue whereProductReservationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservationFieldValue whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservationFieldValue whereValue($value)
  * @mixin \Eloquent
  */
 class ProductReservationFieldValue extends BaseModel

@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\FundRequests;
 
 use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Funds\Requests\Clarifications\IndexFundRequestClarificationsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Clarifications\StoreFundRequestClarificationsRequest;
 use App\Http\Resources\FundRequestClarificationResource;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
-use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 

@@ -121,7 +121,7 @@ class FundRequestSubscriber
                         );
                     } else {
                         $fund->makeVoucher(
-                            $fundRequest->identity_address,
+                            $fundRequest->identity,
                             voucherFields: [
                                 'fund_request_id' => $fundRequest->id,
                             ],
@@ -130,7 +130,7 @@ class FundRequestSubscriber
                     }
 
                     $fund->makeFundFormulaProductVouchers(
-                        $fundRequest->identity_address,
+                        $fundRequest->identity,
                         voucherFields: [
                             'fund_request_id' => $fundRequest->id,
                         ]

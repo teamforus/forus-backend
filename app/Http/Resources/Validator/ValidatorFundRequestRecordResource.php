@@ -6,7 +6,6 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\BaseJsonResource;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
-use App\Scopes\Builders\EmployeeQuery;
 use Illuminate\Http\Request;
 
 /**
@@ -14,7 +13,7 @@ use Illuminate\Http\Request;
  */
 class ValidatorFundRequestRecordResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'files', 'fund_request_clarifications',
     ];
 

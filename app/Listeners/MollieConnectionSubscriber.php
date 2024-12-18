@@ -2,12 +2,12 @@
 
 namespace App\Listeners;
 
+use App\Events\MollieConnections\BaseMollieConnectionEvent;
 use App\Events\MollieConnections\MollieConnectionCompleted;
 use App\Events\MollieConnections\MollieConnectionCreated;
 use App\Events\MollieConnections\MollieConnectionCurrentProfileChanged;
 use App\Events\MollieConnections\MollieConnectionDeleted;
 use App\Events\MollieConnections\MollieConnectionUpdated;
-use App\Events\MollieConnections\BaseMollieConnectionEvent;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Events\Dispatcher;
 

@@ -3,31 +3,30 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\FundProviderProduct;
 use App\Models\BaseModel;
+use App\Models\FundProviderProduct;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QBuilder;
 
-/**
- * Class ProductQuery
- * @package App\Scopes\Builders
- */
 class ProductSubQuery
 {
     /**
      * @param array $options
-     * @param Builder|null $builder
+     * @param Builder|Relation|Product|null $builder
      * @return Builder
      * @throws \Exception
      */
-    public static function appendReservationStats(array $options, Builder $builder = null): Builder
-    {
-        if (count(array_filter(array_only($options, ['identity_address', 'voucher_id', 'fund_id']))) == 0) {
+    public static function appendReservationStats(
+        array $options,
+        Builder|Relation|Product $builder = null,
+    ): Builder {
+        if (count(array_filter(array_only($options, ['identity_id', 'voucher_id', 'fund_id']))) == 0) {
             throw new \Exception("At least one filter is required.");
         }
 
@@ -74,9 +73,9 @@ class ProductSubQuery
 
     /**
      * @param array $options
-     * @return Builder
+     * @return Builder|Relation|Voucher
      */
-    public static function limitMultiplierQuery(array $options = []): Builder
+    protected static function limitMultiplierQuery(array $options = []): Builder|Relation|Voucher
     {
         /** @var int|null $fund_id */
         $fund_id = array_get($options, 'fund_id');
@@ -84,13 +83,13 @@ class ProductSubQuery
         /** @var int|null $voucher_id */
         $voucher_id = array_get($options, 'voucher_id');
 
-        /** @var string|null $identity_address */
-        $identity_address = array_get($options, 'identity_address');
+        /** @var string|null $identity_id */
+        $identity_id = array_get($options, 'identity_id');
 
         return VoucherQuery::whereNotExpired(
-            Voucher::query()->where(function(Builder $builder) use ($identity_address, $voucher_id) {
+            Voucher::query()->where(function(Builder $builder) use ($identity_id, $voucher_id) {
                 $voucher_id && $builder->whereIn('vouchers.id', (array) $voucher_id);
-                $identity_address && $builder->whereIn('vouchers.identity_address', (array) $identity_address);
+                $identity_id && $builder->whereIn('vouchers.identity_id', (array) $identity_id);
             })->whereHas('fund', function(Builder $builder) use ($fund_id) {
                 $fund_id && $builder->whereIn('funds.id', (array) $fund_id);
             })->whereNull('product_id')
@@ -104,14 +103,15 @@ class ProductSubQuery
      */
     protected static function limitTotalSubQuery(array $options = []): Builder
     {
-        $builder= self::queryFundProviderProduct($options)
+        $builder = self::queryFundProviderProduct($options)
             ->whereColumn('fund_provider_products.product_id', '=', 'products.id')
             ->select([])
             ->selectRaw('CAST(if(`limit_total_unlimited`, null, `limit_total`) as SIGNED) as `limit_total`')
             ->getQuery()
             ->whereNull('deleted_at');
 
-        return BaseModel::query()->fromSub($builder, 'reservations')
+        return BaseModel::query()
+            ->fromSub($builder, 'reservations')
             ->selectRaw('cast(sum(`limit_total`) as signed) as `limit_total`');
     }
 
@@ -119,7 +119,7 @@ class ProductSubQuery
      * @param array $options
      * @return Builder
      */
-    public static function limitPerIdentitySubQuery(array $options = []): Builder
+    protected static function limitPerIdentitySubQuery(array $options = []): Builder
     {
         $builder = self::queryFundProviderProduct($options)
             ->whereColumn('fund_provider_products.product_id', '=', 'products.id')
@@ -135,29 +135,30 @@ class ProductSubQuery
 
     /**
      * @param array $options
-     * @return Builder
+     * @return Builder|Relation|FundProviderProduct
      */
-    public static function queryFundProviderProduct(array $options = []): Builder
-    {
+    protected static function queryFundProviderProduct(
+        array $options = [],
+    ): Builder|Relation|FundProviderProduct {
         /** @var int|null $fund_id */
         $fund_id = array_get($options, 'fund_id');
 
         /** @var int|null $voucher_id */
         $voucher_id = array_get($options, 'voucher_id');
 
-        /** @var string|null $identity_address */
-        $identity_address = array_get($options, 'identity_address');
+        /** @var string|null $identity_id */
+        $identity_id = array_get($options, 'identity_id');
 
-        return FundProviderProduct::query()->where(function(Builder $builder) use ($fund_id, $voucher_id, $identity_address) {
-            if ($fund_id || $voucher_id || $identity_address) {
-                $builder->whereHas('fund_provider', function(Builder $builder) use ($fund_id, $voucher_id, $identity_address) {
-                    $builder->whereHas('fund', function(Builder $builder) use ($fund_id, $voucher_id, $identity_address) {
+        return FundProviderProduct::query()->where(function(Builder $builder) use ($fund_id, $voucher_id, $identity_id) {
+            if ($fund_id || $voucher_id || $identity_id) {
+                $builder->whereHas('fund_provider', function(Builder $builder) use ($fund_id, $voucher_id, $identity_id) {
+                    $builder->whereHas('fund', function(Builder $builder) use ($fund_id, $voucher_id, $identity_id) {
                         $fund_id && $builder->whereIn('funds.id', (array) $fund_id);
 
-                        if ($voucher_id || $identity_address) {
-                            $builder->whereHas('vouchers', function(Builder $builder) use ($voucher_id, $identity_address) {
+                        if ($voucher_id || $identity_id) {
+                            $builder->whereHas('vouchers', function(Builder $builder) use ($voucher_id, $identity_id) {
                                 $voucher_id && $builder->whereIn('vouchers.id', (array) $voucher_id);
-                                $identity_address && $builder->whereIn('vouchers.identity_address', (array) $identity_address);
+                                $identity_id && $builder->whereIn('vouchers.identity_id', (array) $identity_id);
                             });
                         }
                     });
@@ -171,12 +172,12 @@ class ProductSubQuery
      * @param bool $total
      * @return Builder
      */
-    public static function limitTotalUsedSubQuery(array $options = [], $total = false): Builder
+    protected static function limitTotalUsedSubQuery(array $options = [], bool $total = false): Builder
     {
         if ($total) {
             $options['fund_voucher_id'] = $options['voucher_id'] ?? null;
 
-            unset($options['identity_address']);
+            unset($options['identity_id']);
             unset($options['voucher_id']);
         }
 
@@ -247,27 +248,30 @@ class ProductSubQuery
             $builder->selectRaw("CAST((`count_transactions` + `count_vouchers` + `count_reservations`) as SIGNED) as `used_total`");
         }, 'count_reservations');
 
-        return BaseModel::query()->fromSub($builder, 'reservations')
+        return BaseModel::query()
+            ->fromSub($builder, 'reservations')
             ->selectRaw('cast(sum(count_reservations) as signed) as count_reservations');
     }
 
     /**
-     * @param Builder $builder
-     * @param array[int|null] $options
-     * @return Builder
+     * @param Builder|Relation|Voucher $builder
+     * @param array $options
+     * @return Builder|Relation|FundProviderProduct
      */
-    protected static function voucherQuery(Builder $builder, array $options): Builder
-    {
+    protected static function voucherQuery(
+        Builder|Relation|Voucher $builder,
+        array $options,
+    ): Builder|Relation|FundProviderProduct {
         VoucherQuery::whereNotExpired($builder);
 
-        /** @var string|null $identity_address */
-        if ($identity_address = array_get($options, 'identity_address')) {
-            $builder->where(compact('identity_address'));
+        /** @var string|null $identity_id */
+        if ($identity_id = array_get($options, 'identity_id')) {
+            $builder->whereRelation('identity', 'id', $identity_id);
         }
 
         /** @var string|null $fund_id */
         if ($fund_id = array_get($options, 'fund_id')) {
-            $builder->where(compact('fund_id'));
+            $builder->where('fund_id', $fund_id);
         }
 
         return $builder->whereHas('fund', function(Builder $builder) use ($options) {

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Records;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Rules\RecordCategoryIdRule;
 use Illuminate\Validation\Rule;
 
 class SortRecordsRequest extends BaseFormRequest

@@ -53,7 +53,7 @@ class VoucherTransactionPolicy
      */
     public function show(Identity $identity, VoucherTransaction $transaction): bool
     {
-        $isOwner = $transaction->voucher->identity_address === $identity->address;
+        $isOwner = $transaction->voucher->identity_id === $identity->id;
         $isPublic = $transaction->voucher->fund->public;
 
         return $identity->exists && ($isOwner || $isPublic);

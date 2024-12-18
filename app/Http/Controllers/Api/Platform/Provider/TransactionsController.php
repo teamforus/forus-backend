@@ -11,10 +11,6 @@ use App\Searches\VoucherTransactionsSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class TransactionsController
- * @package App\Http\Controllers\Api\Platform\Provider
- */
 class TransactionsController extends Controller
 {
     /**

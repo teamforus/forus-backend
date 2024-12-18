@@ -7,8 +7,8 @@ use App\Scopes\Builders\IdentityQuery;
 use App\Services\Forus\Auth2FAService\Auth2FAService;
 use App\Services\Forus\Auth2FAService\Data\Auth2FASecret;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
-use App\Services\Forus\Session\Models\Session;
 use App\Services\Forus\Notification\Models\NotificationToken;
+use App\Services\Forus\Session\Models\Session;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -19,12 +19,12 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
 use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;
 use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
-use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * App\Models\Identity
@@ -227,9 +227,9 @@ class Identity extends Model implements Authenticatable
         return $this->belongsToMany(
             Fund::class,
             'vouchers',
-            'identity_address',
+            'identity_id',
             'fund_id',
-            'address',
+            'id',
         )->groupBy('funds.id');
     }
 
@@ -310,7 +310,7 @@ class Identity extends Model implements Authenticatable
      */
     public function vouchers(): HasMany
     {
-        return $this->hasMany(Voucher::class, 'identity_address', 'address');
+        return $this->hasMany(Voucher::class);
     }
 
     /**
@@ -345,9 +345,9 @@ class Identity extends Model implements Authenticatable
         return $this->hasManyThrough(
             Reimbursement::class,
             Voucher::class,
-            'identity_address',
+            'identity_id',
             'voucher_id',
-            'address',
+            'id',
             'id',
         );
     }

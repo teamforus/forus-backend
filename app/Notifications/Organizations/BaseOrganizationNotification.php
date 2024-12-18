@@ -2,9 +2,9 @@
 
 namespace App\Notifications\Organizations;
 
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Notifications\BaseNotification;
-use App\Models\Identity;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;

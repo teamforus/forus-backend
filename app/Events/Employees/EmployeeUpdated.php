@@ -6,7 +6,7 @@ use App\Models\Employee;
 
 class EmployeeUpdated extends BaseEmployeeEvent
 {
-    protected $previous_roles;
+    protected array $previous_roles;
 
     /**
      * Create a new event instance.

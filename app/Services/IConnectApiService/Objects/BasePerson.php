@@ -5,10 +5,6 @@ namespace App\Services\IConnectApiService\Objects;
 use App\Services\IConnectApiService\Responses\ResponseData;
 use Illuminate\Support\Arr;
 
-/**
- * Class BasePerson
- * @package App\Services\IConnectApiService\Responses
- */
 abstract class BasePerson
 {
     /** @var array|null  */
@@ -18,7 +14,7 @@ abstract class BasePerson
     /**
      * @param ResponseData|array $response
      */
-    public function __construct($response)
+    public function __construct(mixed $response)
     {
         if (is_array($response)) {
             $this->data = $response;
@@ -29,7 +25,7 @@ abstract class BasePerson
     }
 
     /**
-     * @return ResponseData
+     * @return ResponseData|null
      */
     public function response(): ?ResponseData
     {

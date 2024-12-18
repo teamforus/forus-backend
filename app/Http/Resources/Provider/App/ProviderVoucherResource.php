@@ -15,8 +15,8 @@ use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -79,7 +79,7 @@ class ProviderVoucherResource extends BaseJsonResource
         $voucher = $voucherToken->voucher;
         $fund = $voucher->fund;
 
-        return array_merge($voucher->only('identity_address', 'fund_id'), [
+        return array_merge($voucher->only('identity_id', 'fund_id'), [
             'type' => 'regular',
             'fund' => $this->fundDetails($fund),
             'address' => $voucherToken->address,
@@ -110,7 +110,7 @@ class ProviderVoucherResource extends BaseJsonResource
             $productData = ProviderProductAppResource::create($voucher->product);
         }
 
-        return array_merge($voucher->only('identity_address', 'fund_id'), [
+        return array_merge($voucher->only('identity_id', 'fund_id'), [
             'type' => 'product',
             'address' => $voucherToken->address,
             'fund' => $this->fundDetails($voucher->fund),

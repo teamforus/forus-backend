@@ -18,17 +18,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
  * @property-read \App\Models\PreCheckRecord $pre_check_record
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecordSetting newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecordSetting newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecordSetting query()
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecordSetting whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecordSetting whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecordSetting whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecordSetting whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecordSetting whereImpactLevel($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecordSetting whereIsKnockOut($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecordSetting wherePreCheckRecordId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecordSetting whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecordSetting newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecordSetting newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecordSetting query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecordSetting whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecordSetting whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecordSetting whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecordSetting whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecordSetting whereImpactLevel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecordSetting whereIsKnockOut($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecordSetting wherePreCheckRecordId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecordSetting whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class PreCheckRecordSetting extends Model

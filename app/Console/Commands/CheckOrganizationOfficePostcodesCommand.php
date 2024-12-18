@@ -7,8 +7,6 @@ use App\Models\Organization;
 use Illuminate\Console\Command;
 
 /**
- * Class CheckOrganizationOfficePostcodesCommand
- * @package App\Console\Commands
  * @noinspection PhpUnused
  */
 class CheckOrganizationOfficePostcodesCommand extends Command

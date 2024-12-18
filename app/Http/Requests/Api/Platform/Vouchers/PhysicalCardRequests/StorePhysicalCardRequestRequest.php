@@ -4,10 +4,6 @@ namespace App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests;
 
 use App\Http\Requests\BaseFormRequest;
 
-/**
- * Class StorePhysicalCardRequestRequest
- * @package App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests
- */
 class StorePhysicalCardRequestRequest extends BaseFormRequest
 {
     /**

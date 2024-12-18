@@ -9,7 +9,7 @@ use App\Models\FundProviderChatMessage;
 
 class FundProviderSponsorChatMessage extends BaseFundProviderEvent
 {
-    protected $message;
+    protected FundProviderChatMessage $message;
 
     /**
      * Create a new event instance.

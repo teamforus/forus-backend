@@ -3,8 +3,8 @@
 namespace App\Notifications\Organizations\Products;
 
 use App\Mail\Vouchers\ProductSoldOutMail;
-use App\Models\Implementation;
 use App\Models\Identity;
+use App\Models\Implementation;
 
 /**
  * The product was sold out

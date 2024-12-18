@@ -39,7 +39,7 @@ class FundCheckRelationBsnTest extends TestCase
         $response->assertSuccessful();
 
         $this->assertEquals(1, $response->json('vouchers'));
-        $this->assertEquals($voucher->fresh()->identity_address, $requester->address);
+        $this->assertEquals($voucher->fresh()->identity_id, $requester->id);
     }
 
     /**
@@ -68,7 +68,7 @@ class FundCheckRelationBsnTest extends TestCase
         $response->assertSuccessful();
 
         $this->assertEquals(0, $response->json('vouchers'));
-        $this->assertNull($voucher->fresh()->identity_address);
+        $this->assertNull($voucher->fresh()->identity_id);
     }
 
     /**
@@ -94,7 +94,7 @@ class FundCheckRelationBsnTest extends TestCase
         $response->assertSuccessful();
 
         $this->assertEquals(0, $response->json('vouchers'));
-        $this->assertNull($voucher->fresh()->identity_address);
+        $this->assertNull($voucher->fresh()->identity_id);
     }
 
     /**

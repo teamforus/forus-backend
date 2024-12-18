@@ -21,16 +21,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterion[] $fund_criteria
  * @property-read int|null $fund_criteria_count
  * @property-read string $description_html
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundCriteriaStep whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundCriteriaStep extends Model

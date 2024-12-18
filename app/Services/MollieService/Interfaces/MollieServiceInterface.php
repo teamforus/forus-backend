@@ -3,15 +3,15 @@
 namespace App\Services\MollieService\Interfaces;
 
 use App\Services\MollieService\Models\MollieConnection;
-use App\Services\MollieService\Objects\Profile;
-use App\Services\MollieService\Objects\Payment;
-use App\Services\MollieService\Objects\Refund;
 use App\Services\MollieService\Objects\Organization;
+use App\Services\MollieService\Objects\Payment;
+use App\Services\MollieService\Objects\Profile;
+use App\Services\MollieService\Objects\Refund;
 use Illuminate\Support\Collection;
 
 interface MollieServiceInterface
 {
-    public const PAYMENT_METHOD_IDEAL = 'ideal';
+    public const string PAYMENT_METHOD_IDEAL = 'ideal';
 
     /**
      * @param MollieToken $mollieToken

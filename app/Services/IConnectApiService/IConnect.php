@@ -16,17 +16,17 @@ class IConnect
 {
     protected Fund $fund;
 
-    private const METHOD_GET = 'GET';
+    private const string METHOD_GET = 'GET';
 
-    private const ENV_PRODUCTION = 'production';
-    private const ENV_SANDBOX = 'sandbox';
+    private const string ENV_PRODUCTION = 'production';
+    private const string ENV_SANDBOX = 'sandbox';
 
-    private const ENVIRONMENTS = [
+    private const array ENVIRONMENTS = [
         self::ENV_SANDBOX,
         self::ENV_PRODUCTION,
     ];
 
-    private const URL_SANDBOX = 'https://lab.api.mijniconnect.nl/iconnect/apihcbrp/mks/v1/';
+    private const string URL_SANDBOX = 'https://lab.api.mijniconnect.nl/iconnect/apihcbrp/mks/v1/';
 
     private array $with = [
         'parents' => 'ouders',

@@ -8,8 +8,8 @@ use Illuminate\Contracts\Validation\Rule;
 class FundApplicableRule implements Rule
 {
 
-    private $organization;
-    private $message = "The validation error message.";
+    private Organization $organization;
+    private string $message = "The validation error message.";
 
     /**
      * Create a new rule instance.

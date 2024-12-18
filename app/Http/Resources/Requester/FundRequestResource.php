@@ -22,7 +22,7 @@ class FundRequestResource extends BaseJsonResource
     /**
      * @var string[]
      */
-    public const LOAD = [
+    public const array LOAD = [
         'fund.logo.presets',
         'records.record_type.translations',
         'records.fund_request_clarifications.files.preview.presets',

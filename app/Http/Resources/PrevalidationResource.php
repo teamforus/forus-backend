@@ -9,7 +9,7 @@ use App\Models\Prevalidation;
  */
 class PrevalidationResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'prevalidation_records.record_type.translations'
     ];
 

@@ -39,7 +39,7 @@ class RegenerateMediaJob implements ShouldQueue
     public function __construct(
         MediaConfig $mediaConfig,
         Media $media = null,
-        ?array $keepPresets = []
+        ?array $keepPresets = [],
     ) {
         $this->mediaConfig = $mediaConfig;
         $this->media = $media;
@@ -49,7 +49,7 @@ class RegenerateMediaJob implements ShouldQueue
     /**
      * Execute the job.
      *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @return void
      */
     public function handle(): void
     {

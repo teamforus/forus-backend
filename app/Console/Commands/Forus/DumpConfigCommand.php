@@ -36,9 +36,9 @@ class DumpConfigCommand extends BaseCommand
 
     protected string $action;
 
-    public const ACTION_ADD_OWNER = 'action_add_owner';
-    public const ACTION_GENERATE_MEDIA = 'action_generate_media';
-    public const ACTION_UPDATE_FRONTENDS = 'action_add_employee';
+    public const string ACTION_ADD_OWNER = 'action_add_owner';
+    public const string ACTION_GENERATE_MEDIA = 'action_generate_media';
+    public const string ACTION_UPDATE_FRONTENDS = 'action_add_employee';
 
     /**
      * Execute the console command.

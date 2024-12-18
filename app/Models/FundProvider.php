@@ -9,6 +9,8 @@ use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Traits\HasLogs;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -16,11 +18,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Carbon\Carbon;
 
 /**
  * App\Models\FundProvider
@@ -56,44 +56,44 @@ use Carbon\Carbon;
  * @property-read int|null $product_exclusions_count
  * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
- * @method static Builder|FundProvider newModelQuery()
- * @method static Builder|FundProvider newQuery()
- * @method static Builder|FundProvider query()
- * @method static Builder|FundProvider whereAllowBudget($value)
- * @method static Builder|FundProvider whereAllowExtraPayments($value)
- * @method static Builder|FundProvider whereAllowExtraPaymentsFull($value)
- * @method static Builder|FundProvider whereAllowProducts($value)
- * @method static Builder|FundProvider whereAllowSomeProducts($value)
- * @method static Builder|FundProvider whereCreatedAt($value)
- * @method static Builder|FundProvider whereExcluded($value)
- * @method static Builder|FundProvider whereFundId($value)
- * @method static Builder|FundProvider whereId($value)
- * @method static Builder|FundProvider whereOrganizationId($value)
- * @method static Builder|FundProvider whereState($value)
- * @method static Builder|FundProvider whereUpdatedAt($value)
+ * @method static Builder<static>|FundProvider newModelQuery()
+ * @method static Builder<static>|FundProvider newQuery()
+ * @method static Builder<static>|FundProvider query()
+ * @method static Builder<static>|FundProvider whereAllowBudget($value)
+ * @method static Builder<static>|FundProvider whereAllowExtraPayments($value)
+ * @method static Builder<static>|FundProvider whereAllowExtraPaymentsFull($value)
+ * @method static Builder<static>|FundProvider whereAllowProducts($value)
+ * @method static Builder<static>|FundProvider whereAllowSomeProducts($value)
+ * @method static Builder<static>|FundProvider whereCreatedAt($value)
+ * @method static Builder<static>|FundProvider whereExcluded($value)
+ * @method static Builder<static>|FundProvider whereFundId($value)
+ * @method static Builder<static>|FundProvider whereId($value)
+ * @method static Builder<static>|FundProvider whereOrganizationId($value)
+ * @method static Builder<static>|FundProvider whereState($value)
+ * @method static Builder<static>|FundProvider whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundProvider extends BaseModel
 {
     use HasLogs;
 
-    public const EVENT_BUNQ_TRANSACTION_SUCCESS = 'bunq_transaction_success';
-    public const EVENT_STATE_ACCEPTED = 'state_accepted';
-    public const EVENT_STATE_REJECTED = 'state_rejected';
-    public const EVENT_APPROVED_BUDGET = 'approved_budget';
-    public const EVENT_REVOKED_BUDGET = 'revoked_budget';
-    public const EVENT_APPROVED_PRODUCTS = 'approved_products';
-    public const EVENT_REVOKED_PRODUCTS = 'revoked_products';
-    public const EVENT_SPONSOR_MESSAGE = 'sponsor_message';
-    public const EVENT_FUND_EXPIRING = 'fund_expiring';
-    public const EVENT_FUND_STARTED = 'fund_started';
-    public const EVENT_FUND_ENDED = 'fund_ended';
+    public const string EVENT_BUNQ_TRANSACTION_SUCCESS = 'bunq_transaction_success';
+    public const string EVENT_STATE_ACCEPTED = 'state_accepted';
+    public const string EVENT_STATE_REJECTED = 'state_rejected';
+    public const string EVENT_APPROVED_BUDGET = 'approved_budget';
+    public const string EVENT_REVOKED_BUDGET = 'revoked_budget';
+    public const string EVENT_APPROVED_PRODUCTS = 'approved_products';
+    public const string EVENT_REVOKED_PRODUCTS = 'revoked_products';
+    public const string EVENT_SPONSOR_MESSAGE = 'sponsor_message';
+    public const string EVENT_FUND_EXPIRING = 'fund_expiring';
+    public const string EVENT_FUND_STARTED = 'fund_started';
+    public const string EVENT_FUND_ENDED = 'fund_ended';
 
-    public const STATE_PENDING = 'pending';
-    public const STATE_ACCEPTED = 'accepted';
-    public const STATE_REJECTED = 'rejected';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_ACCEPTED = 'accepted';
+    public const string STATE_REJECTED = 'rejected';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_PENDING,
         self::STATE_ACCEPTED,
         self::STATE_REJECTED,

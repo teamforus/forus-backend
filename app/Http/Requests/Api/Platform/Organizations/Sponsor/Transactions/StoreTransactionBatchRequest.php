@@ -45,7 +45,7 @@ class StoreTransactionBatchRequest extends BaseFormRequest
             'transactions.*.uid' => 'nullable|string|max:20',
             'transactions.*.note' => 'nullable|string|max:280',
             'transactions.*.amount' => $this->amountRules($transactions),
-            'transactions.*.voucher_id' => $this->voucherIdRules(),
+            'transactions.*.voucher_number' => $this->voucherIdRules(),
             'transactions.*.direct_payment_iban' => ['required', new IbanRule()],
             'transactions.*.direct_payment_name' => 'required|string|min:3|max:200',
             ...$this->uploadedCSVFileRules(),
@@ -82,7 +82,7 @@ class StoreTransactionBatchRequest extends BaseFormRequest
 
         return [
             'required',
-            Rule::exists('vouchers', 'id')
+            Rule::exists('vouchers', 'number')
                 ->where(fn(QBuilder $builder) => $builder->whereIn('id', $query)),
         ];
     }
@@ -124,13 +124,13 @@ class StoreTransactionBatchRequest extends BaseFormRequest
     {
         /** @var Voucher[] $vouchers */
         $vouchers = $this->getVouchersQuery()
-            ->whereIn('id', Arr::pluck($transactions, 'voucher_id'))
+            ->whereIn('number', Arr::pluck($transactions, 'voucher_number'))
             ->with('transactions', 'product_vouchers', 'reimbursements_pending', 'top_up_transactions')
             ->get()
-            ->keyBy('id');
+            ->keyBy('number');
 
         return array_map(function ($transaction) use ($vouchers) {
-            $voucher = $vouchers[$transaction['voucher_id'] ?? null] ?? null;
+            $voucher = $vouchers[$transaction['voucher_number'] ?? null] ?? null;
 
             return array_merge($transaction, [
                 'voucher' => $voucher,
@@ -140,9 +140,9 @@ class StoreTransactionBatchRequest extends BaseFormRequest
     }
 
     /**
-     * @return Builder
+     * @return Builder|Voucher
      */
-    protected function getVouchersQuery(): Builder
+    protected function getVouchersQuery(): Builder|Voucher
     {
         $builder = Voucher::query()
             ->where(fn (Builder $builder) => VoucherQuery::whereNotExpiredAndActive($builder))

@@ -26,7 +26,7 @@ class FinancialOverviewStatistic
     public function getStatistics(Organization $organization, int $year): array
     {
         $from = Carbon::createFromFormat('Y', $year)->startOfYear();
-        $to = $year < now()->year ? Carbon::createFromFormat('Y', $year)->endOfYear() : now();
+        $to = Carbon::createFromFormat('Y', $year)->endOfYear();
 
         return [
             'funds' => $this->getFundTotals($this->getFunds($organization), $from, $to),
@@ -94,11 +94,15 @@ class FinancialOverviewStatistic
         $deactivated_vouchers_count = $deactivatedVouchersQuery->count();
 
         foreach ($funds as $fund) {
-            $budget += FinancialOverviewStatisticQueries::getFundBudgetTotal($fund);
-            $budget_left += FinancialOverviewStatisticQueries::getFundBudgetLeft($fund);
-            $budget_used += FinancialOverviewStatisticQueries::getFundBudgetUsed($fund);
+            $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $from, $to);
+            $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $from, $to);
+            $left = round($total - $used, 2);
+
+            $budget += $total;
+            $budget_left += $left;
+            $budget_used += $used;
             $budget_used_active_vouchers += FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $from, $to);
-            $transaction_costs += FinancialOverviewStatisticQueries::getFundTransactionCosts($fund);
+            $transaction_costs += FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $from, $to);
         }
 
         $budget_locale = currency_format_locale($budget);
@@ -128,18 +132,22 @@ class FinancialOverviewStatistic
      */
     public static function getFinancialData(Fund $fund, ?string $stats = null, ?int $year = null): array
     {
-        $from = Carbon::createFromFormat('Y', $year ?: now()->year)->startOfYear();
-        $to = $year < now()->year ? Carbon::createFromFormat('Y', $year)->endOfYear() : now();
+        $from = $year ? Carbon::createFromFormat('Y', $year)->startOfYear() : null;
+        $to = $year ? Carbon::createFromFormat('Y', $year)->endOfYear() : null;
 
         if ($stats == 'min') {
+            $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $from, $to);
+            $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $from, $to);
+            $left = round($total - $used, 2);
+
             return [
                 'budget' => [
-                    'used' => currency_format(
-                        FinancialOverviewStatisticQueries::getFundBudgetUsed($fund),
-                    ),
-                    'total' => currency_format(
-                        FinancialOverviewStatisticQueries::getFundBudgetTotal($fund),
-                    ),
+                    'left' => currency_format($left),
+                    'left_locale' => currency_format_locale($left),
+                    'used' => currency_format($used),
+                    'used_locale' => currency_format_locale($used),
+                    'total' => currency_format($total),
+                    'total_locale' => currency_format_locale($total),
                 ]
             ];
         }
@@ -173,12 +181,16 @@ class FinancialOverviewStatistic
     /**
      * @param Fund $fund
      * @param string $type
-     * @param Carbon $from
-     * @param Carbon $to
+     * @param Carbon|null $from
+     * @param Carbon|null $to
      * @return array
      */
-    protected static function getVoucherData(Fund $fund, string $type, Carbon $from, Carbon $to): array
-    {
+    protected static function getVoucherData(
+        Fund $fund,
+        string $type,
+        ?Carbon $from,
+        ?Carbon $to,
+    ): array {
         $details = match($type) {
             'budget' => self::getFundDetails($fund->budget_vouchers()->getQuery(), $from, $to),
             'product' => self::getFundDetails($fund->product_vouchers()->getQuery(), $from, $to),
@@ -206,17 +218,17 @@ class FinancialOverviewStatistic
 
     /**
      * @param Fund $fund
-     * @param Carbon $from
-     * @param Carbon $to
+     * @param Carbon|null $from
+     * @param Carbon|null $to
      * @return array
      */
-    protected static function getVoucherDataBudget(Fund $fund, Carbon $from, Carbon $to): array
+    protected static function getVoucherDataBudget(Fund $fund, ?Carbon $from, ?Carbon $to): array
     {
-        $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund);
-        $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund);
-        $left = FinancialOverviewStatisticQueries::getFundBudgetLeft($fund);
-        $transactionCosts = FinancialOverviewStatisticQueries::getFundTransactionCosts($fund);
+        $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $from, $to);
+        $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $from, $to);
+        $left = round($total - $used, 2);
 
+        $transactionCosts = FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $from, $to);
         $usedActiveVouchers = FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $from, $to);
 
         return [
@@ -236,14 +248,14 @@ class FinancialOverviewStatistic
 
     /**
      * @param Builder|Relation $vouchersQuery
-     * @param Carbon $from
-     * @param Carbon $to
+     * @param Carbon|null $from
+     * @param Carbon|null $to
      * @return array
      */
     public static function getFundDetails(
         Builder|Relation $vouchersQuery,
-        Carbon $from,
-        Carbon $to,
+        ?Carbon $from,
+        ?Carbon $to,
     ) : array {
         $vouchersQuery = FinancialOverviewStatisticQueries::whereNotExpired($vouchersQuery, $from, $to);
         $activeVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndActive((clone $vouchersQuery), $from, $to);

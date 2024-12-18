@@ -27,35 +27,35 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read Carbon $expire_at
  * @property-read bool $expired
  * @property-read \App\Models\Organization|null $organization
- * @method static Builder|FundProviderInvitation newModelQuery()
- * @method static Builder|FundProviderInvitation newQuery()
- * @method static Builder|FundProviderInvitation query()
- * @method static Builder|FundProviderInvitation whereAllowBudget($value)
- * @method static Builder|FundProviderInvitation whereAllowProducts($value)
- * @method static Builder|FundProviderInvitation whereCreatedAt($value)
- * @method static Builder|FundProviderInvitation whereFromFundId($value)
- * @method static Builder|FundProviderInvitation whereFundId($value)
- * @method static Builder|FundProviderInvitation whereId($value)
- * @method static Builder|FundProviderInvitation whereOrganizationId($value)
- * @method static Builder|FundProviderInvitation whereState($value)
- * @method static Builder|FundProviderInvitation whereToken($value)
- * @method static Builder|FundProviderInvitation whereUpdatedAt($value)
+ * @method static Builder<static>|FundProviderInvitation newModelQuery()
+ * @method static Builder<static>|FundProviderInvitation newQuery()
+ * @method static Builder<static>|FundProviderInvitation query()
+ * @method static Builder<static>|FundProviderInvitation whereAllowBudget($value)
+ * @method static Builder<static>|FundProviderInvitation whereAllowProducts($value)
+ * @method static Builder<static>|FundProviderInvitation whereCreatedAt($value)
+ * @method static Builder<static>|FundProviderInvitation whereFromFundId($value)
+ * @method static Builder<static>|FundProviderInvitation whereFundId($value)
+ * @method static Builder<static>|FundProviderInvitation whereId($value)
+ * @method static Builder<static>|FundProviderInvitation whereOrganizationId($value)
+ * @method static Builder<static>|FundProviderInvitation whereState($value)
+ * @method static Builder<static>|FundProviderInvitation whereToken($value)
+ * @method static Builder<static>|FundProviderInvitation whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundProviderInvitation extends BaseModel
 {
-    public const STATE_ACCEPTED = 'accepted';
-    public const STATE_EXPIRED = 'expired';
-    public const STATE_PENDING = 'pending';
+    public const string STATE_ACCEPTED = 'accepted';
+    public const string STATE_EXPIRED = 'expired';
+    public const string STATE_PENDING = 'pending';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_ACCEPTED,
         self::STATE_PENDING,
         self::STATE_EXPIRED,
     ];
 
     // expires in 2 weeks
-    public const VALIDITY_IN_MINUTES = 14 * 24 * 60;
+    public const int|float VALIDITY_IN_MINUTES = 14 * 24 * 60;
 
     protected $fillable = [
         'organization_id', 'from_fund_id', 'fund_id', 'state', 'token',

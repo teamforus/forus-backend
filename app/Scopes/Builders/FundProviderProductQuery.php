@@ -12,27 +12,28 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 class FundProviderProductQuery
 {
     /**
-     * @param Builder|FundProvider $builder
-     * @return Builder|FundProvider
+     * @param Builder|Relation|FundProviderProduct $builder
+     * @return Builder|Relation|FundProviderProduct
      */
-    public static function withTrashed(Builder|FundProvider $builder): Builder|FundProvider
-    {
+    public static function withTrashed(
+        Builder|Relation|FundProviderProduct $builder
+    ): Builder|Relation|FundProviderProduct {
         return $builder->withTrashed();
     }
 
     /**
-     * @param Builder|FundProvider $query
+     * @param Builder|Relation|FundProviderProduct $query
      * @param Voucher $voucher
      * @param null|int|array|Builder $organization_id
      * @param bool $validateLimits
-     * @return Builder
+     * @return Builder|Relation|FundProviderProduct
      */
     public static function whereAvailableForSubsidyVoucher(
-        Builder|FundProvider $query,
+        Builder|Relation|FundProviderProduct $query,
         Voucher $voucher,
         null|int|array|Builder $organization_id = null,
-        bool $validateLimits = true
-    ): Builder {
+        bool $validateLimits = true,
+    ): Builder|Relation|FundProviderProduct {
         $query->whereHas('product', static function(Builder $query) use ($voucher, $organization_id) {
             $query->where(static function(Builder $builder) use ($voucher, $organization_id) {
                 $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
@@ -65,12 +66,14 @@ class FundProviderProductQuery
     }
 
     /**
-     * @param Builder $builder
+     * @param Builder|Relation|FundProviderProduct $builder
      * @param Voucher $voucher
-     * @return Builder
+     * @return Builder|Relation|FundProviderProduct
      */
-    public static function whereInLimitsFilter(Builder $builder, Voucher $voucher): Builder
-    {
+    public static function whereInLimitsFilter(
+        Builder|Relation|FundProviderProduct $builder,
+        Voucher $voucher,
+    ): Builder|Relation|FundProviderProduct {
         return $builder->whereHas('product', function(Builder $builder) use ($voucher) {
             $query = ProductSubQuery::appendReservationStats([
                 'voucher_id' => $voucher->id,
@@ -93,7 +96,7 @@ class FundProviderProductQuery
      * @return Builder|Relation|FundProviderProduct
      */
     public static function whereConfigured(
-        Builder|Relation|FundProviderProduct $builder
+        Builder|Relation|FundProviderProduct $builder,
     ): Builder|Relation|FundProviderProduct {
         return $builder->where(function(Builder|FundProviderProduct $builder) {
             $builder->whereNotNull('expire_at');

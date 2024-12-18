@@ -19,19 +19,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Employee|null $employee
- * @method static \Illuminate\Database\Eloquent\Builder|Note newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Note newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Note query()
- * @method static \Illuminate\Database\Eloquent\Builder|Note whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Note whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Note whereEmployeeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Note whereGroup($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Note whereIcon($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Note whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Note whereNotableId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Note whereNotableType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Note wherePinToTop($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Note whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note whereEmployeeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note whereGroup($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note whereIcon($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note whereNotableId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note whereNotableType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note wherePinToTop($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Note whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Note extends Model

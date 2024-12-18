@@ -10,10 +10,6 @@ use App\Searches\WebshopGenericSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class SearchController
- * @package App\Http\Controllers\Api\Platform
- */
 class SearchController extends Controller
 {
     /**

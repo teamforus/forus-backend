@@ -9,10 +9,6 @@ use Illuminate\Notifications\Notification;
 use NotificationChannels\Apn\ApnChannel;
 use NotificationChannels\Apn\ApnMessage;
 
-/**
- * Class ApnBasicNotification
- * @package App\Services\Forus\Notification\Messages
- */
 class ApnBasicNotification extends Notification implements ShouldQueue
 {
     use Queueable;

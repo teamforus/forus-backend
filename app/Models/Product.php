@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Events\Products\ProductMonitoredFieldsUpdated;
 use App\Events\Products\ProductSoldOut;
 use App\Events\Products\ProductUpdated;
-use App\Events\Products\ProductMonitoredFieldsUpdated;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasBookmarks;
 use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;

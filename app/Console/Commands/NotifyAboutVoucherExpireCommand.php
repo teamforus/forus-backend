@@ -105,7 +105,7 @@ class NotifyAboutVoucherExpireCommand extends Command
         return $builder
             ->whereNull('parent_id')
             ->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER)
-            ->whereNotNull('identity_address')
+            ->whereNotNull('identity_id')
             ->whereHas('fund.fund_config.implementation');
     }
 }

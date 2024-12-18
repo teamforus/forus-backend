@@ -9,7 +9,7 @@ use App\Models\ImplementationPage;
  */
 class ImplementationPageResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'faq',
         'blocks.photo',
         'blocks.implementation_page.implementation',

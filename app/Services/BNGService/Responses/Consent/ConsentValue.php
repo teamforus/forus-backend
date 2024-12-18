@@ -9,8 +9,8 @@ use App\Services\BNGService\Responses\Value;
 
 abstract class ConsentValue extends Value
 {
-    protected $redirectUri;
-    protected $authData;
+    protected string $redirectUri;
+    protected AuthData $authData;
 
     /**
      * @param ResponseData $data

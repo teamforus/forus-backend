@@ -11,14 +11,14 @@ use Illuminate\Support\Facades\Gate;
  */
 class OfficeResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'schedules',
         'photo.presets',
         'organization.logo',
         'organization.business_type.translations',
     ];
 
-    public const LOAD_COUNT = [
+    public const array LOAD_COUNT = [
         'employees',
     ];
 

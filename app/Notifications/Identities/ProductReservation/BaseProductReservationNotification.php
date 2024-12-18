@@ -2,9 +2,9 @@
 
 namespace App\Notifications\Identities\ProductReservation;
 
+use App\Models\Identity;
 use App\Models\ProductReservation;
 use App\Notifications\Identities\BaseIdentityNotification;
-use App\Models\Identity;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Support\Collection;
 
@@ -19,6 +19,6 @@ abstract class BaseProductReservationNotification extends BaseIdentityNotificati
      */
     public static function eligibleIdentities($loggable, EventLog $eventLog): Collection
     {
-        return Identity::whereAddress($loggable->voucher->identity_address)->get();
+        return Identity::where('id', $loggable->voucher->identity_id)->get();
     }
 }

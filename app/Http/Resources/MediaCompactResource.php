@@ -4,22 +4,21 @@ namespace App\Http\Resources;
 
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaPreset;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Class MediaCompactResource
  * @property Media $resource
- * @package App\Http\Resources
  */
 class MediaCompactResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request|any  $request
-     * @return array
+     * @param Request $request
+     * @return array|null
      */
-    public function toArray($request): ?array
+    public function toArray(Request $request): ?array
     {
         $media = $this->resource;
 

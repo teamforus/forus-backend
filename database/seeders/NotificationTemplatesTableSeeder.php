@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Implementation;
 use App\Services\Forus\Notification\Repositories\NotificationRepo;
+use Illuminate\Support\Facades\App;
 
 class NotificationTemplatesTableSeeder extends Seeder
 {
@@ -23,7 +24,10 @@ class NotificationTemplatesTableSeeder extends Seeder
         $communicationTypes = ['formal', 'informal'];
 
         if (is_null($data)) {
-            echo "Could not parse the notification_templates.json file!\n";
+            if (!App::runningUnitTests()) {
+                echo "Could not parse the notification_templates.json file!\n";
+            }
+
             return;
         }
 
@@ -31,7 +35,10 @@ class NotificationTemplatesTableSeeder extends Seeder
             $notificationData = $data[$systemNotification->key] ?? null;
 
             if (is_null($notificationData)) {
-                echo "Notification config data for: $systemNotification->key not found!\n";
+                if (!App::runningUnitTests()) {
+                    echo "Notification config data for: $systemNotification->key not found!\n";
+                }
+
                 continue;
             }
 

@@ -6,16 +6,12 @@ use App\Models\Implementation;
 use Closure;
 use Illuminate\Http\Request;
 
-/**
- * Class DomainDigIdMiddleware
- * @package App\Http\Middleware
- */
 class DomainDigIdMiddleware
 {
     /**
      * @var bool
      */
-    protected $strictDomain = false;
+    protected bool $strictDomain = false;
 
     /**
      * Handle an incoming request.

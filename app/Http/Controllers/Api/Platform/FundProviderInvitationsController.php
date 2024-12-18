@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Controllers\Controller;
 use App\Http\Resources\FundProviderInvitationResource;
 use App\Models\FundProviderInvitation;
-use App\Http\Controllers\Controller;
 
 class FundProviderInvitationsController extends Controller
 {

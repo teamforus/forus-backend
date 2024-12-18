@@ -15,10 +15,6 @@ use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
-/**
- * Class ValidatorDigest
- * @package App\Digests
- */
 class ValidatorDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
@@ -58,13 +54,13 @@ class ValidatorDigest extends BaseOrganizationDigest
             $emailBody->h3(trans_choice(
                 "digests/validator.fund_header",
                 $event['count_requests'],
-                $event
+                self::arrayOnlyString($event)
             ));
 
             $emailBody->text(trans_choice(
                 "digests/validator.fund_details",
                 $event['count_requests'],
-                $event
+                self::arrayOnlyString($event)
             ))->space();
         }
 

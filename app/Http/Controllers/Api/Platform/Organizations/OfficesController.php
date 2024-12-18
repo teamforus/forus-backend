@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Offices\IndexOfficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Offices\StoreOfficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Offices\UpdateOfficeRequest;
 use App\Http\Resources\OfficeResource;
 use App\Models\Office;
 use App\Models\Organization;
-use App\Http\Controllers\Controller;
 use App\Searches\OfficeSearch;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Http\JsonResponse;

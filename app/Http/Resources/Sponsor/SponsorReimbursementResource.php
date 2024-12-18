@@ -5,16 +5,17 @@ namespace App\Http\Resources\Sponsor;
 use App\Http\Resources\EmployeeResource;
 use App\Http\Resources\ReimbursementCategoryResource;
 use App\Http\Resources\ReimbursementResource;
+use Illuminate\Http\Request;
 
 class SponsorReimbursementResource extends ReimbursementResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $reimbursement = $this->resource;
         $bsn_enabled = $this->resource->voucher->fund->organization->bsn_enabled;

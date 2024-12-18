@@ -12,12 +12,10 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class FundProvidersExport implements FromCollection, WithHeadings
 {
-    protected $request;
-    protected $data;
-    protected $headers;
+    protected Request $request;
+    protected mixed $data;
 
     /**
-     * FundProvidersExport constructor.
      * @param Request $request
      * @param Organization $organization
      * @param Builder|null $builder
@@ -44,7 +42,7 @@ class FundProvidersExport implements FromCollection, WithHeadings
      */
     public function headings(): array
     {
-        return $this->data->map(function ($row) {
+        return $this->data->map(function (array $row) {
             return array_keys($row);
         })->flatten()->unique()->toArray();
     }

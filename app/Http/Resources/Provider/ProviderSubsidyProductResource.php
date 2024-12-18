@@ -7,15 +7,14 @@ use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductCategoryResource;
 use App\Models\FundProviderProduct;
+use Illuminate\Http\Request;
 
 /**
- * Class ProviderSubsidyProductResource
  * @property FundProviderProduct $resource
- * @package App\Http\Resources\Provider
  */
 class ProviderSubsidyProductResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'fund_provider.fund.organization',
         'product.photo.presets',
         'product.product_category.translations',
@@ -26,10 +25,10 @@ class ProviderSubsidyProductResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request|any $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $fundProviderProduct = $this->resource;
         $product = $fundProviderProduct->product;

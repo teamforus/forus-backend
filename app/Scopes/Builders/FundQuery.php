@@ -5,7 +5,6 @@ namespace App\Scopes\Builders;
 
 use App\Models\Fund;
 use App\Models\FundProvider;
-use App\Models\Organization;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -17,7 +16,7 @@ class FundQuery
      * @return Builder|Relation|Fund
      */
     public static function whereActiveFilter(
-        Builder|Relation|Fund $query
+        Builder|Relation|Fund $query,
     ): Builder|Relation|Fund {
         return $query
             ->where('state', Fund::STATE_ACTIVE)
@@ -29,7 +28,7 @@ class FundQuery
      * @return Builder|Relation|Fund
      */
     public static function whereNotActiveFilter(
-        Builder|Relation|Fund $query
+        Builder|Relation|Fund $query,
     ): Builder|Relation|Fund {
         return $query->where(function(Builder $builder) {
             $builder->where('state', '!=', Fund::STATE_ACTIVE);
@@ -38,16 +37,16 @@ class FundQuery
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|Relation|Fund $query
      * @param bool $includeArchived
      * @param bool $includeExternal
-     * @return Builder
+     * @return Builder|Relation|Fund
      */
     public static function whereActiveOrClosedFilter(
-        Builder $query,
+        Builder|Relation|Fund $query,
         bool $includeArchived = true,
-        bool $includeExternal = true
-    ): Builder {
+        bool $includeExternal = true,
+    ): Builder|Relation|Fund {
         return $query->whereIn('state', [
             Fund::STATE_ACTIVE, Fund::STATE_CLOSED
         ])->where(function(Builder $builder) use ($includeArchived, $includeExternal) {
@@ -69,7 +68,7 @@ class FundQuery
      */
     public static function whereProductsAreApprovedFilter(
         Builder|Relation|Fund $query,
-        Product $product
+        Product $product,
     ): Builder|Relation|Fund {
         if ($product->sponsor_organization_id) {
             $query->where('organization_id', $product->sponsor_organization_id);
@@ -112,18 +111,20 @@ class FundQuery
      */
     public static function whereProductsAreApprovedAndActiveFilter(
         Builder|Relation|Fund $query,
-        Product $product
+        Product $product,
     ): Builder|Relation|Fund {
         return self::whereProductsAreApprovedFilter(self::whereActiveFilter($query), $product);
     }
 
     /**
-     * @param Builder $query
-     * @param $organization_id
-     * @return Builder
+     * @param Builder|Relation|Fund $query
+     * @param int|array $organization_id
+     * @return Builder|Relation|Fund
      */
-    public static function whereHasProviderFilter(Builder $query, $organization_id): Builder
-    {
+    public static function whereHasProviderFilter(
+        Builder|Relation|Fund $query,
+        int|array $organization_id,
+    ): Builder|Relation|Fund {
         return $query->whereHas('providers.organization', static function(
             Builder $builder
         ) use ($organization_id) {
@@ -132,12 +133,14 @@ class FundQuery
     }
 
     /**
-     * @param Builder|Relation $query
+     * @param Builder|Relation|Fund $query
      * @param string $q
-     * @return Builder|Relation
+     * @return Builder|Relation|Fund
      */
-    public static function whereQueryFilter(Builder|Relation $query, string $q): Builder|Relation
-    {
+    public static function whereQueryFilter(
+        Builder|Relation|Fund $query,
+        string $q,
+    ): Builder|Relation|Fund {
         return $query->where(function(Builder $builder) use ($q) {
             $builder->where('name', 'LIKE', "%$q%");
             $builder->orWhere('description_text', 'LIKE', "%$q%");
@@ -147,12 +150,14 @@ class FundQuery
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|Relation|Fund $query
      * @param array $states
-     * @return Builder
+     * @return Builder|Relation|Fund
      */
-    public static function sortByState(Builder $query, array $states): Builder
-    {
+    public static function sortByState(
+        Builder|Relation|Fund $query,
+        array $states,
+    ): Builder|Relation|Fund {
         foreach ($states as $state) {
             $query->orderByRaw('`funds`.`state` = ? DESC', [$state]);
         }
@@ -165,7 +170,7 @@ class FundQuery
      * @return Builder|Relation|Fund
      */
     public static function whereIsConfiguredByForus(
-        Builder|Relation|Fund $query
+        Builder|Relation|Fund $query,
     ): Builder|Relation|Fund {
         return $query->whereHas('fund_config', static function (Builder $query) {
             return $query->where('is_configured', true);
@@ -195,7 +200,7 @@ class FundQuery
      * @return Builder|Relation|Fund
      */
     public static function whereIsInternalConfiguredAndActive(
-        Builder|Relation|Fund $query
+        Builder|Relation|Fund $query,
     ): Builder|Relation|Fund {
         return self::whereIsInternal(self::whereActiveFilter(self::whereIsConfiguredByForus($query)));
     }
@@ -205,32 +210,9 @@ class FundQuery
      * @return Builder|Relation|Fund
      */
     public static function whereIsInternalAndConfigured(
-        Builder|Relation|Fund $query
+        Builder|Relation|Fund $query,
     ): Builder|Relation|Fund {
         return self::whereIsInternal(self::whereIsConfiguredByForus($query));
-    }
-
-    /**
-     * @param Builder|Relation|Fund $query
-     * @param string $balanceProvider
-     * @return Builder|Relation|Fund
-     */
-    public static function whereTopUpAndBalanceUpdateAvailable(
-        Builder|Relation|Fund $query,
-        string $balanceProvider
-    ): Builder|Relation|Fund{
-        return $query->whereHas('organization', function(Builder $builder) {
-            $builder->whereHas('bank_connection_active');
-        })->where(function(Builder $builder) {
-            FundQuery::whereIsInternal($builder);
-            FundQuery::whereIsConfiguredByForus($builder);
-        })->where(function(Builder $builder) use ($balanceProvider) {
-            if ($balanceProvider === Fund::BALANCE_PROVIDER_TOP_UPS) {
-                $builder->whereHas('top_ups');
-            }
-
-            $builder->where('balance_provider', $balanceProvider);
-        });
     }
 
     /**

@@ -9,10 +9,6 @@ use App\Digests\SponsorDigest;
 use App\Digests\ValidatorDigest;
 use Illuminate\Console\Command;
 
-/**
- * Class SendAllDigestsCommand
- * @package App\Console\Commands
- */
 class SendAllDigestsCommand extends Command
 {
     /**

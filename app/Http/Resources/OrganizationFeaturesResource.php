@@ -11,7 +11,7 @@ use App\Models\Organization;
  */
 class OrganizationFeaturesResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'implementations',
         'funds.fund_config',
         'funds.organization',

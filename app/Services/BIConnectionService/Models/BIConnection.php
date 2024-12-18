@@ -47,12 +47,12 @@ class BIConnection extends Model
 
     protected $table = 'bi_connections';
 
-    public const AUTH_TYPE_HEADER_NAME = 'X-API-KEY';
+    public const string AUTH_TYPE_HEADER_NAME = 'X-API-KEY';
 
-    public const EXPIRATION_PERIODS = [1, 7, 30];
+    public const array EXPIRATION_PERIODS = [1, 7, 30];
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_UPDATED = 'replaced';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_UPDATED = 'replaced';
 
     /**
      * @var string[]

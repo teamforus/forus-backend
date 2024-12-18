@@ -3,10 +3,6 @@
 
 namespace App\Services\MediaService;
 
-/**
- * Class TmpFile
- * @package App\Services\MediaService
- */
 class TmpFile
 {
     private $resource;
@@ -16,7 +12,7 @@ class TmpFile
      * @param string $content
      * @param bool $isTmpFilePath
      */
-    public function __construct(string $content, $isTmpFilePath = false)
+    public function __construct(string $content, bool $isTmpFilePath = false)
     {
         if ($isTmpFilePath) {
             $this->resource = fopen($content, 'rb');

@@ -9,10 +9,10 @@ use App\Scopes\Builders\OrganizationQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Support\Collection;
 
 /**
@@ -40,36 +40,36 @@ use Illuminate\Support\Collection;
  * @property-read int|null $prevalidation_records_count
  * @property-read EloquentCollection|\App\Models\PrevalidationRecord[] $records
  * @property-read int|null $records_count
- * @method static Builder|Prevalidation newModelQuery()
- * @method static Builder|Prevalidation newQuery()
- * @method static Builder|Prevalidation onlyTrashed()
- * @method static Builder|Prevalidation query()
- * @method static Builder|Prevalidation whereCreatedAt($value)
- * @method static Builder|Prevalidation whereDeletedAt($value)
- * @method static Builder|Prevalidation whereExported($value)
- * @method static Builder|Prevalidation whereFundId($value)
- * @method static Builder|Prevalidation whereId($value)
- * @method static Builder|Prevalidation whereIdentityAddress($value)
- * @method static Builder|Prevalidation whereOrganizationId($value)
- * @method static Builder|Prevalidation whereRecordsHash($value)
- * @method static Builder|Prevalidation whereRedeemedByAddress($value)
- * @method static Builder|Prevalidation whereState($value)
- * @method static Builder|Prevalidation whereUid($value)
- * @method static Builder|Prevalidation whereUidHash($value)
- * @method static Builder|Prevalidation whereUpdatedAt($value)
- * @method static Builder|Prevalidation whereValidatedAt($value)
- * @method static Builder|Prevalidation withTrashed()
- * @method static Builder|Prevalidation withoutTrashed()
+ * @method static Builder<static>|Prevalidation newModelQuery()
+ * @method static Builder<static>|Prevalidation newQuery()
+ * @method static Builder<static>|Prevalidation onlyTrashed()
+ * @method static Builder<static>|Prevalidation query()
+ * @method static Builder<static>|Prevalidation whereCreatedAt($value)
+ * @method static Builder<static>|Prevalidation whereDeletedAt($value)
+ * @method static Builder<static>|Prevalidation whereExported($value)
+ * @method static Builder<static>|Prevalidation whereFundId($value)
+ * @method static Builder<static>|Prevalidation whereId($value)
+ * @method static Builder<static>|Prevalidation whereIdentityAddress($value)
+ * @method static Builder<static>|Prevalidation whereOrganizationId($value)
+ * @method static Builder<static>|Prevalidation whereRecordsHash($value)
+ * @method static Builder<static>|Prevalidation whereRedeemedByAddress($value)
+ * @method static Builder<static>|Prevalidation whereState($value)
+ * @method static Builder<static>|Prevalidation whereUid($value)
+ * @method static Builder<static>|Prevalidation whereUidHash($value)
+ * @method static Builder<static>|Prevalidation whereUpdatedAt($value)
+ * @method static Builder<static>|Prevalidation whereValidatedAt($value)
+ * @method static Builder<static>|Prevalidation withTrashed()
+ * @method static Builder<static>|Prevalidation withoutTrashed()
  * @mixin \Eloquent
  */
 class Prevalidation extends BaseModel
 {
     use SoftDeletes, HasDbTokens;
 
-    public const STATE_PENDING = 'pending';
-    public const STATE_USED = 'used';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_USED = 'used';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_PENDING,
         self::STATE_USED
     ];

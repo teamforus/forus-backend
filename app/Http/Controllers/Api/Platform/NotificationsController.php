@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Notifications\IndexNotificationsRequest;
-use App\Models\Implementation;
+use App\Http\Resources\NotificationResource;
 use App\Models\Notification;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\NotificationResource;
 
 class NotificationsController extends Controller
 {

@@ -5,13 +5,9 @@ namespace App\Events\Products;
 use App\Models\Product;
 use App\Models\Voucher;
 
-/**
- * Class ProductReserved
- * @package App\Events\Products
- */
 class ProductReserved extends BaseProductEvent
 {
-    protected $voucher;
+    protected Voucher $voucher;
 
     /**
      * Create a new event instance.

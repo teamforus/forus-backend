@@ -5,9 +5,7 @@ namespace App\Http\Requests\Api\Identity\Emails;
 use App\Models\IdentityEmail;
 
 /**
- * Class ResendIdentityEmailRequest
  * @property IdentityEmail $identity_email
- * @package App\Http\Requests\Api\Identity\Emails
  */
 class ResendIdentityEmailRequest extends BaseIdentityEmailRequest
 {

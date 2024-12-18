@@ -10,7 +10,7 @@ use App\Services\BankService\Resources\BankResource;
  */
 class VoucherTransactionBulkResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'voucher_transactions',
         'bank_connection.bank',
     ];

@@ -110,7 +110,7 @@ class ReimbursementTest extends DuskTestCase
             $this->loginIdentity($browser, $identity);
             $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
 
-            $voucher = $implementation->funds[0]->makeVoucher($identity->address);
+            $voucher = $implementation->funds[0]->makeVoucher($identity);
             $shouldSubmit = $state != 'draft';
 
             $data = $this->prepareReimbursementRequestForm($browser, $voucher);

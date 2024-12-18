@@ -16,29 +16,25 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-/**
- * Class BackofficeApi
- * @package App\Services\BackofficeApiService
- */
 class BackofficeApi
 {
     protected Fund $fund;
 
-    public const ACTION_ELIGIBILITY_CHECK = 'eligibility_check';
-    public const ACTION_RESIDENCY_CHECK = 'residency_check';
+    public const string ACTION_ELIGIBILITY_CHECK = 'eligibility_check';
+    public const string ACTION_RESIDENCY_CHECK = 'residency_check';
 
-    public const ACTION_REPORT_FIRST_USE = 'first_use';
-    public const ACTION_REPORT_RECEIVED = 'received';
-    public const ACTION_STATUS = 'status';
+    public const string ACTION_REPORT_FIRST_USE = 'first_use';
+    public const string ACTION_REPORT_RECEIVED = 'received';
+    public const string ACTION_STATUS = 'status';
 
-    public const ACTION_PARTNER_BSN = 'partner_bsn';
+    public const string ACTION_PARTNER_BSN = 'partner_bsn';
 
-    public const STATE_PENDING = 'pending';
-    public const STATE_SUCCESS = 'success';
-    public const STATE_ERROR = 'error';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_SUCCESS = 'success';
+    public const string STATE_ERROR = 'error';
 
-    public const TOTAL_ATTEMPTS = 5;
-    public const ATTEMPTS_INTERVAL = 8;
+    public const int TOTAL_ATTEMPTS = 5;
+    public const int ATTEMPTS_INTERVAL = 8;
 
     /**
      * @param Fund $fund

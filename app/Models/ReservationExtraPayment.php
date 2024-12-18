@@ -12,13 +12,13 @@ use App\Events\ReservationExtraPayments\ReservationExtraPaymentUpdated;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Models\MollieConnection;
+use App\Services\MollieService\Objects\Payment;
+use App\Services\MollieService\Objects\Refund;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Event;
-use App\Services\MollieService\Objects\Payment;
-use App\Services\MollieService\Objects\Refund;
 
 /**
  * App\Models\ReservationExtraPayment
@@ -54,29 +54,29 @@ use App\Services\MollieService\Objects\Refund;
  * @property-read int|null $refunds_completed_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ReservationExtraPaymentRefund[] $refunds_pending
  * @property-read int|null $refunds_pending_count
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment query()
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereAmountCaptured($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereAmountRefunded($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereAmountRemaining($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereCanceledAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereCurrency($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereExpiresAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereMethod($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment wherePaidAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment wherePaymentId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereProductReservationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|ReservationExtraPayment withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereAmountCaptured($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereAmountRefunded($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereAmountRemaining($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereCanceledAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereCurrency($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereExpiresAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereMethod($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment wherePaidAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment wherePaymentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereProductReservationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment withoutTrashed()
  * @mixin \Eloquent
  */
 class ReservationExtraPayment extends Model
@@ -84,25 +84,25 @@ class ReservationExtraPayment extends Model
     use HasLogs;
     use SoftDeletes;
 
-    public const TYPE_MOLLIE = 'mollie';
+    public const string TYPE_MOLLIE = 'mollie';
 
-    public const STATE_PAID = 'paid';
-    public const STATE_CANCELED = 'canceled';
-    public const STATE_OPEN = 'open';
-    public const STATE_PENDING = 'pending';
-    public const STATE_FAILED = 'failed';
-    public const STATE_EXPIRED = 'expired';
+    public const string STATE_PAID = 'paid';
+    public const string STATE_CANCELED = 'canceled';
+    public const string STATE_OPEN = 'open';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_FAILED = 'failed';
+    public const string STATE_EXPIRED = 'expired';
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_UPDATED = 'updated';
-    public const EVENT_FAILED = 'failed';
-    public const EVENT_EXPIRED = 'expired';
-    public const EVENT_PAID = 'paid';
-    public const EVENT_CANCELED = 'canceled';
-    public const EVENT_REFUNDED = 'refunded';
-    public const EVENT_REFUNDED_API = 'refunded_api';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_UPDATED = 'updated';
+    public const string EVENT_FAILED = 'failed';
+    public const string EVENT_EXPIRED = 'expired';
+    public const string EVENT_PAID = 'paid';
+    public const string EVENT_CANCELED = 'canceled';
+    public const string EVENT_REFUNDED = 'refunded';
+    public const string EVENT_REFUNDED_API = 'refunded_api';
 
-    public const CANCELED_STATES = [
+    public const array CANCELED_STATES = [
         self::STATE_FAILED,
         self::STATE_EXPIRED,
         self::STATE_CANCELED,

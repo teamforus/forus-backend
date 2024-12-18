@@ -52,7 +52,7 @@ class VoucherTransactionBatchTest extends TestCase
         $transactions = $vouchers->reduce(function (array $arr, Voucher $voucher) {
             return array_merge($arr, array_map(fn () => array_merge([
                 'amount' => $voucher->amount_available / $this->transactionsPerVoucher,
-                'voucher_id' => $voucher->id,
+                'voucher_number' => $voucher->number,
             ], $this->getDefaultTransactionData()), range(1, $this->transactionsPerVoucher)));
         }, []);
 
@@ -76,7 +76,7 @@ class VoucherTransactionBatchTest extends TestCase
         foreach (range(0, $rows) as $item) {
             $transactions[] = array_merge($this->getDefaultTransactionData(), [
                 'amount' => 1,
-                'voucher_id' => $voucher->id,
+                'voucher_number' => $voucher->number,
             ]);
 
             if ($voucher->amount_available_cached < array_sum(array_pluck($transactions, 'amount'))) {
@@ -102,11 +102,11 @@ class VoucherTransactionBatchTest extends TestCase
 
         $transaction = array_merge($this->getDefaultTransactionData(), [
             'amount' => $voucher->amount_available,
-            'voucher_id' => $voucher->id,
+            'voucher_number' => $voucher->number,
         ]);
 
         $this->checkTransactionBatch([$transaction], [
-            'transactions.0.voucher_id',
+            'transactions.0.voucher_number',
         ]);
     }
 
@@ -124,15 +124,15 @@ class VoucherTransactionBatchTest extends TestCase
         $transactions = [
             array_merge($this->getDefaultTransactionData(), [
                 'amount' => 0.01,
-                'voucher_id' => $voucher->id,
+                'voucher_number' => $voucher->number,
             ]),
             array_merge($this->getDefaultTransactionData(), [
                 'amount' => 0.02,
-                'voucher_id' => $voucher->id,
+                'voucher_number' => $voucher->number,
             ]),
             array_merge($this->getDefaultTransactionData(), [
                 'amount' => floatval($voucher->amount_available) + 100,
-                'voucher_id' => $voucher->id,
+                'voucher_number' => $voucher->number,
             ]),
         ];
 
@@ -158,7 +158,7 @@ class VoucherTransactionBatchTest extends TestCase
                     $voucher->amount_available / $this->transactionsPerVoucher,
                     $index == $this->transactionsPerVoucher ? 100 : 0,
                 ]),
-                'voucher_id' => $voucher->id,
+                'voucher_number' => $voucher->number,
             ], $this->getDefaultTransactionData()), range(1, $this->transactionsPerVoucher)));
         }, []);
 
@@ -183,7 +183,7 @@ class VoucherTransactionBatchTest extends TestCase
             array_merge($this->getDefaultTransactionData(), [
                 'uid' => Str::random(50),
                 'amount' => $voucher->amount_available,
-                'voucher_id' => $voucher->id,
+                'voucher_number' => $voucher->number,
                 'note' => [],
                 'direct_payment_iban' => '',
                 'direct_payment_name' => '',
@@ -220,12 +220,12 @@ class VoucherTransactionBatchTest extends TestCase
         $transactions = [
             array_merge($this->getDefaultTransactionData(), [
                 'amount' => $voucher->amount_available,
-                'voucher_id' => $voucher->id,
+                'voucher_number' => $voucher->number,
             ])
         ];
 
         $errors = [
-            'transactions.0.voucher_id',
+            'transactions.0.voucher_number',
         ];
 
         $this->checkTransactionBatch($transactions, $errors);
@@ -281,7 +281,9 @@ class VoucherTransactionBatchTest extends TestCase
 
             // check transactions
             $createdTransactions = VoucherTransaction::query()
-                ->whereIn('voucher_id', array_unique(Arr::pluck($transactions, 'voucher_id')))
+                ->whereHas('voucher', function (Builder $builder) use ($transactions) {
+                    $builder->whereIn('number', array_unique(Arr::pluck($transactions, 'voucher_number')));
+                })
                 ->where('created_at', '>=', $startDate)
                 ->whereRelation('voucher.fund', 'organization_id', $organization->id)
                 ->get();

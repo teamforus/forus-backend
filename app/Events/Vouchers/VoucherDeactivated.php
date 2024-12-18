@@ -5,15 +5,11 @@ namespace App\Events\Vouchers;
 use App\Models\Employee;
 use App\Models\Voucher;
 
-/**
- * Class VoucherCreated
- * @package App\Events\Vouchers
- */
 class VoucherDeactivated extends BaseVoucherEvent
 {
-    protected $note;
-    protected $employee;
-    protected $notifyByEmail;
+    protected string $note;
+    protected ?Employee $employee;
+    protected bool $notifyByEmail;
 
     /**
      * Create a new event instance.

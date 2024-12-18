@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Platform\Vouchers;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Fund;
 use App\Models\Voucher;
 
 class IndexVouchersRequest extends BaseFormRequest

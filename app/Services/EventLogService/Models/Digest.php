@@ -15,15 +15,15 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Model|\Eloquent $digestable
- * @method static \Illuminate\Database\Eloquent\Builder|Digest newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Digest newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Digest query()
- * @method static \Illuminate\Database\Eloquent\Builder|Digest whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Digest whereDigestableId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Digest whereDigestableType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Digest whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Digest whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Digest whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Digest newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Digest newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Digest query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Digest whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Digest whereDigestableId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Digest whereDigestableType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Digest whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Digest whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Digest whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Digest extends Model

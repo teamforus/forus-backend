@@ -13,7 +13,7 @@ class MediaRegenerateCommand extends Command
      * @var string
      */
     protected $signature = 'media:regenerate 
-                            {media_type? : Name for the config to be regenerated or `all` to regenerate all media.}';
+                            {media_type : Name for the config to be regenerated or `all` to regenerate all media.}';
 
     /**
      * The console command description.
@@ -58,9 +58,51 @@ class MediaRegenerateCommand extends Command
             ));
         }
 
+        $totalConfigs = count($mediaConfigs);
+        $currentConfig = 0;
+        $width = 60;
+
+        $this->header('Media Regeneration Tool', $width);
+        $this->info('');
+
+        $callback = function(int $total, int $current) use ($width) {
+            $this->textCenter(' - Item: ' . $current . ' / ' . $total, $width);
+        };
+
         foreach ($mediaConfigs as $mediaConfig) {
-            echo $mediaConfig->getName() . "\n";
-            $media->regenerateMedia($mediaConfig);
+            $currentConfig++;
+
+            $this->header('Config: ' . $mediaConfig->getName() . " ($currentConfig/$totalConfigs)", $width);
+            $media->regenerateMedia($mediaConfig, callback: $callback);
+            $this->info(str_repeat('-', $width));
+            $this->info('');
         }
+
+        $this->header('Media Regeneration Complete', $width);
+    }
+
+    /**
+     * @param string $title
+     * @param int $width
+     * @return void
+     */
+    public function header(string $title, int $width): void
+    {
+        $this->info(str_repeat('-', $width));
+        $this->textCenter($title, $width);
+        $this->info(str_repeat('-', $width));
+    }
+
+    /**
+     * @param string $text
+     * @param int $width
+     * @return void
+     */
+    public function textCenter(string $text, int $width): void
+    {
+        $leftPadding = floor(($width - strlen($text)) / 2);
+        $centeredText = str_repeat(' ', $leftPadding) . $text;
+
+        $this->info($centeredText);
     }
 }

@@ -5,26 +5,22 @@ namespace App\Services\MediaService;
 use App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException;
 use App\Services\MediaService\Models\Media;
 
-/**
- * Class MediaSize
- * @package App\Services\MediaService
- */
 abstract class MediaConfig
 {
-    const TYPE_SINGLE = 'single';
-    const TYPE_MULTIPLE = 'multiple';
+    const string TYPE_SINGLE = 'single';
+    const string TYPE_MULTIPLE = 'multiple';
 
-    const TYPES = [
+    const array TYPES = [
         self::TYPE_SINGLE,
         self::TYPE_MULTIPLE,
     ];
 
-    protected $presets = [];
+    protected array $presets = [];
 
     /**
      * @var array
      */
-    protected $source_extensions = [
+    protected array $source_extensions = [
         'jpg',
         'jpeg',
         'png',
@@ -35,7 +31,7 @@ abstract class MediaConfig
     /**
      * @var array
      */
-    protected $source_mime_types = [
+    protected array $source_mime_types = [
         'image/jpeg',
         'image/png',
         'image/gif',
@@ -43,41 +39,41 @@ abstract class MediaConfig
     ];
 
     /**
-     * @var int
+     * @var ?int
      */
-    protected $max_source_file_size = null;
+    protected ?int $max_source_file_size = null;
 
     /**
      * @var string Source preset to be used for media regeneration
      */
-    protected $regenerate_source = 'original';
+    protected string $regenerate_source = 'original';
 
     /**
-     * @var string Reference name for media
+     * @var ?string Reference name for media
      */
-    protected $name = null;
+    protected ?string $name = null;
 
     /**
      * @var string
      */
-    protected $type = self::TYPE_SINGLE;
+    protected string $type = self::TYPE_SINGLE;
 
     /**
      * @var bool
      */
-    protected $use_queue = false;
+    protected bool $use_queue = false;
 
     /**
      * @var array
      */
-    protected $sync_presets = [
+    protected array $sync_presets = [
         'thumbnail'
     ];
 
     /**
      * @var bool
      */
-    protected $save_dominant_color = false;
+    protected bool $save_dominant_color = true;
 
     /**
      * @return string|null
@@ -178,7 +174,7 @@ abstract class MediaConfig
     /**
      * @param Media $media
      * @param bool $fromQueue
-     * @return mixed
+     * @return void
      */
-    abstract public function onMediaPresetsUpdated(Media $media, bool $fromQueue = false);
+    abstract public function onMediaPresetsUpdated(Media $media, bool $fromQueue = false): void;
 }
