@@ -23,6 +23,7 @@ use Illuminate\Support\Arr;
  * App\Models\FundRequest
  *
  * @property int $id
+ * @property int|null $identity_id
  * @property int $fund_id
  * @property string $identity_address
  * @property int|null $employee_id
@@ -66,6 +67,7 @@ use Illuminate\Support\Arr;
  * @method static Builder<static>|FundRequest whereFundId($value)
  * @method static Builder<static>|FundRequest whereId($value)
  * @method static Builder<static>|FundRequest whereIdentityAddress($value)
+ * @method static Builder<static>|FundRequest whereIdentityId($value)
  * @method static Builder<static>|FundRequest whereNote($value)
  * @method static Builder<static>|FundRequest whereResolvedAt($value)
  * @method static Builder<static>|FundRequest whereState($value)
@@ -116,9 +118,8 @@ class FundRequest extends BaseModel
     ];
 
     protected $fillable = [
-        'fund_id', 'identity_address', 'employee_id', 'note', 'state', 'resolved_at',
-        'disregard_note', 'disregard_notify', 'identity_address',
-        'contact_information',
+        'fund_id', 'employee_id', 'note', 'state', 'resolved_at',
+        'disregard_note', 'disregard_notify', 'identity_id', 'contact_information',
     ];
 
     protected $casts = [
@@ -131,7 +132,7 @@ class FundRequest extends BaseModel
      */
     public function identity(): BelongsTo
     {
-        return $this->belongsTo(Identity::class, 'identity_address', 'address');
+        return $this->belongsTo(Identity::class);
     }
 
     /**

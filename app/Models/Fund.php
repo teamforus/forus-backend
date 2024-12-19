@@ -1381,7 +1381,7 @@ class Fund extends BaseModel
     ): FundRequest {
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->fund_requests()->create(array_merge([
-            'identity_address' => $identity->address,
+            'identity_id' => $identity->id,
         ], $this->fund_config->contact_info_enabled ? [
             'contact_information' => $contactInformation,
         ] : []));
