@@ -334,7 +334,7 @@ class Identity extends Model implements Authenticatable
      */
     public function fund_requests(): HasMany
     {
-        return $this->hasMany(FundRequest::class, 'identity_address', 'address');
+        return $this->hasMany(FundRequest::class);
     }
 
     /**

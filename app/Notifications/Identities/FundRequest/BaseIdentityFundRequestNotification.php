@@ -19,6 +19,6 @@ abstract class BaseIdentityFundRequestNotification extends BaseIdentityNotificat
      */
     public static function eligibleIdentities($loggable, EventLog $eventLog): Collection
     {
-        return Identity::whereAddress($loggable->identity_address)->get();
+        return Identity::whereId($loggable->identity_id)->get();
     }
 }
