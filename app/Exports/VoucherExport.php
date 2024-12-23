@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 class VoucherExport extends BaseFieldedExport
 {
     protected Collection $data;
+    protected array $fields;
 
     /**
      * @var array|\string[][]
@@ -45,10 +46,12 @@ class VoucherExport extends BaseFieldedExport
 
     /**
      * @param array $data
+     * @param array $fields
      */
-    public function __construct(array $data)
+    public function __construct(array $data, array $fields)
     {
         $this->data = collect($data);
+        $this->fields = $fields;
     }
 
     /**
@@ -78,5 +81,18 @@ class VoucherExport extends BaseFieldedExport
             'name' => $type['name'],
             'is_record_field' => true,
         ], array_filter(record_types_cached(), fn($record) => $record['vouchers'] ?? false));
+    }
+
+    /**
+     * @return array
+     */
+    public function headings(): array
+    {
+        $collection = $this->collection();
+
+        return array_map(
+            fn ($key) => static::$exportFields[$key] ?? $key,
+            $collection->isNotEmpty() ? array_keys($collection->first()) : $this->fields
+        );
     }
 }
