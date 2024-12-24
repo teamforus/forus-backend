@@ -76,8 +76,8 @@ class FundRequestSearch extends BaseSearch
             $builder->whereDoesntHave('employee');
         }
 
-        if ($this->getFilter('identity_address')) {
-            $builder->where('identity_address', $this->getFilter('identity_address'));
+        if ($this->getFilter('identity_id')) {
+            $builder->where('identity_id', $this->getFilter('identity_id'));
         }
 
         return $this->order($builder);

@@ -27,9 +27,10 @@ class FundRequestQuery
                     $builder->where('identity_id', $identity_id);
                     VoucherQuery::whereNotExpired($builder);
                 });
-            })
-                ->where('state', FundRequest::STATE_APPROVED)
-                ->whereRelation('identity', 'id', $identity_id);
+            })->where([
+                'state' => FundRequest::STATE_APPROVED,
+                'identity_id' => $identity_id,
+            ]);
         });
     }
 

@@ -29,7 +29,7 @@ class FundRequestsController extends Controller
         $this->authorize('viewAnyAsRequester', [FundRequest::class, $fund]);
 
         return FundRequestResource::queryCollection($fund->fund_requests()->where([
-            'identity_address' => $request->auth_address()
+            'identity_id' => $request->auth_id()
         ]), $request);
     }
 

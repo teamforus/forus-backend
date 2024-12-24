@@ -50,6 +50,12 @@ return [
             'level' => 'debug',
         ],
 
+        'query-counter' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/query-counter.log'),
+            'level' => 'debug',
+        ],
+
         'bunq' => [
             'driver' => 'single',
             'path' => storage_path('logs/bunq-service.log'),
