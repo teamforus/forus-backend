@@ -26,7 +26,7 @@ class FundRequestsController extends Controller
         ]));
 
         return FundRequestResource::queryCollection($search->query()->where([
-            'identity_address' => $request->auth_address()
+            'identity_id' => $request->auth_id()
         ]), $request);
     }
 

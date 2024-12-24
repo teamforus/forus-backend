@@ -27,7 +27,7 @@ class PayoutsController extends Controller
             $builder->where('target', VoucherTransaction::TARGET_PAYOUT);
             $builder->whereHas('voucher', function (Builder $builder) use ($request) {
                 $builder->where('voucher_type', Voucher::VOUCHER_TYPE_PAYOUT);
-                $builder->whereRelation('fund_request', 'identity_address', $request->auth_address());
+                $builder->whereRelation('fund_request', 'identity_id', $request->auth_id());
             });
         });
 
