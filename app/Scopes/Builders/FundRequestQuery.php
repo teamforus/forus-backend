@@ -29,7 +29,7 @@ class FundRequestQuery
                 });
             })->where([
                 'state' => FundRequest::STATE_APPROVED,
-                'identity_address' => $identity_id,
+                'identity_id' => $identity_id,
             ]);
         });
     }

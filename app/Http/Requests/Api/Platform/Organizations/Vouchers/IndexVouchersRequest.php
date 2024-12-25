@@ -56,14 +56,11 @@ class IndexVouchersRequest extends BaseFormRequest
             'count_per_identity_max' => 'nullable|numeric',
             'fields' => 'nullable|array',
             'fields.*' => ['nullable', Rule::in($fields)],
-            'identity_address' => 'nullable|exists:identities,address',
+            'identity_id' => 'nullable|exists:identities,id',
             'amount_available_min' => 'nullable|numeric',
             'amount_available_max' => 'nullable|numeric',
             'implementation_id' => 'nullable|exists:implementations,id|in:' . $implementations->join(','),
-            // todo: update to default order_by/order_dir format
-            'sort_by' => 'nullable|in:amount,expire_at,created_at',
-            'sort_order' => 'nullable|in:asc,desc',
-            ...$this->sortableResourceRules(),
+            ...$this->sortableResourceRules(100, ['created_at']),
         ];
     }
 

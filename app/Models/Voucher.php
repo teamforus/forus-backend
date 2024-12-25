@@ -919,8 +919,8 @@ class Voucher extends BaseModel
             $query->where('identity_id', Identity::findByEmail($email)?->id ?: '_');
         }
 
-        if ($request->input('identity_address', false)) {
-            $query->whereRelation('identity', 'address', $request->input('identity_address'));
+        if ($request->input('identity_id', false)) {
+            $query->where('identity_id', $request->input('identity_id'));
         }
 
         if ($request->has('bsn') && $bsn = $request->input('bsn')) {
@@ -987,8 +987,8 @@ class Voucher extends BaseModel
         }
 
         return $query->orderBy(
-            $request->input('sort_by', 'created_at'),
-            $request->input('sort_order', 'asc')
+            $request->input('order_by', 'created_at'),
+            $request->input('order_dir', 'asc')
         );
     }
 
