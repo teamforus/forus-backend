@@ -6,8 +6,8 @@ use App\Models\Voucher;
 
 class ProductVoucherShared extends BaseVoucherEvent
 {
-    protected $message;
-    protected $sendCopyToUser;
+    protected string $message;
+    protected bool $sendCopyToUser;
 
     /**
      * Create a new event instance.

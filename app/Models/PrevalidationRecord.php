@@ -15,15 +15,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Prevalidation $prevalidation
  * @property-read \App\Models\RecordType $record_type
- * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord query()
- * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord wherePrevalidationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord whereRecordTypeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRecord query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRecord wherePrevalidationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRecord whereRecordTypeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRecord whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRecord whereValue($value)
  * @mixin \Eloquent
  */
 class PrevalidationRecord extends BaseModel

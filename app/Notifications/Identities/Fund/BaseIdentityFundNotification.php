@@ -3,9 +3,9 @@
 namespace App\Notifications\Identities\Fund;
 
 use App\Models\Fund;
+use App\Models\Identity;
 use App\Notifications\Identities\BaseIdentityNotification;
 use App\Scopes\Builders\VoucherQuery;
-use App\Models\Identity;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Support\Collection;
 

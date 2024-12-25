@@ -3,22 +3,21 @@
 namespace App\Http\Resources;
 
 use App\Models\OfficeSchedule;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Class OfficeScheduleResource
  * @property OfficeSchedule $resource
- * @package App\Http\Resources
  */
 class OfficeScheduleResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request|any  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $schedule = $this->resource;
 

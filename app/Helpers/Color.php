@@ -4,13 +4,9 @@
 namespace App\Helpers;
 
 
-/**
- * Class Color
- * @package App\Helpers
- */
 class Color
 {
-    protected const LUMA_THRESHOLD = .75;
+    protected const float LUMA_THRESHOLD = .75;
 
     public int $red;
     public int $green;
@@ -26,7 +22,7 @@ class Color
     /**
      * @return float|int
      */
-    public function toLuma()
+    public function toLuma(): float|int
     {
         return self::rgb2luma($this->red, $this->green, $this->blue);
     }
@@ -83,7 +79,7 @@ class Color
      * @param int $red
      * @param int $green
      * @param int $blue
-     * @return float|int
+     * @return float
      */
     public static function rgb2luma(int $red, int $green, int $blue): float
     {

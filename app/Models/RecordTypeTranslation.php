@@ -13,13 +13,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $locale
  * @property string $name
  * @property-read \App\Models\RecordType $record_type
- * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation query()
- * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation whereLocale($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation whereRecordTypeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeTranslation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeTranslation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeTranslation query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeTranslation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeTranslation whereLocale($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeTranslation whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeTranslation whereRecordTypeId($value)
  * @mixin \Eloquent
  */
 class RecordTypeTranslation extends Model

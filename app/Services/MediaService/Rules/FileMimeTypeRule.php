@@ -10,22 +10,22 @@ class FileMimeTypeRule implements Rule
     /**
      * @var array list allowed mime types
      */
-    protected $mimeTypes = [];
+    protected array $mimeTypes = [];
 
     /**
      * @var Request
      */
-    protected $request = null;
+    protected mixed $request = null;
 
     /**
      * Create a new rule instance.
      *
-     * @param string|array $mimeTypes
+     * @param array|string $mimeTypes
      * @param Request|null $request
      */
     public function __construct(
-        $mimeTypes,
-        Request $request = null
+        array|string $mimeTypes,
+        Request $request = null,
     ) {
         $this->mimeTypes = (array) $mimeTypes;
         $this->request = $request ?? request();
@@ -38,7 +38,7 @@ class FileMimeTypeRule implements Rule
      * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
         if ($this->request->hasFile($attribute)) {
             return in_array(
@@ -55,7 +55,7 @@ class FileMimeTypeRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return 'Invalid media type.';
     }

@@ -11,8 +11,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class FundRequestsExport implements FromCollection, WithHeadings
 {
-    protected $data;
-    protected $headers;
+    protected mixed $data;
 
     /**
      * FundRequestsExport constructor.
@@ -28,7 +27,7 @@ class FundRequestsExport implements FromCollection, WithHeadings
     /**
      * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|Collection
      */
-    public function collection()
+    public function collection(): mixed
     {
         return $this->data;
     }
@@ -38,7 +37,7 @@ class FundRequestsExport implements FromCollection, WithHeadings
      */
     public function headings(): array
     {
-        return $this->data->map(static function ($row) {
+        return $this->data->map(static function (array $row) {
             return array_keys($row);
         })->flatten()->unique()->toArray();
     }

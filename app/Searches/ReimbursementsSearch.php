@@ -49,7 +49,9 @@ class ReimbursementsSearch extends BaseSearch
         }
 
         if ($this->hasFilter('identity_address')) {
-            $builder->whereRelation('voucher', 'identity_address', $this->getFilter('identity_address'));
+            $builder->whereHas('voucher.identity', function(Builder $builder) {
+                $builder->where('address', $this->getFilter('identity_address'));
+            });
         }
 
         if ($this->hasFilter('implementation_id') && $implementation_id = $this->getFilter('implementation_id')) {

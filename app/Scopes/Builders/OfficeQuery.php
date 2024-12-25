@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\Office;
@@ -10,16 +9,16 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 class OfficeQuery
 {
     /**
-     * @param Office|Relation|Builder $query
+     * @param Builder|Relation|Office $query
      * @param string $q
      * @param bool $withBranches
-     * @return Office|Relation|Builder
+     * @return Builder|Relation|Office
      */
     public static function queryWebshopDeepFilter(
-        Office|Relation|Builder $query,
+        Builder|Relation|Office $query,
         string $q = '',
         bool $withBranches = false,
-    ): Office|Relation|Builder {
+    ): Builder|Relation|Office {
         return $query->where(function (Builder $query) use ($q, $withBranches) {
             $query->where('address','LIKE', "%$q%");
 
@@ -55,13 +54,16 @@ class OfficeQuery
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|Relation|Office $query
      * @param float $distance
      * @param array $location
-     * @return Builder
+     * @return Builder|Relation|Office
      */
-    public static function whereDistance(Builder $query, float $distance, array $location): Builder
-    {
+    public static function whereDistance(
+        Builder|Relation|Office $query,
+        float $distance,
+        array $location,
+    ): Builder|Relation|Office {
         $lng = number_format($location['lng'], 6, '.', '');
         $lat = number_format($location['lat'], 6, '.', '');
         $distance = number_format($distance, 2, '.', '');

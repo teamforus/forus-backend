@@ -4,15 +4,11 @@ namespace App\Events\VoucherTransactions;
 
 use App\Models\VoucherTransaction;
 use Illuminate\Broadcasting\Channel;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Queue\SerializesModels;
 
-/**
- * Class VoucherTransactionCreated
- * @package App\Events\VoucherTransactions
- */
 abstract class BaseVoucherTransactionEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;

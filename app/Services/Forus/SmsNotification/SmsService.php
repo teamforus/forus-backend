@@ -6,10 +6,6 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Twilio\Rest\Client;
 
-/**
- * Class MailService
- * @package App\Services\Forus\MailNotification
- */
 class SmsService
 {
     /**

@@ -11,11 +11,11 @@ use Illuminate\Http\Request;
  */
 class ReimbursementCategoryResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'organization.logo.presets',
     ];
 
-    public const LOAD_COUNT = [
+    public const array LOAD_COUNT = [
         'reimbursements',
     ];
 

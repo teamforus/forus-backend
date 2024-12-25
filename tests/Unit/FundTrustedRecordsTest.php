@@ -31,17 +31,17 @@ class FundTrustedRecordsTest extends TestCase
         ])->save();
 
         // assert record is valid right away
-        $trustedRecord = $fund->getTrustedRecordOfType($requester->address, 'children_nth');
+        $trustedRecord = $fund->getTrustedRecordOfType($requester, 'children_nth');
         self::assertEquals(2, $trustedRecord?->value);
 
         // assert record is one minute before is is supposed to be expired
         $this->travelTo(now()->addDays(2));
-        $trustedRecord = $fund->getTrustedRecordOfType($requester->address, 'children_nth');
+        $trustedRecord = $fund->getTrustedRecordOfType($requester, 'children_nth');
         self::assertEquals(2, $trustedRecord?->value);
 
         // assert record is expired
         $this->travelTo(now()->addDays(2)->addMinute());
-        $trustedRecord = $fund->getTrustedRecordOfType($requester->address, 'children_nth');
+        $trustedRecord = $fund->getTrustedRecordOfType($requester, 'children_nth');
         self::assertNull($trustedRecord);
     }
 
@@ -61,18 +61,18 @@ class FundTrustedRecordsTest extends TestCase
         $this->setRecordsValue($fund->organization, $requester, 'children_nth', 2);
 
         // assert record validated before $startDate is not valid
-        self::assertNull($fund->getTrustedRecordOfType($requester->address, 'children_nth'));
+        self::assertNull($fund->getTrustedRecordOfType($requester, 'children_nth'));
 
         $this->travelTo($startDate);
 
         // assert record validated before $startDate is still not valid even after reaching start date
-        self::assertNull($fund->getTrustedRecordOfType($requester->address, 'children_nth'));
+        self::assertNull($fund->getTrustedRecordOfType($requester, 'children_nth'));
 
         // validate records after startDate
         $this->setRecordsValue($fund->organization, $requester, 'children_nth', 2);
 
         // assert record validated after start date is valid
-        $trustedRecord = $fund->getTrustedRecordOfType($requester->address, 'children_nth');
+        $trustedRecord = $fund->getTrustedRecordOfType($requester, 'children_nth');
         self::assertEquals(2, $trustedRecord?->value);
     }
 

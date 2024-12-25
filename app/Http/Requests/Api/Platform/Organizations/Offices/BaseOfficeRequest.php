@@ -4,10 +4,6 @@ namespace App\Http\Requests\Api\Platform\Organizations\Offices;
 
 use App\Http\Requests\BaseFormRequest;
 
-/**
- * Class BaseOfficeRequest
- * @package App\Http\Requests\Api\Platform\Organizations\Offices
- */
 abstract class BaseOfficeRequest extends BaseFormRequest
 {
     /**
@@ -21,7 +17,7 @@ abstract class BaseOfficeRequest extends BaseFormRequest
     }
 
     /**
-     * @return array|mixed
+     * @return array
      */
     public function attributes(): array
     {

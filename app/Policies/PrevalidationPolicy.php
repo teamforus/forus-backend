@@ -54,7 +54,7 @@ class PrevalidationPolicy extends BasePolicy
 
         if (VoucherQuery::whereNotExpired(Voucher::where([
             'fund_id' => $prevalidation->fund_id,
-            'identity_address' => $identity->address,
+            'identity_id' => $identity->id,
         ]))->exists()) {
             $this->deny('used_same_fund');
         }

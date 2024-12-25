@@ -19,16 +19,17 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'criteria' => true,
     ], [
         'key' => 'given_name',
-        'name' => 'Given Name',
+        'name' => 'Voornaam',
         'vouchers' => true,
     ], [
         'key' => 'family_name',
-        'name' => 'Family Name',
+        'name' => 'Achternaam',
         'vouchers' => true,
     ], [
         'key' => 'children_nth',
         'name' => 'Number of children',
         'type' => 'number',
+        'control_type' => 'step',
         'vouchers' => true,
         'criteria' => true,
     ], [
@@ -40,7 +41,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'vouchers' => true,
     ], [
         'key' => 'birth_date',
-        'name' => 'Birth date',
+        'name' => 'Geboortedatum',
         'type' => 'date',
         'vouchers' => true,
         'criteria' => true,
@@ -54,19 +55,22 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'tax_id',
         'name' => 'Tax ID',
+        'control_type' => 'number',
     ], [
         'key' => 'telephone',
-        'name' => 'Telephone',
+        'name' => 'Vast telefoonnummer',
         'vouchers' => true,
     ], [
         'key' => 'net_worth',
         'name' => 'Net worth',
         'type' => 'number',
+        'control_type' => 'currency',
         'criteria' => true,
     ], [
         'key' => 'base_salary',
         'name' => 'Base salary',
         'type' => 'number',
+        'control_type' => 'currency',
         'criteria' => true,
     ], [
         'key' => 'bsn',
@@ -91,6 +95,30 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'key' => 'partner_bsn_hash',
         'name' => 'Partner BSN Hash',
         'system' => true,
+    ], [
+        'key' => 'mobile',
+        'name' => 'Mobiele telefoonnummer',
+        'system' => true,
+    ], [
+        'key' => 'city',
+        'name' => 'Woonplaats',
+        'system' => true,
+    ], [
+        'key' => 'street',
+        'name' => 'Straatnaam',
+        'system' => true,
+    ], [
+        'key' => 'house_number',
+        'name' => 'Huisnummer',
+        'system' => true,
+    ], [
+        'key' => 'house_number_addition',
+        'name' => 'Huisnummer toevoeging',
+        'system' => true,
+    ], [
+        'key' => 'postal_code',
+        'name' => 'Postcode',
+        'system' => true,
     ]];
 
     /**
@@ -100,14 +128,27 @@ class RecordTypesTableSeeder extends DatabaseSeeder
      */
     public function run(): void
     {
+        $baseTypes = [
+            'bool' => 'checkbox',
+            'date' => 'date',
+            'string' => 'text',
+            'email' => 'text',
+            'bsn' => 'number',
+            'iban' => 'text',
+            'number' => 'number',
+            'select' => 'select',
+            'select_number' => 'select',
+        ];
+
         foreach ($this->recordTypes as $type) {
             $recordType = RecordType::create([
                 'type' => 'string',
                 'system' => false,
                 'vouchers' => false,
                 'criteria' => false,
+                'control_type' => $baseTypes[$type['type'] ?? null] ?? 'text',
                 ...Arr::only($type, [
-                    'key', 'name', 'type', 'required', 'criteria', 'system', 'vouchers',
+                    'key', 'name', 'type', 'required', 'criteria', 'system', 'vouchers', 'control_type',
                 ]),
             ]);
 

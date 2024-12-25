@@ -140,7 +140,7 @@ class ProductResource extends BaseJsonResource
             ];
 
             $productData = ProductSubQuery::appendReservationStats([
-                'identity_address' => $request->auth_address(),
+                'identity_id' => $request->auth_id(),
                 'fund_id' => $fund->id,
             ], Product::whereId($product->id))->firstOrFail()->only([
                 'limit_total', 'limit_per_identity', 'limit_available',

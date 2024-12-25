@@ -9,10 +9,8 @@ use App\Models\Organization;
 use App\Models\Permission;
 
 /**
- * Class UpdateFundRequest
  * @property null|Fund $fund
  * @property null|Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
 class UpdateFundBackofficeRequest extends BaseFormRequest
 {

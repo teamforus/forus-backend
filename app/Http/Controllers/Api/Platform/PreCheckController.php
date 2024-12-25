@@ -31,13 +31,17 @@ class PreCheckController extends Controller
     public function calculateTotals(CalculatePreCheckRequest $request): JsonResponse
     {
         $records = array_pluck($request->input('records', []), 'value', 'key');
-        $availableFunds = PreCheck::getAvailableFunds($request);
+        $availableFunds = PreCheck::getAvailableFunds($request->identity(), $request->only([
+            'q', 'tag_id', 'organization_id',
+        ]));
 
         $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
         $fundsValid = array_where($funds, fn ($fund) => $fund['is_valid']);
 
         $amountTotal = array_sum(array_pluck($funds, 'amount_total'));
         $amountTotalValid = array_sum(array_pluck($fundsValid, 'amount_total'));
+        $productsCountTotal = array_sum(array_pluck($funds, 'product_count'));
+        $productsAmountTotal = array_sum(array_pluck($funds, 'products_amount_total'));
 
         return new JsonResponse([
             'funds' => $funds,
@@ -45,6 +49,8 @@ class PreCheckController extends Controller
             'amount_total' => $amountTotal,
             'amount_total_locale' => currency_format_locale($amountTotal),
             'amount_total_valid' => $amountTotalValid,
+            'products_count_total' => $productsCountTotal,
+            'products_amount_total' => currency_format_locale($productsAmountTotal),
             'amount_total_valid_locale' => currency_format_locale($amountTotalValid),
         ]);
     }
@@ -57,7 +63,9 @@ class PreCheckController extends Controller
     public function downloadPDF(CalculatePreCheckRequest $request): Response
     {
         $records = array_pluck($request->input('records', []), 'value', 'key');
-        $availableFunds = PreCheck::getAvailableFunds($request);
+        $availableFunds = PreCheck::getAvailableFunds($request->identity(), $request->only([
+            'q', 'tag_id', 'organization_id',
+        ]));
 
         $funds = PreCheck::calculateTotalsPerFund($availableFunds, $records);
 

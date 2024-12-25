@@ -8,13 +8,13 @@ use SimpleXMLElement;
 
 class BulkPayment
 {
-    protected $requestedExecutionDate;
-    protected $paymentInitiator;
-    protected $redirectToken;
-    protected $bulkPaymentId;
-    protected $messageId;
-    protected $payments;
-    protected $debtor;
+    protected ?string $requestedExecutionDate;
+    protected PaymentInitiator $paymentInitiator;
+    protected string $redirectToken;
+    protected string $bulkPaymentId;
+    protected ?string $messageId;
+    protected array $payments;
+    protected Account $debtor;
 
     /**
      * @param PaymentInitiator $paymentInitiator

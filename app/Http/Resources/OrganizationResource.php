@@ -3,22 +3,22 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Fund;
 use App\Models\Identity;
+use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Role;
-use App\Models\Fund;
-use App\Models\Organization;
 use App\Services\MollieService\Models\MollieConnection;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Http\Request;
 
 /**
  * @property Organization $resource
  */
 class OrganizationResource extends JsonResource
 {
-    public const DEPENDENCIES = [
+    public const array DEPENDENCIES = [
         'logo',
         'funds',
         'offices',
@@ -141,7 +141,8 @@ class OrganizationResource extends JsonResource
                 'allow_batch_reservations', 'allow_budget_fund_limits',
                 'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
                 'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
-                'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts',
+                'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts', 'allow_profiles',
+                'allow_product_updates',
             ]),
             ...$request->isProviderDashboard() ? [
                 'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),
@@ -149,9 +150,9 @@ class OrganizationResource extends JsonResource
                 'can_view_provider_extra_payments' => $organization->canViewExtraPaymentsAsProvider(),
             ] : [],
             'bank_statement_details' => $organization->only([
-                'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time', 'bank_branch_number', 'bank_branch_id',
-                'bank_branch_name', 'bank_fund_name', 'bank_note', 'bank_reservation_number',
-                'bank_separator',
+                'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time',
+                'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
+                'bank_note', 'bank_reservation_number', 'bank_separator',
             ]),
         ] : [];
     }

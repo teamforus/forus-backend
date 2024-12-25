@@ -27,7 +27,7 @@ class PhysicalCardPolicy
             return $result;
         }
 
-        return $identity->address === $voucher->identity_address;
+        return $identity->id === $voucher->identity_id;
     }
 
     /**
@@ -66,7 +66,7 @@ class PhysicalCardPolicy
     {
         return
             $physicalCard->voucher_id === $voucher->id &&
-            $voucher->identity_address === $identity->address;
+            $voucher->identity_id === $identity->id;
     }
 
     /**

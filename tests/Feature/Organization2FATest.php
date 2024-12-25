@@ -69,9 +69,8 @@ class Organization2FATest extends TestCase
         $organization = $this->getOrganization();
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
-        /** @var Fund $fund */
-        $fund = $organization->funds->first();
-        $fund->makeVoucher($organization->identity->address);
+        $fund = $organization->funds[0];
+        $fund->makeVoucher($organization->identity);
 
         $fund->fund_config->update([
             'auth_2fa_policy' => FundConfig::AUTH_2FA_POLICY_GLOBAL,

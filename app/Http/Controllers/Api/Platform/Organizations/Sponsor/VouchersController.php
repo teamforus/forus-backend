@@ -30,10 +30,6 @@ use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class VouchersController
- * @package App\Http\Controllers\Api\Platform\Organizations\Sponsor
- */
 class VouchersController extends Controller
 {
     /**
@@ -79,10 +75,10 @@ class VouchersController extends Controller
         $note = $request->input('note');
         $email = $request->input('email', false);
         $amount = currency_format($fund->isTypeBudget() ? $request->input('amount', 0) : 0);
-        $identity = $email ? Identity::findOrMake($email)->address : null;
         $expire_at = $request->input('expire_at', false);
         $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
+        $identity = $email ? Identity::findOrMake($email) : null;
         $multiplier = $request->input('limit_multiplier');
         $records = $request->input('records', []);
 
@@ -136,7 +132,7 @@ class VouchersController extends Controller
      */
     public function storeValidate(
         StoreVoucherRequest $request,
-        Organization        $organization
+        Organization $organization
     ): void {}
 
     /**
@@ -150,32 +146,36 @@ class VouchersController extends Controller
      */
     public function storeBatch(
         StoreBatchVoucherRequest $request,
-        Organization             $organization
+        Organization $organization,
     ): AnonymousResourceCollection {
         $fund = Fund::find($request->post('fund_id'));
-        $allowVoucherRecords = $fund?->fund_config?->allow_voucher_records;
+        $file = $request->post('file');
         $employee = $request->employee($organization);
+        $vouchers = $request->post('vouchers');
+        $allowVoucherRecords = $fund?->fund_config?->allow_voucher_records;
 
         $this->authorize('show', $organization);
         $this->authorize('storeSponsor', [Voucher::class, $organization, $fund]);
 
-        return SponsorVoucherResource::collection(collect(
-            $request->post('vouchers')
-        )->map(function($voucher) use ($fund, $organization, $request, $employee, $allowVoucherRecords) {
-            $note       = $voucher['note'] ?? null;
-            $email      = $voucher['email'] ?? false;
-            $amount     = currency_format($fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0);
-            $records    = isset($voucher['records']) && is_array($voucher['records']) ? $voucher['records'] : [];
-            $identity   = $email ? Identity::findOrMake($email)->address : null;
-            $expire_at  = $voucher['expire_at'] ?? false;
-            $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
+        $event = $employee->logCsvUpload($employee::EVENT_UPLOADED_VOUCHERS, $file, $vouchers);
+
+        $voucherModels = collect($vouchers)->map(function($voucher) use (
+            $fund, $organization, $request, $employee, $allowVoucherRecords,
+        ) {
+            $note = $voucher['note'] ?? null;
+            $email = $voucher['email'] ?? false;
+            $amount = currency_format($fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0);
+            $records = isset($voucher['records']) && is_array($voucher['records']) ? $voucher['records'] : [];
+            $identity = $email ? Identity::findOrMake($email) : null;
+            $expire_at = $voucher['expire_at'] ?? false;
+            $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
             $multiplier = $voucher['limit_multiplier'] ?? null;
 
-            $employee_id        = $employee->id;
-            $extraFields        = compact('note', 'employee_id');
-            $payment_iban       = $voucher['direct_payment_iban'] ?? null;
-            $payment_name       = $voucher['direct_payment_name'] ?? null;
+            $employee_id = $employee->id;
+            $extraFields = compact('note', 'employee_id');
+            $payment_iban = $voucher['direct_payment_iban'] ?? null;
+            $payment_name = $voucher['direct_payment_name'] ?? null;
 
             if ($product_id) {
                 $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
@@ -215,7 +215,14 @@ class VouchersController extends Controller
             }
 
             return $mainVoucher;
-        }));
+        });
+
+        $event->forceFill([
+            'data->uploaded_file_meta->state' => 'success',
+            'data->uploaded_file_meta->created_ids' => $voucherModels->pluck('id')->toArray(),
+        ])->update();
+
+        return SponsorVoucherResource::collection($voucherModels);
     }
 
     /**
@@ -227,7 +234,7 @@ class VouchersController extends Controller
      */
     public function storeBatchValidate(
         StoreBatchVoucherRequest $request,
-        Organization             $organization
+        Organization $organization,
     ): void {}
 
     /**

@@ -38,8 +38,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class MollieConnectionProfile extends BaseModel
 {
-    public const STATE_ACTIVE = 'active';
-    public const STATE_PENDING = 'pending';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_PENDING = 'pending';
 
     /**
      * @var string[]

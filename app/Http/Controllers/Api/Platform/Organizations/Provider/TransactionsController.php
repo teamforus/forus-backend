@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Provider;
 
 use App\Exports\VoucherTransactionsProviderExport;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Provider\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Provider\ProviderVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
-use App\Http\Controllers\Controller;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;

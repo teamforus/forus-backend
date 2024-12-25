@@ -5,10 +5,6 @@ namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 
-/**
- * Class IndexFundRequest
- * @package App\Http\Requests\Api\Platform\Organizations\Funds
- */
 class IndexFundRequest extends BaseFormRequest
 {
     /**

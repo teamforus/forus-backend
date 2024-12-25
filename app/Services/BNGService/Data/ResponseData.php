@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 
 class ResponseData
 {
-    protected $data;
+    protected mixed $data;
     protected int $code;
     protected array $headers;
 
@@ -53,7 +53,7 @@ class ResponseData
     }
 
     /**
-     * @return array
+     * @return array|null
      */
     public function getData(): ?array
     {

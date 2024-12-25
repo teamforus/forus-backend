@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Payouts\IndexPayoutsRequest;
 use App\Http\Resources\VoucherTransactionPayoutResource;
-use App\Models\FundRequest;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Searches\VoucherTransactionsSearch;
@@ -28,7 +27,7 @@ class PayoutsController extends Controller
             $builder->where('target', VoucherTransaction::TARGET_PAYOUT);
             $builder->whereHas('voucher', function (Builder $builder) use ($request) {
                 $builder->where('voucher_type', Voucher::VOUCHER_TYPE_PAYOUT);
-                $builder->whereRelation('fund_request', 'identity_address', $request->auth_address());
+                $builder->whereRelation('fund_request', 'identity_id', $request->auth_id());
             });
         });
 

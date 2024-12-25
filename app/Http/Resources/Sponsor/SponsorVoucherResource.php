@@ -16,12 +16,12 @@ class SponsorVoucherResource extends BaseJsonResource
     /**
      * @var array
      */
-    public const LOAD = [
+    public const array LOAD = [
         'token_without_confirmation',
         'transactions.voucher.fund.logo.presets',
         'transactions.provider.logo.presets',
         'transactions.product.photo.presets',
-        'product_vouchers',
+        'product_vouchers.paid_out_transactions',
         'reimbursements_pending',
         'fund.fund_config.implementation',
         'fund.organization',
@@ -49,13 +49,13 @@ class SponsorVoucherResource extends BaseJsonResource
         $amount_spent = floatval($voucher->amount_total) - $amount_available;
         $first_use_date = $voucher->first_use_date;
 
-        if ($voucher->is_granted && $voucher->identity_address) {
+        if ($voucher->is_granted && $voucher->identity_id) {
             $identity_email = $voucher->identity?->email;
             $identity_bsn = $bsn_enabled ? $voucher->identity?->bsn: null;
         }
 
         return array_merge($voucher->only([
-            'id', 'number', 'note', 'identity_address', 'state', 'state_locale',
+            'id', 'number', 'note', 'identity_id', 'state', 'state_locale',
             'is_granted', 'expired', 'activation_code', 'client_uid', 'has_transactions',
             'in_use', 'limit_multiplier', 'fund_id', 'is_external',
         ]), [

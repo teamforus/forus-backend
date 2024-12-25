@@ -19,18 +19,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Implementation $implementation
  * @property-read \App\Models\SystemNotification $system_notification
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotificationConfig newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotificationConfig newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotificationConfig query()
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotificationConfig whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotificationConfig whereEnableAll($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotificationConfig whereEnableDatabase($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotificationConfig whereEnableMail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotificationConfig whereEnablePush($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotificationConfig whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotificationConfig whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotificationConfig whereSystemNotificationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SystemNotificationConfig whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereEnableAll($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereEnableDatabase($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereEnableMail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereEnablePush($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereSystemNotificationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class SystemNotificationConfig extends Model

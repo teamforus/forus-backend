@@ -38,7 +38,7 @@ trait MakesProductReservations
         )->whereNull('product_id')->first();
 
         if (!$voucher) {
-            $voucher = $funds->first()->makeVoucher($organization->identity_address, [
+            $voucher = $funds->first()->makeVoucher($organization->identity, [
                 'state' => Voucher::STATE_ACTIVE
             ], 10000);
         }
@@ -94,9 +94,9 @@ trait MakesProductReservations
     {
         $product = ProductQuery::approvedForFundsAndActiveFilter(
             ProductSubQuery::appendReservationStats([
+                'identity_id' => $voucher->identity_id,
                 'voucher_id' => $voucher->id,
                 'fund_id' => $voucher->fund_id,
-                'identity_address' => $voucher->identity_address,
             ]),
             $voucher->fund_id
         )->where('limit_total_available', '>', 0);

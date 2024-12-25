@@ -9,7 +9,7 @@ use App\Models\Product;
  */
 class ProductBasicResource extends ProductResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'organization',
     ];
 

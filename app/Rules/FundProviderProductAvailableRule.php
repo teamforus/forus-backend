@@ -2,8 +2,8 @@
 
 namespace App\Rules;
 
-use App\Models\Product;
 use App\Models\FundProvider;
+use App\Models\Product;
 use App\Scopes\Builders\ProductQuery;
 use Illuminate\Support\Env;
 

@@ -8,19 +8,19 @@ use App\Services\MediaService\MediaImagePreset;
 class PreCheckBannerMediaConfig extends MediaImageConfig
 {
     /**
-     * @var array
+     * @var ?string
      */
-    protected $name = 'pre_check_banner';
+    protected ?string $name = 'pre_check_banner';
 
     /**
      * @var string
      */
-    protected $type = self::TYPE_MULTIPLE;
+    protected string $type = self::TYPE_MULTIPLE;
 
     /**
      * @var float
      */
-    protected $preview_aspect_ratio = 1.36;
+    protected float $preview_aspect_ratio = 1.36;
 
     /**
      * @throws \App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException

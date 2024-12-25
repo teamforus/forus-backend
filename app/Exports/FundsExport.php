@@ -7,8 +7,8 @@ use App\Models\Fund;
 use App\Statistics\Funds\FinancialOverviewStatistic;
 use App\Statistics\Funds\FinancialOverviewStatisticQueries;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
@@ -128,21 +128,19 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
     protected function exportTransform(Collection $funds): Collection
     {
         if (!$this->detailed) {
-            return $funds->map(fn(Fund $fund) => [
-                "name" => $fund->name,
-                "total_top_up" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetTotal(
-                    $fund, $this->from, $this->to,
-                )),
-                "expenses" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetUsed(
-                    $fund, $this->from, $this->to,
-                )),
-                "balance" => currency_format(FinancialOverviewStatisticQueries::getFundBudgetLeft(
-                    $fund, $this->from, $this->to,
-                )),
-                "transactions" => currency_format(FinancialOverviewStatisticQueries::getFundTransactionCosts(
-                    $fund, $this->from, $this->to,
-                )),
-            ]);
+            return $funds->map(function (Fund $fund) {
+                $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $this->from, $this->to);
+                $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $this->from, $this->to);
+                $costs = FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $this->from, $this->to);
+
+                return [
+                    "name" => $fund->name,
+                    "total_top_up" => currency_format($total),
+                    "expenses" => currency_format($used),
+                    "balance" => currency_format(round($total - $used, 2)),
+                    "transactions" => currency_format($costs),
+                ];
+            });
         }
 
         $funds = $funds->map(fn(Fund $fund) => $this->getVoucherData($fund));

@@ -5,16 +5,12 @@ namespace App\Media;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 
-/**
- * Class OrganizationLogoMediaConfig
- * @package App\Media
- */
 class OfficePhotoMediaConfig extends MediaImageConfig
 {
     /**
-     * @var array
+     * @var ?string
      */
-    protected $name = 'office_photo';
+    protected ?string $name = 'office_photo';
 
     /**
      * OfficePhotoMediaConfig constructor.

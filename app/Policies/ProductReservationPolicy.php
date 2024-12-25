@@ -49,7 +49,7 @@ class ProductReservationPolicy
      */
     public function view(Identity $identity, ProductReservation $productReservation): bool
     {
-        return $productReservation->voucher->identity_address === $identity->address;
+        return $productReservation->voucher->identity_id === $identity->id;
     }
 
     /**
@@ -118,7 +118,7 @@ class ProductReservationPolicy
             return $this->deny('Only pending reservations can be canceled.');
         }
 
-        if ($productReservation->voucher->identity_address !== $identity->address) {
+        if ($productReservation->voucher->identity_id !== $identity->id) {
             return false;
         }
 
@@ -196,7 +196,7 @@ class ProductReservationPolicy
             return $this->deny('The voucher used to make the reservation, is not active.');
         }
 
-        if ($productReservation->voucher->expired) {
+        if ($productReservation->voucher->reservation_approval_time_expired) {
             return $this->deny('The voucher used to make the reservation, has expired.');
         }
 
@@ -319,7 +319,7 @@ class ProductReservationPolicy
             return $this->deny('Checkout time expired expired.');
         }
 
-        return $reservation->voucher->identity_address === $identity->address;
+        return $reservation->voucher->identity_id === $identity->id;
     }
 
     /**

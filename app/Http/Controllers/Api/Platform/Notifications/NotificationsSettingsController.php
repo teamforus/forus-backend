@@ -5,14 +5,9 @@ namespace App\Http\Controllers\Api\Platform\Notifications;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Notifications\UpdateNotificationPreferencesRequest;
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Identity;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use Illuminate\Http\JsonResponse;
 
-/**
- * Class NotificationsController
- * @package App\Http\Controllers\Api\Platform
- */
 class NotificationsSettingsController extends Controller
 {
     private INotificationRepo $notificationRepo;

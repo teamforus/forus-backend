@@ -36,7 +36,6 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -60,8 +59,6 @@ use Illuminate\Support\Facades\Log;
  * @property string|null $external_page_url
  * @property string|null $type
  * @property string $state
- * @property string $balance
- * @property string $balance_provider
  * @property bool $archived
  * @property bool $public
  * @property bool $criteria_editable_after_start
@@ -159,98 +156,98 @@ use Illuminate\Support\Facades\Log;
  * @property-read int|null $voucher_transactions_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static Builder|Fund newModelQuery()
- * @method static Builder|Fund newQuery()
- * @method static Builder|Fund query()
- * @method static Builder|Fund whereArchived($value)
- * @method static Builder|Fund whereAutoRequestsValidation($value)
- * @method static Builder|Fund whereBalance($value)
- * @method static Builder|Fund whereBalanceProvider($value)
- * @method static Builder|Fund whereCreatedAt($value)
- * @method static Builder|Fund whereCriteriaEditableAfterStart($value)
- * @method static Builder|Fund whereDefaultValidatorEmployeeId($value)
- * @method static Builder|Fund whereDescription($value)
- * @method static Builder|Fund whereDescriptionPosition($value)
- * @method static Builder|Fund whereDescriptionShort($value)
- * @method static Builder|Fund whereDescriptionText($value)
- * @method static Builder|Fund whereEndDate($value)
- * @method static Builder|Fund whereExternalLinkText($value)
- * @method static Builder|Fund whereExternalLinkUrl($value)
- * @method static Builder|Fund whereExternalPage($value)
- * @method static Builder|Fund whereExternalPageUrl($value)
- * @method static Builder|Fund whereFaqTitle($value)
- * @method static Builder|Fund whereId($value)
- * @method static Builder|Fund whereName($value)
- * @method static Builder|Fund whereNotificationAmount($value)
- * @method static Builder|Fund whereNotifiedAt($value)
- * @method static Builder|Fund whereOrganizationId($value)
- * @method static Builder|Fund whereParentId($value)
- * @method static Builder|Fund wherePublic($value)
- * @method static Builder|Fund whereRequestBtnText($value)
- * @method static Builder|Fund whereStartDate($value)
- * @method static Builder|Fund whereState($value)
- * @method static Builder|Fund whereType($value)
- * @method static Builder|Fund whereUpdatedAt($value)
+ * @method static Builder<static>|Fund newModelQuery()
+ * @method static Builder<static>|Fund newQuery()
+ * @method static Builder<static>|Fund query()
+ * @method static Builder<static>|Fund whereArchived($value)
+ * @method static Builder<static>|Fund whereAutoRequestsValidation($value)
+ * @method static Builder<static>|Fund whereCreatedAt($value)
+ * @method static Builder<static>|Fund whereCriteriaEditableAfterStart($value)
+ * @method static Builder<static>|Fund whereDefaultValidatorEmployeeId($value)
+ * @method static Builder<static>|Fund whereDescription($value)
+ * @method static Builder<static>|Fund whereDescriptionPosition($value)
+ * @method static Builder<static>|Fund whereDescriptionShort($value)
+ * @method static Builder<static>|Fund whereDescriptionText($value)
+ * @method static Builder<static>|Fund whereEndDate($value)
+ * @method static Builder<static>|Fund whereExternalLinkText($value)
+ * @method static Builder<static>|Fund whereExternalLinkUrl($value)
+ * @method static Builder<static>|Fund whereExternalPage($value)
+ * @method static Builder<static>|Fund whereExternalPageUrl($value)
+ * @method static Builder<static>|Fund whereFaqTitle($value)
+ * @method static Builder<static>|Fund whereId($value)
+ * @method static Builder<static>|Fund whereName($value)
+ * @method static Builder<static>|Fund whereNotificationAmount($value)
+ * @method static Builder<static>|Fund whereNotifiedAt($value)
+ * @method static Builder<static>|Fund whereOrganizationId($value)
+ * @method static Builder<static>|Fund whereParentId($value)
+ * @method static Builder<static>|Fund wherePublic($value)
+ * @method static Builder<static>|Fund whereRequestBtnText($value)
+ * @method static Builder<static>|Fund whereStartDate($value)
+ * @method static Builder<static>|Fund whereState($value)
+ * @method static Builder<static>|Fund whereType($value)
+ * @method static Builder<static>|Fund whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Fund extends BaseModel
 {
     use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasFaq;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_UPDATED = 'updated';
-    public const EVENT_PROVIDER_APPLIED = 'provider_applied';
-    public const EVENT_PROVIDER_REPLIED = 'provider_replied';
-    public const EVENT_PROVIDER_APPROVED_PRODUCTS = 'provider_approved_products';
-    public const EVENT_PROVIDER_APPROVED_BUDGET = 'provider_approved_budget';
-    public const EVENT_PROVIDER_REVOKED_PRODUCTS = 'provider_revoked_products';
-    public const EVENT_PROVIDER_REVOKED_BUDGET = 'provider_revoked_budget';
-    public const EVENT_BALANCE_LOW = 'balance_low';
-    public const EVENT_BALANCE_SUPPLIED = 'balance_supplied';
-    public const EVENT_FUND_STARTED = 'fund_started';
-    public const EVENT_FUND_ENDED = 'fund_ended';
-    public const EVENT_PRODUCT_ADDED = 'fund_product_added';
-    public const EVENT_PRODUCT_APPROVED = 'fund_product_approved';
-    public const EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
-    public const EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
-    public const EVENT_FUND_EXPIRING = 'fund_expiring';
-    public const EVENT_ARCHIVED = 'archived';
-    public const EVENT_UNARCHIVED = 'unarchived';
-    public const EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
-    public const EVENT_VOUCHERS_EXPORTED = 'vouchers_exported';
-    public const EVENT_SPONSOR_NOTIFICATION_CREATED = 'sponsor_notification_created';
-    public const EVENT_PERIOD_EXTENDED = 'period_extended';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_UPDATED = 'updated';
+    public const string EVENT_PROVIDER_APPLIED = 'provider_applied';
+    public const string EVENT_PROVIDER_REPLIED = 'provider_replied';
+    public const string EVENT_PROVIDER_APPROVED_PRODUCTS = 'provider_approved_products';
+    public const string EVENT_PROVIDER_APPROVED_BUDGET = 'provider_approved_budget';
+    public const string EVENT_PROVIDER_REVOKED_PRODUCTS = 'provider_revoked_products';
+    public const string EVENT_PROVIDER_REVOKED_BUDGET = 'provider_revoked_budget';
+    public const string EVENT_BALANCE_LOW = 'balance_low';
+    public const string EVENT_BALANCE_SUPPLIED = 'balance_supplied';
+    public const string EVENT_FUND_STARTED = 'fund_started';
+    public const string EVENT_FUND_ENDED = 'fund_ended';
+    public const string EVENT_PRODUCT_ADDED = 'fund_product_added';
+    public const string EVENT_PRODUCT_APPROVED = 'fund_product_approved';
+    public const string EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
+    public const string EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
+    public const string EVENT_FUND_EXPIRING = 'fund_expiring';
+    public const string EVENT_ARCHIVED = 'archived';
+    public const string EVENT_UNARCHIVED = 'unarchived';
+    public const string EVENT_VOUCHERS_EXPORTED = 'vouchers_exported';
+    public const string EVENT_SPONSOR_NOTIFICATION_CREATED = 'sponsor_notification_created';
+    public const string EVENT_PERIOD_EXTENDED = 'period_extended';
 
-    public const STATE_ACTIVE = 'active';
-    public const STATE_CLOSED = 'closed';
-    public const STATE_PAUSED = 'paused';
-    public const STATE_WAITING = 'waiting';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_CLOSED = 'closed';
+    public const string STATE_PAUSED = 'paused';
+    public const string STATE_WAITING = 'waiting';
 
-    public const BALANCE_PROVIDER_TOP_UPS = 'top_ups';
-    public const BALANCE_PROVIDER_BANK_CONNECTION = 'bank_connection_balance';
-
-    public const STATES = [
+    public const array STATES = [
         self::STATE_ACTIVE,
         self::STATE_CLOSED,
         self::STATE_PAUSED,
         self::STATE_WAITING,
     ];
 
-    public const TYPE_BUDGET = 'budget';
-    public const TYPE_EXTERNAL = 'external';
-    public const TYPE_SUBSIDIES = 'subsidies';
+    public const array STATES_PUBLIC = [
+        self::STATE_ACTIVE,
+        self::STATE_PAUSED,
+        self::STATE_CLOSED,
+    ];
 
-    public const TYPES = [
+    public const string TYPE_BUDGET = 'budget';
+    public const string TYPE_EXTERNAL = 'external';
+    public const string TYPE_SUBSIDIES = 'subsidies';
+
+    public const array TYPES = [
         self::TYPE_BUDGET,
         self::TYPE_SUBSIDIES,
         self::TYPE_EXTERNAL,
     ];
 
-    const DESCRIPTION_POSITION_AFTER = 'after';
-    const DESCRIPTION_POSITION_BEFORE = 'before';
-    const DESCRIPTION_POSITION_REPLACE = 'replace';
+    const string DESCRIPTION_POSITION_AFTER = 'after';
+    const string DESCRIPTION_POSITION_BEFORE = 'before';
+    const string DESCRIPTION_POSITION_REPLACE = 'replace';
 
-    const DESCRIPTION_POSITIONS = [
+    const array DESCRIPTION_POSITIONS = [
         self::DESCRIPTION_POSITION_AFTER,
         self::DESCRIPTION_POSITION_BEFORE,
         self::DESCRIPTION_POSITION_REPLACE,
@@ -267,7 +264,7 @@ class Fund extends BaseModel
         'default_validator_employee_id', 'auto_requests_validation',
         'criteria_editable_after_start', 'type', 'archived', 'description_short',
         'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title',
-        'balance', 'description_position', 'external_page', 'external_page_url',
+        'description_position', 'external_page', 'external_page_url', 'pre_check_note',
     ];
 
     protected $hidden = [
@@ -508,6 +505,7 @@ class Fund extends BaseModel
             'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
             'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
             'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
+            'pre_check_excluded', 'pre_check_note',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([
@@ -570,26 +568,6 @@ class Fund extends BaseModel
         if (!is_null($tagIds)) {
             $this->syncTags($tagIds, $scope);
         }
-    }
-
-    /**
-     * @param string $balance
-     * @param BankConnection $bankConnection
-     * @return $this
-     */
-    public function setBalance(string $balance, BankConnection $bankConnection): self
-    {
-        $this->update(compact('balance'));
-
-        $this->log(static::EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION, [
-            'bank_connection' => $bankConnection,
-            'bank_connection_account' => $bankConnection->bank_connection_default_account,
-        ], [
-            'fund_balance' => $this->balance,
-            'fund_balance_provider' => $this->balance_provider,
-        ]);
-
-        return $this;
     }
 
     /**
@@ -737,15 +715,7 @@ class Fund extends BaseModel
      */
     public function getBudgetTotalAttribute(): float
     {
-        if ($this->balance_provider === static::BALANCE_PROVIDER_TOP_UPS) {
-            return round($this->top_up_transactions->sum('amount'), 2);
-        }
-
-        if ($this->balance_provider === static::BALANCE_PROVIDER_BANK_CONNECTION) {
-            return round(floatval($this->balance) + $this->budget_used, 2);
-        }
-
-        return 0;
+        return round($this->top_up_transactions->sum('amount'), 2);
     }
 
     /**
@@ -774,15 +744,7 @@ class Fund extends BaseModel
      */
     public function getBudgetLeftAttribute(): float
     {
-        if ($this->balance_provider === static::BALANCE_PROVIDER_TOP_UPS) {
-            return round($this->budget_total - $this->budget_used, 2);
-        }
-
-        if ($this->balance_provider === static::BALANCE_PROVIDER_BANK_CONNECTION) {
-            return round($this->balance, 2);
-        }
-
-        return 0;
+        return round($this->budget_total - $this->budget_used, 2);
     }
 
     /**
@@ -974,34 +936,30 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string $identity_address
-     * @param array $record_types
+     * @param Identity $identity
+     * @param array $recordTypes
      * @return array|Record[]
      */
-    public function getTrustedRecordOfTypes(
-        string $identity_address,
-        array $record_types,
-    ): array {
-        return array_combine($record_types, array_map(fn ($record_type) => $this->getTrustedRecordOfType(
-            $identity_address,
+    public function getTrustedRecordOfTypes(Identity $identity, array $recordTypes): array
+    {
+        return array_combine($recordTypes, array_map(fn ($record_type) => $this->getTrustedRecordOfType(
+            $identity,
             $record_type,
-        )?->value, $record_types));
+        )?->value, $recordTypes));
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param string $record_type
      * @return Model|Record|null
      */
-    public function getTrustedRecordOfType(
-        string $identity_address,
-        string $record_type,
-    ): Record|Model|null {
+    public function getTrustedRecordOfType(Identity $identity, string $record_type): Record|Model|null
+    {
         $fund = $this;
         $daysTrusted = $this->getTrustedDays($record_type);
         $startDate = $this->fund_config?->record_validity_start_date;
 
-        $builder = Record::search(Identity::findByAddress($identity_address)->records(), [
+        $builder = Record::search($identity->records(), [
             'type' => $record_type,
         ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund, $startDate) {
             RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
@@ -1056,29 +1014,27 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string|null $identityAddress
+     * @param ?Identity $identity
      * @param array|null $records
      * @return float
      */
-    public function amountForIdentity(?string $identityAddress, array $records = null): float
-    {
+    public function amountForIdentity(
+        ?Identity $identity,
+        array $records = null,
+    ): float {
         if ($this->fund_formulas->count() === 0 &&
             $this->fund_formula_products->pluck('price')->sum() === 0) {
             return 0;
         }
 
-        return $this->fund_formulas->map(function(FundFormula $formula) use ($identityAddress, $records) {
+        return $this->fund_formulas->map(function(FundFormula $formula) use ($identity, $records) {
             switch ($formula->type) {
                 case 'fixed': return $formula->amount;
                 case 'multiply': {
                     if ($records) {
                         $value = $records[$formula->record_type_key] ?? null;
                     } else {
-                        $record = $this->getTrustedRecordOfType(
-                            $identityAddress,
-                            $formula->record_type_key,
-                        );
-
+                        $record = $this->getTrustedRecordOfType($identity, $formula->record_type_key);
                         $value = $record?->value;
                     }
 
@@ -1090,27 +1046,23 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string|null $identityAddress
+     * @param ?Identity $identity
      * @param array|null $records
      * @return int
      */
-    public function multiplierForIdentity(?string $identityAddress, array $records = null): int {
+    public function multiplierForIdentity(?Identity $identity, array $records = null): int {
         /** @var FundLimitMultiplier[]|Collection $multipliers */
         $multipliers = $this->fund_limit_multipliers()->get();
 
-        if ((!$identityAddress && !$records) || ($multipliers->count() === 0)) {
+        if ((!$identity?->exists() && !$records) || ($multipliers->count() === 0)) {
             return 1;
         }
 
-        return $multipliers->map(function(FundLimitMultiplier $multiplier) use ($identityAddress, $records) {
+        return $multipliers->map(function(FundLimitMultiplier $multiplier) use ($identity, $records) {
             if ($records) {
                 $value = (int) ($records[$multiplier->record_type_key] ?: 1);
             } else {
-                $record = $this->getTrustedRecordOfType(
-                    $identityAddress,
-                    $multiplier->record_type_key,
-                );
-
+                $record = $this->getTrustedRecordOfType($identity, $multiplier->record_type_key);
                 $value = (int) ($record ? $record->value: 1);
             }
 
@@ -1225,7 +1177,7 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string|null $identity_address
+     * @param Identity|null $identity
      * @param array $voucherFields
      * @param string|FundAmountPreset|null $amount
      * @param Carbon|null $expire_at
@@ -1233,7 +1185,7 @@ class Fund extends BaseModel
      * @return Voucher|null
      */
     public function makeVoucher(
-        string $identity_address = null,
+        ?Identity $identity = null,
         array $voucherFields = [],
         string|FundAmountPreset $amount = null,
         Carbon $expire_at = null,
@@ -1246,16 +1198,16 @@ class Fund extends BaseModel
         }
 
         $amount = $presetModel ? $presetModel->amount : $amount;
-        $amount = $amount === null ? $this->amountForIdentity($identity_address) : $amount;
+        $amount = $amount === null ? $this->amountForIdentity($identity) : $amount;
 
         $voucher = Voucher::create([
             'number' => Voucher::makeUniqueNumber(),
-            'identity_address' => $identity_address,
+            'identity_id' => $identity?->id,
             'amount' => $amount,
             'expire_at' => $expire_at ?: $this->end_date,
             'fund_id' => $this->id,
             'returnable' => false,
-            'limit_multiplier' => $limit_multiplier ?: $this->multiplierForIdentity($identity_address),
+            'limit_multiplier' => $limit_multiplier ?: $this->multiplierForIdentity($identity),
             'fund_amount_preset_id' => $presetModel?->id,
             ...$voucherFields,
         ]);
@@ -1298,13 +1250,13 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string|null $identityAddress
+     * @param ?Identity $identity
      * @param array $voucherFields
      * @param Carbon|null $expireAt
      * @return Voucher[]
      */
     public function makeFundFormulaProductVouchers(
-        string $identityAddress = null,
+        ?Identity $identity = null,
         array $voucherFields = [],
         Carbon $expireAt = null
     ): array {
@@ -1315,10 +1267,10 @@ class Fund extends BaseModel
             $productExpireDate = $formulaProduct->product->expire_at;
             $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
             $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
-            $multiplier = $formulaProduct->getIdentityMultiplier($identityAddress);
+            $multiplier = $formulaProduct->getIdentityMultiplier($identity);
 
             $vouchers = array_merge($vouchers, array_map(fn () => $this->makeProductVoucher(
-                $identityAddress,
+                $identity,
                 $voucherFields,
                 $formulaProduct->product->id,
                 $voucherExpireAt,
@@ -1330,7 +1282,7 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string|null $identity_address
+     * @param Identity|null $identity
      * @param array $voucherFields
      * @param int|null $product_id
      * @param Carbon|null $expire_at
@@ -1338,7 +1290,7 @@ class Fund extends BaseModel
      * @return Voucher
      */
     public function makeProductVoucher(
-        string $identity_address = null,
+        ?Identity $identity = null,
         array $voucherFields = [],
         int $product_id = null,
         Carbon $expire_at = null,
@@ -1351,7 +1303,7 @@ class Fund extends BaseModel
             'expire_at' => $expire_at ?: $this->end_date,
             'product_id' => $product_id,
             'returnable' => false,
-            'identity_address' => $identity_address,
+            'identity_id' => $identity?->id,
             ...$voucherFields,
         ]);
 
@@ -1429,7 +1381,7 @@ class Fund extends BaseModel
     ): FundRequest {
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->fund_requests()->create(array_merge([
-            'identity_address' => $identity->address,
+            'identity_id' => $identity->id,
         ], $this->fund_config->contact_info_enabled ? [
             'contact_information' => $contactInformation,
         ] : []));
@@ -1515,15 +1467,13 @@ class Fund extends BaseModel
      * @param FundCriterion $criterion
      * @return bool
      */
-    public function checkFundCriteria(
-        Identity $identity,
-        FundCriterion $criterion,
-    ): bool {
+    public function checkFundCriteria(Identity $identity, FundCriterion $criterion): bool
+    {
         $record_type = $criterion->record_type;
-        $value = $this->getTrustedRecordOfType($identity->address, $record_type->key)?->value;
+        $value = $this->getTrustedRecordOfType($identity, $record_type->key)?->value;
 
         $records = $criterion->fund_criterion_rules->pluck('record_type_key')->unique()->toArray();
-        $recordsValues = $this->getTrustedRecordOfTypes($identity->address, $records);
+        $recordsValues = $this->getTrustedRecordOfTypes($identity, $records);
 
         return
             $criterion->isExcludedByRules($recordsValues) ||
@@ -1548,39 +1498,38 @@ class Fund extends BaseModel
 
     /**
      * @param string $uri
-     * @return string
+     * @return string|null
      */
-    public function urlWebshop(string $uri = "/"): string
+    public function urlWebshop(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlWebshop($uri);
+        return $this->fund_config?->implementation?->urlWebshop($uri);
     }
 
     /**
      * @param string $uri
-     * @return string
+     * @return string|null
      */
-    public function urlSponsorDashboard(string $uri = "/"): string
+    public function urlSponsorDashboard(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlSponsorDashboard($uri);
+        return $this->fund_config?->implementation?->urlSponsorDashboard($uri);
     }
 
     /**
      * @param string $uri
-     * @return string
+     * @return string|null
      */
-    public function urlProviderDashboard(string $uri = "/"): string
+    public function urlProviderDashboard(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlProviderDashboard($uri);
+        return $this->fund_config?->implementation?->urlProviderDashboard($uri);
     }
 
     /**
      * @param string $uri
-     * @return string
-     * @noinspection PhpUnused
+     * @return string|null
      */
-    public function urlValidatorDashboard(string $uri = "/"): string
+    public function urlValidatorDashboard(string $uri = "/"): string|null
     {
-        return $this->fund_config->implementation->urlValidatorDashboard($uri);
+        return $this->fund_config?->implementation?->urlValidatorDashboard($uri);
     }
 
     /**
@@ -1676,7 +1625,7 @@ class Fund extends BaseModel
                     ]);
 
                     $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
-                        $this->getTrustedRecordOfType($identity->address, 'bsn_hash')?->value ?: null,
+                        $this->getTrustedRecordOfType($identity, 'bsn_hash')?->value ?: null,
                         $identityBsn ? $this->getHashedValue($identityBsn) : null
                     ]) : [$identityBsn ?: null]);
                 });
@@ -1687,7 +1636,7 @@ class Fund extends BaseModel
                     ]);
 
                     $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
-                        $this->getTrustedRecordOfType($identity->address, 'partner_bsn_hash')?->value ?: null,
+                        $this->getTrustedRecordOfType($identity, 'partner_bsn_hash')?->value ?: null,
                         $identityBsn ? $this->getHashedValue($identityBsn) : null
                     ]) : [$identityBsn ?: null]);
                 });
@@ -1734,7 +1683,7 @@ class Fund extends BaseModel
     public function identityHasActiveVoucher(Identity $identity): bool
     {
         return VoucherQuery::whereNotExpired($this->vouchers()->getQuery())->where([
-            'identity_address' => $identity->address,
+            'identity_id' => $identity->id,
         ])->exists();
     }
 
@@ -1743,7 +1692,7 @@ class Fund extends BaseModel
      * @return ResidencyResponse|PartnerBsnResponse|EligibilityResponse|null
      */
     public function checkBackofficeIfAvailable(
-        Identity $identity
+        Identity $identity,
     ): EligibilityResponse|ResidencyResponse|PartnerBsnResponse|null {
         $bsn = $identity->bsn;
         $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity);
@@ -1774,8 +1723,8 @@ class Fund extends BaseModel
 
             if ($response->isEligible() && !$this->identityHasActiveVoucher($identity)) {
                 $extraFields = ['fund_backoffice_log_id' => $response->getLog()->id];
-                $voucher = $this->makeVoucher($identity->address, $extraFields);
-                $this->makeFundFormulaProductVouchers($identity->address, $extraFields);
+                $voucher = $this->makeVoucher($identity, $extraFields);
+                $this->makeFundFormulaProductVouchers($identity, $extraFields);
 
                 $response->getLog()->update([
                     'voucher_id' => $voucher?->id,
@@ -1925,7 +1874,7 @@ class Fund extends BaseModel
      */
     public function identityRequireBsnConfirmation(Identity $identity): bool
     {
-        $record = $identity->activeBsnRecord();
+        $record = $identity->record_bsn;
         $recordTime = $record?->created_at?->diffInSeconds(now());
 
         if ($this->fund_config && $this->fund_config->bsn_confirmation_api_time === null) {
@@ -1963,6 +1912,30 @@ class Fund extends BaseModel
         }
 
         return null;
+    }
+
+    /**
+     * @param bool $excluded
+     * @param string $note
+     * @return void
+     */
+    public function updatePreCheckExclusion(bool $excluded, string $note): void
+    {
+        $this->updateFundsConfig([
+            'pre_check_note' => $note,
+            'pre_check_excluded' => $excluded,
+        ]);
+    }
+
+    /**
+     * @return void
+     */
+    public function removePreCheckExclusion(): void
+    {
+        $this->updateFundsConfig([
+            'pre_check_note' => null,
+            'pre_check_excluded' => false,
+        ]);
     }
 
     /**

@@ -13,7 +13,7 @@ class VoucherTransactionPayoutResource extends SponsorVoucherTransactionResource
     /**
      * @var string[]
      */
-    public const LOAD = [
+    public const array LOAD = [
         'voucher.fund:id,name',
         'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
         'employee.identity.primary_email',

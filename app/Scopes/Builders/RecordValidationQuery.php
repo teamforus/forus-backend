@@ -4,6 +4,7 @@
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
+use App\Models\RecordValidation;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -11,16 +12,16 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 class RecordValidationQuery
 {
     /**
-     * @param Builder|Relation $builder
+     * @param Builder|Relation|RecordValidation $builder
      * @param int $trustedDays
      * @param Carbon|null $startDate
-     * @return Builder
+     * @return Builder|Relation|RecordValidation
      */
     public static function whereStillTrustedQuery(
-        Builder|Relation $builder,
+        Builder|Relation|RecordValidation $builder,
         int $trustedDays,
         ?Carbon $startDate,
-    ): Builder {
+    ): Builder|Relation|RecordValidation {
         return $builder->where(function(Builder $builder) use ($trustedDays, $startDate) {
             $builder->where(static function(Builder $builder) use ($trustedDays, $startDate) {
                 $builder->whereNotNull('prevalidation_id');
@@ -45,12 +46,14 @@ class RecordValidationQuery
     }
 
     /**
-     * @param Builder|Relation $builder
+     * @param Builder|Relation|RecordValidation $builder
      * @param Fund $fund
-     * @return Builder
+     * @return Builder|Relation|RecordValidation
      */
-    public static function whereTrustedByQuery(Builder|Relation $builder, Fund $fund): Builder
-    {
+    public static function whereTrustedByQuery(
+        Builder|Relation|RecordValidation $builder,
+        Fund $fund,
+    ): Builder|Relation|RecordValidation {
         return $builder->where(function(Builder $builder) use ($fund) {
             $builder->whereIn('identity_address', $fund->validatorEmployees());
             $builder->where(function(Builder $builder) use ($fund) {

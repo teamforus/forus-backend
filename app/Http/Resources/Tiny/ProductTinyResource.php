@@ -11,7 +11,7 @@ use App\Models\Product;
  */
 class ProductTinyResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'photo.presets',
     ];
 

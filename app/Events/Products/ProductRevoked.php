@@ -7,7 +7,7 @@ use App\Models\Product;
 
 class ProductRevoked extends BaseProductEvent
 {
-    protected $fund;
+    protected Fund $fund;
 
     /**
      * Create a new event instance.

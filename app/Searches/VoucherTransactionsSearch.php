@@ -3,10 +3,10 @@
 
 namespace App\Searches;
 
-use App\Models\Voucher;
 use App\Models\Organization;
 use App\Models\PayoutRelation;
 use App\Models\ProductReservation;
+use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use Carbon\Carbon;
@@ -33,9 +33,16 @@ class VoucherTransactionsSearch extends BaseSearch
         $builder = parent::query();
 
         $targets = $this->getFilter('targets', VoucherTransaction::TARGETS_OUTGOING);
+        $identity_address = $this->getFilter('identity_address');
 
         if ($this->hasFilter('q') && $this->getFilter('q')) {
             $builder = VoucherTransactionQuery::whereQueryFilter($builder, $this->getFilter('q'));
+        }
+
+        if ($identity_address) {
+            $builder->whereHas('voucher', function (Builder $builder) use ($identity_address) {
+                $builder->whereRelation('identity', 'address', $identity_address);
+            });
         }
 
         if ($this->hasFilter('state') && $this->getFilter('state')) {
@@ -105,7 +112,7 @@ class VoucherTransactionsSearch extends BaseSearch
         if ($transfer_in_min = $this->getFilter('transfer_in_min')) {
             $builder->where(function (Builder $builder) use ($transfer_in_min) {
                 $builder->where('state', VoucherTransaction::STATE_PENDING);
-                $builder->where('transfer_at', '>=', now()->addDays($transfer_in_min));
+                $builder->where('transfer_at', '>=', now()->addDays((float)$transfer_in_min));
                 $builder->whereNull('voucher_transaction_bulk_id');
             });
         }

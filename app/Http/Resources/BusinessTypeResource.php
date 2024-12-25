@@ -9,7 +9,7 @@ use App\Models\BusinessType;
  */
 class BusinessTypeResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'translations'
     ];
 

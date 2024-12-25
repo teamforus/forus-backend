@@ -4,13 +4,13 @@ namespace App\Services\BNGService\Data;
 
 class PaymentInfoData
 {
-    protected $paymentId;
-    protected $redirectToken;
-    protected $executionDate;
+    protected string $paymentId;
+    protected ?string $redirectToken;
+    protected ?string $executionDate;
 
     /**
      * @param string $paymentId
-     * @param string|null $executionDate
+     * @param string $executionDate
      * @param string|null $redirectToken
      */
     public function __construct(

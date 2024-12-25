@@ -8,8 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\ExportIdentiti
 use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\IndexIdentitiesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\Identities\SendIdentityNotificationRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
-use App\Http\Resources\Sponsor\IdentityBsnResource;
-use App\Http\Resources\Sponsor\IdentityResource;
+use App\Http\Resources\Sponsor\SponsorIdentityResource;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Identity;
@@ -17,9 +16,9 @@ use App\Models\Organization;
 use App\Notifications\Identities\Fund\IdentityRequesterSponsorCustomNotification;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Searches\Sponsor\FundIdentitiesSearch;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Database\Eloquent\Builder;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class IdentitiesController extends Controller
@@ -36,7 +35,7 @@ class IdentitiesController extends Controller
     public function index(
         IndexIdentitiesRequest $request,
         Organization $organization,
-        Fund $fund
+        Fund $fund,
     ): AnonymousResourceCollection|JsonResponse {
         $this->authorize('show', [$organization]);
         $this->authorize('viewIdentitiesSponsor', [$fund, $organization]);
@@ -53,12 +52,10 @@ class IdentitiesController extends Controller
             'without_email' => $fund->activeIdentityQuery(false, false)->count(),
         ];
 
-        $collection = $organization->bsn_enabled
-            ? IdentityBsnResource::queryCollection($query)
-            : IdentityResource::queryCollection($query);
-
-        return $collection->additional([
+        return SponsorIdentityResource::queryCollection($query)->additional([
             'meta' => compact('counts'),
+            'detailed' => false,
+            'organization' => $organization,
         ]);
     }
 
@@ -66,20 +63,20 @@ class IdentitiesController extends Controller
      * @param Organization $organization
      * @param Fund $fund
      * @param Identity $identity
-     * @return IdentityBsnResource|IdentityResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return SponsorIdentityResource
      */
     public function show(
         Organization $organization,
         Fund $fund,
         Identity $identity
-    ): IdentityBsnResource|IdentityResource {
+    ): SponsorIdentityResource {
         $this->authorize('show', [$organization]);
         $this->authorize('showIdentitySponsor', [$fund, $organization, $identity]);
 
-        return $organization->bsn_enabled
-            ? IdentityBsnResource::create($identity)
-            : IdentityResource::create($identity);
+        return SponsorIdentityResource::create($identity, [
+            'detailed' => false,
+            'organization' => $organization,
+        ]);
     }
 
     /**

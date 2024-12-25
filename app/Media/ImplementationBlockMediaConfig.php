@@ -8,19 +8,19 @@ use App\Services\MediaService\MediaImagePreset;
 class ImplementationBlockMediaConfig extends MediaImageConfig
 {
     /**
-     * @var array
+     * @var ?string
      */
-    protected $name = 'implementation_block_media';
+    protected ?string $name = 'implementation_block_media';
 
     /**
      * @var string
      */
-    protected $type = self::TYPE_MULTIPLE;
+    protected string $type = self::TYPE_MULTIPLE;
 
     /**
      * @var float
      */
-    protected $preview_aspect_ratio = 1.36;
+    protected float $preview_aspect_ratio = 1.36;
 
     /**
      * @throws \App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException

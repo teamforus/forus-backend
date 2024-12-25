@@ -8,10 +8,8 @@ use App\Models\Voucher;
 use App\Rules\BsnRule;
 
 /**
- * Class AssignVoucherRequest
  * @property-read Organization $organization
  * @property-read Voucher $voucher
- * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
  */
 class AssignVoucherRequest extends BaseFormRequest
 {

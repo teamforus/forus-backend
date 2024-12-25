@@ -114,7 +114,6 @@ class BankConnectionsController extends Controller
 
         if ($isActiveConnection && $bank_connection_account_id) {
             $bankConnection->switchBankConnectionAccount($bank_connection_account_id, $employee);
-            $bankConnection->updateFundBalances();
         }
 
         return BankConnectionResource::create($bankConnection);

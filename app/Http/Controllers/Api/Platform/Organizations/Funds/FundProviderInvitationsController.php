@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Funds;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Funds\ProviderInvitations\IndexFundProviderInvitationsRequest;
 use App\Http\Requests\Api\Platform\Funds\ProviderInvitations\StoreFundProviderInvitationsRequest;
 use App\Http\Resources\FundProviderInvitationResource;
 use App\Models\Fund;
 use App\Models\FundProviderInvitation;
 use App\Models\Organization;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundProviderInvitationsController extends Controller

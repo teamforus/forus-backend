@@ -5,10 +5,6 @@ namespace App\Services\Forus\Session\Services\Data;
 
 use WhichBrowser\Parser;
 
-/**
- * Class LocationData
- * @package App\Services\Forus\Session\Services\Data
- */
 class AgentData extends Parser
 {
     /**

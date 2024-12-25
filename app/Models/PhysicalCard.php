@@ -18,22 +18,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Voucher $voucher
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard query()
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard whereVoucherId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCard newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCard newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCard query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCard whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCard whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCard whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCard whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCard whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCard whereVoucherId($value)
  * @mixin \Eloquent
  */
 class PhysicalCard extends BaseModel
 {
     use HasLogs;
 
-    public const EVENT_MIGRATED = 'migrated';
+    public const string EVENT_MIGRATED = 'migrated';
 
     /**
      * The attributes that are mass assignable.

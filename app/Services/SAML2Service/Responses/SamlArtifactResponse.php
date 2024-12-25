@@ -8,8 +8,8 @@ use App\Services\SAML2Service\Lib\Settings;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 use SAML2\Assertion;
 use SAML2\Constants;
-use SAML2\SignedElement;
 use SAML2\Response;
+use SAML2\SignedElement;
 use SAML2\XML\saml\SubjectConfirmationData;
 use Throwable;
 

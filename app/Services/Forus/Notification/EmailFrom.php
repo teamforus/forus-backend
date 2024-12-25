@@ -5,10 +5,6 @@ namespace App\Services\Forus\Notification;
 use App\Models\Implementation;
 use Illuminate\Support\Facades\Config;
 
-/**
- * Class ImplementationFrom
- * @package App\Services\Forus\Notification
- */
 class EmailFrom
 {
     private ?string $email_from_name;

@@ -10,17 +10,18 @@ use App\Console\Commands\BankVoucherTransactionBulksBuildCommand;
 use App\Console\Commands\BankVoucherTransactionBulksUpdateStateCommand;
 use App\Console\Commands\BankVoucherTransactionProcessZeroAmountCommand;
 use App\Console\Commands\CalculateFundUsersCommand;
-use App\Console\Commands\FundsUpdateStateCommand;
 use App\Console\Commands\CheckProductExpirationCommand;
-use App\Console\Commands\FundsExtendPeriodCommand;
 use App\Console\Commands\Digests\SendAllDigestsCommand;
 use App\Console\Commands\Digests\SendProviderFundsDigestCommand;
 use App\Console\Commands\Digests\SendProviderProductsDigestCommand;
 use App\Console\Commands\Digests\SendProviderReservationsDigestCommand;
 use App\Console\Commands\Digests\SendRequesterDigestCommand;
 use App\Console\Commands\Digests\SendSponsorDigestCommand;
+use App\Console\Commands\Digests\SendSponsorProductsUpdateDigest;
 use App\Console\Commands\Digests\SendValidatorDigestCommand;
 use App\Console\Commands\ExportPhysicalCardsRequestsCommand;
+use App\Console\Commands\FundsExtendPeriodCommand;
+use App\Console\Commands\FundsUpdateStateCommand;
 use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
 use App\Console\Commands\NotifyAboutVoucherExpireCommand;
 use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
@@ -33,19 +34,15 @@ use App\Console\Commands\UpdateSystemNotificationsCommand;
 use App\Services\BackofficeApiService\Commands\SendBackofficeLogsCommand;
 use App\Services\FileService\Commands\FilesCleanupCommand;
 use App\Services\Forus\Session\Commands\UpdateSessionsExpirationCommand;
+use App\Services\MailDatabaseLoggerService\Commands\MailDatabaseLoggerClearUnusedAttachmentsCommand;
 use App\Services\MediaService\Commands\MediaCleanupCommand;
 use App\Services\MediaService\Commands\MediaRegenerateCommand;
-use App\Services\MailDatabaseLoggerService\Commands\MailDatabaseLoggerClearUnusedAttachmentsCommand;
 use App\Services\MollieService\Commands\UpdateCompletedMollieConnectionsCommand;
 use App\Services\MollieService\Commands\UpdatePendingMollieConnectionsCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\Config;
 
-/**
- * Class Kernel
- * @package App\Console
- */
 class Kernel extends ConsoleKernel
 {
     /**
@@ -87,6 +84,7 @@ class Kernel extends ConsoleKernel
         SendRequesterDigestCommand::class,
         SendValidatorDigestCommand::class,
         SendSponsorDigestCommand::class,
+        SendSponsorProductsUpdateDigest::class,
 
         // send all digests in one command
         SendAllDigestsCommand::class,
@@ -279,6 +277,9 @@ class Kernel extends ConsoleKernel
             ->weeklyOn(1, "18:00")->withoutOverlapping()->onOneServer();
 
         $schedule->command(SendSponsorDigestCommand::class)
+            ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
+
+        $schedule->command(SendSponsorProductsUpdateDigest::class)
             ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
 
         // $schedule->command(SendRequesterDigestCommand::class)

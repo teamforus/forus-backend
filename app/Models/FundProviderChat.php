@@ -18,24 +18,24 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderChatMessage[] $messages
  * @property-read int|null $messages_count
  * @property-read \App\Models\Product|null $product
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat whereFundProviderId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat whereProductId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderChat newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderChat newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderChat query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderChat whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderChat whereFundProviderId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderChat whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderChat whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderChat whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderChat whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundProviderChat extends Model
 {
-    const TYPE_SYSTEM = 'system';
-    const TYPE_SPONSOR = 'sponsor';
-    const TYPE_PROVIDER = 'provider';
+    const string TYPE_SYSTEM = 'system';
+    const string TYPE_SPONSOR = 'sponsor';
+    const string TYPE_PROVIDER = 'provider';
 
-    const TYPE = [
+    const array TYPE = [
         self::TYPE_SYSTEM,
         self::TYPE_SPONSOR,
         self::TYPE_PROVIDER,

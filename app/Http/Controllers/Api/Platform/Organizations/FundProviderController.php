@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Exports\FundProvidersExport;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Provider\IndexFundProviderRequest;
 use App\Http\Resources\FundProviderResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 

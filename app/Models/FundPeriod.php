@@ -16,23 +16,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
- * @method static \Illuminate\Database\Eloquent\Builder|FundPeriod newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundPeriod newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundPeriod query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundPeriod whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundPeriod whereEndDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundPeriod whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundPeriod whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundPeriod whereStartDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundPeriod whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundPeriod whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundPeriod newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundPeriod newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundPeriod query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundPeriod whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundPeriod whereEndDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundPeriod whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundPeriod whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundPeriod whereStartDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundPeriod whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundPeriod whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundPeriod extends Model
 {
-    public const STATE_PENDING = 'pending';
-    public const STATE_ACTIVE = 'active';
-    public const STATE_ENDED = 'ended';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_ENDED = 'ended';
 
     protected $fillable = [
         'state',

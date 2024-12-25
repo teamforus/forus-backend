@@ -7,10 +7,6 @@ use App\Models\Implementation;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Validation\Rule;
 
-/**
- * Class SearchProvidersRequest
- * @package App\Http\Requests\Api\Platform
- */
 class SearchProvidersRequest extends BaseFormRequest
 {
     /**

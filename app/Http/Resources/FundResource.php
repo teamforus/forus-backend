@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Gate;
  */
 class FundResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'faq',
         'tags',
         'parent',
@@ -70,7 +70,7 @@ class FundResource extends BaseJsonResource
 
         $fundConfigData = $this->getFundConfigData($fund, $isDashboard);
 
-        $financialData = $loadStats ? FinancialOverviewStatistic::getFinancialData($fund, $this->stats, $this->year ?: now()->year) : [];
+        $financialData = $loadStats ? FinancialOverviewStatistic::getFinancialData($fund, $this->stats, $this->year) : [];
         $generatorData = $isDashboard ? $this->getVoucherGeneratorData($fund) : [];
         $prevalidationCsvData = $isDashboard ? $this->getPrevalidationCsvData($fund) : [];
         $organizationFunds2FAData = $this->organizationFunds2FAData($organization);
@@ -79,7 +79,7 @@ class FundResource extends BaseJsonResource
             'id', 'name', 'description', 'description_html', 'description_short', 'description_position',
             'organization_id', 'state', 'notification_amount', 'type', 'type_locale', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
-            'balance_provider', 'external_page', 'external_page_url',
+            'external_page', 'external_page_url',
         ]), [
             'outcome_type' => $fund->fund_config?->outcome_type ?: FundConfig::OUTCOME_TYPE_VOUCHER,
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
@@ -144,7 +144,7 @@ class FundResource extends BaseJsonResource
     protected function hadPendingRequests(?Identity $identity, Fund $fund): bool
     {
         return $identity && $fund->fund_requests()->where(function (Builder $builder) use ($identity) {
-            FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, $identity->address);
+            FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, $identity->id);
         })->exists();
     }
 
@@ -157,7 +157,7 @@ class FundResource extends BaseJsonResource
     {
         return $identity && $fund->vouchers()->where(function (Builder|Voucher $builder) use ($identity) {
             VoucherQuery::whereNotExpiredAndActive($builder);
-            $builder->whereIdentityAddress($identity->address);
+            $builder->where('identity_id', $identity->id);
         })->exists();
     }
 
@@ -180,8 +180,8 @@ class FundResource extends BaseJsonResource
                 'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
                 'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
                 'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
-                'help_description_html',
-                'criteria_label_requirement_show',
+                'help_description_html', 'criteria_label_requirement_show',
+                'pre_check_excluded', 'pre_check_note',
             ]) : [],
             ...$isDashboard && $fund->fund_config ? $fund->fund_config->only([
                 'allow_custom_amounts', 'allow_preset_amounts',

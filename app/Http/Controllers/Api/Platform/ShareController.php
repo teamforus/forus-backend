@@ -11,10 +11,6 @@ use App\Services\Forus\SmsNotification\SmsService;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\JsonResponse;
 
-/**
- * Class ShareController
- * @package App\Http\Controllers\Api\Platform
- */
 class ShareController extends Controller
 {
     use ThrottleWithMeta;
@@ -22,8 +18,8 @@ class ShareController extends Controller
     protected $maxAttempts = 3;
     protected $decayMinutes = 1;
 
-    protected $smsService;
-    protected $notificationService;
+    protected SmsService $smsService;
+    protected NotificationService $notificationService;
 
     /**
      * ShareController constructor.

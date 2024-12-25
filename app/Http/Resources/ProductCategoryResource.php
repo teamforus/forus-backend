@@ -3,25 +3,24 @@
 namespace App\Http\Resources;
 
 use App\Models\ProductCategory;
+use Illuminate\Http\Request;
 
 /**
- * Class ProductCategoryResource
  * @property ProductCategory $resource
- * @package App\Http\Resources
  */
 class ProductCategoryResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'translations',
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request|any  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return $this->resource->only([
             'id', 'key', 'name', 'parent_id',

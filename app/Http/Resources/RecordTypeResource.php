@@ -11,7 +11,7 @@ class RecordTypeResource extends BaseJsonResource
 {
     public static $wrap = false;
 
-    const LOAD = [
+    const array LOAD = [
         'record_type_options',
     ];
 
@@ -26,7 +26,7 @@ class RecordTypeResource extends BaseJsonResource
         $recordType = $this->resource;
 
         return array_merge($recordType->only([
-            'key', 'type', 'system', 'criteria',
+            'key', 'type', 'system', 'criteria', 'control_type',
         ]), [
             'name' => $recordType->name ?: $recordType->key,
             'validations' => $recordType->getValidations(),

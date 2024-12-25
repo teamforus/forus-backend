@@ -6,8 +6,8 @@ use App\Events\FundRequests\FundRequestAssigned;
 use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Helpers\Validation;
-use App\Models\Traits\HasNotes;
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
+use App\Models\Traits\HasNotes;
 use App\Rules\Base\IbanRule;
 use App\Searches\FundRequestSearch;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -23,6 +23,7 @@ use Illuminate\Support\Arr;
  * App\Models\FundRequest
  *
  * @property int $id
+ * @property int|null $identity_id
  * @property int $fund_id
  * @property string $identity_address
  * @property int|null $employee_id
@@ -53,43 +54,44 @@ use Illuminate\Support\Arr;
  * @property-read int|null $records_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static Builder|FundRequest newModelQuery()
- * @method static Builder|FundRequest newQuery()
- * @method static Builder|FundRequest query()
- * @method static Builder|FundRequest whereAmount($value)
- * @method static Builder|FundRequest whereContactInformation($value)
- * @method static Builder|FundRequest whereCreatedAt($value)
- * @method static Builder|FundRequest whereDisregardNote($value)
- * @method static Builder|FundRequest whereDisregardNotify($value)
- * @method static Builder|FundRequest whereEmployeeId($value)
- * @method static Builder|FundRequest whereFundAmountPresetId($value)
- * @method static Builder|FundRequest whereFundId($value)
- * @method static Builder|FundRequest whereId($value)
- * @method static Builder|FundRequest whereIdentityAddress($value)
- * @method static Builder|FundRequest whereNote($value)
- * @method static Builder|FundRequest whereResolvedAt($value)
- * @method static Builder|FundRequest whereState($value)
- * @method static Builder|FundRequest whereUpdatedAt($value)
+ * @method static Builder<static>|FundRequest newModelQuery()
+ * @method static Builder<static>|FundRequest newQuery()
+ * @method static Builder<static>|FundRequest query()
+ * @method static Builder<static>|FundRequest whereAmount($value)
+ * @method static Builder<static>|FundRequest whereContactInformation($value)
+ * @method static Builder<static>|FundRequest whereCreatedAt($value)
+ * @method static Builder<static>|FundRequest whereDisregardNote($value)
+ * @method static Builder<static>|FundRequest whereDisregardNotify($value)
+ * @method static Builder<static>|FundRequest whereEmployeeId($value)
+ * @method static Builder<static>|FundRequest whereFundAmountPresetId($value)
+ * @method static Builder<static>|FundRequest whereFundId($value)
+ * @method static Builder<static>|FundRequest whereId($value)
+ * @method static Builder<static>|FundRequest whereIdentityAddress($value)
+ * @method static Builder<static>|FundRequest whereIdentityId($value)
+ * @method static Builder<static>|FundRequest whereNote($value)
+ * @method static Builder<static>|FundRequest whereResolvedAt($value)
+ * @method static Builder<static>|FundRequest whereState($value)
+ * @method static Builder<static>|FundRequest whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundRequest extends BaseModel
 {
     use HasLogs, HasNotes;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_APPROVED = 'approved';
-    public const EVENT_DECLINED = 'declined';
-    public const EVENT_RESOLVED = 'resolved';
-    public const EVENT_ASSIGNED = 'assigned';
-    public const EVENT_RESIGNED = 'resigned';
-    public const EVENT_DISREGARDED = 'disregarded';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_APPROVED = 'approved';
+    public const string EVENT_DECLINED = 'declined';
+    public const string EVENT_RESOLVED = 'resolved';
+    public const string EVENT_ASSIGNED = 'assigned';
+    public const string EVENT_RESIGNED = 'resigned';
+    public const string EVENT_DISREGARDED = 'disregarded';
 
-    public const STATE_PENDING = 'pending';
-    public const STATE_APPROVED = 'approved';
-    public const STATE_DECLINED = 'declined';
-    public const STATE_DISREGARDED = 'disregarded';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_APPROVED = 'approved';
+    public const string STATE_DECLINED = 'declined';
+    public const string STATE_DISREGARDED = 'disregarded';
 
-    public const EVENTS = [
+    public const array EVENTS = [
         self::EVENT_CREATED,
         self::EVENT_APPROVED,
         self::EVENT_DECLINED,
@@ -98,27 +100,26 @@ class FundRequest extends BaseModel
         self::EVENT_RESIGNED,
     ];
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_PENDING,
         self::STATE_APPROVED,
         self::STATE_DECLINED,
         self::STATE_DISREGARDED,
     ];
 
-    public const STATES_RESOLVED = [
+    public const array STATES_RESOLVED = [
         self::STATE_APPROVED,
         self::STATE_DECLINED,
         self::STATE_DISREGARDED,
     ];
 
-    public const STATES_ARCHIVED = [
+    public const array STATES_ARCHIVED = [
         self::STATE_DECLINED,
     ];
 
     protected $fillable = [
-        'fund_id', 'identity_address', 'employee_id', 'note', 'state', 'resolved_at',
-        'disregard_note', 'disregard_notify', 'identity_address',
-        'contact_information',
+        'fund_id', 'employee_id', 'note', 'state', 'resolved_at',
+        'disregard_note', 'disregard_notify', 'identity_id', 'contact_information',
     ];
 
     protected $casts = [
@@ -131,7 +132,7 @@ class FundRequest extends BaseModel
      */
     public function identity(): BelongsTo
     {
-        return $this->belongsTo(Identity::class, 'identity_address', 'address');
+        return $this->belongsTo(Identity::class);
     }
 
     /**
@@ -440,10 +441,7 @@ class FundRequest extends BaseModel
             ...$this->fund->fund_formulas->pluck('record_type_key')->filter(),
         ]);
 
-        $trustedValues = $this->fund->getTrustedRecordOfTypes(
-            $this->identity_address,
-            $recordTypes,
-        );
+        $trustedValues = $this->fund->getTrustedRecordOfTypes($this->identity, $recordTypes);
 
         return  [
             ...$trustedValues,
@@ -497,7 +495,7 @@ class FundRequest extends BaseModel
     public function getIban(): string
     {
         return $this->fund->getTrustedRecordOfType(
-            $this->identity_address,
+            $this->identity,
             $this->fund->fund_config->iban_record_key,
         )?->value ?: '';
     }
@@ -508,7 +506,7 @@ class FundRequest extends BaseModel
     public function getIbanName(): string
     {
         return $this->fund->getTrustedRecordOfType(
-            $this->identity_address,
+            $this->identity,
             $this->fund->fund_config->iban_name_record_key,
         )?->value ?: '';
     }

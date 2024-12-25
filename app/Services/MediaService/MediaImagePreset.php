@@ -5,8 +5,7 @@ namespace App\Services\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaPreset;
 use Illuminate\Contracts\Filesystem\Filesystem;
-use Intervention\Image\Constraint;
-use Intervention\Image\Facades\Image;
+use Intervention\Image\ImageManager;
 
 class MediaImagePreset extends \App\Services\MediaService\MediaPreset
 {
@@ -14,46 +13,39 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * Preset image width
      * @var int
      */
-    public $width = 1000;
+    public int $width = 1000;
 
     /**
      * Preset image height
-     * @var int
+     * @var ?int
      */
-    public $height = null;
+    public ?int $height = null;
 
     /**
      * Keep media aspect ratio
      * @var bool
      */
-    public $preserve_aspect_ratio = true;
-
-    /**
-     * Media preset format
-     * Set null to preserve original format
-     * @var bool
-     */
-    public $format = 'jpg';
+    public bool $preserve_aspect_ratio = true;
 
     /**
      * @var bool
      */
-    public $allow_transparency = false;
+    public bool $allow_transparency = false;
+
+    /**
+     * @var string
+     */
+    public string $transparent_bg_color = '#ffffff';
 
     /**
      * @var bool
      */
-    public $transparent_bg_color = '#ffffff';
+    protected bool $use_original = false;
 
     /**
      * @var bool
      */
-    protected $use_original = false;
-
-    /**
-     * @var bool
-     */
-    protected $upscale = true;
+    protected bool $upscale = true;
 
     /**
      * MediaImagePreset constructor.
@@ -67,10 +59,10 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
     public function __construct(
         string $name,
         int $width = 1000,
-        int $height = 1000,
+        ?int $height = 1000,
         bool $preserveAspectRatio = true,
         int $quality = 75,
-        ?string $format = 'jpg'
+        ?string $format = 'jpeg',
     ) {
         $this->width = $width;
         $this->height = $height;
@@ -82,8 +74,9 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
     /**
      * @param bool $allow
      * @return $this
+     * @noinspection PhpUnused
      */
-    public function setTransparency($allow = true): MediaImagePreset
+    public function setTransparency(bool $allow = true): MediaImagePreset
     {
         $this->allow_transparency = $allow;
         return $this;
@@ -104,7 +97,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $format
      * @return $this
      */
-    public function setFormat($format = 'jpg'): self
+    public function setFormat(string $format = 'jpg'): self
     {
         $this->allow_transparency = $format;
         return $this;
@@ -113,6 +106,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
     /**
      * @param bool $preserve_aspect_ratio
      * @return $this
+     * @noinspection PhpUnused
      */
     public function setPreserveAspectRatio(bool $preserve_aspect_ratio = true): self
     {
@@ -155,37 +149,36 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
         Filesystem $storage,
         string $storagePath,
         Media $media
-    ) {
+    ): mixed {
         if ($this->use_original) {
             $outPath = $this->makeUniquePath($storage, $storagePath, $media->ext);
             $storage->put($outPath, file_get_contents($sourcePath), 'public');
         } else {
             $format = $this->format ?: $media->ext;
             $outPath = $this->makeUniquePath($storage, $storagePath, $format);
-            $image = Image::make(file_get_contents($sourcePath))->backup();
+            $image = ImageManager::gd()->read(file_get_contents($sourcePath));
 
             $width = $this->upscale ? $this->width : min($this->width, $image->width());
             $height = $this->upscale ? $this->height : min($this->height, $image->height());
 
             if ($this->preserve_aspect_ratio) {
-                $image = $image->resize($width, $height, function (Constraint $constraint) {
-                    $constraint->aspectRatio();
-                });
+                $image = $image->scale($width, $height);
             } else {
-                $image = $image->fit($width, $height);
+                $image = $image->cover($width, $height);
             }
 
-            if ($format !== 'png' || !$this->allow_transparency) {
-                $image = Image::canvas(
+            if ($format !== 'image/png' || !$this->allow_transparency) {
+                $image = ImageManager::gd()->create(
                     $image->width(),
                     $image->height(),
-                    $this->transparent_bg_color
-                )->insert($image)->backup();
+                )->fill($this->transparent_bg_color)->place($image);
             }
 
-            $storage->put($outPath, $image->encode($format, $this->quality)->encoded, 'public');
-
-            $image->reset();
+            $storage->put($outPath, $image->encodeByMediaType(
+                "image/$format",
+                quality: $this->quality)->toFilePointer(),
+                'public',
+            );
         }
 
         // media size row create
@@ -201,7 +194,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $storagePath
      * @param MediaPreset $presetModel
      * @param Media $media
-     * @return \Illuminate\Database\Eloquent\Model|MediaPreset
+     * @return MediaPreset
      * @throws \Exception
      */
     public function copyPresetModel(
@@ -223,6 +216,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
 
     /**
      * @return bool
+     * @noinspection PhpUnused
      */
     public function getUseOriginal(): bool
     {

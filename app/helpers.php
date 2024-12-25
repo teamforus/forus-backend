@@ -1,17 +1,17 @@
 <?php
 
-use App\Models\RecordType;
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Implementation;
+use App\Models\RecordType;
 use App\Services\Forus\Session\Services\Browser;
 use App\Services\Forus\Session\Services\Data\AgentData;
+use App\Services\TokenGeneratorService\TokenGenerator;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Support\Str;
-use App\Services\TokenGeneratorService\TokenGenerator;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use App\Http\Requests\BaseFormRequest;
-use Illuminate\Database\Eloquent\Collection;
 
 if (!function_exists('format_datetime_locale')) {
     /**
@@ -309,27 +309,28 @@ if (!function_exists('trans_fb')) {
      * @return string|array
      */
     function trans_fb(
-        string       $id,
+        string $id,
         string|array $fallback,
-        ?array       $parameters = [],
-        ?string      $locale = null
-    ): string|array
-    {
+        ?array $parameters = [],
+        ?string $locale = null,
+    ): string|array {
         return ($id === ($translation = trans($id, $parameters, $locale))) ? $fallback : $translation;
     }
 }
 
 if (!function_exists('str_var_replace')) {
-    function str_var_replace(string $string, array $replace): string
+    function str_var_replace(string $string, array $replace, bool $filterValues = true): string
     {
         $replace = array_sort($replace, fn($value, $key) => mb_strlen($key) * -1);
 
         foreach ($replace as $key => $value) {
-            $string = str_replace(
-                [':' . $key, ':' . Str::upper($key), ':' . Str::ucfirst($key)],
-                [$value, Str::upper($value), Str::ucfirst($value)],
-                $string
-            );
+            if (!$filterValues || (is_string($value) || is_numeric($value))) {
+                $string = str_replace(
+                    [':' . $key, ':' . Str::upper($key), ':' . Str::ucfirst($key)],
+                    [$value, Str::upper($value), Str::ucfirst($value)],
+                    $string,
+                );
+            }
         }
 
         return $string;

@@ -3,8 +3,8 @@
 namespace App\Notifications\Identities\Voucher;
 
 use App\Mail\Vouchers\ShareProductVoucherMail;
-use App\Models\Voucher;
 use App\Models\Identity;
+use App\Models\Voucher;
 
 /**
  * Share product voucher to the provider by email

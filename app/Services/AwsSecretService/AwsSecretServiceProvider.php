@@ -2,12 +2,12 @@
 
 namespace App\Services\AwsSecretService;
 
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\ServiceProvider;
 use Aws\Credentials\CredentialProvider;
 use Aws\Exception\AwsException;
 use Aws\SecretsManager\SecretsManagerClient;
 use Config;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\ServiceProvider;
 
 class AwsSecretServiceProvider extends ServiceProvider
 {
