@@ -111,13 +111,108 @@ return [
             ],
         ],
     ],
-    /*'Westerkwartier' => [
-        'implementation_name' => 'Westerkwartier',
-        'organization_name' => 'Westerkwartier',
+    'Nijmegen IV' => [
+        'implementation_name' => 'Nijmegen',
+        'organization_name' => 'Nijmegen',
         'fund' => [
             'type' => 'budget',
+            'criteria_editable_after_start' => true,
         ],
-    ],*/
+        'fund_config' => [
+            'outcome_type' => 'payout',
+            'auth_2fa_restrict_emails' => true,
+            'auth_2fa_restrict_auth_sessions' => true,
+            'auth_2fa_restrict_reimbursements' => true,
+            'custom_amount_min' => 100,
+            'custom_amount_max' => 200,
+            'allow_custom_amounts' => true,
+            'allow_custom_amounts_validator' => true,
+            'allow_preset_amounts' => true,
+            'allow_preset_amounts_validator' => true,
+            'iban_record_key' => 'iban',
+            'iban_name_record_key' => 'iban_name',
+        ],
+        'fund_amount_presets' => [
+            [ 'name' => 'Preset #1', 'amount' => '10.00'],
+            [ 'name' => 'Preset #2', 'amount' => '20.00'],
+            [ 'name' => 'Preset #3', 'amount' => '30.00'],
+        ],
+        'fund_criteria' => [[
+            'title' => 'Choose your municipality',
+            'description' => fake('nl')->text(rand(150, 400)),
+            'record_type_key' => 'municipality',
+            'operator' => '=',
+            'value' => '268',
+            'show_attachment' => false,
+            'step' => [
+                'title' => 'Step #1',
+                'description' => 'The _short_ __description__ of the step.',
+            ],
+        ], [
+            'title' => 'Choose the number of children',
+            'description' => fake('nl')->text(rand(150, 400)),
+            'record_type_key' => 'children_nth',
+            'operator' => '>',
+            'value' => 2,
+            'show_attachment' => false,
+            'step' => 'Step #1',
+        ], [
+            'title' => 'Income for 5-9 children',
+            'description' => fake('nl')->text(rand(150, 400)),
+            'record_type_key' => 'net_worth',
+            'operator' => '<=',
+            'value' => 1000,
+            'show_attachment' => false,
+            'step' => 'Step #1',
+            'rules' => [[
+                'record_type_key' => 'children_nth',
+                'operator' => '>=',
+                'value' => '5',
+            ], [
+                'record_type_key' => 'children_nth',
+                'operator' => '<=',
+                'value' => '9',
+            ]]
+        ], [
+            'title' => 'Income for 10+ children',
+            'description' => fake('nl')->text(rand(150, 400)),
+            'record_type_key' => 'net_worth',
+            'operator' => '<=',
+            'value' => 2000,
+            'show_attachment' => false,
+            'step' => 'Step #1',
+            'rules' => [[
+                'record_type_key' => 'children_nth',
+                'operator' => '>=',
+                'value' => '10',
+            ]]
+        ], [
+            'record_type_key' => 'gender',
+            'operator' => '=',
+            'value' => 'Female',
+            'show_attachment' => false,
+            'step' => 'Step #2',
+            'rules' => [[
+                'record_type_key' => 'municipality',
+                'operator' => '=',
+                'value' => '268',
+            ]]
+        ], [
+            'record_type_key' => 'iban',
+            'operator' => '*',
+            'value' => '',
+            'optional' => false,
+            'show_attachment' => false,
+            'step' => 'Step #3',
+        ], [
+            'record_type_key' => 'iban_name',
+            'operator' => '*',
+            'value' => '',
+            'optional' => false,
+            'show_attachment' => false,
+            'step' => 'Step #3',
+        ]],
+    ],
     'Stadjerspas: Jeugd' => [
         'implementation_name' => 'Stadjerspas',
         'organization_name' => 'Gemeente Groningen',
@@ -1313,7 +1408,7 @@ return [
         'fund_formula_products' => [
             [
                 'type' => "multiply",
-		'product_id' => "1"
+		        'product_id' => "1",
                 'amount' => "0.00",
                 'record_type_key' => "eem_kind_0_tm_4_eligible_nth",
             ],
@@ -1381,13 +1476,13 @@ return [
 	    'fund_formula_products' => [
             [
                 'type' => "multiply",
-		        'product_id' => "2"
+		        'product_id' => "2",
                 'amount' => "75.00",
                 'record_type_key' => "eem_kind_12_tm_14_eligible_nth",
             ],
 	        [
                 'type' => "multiply",
-		        'product_id' => "3"
+		        'product_id' => "3",
                 'amount' => "40.00",
                 'record_type_key' => "eem_kind_14_tm_18_eligible_nth",
             ],
