@@ -5,10 +5,6 @@ namespace App\Events\Vouchers;
 use App\Models\PhysicalCardRequest;
 use App\Models\Voucher;
 
-/**
- * Class FundCreated
- * @package App\Events\Funds
- */
 class VoucherPhysicalCardRequestedEvent extends BaseVoucherEvent
 {
     protected Voucher $voucher;

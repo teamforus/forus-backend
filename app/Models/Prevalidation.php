@@ -9,10 +9,10 @@ use App\Scopes\Builders\OrganizationQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Support\Collection;
 
 /**
@@ -40,36 +40,36 @@ use Illuminate\Support\Collection;
  * @property-read int|null $prevalidation_records_count
  * @property-read EloquentCollection|\App\Models\PrevalidationRecord[] $records
  * @property-read int|null $records_count
- * @method static Builder|Prevalidation newModelQuery()
- * @method static Builder|Prevalidation newQuery()
- * @method static \Illuminate\Database\Query\Builder|Prevalidation onlyTrashed()
- * @method static Builder|Prevalidation query()
- * @method static Builder|Prevalidation whereCreatedAt($value)
- * @method static Builder|Prevalidation whereDeletedAt($value)
- * @method static Builder|Prevalidation whereExported($value)
- * @method static Builder|Prevalidation whereFundId($value)
- * @method static Builder|Prevalidation whereId($value)
- * @method static Builder|Prevalidation whereIdentityAddress($value)
- * @method static Builder|Prevalidation whereOrganizationId($value)
- * @method static Builder|Prevalidation whereRecordsHash($value)
- * @method static Builder|Prevalidation whereRedeemedByAddress($value)
- * @method static Builder|Prevalidation whereState($value)
- * @method static Builder|Prevalidation whereUid($value)
- * @method static Builder|Prevalidation whereUidHash($value)
- * @method static Builder|Prevalidation whereUpdatedAt($value)
- * @method static Builder|Prevalidation whereValidatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|Prevalidation withTrashed()
- * @method static \Illuminate\Database\Query\Builder|Prevalidation withoutTrashed()
+ * @method static Builder<static>|Prevalidation newModelQuery()
+ * @method static Builder<static>|Prevalidation newQuery()
+ * @method static Builder<static>|Prevalidation onlyTrashed()
+ * @method static Builder<static>|Prevalidation query()
+ * @method static Builder<static>|Prevalidation whereCreatedAt($value)
+ * @method static Builder<static>|Prevalidation whereDeletedAt($value)
+ * @method static Builder<static>|Prevalidation whereExported($value)
+ * @method static Builder<static>|Prevalidation whereFundId($value)
+ * @method static Builder<static>|Prevalidation whereId($value)
+ * @method static Builder<static>|Prevalidation whereIdentityAddress($value)
+ * @method static Builder<static>|Prevalidation whereOrganizationId($value)
+ * @method static Builder<static>|Prevalidation whereRecordsHash($value)
+ * @method static Builder<static>|Prevalidation whereRedeemedByAddress($value)
+ * @method static Builder<static>|Prevalidation whereState($value)
+ * @method static Builder<static>|Prevalidation whereUid($value)
+ * @method static Builder<static>|Prevalidation whereUidHash($value)
+ * @method static Builder<static>|Prevalidation whereUpdatedAt($value)
+ * @method static Builder<static>|Prevalidation whereValidatedAt($value)
+ * @method static Builder<static>|Prevalidation withTrashed()
+ * @method static Builder<static>|Prevalidation withoutTrashed()
  * @mixin \Eloquent
  */
 class Prevalidation extends BaseModel
 {
     use SoftDeletes, HasDbTokens;
 
-    public const STATE_PENDING = 'pending';
-    public const STATE_USED = 'used';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_USED = 'used';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_PENDING,
         self::STATE_USED
     ];
@@ -77,8 +77,8 @@ class Prevalidation extends BaseModel
     /**
      * @var string[]
      */
-    protected $dates = [
-        'validated_at'
+    protected $casts = [
+        'validated_at' => 'datetime',
     ];
 
     /**
@@ -183,23 +183,35 @@ class Prevalidation extends BaseModel
     {
         $identity_address = $request->auth_address();
 
-        $prevalidations = static::where(function(Builder|Prevalidation $builder) use ($identity_address) {
+        // list of funds where you can manage funds
+        $managedFunds = Fund::whereRelation('organization', function(Builder $builder) use ($identity_address) {
+            OrganizationQuery::whereHasPermissions($builder, $identity_address, Permission::MANAGE_FUNDS);
+        })->pluck('id')->toArray();
+
+        // list of identities who can validate records for funds where you can manage funds
+        $relatedIdentities = Identity::whereHas('employees', function(Builder $builder) use ($identity_address) {
+            EmployeeQuery::whereHasPermissionFilter($builder, [
+                Permission::VALIDATE_RECORDS,
+            ]);
+
+            $builder->whereHas('organization', function(Builder $builder) use ($identity_address) {
+                OrganizationQuery::whereHasPermissions($builder, $identity_address, Permission::MANAGE_FUNDS);
+            });
+        })->pluck('address')->toArray();
+
+        $prevalidations = static::where(function(Builder|Prevalidation $builder) use (
+            $identity_address, $managedFunds, $relatedIdentities
+        ) {
             $builder->where('identity_address', $identity_address);
 
-            $builder->orWhere(function(Builder $builder) use ($identity_address) {
+            $builder->orWhere(function(Builder $builder) use (
+                $identity_address, $managedFunds, $relatedIdentities
+            ) {
                 // created for fund where you can manage funds
-                $builder->whereHas('fund.organization', function (Builder $builder) use ($identity_address) {
-                    OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');
-                });
+                $builder->whereIn('fund_id', $managedFunds);
 
                 // created by identity who can validate records on funds where you can manage funds
-                $builder->whereHas('identity.employees', function(Builder $builder) use ($identity_address) {
-                    EmployeeQuery::whereHasPermissionFilter($builder, 'validate_records');
-
-                    $builder->whereHas('organization', function(Builder $builder) use ($identity_address) {
-                        OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_funds');
-                    });
-                });
+                $builder->whereIn('identity_address', $relatedIdentities);
             });
         });
 

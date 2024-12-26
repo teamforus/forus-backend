@@ -18,6 +18,7 @@ use Illuminate\Support\Arr;
  * @property int $implementation_id
  * @property string|null $page_type
  * @property string $state
+ * @property string|null $title
  * @property string|null $description
  * @property string $description_alignment
  * @property string $description_position
@@ -35,63 +36,65 @@ use Illuminate\Support\Arr;
  * @property-read \App\Models\Implementation|null $implementation
  * @property-read Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage query()
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereBlocksPerRow($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDescriptionAlignment($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDescriptionPosition($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternal($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternalUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage wherePageType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereBlocksPerRow($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereDescriptionAlignment($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereDescriptionPosition($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereExternal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereExternalUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage wherePageType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage withoutTrashed()
  * @mixin \Eloquent
  */
 class ImplementationPage extends BaseModel
 {
     use HasMedia, HasMarkdownDescription, HasFaq, SoftDeletes;
 
-    const TYPE_HOME = 'home';
-    const TYPE_PRODUCTS = 'products';
-    const TYPE_PROVIDERS = 'providers';
-    const TYPE_FUNDS = 'funds';
-    const TYPE_EXPLANATION = 'explanation';
-    const TYPE_PROVIDER = 'provider';
-    const TYPE_PRIVACY = 'privacy';
-    const TYPE_ACCESSIBILITY = 'accessibility';
-    const TYPE_TERMS_AND_CONDITIONS = 'terms_and_conditions';
-    const TYPE_FOOTER_OPENING_TIMES = 'footer_opening_times';
-    const TYPE_FOOTER_CONTACT_DETAILS = 'footer_contact_details';
-    const TYPE_FOOTER_APP_INFO = 'footer_app_info';
+    const string TYPE_HOME = 'home';
+    const string TYPE_PRODUCTS = 'products';
+    const string TYPE_PROVIDERS = 'providers';
+    const string TYPE_FUNDS = 'funds';
+    const string TYPE_EXPLANATION = 'explanation';
+    const string TYPE_PROVIDER = 'provider';
+    const string TYPE_PRIVACY = 'privacy';
+    const string TYPE_ACCESSIBILITY = 'accessibility';
+    const string TYPE_TERMS_AND_CONDITIONS = 'terms_and_conditions';
+    const string TYPE_FOOTER_OPENING_TIMES = 'footer_opening_times';
+    const string TYPE_FOOTER_CONTACT_DETAILS = 'footer_contact_details';
+    const string TYPE_FOOTER_APP_INFO = 'footer_app_info';
+    const string TYPE_BLOCK_HOME_PRODUCTS = 'block_home_products';
 
-    const STATE_DRAFT = 'draft';
-    const STATE_PUBLIC = 'public';
+    const string STATE_DRAFT = 'draft';
+    const string STATE_PUBLIC = 'public';
 
-    const STATES = [
+    const array STATES = [
         self::STATE_DRAFT,
         self::STATE_PUBLIC,
     ];
 
-    const DESCRIPTION_POSITION_AFTER = 'after';
-    const DESCRIPTION_POSITION_BEFORE = 'before';
-    const DESCRIPTION_POSITION_REPLACE = 'replace';
+    const string DESCRIPTION_POSITION_AFTER = 'after';
+    const string DESCRIPTION_POSITION_BEFORE = 'before';
+    const string DESCRIPTION_POSITION_REPLACE = 'replace';
 
-    const DESCRIPTION_POSITIONS = [
+    const array DESCRIPTION_POSITIONS = [
         self::DESCRIPTION_POSITION_AFTER,
         self::DESCRIPTION_POSITION_BEFORE,
         self::DESCRIPTION_POSITION_REPLACE,
     ];
 
-    const PAGE_TYPES = [[
+    const array PAGE_TYPES = [[
         'key' => self::TYPE_HOME,
         'type' => 'static',
         'blocks' => true,
@@ -163,13 +166,19 @@ class ImplementationPage extends BaseModel
         'blocks' => false,
         'faq' => false,
         'description_position_configurable' => true,
+    ], [
+        'key' => self::TYPE_BLOCK_HOME_PRODUCTS,
+        'type' => 'block',
+        'blocks' => false,
+        'faq' => false,
+        'description_position_configurable' => false,
     ]];
 
     /**
      * @var string[]
      */
     protected $fillable = [
-        'implementation_id', 'page_type', 'description', 'description_alignment',
+        'title', 'implementation_id', 'page_type', 'description', 'description_alignment',
         'external', 'external_url', 'state', 'description_position', 'blocks_per_row',
     ];
 
@@ -193,7 +202,7 @@ class ImplementationPage extends BaseModel
      */
     public function blocks(): HasMany
     {
-        return $this->hasMany(ImplementationBlock::class);
+        return $this->hasMany(ImplementationBlock::class)->orderBy('order');
     }
 
     /**
@@ -210,12 +219,12 @@ class ImplementationPage extends BaseModel
         $block_ids = array_filter(Arr::pluck($blocks, 'id'));
         $this->blocks()->whereNotIn('id', $block_ids)->delete();
 
-        foreach ($blocks as $block) {
-            $blockData = Arr::only($block, [
+        foreach ($blocks as $order => $block) {
+            $blockData = array_merge(Arr::only($block, [
                 'type', 'key', 'media_uid', 'label', 'title', 'description',
                 'button_enabled', 'button_text', 'button_link', 'button_target_blank',
                 'button_link_label',
-            ]);
+            ]), compact('order'));
 
             /** @var ImplementationBLock $block */
             if ($block = $this->blocks()->find($block['id'] ?? null)) {

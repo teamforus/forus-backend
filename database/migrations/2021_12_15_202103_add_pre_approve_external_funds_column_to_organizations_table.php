@@ -14,7 +14,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
-            $table->boolean('pre_approve_external_funds')->default(false)
+            $table->boolean('pre_approve_external_funds')
+                ->default(false)
                 ->after('allow_batch_reservations');
         });
     }

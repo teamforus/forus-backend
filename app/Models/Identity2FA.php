@@ -22,43 +22,46 @@ use PragmaRX\Google2FA\Google2FA;
  * @property string $identity_address
  * @property string $state
  * @property int|null $auth_2fa_provider_id
- * @property array|null $data
- * @property string $phone
- * @property string $secret
- * @property string $secret_url
- * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $phone
+ * @property string|null $secret
+ * @property string|null $secret_url
+ * @property string $code
+ * @property string $deactivation_code
+ * @property Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Auth2FAProvider|null $auth_2fa_provider
+ * @property-read string $phone_masked
  * @property-read \App\Models\Identity $identity
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Identity2FACode[] $identity_2fa_codes
  * @property-read int|null $identity_2fa_codes_count
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA query()
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA whereAuth2faProviderId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA whereData($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA wherePhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA whereSecret($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA whereSecretUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA whereUuid($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Identity2FA withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA whereAuth2faProviderId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA whereDeactivationCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA wherePhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA whereSecret($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA whereSecretUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA whereUuid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Identity2FA withoutTrashed()
  * @mixin \Eloquent
  */
 class Identity2FA extends Model
 {
     use HasUuids, SoftDeletes;
 
-    public const STATE_ACTIVE = 'active';
-    public const STATE_PENDING = 'pending';
-    public const STATE_DEACTIVATED = 'deactivated';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_DEACTIVATED = 'deactivated';
 
     protected $primaryKey = 'uuid';
 
@@ -133,6 +136,17 @@ class Identity2FA extends Model
     public function isTypeAuthenticator(): bool
     {
         return $this->auth_2fa_provider->isTypeAuthenticator();
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getPhoneMaskedAttribute(): string
+    {
+        return substr($this->phone,0,2)
+            .str_repeat( '*', (strlen($this->phone) - 4))
+            .substr($this->phone, -2);
     }
 
     /**

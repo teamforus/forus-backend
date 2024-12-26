@@ -5,8 +5,14 @@ namespace App\Http\Resources\Requester;
 use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\FundRequestClarificationResource;
 use App\Http\Resources\Tiny\FundTinyResource;
+use App\Http\Resources\VoucherResource;
+use App\Http\Resources\VoucherTransactionPayoutResource;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
+use App\Models\Voucher;
+use App\Models\VoucherTransaction;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 /**
  * @property FundRequest $resource
@@ -16,29 +22,55 @@ class FundRequestResource extends BaseJsonResource
     /**
      * @var string[]
      */
-    public const LOAD = [
+    public const array LOAD = [
         'fund.logo.presets',
         'records.record_type.translations',
         'records.fund_request_clarifications.files.preview.presets',
         'records.fund_request_clarifications.fund_request_record.record_type.translations',
+        'vouchers.transactions',
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return array_merge($this->resource->only([
             'id', 'fund_id', 'contact_information', 'note', 'state', 'state_locale',
         ]), [
             'fund' => new FundTinyResource($this->resource->fund),
             'records' => $this->getRecordsDetails($this->resource),
+            'vouchers' => VoucherResource::collection($this->getVouchers($this->resource)),
+            'payouts' => VoucherTransactionPayoutResource::collection($this->getPayouts($this->resource)),
         ], $this->makeTimestamps($this->resource->only([
             'created_at', 'updated_at',
         ])));
+    }
+
+    /**
+     * @param FundRequest $fundRequest
+     * @return Collection
+     */
+    public function getVouchers(FundRequest $fundRequest): Collection
+    {
+        return $fundRequest->vouchers->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER);
+    }
+
+    /**
+     * @param FundRequest $fundRequest
+     * @return Collection
+     */
+    public function getPayouts(FundRequest $fundRequest): Collection
+    {
+        return $fundRequest->vouchers
+            ->where('voucher_type', Voucher::VOUCHER_TYPE_PAYOUT)
+            ->map(fn ($voucher) => $voucher->transactions->where(
+                'target', VoucherTransaction::TARGET_PAYOUT,
+            ))
+            ->flatten();
     }
 
     /**

@@ -9,7 +9,7 @@ use App\Models\FundProviderInvitation;
  */
 class FundProviderInvitationResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'fund',
         'from_fund',
         'organization',

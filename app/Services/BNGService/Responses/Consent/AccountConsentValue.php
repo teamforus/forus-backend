@@ -39,14 +39,15 @@ class AccountConsentValue extends ConsentValue
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getConsentStatus(): ?string
     {
         return $this->data['consentStatus'] ?? null;
     }
+
     /**
-     * @return string
+     * @return string|null
      */
     public function getConsentId(): ?string
     {

@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\FundRequestRecord;
+use Illuminate\Http\Request;
 
 /**
  * @property FundRequestRecord $resource
@@ -15,10 +16,10 @@ class FundRequestRecordResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return array_merge($this->resource->only([
-            'id', 'state', 'record_type_key', 'fund_request_id', 'employee_id', 'value',
+            'id', 'record_type_key', 'fund_request_id', 'value',
             'fund_criterion_id',
         ]), [
             'record_type' => [

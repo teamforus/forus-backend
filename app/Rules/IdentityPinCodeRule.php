@@ -5,21 +5,19 @@ namespace App\Rules;
 use Illuminate\Contracts\Validation\Rule;
 
 /**
- * Class IdentityPinCodeRule
  * @property string $message
- * @package App\Rules
  */
 class IdentityPinCodeRule implements Rule
 {
-    private $message;
-    private $digits;
+    private string $message;
+    private int $digits;
 
     /**
      * Create a new rule instance.
      * @param integer $digits
      * @return void
      */
-    public function __construct($digits = 4)
+    public function __construct(int $digits = 4)
     {
         $this->digits = $digits;
     }

@@ -7,7 +7,6 @@ use App\Events\Reimbursements\ReimbursementResigned;
 use App\Events\Reimbursements\ReimbursementResolved;
 use App\Models\Traits\HasNotes;
 use App\Models\Traits\HasTags;
-use App\Models\Traits\UpdatesModel;
 use App\Searches\ReimbursementsSearch;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Traits\HasFiles;
@@ -65,50 +64,50 @@ use Throwable;
  * @property-read int|null $tags_count
  * @property-read \App\Models\Voucher $voucher
  * @property-read \App\Models\VoucherTransaction|null $voucher_transaction
- * @method static Builder|Reimbursement newModelQuery()
- * @method static Builder|Reimbursement newQuery()
- * @method static Builder|Reimbursement onlyTrashed()
- * @method static Builder|Reimbursement query()
- * @method static Builder|Reimbursement whereAmount($value)
- * @method static Builder|Reimbursement whereCode($value)
- * @method static Builder|Reimbursement whereCreatedAt($value)
- * @method static Builder|Reimbursement whereDeletedAt($value)
- * @method static Builder|Reimbursement whereDescription($value)
- * @method static Builder|Reimbursement whereEmployeeId($value)
- * @method static Builder|Reimbursement whereIban($value)
- * @method static Builder|Reimbursement whereIbanName($value)
- * @method static Builder|Reimbursement whereId($value)
- * @method static Builder|Reimbursement whereProviderName($value)
- * @method static Builder|Reimbursement whereReason($value)
- * @method static Builder|Reimbursement whereReimbursementCategoryId($value)
- * @method static Builder|Reimbursement whereResolvedAt($value)
- * @method static Builder|Reimbursement whereState($value)
- * @method static Builder|Reimbursement whereSubmittedAt($value)
- * @method static Builder|Reimbursement whereTitle($value)
- * @method static Builder|Reimbursement whereUpdatedAt($value)
- * @method static Builder|Reimbursement whereVoucherId($value)
- * @method static Builder|Reimbursement withTrashed()
- * @method static Builder|Reimbursement withoutTrashed()
+ * @method static Builder<static>|Reimbursement newModelQuery()
+ * @method static Builder<static>|Reimbursement newQuery()
+ * @method static Builder<static>|Reimbursement onlyTrashed()
+ * @method static Builder<static>|Reimbursement query()
+ * @method static Builder<static>|Reimbursement whereAmount($value)
+ * @method static Builder<static>|Reimbursement whereCode($value)
+ * @method static Builder<static>|Reimbursement whereCreatedAt($value)
+ * @method static Builder<static>|Reimbursement whereDeletedAt($value)
+ * @method static Builder<static>|Reimbursement whereDescription($value)
+ * @method static Builder<static>|Reimbursement whereEmployeeId($value)
+ * @method static Builder<static>|Reimbursement whereIban($value)
+ * @method static Builder<static>|Reimbursement whereIbanName($value)
+ * @method static Builder<static>|Reimbursement whereId($value)
+ * @method static Builder<static>|Reimbursement whereProviderName($value)
+ * @method static Builder<static>|Reimbursement whereReason($value)
+ * @method static Builder<static>|Reimbursement whereReimbursementCategoryId($value)
+ * @method static Builder<static>|Reimbursement whereResolvedAt($value)
+ * @method static Builder<static>|Reimbursement whereState($value)
+ * @method static Builder<static>|Reimbursement whereSubmittedAt($value)
+ * @method static Builder<static>|Reimbursement whereTitle($value)
+ * @method static Builder<static>|Reimbursement whereUpdatedAt($value)
+ * @method static Builder<static>|Reimbursement whereVoucherId($value)
+ * @method static Builder<static>|Reimbursement withTrashed()
+ * @method static Builder<static>|Reimbursement withoutTrashed()
  * @mixin \Eloquent
  */
 class Reimbursement extends Model
 {
-    use SoftDeletes, HasFiles, HasNotes, HasTags, UpdatesModel, HasLogs;
+    use SoftDeletes, HasFiles, HasNotes, HasTags, HasLogs;
 
-    public const STATE_DRAFT = 'draft';
-    public const STATE_PENDING = 'pending';
-    public const STATE_APPROVED = 'approved';
-    public const STATE_DECLINED = 'declined';
+    public const string STATE_DRAFT = 'draft';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_APPROVED = 'approved';
+    public const string STATE_DECLINED = 'declined';
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_SUBMITTED = 'submitted';
-    public const EVENT_APPROVED = 'approved';
-    public const EVENT_DECLINED = 'declined';
-    public const EVENT_RESOLVED = 'resolved';
-    public const EVENT_ASSIGNED = 'assigned';
-    public const EVENT_RESIGNED = 'resigned';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_SUBMITTED = 'submitted';
+    public const string EVENT_APPROVED = 'approved';
+    public const string EVENT_DECLINED = 'declined';
+    public const string EVENT_RESOLVED = 'resolved';
+    public const string EVENT_ASSIGNED = 'assigned';
+    public const string EVENT_RESIGNED = 'resigned';
 
-    public const STATES_RESOLVED = [
+    public const array STATES_RESOLVED = [
         self::STATE_APPROVED,
         self::STATE_DECLINED,
     ];
@@ -116,7 +115,7 @@ class Reimbursement extends Model
     /**
      * @noinspection PhpUnused
      */
-    public const STATES = [
+    public const array STATES = [
         self::STATE_DRAFT,
         self::STATE_PENDING,
         self::STATE_APPROVED,
@@ -142,9 +141,9 @@ class Reimbursement extends Model
     /**
      * @var string[]
      */
-    protected $dates = [
-        'resolved_at',
-        'submitted_at',
+    protected $casts = [
+        'resolved_at' => 'datetime',
+        'submitted_at' => 'datetime',
     ];
 
     /**
@@ -187,7 +186,7 @@ class Reimbursement extends Model
      */
     public function getExpiredAttribute(): bool
     {
-        return !$this->isResolved() && $this->voucher->expired;
+        return !$this->isResolved() && $this->voucher->reimbursement_approval_time_expired;
     }
 
     /**
@@ -209,11 +208,11 @@ class Reimbursement extends Model
             return null;
         }
 
-        if ($this->voucher->expire_at->isAfter($this->voucher->fund->end_date)) {
-            return $this->voucher->fund->end_date;
-        }
+        $expireOffset = $this->voucher?->fund?->fund_config?->reimbursement_approve_offset;
+        $fundEndDate = $this->voucher->fund->end_date->clone()->addDays($expireOffset);
+        $voucherExpireDate = $this->voucher->expire_at->clone()->addDays($expireOffset);
 
-        return $this->voucher->expire_at;
+        return $voucherExpireDate->isAfter($fundEndDate) ? $fundEndDate : $voucherExpireDate;
     }
 
     /**
@@ -342,9 +341,11 @@ class Reimbursement extends Model
      */
     public function assign(Employee $employee): self
     {
-        ReimbursementAssigned::broadcast($this->updateModel([
+        $this->update([
             'employee_id' => $employee->id,
-        ]), $employee);
+        ]);
+
+        ReimbursementAssigned::broadcast($this, $employee);
 
         return $this;
     }
@@ -354,9 +355,11 @@ class Reimbursement extends Model
      */
     public function resign(): self
     {
-        ReimbursementResigned::broadcast($this->updateModel([
+        $this->update([
             'employee_id' => null,
-        ]));
+        ]);
+
+        ReimbursementResigned::broadcast($this);
 
         return $this;
     }
@@ -407,7 +410,7 @@ class Reimbursement extends Model
         }
 
         if ($note) {
-            $note = sprintf("%s: $note", $approved ? "Geaccepteerd" : "Afgewezen");
+            $note = ($approved ? "Geaccepteerd: " : "Afgewezen: ") . $note;
             $this->addNote($note, $this->employee);
         }
 
@@ -434,6 +437,9 @@ class Reimbursement extends Model
             'amount' => $this->amount,
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
             'employee_id' => $this->employee->id,
+            'branch_id' => $this->employee?->office?->branch_id,
+            'branch_name' => $this->employee?->office?->branch_name,
+            'branch_number' => $this->employee?->office?->branch_number,
             'reimbursement_id' => $this->id,
             'target' => VoucherTransaction::TARGET_IBAN,
             'state' => VoucherTransaction::STATE_PENDING,
@@ -455,15 +461,23 @@ class Reimbursement extends Model
             'voucher.identity.record_bsn',
             'voucher.identity.primary_email',
             'employee.identity.primary_email',
+            'voucher.fund.fund_config.implementation',
         ])->get();
 
         return $data->map(fn (Reimbursement $reimbursement) => array_only([
             'id' => $reimbursement->id,
+            'email' => $reimbursement->voucher->identity->email,
+            'amount' => currency_format($reimbursement->amount),
+            'submitted_at' => $reimbursement->submitted_at ?
+                format_datetime_locale($reimbursement->submitted_at) :
+                '-',
+            'lead_time' => $reimbursement->lead_time_locale,
+            'employee' => $reimbursement->employee?->identity?->email ?: '-',
+            'expired' => $reimbursement->expired ? 'Ja' : 'Nee',
+            'state' => $reimbursement->state_locale,
             'code' => '#' . $reimbursement->code,
             'fund_name' => $reimbursement->voucher->fund->name,
-            'amount' => currency_format($reimbursement->amount),
-            'employee' => $reimbursement->employee?->identity?->email ?: '-',
-            'email' => $reimbursement->voucher->identity->email,
+            'implementation_name' => $reimbursement->voucher->fund->fund_config?->implementation?->name,
             'bsn' => $reimbursement->voucher->fund->organization->bsn_enabled ?
                 ($reimbursement->voucher->identity->record_bsn?->value ?: '-') :
                 '-',
@@ -474,15 +488,9 @@ class Reimbursement extends Model
             'title' => $reimbursement->title,
             'description' => $reimbursement->description,
             'files_count' => $reimbursement->files_count,
-            'submitted_at' => $reimbursement->submitted_at ?
-                format_datetime_locale($reimbursement->submitted_at) :
-                '-',
             'resolved_at' => $reimbursement->resolved_at ?
                 format_datetime_locale($reimbursement->resolved_at) :
                 '-',
-            'lead_time' => $reimbursement->lead_time_locale,
-            'expired' => $reimbursement->expired ? 'Ja' : 'Nee',
-            'state' => $reimbursement->state_locale,
         ], $fields))->values();
     }
 
@@ -499,7 +507,7 @@ class Reimbursement extends Model
 
         $search = new ReimbursementsSearch($request->only([
             'q', 'fund_id', 'from', 'to', 'amount_min', 'amount_max', 'state',
-            'expired', 'archived', 'deactivated', 'identity_address',
+            'expired', 'archived', 'deactivated', 'identity_address', 'implementation_id',
         ]), $query);
 
         return self::exportTransform($search->query()->latest(), $fields);

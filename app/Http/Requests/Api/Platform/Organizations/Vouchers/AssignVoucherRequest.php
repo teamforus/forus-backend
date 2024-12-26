@@ -8,10 +8,8 @@ use App\Models\Voucher;
 use App\Rules\BsnRule;
 
 /**
- * Class AssignVoucherRequest
  * @property-read Organization $organization
  * @property-read Voucher $voucher
- * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
  */
 class AssignVoucherRequest extends BaseFormRequest
 {
@@ -36,10 +34,16 @@ class AssignVoucherRequest extends BaseFormRequest
     public function rules(): array
     {
         return $this->organization->bsn_enabled ? [
-            'email' => 'required_without:bsn|email:strict',
+            'email' => [
+                'required_without:bsn',
+                ...$this->emailRules(),
+            ],
             'bsn' => ['required_without:email', new BsnRule()],
         ] : [
-            'email' => 'required|email:strict',
+            'email' => [
+                'required',
+                ...$this->emailRules(),
+            ],
             'bsn' => 'nullable|in:',
         ];
     }

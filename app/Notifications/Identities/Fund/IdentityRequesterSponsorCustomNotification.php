@@ -23,14 +23,13 @@ class IdentityRequesterSponsorCustomNotification extends BaseIdentityFundNotific
     {
         /** @var Fund $fund */
         $fund = $this->eventLog->loggable;
-        $data = array_merge(array_filter($this->eventLog->data, fn($value) => is_string($value)), [
-            'webshop_link' => $fund->urlWebshop(),
-        ]);
 
-        $this->sendMailNotification(
-            $identity->email,
-            new FundSponsorCustomNotificationMail($data, $fund->getEmailFrom())
-        );
+        $mailable = new FundSponsorCustomNotificationMail([
+            ...array_filter($this->eventLog->data, fn($value) => is_string($value)),
+            'webshop_link' => $fund->urlWebshop(),
+        ], $fund->getEmailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 
     /**

@@ -87,13 +87,11 @@ class VoucherTransactionBatchTest extends DuskTestCase
     private function searchTransaction(Browser $browser, VoucherTransaction $transaction): void
     {
         $browser->waitFor('@searchTransaction');
-        $browser->type('@searchTransaction', $transaction->uid);
+        $browser->value('@searchTransaction', $transaction->uid);
 
-        $browser->pause(2000);
-        $browser->waitFor('@transactionItem');
-        $browser->assertSeeIn('@transactionItem', $transaction->uid);
-
-        $browser->within('@transactionItem', function(Browser $browser) use ($transaction) {
+        $browser->waitFor("@transactionItem$transaction->id");
+        $browser->within("@transactionItem$transaction->id", function(Browser $browser) use ($transaction) {
+            $browser->assertSee($transaction->uid);
             $browser->assertSeeIn('@transactionState', $transaction->state_locale);
         });
     }
@@ -148,12 +146,12 @@ class VoucherTransactionBatchTest extends DuskTestCase
         $handle = fopen($filename, 'w');
 
         fputcsv($handle, [
-            'voucher_id', 'amount', 'direct_payment_iban', 'direct_payment_name', 'uid', 'note',
+            'voucher_number', 'amount', 'direct_payment_iban', 'direct_payment_name', 'uid', 'note',
         ]);
 
         for ($i = 1; $i <= $this->transactionPerVoucher; $i++) {
             fputcsv($handle, [
-                'voucher_id' => $voucher->id,
+                'voucher_number' => $voucher->number,
                 'amount' => $voucher->amount_available / $this->transactionPerVoucher,
                 'direct_payment_iban' => $this->faker()->iban('NL'),
                 'direct_payment_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,

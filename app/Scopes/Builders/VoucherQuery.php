@@ -17,18 +17,18 @@ use Illuminate\Support\Facades\DB;
 class VoucherQuery
 {
     /**
-     * @param Builder|Voucher $builder
+     * @param Builder|Relation|Voucher $builder
      * @param string $identity_address
      * @param $fund_id
      * @param null $organization_id Provider organization id
-     * @return Builder|Voucher
+     * @return Builder|Relation|Voucher
      */
     public static function whereProductVouchersCanBeScannedForFundBy(
-        Builder|Voucher $builder,
+        Builder|Relation|Voucher $builder,
         string $identity_address,
         $fund_id,
         $organization_id = null
-    ): Builder|Voucher {
+    ): Builder|Relation|Voucher {
         $builder->whereHas('product', static function(Builder $builder) use (
             $fund_id, $identity_address, $organization_id
         ) {
@@ -61,10 +61,10 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder|Relation $builder
-     * @return Builder|Relation
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereNotExpired(Builder|Relation $builder): Builder|Relation
+    public static function whereNotExpired(Builder|Relation|Voucher $builder): Builder|Relation|Voucher
     {
         return $builder->where(static function(Builder $builder) {
             $builder->where('vouchers.expire_at', '>=', today());
@@ -76,10 +76,10 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder|Relation $builder
+     * @param Builder|Relation|Voucher $builder
      * @return Builder|Relation|Voucher
      */
-    public static function whereActive(Builder|Relation $builder): Builder|Relation|Voucher
+    public static function whereActive(Builder|Relation|Voucher $builder): Builder|Relation|Voucher
     {
         return $builder->where('state', Voucher::STATE_ACTIVE);
     }
@@ -94,56 +94,32 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function wherePending(Builder $builder): Builder
-    {
-        return $builder->where('state', Voucher::STATE_PENDING);
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    public static function whereDeactivated(Builder $builder): Builder
-    {
+    public static function whereDeactivated(
+        Builder|Relation|Voucher $builder,
+    ): Builder|Relation|Voucher {
         return $builder->where('state', Voucher::STATE_DEACTIVATED);
     }
 
     /**
-     * @param Builder|Relation $builder
-     * @return Builder|Relation
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereNotExpiredAndActive(Builder|Relation $builder): Builder|Relation
-    {
+    public static function whereNotExpiredAndActive(
+        Builder|Relation|Voucher $builder
+    ): Builder|Relation|Voucher {
         return self::whereNotExpired(self::whereActive($builder));
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereNotExpiredAndPending(Builder $builder): Builder
-    {
-        return self::whereNotExpired(self::wherePending($builder));
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    public static function whereNotExpiredAndDeactivated(Builder $builder): Builder
-    {
-        return self::whereNotExpired(self::whereDeactivated($builder));
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    public static function whereExpired(Builder $builder): Builder
-    {
+    public static function whereExpired(
+        Builder|Relation|Voucher $builder,
+    ): Builder|Relation|Voucher {
         return $builder->where(static function(Builder $builder) {
             $builder->where('vouchers.expire_at', '<', today());
 
@@ -154,20 +130,22 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereExpiredButActive(Builder $builder): Builder
-    {
+    public static function whereExpiredButActive(
+        Builder|Relation|Voucher $builder,
+    ): Builder|Relation|Voucher {
         return static::whereActive(static::whereExpired($builder));
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereExpiredOrNotActive(Builder $builder): Builder
-    {
+    public static function whereExpiredOrNotActive(
+        Builder|Relation|Voucher $builder,
+    ): Builder|Relation|Voucher {
         return $builder->where(function (Builder $builder) {
             $builder->where(fn (Builder $builder) => static::whereExpired($builder));
             $builder->orWhere(fn (Builder $builder) => static::whereNotActive($builder));
@@ -175,14 +153,41 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder|Voucher $builder
-     * @param string $q
-     * @return Builder|Voucher
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereSearchSponsorQuery(Builder|Voucher $builder, string $q): Builder|Voucher
-    {
-        return $builder->where(static function (Builder|Voucher $builder) use ($q) {
-            $builder->where('note', 'LIKE', "%$q%");
+    public static function whereVisibleToSponsor(
+        Builder|Relation|Voucher $builder
+    ): Builder|Relation|Voucher {
+        return $builder->where(static function(Builder $builder) {
+            $builder->whereNotNull('employee_id');
+
+            $builder->orWhere(static function(Builder $builder) {
+                $builder->whereNull('employee_id');
+                $builder->whereNull('product_id');
+            });
+
+            $builder->orWhere(static function(Builder $builder) {
+                $builder->whereNull('employee_id');
+                $builder->whereNotNull('product_id');
+                $builder->whereNull('parent_id');
+                $builder->where('returnable', false);
+            });
+        });
+    }
+
+    /**
+     * @param Builder|Relation|Voucher $builder
+     * @param string $q
+     * @return Builder|Relation|Voucher
+     */
+    public static function whereSearchSponsorQuery(
+        Builder|Relation|Voucher $builder,
+        string $q,
+    ): Builder|Relation|Voucher {
+        return $builder->where(static function ($builder) use ($q) {
+            $builder->where('number', 'LIKE', "%" . ltrim($q, '#') ."%");
+            $builder->orWhere('note', 'LIKE', "%$q%");
             $builder->orWhere('activation_code', 'LIKE', "%$q%");
             $builder->orWhere('client_uid', 'LIKE', "%$q%");
 
@@ -206,35 +211,14 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder|Voucher $builder
-     * @return Builder|Voucher
-     */
-    public static function whereVisibleToSponsor(Builder|Voucher $builder): Builder|Voucher
-    {
-        return $builder->where(static function(Builder $builder) {
-            $builder->whereNotNull('employee_id');
-
-            $builder->orWhere(static function(Builder $builder) {
-                $builder->whereNull('employee_id');
-                $builder->whereNull('product_id');
-            });
-
-            $builder->orWhere(static function(Builder $builder) {
-                $builder->whereNull('employee_id');
-                $builder->whereNotNull('product_id');
-                $builder->whereNull('parent_id');
-                $builder->where('returnable', false);
-            });
-        });
-    }
-
-    /**
-     * @param Builder $builder
+     * @param Builder|Relation|Voucher $builder
      * @param bool $inUse
-     * @return Builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereInUseQuery(Builder $builder, bool $inUse = true): Builder
-    {
+    public static function whereInUseQuery(
+        Builder|Relation|Voucher $builder,
+        bool $inUse = true,
+    ): Builder|Relation|Voucher {
         return $builder->where(static function(Builder $builder) use ($inUse) {
             if ($inUse) {
                 $builder->whereHas('transactions');
@@ -251,16 +235,16 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder|Relation $builder
+     * @param Builder|Relation|Voucher $builder
      * @param Carbon|null $fromDate
      * @param Carbon|null $toDate
-     * @return Builder
+     * @return Builder|Relation|Voucher
      */
     public static function whereInUseDateQuery(
-        Builder|Relation $builder,
+        Builder|Relation|Voucher $builder,
         Carbon $fromDate = null,
         Carbon $toDate = null,
-    ): Builder {
+    ): Builder|Relation|Voucher {
         if ($fromDate) {
             $builder->where("first_use_date", '>=', $fromDate);
         }
@@ -273,11 +257,12 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereIsProductVoucher(Builder $builder): Builder
-    {
+    public static function whereIsProductVoucher(
+        Builder|Relation|Voucher $builder,
+    ): Builder|Relation|Voucher {
         return $builder->where(static function(Builder $builder) {
             $builder->whereNotNull('parent_id');
 
@@ -295,29 +280,32 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereIsProductVoucherWithoutTransactions(Builder $builder): Builder
-    {
+    public static function whereIsProductVoucherWithoutTransactions(
+        Builder|Relation|Voucher $builder
+    ): Builder|Relation|Voucher {
         return self::whereIsProductVoucher($builder)->whereDoesntHave('transactions');
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereNotInUseQuery(Builder $builder): Builder
-    {
+    public static function whereNotInUseQuery(
+        Builder|Relation|Voucher $builder,
+    ): Builder|Relation|Voucher {
         return static::whereInUseQuery($builder, false);
     }
 
     /**
-     * @param Relation|Builder $query
-     * @return Relation|Builder
+     * @param Builder|Relation|Voucher $query
+     * @return Builder|Relation|Voucher
      */
-    public static function whereHasBalance(Relation|Builder $query): Relation|Builder
-    {
+    public static function whereHasBalance(
+        Builder|Relation|Voucher $query
+    ): Builder|Relation|Voucher {
         $selectQuery = Voucher::fromSub(self::addBalanceFields(Voucher::query()), 'vouchers');
 
         $selectQuery->where(function(Builder $builder) {
@@ -333,21 +321,22 @@ class VoucherQuery
     }
 
     /**
-     * @param Relation|Builder $query
-     * @return Relation|Builder
+     * @param Builder|Relation|Voucher $query
+     * @return Builder|Relation|Voucher
      */
     public static function whereHasBalanceIsActiveAndNotExpired(
-        Relation|Builder $query
-    ): Relation|Builder {
+        Builder|Relation|Voucher $query,
+    ): Builder|Relation|Voucher {
         return self::whereHasBalance(self::whereNotExpiredAndActive($query));
     }
 
     /**
-     * @param Relation|Builder|QBuilder $query
-     * @return Relation|Builder|QBuilder
+     * @param Builder|Relation|Voucher $query
+     * @return Builder|Relation|Voucher
      */
-    public static function addBalanceFields(Relation|Builder|QBuilder $query): Relation|Builder|QBuilder
-    {
+    public static function addBalanceFields(
+        Builder|Relation|Voucher $query,
+    ): Builder|Relation|Voucher {
         $selectQuery = DB::query()->select([
             'amount_total' => static::voucherTotalAmountSubQuery(),
             'amount_spent' => static::voucherAmountSpentSubQuery(),
@@ -363,9 +352,9 @@ class VoucherQuery
     }
 
     /**
-     * @return Builder
+     * @return Builder|VoucherTransaction
      */
-    private static function voucherTotalAmountSubQuery(): Builder
+    private static function voucherTotalAmountSubQuery(): Builder|VoucherTransaction
     {
         return VoucherTransaction::query()
             ->where(fn ($builder) => VoucherTransactionQuery::whereIncoming($builder))
@@ -399,16 +388,16 @@ class VoucherQuery
     }
 
     /**
-     * @param Builder|Voucher|Relation $builder
+     * @param Builder|Relation|Voucher $builder
      * @param Reimbursement|null $reimbursement
-     * @return Builder|Voucher|Relation
+     * @return Builder|Relation|Voucher
      */
     public static function whereAllowReimbursements(
-        Builder|Voucher|Relation $builder,
+        Builder|Relation|Voucher $builder,
         ?Reimbursement $reimbursement = null,
-    ): Builder|Voucher|Relation {
-        return $builder->where(function(Builder|Voucher $builder) use ($reimbursement) {
-            $builder->where(function(Builder|Voucher $builder) use ($reimbursement) {
+    ): Builder|Relation|Voucher {
+        return $builder->where(function(Builder $builder) use ($reimbursement) {
+            $builder->where(function(Builder $builder) use ($reimbursement) {
                 VoucherQuery::whereNotExpiredAndActive($builder);
 
                 if ($reimbursement) {

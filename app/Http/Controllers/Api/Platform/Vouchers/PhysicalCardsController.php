@@ -3,17 +3,13 @@
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Vouchers\PhysicalCards\StorePhysicalCardRequest;
 use App\Http\Resources\PhysicalCardResource;
 use App\Models\PhysicalCard;
-use App\Models\VoucherToken;
-use App\Http\Requests\Api\Platform\Vouchers\PhysicalCards\StorePhysicalCardRequest;
+use App\Models\Voucher;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\Response;
 
-/**
- * Class PhysicalCardsController
- * @package App\Http\Controllers\Api\Platform\Vouchers
- */
 class PhysicalCardsController extends Controller
 {
     use ThrottleWithMeta;
@@ -24,39 +20,33 @@ class PhysicalCardsController extends Controller
     /**
      * Link existing physical card to existing voucher
      * @param StorePhysicalCardRequest $request
-     * @param VoucherToken $voucherToken
+     * @param Voucher $voucher
      * @return PhysicalCardResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \App\Exceptions\AuthorizationJsonException
      */
-    public function store(
-        StorePhysicalCardRequest $request,
-        VoucherToken $voucherToken
-    ): PhysicalCardResource {
+    public function store(StorePhysicalCardRequest $request, Voucher $voucher): PhysicalCardResource
+    {
         $this->throttleWithKey('to_many_attempts', $request, 'physical_cards');
-        $this->authorize('create', [PhysicalCard::class, $voucherToken->voucher]);
+        $this->authorize('create', [PhysicalCard::class, $voucher]);
 
-        return new PhysicalCardResource($voucherToken->voucher->addPhysicalCard(
-            $request->input('code')
-        ));
+        return new PhysicalCardResource($voucher->addPhysicalCard($request->input('code')));
     }
 
     /**
      * Unlink physical card from voucher
      *
-     * @param VoucherToken $voucherToken
+     * @param Voucher $voucher
      * @param PhysicalCard $physicalCard
      * @return Response
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function destroy(
-        VoucherToken $voucherToken,
-        PhysicalCard $physicalCard
-    ): Response {
-        $this->authorize('show', $voucherToken->voucher);
-        $this->authorize('delete', [$physicalCard, $voucherToken->voucher]);
+    public function destroy(Voucher $voucher, PhysicalCard $physicalCard): Response
+    {
+        $this->authorize('show', $voucher);
+        $this->authorize('delete', [$physicalCard, $voucher]);
 
-        $voucherToken->voucher->physical_cards()->where([
+        $voucher->physical_cards()->where([
             'physical_cards.id' => $physicalCard->id
         ])->delete();
 

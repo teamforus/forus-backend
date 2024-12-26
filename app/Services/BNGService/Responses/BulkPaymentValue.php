@@ -4,7 +4,7 @@ namespace App\Services\BNGService\Responses;
 
 class BulkPaymentValue extends Value {
     /**
-     * @return string
+     * @return string|null
      */
     public function getTransactionStatus(): ?string
     {
@@ -12,7 +12,7 @@ class BulkPaymentValue extends Value {
     }
 
     /**
-     * @return int
+     * @return int|null
      * @noinspection PhpUnused
      */
     public function getNumberOfTransactions(): ?int
@@ -21,7 +21,7 @@ class BulkPaymentValue extends Value {
     }
 
     /**
-     * @return int
+     * @return int|null
      * @noinspection PhpUnused
      */
     public function getRequestedExecutionDate(): ?int
@@ -30,17 +30,15 @@ class BulkPaymentValue extends Value {
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getStatus(): ?string
     {
-        switch ($this->getTransactionStatus()) {
-            case 'RCVD':
-            case 'PDNG':
-            case 'PATC': return 'pending';
-            case 'RJCT': return 'rejected';
-            case 'ACTC': return 'accepted';
-            default: return null;
-        }
+        return match ($this->getTransactionStatus()) {
+            'RCVD', 'PDNG', 'PATC' => 'pending',
+            'RJCT' => 'rejected',
+            'ACTC' => 'accepted',
+            default => null,
+        };
     }
 }

@@ -14,10 +14,6 @@ use App\Models\Organization;
 use App\Models\Product;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class FundProviderChatsController
- * @package App\Http\Controllers\Api\Platform\Organizations\Funds\FundProviders
- */
 class FundProviderChatsController extends Controller
 {
     /**

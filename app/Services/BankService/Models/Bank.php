@@ -22,24 +22,24 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $transaction_cost
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|Bank newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Bank newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Bank query()
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereData($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereOauthRedirectId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereOauthRedirectUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereTransactionCost($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Bank newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Bank newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Bank query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Bank whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Bank whereData($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Bank whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Bank whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Bank whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Bank whereOauthRedirectId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Bank whereOauthRedirectUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Bank whereTransactionCost($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Bank whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Bank extends Model
 {
-    public const BANK_BNG = 'bng';
-    public const BANK_BUNQ = 'bunq';
+    public const string BANK_BNG = 'bng';
+    public const string BANK_BUNQ = 'bunq';
 
     /**
      * @var array

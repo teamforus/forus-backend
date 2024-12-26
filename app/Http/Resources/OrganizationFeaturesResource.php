@@ -11,7 +11,7 @@ use App\Models\Organization;
  */
 class OrganizationFeaturesResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'implementations',
         'funds.fund_config',
         'funds.organization',
@@ -38,7 +38,13 @@ class OrganizationFeaturesResource extends BaseJsonResource
                 'reimbursements' => $this->isReimbursementsEnabled($organization),
                 'voucher_records' => $this->isVoucherRecordsEnabled($organization),
                 'iconnect_api' => $this->isIConnectApiOinEnabled($organization),
+                'fund_requests' => $this->isFundRequestsEnabled($organization),
+                'extra_payments' => $this->isExtraPaymentsEnabled($organization),
+                'voucher_top_up' => $this->isVoucherTopUpEnabled($organization),
                 'email_connection' => true,
+                'external_funds' => true,
+                'budget_funds' => true,
+                'subsidy_funds' => true,
             ]
         ];
     }
@@ -96,6 +102,37 @@ class OrganizationFeaturesResource extends BaseJsonResource
     {
         return $organization->implementations
             ->filter(fn(Implementation $implementation) => $implementation->digidEnabled())
+            ->isNotEmpty();
+    }
+
+    /**
+     * @param Organization $organization
+     * @return bool
+     */
+    protected function isExtraPaymentsEnabled(Organization $organization): bool
+    {
+        return $organization->allow_provider_extra_payments;
+    }
+
+    /**
+     * @param Organization $organization
+     * @return bool
+     */
+    protected function isFundRequestsEnabled(Organization $organization): bool
+    {
+        return $organization->funds
+            ->filter(fn(Fund $fund) => $fund->fund_config->allow_fund_requests)
+            ->isNotEmpty();
+    }
+
+    /**
+     * @param Organization $organization
+     * @return bool
+     */
+    protected function isVoucherTopUpEnabled(Organization $organization): bool
+    {
+        return $organization->funds
+            ->filter(fn(Fund $fund) => $fund->fund_config->allow_voucher_top_ups)
             ->isNotEmpty();
     }
 }

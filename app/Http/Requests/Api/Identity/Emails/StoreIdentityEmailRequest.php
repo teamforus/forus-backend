@@ -2,12 +2,9 @@
 
 namespace App\Http\Requests\Api\Identity\Emails;
 
+use App\Rules\IdentityEmailMaxRule;
 use App\Rules\IdentityEmailUniqueRule;
 
-/**
- * Class StoreIdentityEmailRequest
- * @package App\Http\Requests\Api\Identity\Emails
- */
 class StoreIdentityEmailRequest extends BaseIdentityEmailRequest
 {
     /**
@@ -32,7 +29,12 @@ class StoreIdentityEmailRequest extends BaseIdentityEmailRequest
 
         return [
             'target' => 'nullable|alpha_dash',
-            'email' => ['required', 'email:strict', new IdentityEmailUniqueRule()],
+            'email' => [
+                'required',
+                new IdentityEmailUniqueRule(),
+                new IdentityEmailMaxRule($this->auth_address()),
+                ...$this->emailRules(),
+            ],
         ];
     }
 }

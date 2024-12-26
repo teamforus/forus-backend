@@ -6,12 +6,13 @@ use App\Mail\User\IdentityEmailVerificationMail;
 use App\Models\IdentityEmail;
 use App\Models\IdentityProxy;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class IdentityEmailTest extends TestCase
 {
-    use AssertsSentEmails;
+    use AssertsSentEmails, DatabaseTransactions;
 
     /**
      * @var string
@@ -126,6 +127,26 @@ class IdentityEmailTest extends TestCase
     {
         $link = $this->createEmailAndGetVerificationLink('fundRequest');
         $this->get($link)->assertRedirectContains('target=fundRequest');
+    }
+
+    /**
+     * @return void
+     */
+    public function testMaxIdentityEmails()
+    {
+        $proxy = $this->makeIdentityProxy($this->makeIdentity());
+
+        for ($i = 1; $i <= config('forus.mail.max_identity_emails'); $i++) {
+            $email = microtime(true) . "@example.com";
+            $response = $this->storeNewEmailRequest($email, $proxy);
+
+            $response->assertStatus(201);
+            $response->assertJsonStructure(['data' => $this->resourceStructure]);
+        }
+
+        $email = microtime(true) . "@example.com";
+        $response = $this->storeNewEmailRequest($email, $proxy);
+        $response->assertJsonValidationErrorFor('email');
     }
 
     /**

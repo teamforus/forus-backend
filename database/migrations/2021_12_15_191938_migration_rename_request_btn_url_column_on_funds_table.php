@@ -7,16 +7,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * @throws \Doctrine\DBAL\Exception
-     */
-    public function __construct()
-    {
-        DB::getDoctrineSchemaManager()
-            ->getDatabasePlatform()
-            ->registerDoctrineTypeMapping('enum', 'string');
-    }
-
-    /**
      * Run the migrations.
      *
      * @return void

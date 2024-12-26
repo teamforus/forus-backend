@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class IndexImplementationRequest extends FormRequest
+class IndexImplementationRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,8 +24,8 @@ class IndexImplementationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'per_page' => 'numeric|numeric|min:1|max:100',
-            'q'        => 'nullable|string|max:100',
+            'q' => $this->qRule(),
+            'per_page' => $this->perPageRule(),
         ];
     }
 }

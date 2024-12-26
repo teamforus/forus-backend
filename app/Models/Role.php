@@ -21,21 +21,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Models\RoleTranslation|null $translation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RoleTranslation[] $translations
  * @property-read int|null $translations_count
- * @method static \Illuminate\Database\Eloquent\Builder|Role listsTranslations(string $translationField)
- * @method static \Illuminate\Database\Eloquent\Builder|Role newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Role newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Role notTranslatedIn(?string $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|Role orWhereTranslation(string $translationField, $value, ?string $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|Role orWhereTranslationLike(string $translationField, $value, ?string $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|Role orderByTranslation(string $translationField, string $sortMethod = 'asc')
- * @method static \Illuminate\Database\Eloquent\Builder|Role query()
- * @method static \Illuminate\Database\Eloquent\Builder|Role translated()
- * @method static \Illuminate\Database\Eloquent\Builder|Role translatedIn(?string $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|Role whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Role whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Role whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
- * @method static \Illuminate\Database\Eloquent\Builder|Role whereTranslationLike(string $translationField, $value, ?string $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|Role withTranslation()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role listsTranslations(string $translationField)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role notTranslatedIn(?string $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role orWhereTranslation(string $translationField, $value, ?string $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role orWhereTranslationLike(string $translationField, $value, ?string $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role orderByTranslation(string $translationField, string $sortMethod = 'asc')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role translated()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role translatedIn(?string $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereTranslationLike(string $translationField, $value, ?string $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role withTranslation(?string $locale = null)
  * @mixin \Eloquent
  */
 class Role extends BaseModel
@@ -80,6 +80,19 @@ class Role extends BaseModel
     public function role_permissions(): HasMany
     {
         return $this->hasMany(RolePermission::class);
+    }
+
+
+    /**
+     * @param array|string $permission
+     * @return void
+     * @noinspection PhpUnused
+     */
+    public function attachPermissions(array|string $permission): void
+    {
+        $this->permissions()->syncWithoutDetaching(
+            Permission::whereIn('key', (array) $permission)->pluck('id')->toArray(),
+        );
     }
 
     /**

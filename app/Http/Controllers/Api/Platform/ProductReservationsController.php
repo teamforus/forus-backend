@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\ProductReservations\IndexProductReservationsRequest;
+use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\ValidateProductReservationAddressRequest;
 use App\Http\Requests\Api\Platform\ProductReservations\ValidateProductReservationFieldsRequest;
-use App\Http\Requests\Api\Platform\ProductReservations\StoreProductReservationRequest;
 use App\Http\Resources\ProductReservationResource;
 use App\Models\Product;
 use App\Models\ProductReservation;
@@ -32,7 +32,7 @@ class ProductReservationsController extends Controller
         $this->authorize('viewAny', ProductReservation::class);
 
         $builder = ProductReservation::whereHas('voucher', function(Builder $builder) use ($request) {
-            $builder->where('identity_address', $request->auth_address());
+            $builder->where('identity_id', $request->auth_id());
         });
 
         $search = new ProductReservationsSearch(array_merge($request->only([
@@ -62,12 +62,8 @@ class ProductReservationsController extends Controller
 
         try {
             $product = Product::find($request->input('product_id'));
+            $voucher = Voucher::find($request->input('voucher_id'));
             $postCode = $request->input('postal_code') ?: '';
-
-            $voucher = Voucher::findByAddress(
-                $request->input('voucher_address'),
-                $request->auth_address(),
-            );
 
             $extraPaymentRequired =
                 $voucher->fund->isTypeBudget() &&
@@ -77,12 +73,17 @@ class ProductReservationsController extends Controller
                 $this->authorize('createExtraPayment', [ProductReservation::class, $product, $voucher]);
             }
 
-            $reservation = $voucher->reserveProduct($product, null, [
+            $reservationFields = $product->reservation_fields ? [
                 ...$request->only([
-                    'first_name', 'last_name', 'user_note', 'phone', 'birth_date', 'custom_fields',
+                    'phone', 'birth_date', 'custom_fields',
                     'street', 'house_nr', 'house_nr_addition', 'city',
                 ]),
                 'postal_code' => strtoupper(preg_replace("/\s+/", "", $postCode)),
+            ] : [];
+
+            $reservation = $voucher->reserveProduct($product, null, [
+                ...$request->only('first_name', 'last_name', 'user_note'),
+                ...$reservationFields,
                 'has_extra_payment' => $extraPaymentRequired,
             ]);
 
@@ -93,6 +94,7 @@ class ProductReservationsController extends Controller
                     DB::commit();
 
                     return new JsonResponse([
+                        'id' => $reservation->id,
                         'checkout_url' => $payment->getCheckoutUrl(),
                     ], 200);
                 }
@@ -101,7 +103,7 @@ class ProductReservationsController extends Controller
 
                 return new JsonResponse([
                     'message' => "Could prepare the extra payment.",
-                ], 200);
+                ], 503);
             }
 
             if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
@@ -116,7 +118,7 @@ class ProductReservationsController extends Controller
 
         return new JsonResponse([
             'message' => "Something went wrong, please try again later.",
-        ], 200);
+        ], 503);
     }
 
     /**

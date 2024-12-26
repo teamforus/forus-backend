@@ -24,10 +24,11 @@ class FundProviderAppliedNotification extends BaseFundsNotification
         /** @var Fund $fund */
         $fund = $this->eventLog->loggable;
 
-        $mailable = new ProviderAppliedMail(array_merge($this->eventLog->data, [
+        $mailable = new ProviderAppliedMail([
+            ...$this->eventLog->data,
             'sponsor_dashboard_link' => $fund->urlSponsorDashboard(),
-        ]), $fund->fund_config->implementation->getEmailFrom());
+        ], $fund->fund_config->implementation->getEmailFrom());
 
-        $this->sendMailNotification($identity->email, $mailable);
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

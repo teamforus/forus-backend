@@ -34,7 +34,6 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.fund_request_denied" => ["database", "mail"],
         "notifications_identities.fund_request_approved" => ["database", "mail"],
         "notifications_identities.fund_request_disregarded" => ["database", "mail"],
-        "notifications_identities.fund_request_record_declined" => ["database", "mail"],
         "notifications_identities.fund_request_feedback_requested" => ["database", "mail"],
 
         "notifications_identities.reimbursement_submitted" => ["database", "mail"],
@@ -58,8 +57,8 @@ class SystemNotificationsTableSeeder extends Seeder
 
         "notifications_identities.product_reservation_created" => ["database"],
         "notifications_identities.product_reservation_accepted" => ["database", "mail"],
-        "notifications_identities.product_reservation_canceled" => ["database"],
-        "notifications_identities.product_reservation_rejected" => ["database"],
+        "notifications_identities.product_reservation_canceled" => ["database", "mail"],
+        "notifications_identities.product_reservation_rejected" => ["database", "mail"],
 
         "notifications_products.approved" => ["database"],
         "notifications_products.expired" => ["database"],
@@ -192,7 +191,6 @@ class SystemNotificationsTableSeeder extends Seeder
             "notifications_identities.fund_request_approved",
             "notifications_identities.fund_request_denied",
             "notifications_identities.fund_request_disregarded",
-            "notifications_identities.fund_request_record_declined",
             "notifications_identities.fund_request_feedback_requested"
         ],
         "requester_reimbursements" => [

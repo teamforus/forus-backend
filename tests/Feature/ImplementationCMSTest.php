@@ -340,8 +340,8 @@ class ImplementationCMSTest extends TestCase
             'button_link_label' => $this->faker->text(),
             'button_target_blank' => (bool) rand(0, 1),
             'button_text' => $this->faker->text(100),
-            'description' => $this->faker->text(),
-            'label' => $this->faker->text(100),
+            'description' => $this->faker->text(500),
+            'label' => $this->faker->text(30),
             'title' => $this->faker->text(100),
             'media_uid' => $this->makeMedia('implementation_block_media')->uid,
         ];
@@ -508,7 +508,7 @@ class ImplementationCMSTest extends TestCase
         }
 
         if (isset($body['blocks'])) {
-            $this->assertEquals($page->blocks->count(), count($body['blocks']));
+            $this->assertCount($page->blocks->count(), $body['blocks']);
 
             /** @var ImplementationBlock $block */
             foreach ($page->blocks as $index => $block) {

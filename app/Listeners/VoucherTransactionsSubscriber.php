@@ -8,8 +8,8 @@ use App\Mail\Forus\TransactionVerifyMail;
 use App\Models\FundProvider;
 use App\Models\Voucher;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherTransactionNotification;
-use App\Notifications\Identities\Voucher\IdentityVoucherSubsidyTransactionNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherBudgetTransactionNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherSubsidyTransactionNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderTransactionBunqSuccessNotification;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Config;
@@ -62,7 +62,7 @@ class VoucherTransactionsSubscriber
                     'subsidy_new_limit' => $fundProviderProduct->stockAvailableForVoucher($transaction->voucher),
                 ], $logData));
 
-                if ($transaction->voucher->identity_address) {
+                if ($transaction->voucher->identity_id) {
                     IdentityVoucherSubsidyTransactionNotification::send($eventLog);
                 }
             }

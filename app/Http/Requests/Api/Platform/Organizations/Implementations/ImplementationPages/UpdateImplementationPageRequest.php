@@ -35,6 +35,7 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
         $faqRules = $this->faqRules($this->implementationPage->faq()->pluck('id')->toArray());
 
         return array_merge(parent::rules(), [
+            'title'                 => 'nullable|string|max:200',
             'state'                 => "nullable|in:$states",
             'description'           => 'nullable|string|max:10000',
             'description_position'  => "nullable|in:$descriptionPositions",

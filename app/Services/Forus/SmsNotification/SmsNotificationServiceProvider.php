@@ -4,10 +4,6 @@ namespace App\Services\Forus\SmsNotification;
 
 use Illuminate\Support\ServiceProvider;
 
-/**
- * Class SmsNotificationServiceProvider
- * @package App\Services\Forus\SmsNotification
- */
 class SmsNotificationServiceProvider extends ServiceProvider
 {
     /**

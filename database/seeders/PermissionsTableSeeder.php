@@ -18,6 +18,8 @@ class PermissionsTableSeeder extends Seeder
         'manage_validators'         => "Manage validators",
         'manage_employees'          => "Manage employees",
         'manage_vouchers'           => "Manage vouchers",
+        'view_vouchers'             => "View vouchers",
+        'view_implementations'      => "View implementations",
         'manage_implementation'     => "Manage implementation",
         'manage_implementation_cms' => "Manage implementation CMS",
         'manage_implementation_notifications' => "Manage implementation notifications",
@@ -33,6 +35,9 @@ class PermissionsTableSeeder extends Seeder
         'manage_bi_connection'      => "Manage BI connection",
         'manage_payment_methods'    => "Manage payment methods",
         'view_funds_extra_payments' => "See funds extra payments",
+        'manage_payouts'            => "Manage payouts",
+        'view_identities'           => "View identities",
+        'manage_identities'         => "Manage identities",
     ];
 
     /**

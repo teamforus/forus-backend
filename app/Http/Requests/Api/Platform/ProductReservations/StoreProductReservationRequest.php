@@ -52,14 +52,14 @@ class StoreProductReservationRequest extends BaseFormRequest
     public function baseRules(?Product $product): array
     {
         return [
-            'voucher_address' => [
+            'voucher_id' => [
                 'required',
-                new IdentityVoucherAddressRule($this->auth_address(), Voucher::TYPE_BUDGET),
+                new IdentityVoucherAddressRule($this->identity(), Voucher::TYPE_BUDGET),
             ],
             'product_id' => [
                 'required',
                 'exists:products,id',
-                new ProductIdToReservationRule($this->input('voucher_address'), true, true),
+                new ProductIdToReservationRule($this->input('voucher_id'), true, true),
             ],
             ...$this->fieldsRules($product),
             ...$this->customFieldRules($product),
@@ -116,6 +116,10 @@ class StoreProductReservationRequest extends BaseFormRequest
      */
     private function customFieldRules(?Product $product): array
     {
+        if (!$product->reservation_fields) {
+            return [];
+        }
+
         return $product?->organization->reservation_fields->reduce(fn (array $result, $field) => [
             ...$result,
             "custom_fields.$field->id" => array_filter([

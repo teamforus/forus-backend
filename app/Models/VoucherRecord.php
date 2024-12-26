@@ -20,33 +20,35 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $value_locale
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  * @property-read \App\Models\RecordType $record_type
  * @property-read \App\Models\Voucher $voucher
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord newQuery()
- * @method static \Illuminate\Database\Query\Builder|VoucherRecord onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord query()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereNote($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereRecordTypeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereValue($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherRecord whereVoucherId($value)
- * @method static \Illuminate\Database\Query\Builder|VoucherRecord withTrashed()
- * @method static \Illuminate\Database\Query\Builder|VoucherRecord withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereRecordTypeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord whereVoucherId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRecord withoutTrashed()
  * @mixin \Eloquent
  */
 class VoucherRecord extends Model
 {
     use SoftDeletes, HasLogs;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_UPDATED = 'updated';
-    public const EVENT_DELETED = 'deleted';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_UPDATED = 'updated';
+    public const string EVENT_DELETED = 'deleted';
 
-    public const EVENTS = [
+    public const array EVENTS = [
         self::EVENT_CREATED,
         self::EVENT_UPDATED,
         self::EVENT_DELETED,

@@ -4,17 +4,16 @@ namespace App\Policies;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
-use App\Models\FundRequestRecord;
 use App\Models\Identity;
 use App\Models\Note;
 use App\Models\Organization;
-use App\Scopes\Builders\EmployeeQuery;
+use App\Models\Permission;
+use App\Scopes\Builders\EmailLogQuery;
 use App\Scopes\Builders\FundRequestQuery;
-use App\Scopes\Builders\FundRequestRecordQuery;
-use App\Scopes\Builders\OrganizationQuery;
+use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\App;
 
 class FundRequestPolicy
 {
@@ -55,7 +54,7 @@ class FundRequestPolicy
             return $this->deny('invalid_endpoint');
         }
 
-        if ($fundRequest->identity_address !== $identity->address) {
+        if ($fundRequest->identity_id !== $identity->id) {
             return $this->deny('not_requester');
         }
 
@@ -86,7 +85,7 @@ class FundRequestPolicy
 
         // has pending fund requests
         if ($fund->fund_requests()->where([
-            'identity_address' => $identity->address,
+            'identity_id' => $identity->id,
             'state' => FundRequest::STATE_PENDING,
         ])->exists()) {
             return $this->deny('pending_request_exists');
@@ -95,7 +94,7 @@ class FundRequestPolicy
         // has approved fund requests where voucher is not expired
         if (FundRequestQuery::whereApprovedAndVoucherIsActive(
             $fund->fund_requests(),
-            $identity->address
+            $identity->id
         )->exists()) {
             return $this->deny('approved_request_exists');
         }
@@ -116,7 +115,8 @@ class FundRequestPolicy
         Organization $organization
     ): Response|bool {
         if (!$organization->identityCan($identity, [
-            'validate_records', 'manage_validators',
+            Permission::VALIDATE_RECORDS,
+            Permission::MANAGE_VALIDATORS,
         ], false)) {
             return $this->deny('invalid_validator');
         }
@@ -157,20 +157,7 @@ class FundRequestPolicy
             return $this->deny('invalid_endpoint');
         }
 
-        if (!$organization->isEmployee($identity)) {
-            return $this->deny('not_employee');
-        }
-
-        $availableRecordsQuery = FundRequestRecordQuery::whereEmployeeIsValidatorOrSupervisor(
-            $fundRequest->records(),
-            $organization->findEmployee($identity->address)
-        );
-
-        if ($availableRecordsQuery->doesntExist()) {
-            return $this->deny('not_validator');
-        }
-
-        return true;
+        return $this->viewAnyAsValidator($identity, $organization);
     }
 
     /**
@@ -191,40 +178,30 @@ class FundRequestPolicy
             return $this->deny('invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, 'validate_records')) {
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return $this->deny('invalid_validator');
         }
 
         // only pending requests could be assigned
-        if ($fundRequest->state !== FundRequest::STATE_PENDING) {
+        if (!$fundRequest->isPending()) {
             return $this->deny('not_pending');
         }
 
-        $recordsQuery = $fundRequest->records_pending()->whereDoesntHave('employee');
-        $hasRecordsAvailable = EmployeeQuery::whereCanValidateRecords(
-            $organization->employees()->where('identity_address', $identity->address),
-            $recordsQuery->select('fund_request_records.id')->getQuery(),
-        )->exists();
-
-        // doesn't have pending vouchers that could be assigned
-        if (!$hasRecordsAvailable) {
-            return $this->deny('no_records_available');
-        }
-
-        return $identity->exists;
+        return !$fundRequest->employee;
     }
 
     /**
      * @param Identity $identity
      * @param FundRequest $fundRequest
      * @param Organization $organization
+     * @param bool $checkResolvingIssues
      * @return Response|bool
-     * @noinspection PhpUnused
      */
     private function baseResolveAsValidator(
         Identity $identity,
         FundRequest $fundRequest,
-        Organization $organization
+        Organization $organization,
+        bool $checkResolvingIssues = false,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
             return $this->deny('invalid_endpoint');
@@ -235,22 +212,14 @@ class FundRequestPolicy
             return $this->deny('not_pending');
         }
 
-        $recordsAssigned = FundRequestRecordQuery::whereEmployeeIsAssignedValidator(
-            $fundRequest->records(),
-            $organization->findEmployee($identity->address)
-        );
-
-        // need to have at least one record assigned to you
-        if ((clone $recordsAssigned)->doesntExist()) {
-            return $this->deny('no_records_assigned');
+        // should be properly configured
+        if ($checkResolvingIssues && ($error = $fundRequest->getResolvingError())) {
+            $fundRequest->fund->logError($error, ['fund_request_id' => $fundRequest->id]);
+            return $this->deny(App::hasDebugModeEnabled() ? $error : 'configuration_issue');
         }
 
-        // should not have any records disregarded by you
-        if ((clone $recordsAssigned)->where('state', FundRequestRecord::STATE_DISREGARDED)->exists()) {
-            return $this->deny('has_disregarded_records');
-        }
-
-        return $identity->exists;
+        // has to be assigned
+        return $fundRequest->employee?->identity_address === $identity->address;
     }
 
     /**
@@ -259,19 +228,37 @@ class FundRequestPolicy
      * @param Identity $identity
      * @param FundRequest $fundRequest
      * @param Organization $organization
+     * @param bool $checkResolvingIssues
      * @return Response|bool
-     * @noinspection PhpUnused
      */
     public function resolveAsValidator(
         Identity $identity,
         FundRequest $fundRequest,
-        Organization $organization
+        Organization $organization,
+        bool $checkResolvingIssues = false,
     ): Response|bool {
-        if (!$organization->identityCan($identity, 'validate_records')) {
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return $this->deny('invalid_validator');
         }
 
-        return $this->baseResolveAsValidator($identity, $fundRequest, $organization);
+        return $this->baseResolveAsValidator($identity, $fundRequest, $organization, $checkResolvingIssues);
+    }
+
+    /**
+     * Determine whether the validator can approve the fundRequest.
+     *
+     * @param Identity $identity
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function approveAsValidator(
+        Identity $identity,
+        FundRequest $fundRequest,
+        Organization $organization,
+    ): Response|bool {
+        return $this->resolveAsValidator($identity, $fundRequest, $organization, true);
     }
 
     /**
@@ -286,7 +273,7 @@ class FundRequestPolicy
     public function resignAsValidator(
         Identity $identity,
         FundRequest $fundRequest,
-        Organization $organization
+        Organization $organization,
     ): Response|bool {
         return $this->baseResolveAsValidator($identity, $fundRequest, $organization);
     }
@@ -303,17 +290,9 @@ class FundRequestPolicy
     public function disregard(
         Identity $identity,
         FundRequest $fundRequest,
-        Organization $organization
+        Organization $organization,
     ): Response|bool {
-        if (!$response = $this->resolveAsValidator($identity, $fundRequest, $organization)) {
-            return $response;
-        }
-
-        if ($organization->id !== $fundRequest->fund->organization_id) {
-            return $this->deny('only_sponsor_employee');
-        }
-
-        return $identity->exists;
+        return $this->resolveAsValidator($identity, $fundRequest, $organization);
     }
 
     /**
@@ -334,29 +313,25 @@ class FundRequestPolicy
             return $response;
         }
 
-        $requestsQuery = FundRequest::where([
+        $query = FundRequest::where([
             'fund_id' => $fundRequest->fund_id,
-            'identity_address' => $fundRequest->identity_address,
+            'identity_id' => $fundRequest->identity_id,
         ])->where('id', '!=', $fundRequest->id);
 
         // has other pending requests
-        if ((clone $requestsQuery->where('state', $fundRequest::STATE_PENDING))->exists()) {
+        if ((clone $query->where('state', $fundRequest::STATE_PENDING))->exists()) {
             return $this->deny('fund_request_replaced');
         }
 
         // has other approved requests
         if (FundRequestQuery::whereApprovedAndVoucherIsActive(
-            (clone $requestsQuery),
-            $fundRequest->identity_address
+            (clone $query),
+            $fundRequest->identity->id,
         )->exists()) {
             return $this->deny('approved_request_exists');
         }
 
-        if ($organization->id !== $fundRequest->fund->organization_id) {
-            return $this->deny('only_sponsor_employee');
-        }
-
-        return $identity->exists;
+        return $fundRequest->isDisregarded();
     }
 
     /**
@@ -377,16 +352,12 @@ class FundRequestPolicy
             return $response;
         }
 
-        if ($organization->id !== $fundRequest->fund->organization_id) {
-            return $this->deny('only_sponsor_employee');
-        }
-
         if (!$organization->bsn_enabled) {
             return $this->deny('bsn_not_enabled');
         }
 
         return $fundRequest->records()->where([
-            'record_type_key' => 'partner_bsn'
+            'record_type_key' => 'partner_bsn',
         ])->doesntExist();
     }
 
@@ -407,15 +378,9 @@ class FundRequestPolicy
      */
     private function checkIntegrityValidator(
         Organization $organization,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
     ): bool {
-        $externalValidators = OrganizationQuery::whereIsExternalValidator(
-            Organization::query(),
-            $fundRequest->fund
-        )->pluck('organizations.id')->toArray();
-
-        return $fundRequest->fund->organization_id === $organization->id ||
-            in_array($organization->id, $externalValidators, true);
+        return $fundRequest->fund->organization_id === $organization->id;
     }
 
     /**
@@ -430,17 +395,17 @@ class FundRequestPolicy
     public function assignEmployeeAsSupervisor(
         Identity $identity,
         FundRequest $fundRequest,
-        Organization $organization
+        Organization $organization,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
             return $this->deny('invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, 'manage_validators')) {
+        if (!$organization->identityCan($identity, Permission::MANAGE_VALIDATORS)) {
             return $this->deny('invalid_permissions');
         }
 
-        if ($fundRequest->state !== FundRequest::STATE_PENDING) {
+        if (!$fundRequest->isPending()) {
             return $this->deny('not_pending');
         }
 
@@ -459,15 +424,6 @@ class FundRequestPolicy
         FundRequest $fundRequest,
         Organization $organization
     ): Response|bool {
-        $records = $fundRequest->records()->whereHas('employee', fn(Builder $q) => $q->whereIn(
-            'employees.id',
-            $organization->employees()->select('employees.id')->getQuery()
-        ));
-
-        if ($records->doesntExist()) {
-            return $this->deny('no_records_assigned');
-        }
-
         return $this->assignEmployeeAsSupervisor($identity, $fundRequest, $organization);
     }
 
@@ -481,7 +437,7 @@ class FundRequestPolicy
     public function viewPersonBSNData(
         Identity $identity,
         FundRequest $fundRequest,
-        Organization $organization
+        Organization $organization,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
             return $this->deny('invalid_endpoint');
@@ -493,6 +449,10 @@ class FundRequestPolicy
 
         if (!$fundRequest->identity->bsn) {
             return $this->deny('bsn_is_unknown');
+        }
+
+        if (!$organization->bsn_enabled) {
+            return $this->deny('bsn_not_enabled');
         }
 
         if (!$fundRequest->fund->hasIConnectApiOin()) {
@@ -511,7 +471,7 @@ class FundRequestPolicy
      */
     protected function deny(mixed $message, ?int $code = null): Response
     {
-        return Response::deny(trans('policies/fund_requests.' . $message), $code);
+        return Response::deny(trans("policies/fund_requests.$message"), $code);
     }
 
     /**
@@ -526,13 +486,13 @@ class FundRequestPolicy
     public function viewAnyNoteAsValidator(
         Identity $identity,
         FundRequest $fundRequest,
-        Organization $organization
+        Organization $organization,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
             return $this->deny('invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, 'validate_records')) {
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return false;
         }
 
@@ -557,21 +517,11 @@ class FundRequestPolicy
             return $this->deny('invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, 'validate_records')) {
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return false;
         }
 
-        $recordsAssigned = FundRequestRecordQuery::whereEmployeeIsAssignedValidator(
-            $fundRequest->records(),
-            $organization->findEmployee($identity->address)
-        );
-
-        // need to have at least one record assigned to you
-        if ($recordsAssigned->doesntExist()) {
-            return $this->deny('no_records_assigned');
-        }
-
-        return true;
+        return $fundRequest->employee->identity_address === $identity->address;
     }
 
     /**
@@ -594,7 +544,7 @@ class FundRequestPolicy
             return $this->deny('invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, 'validate_records')) {
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return false;
         }
 
@@ -603,5 +553,46 @@ class FundRequestPolicy
         }
 
         return true;
+    }
+
+    /**
+     * Determine whether the user can view reimbursement notes.
+     *
+     * @param Identity $identity
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function viewAnyEmailLogs(
+        Identity $identity,
+        FundRequest $fundRequest,
+        Organization $organization
+    ): Response|bool {
+        return $this->viewAsValidator($identity, $fundRequest, $organization);
+    }
+
+    /**
+     * Determine whether the user can export email logs.
+     *
+     * @param Identity $identity
+     * @param EmailLog $emailLog
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return Response|bool
+     */
+    public function exportEmailLog(
+        Identity $identity,
+        FundRequest $fundRequest,
+        Organization $organization,
+        EmailLog $emailLog,
+    ): Response|bool {
+        if (!EmailLogQuery::whereFundRequest(EmailLog::query(), $fundRequest)
+            ->where('id', $emailLog->id)
+            ->exists()) {
+            return false;
+        }
+
+        return $this->viewAsValidator($identity, $fundRequest, $organization);
     }
 }

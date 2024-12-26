@@ -11,10 +11,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-/**
- * Class FinancialStatistic
- * @package App\Statistics
- */
 class FinancialStatistic
 {
     /**
@@ -55,11 +51,13 @@ class FinancialStatistic
         $lowest_transaction = $datesData->pluck('lowest_transaction')->sortBy('amount')->first();
         $highest_transaction = $datesData->pluck('highest_transaction')->sortByDesc('amount')->first();
         $highest_daily_transaction = $datesData->pluck('highest_daily_transaction')->sortByDesc('amount')->first();
+        $total_amount = $datesData->sum('amount');
 
         return [
             'dates' => $datesData->toArray(),
             'totals' => [
-                'amount' => $datesData->sum('amount'),
+                'amount' => $total_amount,
+                'amount_locale' => currency_format_locale($total_amount),
                 'count' => $datesData->sum('count'),
             ],
             "lowest_transaction" => $lowest_transaction,
@@ -157,6 +155,7 @@ class FinancialStatistic
     {
         return $transaction ? array_merge($transaction->only('id', 'amount'), [
             'provider' => $transaction->provider?->name,
+            'amount_locale' => currency_format_locale($transaction->amount),
         ]) : null;
     }
 
@@ -185,10 +184,11 @@ class FinancialStatistic
         )->first();
 
         return array_merge($transactionOverview->toArray(), [
-            "key" => $dateFrom->copy()->startOfDay()->formatLocalized($this->dateFormatStr($type)),
+            "key" => $dateFrom->copy()->startOfDay()->isoFormat($this->dateFormatStr($type)),
             "highest_transaction" => $this->getTransactionData($highest_transaction),
             "highest_daily_transaction" => $highest_daily_transaction ? array_merge($highest_daily_transaction->toArray(), [
                 'date_locale' => format_date_locale($highest_daily_transaction->date ?? null),
+                'amount_locale' => currency_format_locale($highest_daily_transaction->amount),
             ]) : $highest_daily_transaction,
         ]);
     }
@@ -200,9 +200,9 @@ class FinancialStatistic
     protected function dateFormatStr(string $type): string
     {
         return [
-            'year' => '%B, %Y',
-            'month' => '%d %b',
-            'quarter' => 'Week %U',
+            'year' => 'MMMM, YYYY',
+            'month' => 'DD MMM',
+            'quarter' => '[Week] WW',
         ][$type];
     }
 }

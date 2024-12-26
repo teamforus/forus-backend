@@ -5,7 +5,7 @@ namespace Tests\TestCases;
 class VoucherBatchTestCases
 {
     /** @var array|array[] */
-    public static array $featureTestCase1 = [
+    public static array $featureTestCaseBudgetVouchers = [
         'fund_id' => 1,
         'organization' => [
             'bsn_enabled' => true,
@@ -45,7 +45,7 @@ class VoucherBatchTestCases
                 'limit_multiplier' => -10,
                 'expire_at' => '01-01-2030',
                 'note' => ['array'],
-                'email' => 'invalidemail',
+                'email' => 'invalid-email',
             ],
         ], [
             'type' => 'budget',
@@ -71,7 +71,7 @@ class VoucherBatchTestCases
         ]]
     ];
 
-    public static array $featureTestCase2 = [
+    public static array $featureTestCaseProductVouchers = [
         'fund_id' => 1,
         'organization' => [
             'bsn_enabled' => true,
@@ -99,7 +99,7 @@ class VoucherBatchTestCases
         ]]
     ];
 
-    public static array $featureTestCase3 = [
+    public static array $featureTestCaseBudgetVouchersAllowedDirectPayments = [
         'fund_id' => 2,
         'organization' => [
             'bsn_enabled' => true,
@@ -123,7 +123,7 @@ class VoucherBatchTestCases
         ]]
     ];
 
-    public static array $featureTestCase4 = [
+    public static array $featureTestCaseBudgetVouchersNoBSNExceedAmount = [
         'fund_id' => 2,
         'organization' => [
             'bsn_enabled' => false,
@@ -158,7 +158,7 @@ class VoucherBatchTestCases
         ]]
     ];
 
-    public static array $featureTestCase5 = [
+    public static array $featureTestCaseBudgetAndProductVouchersEdgeCases = [
         'fund_id' => 2,
         'type' => 'product',
         'organization' => [
@@ -211,7 +211,7 @@ class VoucherBatchTestCases
         ]]
     ];
 
-    public static array $featureTestCase6 = [
+    public static array $featureTestCaseBudgetVouchersSameAssign = [
         'fund_id' => 6,
         'organization' => [
             'bsn_enabled' => true,
@@ -249,7 +249,7 @@ class VoucherBatchTestCases
         ]]
     ];
 
-    public static array $featureTestCase7 = [
+    public static array $featureTestCaseBudgetVouchersAllowedDirectPaymentsErrors = [
         'fund_id' => 5,
         'organization' => [
             'bsn_enabled' => true,
@@ -295,27 +295,39 @@ class VoucherBatchTestCases
     ];
 
     /** @var array|array[] */
-    public static array $browserTestCase1 = [
+    public static array $browserTestCaseLowAmounts = [
+        'assign_by' => 'email',
+        'vouchers_count' => 1,
+        'low_amounts' => true,
+        'same_code_for_fund' => false,
+    ];
+
+    /** @var array|array[] */
+    public static array $browserTestCaseAssignByEmail = [
         'assign_by' => 'email',
         'vouchers_count' => 5,
+        'low_amounts' => false,
         'same_code_for_fund' => false,
     ];
 
-    public static array $browserTestCase2 = [
+    public static array $browserTestCaseAssignByBSN = [
         'assign_by' => 'bsn',
         'vouchers_count' => 2,
+        'low_amounts' => false,
         'same_code_for_fund' => false,
     ];
 
-    public static array $browserTestCase3 = [
+    public static array $browserTestCaseAssignByClientUID = [
         'assign_by' => 'client_uid',
         'vouchers_count' => 2,
+        'low_amounts' => false,
         'same_code_for_fund' => false,
     ];
 
-    public static array $browserTestCase4 = [
+    public static array $browserTestCaseAssignByClientUIDSameCode = [
         'assign_by' => 'client_uid',
         'vouchers_count' => 2,
+        'low_amounts' => false,
         'same_code_for_fund' => true,
     ];
 }

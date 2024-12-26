@@ -6,13 +6,9 @@ namespace App\Searches;
 
 use App\Models\Implementation;
 use App\Models\Product;
-use Illuminate\Database\Eloquent\Builder;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 
-/**
- * Class WebshopSearch
- * @package App\Searches
- */
 class WebshopGenericSearch
 {
     protected array $filters;

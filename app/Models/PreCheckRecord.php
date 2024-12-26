@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\PreCheckRecord
@@ -20,19 +21,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read \App\Models\Implementation $implementation
  * @property-read \App\Models\PreCheck|null $pre_check
  * @property-read \App\Models\RecordType|null $record_type
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord query()
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord wherePreCheckId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereRecordTypeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereTitleShort($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereUpdatedAt($value)
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PreCheckRecordSetting[] $settings
+ * @property-read int|null $settings_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord wherePreCheckId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereRecordTypeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereTitleShort($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class PreCheckRecord extends BaseModel
@@ -68,5 +71,14 @@ class PreCheckRecord extends BaseModel
     public function implementation(): BelongsTo
     {
         return $this->belongsTo(Implementation::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function settings(): HasMany
+    {
+        return $this->hasMany(PreCheckRecordSetting::class);
     }
 }

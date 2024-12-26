@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Provider;
 
 use App\Exports\VoucherTransactionsProviderExport;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Provider\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Provider\ProviderVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
-use App\Http\Controllers\Controller;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -32,9 +32,11 @@ class TransactionsController extends Controller
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
         $query = VoucherTransaction::searchProvider($request, $organization);
+        $totalAmount = currency_format((clone $query)->sum('amount'));
         
         $meta = [
-            'total_amount' => currency_format((clone $query)->sum('amount')),
+            'total_amount' => $totalAmount,
+            'total_amount_locale' => currency_format_locale($totalAmount),
         ];
         
         return ProviderVoucherTransactionResource::queryCollection(VoucherTransactionQuery::order(

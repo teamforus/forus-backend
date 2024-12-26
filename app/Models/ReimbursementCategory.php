@@ -15,16 +15,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Organization $organization
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Reimbursement> $reimbursements
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Reimbursement[] $reimbursements
  * @property-read int|null $reimbursements_count
- * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory query()
- * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ReimbursementCategory whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReimbursementCategory newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReimbursementCategory newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReimbursementCategory query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReimbursementCategory whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReimbursementCategory whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReimbursementCategory whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReimbursementCategory whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReimbursementCategory whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class ReimbursementCategory extends Model

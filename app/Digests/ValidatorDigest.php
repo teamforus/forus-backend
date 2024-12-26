@@ -9,23 +9,21 @@ use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
-/**
- * Class ValidatorDigest
- * @package App\Digests
- */
 class ValidatorDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
 
     protected string $requiredRelation = "funds";
     protected string $digestKey = "validator";
+
     protected array $employeePermissions = [
-        'validate_records'
+        Permission::VALIDATE_RECORDS,
     ];
 
     /**
@@ -56,13 +54,13 @@ class ValidatorDigest extends BaseOrganizationDigest
             $emailBody->h3(trans_choice(
                 "digests/validator.fund_header",
                 $event['count_requests'],
-                $event
+                self::arrayOnlyString($event)
             ));
 
             $emailBody->text(trans_choice(
                 "digests/validator.fund_details",
                 $event['count_requests'],
-                $event
+                self::arrayOnlyString($event)
             ))->space();
         }
 

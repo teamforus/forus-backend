@@ -34,20 +34,20 @@ use Illuminate\Support\Facades\Config;
  * @property-read \App\Services\Forus\Session\Models\SessionRequest|null $last_request
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Session\Models\SessionRequest[] $requests
  * @property-read int|null $requests_count
- * @method static Builder|Session newModelQuery()
- * @method static Builder|Session newQuery()
- * @method static \Illuminate\Database\Query\Builder|Session onlyTrashed()
- * @method static Builder|Session query()
- * @method static Builder|Session whereCreatedAt($value)
- * @method static Builder|Session whereDeletedAt($value)
- * @method static Builder|Session whereId($value)
- * @method static Builder|Session whereIdentityAddress($value)
- * @method static Builder|Session whereIdentityProxyId($value)
- * @method static Builder|Session whereLastActivityAt($value)
- * @method static Builder|Session whereUid($value)
- * @method static Builder|Session whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|Session withTrashed()
- * @method static \Illuminate\Database\Query\Builder|Session withoutTrashed()
+ * @method static Builder<static>|Session newModelQuery()
+ * @method static Builder<static>|Session newQuery()
+ * @method static Builder<static>|Session onlyTrashed()
+ * @method static Builder<static>|Session query()
+ * @method static Builder<static>|Session whereCreatedAt($value)
+ * @method static Builder<static>|Session whereDeletedAt($value)
+ * @method static Builder<static>|Session whereId($value)
+ * @method static Builder<static>|Session whereIdentityAddress($value)
+ * @method static Builder<static>|Session whereIdentityProxyId($value)
+ * @method static Builder<static>|Session whereLastActivityAt($value)
+ * @method static Builder<static>|Session whereUid($value)
+ * @method static Builder<static>|Session whereUpdatedAt($value)
+ * @method static Builder<static>|Session withTrashed()
+ * @method static Builder<static>|Session withoutTrashed()
  * @mixin \Eloquent
  */
 class Session extends Model
@@ -63,8 +63,8 @@ class Session extends Model
         'uid', 'identity_address', 'identity_proxy_id', 'last_activity_at',
     ];
 
-    protected $dates = [
-        'last_activity_at',
+    protected $casts = [
+        'last_activity_at' => 'datetime',
     ];
 
     /**

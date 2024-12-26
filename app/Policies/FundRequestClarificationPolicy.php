@@ -6,7 +6,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Scopes\Builders\OrganizationQuery;
+use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -33,7 +33,7 @@ class FundRequestClarificationPolicy
         }
 
         // only fund requester is allowed to see records
-        if ($fundRequest->identity_address !== $identity->address) {
+        if ($fundRequest->identity_id !== $identity->id) {
             return $this->deny('fund_requests.not_requester');
         }
 
@@ -81,7 +81,7 @@ class FundRequestClarificationPolicy
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, 'validate_records')) {
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return $this->deny('fund_requests.invalid_validator');
         }
 
@@ -106,7 +106,7 @@ class FundRequestClarificationPolicy
             return $this->deny('fund_requests.invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, 'validate_records')) {
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
             return $this->deny('fund_requests.invalid_validator');
         }
 
@@ -146,13 +146,7 @@ class FundRequestClarificationPolicy
         FundRequest $fundRequest,
         FundRequestClarification $fundRequestClarification = null
     ): bool {
-        $externalValidators = OrganizationQuery::whereIsExternalValidator(
-            Organization::query(),
-            $fundRequest->fund
-        )->pluck('organizations.id')->toArray();
-
-        if (($fundRequest->fund->organization_id !== $organization->id) &&
-            !in_array($organization->id, $externalValidators, true)) {
+        if ($fundRequest->fund->organization_id !== $organization->id) {
             return false;
         }
 

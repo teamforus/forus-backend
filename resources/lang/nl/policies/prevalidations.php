@@ -2,8 +2,8 @@
 
 return [
     'used' => [
-        'title' => "This activation code was already used.",
-        'message' => "This activation code was already used.",
+        'title' => "Activeringscode al gebruikt",
+        'message' => "Deze activeringscode is al gebruikt. Gebruik een andere code..",
     ],
     'used_same_fund' => [
         'title' => 'U heeft een voucher voor deze regeling!',

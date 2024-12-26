@@ -2,27 +2,27 @@
 
 namespace App\Notifications;
 
+use App\Mail\ImplementationMail;
+use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
-use App\Models\Identity;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Mail\Mailable;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Notification;
-use App\Mail\ImplementationMail;
+use Illuminate\Support\Collection;
 
 abstract class BaseNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public const SCOPE_WEBSHOP = 'webshop';
-    public const SCOPE_SPONSOR = 'sponsor';
-    public const SCOPE_PROVIDER = 'provider';
-    public const SCOPE_VALIDATOR = 'validator';
+    public const string SCOPE_WEBSHOP = 'webshop';
+    public const string SCOPE_SPONSOR = 'sponsor';
+    public const string SCOPE_PROVIDER = 'provider';
+    public const string SCOPE_VALIDATOR = 'validator';
 
     protected static ?string $key;
     protected static ?string $scope;
@@ -32,7 +32,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     protected array $meta = [];
     protected ?Implementation $implementation;
 
-    public const VARIABLES = [
+    public const array VARIABLES = [
         "notifications_identities.added_employee" => [
             "dashboard_auth_button", "employee_roles", "organization_name",
             "download_me_app_link", "download_me_app_button",
@@ -80,9 +80,6 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         ],
         "notifications_identities.fund_request_disregarded" => [
             "fund_name", "sponsor_email", "sponsor_name", "sponsor_phone",
-        ],
-        "notifications_identities.fund_request_record_declined" => [
-            "fund_name", "rejection_note", "webshop_link", "webshop_button",
         ],
         "notifications_identities.fund_request_feedback_requested" => [
             "fund_name", "fund_request_clarification_question", "sponsor_name",
@@ -287,7 +284,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      */
     public function getChannels(): array
     {
-        $systemNotification = SystemNotification::getByKey(static::$key);
+        $systemNotification = SystemNotification::findByKey(static::$key);
 
         return $systemNotification ? $systemNotification->channels(
             $this->implementation->id ?? Implementation::general()?->id
@@ -305,11 +302,16 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     /**
      * @param string $email
      * @param Mailable $mailable
+     * @param ?EventLog $eventLog
      * @return bool
      */
-    public function sendMailNotification(string $email, Mailable $mailable): bool
-    {
+    public function sendMailNotification(
+        string $email,
+        Mailable $mailable,
+        ?EventLog $eventLog = null,
+    ): bool {
         if ($mailable instanceof ImplementationMail) {
+            $mailable->setEventLog($eventLog);
             $mailable->setPreferencesLink($this->implementation?->makePreferencesLink(static::$scope));
         }
 
@@ -369,11 +371,10 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      */
     public function toPush(Identity $identity): void
     {
-        $template = SystemNotification::findTemplate(
-            static::getKey(),
-            'push',
-            $this->implementation->key ?? Implementation::KEY_GENERAL,
+        $template = SystemNotification::findByKey(static::getKey())->findTemplate(
+            $this->implementation ?? Implementation::general(),
             $this->eventLog?->data['fund_id'] ?? null,
+            'push',
         );
 
         $this->getNotificationService()->sendPushNotification(

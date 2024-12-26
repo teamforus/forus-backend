@@ -7,7 +7,7 @@ use App\Models\FundProviderInvitation;
 
 class FundProviderInvitedEvent extends BaseFundEvent
 {
-    protected $fundProviderInvitation;
+    protected FundProviderInvitation $fundProviderInvitation;
 
     /**
      * Create a new event instance.

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Exports\FundRequestsExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Funds\Requests\ApproveFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\AssignEmployeeFundRequestRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DisregardFundRequestsRequest;
@@ -14,15 +15,21 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Requests\BaseIndexFormRequest;
 use App\Http\Resources\Arr\FundRequestPersonArrResource;
 use App\Http\Resources\NoteResource;
+use App\Http\Resources\Validator\ValidatorFundRequestEmailLogResource;
 use App\Http\Resources\Validator\ValidatorFundRequestResource;
 use App\Models\Employee;
 use App\Models\FundRequest;
 use App\Models\Note;
 use App\Models\Organization;
+use App\Scopes\Builders\EmailLogQuery;
+use App\Scopes\Builders\FundRequestQuery;
 use App\Searches\FundRequestSearch;
+use App\Searches\Sponsor\EmailLogSearch;
+use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FundRequestsController extends Controller
@@ -37,15 +44,29 @@ class FundRequestsController extends Controller
      */
     public function index(
         IndexFundRequestsRequest $request,
-        Organization $organization
+        Organization $organization,
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyAsValidator', [FundRequest::class, $organization]);
 
         $search = (new FundRequestSearch($request->only([
             'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir', 'assigned',
+            'identity_id',
         ])))->setEmployee($request->employee($organization));
 
-        return ValidatorFundRequestResource::queryCollection($search->query(), $request);
+        $stateGroup = $request->get('state_group');
+        $builder = $search->query();
+        $query = $stateGroup ? FundRequestQuery::whereGroupState(clone $builder, $stateGroup) : $builder;
+
+        return ValidatorFundRequestResource::queryCollection($query, $request)->additional([
+            'meta' => [
+                'totals' => [
+                    'all' => (clone $builder)->count(),
+                    'pending' => FundRequestQuery::whereGroupStatePending(clone $builder)->count(),
+                    'assigned' => FundRequestQuery::whereGroupStateAssigned(clone $builder)->count(),
+                    'resolved' => FundRequestQuery::whereGroupStateResolved(clone $builder)->count(),
+                ],
+            ],
+        ]);
     }
 
     /**
@@ -58,11 +79,28 @@ class FundRequestsController extends Controller
      */
     public function show(
         Organization $organization,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
     ): ValidatorFundRequestResource {
         $this->authorize('viewAsValidator', [$fundRequest, $organization]);
 
         return ValidatorFundRequestResource::create($fundRequest);
+    }
+
+    /**
+     * Get fund request
+     *
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     */
+    public function formula(
+        Organization $organization,
+        FundRequest $fundRequest,
+    ): JsonResponse {
+        $this->authorize('approveAsValidator', [$fundRequest, $organization]);
+
+        return new JsonResponse($fundRequest->formulaPreview());
     }
 
     /**
@@ -111,22 +149,31 @@ class FundRequestsController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param BaseFormRequest $request
+     * @param ApproveFundRequestsRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function approve(
-        BaseFormRequest $request,
+        ApproveFundRequestsRequest $request,
         Organization $organization,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
     ): ValidatorFundRequestResource {
-        $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
+        $this->authorize('approveAsValidator', [$fundRequest, $organization]);
 
-        return ValidatorFundRequestResource::create($fundRequest->approve(
-            $request->employee($organization)
-        ));
+        $data = $request->input('fund_amount_preset_id') ?
+            $request->only('fund_amount_preset_id') :
+            $request->only('amount');
+
+        $fundRequest->forceFill($data)->save();
+        $fundRequest->approve();
+
+        if ($request->input('note')) {
+            $fundRequest->addNote($request->input('note'), $request->employee($organization));
+        }
+
+        return ValidatorFundRequestResource::create($fundRequest);
     }
 
     /**
@@ -146,8 +193,7 @@ class FundRequestsController extends Controller
         $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
 
         return ValidatorFundRequestResource::create($fundRequest->decline(
-            $request->employee($organization),
-            $request->input('note')
+            $request->input('note'),
         ));
     }
 
@@ -169,16 +215,14 @@ class FundRequestsController extends Controller
         $this->authorize('disregard', [$fundRequest, $organization]);
 
         return ValidatorFundRequestResource::create($fundRequest->disregard(
-            $request->employee($organization),
             $request->input('note'),
-            $request->input('notify')
+            $request->input('notify'),
         ));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
@@ -186,15 +230,12 @@ class FundRequestsController extends Controller
      * @noinspection PhpUnused
      */
     public function disregardUndo(
-        BaseFormRequest $request,
         Organization $organization,
         FundRequest $fundRequest
     ): ValidatorFundRequestResource {
         $this->authorize('disregardUndo', [$fundRequest, $organization]);
 
-        return ValidatorFundRequestResource::create($fundRequest->disregardUndo(
-            $request->employee($organization)
-        ));
+        return ValidatorFundRequestResource::create($fundRequest->disregardUndo());
     }
 
     /**
@@ -235,7 +276,7 @@ class FundRequestsController extends Controller
         $this->authorize('assignEmployeeAsSupervisor', [$fundRequest, $organization]);
 
         /** @var Employee $employee */
-        $employee = $organization->employees()->find($request->post('employee_id'));
+        $employee = $organization->employees()->find($request->input('employee_id'));
 
         return ValidatorFundRequestResource::create($fundRequest->assignEmployee(
             $employee,
@@ -254,13 +295,13 @@ class FundRequestsController extends Controller
     public function resignEmployee(
         BaseFormRequest $request,
         Organization $organization,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
     ): ValidatorFundRequestResource {
         $this->authorize('resignEmployeeAsSupervisor', [$fundRequest, $organization]);
 
-        return ValidatorFundRequestResource::create($fundRequest->resignAllEmployees(
-            $organization,
-            $request->employee($organization)
+        return ValidatorFundRequestResource::create($fundRequest->resignEmployee(
+            $fundRequest->employee,
+            $request->employee($organization),
         ));
     }
 
@@ -349,6 +390,45 @@ class FundRequestsController extends Controller
             $request->input('description'),
             $request->employee($organization),
         ));
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param BaseIndexFormRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return AnonymousResourceCollection
+     */
+    public function emailLogs(
+        BaseIndexFormRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest,
+    ): AnonymousResourceCollection {
+        $this->authorize('viewAnyEmailLogs', [$fundRequest, $organization]);
+
+        $query = EmailLogQuery::whereFundRequest(EmailLog::query(), $fundRequest);
+        $search = new EmailLogSearch($request->only(['q']), $query);
+
+        return ValidatorFundRequestEmailLogResource::queryCollection($search->query(), $request);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @param EmailLog $emailLog
+     * @return Response
+     */
+    public function exportEmailLog(
+        Organization $organization,
+        FundRequest $fundRequest,
+        EmailLog $emailLog
+    ): Response {
+        $this->authorize('exportEmailLog', [$fundRequest, $organization, $emailLog]);
+
+        return $emailLog->toPdf()->download('email.pdf');
     }
 
     /**

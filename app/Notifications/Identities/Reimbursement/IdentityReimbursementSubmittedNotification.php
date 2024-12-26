@@ -22,11 +22,11 @@ class IdentityReimbursementSubmittedNotification extends BaseIdentityReimburseme
         $reimbursement = $this->eventLog->loggable;
         $fund = $reimbursement->voucher->fund;
 
-        $this->sendMailNotification(
-            $identity->email,
-            new ReimbursementSubmittedMail(array_merge($this->eventLog->data, [
-                'webshop_link' => $fund->urlWebshop(),
-            ]), $fund->getEmailFrom())
-        );
+        $mailable = new ReimbursementSubmittedMail([
+            ...$this->eventLog->data,
+            'webshop_link' => $fund->urlWebshop(),
+        ], $fund->getEmailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

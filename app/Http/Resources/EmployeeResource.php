@@ -10,7 +10,7 @@ use App\Models\Role;
  */
 class EmployeeResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'organization',
         'roles.translations',
         'roles.permissions',
@@ -28,7 +28,9 @@ class EmployeeResource extends BaseJsonResource
     {
         $employee = $this->resource;
 
-        return array_merge($employee->only('id', 'identity_address', 'organization_id'), [
+        return array_merge($employee->only([
+            'id', 'identity_address', 'organization_id', 'office_id',
+        ]), [
             'roles' => RoleResource::collection($employee->roles),
             'permissions' => array_unique($employee->roles->reduce(function(array $list, Role $role) {
                 return array_merge($list, $role->permissions->pluck('key')->toArray());
@@ -36,6 +38,12 @@ class EmployeeResource extends BaseJsonResource
             'email' => $employee->identity?->email,
             'organization' => $employee->organization->only('id', 'name'),
             'is_2fa_configured' => $employee->identity->is2FAConfigured(),
+            'branch' => [
+                'id' => $employee->office?->branch_id,
+                'name' => $employee->office?->branch_name,
+                'number' => $employee->office?->branch_number,
+                'full_name' => $employee->office?->branch_full_name ?? '',
+            ],
         ]);
     }
 }

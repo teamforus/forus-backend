@@ -4,8 +4,8 @@ namespace App\Notifications\Identities\Employee;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Mail\User\EmployeeAddedMail;
-use App\Models\Implementation;
 use App\Models\Identity;
+use App\Models\Implementation;
 
 /**
  * Notify identity about them becoming an employee for the organization
@@ -31,12 +31,12 @@ class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
             $identity->makeIdentityPoxy()->exchange_token,
         );
 
-        $this->sendMailNotification(
-            $identity->email,
-            new EmployeeAddedMail(array_merge($this->eventLog->data, [
-                'dashboard_auth_link'   => $confirmationLink,
-                'download_me_app_link'  => 'https://www.forus.io/DL',
-            ]), Implementation::emailFrom())
-        );
+        $mailable = new EmployeeAddedMail([
+            ...$this->eventLog->data,
+            'dashboard_auth_link' => $confirmationLink,
+            'download_me_app_link' => 'https://www.forus.io/DL',
+        ], Implementation::emailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

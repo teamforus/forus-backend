@@ -46,36 +46,36 @@ use Illuminate\Support\Facades\Log;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read Identity|null $identity
  * @property-read Implementation|null $implementation
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession newQuery()
- * @method static \Illuminate\Database\Query\Builder|DigIdSession onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession query()
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereClientType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereConnectionType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereDigidAppUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereDigidAsUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereDigidAuthRedirectUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereDigidErrorCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereDigidErrorMessage($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereDigidRequestAselectServer($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereDigidResponseAselectCredentials($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereDigidResponseAselectServer($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereDigidRid($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereDigidUid($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereMeta($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereSessionFinalUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereSessionRequest($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereSessionSecret($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereSessionUid($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|DigIdSession withTrashed()
- * @method static \Illuminate\Database\Query\Builder|DigIdSession withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereClientType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereConnectionType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereDigidAppUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereDigidAsUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereDigidAuthRedirectUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereDigidErrorCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereDigidErrorMessage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereDigidRequestAselectServer($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereDigidResponseAselectCredentials($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereDigidResponseAselectServer($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereDigidRid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereDigidUid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereMeta($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereSessionFinalUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereSessionRequest($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereSessionSecret($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereSessionUid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DigIdSession withoutTrashed()
  * @mixin \Eloquent
  */
 class DigIdSession extends Model
@@ -83,20 +83,20 @@ class DigIdSession extends Model
     use SoftDeletes;
 
     // Session created
-    public const STATE_CREATED         = 'created';
+    public const string STATE_CREATED = 'created';
     // Session expired
-    public const STATE_EXPIRED         = 'expired';
+    public const string STATE_EXPIRED = 'expired';
     // Session created and rid received from digid
-    public const STATE_PENDING_AUTH    = 'pending_authorization';
+    public const string STATE_PENDING_AUTH = 'pending_authorization';
     // User authorized session through on digid auth form
-    public const STATE_AUTHORIZED      = 'authorized';
+    public const string STATE_AUTHORIZED = 'authorized';
     // User canceled digid request
-    public const STATE_CANCELED        = 'canceled';
+    public const string STATE_CANCELED = 'canceled';
     // Session has error and can't be used anymore
-    public const STATE_ERROR           = 'error';
+    public const string STATE_ERROR = 'error';
 
     // List all valid states
-    public const STATES = [
+    public const array STATES = [
         self::STATE_CREATED,
         self::STATE_EXPIRED,
         self::STATE_PENDING_AUTH,
@@ -106,10 +106,10 @@ class DigIdSession extends Model
     ];
 
     // Sessions which are authorized in 10 minutes are deleted
-    public const SESSION_EXPIRATION_TIME = 10*60;
+    public const int|float SESSION_EXPIRATION_TIME = 10*60;
 
-    public const CONNECTION_TYPE_CGI = 'cgi';
-    public const CONNECTION_TYPE_SAML = 'saml';
+    public const string CONNECTION_TYPE_CGI = 'cgi';
+    public const string CONNECTION_TYPE_SAML = 'saml';
 
     protected $table = 'digid_sessions';
 

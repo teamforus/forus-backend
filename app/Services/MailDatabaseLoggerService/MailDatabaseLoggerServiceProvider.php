@@ -3,6 +3,7 @@
 namespace App\Services\MailDatabaseLoggerService;
 
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
 
 class MailDatabaseLoggerServiceProvider extends ServiceProvider
@@ -16,7 +17,7 @@ class MailDatabaseLoggerServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/migrations');
 
-        if (!App::isProduction() || env('LOG_EMAILS_IN_PROD', FALSE)) {
+        if (!App::isProduction() || Config::get('forus.mail.log_production')) {
             $this->app->register(MailDatabaseLoggerEventServiceProvider::class);
         }
     }

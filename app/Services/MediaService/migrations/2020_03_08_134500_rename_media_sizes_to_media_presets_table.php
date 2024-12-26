@@ -3,12 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Class RenameMediaSizesToMediaPresetsTable
- * @noinspection PhpIllegalPsrClassPathInspection
- * @noinspection PhpUnused
- */
-class RenameMediaSizesToMediaPresetsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -29,4 +24,4 @@ class RenameMediaSizesToMediaPresetsTable extends Migration
     {
         Schema::rename('media_presets', 'media_sizes');
     }
-}
+};

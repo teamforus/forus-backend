@@ -10,7 +10,7 @@ use App\Services\BankService\Resources\BankResource;
  */
 class BankConnectionResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'bank_connection_accounts',
         'bank_connection_default_account',
     ];

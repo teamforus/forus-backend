@@ -2,10 +2,6 @@
 
 namespace App\Mail\Digest;
 
-/**
- * Class DigestProviderFundsMail
- * @package App\Mail\Digest
- */
 class DigestProviderFundsMail extends BaseDigestMail
 {
     protected ?string $preferencesLinkDashboard = 'provider';

@@ -5,8 +5,8 @@ namespace App\Policies;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
+use App\Models\Permission;
 use App\Models\Reimbursement;
-use App\Scopes\Builders\EmployeeQuery;
 use App\Services\FileService\Models\File;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -34,6 +34,10 @@ class FilePolicy
             return false;
         }
 
+        if ($file->type === 'uploaded_csv_details') {
+            return false;
+        }
+
         // is file owner/creator
         if ($file->identity_address === $identity->address) {
             return true;
@@ -44,19 +48,19 @@ class FilePolicy
             $reimbursement = $file->fileable instanceof Reimbursement ? $file->fileable : null;
 
             // is fund validator
-            return $reimbursement && $reimbursement->voucher->fund->organization->identityCan(
-                $identity, 'manage_reimbursements'
+            return $reimbursement && $reimbursement->voucher?->fund?->organization?->identityCan(
+                $identity, 'manage_reimbursements',
             );
         }
 
         // is fund request proof
         if ($file->type === 'fund_request_record_proof') {
-            $reimbursement = $file->fileable instanceof FundRequestRecord ? $file->fileable : null;
+            $fundRequestRecord = $file->fileable instanceof FundRequestRecord ? $file->fileable : null;
 
             // is fund validator
-            return $reimbursement && EmployeeQuery::whereCanValidateRecords(
-                $identity->employees(), (array) $reimbursement->id
-            )->exists();
+            return $fundRequestRecord
+                ?->fund_request?->fund?->organization
+                ?->identityCan($identity, Permission::VALIDATE_RECORDS);
         }
 
         // is fund request proof
@@ -64,10 +68,9 @@ class FilePolicy
             $clarification = $file->fileable instanceof FundRequestClarification ? $file->fileable : null;
 
             // is fund validator
-            return $clarification && EmployeeQuery::whereCanValidateRecords(
-                $identity->employees(),
-                $clarification->fund_request_record()->select('fund_request_records.id')->getQuery()
-            )->exists();
+            return $clarification
+                ?->fund_request_record?->fund_request?->fund?->organization
+                ?->identityCan($identity, Permission::VALIDATE_RECORDS);
         }
 
         return false;

@@ -16,10 +16,12 @@ use Illuminate\Support\Arr;
  * @property int $id
  * @property string $key
  * @property string $type
+ * @property string $control_type
  * @property int|null $organization_id
  * @property bool $system
  * @property bool $criteria
  * @property bool $vouchers
+ * @property bool $pre_check
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\FundCriterion[] $fund_criteria
@@ -32,43 +34,46 @@ use Illuminate\Support\Arr;
  * @property-read \App\Models\RecordTypeTranslation|null $translation
  * @property-read Collection|\App\Models\RecordTypeTranslation[] $translations
  * @property-read int|null $translations_count
- * @method static Builder|RecordType listsTranslations(string $translationField)
- * @method static Builder|RecordType newModelQuery()
- * @method static Builder|RecordType newQuery()
- * @method static Builder|RecordType notTranslatedIn(?string $locale = null)
- * @method static Builder|RecordType orWhereTranslation(string $translationField, $value, ?string $locale = null)
- * @method static Builder|RecordType orWhereTranslationLike(string $translationField, $value, ?string $locale = null)
- * @method static Builder|RecordType orderByTranslation(string $translationField, string $sortMethod = 'asc')
- * @method static Builder|RecordType query()
- * @method static Builder|RecordType translated()
- * @method static Builder|RecordType translatedIn(?string $locale = null)
- * @method static Builder|RecordType whereCreatedAt($value)
- * @method static Builder|RecordType whereCriteria($value)
- * @method static Builder|RecordType whereId($value)
- * @method static Builder|RecordType whereKey($value)
- * @method static Builder|RecordType whereOrganizationId($value)
- * @method static Builder|RecordType whereSystem($value)
- * @method static Builder|RecordType whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
- * @method static Builder|RecordType whereTranslationLike(string $translationField, $value, ?string $locale = null)
- * @method static Builder|RecordType whereType($value)
- * @method static Builder|RecordType whereUpdatedAt($value)
- * @method static Builder|RecordType whereVouchers($value)
- * @method static Builder|RecordType withTranslation()
+ * @method static Builder<static>|RecordType listsTranslations(string $translationField)
+ * @method static Builder<static>|RecordType newModelQuery()
+ * @method static Builder<static>|RecordType newQuery()
+ * @method static Builder<static>|RecordType notTranslatedIn(?string $locale = null)
+ * @method static Builder<static>|RecordType orWhereTranslation(string $translationField, $value, ?string $locale = null)
+ * @method static Builder<static>|RecordType orWhereTranslationLike(string $translationField, $value, ?string $locale = null)
+ * @method static Builder<static>|RecordType orderByTranslation(string $translationField, string $sortMethod = 'asc')
+ * @method static Builder<static>|RecordType query()
+ * @method static Builder<static>|RecordType translated()
+ * @method static Builder<static>|RecordType translatedIn(?string $locale = null)
+ * @method static Builder<static>|RecordType whereControlType($value)
+ * @method static Builder<static>|RecordType whereCreatedAt($value)
+ * @method static Builder<static>|RecordType whereCriteria($value)
+ * @method static Builder<static>|RecordType whereId($value)
+ * @method static Builder<static>|RecordType whereKey($value)
+ * @method static Builder<static>|RecordType whereOrganizationId($value)
+ * @method static Builder<static>|RecordType wherePreCheck($value)
+ * @method static Builder<static>|RecordType whereSystem($value)
+ * @method static Builder<static>|RecordType whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
+ * @method static Builder<static>|RecordType whereTranslationLike(string $translationField, $value, ?string $locale = null)
+ * @method static Builder<static>|RecordType whereType($value)
+ * @method static Builder<static>|RecordType whereUpdatedAt($value)
+ * @method static Builder<static>|RecordType whereVouchers($value)
+ * @method static Builder<static>|RecordType withTranslation(?string $locale = null)
  * @mixin \Eloquent
  */
 class RecordType extends BaseModel
 {
     use Translatable, RecordTranslationsTrait;
 
-    public const TYPE_BOOL = 'bool';
-    public const TYPE_IBAN = 'iban';
-    public const TYPE_DATE = 'date';
-    public const TYPE_EMAIL = 'email';
-    public const TYPE_STRING = 'string';
-    public const TYPE_NUMBER = 'number';
-    public const TYPE_SELECT = 'select';
+    public const string TYPE_BOOL = 'bool';
+    public const string TYPE_IBAN = 'iban';
+    public const string TYPE_DATE = 'date';
+    public const string TYPE_EMAIL = 'email';
+    public const string TYPE_STRING = 'string';
+    public const string TYPE_NUMBER = 'number';
+    public const string TYPE_SELECT = 'select';
+    public const string TYPE_SELECT_NUMBER = 'select_number';
 
-    public const TYPES = [
+    public const array TYPES = [
         self::TYPE_BOOL,
         self::TYPE_IBAN,
         self::TYPE_DATE,
@@ -76,6 +81,7 @@ class RecordType extends BaseModel
         self::TYPE_STRING,
         self::TYPE_NUMBER,
         self::TYPE_SELECT,
+        self::TYPE_SELECT_NUMBER,
     ];
 
     /**
@@ -84,7 +90,7 @@ class RecordType extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'key', 'type', 'system', 'criteria', 'vouchers', 'organization_id',
+        'key', 'type', 'system', 'criteria', 'vouchers', 'organization_id', 'control_type',
     ];
 
     protected $perPage = 100;
@@ -103,6 +109,7 @@ class RecordType extends BaseModel
         'system' => 'bool',
         'criteria' => 'bool',
         'vouchers' => 'bool',
+        'pre_check' => 'bool',
     ];
 
     /**
@@ -209,19 +216,17 @@ class RecordType extends BaseModel
      */
     public function getOperators(): array
     {
-        if (in_array($this->type, ['number', 'date'], true)) {
-            return ['<', '<=', '=', '>=', '>', '*'];
-        }
-
-        if (in_array($this->type, ['string', 'select', 'bool'], true)) {
-            return ['=', '*'];
-        }
-
-        if (in_array($this->type, ['iban', 'email'], true)) {
-            return ['*'];
-        }
-
-        return [];
+        return match ($this->type) {
+            self::TYPE_DATE,
+            self::TYPE_NUMBER => ['<', '<=', '=', '>=', '>', '*'],
+            self::TYPE_SELECT_NUMBER => ['<=', '=', '>=', '*'],
+            self::TYPE_BOOL,
+            self::TYPE_STRING,
+            self::TYPE_SELECT => ['=', '*'],
+            self::TYPE_IBAN,
+            self::TYPE_EMAIL => ['*'],
+            default => [],
+        };
     }
 
     /**

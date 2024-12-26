@@ -5,7 +5,7 @@ namespace App\Services\Forus\Auth2FAService\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * \App\Services\Forus\Auth2FAService\Models\Auth2FAProvider
+ * App\Services\Forus\Auth2FAService\Models\Auth2FAProvider
  *
  * @property int $id
  * @property string $key
@@ -15,23 +15,23 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $url_android
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|Auth2FAProvider newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Auth2FAProvider newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Auth2FAProvider query()
- * @method static \Illuminate\Database\Eloquent\Builder|Auth2FAProvider whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Auth2FAProvider whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Auth2FAProvider whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Auth2FAProvider whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Auth2FAProvider whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Auth2FAProvider whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Auth2FAProvider whereUrlAndroid($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Auth2FAProvider whereUrlIos($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auth2FAProvider newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auth2FAProvider newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auth2FAProvider query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auth2FAProvider whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auth2FAProvider whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auth2FAProvider whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auth2FAProvider whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auth2FAProvider whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auth2FAProvider whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auth2FAProvider whereUrlAndroid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auth2FAProvider whereUrlIos($value)
  * @mixin \Eloquent
  */
 class Auth2FAProvider extends Model
 {
-    public const TYPE_PHONE = 'phone';
-    public const TYPE_AUTHENTICATOR = 'authenticator';
+    public const string TYPE_PHONE = 'phone';
+    public const string TYPE_AUTHENTICATOR = 'authenticator';
 
     protected $table = 'auth_2fa_providers';
 

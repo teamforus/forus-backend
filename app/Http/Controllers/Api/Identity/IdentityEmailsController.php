@@ -9,10 +9,10 @@ use App\Http\Requests\Api\Identity\Emails\StoreIdentityEmailRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\IdentityEmailResource;
 use App\Models\IdentityEmail;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class IdentityEmailsController extends Controller
 {

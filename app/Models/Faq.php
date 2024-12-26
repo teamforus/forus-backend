@@ -18,19 +18,19 @@ use Illuminate\Database\Eloquent\Builder;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $description_html
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Services\MediaService\Models\Media> $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
- * @method static Builder|Faq newModelQuery()
- * @method static Builder|Faq newQuery()
- * @method static Builder|Faq query()
- * @method static Builder|Faq whereCreatedAt($value)
- * @method static Builder|Faq whereDescription($value)
- * @method static Builder|Faq whereFaqId($value)
- * @method static Builder|Faq whereFaqType($value)
- * @method static Builder|Faq whereId($value)
- * @method static Builder|Faq whereOrder($value)
- * @method static Builder|Faq whereTitle($value)
- * @method static Builder|Faq whereUpdatedAt($value)
+ * @method static Builder<static>|Faq newModelQuery()
+ * @method static Builder<static>|Faq newQuery()
+ * @method static Builder<static>|Faq query()
+ * @method static Builder<static>|Faq whereCreatedAt($value)
+ * @method static Builder<static>|Faq whereDescription($value)
+ * @method static Builder<static>|Faq whereFaqId($value)
+ * @method static Builder<static>|Faq whereFaqType($value)
+ * @method static Builder<static>|Faq whereId($value)
+ * @method static Builder<static>|Faq whereOrder($value)
+ * @method static Builder<static>|Faq whereTitle($value)
+ * @method static Builder<static>|Faq whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Faq extends BaseModel

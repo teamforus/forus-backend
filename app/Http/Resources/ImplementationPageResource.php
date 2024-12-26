@@ -9,7 +9,7 @@ use App\Models\ImplementationPage;
  */
 class ImplementationPageResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'faq',
         'blocks.photo',
         'blocks.implementation_page.implementation',
@@ -28,6 +28,7 @@ class ImplementationPageResource extends BaseJsonResource
         return array_merge($page->only(
             'page_type', 'external', 'description_position', 'description_alignment', 'blocks_per_row',
         ), [
+            'title' => $page->title,
             'description_html' => $page->external ? '' : $page->description_html,
             'external_url' => $page->external ? $page->external_url : '',
             'blocks' => ImplementationBlockResource::collection($page->blocks),

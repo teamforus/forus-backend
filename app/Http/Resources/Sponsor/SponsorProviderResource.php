@@ -11,7 +11,6 @@ use App\Http\Resources\OrganizationWithPrivateResource;
 use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
-use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Support\Collection;
 
 /**
@@ -20,7 +19,7 @@ use Illuminate\Support\Collection;
  */
 class SponsorProviderResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'tags',
         'funds',
         'logo.presets',

@@ -2,15 +2,12 @@
 
 namespace App\Models;
 
-use App\Events\FundRequestRecords\FundRequestRecordApproved;
-use App\Events\FundRequestRecords\FundRequestRecordDeclined;
 use App\Events\FundRequestRecords\FundRequestRecordUpdated;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Traits\HasFiles;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
 
 /**
  * App\Models\FundRequestRecord
@@ -21,11 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $record_type_key
  * @property string $value
  * @property string $note
- * @property string|null $state
- * @property int|null $employee_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Employee|null $employee
  * @property-read Collection|\App\Services\FileService\Models\File[] $files
  * @property-read int|null $files_count
  * @property-read \App\Models\FundCriterion|null $fund_criterion
@@ -34,59 +28,30 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read int|null $fund_request_clarifications_count
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read \App\Models\RecordType $record_type
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereEmployeeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereFundCriterionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereFundRequestId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereNote($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereRecordTypeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereValue($value)
+ * @property-read \App\Models\RecordType|null $record_type
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereFundCriterionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereFundRequestId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereRecordTypeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereValue($value)
  * @mixin \Eloquent
  */
 class FundRequestRecord extends BaseModel
 {
     use HasFiles, HasLogs;
 
-    public const STATE_PENDING = 'pending';
-    public const STATE_APPROVED = 'approved';
-    public const STATE_DECLINED = 'declined';
-    public const STATE_DISREGARDED = 'disregarded';
-
-    public const EVENT_ASSIGNED = 'assigned';
-    public const EVENT_RESIGNED = 'resigned';
-    public const EVENT_APPROVED = 'approved';
-    public const EVENT_DECLINED = 'declined';
-    public const EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
-    public const EVENT_CLARIFICATION_RECEIVED = 'clarification_received';
-    public const EVENT_UPDATED = 'updated';
-
-    public const EVENTS = [
-        self::EVENT_UPDATED,
-        self::EVENT_ASSIGNED,
-        self::EVENT_RESIGNED,
-        self::EVENT_APPROVED,
-        self::EVENT_DECLINED,
-        self::EVENT_CLARIFICATION_REQUESTED,
-        self::EVENT_CLARIFICATION_RECEIVED,
-    ];
-
-    public const STATES = [
-        self::STATE_PENDING,
-        self::STATE_APPROVED,
-        self::STATE_DECLINED,
-        self::STATE_DISREGARDED,
-    ];
+    public const string EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
+    public const string EVENT_CLARIFICATION_RECEIVED = 'clarification_received';
+    public const string EVENT_UPDATED = 'updated';
 
     protected $fillable = [
-        'value', 'record_type_key', 'fund_request_id', 'state', 'note',
-        'employee_id', 'fund_criterion_id',
+        'value', 'record_type_key', 'fund_request_id', 'fund_criterion_id',
     ];
 
     /**
@@ -121,82 +86,6 @@ class FundRequestRecord extends BaseModel
     public function fund_request_clarifications(): HasMany
     {
         return $this->hasMany(FundRequestClarification::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function employee(): BelongsTo
-    {
-        return $this->belongsTo(Employee::class);
-    }
-
-    /**
-     * Change fund request record state
-     *
-     * @param string $state
-     * @param string|null $note
-     * @param bool $notifyRequester
-     * @return FundRequestRecord
-     */
-    private function setStateAndResolve(string $state, ?string $note = null, bool $notifyRequester = true): FundRequestRecord
-    {
-        $this->updateModel(compact('state', 'note'));
-
-        if (static::STATE_APPROVED === $state) {
-            FundRequestRecordApproved::dispatch($this);
-        }
-
-        if (static::STATE_DECLINED === $state) {
-            FundRequestRecordDeclined::dispatch($this, null, null, $notifyRequester);
-        }
-
-        if ($this->fund_request->records_pending()->doesntExist()) {
-            $this->fund_request->resolve();
-        }
-
-        return $this;
-    }
-
-    /**
-     * Approve fund request record
-     * @param string|null $note
-     * @return $this
-     */
-    public function approve(?string $note = null): self
-    {
-        return $this->setStateAndResolve(self::STATE_APPROVED, $note);
-    }
-
-    /**
-     * Decline fund request record
-     *
-     * @param string|null $note
-     * @param bool $notifyRequester
-     * @return self
-     */
-    public function decline(?string $note = null, bool $notifyRequester = true): self
-    {
-        return $this->setStateAndResolve(self::STATE_DECLINED, $note, $notifyRequester);
-    }
-
-    /**
-     * @param string|null $note
-     * @return $this
-     */
-    public function disregard(?string $note = null): self
-    {
-        return $this->setStateAndResolve(self::STATE_DISREGARDED, $note);
-    }
-
-    /**
-     * @return $this
-     */
-    public function disregardUndo(): self
-    {
-        return $this->updateModel([
-            'state' => self::STATE_PENDING,
-        ]);
     }
 
     /**
@@ -244,26 +133,13 @@ class FundRequestRecord extends BaseModel
      * @param string $value
      * @return FundRequestRecord
      */
-    private function applyRecordAndValidation(
-        string $recordTypeKey,
-        string $value
-    ): FundRequestRecord {
-        $fundRequest = $this->fund_request;
-        $requestIdentity = $fundRequest->identity;
-
-        $requestIdentity
+    private function applyRecordAndValidation(string $recordTypeKey, string $value): FundRequestRecord
+    {
+        $this->fund_request->identity
             ->makeRecord(RecordType::findByKey($recordTypeKey), $value)
             ->makeValidationRequest()
-            ->approve($this->employee->identity, $fundRequest->fund->organization);
+            ->approve($this->fund_request->employee->identity, $this->fund_request->fund->organization);
 
         return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isPending(): bool
-    {
-        return $this->state === static::STATE_PENDING;
     }
 }

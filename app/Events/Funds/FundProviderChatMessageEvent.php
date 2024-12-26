@@ -6,13 +6,9 @@ use App\Models\Fund;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
 
-/**
- * Class FundProviderChatMessageEvent
- * @package App\Events\Funds
- */
 class FundProviderChatMessageEvent extends BaseFundEvent
 {
-    protected $message;
+    protected FundProviderChatMessage $message;
 
     /**
      * Create a new event instance.

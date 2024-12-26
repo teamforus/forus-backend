@@ -27,6 +27,7 @@ class ProductResource extends BaseJsonResource
         'organization.logo.presets',
         'organization.business_type.translations',
         'organization.fund_providers_allowed_extra_payments',
+        'organization.fund_providers_allowed_extra_payments_full',
         'organization.mollie_connection',
         'bookmarks',
     ];
@@ -41,10 +42,11 @@ class ProductResource extends BaseJsonResource
     {
         $baseRequest = BaseFormRequest::createFrom($request);
         $product = $this->resource;
-        $simplified = $request->has('simplified') && $request->input('simplified');
-        $baseFields = $this->baseFields($product);
 
-        return $simplified ? $baseFields : array_merge($baseFields, [
+        return array_merge($this->baseFields($product), [
+            'photo' => new MediaResource($product->photo),
+            'organization' => new OrganizationBasicResource($product->organization),
+            'description_html' => $product->description_html,
             'total_amount' => $product->total_amount,
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->countReservedCached(),
@@ -73,13 +75,12 @@ class ProductResource extends BaseJsonResource
     protected function baseFields(Product $product): array
     {
         return array_merge($product->only([
-            'id', 'name', 'description', 'description_html', 'product_category_id', 'sold_out',
+            'id', 'name', 'description', 'product_category_id', 'sold_out',
             'organization_id', 'reservation_enabled', 'reservation_policy', 'alternative_text',
         ]), [
-            'photo' => new MediaResource($product->photo),
             'price' => is_null($product->price) ? null : currency_format($product->price),
             'price_locale' => $product->price_locale,
-            'organization' => new OrganizationBasicResource($product->organization),
+            'organization' => $product->organization->only('id', 'name'),
         ]);
     }
 
@@ -139,7 +140,7 @@ class ProductResource extends BaseJsonResource
             ];
 
             $productData = ProductSubQuery::appendReservationStats([
-                'identity_address' => $request->auth_address(),
+                'identity_id' => $request->auth_id(),
                 'fund_id' => $fund->id,
             ], Product::whereId($product->id))->firstOrFail()->only([
                 'limit_total', 'limit_per_identity', 'limit_available',
@@ -184,7 +185,7 @@ class ProductResource extends BaseJsonResource
 
         if ($request->isWebshop()) {
             return [
-                'reservation' => [
+                'reservation' => $product->reservation_fields ? [
                     'phone' => $product->reservation_phone === $global ?
                         $organization->reservation_phone :
                         $product->reservation_phone,
@@ -194,13 +195,19 @@ class ProductResource extends BaseJsonResource
                     'birth_date' => $product->reservation_birth_date === $global ?
                         $organization->reservation_birth_date :
                         $product->reservation_birth_date,
-                    'fields' => OrganizationReservationFieldResource::collection($fields)
+                    'fields' => OrganizationReservationFieldResource::collection($fields),
+                ] : [
+                    'phone' => $product::RESERVATION_FIELD_NO,
+                    'address' => $product::RESERVATION_FIELD_NO,
+                    'birth_date' => $product::RESERVATION_FIELD_NO,
+                    'fields' => [],
                 ],
             ];
         }
 
         return [
             'reservation_phone' => $product->reservation_phone,
+            'reservation_fields' => $product->reservation_fields,
             'reservation_address' => $product->reservation_address,
             'reservation_birth_date' => $product->reservation_birth_date,
         ];

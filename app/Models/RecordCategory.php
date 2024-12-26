@@ -18,15 +18,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Models\Identity $identity
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Record[] $records
  * @property-read int|null $records_count
- * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory query()
- * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordCategory newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordCategory newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordCategory query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordCategory whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordCategory whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordCategory whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordCategory whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordCategory whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordCategory whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class RecordCategory extends Model

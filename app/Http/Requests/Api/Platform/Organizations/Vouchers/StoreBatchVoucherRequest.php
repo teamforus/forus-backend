@@ -23,19 +23,23 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
 
         return [
             'fund_id' => $this->fundIdRule(),
-            'vouchers' => 'required|array',
+            'vouchers' => 'required|array|max:1000',
             'vouchers.*' => 'required|array',
             'vouchers.*.amount' => $this->amountRule($fund),
             'vouchers.*.product_id' => $this->productIdRule($fund),
             'vouchers.*.expire_at' => $this->expireAtRule($fund),
             'vouchers.*.note' => 'nullable|string|max:280',
-            'vouchers.*.email' => 'nullable|string|email:strict',
+            'vouchers.*.email' => [
+                'nullable',
+                ...$this->emailRules(),
+            ],
             'vouchers.*.bsn' => $bsn_enabled ? ['nullable', new BsnRule()] : 'nullable|in:',
             'vouchers.*.activate' => 'boolean',
             'vouchers.*.activation_code' => 'boolean',
             'vouchers.*.client_uid' => 'nullable|string|max:20',
             'vouchers.*.limit_multiplier' => 'nullable|numeric|min:1|max:1000',
             'vouchers.*.records' => $this->recordsRule(),
+            ...$this->uploadedCSVFileRules(),
             ...$this->directPaymentRules($fund),
         ];
     }

@@ -2,15 +2,12 @@
 
 namespace App\Models;
 
-use App\Scopes\Builders\FundProviderQuery;
-use App\Scopes\Builders\OfficeQuery;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Http\Request;
 
 /**
  * App\Models\Office
@@ -19,6 +16,9 @@ use Illuminate\Http\Request;
  * @property int $organization_id
  * @property string $address
  * @property string|null $phone
+ * @property string|null $branch_id
+ * @property string|null $branch_name
+ * @property string|null $branch_number
  * @property string|null $lon
  * @property string|null $lat
  * @property string|null $postcode
@@ -27,27 +27,33 @@ use Illuminate\Http\Request;
  * @property int $parsed
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
+ * @property-read int|null $employees_count
+ * @property-read string $branch_full_name
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
  * @property-read Media|null $photo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OfficeSchedule[] $schedules
  * @property-read int|null $schedules_count
- * @method static Builder|Office newModelQuery()
- * @method static Builder|Office newQuery()
- * @method static Builder|Office query()
- * @method static Builder|Office whereAddress($value)
- * @method static Builder|Office whereCreatedAt($value)
- * @method static Builder|Office whereId($value)
- * @method static Builder|Office whereLat($value)
- * @method static Builder|Office whereLon($value)
- * @method static Builder|Office whereOrganizationId($value)
- * @method static Builder|Office whereParsed($value)
- * @method static Builder|Office wherePhone($value)
- * @method static Builder|Office wherePostcode($value)
- * @method static Builder|Office wherePostcodeAddition($value)
- * @method static Builder|Office wherePostcodeNumber($value)
- * @method static Builder|Office whereUpdatedAt($value)
+ * @method static Builder<static>|Office newModelQuery()
+ * @method static Builder<static>|Office newQuery()
+ * @method static Builder<static>|Office query()
+ * @method static Builder<static>|Office whereAddress($value)
+ * @method static Builder<static>|Office whereBranchId($value)
+ * @method static Builder<static>|Office whereBranchName($value)
+ * @method static Builder<static>|Office whereBranchNumber($value)
+ * @method static Builder<static>|Office whereCreatedAt($value)
+ * @method static Builder<static>|Office whereId($value)
+ * @method static Builder<static>|Office whereLat($value)
+ * @method static Builder<static>|Office whereLon($value)
+ * @method static Builder<static>|Office whereOrganizationId($value)
+ * @method static Builder<static>|Office whereParsed($value)
+ * @method static Builder<static>|Office wherePhone($value)
+ * @method static Builder<static>|Office wherePostcode($value)
+ * @method static Builder<static>|Office wherePostcodeAddition($value)
+ * @method static Builder<static>|Office wherePostcodeNumber($value)
+ * @method static Builder<static>|Office whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Office extends BaseModel
@@ -61,7 +67,8 @@ class Office extends BaseModel
      */
     protected $fillable = [
         'organization_id', 'address', 'phone', 'lon', 'lat', 'parsed',
-        'postcode', 'postcode_number', 'postcode_addition'
+        'postcode', 'postcode_number', 'postcode_addition',
+        'branch_name', 'branch_number', 'branch_id',
     ];
 
     /**
@@ -77,32 +84,14 @@ class Office extends BaseModel
     protected $perPage = 100;
 
     /**
-     * @param Request $request
-     * @return Builder
+     * @return string
+     * @noinspection PhpUnused
      */
-    public static function search(Request $request): Builder
+    public function getBranchFullNameAttribute(): string
     {
-        /** @var Builder $query */
-        $query = self::query();
-
-        // approved only
-        if ($request->input('approved', false)) {
-            $query->whereHas('organization.fund_providers', static function(
-                Builder $builder
-            ) {
-                return FundProviderQuery::whereApprovedForFundsFilter(
-                    $builder,
-                    Implementation::activeFundsQuery()->pluck('id')->toArray()
-                );
-            });
-        }
-
-        // full text search
-        if ($request->has('q') && !empty($q = $request->input('q'))) {
-            return OfficeQuery::queryDeepFilter($query, $q);
-        }
-
-        return $query;
+        return trim(implode(', ', array_filter([
+            $this->branch_name, $this->branch_number, $this->branch_id,
+        ])));
     }
 
     /**
@@ -111,6 +100,14 @@ class Office extends BaseModel
     public function schedules(): HasMany
     {
         return $this->hasMany(OfficeSchedule::class)->orderBy('week_day');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class);
     }
 
     /**
@@ -156,7 +153,7 @@ class Office extends BaseModel
     /**
      * Update postcode and coordinates by google api
      */
-    public function updateGeoData()
+    public function updateGeoData(): void
     {
         $geocodeService = resolve('geocode_api');
         $location = $geocodeService->getLocation($this->address);

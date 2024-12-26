@@ -35,33 +35,41 @@ class VoucherBatchTest extends DuskTestCase
     /**
      * @throws \Throwable
      */
-    public function testUploadBatchCase1(): void
+    public function testUploadBatchCaseAssignByEmail(): void
     {
-        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCase1);
+        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCaseAssignByEmail);
     }
 
     /**
      * @throws \Throwable
      */
-    public function testUploadBatchCase2(): void
+    public function testUploadBatchCaseAssignByBSN(): void
     {
-        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCase2);
+        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCaseAssignByBSN);
     }
 
     /**
      * @throws \Throwable
      */
-    public function testUploadBatchCase3(): void
+    public function testUploadBatchCaseAssignByClientUID(): void
     {
-        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCase3);
+        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCaseAssignByClientUID);
     }
 
     /**
      * @throws \Throwable
      */
-    public function testUploadBatchCase4(): void
+    public function testUploadBatchCaseAssignByClientUIDSameCode(): void
     {
-        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCase4);
+        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCaseAssignByClientUIDSameCode);
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    public function testUploadBatchCaseLowAmounts(): void
+    {
+        $this->doUploadBatch(VoucherBatchTestCases::$browserTestCaseLowAmounts);
     }
 
     /**
@@ -80,7 +88,7 @@ class VoucherBatchTest extends DuskTestCase
         // configure organization for bsn
         $organization->update(['bsn_enabled' => true]);
 
-        $funds = $organization->funds;
+        $funds = $organization->funds->take(3);
         $this->assertNotEmpty($funds);
 
         $this->browse(function (Browser $browser) use ($implementation, $organization, $funds, $testCase) {
@@ -91,7 +99,6 @@ class VoucherBatchTest extends DuskTestCase
             $assertTotalCount = $count * $funds->count();
 
             $browser->visit($implementation->urlSponsorDashboard());
-            $browser->pause(100);
 
             // Authorize identity
             $this->loginIdentity($browser, $organization->identity);
@@ -115,8 +122,12 @@ class VoucherBatchTest extends DuskTestCase
 
             foreach ($vouchers->groupBy('fund_id') as $fundId => $list) {
                 $this->switchToFund($browser, $fundId);
-                $list->each(fn (Voucher $item) => $this->searchVoucher($browser, $item, $type));
-                $list->each(fn (Voucher $item) => $item->delete());
+
+                $browser->waitFor('@searchVoucher');
+                $browser->waitFor("@vouchersCard$fundId");
+
+                $list->each(fn(Voucher $item) => $this->searchVoucher($browser, $item, $type));
+                $list->each(fn(Voucher $item) => $item->delete());
             }
 
             // Logout
@@ -133,34 +144,17 @@ class VoucherBatchTest extends DuskTestCase
      */
     private function searchVoucher(Browser $browser, Voucher $voucher, string $type = 'client_uid'): void
     {
-        $search = match($type) {
+        $search = match ($type) {
             'client_uid' => $voucher->client_uid,
             'bsn' => $voucher->identity?->bsn ?? ($voucher->voucher_relation->bsn ?? null),
             'email' => $voucher->identity?->email,
         };
 
         $browser->waitFor('@searchVoucher');
-        $browser->type('@searchVoucher', $search);
+        $browser->value('@searchVoucher', $search);
 
         $browser->waitFor("@voucherItem$voucher->id");
         $browser->assertSeeIn("@voucherItem$voucher->id", $search);
-    }
-
-    /**
-     * @param Browser $browser
-     * @param int $fundId
-     * @return void
-     * @throws TimeOutException
-     */
-    private function switchToFund(Browser $browser, int $fundId): void
-    {
-        $browser->waitFor("@fundSelectorOption$fundId");
-        $browser->pause(200);
-        $browser->element("@fundSelectorOption$fundId")->click();
-        $browser->waitFor('@searchVoucher');
-        $browser->type('@searchVoucher', '');
-        $browser->waitFor("@vouchersCard$fundId");
-        $browser->pause(100);
     }
 
     /**
@@ -191,6 +185,8 @@ class VoucherBatchTest extends DuskTestCase
         $browser->waitFor('@uploadVouchersBatchButton');
         $browser->element('@uploadVouchersBatchButton')->click();
 
+        $browser->element('@modalFundSelectSubmit')->click();
+
         $browser->waitFor('@modalVoucherUpload');
 
         $browser->waitFor('@selectFileButton');
@@ -202,9 +198,21 @@ class VoucherBatchTest extends DuskTestCase
         $browser->waitFor('@uploadFileButton');
         $browser->element('@uploadFileButton')->click();
 
-        $browser->waitFor('@successUploadIcon', 60);
+        if ($testCase['low_amounts']) {
+            for ($i = 0; $i < $funds->count(); $i++) {
+                $browser->waitFor('@modalDuplicatesPicker');
+
+                $browser->waitFor('@modalDuplicatesPickerConfirm');
+                $browser->element('@modalDuplicatesPickerConfirm')->click();
+            }
+
+            $browser->waitUntilMissing('@modalDuplicatesPicker');
+        }
+
+        $browser->waitFor('@successUploadIcon');
 
         $browser->element('@closeModalButton')->click();
+        $browser->waitUntilMissing('@modalVoucherUpload');
 
         Storage::delete($this->csvPath);
     }
@@ -220,6 +228,7 @@ class VoucherBatchTest extends DuskTestCase
         $type = $testCase['assign_by'];
         $count = $testCase['vouchers_count'];
         $sameCode = $testCase['same_code_for_fund'];
+        $lowAmounts = $testCase['low_amounts'];
 
         $filename = Storage::path($this->csvPath);
         $handle = fopen($filename, 'w');
@@ -235,6 +244,8 @@ class VoucherBatchTest extends DuskTestCase
         /** @var Fund $fund */
         foreach ($funds as $fund) {
             for ($i = 1; $i <= $count; $i++) {
+                $amount = $lowAmounts ? rand(1, 5) : rand(6, min($fund->getMaxAmountPerVoucher(), 50));
+
                 fputcsv($handle, array_merge([
                     'fund_id' => $fund->id,
                     'bsn' => $type === 'bsn' ? (string) $this->randomFakeBsn() : null,
@@ -242,7 +253,7 @@ class VoucherBatchTest extends DuskTestCase
                     'client_uid' => $type === 'client_uid' ? ($sameCode ? $baseClientUid : Str::random()) : null,
                     'activate' => true,
                     'activation_code' => true,
-                    'amount' => rand(1, min($fund->getMaxAmountPerVoucher(), 50)),
+                    'amount' => $amount,
                     'limit_multiplier' => rand(1, 3),
                     'expire_at' => now()->addDays(30)->format('Y-m-d'),
                     'note' => $this->faker()->sentence(),
@@ -303,9 +314,9 @@ class VoucherBatchTest extends DuskTestCase
     /**
      * @param Collection $funds
      * @param Carbon $startDate
-     * @return Collection
+     * @return Collection|Voucher[]
      */
-    private function getVouchers(Collection $funds, Carbon $startDate): Collection
+    private function getVouchers(Collection $funds, Carbon $startDate): Collection|array
     {
         return Voucher::query()
             ->whereIn('fund_id', $funds->pluck('id')->all())

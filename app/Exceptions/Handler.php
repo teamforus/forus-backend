@@ -2,9 +2,17 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
+use ReflectionClass;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Throwable;
 
 class Handler extends ExceptionHandler
 {
@@ -15,6 +23,16 @@ class Handler extends ExceptionHandler
      */
     protected $dontReport = [
         AuthorizationJsonException::class,
+    ];
+
+    /**
+     * @var string[]
+     */
+    protected array $mapModelNames = [
+        'Fund' => 'fund',
+        'Product' => 'product',
+        'FundProvider' => 'provider',
+        'Organization' => 'organization',
     ];
 
     /**
@@ -40,5 +58,26 @@ class Handler extends ExceptionHandler
             'message' => trans('validation.header'),
             'errors' => $exception->errors(),
         ], $exception->status);
+    }
+
+    /**
+     * @param $request
+     * @param Throwable $e
+     * @return ResponseFactory|Application|Response|SymfonyResponse
+     * @throws Throwable
+     */
+    public function render(
+        $request, 
+        Throwable $e,
+    ): ResponseFactory|Application|Response|SymfonyResponse {
+        if ($e instanceof ModelNotFoundException) {
+            $reflection = new ReflectionClass($e->getModel());
+            $modelKey = $this->mapModelNames[$reflection->getShortName()] ?? 'default';
+            $model = trans("exceptions.models.$modelKey");
+
+            $e = new NotFoundHttpException(trans('exceptions.not_found', compact('model')));
+        }
+
+        return parent::render($request, $e);
     }
 }

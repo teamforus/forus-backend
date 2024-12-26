@@ -6,7 +6,10 @@ use App\Services\FileService\Models\File;
 use Carbon\Carbon;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -37,86 +40,6 @@ class FileService
         $this->model = File::query();
         $this->storagePath = str_start(config('file.storage_path'), '/');
         $this->storageDriver = config('file.filesystem_driver', 'local');
-    }
-
-    /**
-     * Remove expired and missing from db files
-     */
-    public function clear(): void
-    {
-        $this->clearFilesWithDeletedFileable();
-        $this->clearExpiredFiles();
-        $this->clearStorage();
-    }
-
-    /**
-     * Delete all files that were assigned, but objects no longer exists
-     *
-     * @return int
-     */
-    public function clearFilesWithDeletedFileable(): int
-    {
-        return $this->model
-            ->with('fileable')
-            ->whereNotNull('fileable_id')
-            ->whereNotNull('fileable_type')
-            ->get()
-            ->filter(fn (File $file) => !$file->fileable)
-            ->each(fn (File $file) => $this->unlink($file))
-            ->count();
-    }
-
-    /**
-     * Clear file that are created but not assigned to any resource
-     *
-     * @return int
-     */
-    public function clearExpiredFiles(): int
-    {
-        return $this
-            ->getExpiredQuery()
-            ->get()
-            ->each(fn (File $file) => $this->unlink($file))
-            ->count();
-    }
-
-    /**
-     * Clear files that are missing in database from storage
-     *
-     * @return int count files deleted
-     */
-    public function clearStorage(): int
-    {
-        $storage = $this->storage();
-
-        $dbFiles = File::query()->pluck('path')->toArray();
-        $storageFiles = $storage->allFiles($this->storagePath);
-
-        return collect($storageFiles)
-            ->filter(fn (string $file) => !in_array($file, $dbFiles))
-            ->each(fn (string $file) => $storage->delete($file))
-            ->count();
-    }
-
-    /**
-     * Returns list of expired File Models
-     *
-     * @param string|null $identity_address
-     * @return Builder
-     */
-    public function getExpiredQuery(string $identity_address = null): Builder
-    {
-        $expiredFiles = $this->model
-            ->newQuery()
-            ->whereNotNull('fileable_id')
-            ->whereNotNull('fileable_type')
-            ->where('created_at', '<', Carbon::now()->subMinutes(60));
-
-        if ($identity_address) {
-            $expiredFiles->whereIdentityAddress($identity_address);
-        }
-
-        return $expiredFiles;
     }
 
     /**
@@ -153,16 +76,18 @@ class FileService
     /**
      * @param UploadedFile $file
      * @param string $type
+     * @param array $options
      * @return File
      */
-    public function uploadSingle(UploadedFile $file, string $type): File
+    public function uploadSingle(UploadedFile $file, string $type, array $options = []): File
     {
         return $this->doUpload(
             $file->getRealPath(),
             $file->getClientOriginalName(),
             $file->getClientOriginalExtension(),
             $type,
-            $file->getSize()
+            $file->getSize(),
+            $options,
         );
     }
 
@@ -172,6 +97,7 @@ class FileService
      * @param string $ext
      * @param string $type
      * @param string $size
+     * @param array $options
      * @return File
      */
     protected function doUpload(
@@ -179,15 +105,19 @@ class FileService
         string $original_name,
         string $ext,
         string $type,
-        string $size
+        string $size,
+        array $options = []
     ): File {
         $uid = File::makeUid();
         $name = $this->makeUniqueFileName($this->storagePath, $ext);
 
-        $path = str_start($name . '.' . $ext, '/');
-        $path = str_start($this->storagePath . $path, '/');
+        $storagePrefix = Arr::get($options, 'storage_prefix', '');
+        $visibility = Arr::get($options, 'visibility', 'private');
 
-        $this->storage()->put($path, file_get_contents($file_path), 'private');
+        $path = str_start($name . '.' . $ext, '/');
+        $path = str_start($this->storagePath . $storagePrefix . $path, '/');
+
+        $this->storage()->put($path, file_get_contents($file_path), $visibility);
 
         return File::create(compact(
             'uid', 'original_name', 'path', 'size', 'ext', 'type',
@@ -238,5 +168,96 @@ class FileService
     public function deleteFile(string $path): bool
     {
         return $this->storage()->delete($path);
+    }
+
+    /**
+     * Delete all files with missing fileable
+     *
+     * @return int count files removed
+     * @throws \Exception
+     */
+    public function clearFilesWithoutFileable(): int
+    {
+        return $this
+            ->getFilesWithoutFileableList()
+            ->each(fn (File $file) => $this->unlink($file))
+            ->count();
+    }
+
+    /**
+     * Get all files with missing fileable
+     *
+     * @return File[]|Builder[]|Collection|SupportCollection
+     */
+    public function getFilesWithoutFileableList(): array|Collection|SupportCollection
+    {
+        return $this->model
+            ->newQuery()
+            ->with('fileable')
+            ->whereNotNull('fileable_id')
+            ->whereNotNull('fileable_type')
+            ->get()
+            ->filter(fn (File $file) => is_null($file->fileable));
+    }
+
+    /**
+     * Clear files that are created but not assigned to any resource
+     *
+     * @param float|int $minutesToExpire
+     * @return int
+     * @throws \Exception
+     */
+    public function clearExpiredFiles(float|int $minutesToExpire = 5 * 60): int
+    {
+        return $this
+            ->getExpiredList($minutesToExpire)
+            ->each(fn (File $file) => $this->unlink($file))
+            ->count();
+    }
+
+    /**
+     * Returns list of all files uploaded to storage but not assigned to any entity
+     *
+     * @param float|int $minutesToExpire
+     * @return File[]|Builder[]|Collection
+     */
+    public function getExpiredList(float|int $minutesToExpire = 5 * 60): Collection|array
+    {
+        $expiredFiles = $this->model->newQuery()->where(function(Builder $query) {
+            $query->whereNull('fileable_type');
+            $query->orWhereNull('fileable_id');
+        })->where('created_at', '<', Carbon::now()->subMinutes($minutesToExpire));
+
+        // query to filter files without user
+        return $expiredFiles->get();
+    }
+
+    /**
+     * Delete all files which exists on storage but are not listed in db
+     *
+     * @return int count files deleted
+     */
+    public function clearStorage(): int
+    {
+        $storage = $this->storage();
+
+        return collect($this->getUnusedFilesList())
+            ->each(fn (string $filePath) => $storage->delete($filePath))
+            ->count();
+    }
+
+    /**
+     * Make list files which exists on storage but are not listed in db
+     *
+     * @return array
+     */
+    public function getUnusedFilesList(): array
+    {
+        $storage = $this->storage();
+        $dbFiles = File::query()->pluck('path');
+
+        return array_filter($storage->allFiles($this->storagePath), function($file) use ($dbFiles) {
+            return $dbFiles->search(str_start($file, '/')) === false;
+        });
     }
 }

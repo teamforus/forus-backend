@@ -3,14 +3,10 @@
 namespace App\Http\Requests\Api;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Rules\IdentityEmailExistsRule;
 use App\Models\Implementation;
+use App\Rules\IdentityEmailExistsRule;
 use Illuminate\Support\Facades\Config;
 
-/**
- * Class IdentityAuthorizationEmailTokenRequest
- * @package App\Http\Requests\Api
- */
 class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
 {
     /**
@@ -36,7 +32,11 @@ class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
         $this->throttleWithKey('to_many_attempts', $this, 'auth');
 
         return [
-            'email' => ['required', 'email:strict', new IdentityEmailExistsRule()],
+            'email' => [
+                'required',
+                new IdentityEmailExistsRule(),
+                ...$this->emailRules(),
+            ],
             'source' => 'required|in:' . Implementation::keysAvailable()->implode(','),
             'target' => 'nullable|alpha_dash'
         ];

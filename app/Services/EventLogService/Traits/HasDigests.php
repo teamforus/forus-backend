@@ -6,8 +6,6 @@ use App\Services\EventLogService\Models\Digest;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
- * Trait HasDigests
- * @package App\Services\EventLogService\Traits
  * @mixin \Eloquent
  */
 trait HasDigests

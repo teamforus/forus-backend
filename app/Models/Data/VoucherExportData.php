@@ -51,7 +51,7 @@ class VoucherExportData
     public function toArray(): array
     {
         $sponsor = $this->voucher->fund->organization;
-        $assigned = $this->voucher->identity_address && $this->voucher->is_granted;
+        $assigned = $this->voucher->identity_id && $this->voucher->is_granted;
         $identity = $this->voucher->identity;
         $firstUseDate = $this->voucher->first_use_date;
         $allowRecords = $this->voucher->fund?->fund_config?->allow_voucher_records;
@@ -64,26 +64,27 @@ class VoucherExportData
         $export_data = array_merge($this->onlyData ? [] : [
             'name' => $this->name,
         ], [
-            'id' => $this->voucher->id,
-            'granted' => $assigned ? 'Ja': 'Nee',
-            'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
-            'in_use_date' => $firstUseDate ? format_date_locale($firstUseDate) : null,
-            'has_transactions' => $this->voucher->has_transactions ? 'Ja': 'Nee',
-            'has_reservations' => $this->voucher->has_reservations ? 'Ja': 'Nee',
-            'product_name' => $this->voucher->product?->name,
-        ], $bsnData, [
+            'number' => $this->voucher->number,
+            ...$bsnData,
             'identity_email' => $assigned ? ($identity?->email) : null,
-            'state' => $this->voucher->state_locale,
             'activation_code' => $this->voucher->activation_code ?? null,
             'client_uid' => $this->voucher->client_uid ?? null,
-            'note' => $this->voucher->note,
             'source' => $this->voucher->source_locale,
             'amount' => $this->voucher->amount_total_cached,
             'amount_available' => $this->voucher->amount_available_cached,
+            'note' => $this->voucher->note,
             'fund_name' => $this->voucher->fund->name,
             'implementation_name' => $this->voucher->fund->fund_config?->implementation?->name,
+            'product_name' => $this->voucher->product?->name,
+            'granted' => $assigned ? 'Ja': 'Nee',
             'created_at' => format_date_locale($this->voucher->created_at),
             'expire_at' => format_date_locale($this->voucher->expire_at),
+            'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
+            'in_use_date' => $firstUseDate ? format_date_locale($firstUseDate) : null,
+            'state' => $this->voucher->state ?? null,
+            'has_transactions' => $this->voucher->has_transactions ? 'Ja': 'Nee',
+            'has_reservations' => $this->voucher->has_reservations ? 'Ja': 'Nee',
+            'has_payouts' => $this->voucher->has_payouts ? 'Ja': 'Nee',
         ]);
 
         return array_only(array_merge(

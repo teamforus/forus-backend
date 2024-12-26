@@ -4,12 +4,14 @@ namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Tiny\FundTinyResource;
+use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Models\Fund;
-use App\Models\Identity;
 use App\Models\FundConfig;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 
 /**
@@ -17,7 +19,7 @@ use Illuminate\Support\Facades\Config;
  */
 class Identity2FAStateResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'funds.fund_config',
         'funds.logo.presets',
         'identity_2fa_active',
@@ -27,10 +29,10 @@ class Identity2FAStateResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $request = BaseFormRequest::createFrom($request);
         $identityProxy = $request->identityProxy();
@@ -95,6 +97,7 @@ class Identity2FAStateResource extends BaseJsonResource
             'emails' => $this->getRestriction($isConfirmed, $identity, 'emails'),
             'sessions' => $this->getRestriction($isConfirmed, $identity, 'sessions'),
             'reimbursements' => $this->getRestriction($isConfirmed, $identity, 'reimbursements'),
+            'bi_connections' => $this->getRestriction($isConfirmed, $identity, 'bi_connections'),
         ];
     }
 
@@ -106,11 +109,14 @@ class Identity2FAStateResource extends BaseJsonResource
      */
     protected function getRestriction(bool $isConfirmed, Identity $identity, string $key): array
     {
-        $funds = $identity->getRestricting2FAFunds($key);
+        $funds = $key !== 'bi_connections' ? $identity->getRestricting2FAFunds($key) : collect();
+        $organizations = $key === 'bi_connections' ? $identity->getRestricting2FAOrganizations($key) : collect();
+        $restricted = $funds->isNotEmpty() || $organizations->isNotEmpty();
 
         return [
-            'restricted' => $funds->isNotEmpty() && !$isConfirmed,
             'funds' => FundTinyResource::collection($funds),
+            'restricted' => $restricted && !$isConfirmed,
+            'organizations' => OrganizationTinyResource::collection($organizations),
         ];
     }
 

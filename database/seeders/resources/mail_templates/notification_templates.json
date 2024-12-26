@@ -197,8 +197,8 @@
         "push": {},
         "database": {
             "title": "Aanvraag voor :fund_name is ontvangen.",
-            "content": "De aanvraag voor :fund_name is ontvangen. U ontvangt binnen twee weken een reactie op uw aanvraag.",
-            "content_informal": "De aanvraag voor :fund_name is ontvangen. Je ontvangt binnen twee weken een reactie op jouw aanvraag."
+            "content": "De aanvraag voor :fund_name is ontvangen. U ontvangt zo snel mogelijk een reactie op uw aanvraag.",
+            "content_informal": "De aanvraag voor :fund_name is ontvangen. Je ontvangt zo snel mogelijk een reactie op jouw aanvraag."
         }
     },
     "notifications_identities.fund_request_approved": {
@@ -243,14 +243,6 @@
             "content_informal": ":sponsor_name heeft uw aanvraag voor :fund_name niet behandelen."
         }
     },
-    "notifications_identities.fund_request_record_declined": {
-        "mail": {
-            "title": "Uw aanvraag voor :fund_name is afgewezen",
-            "template": "notifications_identities/fund_request_record_declined.md"
-        },
-        "push": {},
-        "database": {}
-    },
     "notifications_identities.fund_request_feedback_requested": {
         "mail": {
             "title": "Uw aanvraag voor :fund_name aanvullen",
@@ -275,8 +267,8 @@
         "push": {},
         "database": {
             "title": "Aanvraag voor :fund_name is ontvangen.",
-            "content": "De aanvraag voor :fund_name is ontvangen. U ontvangt binnen twee weken een reactie op uw aanvraag.",
-            "content_informal": "De aanvraag voor :fund_name is ontvangen. Je ontvangt binnen twee weken een reactie op jouw aanvraag."
+            "content": "De aanvraag voor :fund_name is ontvangen. U ontvangt zo snel mogelijk een reactie op uw aanvraag.",
+            "content_informal": "De aanvraag voor :fund_name is ontvangen. Je ontvangt zo snel mogelijk een reactie op jouw aanvraag."
         }
     },
     "notifications_identities.reimbursement_approved": {
@@ -429,7 +421,10 @@
         }
     },
     "notifications_identities.product_reservation_canceled": {
-        "mail": {},
+        "mail": {
+            "title": "Reservering is geannuleerd.",
+            "template": "notifications_identities/product_reservation_canceled.md"
+        },
         "push": {},
         "database": {
             "title": "Reservering is geannuleerd.",
@@ -445,7 +440,10 @@
         }
     },
     "notifications_identities.product_reservation_rejected": {
-        "mail": {},
+        "mail": {
+            "title": "Reservering is geweigerd.",
+            "template": "notifications_identities/product_reservation_rejected.md"
+        },
         "push": {},
         "database": {
             "title": "Reservering is geweigerd.",

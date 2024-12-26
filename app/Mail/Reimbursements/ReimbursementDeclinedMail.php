@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class ReimbursementDeclinedMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = 'notifications_identities.reimbursement_declined';
+    public ?string $notificationTemplateKey = 'notifications_identities.reimbursement_declined';
 
     /**
      * @return Mailable

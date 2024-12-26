@@ -12,13 +12,14 @@ use App\Models\Voucher;
  */
 class ProductReservationResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'voucher.fund.organization',
         'voucher.voucher_records',
         'product.organization',
         'product.photo.presets',
         'voucher_transaction',
         'extra_payment.refunds',
+        'extra_payment.refunds_active',
         'custom_fields.organization_reservation_field'
     ];
 
@@ -61,6 +62,8 @@ class ProductReservationResource extends BaseJsonResource
             'expired' => $reservation->isExpired(),
             'canceled' => $reservation->isCanceled(),
             'cancelable' => $reservation->isCancelableByRequester(),
+            'acceptable' => $reservation->isAcceptable(),
+            'rejectable' => $reservation->isCancelableByProvider(),
             'archivable' => $reservation->isArchivable(),
             'product' => array_merge($reservation->product->only('id', 'name', 'organization_id'), [
                 'deleted' => $reservation->product->trashed(),

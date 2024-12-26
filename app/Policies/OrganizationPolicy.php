@@ -2,12 +2,13 @@
 
 namespace App\Policies;
 
-use App\Models\Fund;
+use App\Models\Employee;
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Scopes\Builders\FundQuery;
+use App\Models\Permission;
+use App\Models\ProfileBankAccount;
+use App\Scopes\Builders\IdentityQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
 
 class OrganizationPolicy
@@ -67,53 +68,11 @@ class OrganizationPolicy
      * @param Identity $identity
      * @param Organization $organization
      * @return bool
-     */
-    public function updateBIConnection(Identity $identity, Organization $organization): bool
-    {
-        return $organization->identityCan($identity, 'manage_bi_connection');
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Organization $organization
-     * @return bool
      * @noinspection PhpUnused
      */
     public function updateIban(Identity $identity, Organization $organization): bool
     {
         return $this->update($identity, $organization) && $organization->isOwner($identity);
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Organization $organization
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    public function viewExternalFunds(Identity $identity, Organization $organization): bool
-    {
-        return $organization->identityCan($identity, 'manage_organization');
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Organization $organization
-     * @param Fund $externalFund
-     * @return Response|bool
-     * @noinspection PhpUnused
-     */
-    public function updateExternalFunds(
-        Identity $identity,
-        Organization $organization,
-        Fund $externalFund
-    ): Response|bool {
-        if (!FundQuery::whereExternalValidatorFilter(Fund::query(), $organization->id)->where([
-            'funds.id' => $externalFund->id,
-        ])->exists()) {
-            return $this->deny("Invalid fund id.");
-        }
-
-        return $organization->identityCan($identity, 'manage_organization');
     }
 
     /**
@@ -174,6 +133,91 @@ class OrganizationPolicy
      */
     public function showFeatures(Identity $identity, Organization $organization): bool
     {
-        return $organization->isEmployee($identity) && $organization->funds->isNotEmpty();
+        $hasFunds = Employee::query()
+            ->where('identity_address', $identity->address)
+            ->whereHas('roles.permissions')
+            ->whereRelation('organization.funds.fund_config', 'is_configured', true)
+            ->exists();
+
+         return $organization->isEmployee($identity) && $hasFunds;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
+    public function indexSponsorIdentities(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, [
+            Permission::VIEW_IDENTITIES, Permission::MANAGE_IDENTITIES,
+        ], false);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @param Identity $sponsorIdentity
+     * @return bool
+     */
+    public function showSponsorIdentities(
+        Identity $identity,
+        Organization $organization,
+        Identity $sponsorIdentity,
+    ): bool {
+        return
+            $this->organizationHasAccessToSponsorIdentity($organization, $sponsorIdentity) &&
+            $organization->identityCan($identity, [
+                Permission::VIEW_IDENTITIES, Permission::MANAGE_IDENTITIES,
+            ], false);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @param Identity $sponsorIdentity
+     * @return bool
+     */
+    public function updateSponsorIdentities(
+        Identity $identity,
+        Organization $organization,
+        Identity $sponsorIdentity,
+    ): bool {
+        return
+            $this->organizationHasAccessToSponsorIdentity($organization, $sponsorIdentity) &&
+            $organization->identityCan($identity, [Permission::MANAGE_IDENTITIES]);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @param Identity $sponsorIdentity
+     * @param ProfileBankAccount $profileBankAccount
+     * @return bool
+     */
+    public function updateSponsorIdentitiesBankAccounts(
+        Identity $identity,
+        Organization $organization,
+        Identity $sponsorIdentity,
+        ProfileBankAccount $profileBankAccount,
+    ): bool {
+        return
+            $this->organizationHasAccessToSponsorIdentity($organization, $sponsorIdentity) &&
+            $organization->identityCan($identity, [Permission::MANAGE_IDENTITIES]) &&
+            $profileBankAccount->profile->identity_id === $sponsorIdentity->id;
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity $sponsorIdentity
+     * @return bool
+     */
+    protected function organizationHasAccessToSponsorIdentity(
+        Organization $organization,
+        Identity $sponsorIdentity,
+    ): bool {
+        return IdentityQuery::relatedToOrganization(Identity::query()->where([
+            'id' => $sponsorIdentity->id,
+        ]), $organization->id)->exists();
     }
 }

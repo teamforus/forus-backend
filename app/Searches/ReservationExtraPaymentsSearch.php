@@ -51,8 +51,6 @@ class ReservationExtraPaymentsSearch extends BaseSearch
         $orderBy = $this->getFilter('order_by', 'paid_at');
         $orderDir = $this->getFilter('order_dir', 'desc');
 
-        $builder = $this->appendSortableFields($builder, $orderBy);
-
         return ReservationExtraPayment::query()
             ->fromSub($this->appendSortableFields($builder, $orderBy), 'reservation_extra_payments')
             ->orderBy($orderBy, $orderDir)
@@ -71,7 +69,9 @@ class ReservationExtraPaymentsSearch extends BaseSearch
         $subQuery = match($orderBy) {
             'fund_name' => Fund::query()
                 ->whereHas('vouchers.product_reservation', function(Builder $builder) {
-                    $builder->whereColumn('product_reservations.id', 'product_reservation_id');
+                    $builder->whereColumn(
+                        'product_reservations.id', 'reservation_extra_payments.product_reservation_id'
+                    );
                 })
                 ->select('name')
                 ->limit(1),

@@ -17,6 +17,7 @@ use App\Helpers\Arr;
 use App\Models\BusinessType;
 use App\Models\Fund;
 use App\Models\FundConfig;
+use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\FundProvider;
 use App\Models\Identity;
@@ -40,6 +41,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use Kalnoy\Nestedset\Collection as NestedsetCollection;
@@ -241,32 +243,13 @@ class TestData
     }
 
     /**
-     * @param string $identity_address
-     * @param int|null $count
-     * @throws \Throwable
-     */
-    public function makeExternalValidators(string $identity_address, ?int $count = null): void
-    {
-        $count = $count ?: $this->config('validators_count');
-        $organizations = $this->makeOrganizations("Validator", $identity_address, $count);
-
-        foreach ($organizations as $key => $organization) {
-            $this->makeOffices($organization, random_int(1, 2));
-
-            $organization->update([
-                'is_validator' => true,
-                'validator_auto_accept_funds' => $key <= ($this->config('validators_count') / 2),
-            ]);
-        }
-    }
-
-    /**
      * @param Identity $identity
      * @return void
      * @throws \Exception
      */
     public function applyFunds(Identity $identity): void
     {
+        /** @var Prevalidation[] $prevalidations */
         $prevalidations = Prevalidation::where([
             'state' => 'pending',
             'identity_address' => $identity->address
@@ -290,8 +273,8 @@ class TestData
                 'state' => 'used'
             ]);
 
-            $voucher = $prevalidation->fund->makeVoucher($identity->address);
-            $prevalidation->fund->makeFundFormulaProductVouchers($identity->address);
+            $voucher = $prevalidation->fund->makeVoucher($identity);
+            $prevalidation->fund->makeFundFormulaProductVouchers($identity);
 
             /** @var Product $product */
             $productsQuery = ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $prevalidation->fund->id);
@@ -370,7 +353,7 @@ class TestData
     ): Organization {
         $data = [
             'kvk' => Organization::GENERIC_KVK,
-            'iban' => $this->config('default_organization_iban') ?: $this->faker->iban('NL'),
+            'iban' => $this->faker->iban('NL'),
             'phone' => '123456789',
             'email' => sprintf(
                 $this->config('organization_email_pattern'),
@@ -639,6 +622,7 @@ class TestData
     {
         $configFormula = $this->config("funds.$fund->name.fund_formula");
         $configCriteria = $this->config("funds.$fund->name.fund_criteria");
+        $configFundPresets = $this->config("funds.$fund->name.fund_amount_presets", []);
         $configLimitMultiplier = $this->config("funds.$fund->name.fund_limit_multiplier");
 
         $eligibility_key = sprintf("%s_eligible", $fund->load('fund_config')->fund_config->key);
@@ -647,6 +631,7 @@ class TestData
         $recordType = RecordType::firstOrCreate([
             'key' => $eligibility_key,
             'type' => 'bool',
+            'control_type' => 'checkbox',
         ], [
             'name' => "$fund->name eligible",
             'system' => false,
@@ -675,13 +660,38 @@ class TestData
 
         $fundFormula = $configFormula ?: [[
             'type' => 'fixed',
-            'amount' => $fund->isTypeBudget() ? $this->config('voucher_amount'): 0,
+            'amount' => $fund->isTypeBudget() ? $this->config('voucher_amount') : 0,
             'fund_id' => $fund->id,
         ]];
 
-        $fund->criteria()->createMany($configCriteria ?: $criteria);
+        foreach (($configCriteria ?: $criteria) as $criterion) {
+            $stepTitle = Arr::get($criterion, 'step', Arr::get($criterion, 'step.title'));
+            $stepFields = is_array(Arr::get($criterion, 'step')) ? Arr::get($criterion, 'step') : [];
+
+            /** @var FundCriteriaStep $stepModel */
+            $stepModel = $stepTitle ?
+                ($fund->criteria_steps()->firstWhere([
+                    'title' => $stepTitle,
+                    ...$stepFields,
+                ]) ?: $fund->criteria_steps()->forceCreate([
+                    'title' => $stepTitle,
+                    ...$stepFields,
+                ])) : null;
+
+            /** @var FundCriterion $criterionModel */
+            $criterionModel = $fund->criteria()->create([
+                ...array_except($criterion, ['rules', 'step']),
+                'fund_criteria_step_id' => $stepModel?->id,
+            ]);
+
+            foreach ($criterion['rules'] ?? [] as $rule) {
+                $criterionModel->fund_criterion_rules()->forceCreate($rule);
+            }
+        }
+
         $fund->fund_formulas()->createMany($fundFormula);
         $fund->fund_limit_multipliers()->createMany($limitMultiplier);
+        $fund->syncAmountPresets($configFundPresets);
     }
 
     /**
@@ -931,6 +941,11 @@ class TestData
                         '=' => $criterion->value,
                         '>' => (int) $criterion->value * 2,
                         '<' => (int) ((int) $criterion->value / 2),
+                        '*' => match ($criterion->record_type_key) {
+                            'iban' => 'NL50RABO3741207772',
+                            'iban_name' => 'John Doe',
+                            default => '',
+                        },
                         default => '',
                     },
                     'files' => array_map(
@@ -1040,7 +1055,9 @@ class TestData
      */
     public function separator(): void
     {
-        echo str_repeat('-', 80) . "\n";
+        if (!App::runningUnitTests()) {
+            echo str_repeat('-', 80) . "\n";
+        }
     }
 
     /**
@@ -1049,7 +1066,9 @@ class TestData
      */
     public function info(string $msg, bool $timestamp = true): void
     {
-        echo ($timestamp ? $this->timestamp() : null) . "\e[0;34m$msg\e[0m\n";
+        if (!App::runningUnitTests()) {
+            echo ($timestamp ? $this->timestamp() : null) . "\e[0;34m$msg\e[0m\n";
+        }
     }
 
     /**
@@ -1058,7 +1077,9 @@ class TestData
      */
     public function success(string $msg, bool $timestamp = true): void
     {
-        echo ($timestamp ? $this->timestamp() : null) . "\e[0;32m$msg\e[0m\n";
+        if (!App::runningUnitTests()) {
+            echo ($timestamp ? $this->timestamp() : null) . "\e[0;32m$msg\e[0m\n";
+        }
     }
 
     /**
@@ -1067,7 +1088,9 @@ class TestData
      */
     public function error(string $msg, bool $timestamp = true): void
     {
+        if (!App::runningUnitTests()) {
         echo ($timestamp ? $this->timestamp() : null) . "\e[0;31m$msg\e[0m\n";
+        }
     }
 
     /**
@@ -1162,11 +1185,11 @@ class TestData
 
         foreach ($funds as $fund) {
             for ($i = 1; $i <= $vouchersPerFund; ++$i) {
-                $identity_address = $this->makeIdentity();
+                $identity = $this->makeIdentity();
                 $note = 'Test data seeder!';
 
-                $fund->makeVoucher($identity_address, compact('note'));
-                $fund->makeFundFormulaProductVouchers($identity_address, compact('note'));
+                $fund->makeVoucher($identity, compact('note'));
+                $fund->makeFundFormulaProductVouchers($identity, compact('note'));
             }
         }
     }

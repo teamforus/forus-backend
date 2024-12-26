@@ -2,9 +2,9 @@
 
 namespace App\Services\MollieService\Data;
 
-use Carbon\Carbon;
 use App\Services\MollieService\Interfaces\MollieToken;
 use App\Services\MollieService\Models\MollieConnection;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Config;
 use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Token\AccessTokenInterface;

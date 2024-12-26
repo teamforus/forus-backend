@@ -38,6 +38,7 @@ class StoreImplementationPageRequest extends ValidateImplementationPageBlocksReq
         $faqRules = $this->faqRules([]);
 
         return array_merge(parent::rules(), [
+            'title'                 => 'nullable|string|max:200',
             'state'                 => "nullable|in:$states",
             'page_type'             => $this->pageTypeRule(),
             'description'           => 'nullable|string|max:10000',

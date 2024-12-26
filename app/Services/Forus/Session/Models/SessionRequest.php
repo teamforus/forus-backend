@@ -18,19 +18,19 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Services\Forus\Session\Models\Session $session
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest query()
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest whereClientType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest whereClientVersion($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest whereEndpoint($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest whereIp($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest whereMethod($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest whereSessionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|SessionRequest whereUserAgent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest whereClientType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest whereClientVersion($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest whereEndpoint($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest whereIp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest whereMethod($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest whereSessionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SessionRequest whereUserAgent($value)
  * @mixin \Eloquent
  */
 class SessionRequest extends Model

@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Notifications\IndexNotificationsRequest;
-use App\Http\Requests\BaseFormRequest;
+use App\Http\Resources\NotificationResource;
 use App\Models\Notification;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\NotificationResource;
 
 class NotificationsController extends Controller
 {
@@ -17,13 +16,30 @@ class NotificationsController extends Controller
      */
     public function index(IndexNotificationsRequest $request): AnonymousResourceCollection
     {
-        $identity = $request->identity();
-        $request = BaseFormRequest::createFrom($request);
+        $seen = $request->input('seen');
+        $page = $request->input('page', 1);
+        $per_page = $request->input('per_page', 15);
+        $mark_read = $request->input('mark_read', false);
 
-        $notifications = Notification::paginateFromRequest($request, $identity);
+        $identity = $request->identity();
+        $notificationsQuery = Notification::search($request, $seen, $identity->notifications());
+
+        if ($mark_read) {
+            $listUnreadFetched = $notificationsQuery->clone()
+                ->skip(($page - 1) * $per_page)
+                ->take($per_page)
+                ->get()
+                ->whereNull('read_at')
+                ->pluck('id');
+
+            Notification::query()
+                ->whereIn('id', $listUnreadFetched)
+                ->update(['read_at' => now()]);
+        }
+
         $total_unseen = Notification::totalUnseenFromRequest($request, $identity);
 
-        return NotificationResource::collection($notifications)->additional([
+        return NotificationResource::queryCollection($notificationsQuery, $per_page)->additional([
             'meta' => compact('total_unseen'),
         ]);
     }

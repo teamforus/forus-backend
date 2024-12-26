@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function(Blueprint $table) {
-            $table->string('backoffice_certificate', 8000)->change();
+            $table->string('backoffice_certificate', 8000)->nullable()->change();
         });
     }
 
@@ -26,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('fund_configs', function(Blueprint $table) {
-            $table->string('backoffice_certificate', 2000)->change();
+            $table->string('backoffice_certificate', 2000)->nullable()->change();
         });
     }
 };

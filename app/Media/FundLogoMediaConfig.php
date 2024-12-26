@@ -5,16 +5,12 @@ namespace App\Media;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 
-/**
- * Class OrganizationLogoMediaConfig
- * @package App\Media
- */
 class FundLogoMediaConfig extends MediaImageConfig
 {
     /**
-     * @var array
+     * @var ?string
      */
-    protected $name = 'fund_logo';
+    protected ?string $name = 'fund_logo';
 
     /**
      * FundLogoMediaConfig constructor.

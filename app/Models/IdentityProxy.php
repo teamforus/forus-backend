@@ -37,43 +37,43 @@ use Illuminate\Support\Facades\DB;
  * @property-read int|null $sessions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Session[] $sessions_with_trashed
  * @property-read int|null $sessions_with_trashed_count
- * @method static Builder|IdentityProxy newModelQuery()
- * @method static Builder|IdentityProxy newQuery()
- * @method static Builder|IdentityProxy onlyTrashed()
- * @method static Builder|IdentityProxy query()
- * @method static Builder|IdentityProxy whereAccessToken($value)
- * @method static Builder|IdentityProxy whereActivatedAt($value)
- * @method static Builder|IdentityProxy whereCreatedAt($value)
- * @method static Builder|IdentityProxy whereDeletedAt($value)
- * @method static Builder|IdentityProxy whereExchangeToken($value)
- * @method static Builder|IdentityProxy whereExpiresIn($value)
- * @method static Builder|IdentityProxy whereId($value)
- * @method static Builder|IdentityProxy whereIdentity2faCode($value)
- * @method static Builder|IdentityProxy whereIdentity2faParentProxyId($value)
- * @method static Builder|IdentityProxy whereIdentity2faUuid($value)
- * @method static Builder|IdentityProxy whereIdentityAddress($value)
- * @method static Builder|IdentityProxy whereState($value)
- * @method static Builder|IdentityProxy whereType($value)
- * @method static Builder|IdentityProxy whereUpdatedAt($value)
- * @method static Builder|IdentityProxy withTrashed()
- * @method static Builder|IdentityProxy withoutTrashed()
+ * @method static Builder<static>|IdentityProxy newModelQuery()
+ * @method static Builder<static>|IdentityProxy newQuery()
+ * @method static Builder<static>|IdentityProxy onlyTrashed()
+ * @method static Builder<static>|IdentityProxy query()
+ * @method static Builder<static>|IdentityProxy whereAccessToken($value)
+ * @method static Builder<static>|IdentityProxy whereActivatedAt($value)
+ * @method static Builder<static>|IdentityProxy whereCreatedAt($value)
+ * @method static Builder<static>|IdentityProxy whereDeletedAt($value)
+ * @method static Builder<static>|IdentityProxy whereExchangeToken($value)
+ * @method static Builder<static>|IdentityProxy whereExpiresIn($value)
+ * @method static Builder<static>|IdentityProxy whereId($value)
+ * @method static Builder<static>|IdentityProxy whereIdentity2faCode($value)
+ * @method static Builder<static>|IdentityProxy whereIdentity2faParentProxyId($value)
+ * @method static Builder<static>|IdentityProxy whereIdentity2faUuid($value)
+ * @method static Builder<static>|IdentityProxy whereIdentityAddress($value)
+ * @method static Builder<static>|IdentityProxy whereState($value)
+ * @method static Builder<static>|IdentityProxy whereType($value)
+ * @method static Builder<static>|IdentityProxy whereUpdatedAt($value)
+ * @method static Builder<static>|IdentityProxy withTrashed()
+ * @method static Builder<static>|IdentityProxy withoutTrashed()
  * @mixin \Eloquent
  */
 class IdentityProxy extends Model
 {
     use SoftDeletes;
 
-    public const STATE_ACTIVE = 'active';
-    public const STATE_PENDING = 'pending';
+    public const string STATE_ACTIVE = 'active';
+    public const string STATE_PENDING = 'pending';
 
     // User logged out
-    public const STATE_DESTROYED = 'destroyed';
+    public const string STATE_DESTROYED = 'destroyed';
 
     // Session terminated by the user
-    public const STATE_TERMINATED = 'terminated';
+    public const string STATE_TERMINATED = 'terminated';
 
     // Session expired
-    public const STATE_EXPIRED = 'expired';
+    public const string STATE_EXPIRED = 'expired';
 
     /**
      * The attributes that are mass assignable.
@@ -88,8 +88,8 @@ class IdentityProxy extends Model
     /**
      * @var string[]
      */
-    protected $dates = [
-        'activated_at',
+    protected $casts = [
+        'activated_at' => 'datetime',
     ];
 
     /**

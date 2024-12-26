@@ -6,6 +6,7 @@ use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Models\Voucher;
+use Illuminate\Http\Request;
 
 /**
  * @property Voucher $resource
@@ -15,12 +16,12 @@ class SponsorVoucherResource extends BaseJsonResource
     /**
      * @var array
      */
-    public const LOAD = [
+    public const array LOAD = [
         'token_without_confirmation',
         'transactions.voucher.fund.logo.presets',
         'transactions.provider.logo.presets',
         'transactions.product.photo.presets',
-        'product_vouchers',
+        'product_vouchers.paid_out_transactions',
         'reimbursements_pending',
         'fund.fund_config.implementation',
         'fund.organization',
@@ -29,6 +30,7 @@ class SponsorVoucherResource extends BaseJsonResource
         'voucher_relation',
         'identity.primary_email',
         'top_up_transactions',
+        'paid_out_transactions',
     ];
 
     /**
@@ -37,26 +39,36 @@ class SponsorVoucherResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $voucher = $this->resource;
         $address = $voucher->token_without_confirmation->address ?? null;
         $physical_cards = $voucher->physical_cards->first();
         $bsn_enabled = $voucher->fund->organization->bsn_enabled;
         $amount_available = $voucher->fund->isTypeBudget() ? $voucher->amount_available_cached : 0;
+        $amount_spent = floatval($voucher->amount_total) - $amount_available;
         $first_use_date = $voucher->first_use_date;
 
-        if ($voucher->is_granted && $voucher->identity_address) {
+        if ($voucher->is_granted && $voucher->identity_id) {
             $identity_email = $voucher->identity?->email;
             $identity_bsn = $bsn_enabled ? $voucher->identity?->bsn: null;
         }
 
         return array_merge($voucher->only([
-            'id', 'amount', 'amount_total', 'amount_top_up', 'note', 'identity_address', 'state', 'state_locale',
+            'id', 'number', 'note', 'identity_id', 'state', 'state_locale',
             'is_granted', 'expired', 'activation_code', 'client_uid', 'has_transactions',
             'in_use', 'limit_multiplier', 'fund_id', 'is_external',
         ]), [
+            'amount' => currency_format($voucher->amount),
+            'amount_locale' => currency_format_locale($voucher->amount),
+            'amount_spent' => currency_format($amount_spent),
+            'amount_spent_locale' => currency_format_locale($amount_spent),
+            'amount_total' => currency_format($voucher->amount_total),
+            'amount_total_locale' => currency_format_locale($voucher->amount_total),
+            'amount_top_up' => currency_format($voucher->amount_top_up),
+            'amount_top_up_locale' => currency_format_locale($voucher->amount_top_up),
             'amount_available' => currency_format($amount_available),
+            'amount_available_locale' => currency_format_locale($amount_available),
             'source_locale' => trans('vouchers.source.' . ($voucher->employee_id ? 'employee' : 'user')),
             'identity_bsn' => $identity_bsn ?? null,
             'identity_email' => $identity_email ?? null,
@@ -72,6 +84,7 @@ class SponsorVoucherResource extends BaseJsonResource
             ]),
             'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
+            'has_payouts' => $voucher->has_payouts,
             'first_use_date' => $first_use_date?->format('Y-m-d'),
             'first_use_date_locale' => $first_use_date ? format_date_locale($first_use_date) : null,
             'created_at' => $voucher->created_at->format('Y-m-d H:i:s'),

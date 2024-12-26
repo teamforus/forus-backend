@@ -5,18 +5,14 @@ namespace App\Digests;
 use App\Mail\Digest\BaseDigestMail;
 use App\Mail\Digest\DigestProviderProductsMail;
 use App\Mail\MailBodyBuilder;
-use App\Models\Product;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Product;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
-/**
- * Class ProviderProductsDigest
- * @package App\Digests
- */
 class ProviderProductsDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
@@ -58,7 +54,9 @@ class ProviderProductsDigest extends BaseOrganizationDigest
                 $emailBodyProducts->text(trans_choice(
                     'digests/provider_products.fund_products',
                     $count_reservations,
-                    array_merge($_logsProductReserved[0], compact('count_reservations'))
+                    self::arrayOnlyString(
+                        array_merge($_logsProductReserved[0], compact('count_reservations'))
+                    )
                 ));
             }
         }

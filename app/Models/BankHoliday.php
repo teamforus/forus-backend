@@ -10,13 +10,13 @@ namespace App\Models;
  * @property \Illuminate\Support\Carbon $date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|BankHoliday newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BankHoliday newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BankHoliday query()
- * @method static \Illuminate\Database\Eloquent\Builder|BankHoliday whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankHoliday whereDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankHoliday whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankHoliday whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankHoliday newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankHoliday newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankHoliday query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankHoliday whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankHoliday whereDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankHoliday whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BankHoliday whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class BankHoliday extends BaseModel
@@ -31,7 +31,7 @@ class BankHoliday extends BaseModel
     /**
      * @var string[]
      */
-    protected $dates = [
-        'date',
+    protected $casts = [
+        'date' => 'datetime',
     ];
 }

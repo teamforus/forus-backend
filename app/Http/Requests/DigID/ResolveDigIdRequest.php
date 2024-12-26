@@ -4,10 +4,6 @@ namespace App\Http\Requests\DigID;
 
 use App\Http\Requests\BaseFormRequest;
 
-/**
- * Class ResolveDigIdRequest
- * @package App\Http\Requests\DigID
- */
 class ResolveDigIdRequest extends BaseFormRequest
 {
     /**

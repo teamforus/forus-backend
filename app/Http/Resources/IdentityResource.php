@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Identity;
+use Illuminate\Http\Request;
 
 /**
  * @property-read Identity $resource
@@ -15,17 +16,18 @@ class IdentityResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $request = BaseFormRequest::createFrom($request);
         $identity = $this->resource;
 
-        return array_merge($identity->only([
-            'address',
-        ]), $this->privateFields($request, $identity));
+        return [
+            'address' => $identity->address,
+            ...$this->privateFields($request, $identity),
+        ];
     }
 
     /**
@@ -36,13 +38,14 @@ class IdentityResource extends BaseJsonResource
     protected function privateFields(BaseFormRequest $request, Identity $identity): array
     {
         $email = $request->isMeApp() ? $identity->email ?: 'Geen e-mailadres' : $identity->email;
-        $bsnRecord = $identity->activeBsnRecord();
+        $bsnRecord = $identity->record_bsn;
 
         if ($request->auth_address() === $identity->address) {
             return [
                 'bsn' => !empty($bsnRecord),
-                'bsn_time' => $bsnRecord ? now()->diffInSeconds($bsnRecord->created_at) : null,
+                'bsn_time' => $bsnRecord ? now()->diffInSeconds($bsnRecord->created_at, true) : null,
                 'email' => $email,
+                'profile' => $request->implementation()?->organization?->allow_profiles,
             ];
         }
 

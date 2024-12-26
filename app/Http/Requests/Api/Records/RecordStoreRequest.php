@@ -6,10 +6,6 @@ use App\Http\Requests\BaseFormRequest;
 use App\Rules\RecordCategoryIdRule;
 use App\Rules\RecordTypeKeyExistsRule;
 
-/**
- * Class RecordStoreRequest
- * @package App\Http\Requests\Api\Records
- */
 class RecordStoreRequest extends BaseFormRequest
 {
     /**
@@ -38,7 +34,7 @@ class RecordStoreRequest extends BaseFormRequest
             ],
             'value' => [
                 'required',
-                $type === 'email' || $type === 'primary_email' ? 'email:strict' : null
+                ...$type === 'email' || $type === 'primary_email' ? $this->emailRules() : []
             ],
             'order' => 'nullable|numeric|min:0',
             'record_category_id' => ['nullable', new RecordCategoryIdRule()]

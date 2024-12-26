@@ -6,9 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\FundRequest;
 
 /**
- * Class DisregardFundRequestsRequest
  * @property FundRequest $fund_request
- * @package App\Http\Requests\Api\Platform\Funds\FundRequests
  */
 class DisregardFundRequestsRequest extends BaseFormRequest
 {

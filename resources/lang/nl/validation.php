@@ -100,11 +100,13 @@ return [
     'regex'                => 'Het :attribute formaat is ongeldig.',
     'required'             => 'Het :attribute veld is verplicht.',
     'required_if'          => 'Het :attribute veld is verplicht wanneer :other is :value.',
+    'required_if_accepted' => "Het is verplicht om het :attribute in te vullen als het ':other' veld is aangevinkt.",
     'required_with'        => 'Het :attribute veld is verplicht wanneer :values aanwezig is.',
     'required_unless'      => 'Het :attribute veld in nodig tenzij :other in :values zit.',
     'required_with_all'    => 'Het :attribute veld is verplicht wanneer :values aanwezig is.',
     'required_without'     => 'Het :attribute veld is verplicht wanneer :values niet aanwezig is.',
     'required_without_all' => 'Het :attribute veld is verplicht wanneer geen van :values aanwezig is.',
+    'required_not_filled'  => 'Het :attribute veld is verplicht maar nog niet ingevuld',
     'same'                 => 'Het :attribute en :other moeten hetzelfde zijn.',
     'size'                 => [
         'numeric' => ':attribute moet :size zijn.',
@@ -134,6 +136,7 @@ return [
     'house_number' => 'Het lijkt erop dat het :attribute niet klopt.',
     'house_addition' => 'Het lijkt erop dat de :attribute niet klopt.',
     'postcode' => 'Het lijkt erop dat de :attribute niet klopt.',
+    'ean_code' => 'Het :attribute is geen geldige EAN-code.',
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +172,8 @@ return [
     'fund_request_request_field_incomplete' => 'Dit veld mag niet leeg zijn.',
     'fund_request_request_eligible_field_incomplete' => 'Ga akkoord met de voorwaarden.',
     'email_already_used' => 'Dit e-mailadres is al ingenomen door een ander account.',
-    'iban' => 'Het IBAN-nummer is verplicht en moet geldig zijn.',
+    'max_emails_reached' => 'Het maximale aantal van :max e-mailadressen is bereikt. Verwijder eerst een bestaand e-mailadres om een nieuw e-mailadres toe te voegen.',
+    'iban' => 'Vul een geldig IBAN-nummer in, bijvoorbeeld NL02ABNA0123456789',
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
     'business_type_id' => 'Organisatie type',
     'voucher' => [
@@ -271,6 +275,26 @@ return [
         'house_nr_addition' => 'huisnummertoevoeging',
         'postal_code' => 'postcode',
         'street' => 'straat',
+        'ip' => "IP",
+        'title' => 'titel',
+        'iban_name' => 'naam rekeninghouder',
+
+        'help_enabled' => 'toon hulpknop in het aanvraagformulier',
+        'help_title' => 'titel hulp informatie pagina',
+        'help_block_text' => 'banner tekst',
+        'help_button_text' => 'knop tekst',
+        'help_email' => 'e-mailadres',
+        'help_phone' => 'telefoonnummer',
+        'help_website' => 'website link',
+        'help_chat' => 'link naar chat',
+        'help_description' => 'omschrijving',
+        'help_show_email' => 'toon e-mailadres',
+        'help_show_phone' => 'toon telefoonnummer',
+        'help_show_website' => 'toon website',
+        'help_show_chat' => 'toon chat',
+
+        'ean' => 'EAN',
+        'sku' => 'SKU',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',

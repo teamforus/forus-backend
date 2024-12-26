@@ -5,13 +5,9 @@ namespace App\Http\Controllers;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use Illuminate\View\View;
 
-/**
- * Class NotificationsController
- * @package App\Http\Controllers\Api\Platform
- */
 class NotificationsController extends Controller
 {
-    private $notificationRepo;
+    private INotificationRepo $notificationRepo;
 
     /**
      * NotificationsController constructor.

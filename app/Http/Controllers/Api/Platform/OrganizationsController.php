@@ -4,20 +4,21 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Events\Organizations\OrganizationCreated;
 use App\Events\Organizations\OrganizationUpdated;
-use App\Http\Requests\Api\Platform\Organizations\TransferOrganizationOwnershipRequest;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
+use App\Http\Requests\Api\Platform\Organizations\TransferOrganizationOwnershipRequest;
+use App\Http\Requests\Api\Platform\Organizations\UpdateBankStatementFieldsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationAcceptReservationsRequest;
-use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBIConnectionRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationReservationSettingsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRolesRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\OrganizationFeaturesResource;
 use App\Http\Resources\OrganizationResource;
-use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Organization;
+use App\Searches\OrganizationSearch;
 use App\Services\MediaService\Models\Media;
 use App\Services\MollieService\Models\MollieConnection;
 use Illuminate\Http\JsonResponse;
@@ -37,7 +38,16 @@ class OrganizationsController extends Controller
     {
         $this->authorize('viewAny', Organization::class);
 
-        $organizations = Organization::searchQuery($request)
+        $search = new OrganizationSearch([
+            ...$request->only([
+                'type', 'is_sponsor', 'is_provider', 'is_validator', 'q',
+                'has_reservations', 'fund_type', 'order_by', 'order_dir',
+            ]),
+            'auth_address' => $request->auth_address(),
+            'implementation_id' => $request->implementation()?->id,
+        ], Organization::query());
+
+        $organizations = $search->query()
             ->with(OrganizationResource::load($request))
             ->orderBy('name')
             ->paginate($request->input('per_page', 10));
@@ -125,7 +135,7 @@ class OrganizationsController extends Controller
                 'auth_2fa_policy', 'auth_2fa_remember_ip',
                 'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip',
                 'auth_2fa_funds_restrict_emails', 'auth_2fa_funds_restrict_auth_sessions',
-                'auth_2fa_funds_restrict_reimbursements'
+                'auth_2fa_funds_restrict_reimbursements', 'auth_2fa_restrict_bi_connections',
             ]));
         }
 
@@ -163,7 +173,28 @@ class OrganizationsController extends Controller
 
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'is_sponsor', 'is_provider', 'is_validator',
-            'validator_auto_accept_funds'
+        ])));
+
+        return new OrganizationResource($organization);
+    }
+
+    /**
+     * @param UpdateBankStatementFieldsRequest $request
+     * @param Organization $organization
+     * @return OrganizationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function updateBankStatementFields(
+        UpdateBankStatementFieldsRequest $request,
+        Organization $organization
+    ): OrganizationResource {
+        $this->authorize('update', $organization);
+
+        OrganizationUpdated::dispatch($organization->updateModel($request->only([
+            'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time', 'bank_reservation_number',
+            'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name', 'bank_note',
+            'bank_separator',
         ])));
 
         return new OrganizationResource($organization);
@@ -210,29 +241,6 @@ class OrganizationsController extends Controller
         ])));
 
         $organization->syncReservationFields($request->get('fields', []));
-
-        return new OrganizationResource($organization);
-    }
-
-    /**
-     * @param UpdateOrganizationBIConnectionRequest $request
-     * @param Organization $organization
-     * @return OrganizationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @noinspection PhpUnused
-     */
-    public function updateBIConnection(
-        UpdateOrganizationBIConnectionRequest $request,
-        Organization $organization
-    ): OrganizationResource {
-        $this->authorize('updateBIConnection', $organization);
-
-        $authType = $request->input('bi_connection_auth_type');
-        $resetToken = $request->boolean('bi_connection_token_reset');
-
-        if ($authType !== $organization->bi_connection_auth_type || $resetToken) {
-            $organization->updateBIConnection($authType, $resetToken);
-        }
 
         return new OrganizationResource($organization);
     }

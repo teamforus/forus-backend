@@ -3,10 +3,11 @@
 namespace App\Http\Requests;
 
 use App\Models\Employee;
-use App\Models\Implementation;
-use App\Models\Organization;
 use App\Models\Identity;
 use App\Models\IdentityProxy;
+use App\Models\Implementation;
+use App\Models\Organization;
+use App\Rules\BsnRule;
 use App\Services\Forus\Notification\NotificationService;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -60,6 +61,14 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     public function auth_address(): ?string
     {
         return $this->identity()?->address;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function auth_id(): ?int
+    {
+        return $this->identity()?->id;
     }
 
     /**
@@ -146,6 +155,27 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
         return [
             'order_by' => 'nullable|in:' . implode(',', $columns),
             'order_dir' => 'nullable|string|in:asc,desc',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function emailRules(): array
+    {
+        return [
+            'max:191',
+            'email:strict,filter_unicode',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function bsnRules(): array
+    {
+        return [
+            new BsnRule(),
         ];
     }
 
@@ -282,5 +312,21 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     public function isDashboard(): bool
     {
         return $this->isSponsorDashboard() || $this->isProviderDashboard() || $this->isValidatorDashboard();
+    }
+
+    /**
+     * @return string[]
+     */
+    protected function uploadedCSVFileRules(): array
+    {
+        return [
+            'file' => 'nullable|array|size:6',
+            'file.name' => 'required_with:file|string',
+            'file.content' => 'required_with:file|string',
+            'file.total' => 'required_with:file|numeric',
+            'file.chunk' => 'required_with:file|numeric',
+            'file.chunks' => 'required_with:file|numeric',
+            'file.chunkSize' => 'required_with:file|numeric',
+        ];
     }
 }

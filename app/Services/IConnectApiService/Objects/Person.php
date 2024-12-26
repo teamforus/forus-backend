@@ -4,10 +4,6 @@ namespace App\Services\IConnectApiService\Objects;
 
 use Illuminate\Support\Arr;
 
-/**
- * Class Person
- * @package App\Services\IConnectApiService\Responses
- */
 class Person extends BasePerson
 {
     /** @var array  */
@@ -137,12 +133,12 @@ class Person extends BasePerson
      */
     public function geRelated(string $scope): array
     {
-        switch ($scope) {
-            case 'partners': return $this->getPartners();
-            case 'children': return $this->getChildren();
-            case 'parents': return $this->getParents();
-            default: return [];
-        }
+        return match ($scope) {
+            'partners' => $this->getPartners(),
+            'children' => $this->getChildren(),
+            'parents' => $this->getParents(),
+            default => [],
+        };
     }
 
     /**

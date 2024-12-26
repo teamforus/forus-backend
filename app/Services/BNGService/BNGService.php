@@ -5,10 +5,10 @@ namespace App\Services\BNGService;
 use App\Services\BNGService\Data\AuthData;
 use App\Services\BNGService\Data\ResponseData;
 use App\Services\BNGService\Exceptions\ApiException;
+use App\Services\BNGService\Responses\AccessTokenResponseValue;
 use App\Services\BNGService\Responses\AccountsValue;
 use App\Services\BNGService\Responses\Balances;
 use App\Services\BNGService\Responses\BulkPaymentValue;
-use App\Services\BNGService\Responses\AccessTokenResponseValue;
 use App\Services\BNGService\Responses\Consent\AccountConsentValue;
 use App\Services\BNGService\Responses\Consent\BulkPaymentConsentValue;
 use App\Services\BNGService\Responses\Entries\BulkPayment;
@@ -19,26 +19,26 @@ use App\Services\BNGService\Responses\TransactionValue;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use RuntimeException;
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 use Throwable;
 
 class BNGService
 {
-    public const ENV_SANDBOX = 'sandbox';
-    public const ENV_PRODUCTION = 'production';
+    public const string ENV_SANDBOX = 'sandbox';
+    public const string ENV_PRODUCTION = 'production';
 
-    public const URL_SANDBOX = 'https://api.xs2a-sandbox.bngbank.nl';
-    public const URL_PRODUCTION = 'https://api.xs2a.bngbank.nl';
+    public const string URL_SANDBOX = 'https://api.xs2a-sandbox.bngbank.nl';
+    public const string URL_PRODUCTION = 'https://api.xs2a.bngbank.nl';
 
-    public const ENDPOINT_TOKEN = '/token';
-    public const ENDPOINT_AUTHORISE = '/authorise';
-    public const ENDPOINT_AUTHORISE_ACCOUNT = '/authorise';
+    public const string ENDPOINT_TOKEN = '/token';
+    public const string ENDPOINT_AUTHORISE = '/authorise';
+    public const string ENDPOINT_AUTHORISE_ACCOUNT = '/authorise';
 
-    public const ENDPOINT_CONSENT = '/api/v1/consents';
-    public const ENDPOINT_ACCOUNTS = '/api/v1/accounts';
-    public const ENDPOINT_PAYMENT = '/api/v1/payments/sepa-credit-transfers';
-    public const ENDPOINT_PAYMENT_BULK = '/api/v1/bulk-payments/pain.001-sepa-credit-transfers';
+    public const string ENDPOINT_CONSENT = '/api/v1/consents';
+    public const string ENDPOINT_ACCOUNTS = '/api/v1/accounts';
+    public const string ENDPOINT_PAYMENT = '/api/v1/payments/sepa-credit-transfers';
+    public const string ENDPOINT_PAYMENT_BULK = '/api/v1/bulk-payments/pain.001-sepa-credit-transfers';
 
     protected string $env;
     protected ?string $keyId;
@@ -131,11 +131,26 @@ class BNGService
      * @return BulkPaymentValue
      * @throws ApiException
      */
-    public function getBulkDetails(
-        string $paymentId,
-        string $accessToken
-    ): BulkPaymentValue {
+    public function getBulkDetails(string $paymentId, string $accessToken): BulkPaymentValue
+    {
         $url = $this->getEndpoint('payment_bulk', [$paymentId]);
+        $res = $this->requestJson('get', $url, null, [
+            "Authorization" => sprintf("Bearer %s", $accessToken),
+        ]);
+
+        return new BulkPaymentValue(new ResponseData($res));
+    }
+    
+    /**
+     * @param string $paymentId
+     * @param string $accessToken
+     * @return BulkPaymentValue
+     * @throws ApiException
+     * @noinspection PhpUnused
+     */
+    public function getBulkDetailsStatus(string $paymentId, string $accessToken): BulkPaymentValue
+    {
+        $url = $this->getEndpoint('payment_bulk', [$paymentId, 'status']);
         $res = $this->requestJson('get', $url, null, [
             "Authorization" => sprintf("Bearer %s", $accessToken),
         ]);

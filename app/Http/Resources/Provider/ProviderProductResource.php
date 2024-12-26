@@ -29,6 +29,9 @@ class ProviderProductResource extends ProductResource
             })->select([
                 'id', 'name', 'state'
             ])->get(),
+            ...$this->resource->only([
+                'sku', 'ean',
+            ]),
             ...$this->extraPaymentConfigs(),
         ];
     }
@@ -48,8 +51,8 @@ class ProviderProductResource extends ProductResource
      */
     private function extraPaymentConfigs(): array
     {
-        return $this->resource->organization->canReceiveExtraPayments()
-            ? $this->resource->only('reservation_extra_payments')
-            : [];
+        return $this->resource->only([
+            'reservation_extra_payments',
+        ]);
     }
 }

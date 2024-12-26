@@ -9,10 +9,6 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-/**
- * Class BaseProductReservationEvent
- * @package App\Events\ProductReservations
- */
 class BaseProductReservationEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
@@ -38,17 +34,9 @@ class BaseProductReservationEvent
     }
 
     /**
-     * @param ProductReservation $productReservation
-     */
-    public function setProductReservation(ProductReservation $productReservation): void
-    {
-        $this->productReservation = $productReservation;
-    }
-
-    /**
      * Get the channels the event should broadcast on.
      *
-     * @return \Illuminate\Broadcasting\Channel|array
+     * @return Channel
      */
     public function broadcastOn(): Channel
     {

@@ -4,13 +4,11 @@ namespace App\Http\Requests\Api\Platform\Organizations\Provider;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\FundProvider;
-use App\Scopes\Builders\OrganizationQuery;
 use App\Models\Organization;
+use App\Scopes\Builders\OrganizationQuery;
 
 /**
- * Class IndexFundProviderRequest
  * @property-read Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Provider
  */
 class IndexFundProviderRequest extends BaseFormRequest
 {
@@ -38,15 +36,16 @@ class IndexFundProviderRequest extends BaseFormRequest
         )->pluck('id')->toArray();
 
         return [
-            'q'                 => 'nullable|string',
-            'state'             => 'nullable|in:' . implode(',', FundProvider::STATES),
-            'allow_budget'      => 'nullable|boolean',
-            'allow_products'    => 'nullable|in:1,0,some',
-            'has_products'      => 'nullable|boolean',
-            'per_page'          => 'nullable|numeric|min:1|max:1000',
-            'fund_id'           => 'nullable|in:' . implode(',', $fundIds),
-            'organization_id'   => 'nullable|in:' . implode(',', $providerIds),
-            'export_format'     => 'nullable|in:csv,xls',
+            'q'                     => 'nullable|string',
+            'state'                 => 'nullable|in:' . implode(',', FundProvider::STATES),
+            'allow_budget'          => 'nullable|boolean',
+            'allow_products'        => 'nullable|in:1,0,some',
+            'allow_extra_payments'  => 'nullable|boolean',
+            'has_products'          => 'nullable|boolean',
+            'per_page'              => 'nullable|numeric|min:1|max:1000',
+            'fund_id'               => 'nullable|in:' . implode(',', $fundIds),
+            'organization_id'       => 'nullable|in:' . implode(',', $providerIds),
+            'export_format'         => 'nullable|in:csv,xls',
         ];
     }
 }

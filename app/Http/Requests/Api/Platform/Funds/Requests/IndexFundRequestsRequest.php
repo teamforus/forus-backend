@@ -5,10 +5,6 @@ namespace App\Http\Requests\Api\Platform\Funds\Requests;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\FundRequest;
 
-/**
- * Class IndexFundRequestsRequest
- * @package App\Http\Requests\Api\Platform\Funds\Requests
- */
 class IndexFundRequestsRequest extends BaseFormRequest
 {
     /**
@@ -29,15 +25,17 @@ class IndexFundRequestsRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'per_page'      => 'numeric|between:1,100',
-            'state'         => 'nullable|in:' . implode(',', FundRequest::STATES),
-            'employee_id'   => 'nullable|exists:employees,id',
-            'assigned'      => 'nullable|boolean',
-            'from'          => 'nullable|date:Y-m-d',
-            'to'            => 'nullable|date:Y-m-d',
-            'order_by'      => 'nullable|in:id,fund_name,created_at,note,state,requester_email,assignee_email',
-            'order_dir'     => 'nullable|in:asc,desc',
+            'state' => 'nullable|in:' . implode(',', FundRequest::STATES),
+            'employee_id' => 'nullable|exists:employees,id',
+            'assigned' => 'nullable|boolean',
+            'from' => 'nullable|date:Y-m-d',
+            'to' => 'nullable|date:Y-m-d',
             'export_format' => 'nullable|in:csv,xls',
+            'state_group' => 'nullable|in:all,pending,assigned,resolved',
+            'identity_id' => 'nullable|exists:identities,id',
+            ...$this->sortableResourceRules(100, [
+                'id', 'fund_name', 'created_at', 'note', 'state', 'requester_email', 'assignee_email'
+            ])
         ];
     }
 }

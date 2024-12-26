@@ -6,9 +6,6 @@ use App\Mail\Funds\FundRequests\FundRequestCreatedMail;
 use App\Models\FundRequest;
 use App\Models\Identity;
 
-/**
- * Notify requester about their fund request being submitted
- */
 class IdentityFundRequestCreatedNotification extends BaseIdentityFundRequestNotification
 {
     protected static ?string $key = 'notifications_identities.fund_request_created';
@@ -26,11 +23,11 @@ class IdentityFundRequestCreatedNotification extends BaseIdentityFundRequestNoti
             return;
         }
 
-        $this->sendMailNotification(
-            $identity->email,
-            new FundRequestCreatedMail(array_merge($this->eventLog->data, [
-                'webshop_link' => $fund->urlWebshop(),
-            ]), $fund->getEmailFrom())
-        );
+        $mailable = new FundRequestCreatedMail([
+            ...$this->eventLog->data,
+            'webshop_link' => $fund->urlWebshop(),
+        ], $fund->getEmailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

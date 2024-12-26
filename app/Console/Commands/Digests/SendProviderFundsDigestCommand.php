@@ -5,10 +5,6 @@ namespace App\Console\Commands\Digests;
 use App\Digests\ProviderFundsDigest;
 use Illuminate\Console\Command;
 
-/**
- * Class SendProviderFundsDigestCommand
- * @package App\Console\Commands
- */
 class SendProviderFundsDigestCommand extends Command
 {
     /**

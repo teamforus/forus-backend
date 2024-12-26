@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class EmployeeAddedMail extends ImplementationMail
 {
-    protected string $notificationTemplateKey = 'notifications_identities.added_employee';
+    public ?string $notificationTemplateKey = 'notifications_identities.added_employee';
 
     /**
      * @return Mailable
@@ -30,8 +30,8 @@ class EmployeeAddedMail extends ImplementationMail
 
         return [
             'download_me_app_link' => $this->makeLink($appLink, 'https://forus.io/DL'),
-            'dashboard_auth_link' => $this->makeLink($authLink, 'Ga naar het dashboard'),
-            'dashboard_auth_button' => $this->makeButton($authLink, 'Ga naar het dashboard'),
+            'dashboard_auth_link' => $this->makeLink($authLink, 'Ga naar de beheeromgeving'),
+            'dashboard_auth_button' => $this->makeButton($authLink, 'Ga naar de beheeromgeving'),
         ];
     }
 }

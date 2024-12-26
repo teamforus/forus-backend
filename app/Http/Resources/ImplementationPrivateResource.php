@@ -38,7 +38,7 @@ class ImplementationPrivateResource extends BaseJsonResource
                 'allow_per_fund_notification_templates',
                 'pre_check_enabled', 'pre_check_title', 'pre_check_description',
                 'pre_check_banner_state', 'pre_check_banner_title',
-                'pre_check_banner_description', 'pre_check_banner_label',
+                'pre_check_banner_description', 'pre_check_banner_label', 'page_title_suffix',
             ]),
             'pre_check_url' => $implementation->urlWebshop('/fund-pre-check'),
             'communication_type' => $implementation->informal_communication ? 'informal' : 'formal',
@@ -72,7 +72,7 @@ class ImplementationPrivateResource extends BaseJsonResource
         Implementation $implementation
     ): array {
         if ($implementation->organization->identityCan($request->identity(), [
-            'implementation_manager',
+            'manage_implementation',
         ])) {
             return $implementation->only([
                 'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',

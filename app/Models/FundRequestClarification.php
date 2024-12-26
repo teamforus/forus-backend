@@ -19,27 +19,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\FileService\Models\File[] $files
  * @property-read int|null $files_count
  * @property-read \App\Models\FundRequestRecord $fund_request_record
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereAnswer($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereAnsweredAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereFundRequestRecordId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereQuestion($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereAnswer($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereAnsweredAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereFundRequestRecordId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereQuestion($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundRequestClarification extends BaseModel
 {
     use HasFiles;
 
-    public const STATE_PENDING = 'pending';
-    public const STATE_ANSWERED = 'answered';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_ANSWERED = 'answered';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_PENDING,
         self::STATE_ANSWERED,
     ];
@@ -48,8 +48,8 @@ class FundRequestClarification extends BaseModel
         'fund_request_record_id', 'state', 'question', 'answer', 'answered_at',
     ];
 
-    protected $dates = [
-        'answered_at',
+    protected $casts = [
+        'answered_at' => 'datetime',
     ];
 
     /**

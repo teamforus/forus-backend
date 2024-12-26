@@ -1,15 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-/**
- * Class CreateMediaTable
- * @noinspection PhpIllegalPsrClassPathInspection
- * @noinspection PhpUnused
- */
-class CreateMediaTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -44,4 +39,4 @@ class CreateMediaTable extends Migration
     {
         Schema::dropIfExists('media');
     }
-}
+};

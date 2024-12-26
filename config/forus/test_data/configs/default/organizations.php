@@ -14,14 +14,18 @@ return [
         'offices_count' => 0,
         'organization' => [
             'backoffice_available' => true,
+            'allow_payouts' => true,
+            'allow_profiles' => true,
             'allow_pre_checks' => true,
             'allow_bi_connection' => true,
+            'allow_product_updates' => true,
             'allow_2fa_restrictions' => true,
             'allow_budget_fund_limits' => true,
             'allow_manual_bulk_processing' => true,
             'allow_provider_extra_payments' => true,
             'allow_fund_request_record_edit' => true,
             'allow_custom_fund_notifications' => true,
+            'fund_request_resolve_policy' => "apply_auto_requested",
         ]
     ],
     'Gemeente Groningen' => [
@@ -32,7 +36,6 @@ return [
             'is_sponsor' => true,
             'is_provider' => true,
             'is_validator' => true,
-            'validator_auto_accept_funds' => false,
             'reservations_budget_enabled' => true,
             'reservations_subsidy_enabled' => true,
             'reservations_auto_accept' => false,

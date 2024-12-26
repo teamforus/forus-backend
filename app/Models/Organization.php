@@ -3,14 +3,13 @@
 namespace App\Models;
 
 use App\Events\Employees\EmployeeCreated;
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\BankService\Models\Bank;
-use App\Services\BIConnectionService\BIConnection;
+use App\Services\BIConnectionService\Models\BIConnection;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
@@ -29,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
@@ -56,7 +56,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $is_sponsor
  * @property bool $is_provider
  * @property bool $is_validator
- * @property bool $validator_auto_accept_funds
  * @property bool $reservations_budget_enabled
  * @property bool $reservations_subsidy_enabled
  * @property bool $reservations_auto_accept
@@ -73,12 +72,13 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
  * @property bool $allow_provider_extra_payments
- * @property int $allow_pre_checks
+ * @property bool $allow_pre_checks
+ * @property bool $allow_payouts
+ * @property bool $allow_profiles
+ * @property bool $allow_product_updates
  * @property bool $reservation_allow_extra_payments
- * @property bool $pre_approve_external_funds
+ * @property int $pre_approve_external_funds
  * @property int $provider_throttling_value
- * @property string $bi_connection_auth_type
- * @property string $bi_connection_token
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
@@ -89,12 +89,24 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $auth_2fa_funds_restrict_emails
  * @property bool $auth_2fa_funds_restrict_auth_sessions
  * @property bool $auth_2fa_funds_restrict_reimbursements
- * @property int $show_provider_transactions
+ * @property bool $auth_2fa_restrict_bi_connections
+ * @property bool $show_provider_transactions
+ * @property bool $bank_transaction_id
+ * @property bool $bank_transaction_date
+ * @property bool $bank_transaction_time
+ * @property bool $bank_reservation_number
+ * @property bool $bank_branch_number
+ * @property bool $bank_branch_id
+ * @property bool $bank_branch_name
+ * @property bool $bank_fund_name
+ * @property bool $bank_note
+ * @property string $bank_separator
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
+ * @property-read BIConnection|null $bi_connection
  * @property-read \App\Models\BusinessType $business_type
  * @property-read Collection|\App\Models\OrganizationContact[] $contacts
  * @property-read int|null $contacts_count
@@ -104,14 +116,14 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $employees_count
  * @property-read Collection|\App\Models\Employee[] $employees_with_trashed
  * @property-read int|null $employees_with_trashed_count
- * @property-read Collection|Organization[] $external_validators
- * @property-read int|null $external_validators_count
  * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers_allowed_extra_payments
  * @property-read int|null $fund_providers_allowed_extra_payments_count
+ * @property-read Collection|\App\Models\FundProvider[] $fund_providers_allowed_extra_payments_full
+ * @property-read int|null $fund_providers_allowed_extra_payments_full_count
  * @property-read Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read Collection|\App\Models\Fund[] $funds
@@ -133,8 +145,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $mollie_connections_count
  * @property-read Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
- * @property-read Collection|\App\Models\OrganizationValidator[] $organization_validators
- * @property-read int|null $organization_validators_count
  * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @property-read Collection|\App\Models\Product[] $products_as_sponsor
@@ -143,6 +153,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $products_provider_count
  * @property-read Collection|\App\Models\Product[] $products_sponsor
  * @property-read int|null $products_sponsor_count
+ * @property-read Collection|\App\Models\Profile[] $profiles
+ * @property-read int|null $profiles_count
  * @property-read Collection|\App\Models\ReimbursementCategory[] $reimbursement_categories
  * @property-read int|null $reimbursement_categories_count
  * @property-read Collection|\App\Models\OrganizationReservationField[] $reservation_fields
@@ -151,102 +163,113 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $supplied_funds_count
  * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
- * @property-read Collection|\App\Models\OrganizationValidator[] $validated_organizations
- * @property-read int|null $validated_organizations_count
  * @property-read Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
  * @property-read int|null $voucher_transaction_bulks_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static EloquentBuilder|Organization newModelQuery()
- * @method static EloquentBuilder|Organization newQuery()
- * @method static EloquentBuilder|Organization query()
- * @method static EloquentBuilder|Organization whereAllow2faRestrictions($value)
- * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
- * @method static EloquentBuilder|Organization whereAllowBiConnection($value)
- * @method static EloquentBuilder|Organization whereAllowBudgetFundLimits($value)
- * @method static EloquentBuilder|Organization whereAllowCustomFundNotifications($value)
- * @method static EloquentBuilder|Organization whereAllowFundRequestRecordEdit($value)
- * @method static EloquentBuilder|Organization whereAllowManualBulkProcessing($value)
- * @method static EloquentBuilder|Organization whereAllowPreChecks($value)
- * @method static EloquentBuilder|Organization whereAllowProviderExtraPayments($value)
- * @method static EloquentBuilder|Organization whereAuth2faFundsPolicy($value)
- * @method static EloquentBuilder|Organization whereAuth2faFundsRememberIp($value)
- * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictAuthSessions($value)
- * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictEmails($value)
- * @method static EloquentBuilder|Organization whereAuth2faFundsRestrictReimbursements($value)
- * @method static EloquentBuilder|Organization whereAuth2faPolicy($value)
- * @method static EloquentBuilder|Organization whereAuth2faRememberIp($value)
- * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
- * @method static EloquentBuilder|Organization whereBankCronTime($value)
- * @method static EloquentBuilder|Organization whereBiConnectionAuthType($value)
- * @method static EloquentBuilder|Organization whereBiConnectionToken($value)
- * @method static EloquentBuilder|Organization whereBsnEnabled($value)
- * @method static EloquentBuilder|Organization whereBtw($value)
- * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
- * @method static EloquentBuilder|Organization whereCreatedAt($value)
- * @method static EloquentBuilder|Organization whereDescription($value)
- * @method static EloquentBuilder|Organization whereDescriptionText($value)
- * @method static EloquentBuilder|Organization whereEmail($value)
- * @method static EloquentBuilder|Organization whereEmailPublic($value)
- * @method static EloquentBuilder|Organization whereFundRequestResolvePolicy($value)
- * @method static EloquentBuilder|Organization whereIban($value)
- * @method static EloquentBuilder|Organization whereId($value)
- * @method static EloquentBuilder|Organization whereIdentityAddress($value)
- * @method static EloquentBuilder|Organization whereIsProvider($value)
- * @method static EloquentBuilder|Organization whereIsSponsor($value)
- * @method static EloquentBuilder|Organization whereIsValidator($value)
- * @method static EloquentBuilder|Organization whereKvk($value)
- * @method static EloquentBuilder|Organization whereManageProviderProducts($value)
- * @method static EloquentBuilder|Organization whereName($value)
- * @method static EloquentBuilder|Organization wherePhone($value)
- * @method static EloquentBuilder|Organization wherePhonePublic($value)
- * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
- * @method static EloquentBuilder|Organization whereProviderThrottlingValue($value)
- * @method static EloquentBuilder|Organization whereReservationAddress($value)
- * @method static EloquentBuilder|Organization whereReservationAllowExtraPayments($value)
- * @method static EloquentBuilder|Organization whereReservationBirthDate($value)
- * @method static EloquentBuilder|Organization whereReservationPhone($value)
- * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
- * @method static EloquentBuilder|Organization whereReservationsBudgetEnabled($value)
- * @method static EloquentBuilder|Organization whereReservationsSubsidyEnabled($value)
- * @method static EloquentBuilder|Organization whereShowProviderTransactions($value)
- * @method static EloquentBuilder|Organization whereUpdatedAt($value)
- * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
- * @method static EloquentBuilder|Organization whereWebsite($value)
- * @method static EloquentBuilder|Organization whereWebsitePublic($value)
+ * @method static EloquentBuilder<static>|Organization newModelQuery()
+ * @method static EloquentBuilder<static>|Organization newQuery()
+ * @method static EloquentBuilder<static>|Organization query()
+ * @method static EloquentBuilder<static>|Organization whereAllow2faRestrictions($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowBatchReservations($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowBiConnection($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowBudgetFundLimits($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowCustomFundNotifications($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowFundRequestRecordEdit($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowManualBulkProcessing($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowPayouts($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowPreChecks($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProductUpdates($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProfiles($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProviderExtraPayments($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faFundsPolicy($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faFundsRememberIp($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faFundsRestrictAuthSessions($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faFundsRestrictEmails($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faFundsRestrictReimbursements($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faPolicy($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faRememberIp($value)
+ * @method static EloquentBuilder<static>|Organization whereAuth2faRestrictBiConnections($value)
+ * @method static EloquentBuilder<static>|Organization whereBackofficeAvailable($value)
+ * @method static EloquentBuilder<static>|Organization whereBankBranchId($value)
+ * @method static EloquentBuilder<static>|Organization whereBankBranchName($value)
+ * @method static EloquentBuilder<static>|Organization whereBankBranchNumber($value)
+ * @method static EloquentBuilder<static>|Organization whereBankCronTime($value)
+ * @method static EloquentBuilder<static>|Organization whereBankFundName($value)
+ * @method static EloquentBuilder<static>|Organization whereBankNote($value)
+ * @method static EloquentBuilder<static>|Organization whereBankReservationNumber($value)
+ * @method static EloquentBuilder<static>|Organization whereBankSeparator($value)
+ * @method static EloquentBuilder<static>|Organization whereBankTransactionDate($value)
+ * @method static EloquentBuilder<static>|Organization whereBankTransactionId($value)
+ * @method static EloquentBuilder<static>|Organization whereBankTransactionTime($value)
+ * @method static EloquentBuilder<static>|Organization whereBsnEnabled($value)
+ * @method static EloquentBuilder<static>|Organization whereBtw($value)
+ * @method static EloquentBuilder<static>|Organization whereBusinessTypeId($value)
+ * @method static EloquentBuilder<static>|Organization whereCreatedAt($value)
+ * @method static EloquentBuilder<static>|Organization whereDescription($value)
+ * @method static EloquentBuilder<static>|Organization whereDescriptionText($value)
+ * @method static EloquentBuilder<static>|Organization whereEmail($value)
+ * @method static EloquentBuilder<static>|Organization whereEmailPublic($value)
+ * @method static EloquentBuilder<static>|Organization whereFundRequestResolvePolicy($value)
+ * @method static EloquentBuilder<static>|Organization whereIban($value)
+ * @method static EloquentBuilder<static>|Organization whereId($value)
+ * @method static EloquentBuilder<static>|Organization whereIdentityAddress($value)
+ * @method static EloquentBuilder<static>|Organization whereIsProvider($value)
+ * @method static EloquentBuilder<static>|Organization whereIsSponsor($value)
+ * @method static EloquentBuilder<static>|Organization whereIsValidator($value)
+ * @method static EloquentBuilder<static>|Organization whereKvk($value)
+ * @method static EloquentBuilder<static>|Organization whereManageProviderProducts($value)
+ * @method static EloquentBuilder<static>|Organization whereName($value)
+ * @method static EloquentBuilder<static>|Organization wherePhone($value)
+ * @method static EloquentBuilder<static>|Organization wherePhonePublic($value)
+ * @method static EloquentBuilder<static>|Organization wherePreApproveExternalFunds($value)
+ * @method static EloquentBuilder<static>|Organization whereProviderThrottlingValue($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationAddress($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationAllowExtraPayments($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationBirthDate($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationPhone($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationsAutoAccept($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationsBudgetEnabled($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationsSubsidyEnabled($value)
+ * @method static EloquentBuilder<static>|Organization whereShowProviderTransactions($value)
+ * @method static EloquentBuilder<static>|Organization whereUpdatedAt($value)
+ * @method static EloquentBuilder<static>|Organization whereWebsite($value)
+ * @method static EloquentBuilder<static>|Organization whereWebsitePublic($value)
  * @mixin \Eloquent
  */
 class Organization extends BaseModel
 {
     use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasLogs;
 
-    public const GENERIC_KVK = "00000000";
+    public const string GENERIC_KVK = "00000000";
 
-    public const FUND_REQUEST_POLICY_MANUAL = 'apply_manually';
-    public const FUND_REQUEST_POLICY_AUTO_REQUESTED = 'apply_auto_requested';
-    public const FUND_REQUEST_POLICY_AUTO_AVAILABLE = 'apply_auto_available';
+    public const string FUND_REQUEST_POLICY_MANUAL = 'apply_manually';
+    public const string FUND_REQUEST_POLICY_AUTO_REQUESTED = 'apply_auto_requested';
+    public const string FUND_REQUEST_POLICY_AUTO_AVAILABLE = 'apply_auto_available';
 
-    public const AUTH_2FA_POLICY_OPTIONAL = 'optional';
-    public const AUTH_2FA_POLICY_REQUIRED = 'required';
+    public const string AUTH_2FA_POLICY_OPTIONAL = 'optional';
+    public const string AUTH_2FA_POLICY_REQUIRED = 'required';
 
-    public const AUTH_2FA_FUNDS_POLICY_OPTIONAL = 'optional';
-    public const AUTH_2FA_FUNDS_POLICY_REQUIRED = 'required';
-    public const AUTH_2FA_FUNDS_POLICY_RESTRICT = 'restrict_features';
+    public const string AUTH_2FA_FUNDS_POLICY_OPTIONAL = 'optional';
+    public const string AUTH_2FA_FUNDS_POLICY_REQUIRED = 'required';
+    public const string AUTH_2FA_FUNDS_POLICY_RESTRICT = 'restrict_features';
 
-    public const AUTH_2FA_POLICIES = [
+    public const array AUTH_2FA_POLICIES = [
         self::AUTH_2FA_POLICY_OPTIONAL,
         self::AUTH_2FA_POLICY_REQUIRED,
     ];
 
-    public const EVENT_BI_CONNECTION_UPDATED = 'bi_connection_updated';
+    public const string EVENT_BI_CONNECTION_UPDATED = 'bi_connection_updated';
 
-    public const AUTH_2FA_FUNDS_POLICIES = [
+    public const array AUTH_2FA_FUNDS_POLICIES = [
         self::AUTH_2FA_FUNDS_POLICY_OPTIONAL,
         self::AUTH_2FA_FUNDS_POLICY_REQUIRED,
         self::AUTH_2FA_FUNDS_POLICY_RESTRICT,
     ];
+
+    public const array BANK_SEPARATORS = ['-', '/', '+', ':', '--', '//', '++', '::'];
 
     /**
      * The attributes that are mass assignable.
@@ -257,15 +280,18 @@ class Organization extends BaseModel
         'identity_address', 'name', 'iban', 'email', 'email_public',
         'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
-        'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
+        'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'allow_bi_connection',
         'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
-        'bi_connection_auth_type', 'bi_connection_token',
         'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
         'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
         'reservation_allow_extra_payments', 'allow_provider_extra_payments',
+        'auth_2fa_restrict_bi_connections',
+        'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time',
+        'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
+        'bank_note', 'bank_reservation_number', 'bank_separator',
     ];
 
     /**
@@ -281,7 +307,6 @@ class Organization extends BaseModel
         'is_validator'                              => 'boolean',
         'backoffice_available'                      => 'boolean',
         'manage_provider_products'                  => 'boolean',
-        'validator_auto_accept_funds'               => 'boolean',
         'reservations_budget_enabled'               => 'boolean',
         'reservations_subsidy_enabled'              => 'boolean',
         'reservations_auto_accept'                  => 'boolean',
@@ -292,16 +317,29 @@ class Organization extends BaseModel
         'allow_2fa_restrictions'                    => 'boolean',
         'allow_fund_request_record_edit'            => 'boolean',
         'allow_bi_connection'                       => 'boolean',
-        'pre_approve_external_funds'                => 'boolean',
+        'allow_product_updates'                     => 'boolean',
         'bsn_enabled'                               => 'boolean',
         'auth_2fa_remember_ip'                      => 'boolean',
         'auth_2fa_funds_remember_ip'                => 'boolean',
         'auth_2fa_funds_restrict_emails'            => 'boolean',
         'auth_2fa_funds_restrict_auth_sessions'     => 'boolean',
         'auth_2fa_funds_restrict_reimbursements'    => 'boolean',
+        'auth_2fa_restrict_bi_connections'          => 'boolean',
         'allow_provider_extra_payments'             => 'boolean',
         'allow_pre_checks'                          => 'boolean',
+        'allow_payouts'                             => 'boolean',
+        'allow_profiles'                            => 'boolean',
         'reservation_allow_extra_payments'          => 'boolean',
+        'show_provider_transactions'                => 'boolean',
+        'bank_transaction_id'                       => 'boolean',
+        'bank_transaction_date'                     => 'boolean',
+        'bank_transaction_time'                     => 'boolean',
+        'bank_reservation_number'                   => 'boolean',
+        'bank_branch_number'                        => 'boolean',
+        'bank_branch_id'                            => 'boolean',
+        'bank_branch_name'                          => 'boolean',
+        'bank_fund_name'                            => 'boolean',
+        'bank_note'                                 => 'boolean',
     ];
 
     /**
@@ -328,110 +366,9 @@ class Organization extends BaseModel
     /**
      * @return HasMany
      */
-    public function reimbursement_categories(): HasMany {
-        return $this->hasMany(ReimbursementCategory::class);
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param EloquentBuilder|null $builder
-     * @return EloquentBuilder
-     */
-    public static function searchQuery(
-        BaseFormRequest $request,
-        EloquentBuilder $builder = null
-    ): EloquentBuilder {
-        $query = $builder ?: self::query();
-        $fund_type = $request->input('fund_type', 'budget');
-        $has_products = $request->input('has_products');
-        $has_reservations = $request->input('has_reservations');
-
-        if ($request->input('is_employee', true)) {
-            if ($request->isAuthenticated()) {
-                $query = OrganizationQuery::whereIsEmployee($query, $request->auth_address());
-            } else {
-                $query = $query->whereIn('id', []);
-            }
-        }
-
-        if ($request->has('is_sponsor')) {
-            $query->where($request->only('is_sponsor'));
-        }
-
-        if ($request->has('is_provider')) {
-            $query->where($request->only('is_provider'));
-        }
-
-        if ($request->has('is_validator')) {
-            $query->where($request->only('is_validator'));
-        }
-
-        if ($q = $request->input('q')) {
-            return $query->where(function(EloquentBuilder $builder) use ($q) {
-                $builder->where('name', 'LIKE', "%$q%");
-                $builder->orWhere('description_text', 'LIKE', "%$q%");
-
-                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
-                    $builder->where('email_public', true);
-                    $builder->where('email', 'LIKE', "%$q%");
-                });
-
-                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
-                    $builder->where('phone_public', true);
-                    $builder->where('phone', 'LIKE', "%$q%");
-                });
-
-                $builder->orWhere(function (EloquentBuilder $builder) use ($q) {
-                    $builder->where('website_public', true);
-                    $builder->where('website', 'LIKE', "%$q%");
-                });
-            });
-        }
-
-        if ($request->input('implementation', false)) {
-            $query->whereHas('funds', static function(EloquentBuilder $builder) {
-                $builder->whereIn('funds.id', Implementation::activeFundsQuery()->select('id'));
-            });
-        }
-
-        if ($has_reservations && $request->isAuthenticated()) {
-            $query->whereHas('products.product_reservations', function(EloquentBuilder $builder) use ($request) {
-                $builder->whereHas('voucher', function(EloquentBuilder $builder) use ($request) {
-                    $builder->where('identity_address', $request->auth_address());
-                });
-            });
-        }
-
-        if ($has_products) {
-            $query->whereHas('products', static function(EloquentBuilder $builder) use ($fund_type) {
-                $activeFunds = Implementation::activeFundsQuery()->where(
-                    'type', $fund_type
-                )->pluck('id')->toArray();
-
-                // only in stock and not expired
-                $builder = ProductQuery::inStockAndActiveFilter($builder);
-
-                // only approved by at least one sponsor
-                return ProductQuery::approvedForFundsFilter($builder, $activeFunds);
-            });
-        } else if ($has_products !== null) {
-            $query->whereDoesntHave('products');
-        }
-
-        return $query->orderBy(
-            $request->get('order_by', 'created_at'),
-            $request->get('order_dir', 'asc'),
-        );
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @return EloquentBuilder[]|Collection
-     * @noinspection PhpUnused
-     */
-    public static function search(BaseFormRequest $request): Collection|Arrayable
+    public function reimbursement_categories(): HasMany
     {
-        return self::searchQuery($request)->get();
+        return $this->hasMany(ReimbursementCategory::class);
     }
 
     /**
@@ -523,30 +460,9 @@ class Organization extends BaseModel
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
-    public function validated_organizations(): HasMany
+    public function profiles(): HasMany
     {
-        return $this->hasMany(OrganizationValidator::class, 'validator_organization_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function organization_validators(): HasMany {
-        return $this->hasMany(OrganizationValidator::class);
-    }
-
-    /**
-     * @return BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function external_validators(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            self::class,
-            OrganizationValidator::class,
-            'organization_id',
-            'validator_organization_id'
-        );
+        return $this->hasMany(Profile::class);
     }
 
     /**
@@ -662,10 +578,10 @@ class Organization extends BaseModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return HasOneThrough
      * @noinspection PhpUnused
      */
-    public function last_employee_session(): HasManyThrough
+    public function last_employee_session(): HasOneThrough
     {
         return $this->hasOneThrough(
             Session::class,
@@ -691,6 +607,15 @@ class Organization extends BaseModel
     public function reservation_fields(): HasMany
     {
         return $this->hasMany(OrganizationReservationField::class)->orderBy('order');
+    }
+
+    /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function bi_connection(): HasOne
+    {
+        return $this->hasOne(BIConnection::class);
     }
 
     /**
@@ -723,6 +648,18 @@ class Organization extends BaseModel
         return $this
             ->hasMany(FundProvider::class)
             ->where('allow_extra_payments', true);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_providers_allowed_extra_payments_full(): HasMany
+    {
+        return $this
+            ->hasMany(FundProvider::class)
+            ->where('allow_extra_payments', true)
+            ->where('allow_extra_payments_full', true);
     }
 
     /**
@@ -825,10 +762,15 @@ class Organization extends BaseModel
     /**
      * Check if identity is organization employee
      * @param Identity $identity
+     * @param bool $fresh
      * @return bool
      */
-    public function isEmployee(Identity $identity): bool
+    public function isEmployee(Identity $identity, bool $fresh = true): bool
     {
+        if (!$fresh) {
+            return $this->employees->where('identity_address', $identity->address)->isNotEmpty();
+        }
+
         return $this->employees()->where('identity_address', $identity->address)->exists();
     }
 
@@ -912,27 +854,6 @@ class Organization extends BaseModel
     }
 
     /**
-     * @param Organization $validatorOrganization
-     */
-    public function detachExternalValidator(
-        Organization $validatorOrganization
-    ): void {
-        /** @var Fund[] $fundsAffected */
-        $fundsAffected = FundQuery::whereExternalValidatorFilter(
-            $this->funds()->getQuery(),
-            $validatorOrganization->id
-        )->get();
-
-        foreach ($fundsAffected as $fund) {
-            $fund->detachExternalValidator($validatorOrganization);
-        }
-
-        $this->organization_validators()->where([
-            'validator_organization_id' => $validatorOrganization->id,
-        ])->delete();
-    }
-
-    /**
      * @param string $identity_address
      * @return Employee|Model|null
      */
@@ -948,6 +869,19 @@ class Organization extends BaseModel
     public function findFund($fund_id = null): Fund|Model|null
     {
         return $this->funds()->where('funds.id', $fund_id)->first();
+    }
+
+    /**
+     * @param Identity $identity
+     * @return Fund|Model
+     */
+    public function findOrMakeProfile(Identity $identity): Profile|Model
+    {
+        return $identity->profiles()->where([
+            'organization_id' => $this->id,
+        ])->firstOrCreate([
+            'organization_id' => $this->id,
+        ]);
     }
 
     /**
@@ -1030,32 +964,18 @@ class Organization extends BaseModel
     }
 
     /**
-     * @return void
-     */
-    public function updateFundBalancesByBankConnection(): void
-    {
-        /** @var Fund[] $funds */
-        $balanceProvider = Fund::BALANCE_PROVIDER_BANK_CONNECTION;
-        $funds = FundQuery::whereTopUpAndBalanceUpdateAvailable($this->funds(), $balanceProvider)->get();
-        $balance = $funds->isNotEmpty() ? $this->bank_connection_active->fetchBalance() : null;
-
-        if ($balance && $funds->isNotEmpty()) {
-            foreach ($funds as $fund) {
-                $fund->setBalance($balance->getAmount(), $this->bank_connection_active);
-            }
-        }
-    }
-
-    /**
      * @param Identity $identity
      * @param array $roles
+     * @param int|null $office_id
      * @return Employee
      */
-    public function addEmployee(Identity $identity, array $roles = []): Employee
+    public function addEmployee(Identity $identity, array $roles = [], int $office_id = null): Employee
     {
         /** @var Employee $employee */
         $employee = $this->employees()->firstOrCreate([
             'identity_address' => $identity->address,
+        ], [
+            'office_id' => $office_id,
         ]);
 
         $employee->roles()->sync($roles);
@@ -1071,31 +991,6 @@ class Organization extends BaseModel
     public function isOwner(Identity $identity): bool
     {
         return $this->identity_address === $identity->address;
-    }
-
-    public function updateBIConnection(?string $auth_type, bool $reset_token = false): void
-    {
-        if ($auth_type) {
-            $this->update(([
-                'bi_connection_auth_type' => $auth_type
-            ]));
-        }
-
-        $connectionToken = $this->bi_connection_token;
-        $connectionEnabled = $this->bi_connection_auth_type !== BIConnection::AUTH_TYPE_DISABLED;
-
-        if ($reset_token || (empty($this->bi_connection_token) && $connectionEnabled)) {
-            $this->update([
-                'bi_connection_token' => BIConnection::makeToken(),
-            ]);
-        }
-
-        $this->log(self::EVENT_BI_CONNECTION_UPDATED, [
-            'organization' => $this,
-        ], [
-            'organization_bi_connection_token' => $this->bi_connection_token,
-            'organization_bi_connection_token_previous' => $connectionToken,
-        ]);
     }
 
     /**

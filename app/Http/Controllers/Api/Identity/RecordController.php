@@ -16,10 +16,6 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\JsonResponse;
 
-/**
- * Class RecordController
- * @package App\Http\Controllers\Api\Identity
- */
 class RecordController extends Controller
 {
     /**
@@ -135,7 +131,7 @@ class RecordController extends Controller
         }
 
         return new JsonResponse([
-            'success' => (bool) $record?->delete(),
+            'success' => (bool) $record->delete(),
         ]);
     }
 

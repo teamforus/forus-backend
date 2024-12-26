@@ -30,22 +30,22 @@ use Illuminate\Support\Arr;
  * @property-read int|null $validations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RecordValidation[] $validations_approved
  * @property-read int|null $validations_approved_count
- * @method static Builder|Record newModelQuery()
- * @method static Builder|Record newQuery()
- * @method static \Illuminate\Database\Query\Builder|Record onlyTrashed()
- * @method static Builder|Record query()
- * @method static Builder|Record whereCreatedAt($value)
- * @method static Builder|Record whereDeletedAt($value)
- * @method static Builder|Record whereId($value)
- * @method static Builder|Record whereIdentityAddress($value)
- * @method static Builder|Record whereOrder($value)
- * @method static Builder|Record wherePrevalidationId($value)
- * @method static Builder|Record whereRecordCategoryId($value)
- * @method static Builder|Record whereRecordTypeId($value)
- * @method static Builder|Record whereUpdatedAt($value)
- * @method static Builder|Record whereValue($value)
- * @method static \Illuminate\Database\Query\Builder|Record withTrashed()
- * @method static \Illuminate\Database\Query\Builder|Record withoutTrashed()
+ * @method static Builder<static>|Record newModelQuery()
+ * @method static Builder<static>|Record newQuery()
+ * @method static Builder<static>|Record onlyTrashed()
+ * @method static Builder<static>|Record query()
+ * @method static Builder<static>|Record whereCreatedAt($value)
+ * @method static Builder<static>|Record whereDeletedAt($value)
+ * @method static Builder<static>|Record whereId($value)
+ * @method static Builder<static>|Record whereIdentityAddress($value)
+ * @method static Builder<static>|Record whereOrder($value)
+ * @method static Builder<static>|Record wherePrevalidationId($value)
+ * @method static Builder<static>|Record whereRecordCategoryId($value)
+ * @method static Builder<static>|Record whereRecordTypeId($value)
+ * @method static Builder<static>|Record whereUpdatedAt($value)
+ * @method static Builder<static>|Record whereValue($value)
+ * @method static Builder<static>|Record withTrashed()
+ * @method static Builder<static>|Record withoutTrashed()
  * @mixin \Eloquent
  */
 class Record extends BaseModel
@@ -126,13 +126,13 @@ class Record extends BaseModel
      * @param Builder|Relation|null $builder
      * @param array $filters
      * @param bool $hideSystemRecords
-     * @return Builder|Relation
+     * @return Builder|Relation|Record
      */
     public static function search(
         Builder|Relation $builder = null,
         array $filters = [],
         bool $hideSystemRecords = false
-    ): Builder|Relation {
+    ): Builder|Relation|Record {
         $builder = $builder ?: static::query();
 
         if (Arr::has($filters, 'type')) {

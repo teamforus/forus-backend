@@ -8,6 +8,7 @@ use App\Events\Funds\FundProductRevokedEvent;
 use App\Events\Products\ProductApproved;
 use App\Events\Products\ProductCreated;
 use App\Events\Products\ProductExpired;
+use App\Events\Products\ProductMonitoredFieldsUpdated;
 use App\Events\Products\ProductReserved;
 use App\Events\Products\ProductRevoked;
 use App\Events\Products\ProductSoldOut;
@@ -74,12 +75,28 @@ class ProductSubscriber
     }
 
     /**
-     * @param ProductSoldOut $productSoldOut
+     * @param ProductMonitoredFieldsUpdated $event
      * @noinspection PhpUnused
      */
-    public function onProductSoldOut(ProductSoldOut $productSoldOut): void
+    public function onProductMonitoredFieldsUpdated(ProductMonitoredFieldsUpdated $event): void
     {
-        $product = $productSoldOut->getProduct();
+        $product = $event->getProduct();
+
+        $product->log($product::EVENT_MONITORED_FIELDS_UPDATED, [
+            'product' => $product,
+            'provider' => $product->organization,
+        ], [
+            'product_updated_fields' => $event->getUpdateFields(),
+        ]);
+    }
+
+    /**
+     * @param ProductSoldOut $event
+     * @noinspection PhpUnused
+     */
+    public function onProductSoldOut(ProductSoldOut $event): void
+    {
+        $product = $event->getProduct();
 
         ProductSoldOutNotification::send($product->log($product::EVENT_SOLD_OUT, [
             'product' => $product,
@@ -183,5 +200,6 @@ class ProductSubscriber
         $events->listen(ProductExpired::class, "$class@onProductExpired");
         $events->listen(ProductReserved::class, "$class@onProductReserved");
         $events->listen(ProductApproved::class, "$class@onProductApproved");
+        $events->listen(ProductMonitoredFieldsUpdated::class, "$class@onProductMonitoredFieldsUpdated");
     }
 }

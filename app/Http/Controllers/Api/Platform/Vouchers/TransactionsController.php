@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\IndexVoucherTransactionsRequest;
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\StoreVoucherTransactionRequest;
 use App\Http\Resources\VoucherTransactionResource;
@@ -10,10 +11,10 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
-use App\Http\Controllers\Controller;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Config;
+use Throwable;
 
 class TransactionsController extends Controller
 {
@@ -48,7 +49,7 @@ class TransactionsController extends Controller
      * @param StoreVoucherTransactionRequest $request
      * @param VoucherToken $voucherToken
      * @return VoucherTransactionResource
-     * @throws AuthorizationException
+     * @throws AuthorizationException|Throwable
      */
     public function store(
         StoreVoucherTransactionRequest $request,
@@ -71,6 +72,7 @@ class TransactionsController extends Controller
         $voucher = $voucherToken->voucher;
         $product = null;
         $transactionState = VoucherTransaction::STATE_PENDING;
+        $amountExtraCash = null;
 
         // Product reservation voucher
         if ($voucher->product_reservation) {
@@ -96,6 +98,8 @@ class TransactionsController extends Controller
                     $amount = $request->input('amount');
                     $organization = Organization::findOrFail($request->input('organization_id'));
                 }
+
+                $amountExtraCash = $request->input('amount_extra_cash');
             } else {
                 // budget fund and product voucher
                 $amount = $voucher->amount;
@@ -116,14 +120,20 @@ class TransactionsController extends Controller
             }
         }
 
+        $employee = $organization->findEmployee($request->auth_address());
+
         $transaction = $voucher->makeTransaction([
             'amount' => $amount,
             'product_id' => $product->id ?? null,
-            'employee_id' => $organization->findEmployee($request->auth_address())->id,
+            'employee_id' => $employee?->id,
+            'branch_id' => $employee?->office?->branch_id,
+            'branch_number' => $employee?->office?->branch_number,
+            'branch_name' => $employee?->office?->branch_name,
             'state' => $transactionState,
             'fund_provider_product_id' => $fundProviderProduct?->id ?? null,
             'target' => VoucherTransaction::TARGET_PROVIDER,
             'organization_id' => $organization->id,
+            'amount_extra_cash' => $amountExtraCash,
         ], $voucher->needsTransactionReview());
 
         $note && $transaction->addNote('provider', $note);

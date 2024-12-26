@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\BankConnection;
 use App\Models\Employee;
+use App\Models\Fund;
+use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
 use App\Models\FundProviderInvitation;
@@ -11,10 +13,11 @@ use App\Models\FundProviderUnsubscribe;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
+use App\Models\IdentityEmail;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\Office;
-use App\Models\FundProvider;
+use App\Models\Organization;
 use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
 use App\Models\Prevalidation;
@@ -27,11 +30,14 @@ use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use App\Policies\BankConnectionPolicy;
+use App\Policies\BIConnectionPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\FilePolicy;
+use App\Policies\FundPolicy;
 use App\Policies\FundProviderChatMessagePolicy;
 use App\Policies\FundProviderChatPolicy;
 use App\Policies\FundProviderInvitationPolicy;
+use App\Policies\FundProviderPolicy;
 use App\Policies\FundProviderUnsubscribePolicy;
 use App\Policies\FundRequestClarificationPolicy;
 use App\Policies\FundRequestPolicy;
@@ -42,11 +48,11 @@ use App\Policies\ImplementationPolicy;
 use App\Policies\MediaPolicy;
 use App\Policies\MollieConnectionPolicy;
 use App\Policies\MollieConnectionProfilePolicy;
+use App\Policies\OfficePolicy;
+use App\Policies\OrganizationPolicy;
 use App\Policies\PhysicalCardPolicy;
 use App\Policies\PhysicalCardRequestPolicy;
 use App\Policies\PrevalidationPolicy;
-use App\Policies\OfficePolicy;
-use App\Policies\FundProviderPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ProductReservationPolicy;
 use App\Policies\ReimbursementCategoryPolicy;
@@ -57,19 +63,15 @@ use App\Policies\VoucherTransactionBulkPolicy;
 use App\Policies\VoucherTransactionPolicy;
 use App\Services\AuthService\BearerTokenGuard;
 use App\Services\AuthService\ServiceIdentityProvider;
+use App\Services\BIConnectionService\Models\BIConnection;
 use App\Services\FileService\Models\File;
-use App\Models\IdentityEmail;
 use App\Services\MediaService\Models\Media;
 use App\Services\MollieService\Models\MollieConnection;
 use App\Services\MollieService\Models\MollieConnectionProfile;
 use Illuminate\Contracts\Auth\Access\Gate as GateContract;
-use App\Models\Fund;
-use App\Models\Organization;
-use App\Policies\FundPolicy;
-use App\Policies\OrganizationPolicy;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -90,6 +92,7 @@ class AuthServiceProvider extends ServiceProvider
         Organization::class             => OrganizationPolicy::class,
         FundProvider::class             => FundProviderPolicy::class,
         PhysicalCard::class             => PhysicalCardPolicy::class,
+        BIConnection::class             => BIConnectionPolicy::class,
         Reimbursement::class            => ReimbursementPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
         IdentityEmail::class            => IdentityEmailPolicy::class,
@@ -119,8 +122,6 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->registerPolicies();
-
         // add custom guard provider
         Auth::provider('identity_service', function () {
             return new ServiceIdentityProvider();

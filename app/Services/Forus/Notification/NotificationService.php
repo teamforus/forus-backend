@@ -10,22 +10,18 @@ use App\Mail\User\IdentityEmailVerificationMail;
 use App\Models\Identity;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Notification\Models\NotificationToken;
+use Exception;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Notification;
-use Exception;
 
-/**
- * Class MailService
- * @package App\Services\Forus\MailNotification
- */
 class NotificationService
 {
-    public const TYPE_PUSH_IOS = NotificationToken::TYPE_PUSH_IOS;
-    public const TYPE_PUSH_ANDROID = NotificationToken::TYPE_PUSH_ANDROID;
+    public const string TYPE_PUSH_IOS = NotificationToken::TYPE_PUSH_IOS;
+    public const string TYPE_PUSH_ANDROID = NotificationToken::TYPE_PUSH_ANDROID;
 
-    public const TYPES = [
+    public const array TYPES = [
         self::TYPE_PUSH_IOS,
         self::TYPE_PUSH_ANDROID,
     ];
@@ -265,6 +261,7 @@ class NotificationService
         $mailable->with(array_merge([
             'email' => $email,
             'mailable' => get_class($mailable),
+            'eventLog' => $mailable instanceof ImplementationMail ? $mailable->getEventLog() : null,
             'unsubscribeLink' => $this->notificationRepo->makeUnsubLink($email),
         ], $mailable instanceof ImplementationMail && $this->isUnsubscribable($mailable) ? [
             'notificationPreferencesLink' => $mailable->getPreferencesLink(),
@@ -338,7 +335,7 @@ class NotificationService
     private function logFailure(?string $message): void
     {
         if ($logger = logger()) {
-            $logger->error("Error sending notification: `${$message}`");
+            $logger->error("Error sending notification: `$message`");
         }
     }
 }

@@ -7,7 +7,7 @@ use App\Models\FundTopUpTransaction;
 
 class FundBalanceSuppliedEvent extends BaseFundEvent
 {
-    protected $transaction;
+    protected FundTopUpTransaction $transaction;
 
     /**
      * Create a new event instance.

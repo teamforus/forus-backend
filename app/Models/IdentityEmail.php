@@ -22,22 +22,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Identity $identity
  * @property-read \App\Models\Redirect|null $redirect
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail newQuery()
- * @method static \Illuminate\Database\Query\Builder|IdentityEmail onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail query()
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereInitial($value)
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail wherePrimary($value)
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereVerificationToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|IdentityEmail whereVerified($value)
- * @method static \Illuminate\Database\Query\Builder|IdentityEmail withTrashed()
- * @method static \Illuminate\Database\Query\Builder|IdentityEmail withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail whereInitial($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail wherePrimary($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail whereVerificationToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail whereVerified($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityEmail withoutTrashed()
  * @mixin \Eloquent
  */
 class IdentityEmail extends Model

@@ -3,8 +3,8 @@
 namespace App\Notifications\Identities\Voucher;
 
 use App\Mail\Vouchers\PaymentSuccessBudgetMail;
-use App\Models\Voucher;
 use App\Models\Identity;
+use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use Illuminate\Support\Arr;
 
@@ -30,11 +30,11 @@ class IdentityVoucherBudgetTransactionNotification extends BaseIdentityVoucherNo
             return;
         }
 
-        $this->sendMailNotification(
-            $identity->email,
-            new PaymentSuccessBudgetMail(array_merge($this->eventLog->data, [
-                'webshop_link' => $voucher->fund->urlWebshop(),
-            ]), $voucher->fund->fund_config->implementation->getEmailFrom())
-        );
+        $mailable = new PaymentSuccessBudgetMail([
+            ...$this->eventLog->data,
+            'webshop_link' => $voucher->fund->urlWebshop(),
+        ], $voucher->fund->fund_config->implementation->getEmailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

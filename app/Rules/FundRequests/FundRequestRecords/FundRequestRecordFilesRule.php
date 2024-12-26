@@ -3,6 +3,7 @@
 namespace App\Rules\FundRequests\FundRequestRecords;
 
 use App\Helpers\Validation;
+use App\Models\FundCriterion;
 use App\Rules\FundRequests\BaseFundRequestRule;
 use App\Services\FileService\Models\File;
 use Illuminate\Database\Query\Builder;
@@ -30,15 +31,15 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
             return empty($value) || $this->reject(trans('validation.in', compact('attribute')));
         }
 
-        // files must be a non empty array
-        if (($validation = Validation::check($value, 'required|array|min:1'))->fails()) {
+        // files must be an array (if criterion not optional - not empty array)
+        if (($validation = Validation::check($value, $this->filesRules($criterion)))->fails()) {
             return $this->reject($validation->errors()->first('value'));
         }
 
         // validate each file
         foreach ($value as $index => $file) {
             $validation = Validation::check($file, [
-                'required',
+                $this->isRequiredRule($criterion),
                 Rule::exists('files', 'uid')->where(function(Builder|File $builder) {
                     $builder->where('identity_address', $this->request->auth_address());
                     $builder->where('type', 'fund_request_record_proof');
@@ -53,5 +54,27 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
         }
 
         return true;
+    }
+
+    /**
+     * @param FundCriterion $criterion
+     * @return string
+     */
+    private function filesRules(FundCriterion $criterion): string
+    {
+        if ($criterion->optional) {
+            return 'nullable|array';
+        }
+
+        return 'required|array|min:1';
+    }
+
+    /**
+     * @param FundCriterion $criterion
+     * @return string
+     */
+    private function isRequiredRule(FundCriterion $criterion): string
+    {
+        return $criterion->optional ? 'nullable' : 'required';
     }
 }

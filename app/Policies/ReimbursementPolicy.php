@@ -55,7 +55,7 @@ class ReimbursementPolicy
         Reimbursement $reimbursement,
         bool $auth2FAConfirmed = false,
     ): Response|bool {
-        if ($reimbursement->voucher->identity_address !== $identity->address) {
+        if ($reimbursement->voucher->identity_id !== $identity->id) {
             return false;
         }
 
@@ -118,7 +118,7 @@ class ReimbursementPolicy
             return false;
         }
 
-        if ($reimbursement->voucher->identity_address !== $identity->address) {
+        if ($reimbursement->voucher->identity_id !== $identity->id) {
             return false;
         }
 
@@ -368,7 +368,7 @@ class ReimbursementPolicy
             return $this->deny('Only draft requests can be canceled.');
         }
 
-        if ($reimbursement->voucher->identity_address !== $identity->address) {
+        if ($reimbursement->voucher->identity_id !== $identity->id) {
             return false;
         }
 

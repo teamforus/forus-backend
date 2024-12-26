@@ -6,11 +6,22 @@ use App\Traits\DoesTesting;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Illuminate\Support\Facades\Config;
+use Laravel\Dusk\Browser;
+use Laravel\Dusk\Dusk;
 use Laravel\Dusk\TestCase as BaseTestCase;
 
 abstract class DuskTestCase extends BaseTestCase
 {
     use CreatesApplication, DoesTesting;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Dusk::selectorHtmlAttribute(Config::get('forus.tests.dusk_selector'));
+        Browser::$waitSeconds = Config::get('forus.tests.dusk_wait_for_time');
+    }
 
     /**
      * Prepare for Dusk test execution.
@@ -21,7 +32,9 @@ abstract class DuskTestCase extends BaseTestCase
     public static function prepare(): void
     {
         if (! static::runningInSail()) {
-            static::startChromeDriver();
+            static::startChromeDriver([
+                '--port=9515',
+            ]);
         }
     }
 
@@ -38,6 +51,8 @@ abstract class DuskTestCase extends BaseTestCase
             return $items->merge([
                 '--disable-gpu',
                 '--headless',
+                '--disable-images',
+                '--disable-dev-shm-usage',
             ]);
         })->all());
 

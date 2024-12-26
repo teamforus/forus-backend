@@ -3,15 +3,17 @@
 namespace Tests\Feature;
 
 use App\Models\Fund;
+use App\Models\Product;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCases\VoucherBatchTestCases;
 use Tests\TestCase;
+use Tests\Traits\MakesTestFunds;
 use Tests\Traits\VoucherTestTrait;
 
 class VoucherBatchTest extends TestCase
 {
-    use VoucherTestTrait, DatabaseTransactions;
+    use VoucherTestTrait, DatabaseTransactions, MakesTestFunds;
 
     /**
      * @var string
@@ -22,63 +24,63 @@ class VoucherBatchTest extends TestCase
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherBatchCase1(): void
+    public function testVoucherBatchCaseBudgetVouchers(): void
     {
-        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase1);
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCaseBudgetVouchers);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherBatchCase2(): void
+    public function testVoucherBatchCaseProductVouchers(): void
     {
-        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase2);
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCaseProductVouchers);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherBatchCase3(): void
+    public function testVoucherBatchCaseBudgetVouchersAllowedDirectPayments(): void
     {
-        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase3);
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCaseBudgetVouchersAllowedDirectPayments);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherBatchCase4(): void
+    public function testVoucherBatchCaseBudgetVouchersNoBSNExceedAmount(): void
     {
-        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase4);
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCaseBudgetVouchersNoBSNExceedAmount);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherBatchCase5(): void
+    public function testVoucherBatchCaseBudgetAndProductVouchersEdgeCases(): void
     {
-        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase5);
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCaseBudgetAndProductVouchersEdgeCases);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherBatchCase6(): void
+    public function testVoucherBatchCaseBudgetVouchersSameAssign(): void
     {
-        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase6);
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCaseBudgetVouchersSameAssign);
     }
 
     /**
      * @return void
      * @throws \Throwable
      */
-    public function testVoucherBatchCase7(): void
+    public function testVoucherBatchCaseBudgetVouchersAllowedDirectPaymentsErrors(): void
     {
-        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCase7);
+        $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCaseBudgetVouchersAllowedDirectPaymentsErrors);
     }
 
     /**
@@ -93,38 +95,34 @@ class VoucherBatchTest extends TestCase
         $fund->fund_config->forceFill($testCase['fund_config'] ?? [])->save();
         $fund->organization->forceFill($testCase['organization'] ?? [])->save();
 
-        $this->makeProviderAndProducts($fund);
-        $this->makeVouchers($fund, $testCase);
-    }
+        $this->addTestCriteriaToFund($fund);
+        $products = $this->makeProviderAndProducts($fund);
 
-    /**
-     * @param Fund $fund
-     * @param array $testCase
-     * @return void
-     * @throws \Throwable
-     */
-    protected function makeVouchers(Fund $fund, array $testCase): void
-    {
+        if ($fund->isTypeBudget()) {
+            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+        }
+
         // create vouchers
         foreach ($testCase['asserts'] as $assert) {
-            $this->storeVouchers($fund, $assert);
+            $this->storeVouchers($fund, $assert, $products[$assert['product'] ?? 'approved']);
         }
     }
 
     /**
      * @param Fund $fund
      * @param array $assert
+     * @param Product[] $products
      * @return void
      * @throws \Throwable
      */
-    protected function storeVouchers(Fund $fund, array $assert): void
+    protected function storeVouchers(Fund $fund, array $assert, array $products): void
     {
         $startDate = now();
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity));
 
         $data = [
             'fund_id' => $fund->id,
-            'vouchers' => $this->makeVoucherData($fund, $assert),
+            'vouchers' => $this->makeVoucherData($fund, $assert, $products),
         ];
 
         $validateResponse = $this->postJson($this->getApiUrl($fund, '/validate'), $data, $headers);

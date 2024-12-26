@@ -72,6 +72,16 @@ return [
             'throw' => true,
         ],
 
+        's3_email_attachments' => [
+            'driver' => 's3',
+            'key' => env('AWS_EMAIL_ATTACHMENTS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_EMAIL_ATTACHMENTS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_EMAIL_ATTACHMENTS_DEFAULT_REGION'),
+            'bucket' => env('AWS_EMAIL_ATTACHMENTS_BUCKET'),
+            'url' => env('AWS_EMAIL_ATTACHMENTS_URL'),
+            'throw' => true,
+        ],
+
         'ftp_physical_cards' => [
             'driver' => 'ftp',
             'host' => env('PHYSICAL_CARDS_FTP_HOST'),

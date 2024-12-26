@@ -16,6 +16,6 @@ return [
     ],
     'dashboard_expire_time' => [
         'unit' => 'months',
-        'value' => env('SESSION_EXPIRE_APP_MONTHS', 3),
+        'value' => env('SESSION_EXPIRE_DASHBOARD_MONTHS', 3),
     ],
 ];

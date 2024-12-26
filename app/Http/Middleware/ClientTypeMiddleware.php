@@ -11,7 +11,7 @@ class ClientTypeMiddleware
     /**
      * @var array
      */
-    public const EXCEPT = [
+    public const array EXCEPT = [
         'status',
         'digidResolve',
         'digidRedirect',

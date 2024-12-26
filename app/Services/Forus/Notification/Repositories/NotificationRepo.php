@@ -7,9 +7,9 @@ use App\Mail\Digest\DigestProviderFundsMail;
 use App\Mail\Digest\DigestProviderProductsMail;
 use App\Mail\Digest\DigestRequesterMail;
 use App\Mail\Digest\DigestSponsorMail;
+use App\Mail\Digest\DigestSponsorProductUpdatesMail;
 use App\Mail\Digest\DigestValidatorMail;
 use App\Mail\Funds\FundBalanceWarningMail;
-use App\Mail\Funds\FundExpireSoonMail;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
@@ -20,6 +20,7 @@ use App\Mail\Vouchers\ProductBoughtProviderMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
+use App\Mail\Vouchers\VoucherExpireSoonBudgetMail;
 use App\Models\SystemNotification;
 use App\Notifications\Identities\Employee\IdentityAddedEmployeeNotification;
 use App\Notifications\Identities\Employee\IdentityAssignedToFundRequestBySupervisorNotification;
@@ -29,10 +30,9 @@ use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedBudgetNot
 use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedProductsNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRequestedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationAcceptedNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCanceledNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCreatedNotification;
@@ -77,17 +77,13 @@ use App\Notifications\Organizations\Products\ProductExpiredNotification;
 use App\Notifications\Organizations\Products\ProductReservedNotification;
 use App\Notifications\Organizations\Products\ProductRevokedNotification;
 use App\Notifications\Organizations\Products\ProductSoldOutNotification;
+use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Notification\Models\NotificationPreference;
 use App\Services\Forus\Notification\Models\NotificationUnsubscription;
 use App\Services\Forus\Notification\Models\NotificationUnsubscriptionToken;
-use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
-/**
- * Class NotificationServiceRepo
- * @package App\Services\Forus\Notification\Repositories
- */
 class NotificationRepo implements INotificationRepo
 {
     protected static array $notifications = [
@@ -112,7 +108,6 @@ class NotificationRepo implements INotificationRepo
         IdentityFundRequestDeniedNotification::class,
         IdentityFundRequestApprovedNotification::class,
         IdentityFundRequestDisregardedNotification::class,
-        IdentityFundRequestRecordDeclinedNotification::class,
         IdentityFundRequestRecordFeedbackRequestedNotification::class,
 
         // funds
@@ -186,7 +181,7 @@ class NotificationRepo implements INotificationRepo
         'funds.provider_approved' => ProviderApprovedMail::class,
         'funds.provider_rejected' => ProviderRejectedMail::class,
         'funds.product_sold_out' => ProductSoldOutMail::class,
-        'funds.fund_expires' => FundExpireSoonMail::class,
+        'funds.fund_expires' => VoucherExpireSoonBudgetMail::class,
         'funds.balance_warning' => FundBalanceWarningMail::class,
         'funds.product_reserved' => ProductBoughtProviderMail::class,
         'funds_requests.assigned_by_supervisor' => FundRequestAssignedBySupervisorMail::class,
@@ -201,6 +196,7 @@ class NotificationRepo implements INotificationRepo
         'digest.daily_requester' => DigestRequesterMail::class,
         'digest.daily_provider_funds' => DigestProviderFundsMail::class,
         'digest.daily_provider_products' => DigestProviderProductsMail::class,
+        'digest.daily_sponsor_product_updates' => DigestSponsorProductUpdatesMail::class,
     ];
 
     /**
@@ -269,9 +265,10 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
+     * @param bool $visibleOnly
      * @return Collection|SystemNotification[]
      */
-    public function getSystemNotifications(bool $visibleOnly = false): Collection
+    public function getSystemNotifications(bool $visibleOnly = false): Collection|array
     {
         return $this->getSystemNotificationsQuery($visibleOnly)->get();
     }
@@ -422,36 +419,27 @@ class NotificationRepo implements INotificationRepo
      */
     public function getNotificationPreferences(string $identityAddress): array
     {
-        $subscribed = false;
-        $identity_address = $identityAddress;
-        $mailKeys = [];
-        $pushKeys = [];
+        $unsubscribedKeys = NotificationPreference::where([
+            'identity_address' => $identityAddress,
+            'subscribed' => false,
+        ])->get();
 
-        foreach ($this->mailTypeKeys() as $mailKey) {
-            $mailKeys[] = (object) [
-                'value' => $mailKey,
-                'type'  => 'email'
-            ];
-        }
+        $unsubscribedMailKeys = $unsubscribedKeys->where('type',  'email')->keyBy('key');
+        $unsubscribedPushKeys = $unsubscribedKeys->where('type',  'push')->keyBy('key');
 
-        foreach (self::getPushNotificationKeys() as $pushKey) {
-            $pushKeys[] = (object) [
-                'value' => $pushKey,
-                'type'  => 'push'
-            ];
-        }
+        $mailKeys = array_map(fn ($mailKey) => [
+            'key' => $mailKey,
+            'type'  => 'email',
+            'subscribed' => !($unsubscribedMailKeys[$mailKey] ?? false)
+        ], $this->mailTypeKeys());
 
-        $unsubscribedKeys = NotificationPreference::where(compact(
-            'identity_address', 'subscribed'
-        ))->pluck('key')->values();
+        $pushKeys = array_map(fn ($pushKey) => [
+            'key' => $pushKey,
+            'type'  => 'push',
+            'subscribed' => !($unsubscribedPushKeys[$pushKey] ?? false)
+        ], self::getPushNotificationKeys());
 
-        return array_map(static function($key) use ($unsubscribedKeys) {
-            return [
-                'key'  => $key->value,
-                'type' => $key->type,
-                'subscribed' => $unsubscribedKeys->search($key->value) === false
-            ];
-        }, array_merge($mailKeys, $pushKeys));
+        return [...$mailKeys, ...$pushKeys];
     }
 
     /**

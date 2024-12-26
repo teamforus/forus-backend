@@ -10,10 +10,6 @@ use App\Models\PhysicalCard;
 use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 
-/**
- * Class PhysicalCardsController
- * @package App\Http\Controllers\Api\Platform\Vouchers
- */
 class PhysicalCardsController extends Controller
 {
     /**
@@ -58,6 +54,6 @@ class PhysicalCardsController extends Controller
             'physical_cards.id' => $physicalCard->id
         ])->delete();
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 }

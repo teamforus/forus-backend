@@ -19,9 +19,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\TestsReservations;
 
 class ProductFundLimitsTest extends TestCase
 {
+    use TestsReservations;
     use DatabaseTransactions;
 
     /**
@@ -29,7 +31,6 @@ class ProductFundLimitsTest extends TestCase
      */
     protected array $urls = [
         'organization' => '/api/v1/platform/organizations',
-        'reservations' => '/api/v1/platform/product-reservations',
         'fundProviders' => '/api/v1/organizations/:organizationId/provider/funds',
         'products' => '/api/v1/platform/products',
         'provider' => '/api/v1/platform/provider',
@@ -491,7 +492,7 @@ class ProductFundLimitsTest extends TestCase
             $identity = $this->identities[$action['identity']] ?? null;
             $this->assertNotNull($identity, 'Identity not found');
 
-            $productVoucher = $fund->makeProductVoucher($identity->address, [], $product->id);
+            $productVoucher = $fund->makeProductVoucher($identity, [], $product->id);
             $this->assertNotNull($productVoucher, 'Product voucher not created');
 
             $this->assertProductLimits($identity, $product, $action['assert_limits']);
@@ -587,7 +588,7 @@ class ProductFundLimitsTest extends TestCase
             $voucher = $this->vouchers[$action['data']['voucher']] ?? null;
             $this->assertNotNull($voucher, 'Voucher not found');
 
-            $reservation = $this->makeProductReservation($identity, $voucher, $product, $action['assert_success']);
+            $reservation = $this->makeProductReservation($voucher, $product, $action['assert_success']);
 
             if ($action['assert_limits'] ?? false) {
                 $this->assertProductLimits($identity, $product, $action['assert_limits']);
@@ -659,7 +660,9 @@ class ProductFundLimitsTest extends TestCase
             ProductReservation::STATE_ACCEPTED => $this->approveReservationByProvider(
                 $provider, $reservation
             ),
-            ProductReservation::STATE_CANCELED_BY_CLIENT => $this->cancelReservationByClient($reservation),
+            ProductReservation::STATE_CANCELED_BY_CLIENT => (
+                $this->makeReservationCancelRequest($reservation)->assertSuccessful()
+            ),
             default => $reservation
         };
 
@@ -712,23 +715,6 @@ class ProductFundLimitsTest extends TestCase
     }
 
     /**
-     * @param ProductReservation $reservation
-     * @return void
-     */
-    protected function cancelReservationByClient(ProductReservation $reservation): void
-    {
-        $identity = $reservation->voucher->identity;
-
-        $proxy = $this->makeIdentityProxy($identity);
-        $headers = $this->makeApiHeaders($proxy);
-        $url = sprintf($this->urls['reservations'] . '/%s', $reservation->id);
-
-        $response = $this->postJson($url . '/cancel', [], $headers);
-
-        $response->assertSuccessful();
-    }
-
-    /**
      * @param Identity $identity
      * @param Product $product
      * @param array $asserts
@@ -771,32 +757,20 @@ class ProductFundLimitsTest extends TestCase
     }
 
     /**
-     * @param Identity $identity
      * @param Voucher $voucher
      * @param Product $product
      * @param bool $assertCreated
      * @return ProductReservation|null
      */
     protected function makeProductReservation(
-        Identity $identity,
         Voucher $voucher,
         Product $product,
         bool $assertCreated = true
     ): ?ProductReservation {
-        $proxy = $this->makeIdentityProxy($identity);
-        $headers = $this->makeApiHeaders($proxy);
-
-        $response = $this->postJson($this->urls['reservations'], [
-            'first_name' => 'John',
-            'last_name' => 'Doe',
-            'user_note' => '',
-            'voucher_address' => $voucher->token_without_confirmation->address,
-            'product_id' => $product->id
-        ], $headers);
+        $response = $this->makeReservationStoreRequest($voucher, $product);
 
         if ($assertCreated) {
             $response->assertSuccessful();
-            /** @var ProductReservation $reservation */
             $reservation = ProductReservation::find($response->json('data.id'));
             $this->assertNotNull($reservation, 'Reservation not found');
 

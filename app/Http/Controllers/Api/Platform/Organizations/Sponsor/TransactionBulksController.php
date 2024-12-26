@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Exports\VoucherTransactionBulksExport;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\IndexTransactionBulksRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\StoreTransactionBulksRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\UpdateTransactionBulksRequest;
@@ -10,7 +11,6 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\VoucherTransactionBulkResource;
 use App\Models\Organization;
-use App\Http\Controllers\Controller;
 use App\Models\VoucherTransactionBulk;
 use App\Scopes\Builders\VoucherTransactionBulkQuery;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -18,11 +18,6 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
-/**
- * Class TransactionsController
- * @package App\Http\Controllers\Api\Platform\Organizations\Sponsor
- * @noinspection PhpUnused
- */
 class TransactionBulksController extends Controller
 {
     /**
@@ -148,6 +143,7 @@ class TransactionBulksController extends Controller
      * @param Organization $organization
      * @param VoucherTransactionBulk $transactionBulk
      * @return string
+     * @throws AuthorizationException
      * @noinspection PhpUnused
      */
     public function exportSEPA(

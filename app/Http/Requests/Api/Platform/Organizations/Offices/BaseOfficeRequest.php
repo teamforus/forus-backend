@@ -4,10 +4,6 @@ namespace App\Http\Requests\Api\Platform\Organizations\Offices;
 
 use App\Http\Requests\BaseFormRequest;
 
-/**
- * Class BaseOfficeRequest
- * @package App\Http\Requests\Api\Platform\Organizations\Offices
- */
 abstract class BaseOfficeRequest extends BaseFormRequest
 {
     /**
@@ -21,7 +17,7 @@ abstract class BaseOfficeRequest extends BaseFormRequest
     }
 
     /**
-     * @return array|mixed
+     * @return array
      */
     public function attributes(): array
     {
@@ -45,7 +41,7 @@ abstract class BaseOfficeRequest extends BaseFormRequest
             }
 
             $week_day = $scheduleMap[$index];
-            $dateLocale = $date->startOfWeek()->addDays($week_day)->formatLocalized('%A');
+            $dateLocale = $date->startOfWeek()->addDays($week_day)->isoFormat('dddd');
 
             $attributes["schedule.$week_day.start_time"] = $dateLocale . ' start time';
             $attributes["schedule.$week_day.end_time"] = $dateLocale . ' end time';
@@ -65,8 +61,14 @@ abstract class BaseOfficeRequest extends BaseFormRequest
         return [
             'name' => '',
             'phone' => '',
-            'email' => 'nullable|email:strict',
+            'email' => [
+                'nullable',
+                ...$this->emailRules(),
+            ],
             'address' => 'required',
+            'branch_name' => 'nullable|string|min:3|max:100',
+            'branch_id' => 'nullable|string|min:3|max:20',
+            'branch_number' => 'nullable|digits:12',
             'schedule' => 'present|array',
             'schedule.*' => 'required|array',
             'schedule.*.week_day' => 'required|numeric:between:0,6',

@@ -6,7 +6,6 @@ use App\Mail\Vouchers\VoucherAssignedBudgetMail;
 use App\Mail\Vouchers\VoucherAssignedProductMail;
 use App\Mail\Vouchers\VoucherAssignedSubsidyMail;
 use App\Models\Fund;
-use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -20,10 +19,16 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
+use Random\RandomException;
 
 trait VoucherTestTrait
 {
-    use WithFaker, AssertsSentEmails, DoesTesting, MakesTestIdentities;
+    use WithFaker;
+    use DoesTesting;
+    use AssertsSentEmails;
+    use MakesTestIdentities;
+    use MakesTestFundProviders;
+    use FundFormulaProductTestTrait;
 
     /**
      * @var string
@@ -36,58 +41,23 @@ trait VoucherTestTrait
     protected string $apiFundUrl = '/api/v1/platform/funds/%s';
 
     /**
-     * @var Product[]
-     */
-    protected array $approvedProducts = [];
-
-    /**
      * @var Identity[]
      */
     protected array $identities = [];
 
     /**
-     * @var Product[]
-     */
-    protected array $unapprovedProducts = [];
-
-    /**
-     * @var Product[]
-     */
-    protected array $emptyStockProducts = [];
-
-    /**
-     * @param Fund $fund
-     * @return void
-     */
-    protected function makeFundFormulaProducts(Fund $fund): void
-    {
-        if (!$fund->fund_formula_products->count()) {
-            array_map(function () use ($fund) {
-                /** @var Product $product */
-                $product = array_random($this->approvedProducts);
-                $fund->fund_formula_products()->updateOrCreate([
-                    'product_id' => $product->id,
-                ], [
-                    'price' => $product->price,
-                    'record_type_key_multiplier' => null,
-                ]);
-            }, range(0, 3));
-
-            $fund->load('fund_formula_products');
-        }
-    }
-
-    /**
      * @param Fund $fund
      * @param array $assert
+     * @param Product[] $products
      * @return array
+     * @throws RandomException
      * @throws \Throwable
      */
-    protected function makeVoucherData(Fund $fund, array $assert): array
+    protected function makeVoucherData(Fund $fund, array $assert, array $products): array
     {
         $range = range(0, Arr::get($assert, 'vouchers_count', 10) - 1);
 
-        return array_reduce($range, function (array $vouchers, $index) use ($fund, $assert) {
+        return array_reduce($range, function (array $vouchers, $index) use ($fund, $assert, $products) {
             $params = [];
             $amount = random_int(1, $fund->getMaxAmountPerVoucher());
             $voucherType = $assert['type'] ?? 'budget';
@@ -105,12 +75,7 @@ trait VoucherTestTrait
             if ($voucherType === 'budget') {
                 $amount = $exceedVoucherAmountLimit ? $fund->getMaxAmountPerVoucher() + 10 : $amount;
             } elseif ($voucherType === 'product') {
-                $productId = match ($assert['product'] ?? 'approved') {
-                    'approved' => array_random($this->approvedProducts)->id,
-                    'unapproved' => array_random($this->unapprovedProducts)->id,
-                    'empty_stock' => array_random($this->emptyStockProducts)->id,
-                    default => null,
-                };
+                $productId = array_random($products)->id;
             }
 
             $item = array_merge($params, [
@@ -238,8 +203,8 @@ trait VoucherTestTrait
             $this->assertFieldsEquals($voucher, $voucherArr);
             $this->assertActivationCode($voucher, $voucherArr);
 
-            if ($assert['assign_by'] === 'email') {
-                $this->assertFundFormulaProducts($voucher, $startDate);
+            if ($assert['assign_by'] === 'email' && $voucher->isBudgetType()) {
+                $this->assertFundFormulaProductVouchersCreatedByMainVoucher($voucher);
             }
         }
 
@@ -294,30 +259,6 @@ trait VoucherTestTrait
 
     /**
      * @param Voucher $voucher
-     * @param Carbon $startDate
-     * @return void
-     */
-    protected function assertFundFormulaProducts(Voucher $voucher, Carbon $startDate): void
-    {
-        if ($voucher->isBudgetType() && $voucher->identity) {
-            foreach ($voucher->fund->fund_formula_products as $formulaProduct) {
-                $multiplier = $formulaProduct->getIdentityMultiplier($voucher->identity_address);
-
-                $productVoucherCount = Voucher::query()
-                    ->where('identity_address', $voucher->identity_address)
-                    ->where('note', $voucher->note)
-                    ->where('product_id', $formulaProduct->product_id)
-                    ->where('created_at', '>=', $startDate)
-                    ->where('amount', $formulaProduct->price)
-                    ->count();
-
-                $this->assertEquals($multiplier, $productVoucherCount);
-            }
-        }
-    }
-
-    /**
-     * @param Voucher $voucher
      * @param string $type
      * @return string|null
      */
@@ -363,7 +304,7 @@ trait VoucherTestTrait
 
         $identity = $this->makeIdentity(null, ['bsn' => $voucher->voucher_relation->bsn]);
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($identity));
+        $headers = $this->makeApiHeaders($identity);
         $response = $this->post(sprintf($this->apiFundUrl . '/check', $voucher->fund_id), [], $headers);
         $response->assertSuccessful();
         $this->assertNotEmpty($response['vouchers']);
@@ -524,96 +465,6 @@ trait VoucherTestTrait
             : $createdVouchers->whereNotNull('product_id');
 
         return $createdVouchers;
-    }
-
-    /**
-     * @param Fund $fund
-     * @return void
-     * @throws \Throwable
-     */
-    protected function makeProviderAndProducts(Fund $fund): void
-    {
-        $this->approvedProducts = $this->makeProducts($fund);
-        $this->emptyStockProducts = $this->makeProducts($fund, 0, 'global');
-        $this->unapprovedProducts = $this->makeProducts();
-
-        if ($fund->isTypeBudget()) {
-            $this->makeFundFormulaProducts($fund);
-        }
-    }
-
-    /**
-     * @param Fund|null $fund
-     * @param int $stock
-     * @param string $allowProducts
-     * @return array
-     * @throws \Throwable
-     */
-    protected function makeProducts(
-        ?Fund $fund = null,
-        int $stock = 50,
-        string $allowProducts = 'individual',
-    ): array {
-        $testData = new TestData();
-        $identity = $this->makeIdentity($this->makeUniqueEmail('provider_'));
-        $provider = $testData->makeOrganizations("Provider", $identity->address)[0];
-
-        $products = $testData->makeProducts($provider, 5, [
-            'sold_out' => $stock === 0,
-            'total_amount' => $stock,
-            'unlimited_stock' => false,
-        ]);
-
-        $this->assertNotEmpty($products, 'Products not created');
-
-        if ($fund) {
-            /** @var FundProvider $fundProvider */
-            $fundProvider = $fund->providers()->firstOrCreate([
-                'state' => FundProvider::STATE_ACCEPTED,
-                'allow_budget' => $fund->isTypeBudget(),
-                'allow_products' => $allowProducts == 'global',
-                'organization_id' => $provider->id,
-            ]);
-
-            if ($allowProducts === 'individual') {
-                $this->updateProducts($fund, $fundProvider, [
-                    'enable_products' => array_map(fn (Product $product) => array_merge([
-                        'id' => $product->id,
-                        'limit_total' => rand(1, $stock),
-                        'limit_per_identity' => 1,
-                    ], $fund->isTypeSubsidy() ? [
-                        'amount' => $product->price,
-                    ] : []), $products),
-                ]);
-            }
-        }
-
-        return $products;
-    }
-
-    /**
-     * @param Fund $fund
-     * @param FundProvider $fundProvider
-     * @param array $params
-     * @return void
-     */
-    protected function updateProducts(
-        Fund $fund,
-        FundProvider $fundProvider,
-        array $params,
-    ): void {
-        $proxy = $this->makeIdentityProxy($fund->organization->identity);
-        $headers = $this->makeApiHeaders($proxy);
-
-        $url = sprintf(
-            $this->apiOrganizationUrl . '/funds/%s/providers/%s',
-            $fund->organization->id,
-            $fund->id,
-            $fundProvider->id
-        );
-
-        $response = $this->patch($url, $params, $headers);
-        $response->assertSuccessful();
     }
 
     /**

@@ -1,6 +1,7 @@
 *
 !public/
 !backoffice/
+!pre-check/
 !iconnect/
 !productboard/
 !.gitignore

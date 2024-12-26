@@ -3,9 +3,9 @@
 namespace App\Events\VoucherRecords;
 
 use App\Models\VoucherRecord;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
 
 abstract class BaseVoucherRecordEvent
 {

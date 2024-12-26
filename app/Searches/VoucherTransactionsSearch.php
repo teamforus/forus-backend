@@ -4,10 +4,14 @@
 namespace App\Searches;
 
 use App\Models\Organization;
+use App\Models\PayoutRelation;
+use App\Models\ProductReservation;
+use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QBuilder;
 
 class VoucherTransactionsSearch extends BaseSearch
 {
@@ -29,9 +33,16 @@ class VoucherTransactionsSearch extends BaseSearch
         $builder = parent::query();
 
         $targets = $this->getFilter('targets', VoucherTransaction::TARGETS_OUTGOING);
+        $identity_address = $this->getFilter('identity_address');
 
         if ($this->hasFilter('q') && $this->getFilter('q')) {
             $builder = VoucherTransactionQuery::whereQueryFilter($builder, $this->getFilter('q'));
+        }
+
+        if ($identity_address) {
+            $builder->whereHas('voucher', function (Builder $builder) use ($identity_address) {
+                $builder->whereRelation('identity', 'address', $identity_address);
+            });
         }
 
         if ($this->hasFilter('state') && $this->getFilter('state')) {
@@ -58,6 +69,38 @@ class VoucherTransactionsSearch extends BaseSearch
             );
         }
 
+        if ($nonCancelableFrom = $this->getFilter('non_cancelable_from')) {
+            $from = Carbon::createFromFormat('Y-m-d', $nonCancelableFrom)
+                ->startOfDay()
+                ->format('Y-m-d H:i:s');
+
+            $builder->where(function (Builder $builder) use ($from) {
+                $builder->where(function (Builder $builder) use ($from) {
+                    $builder->whereHas('product_reservation');
+                    $builder->where('transfer_at', '>=', $from);
+                })->orWhere(function (Builder $builder) use ($from) {
+                    $builder->whereDoesntHave('product_reservation');
+                    $builder->where('created_at', '>=', $from);
+                });
+            });
+        }
+
+        if ($nonCancelableTo = $this->getFilter('non_cancelable_to')) {
+            $to = Carbon::createFromFormat('Y-m-d', $nonCancelableTo)
+                ->endOfDay()
+                ->format('Y-m-d H:i:s');
+
+            $builder->where(function (Builder $builder) use ($to) {
+                $builder->where(function (Builder $builder) use ($to) {
+                    $builder->whereHas('product_reservation');
+                    $builder->where('transfer_at', '<=', $to);
+                })->orWhere(function (Builder $builder) use ($to) {
+                    $builder->whereDoesntHave('product_reservation');
+                    $builder->where('created_at', '<=', $to);
+                });
+            });
+        }
+
         if ($amount_min = $this->getFilter('amount_min')) {
             $builder->where('amount', '>=', $amount_min);
         }
@@ -69,7 +112,7 @@ class VoucherTransactionsSearch extends BaseSearch
         if ($transfer_in_min = $this->getFilter('transfer_in_min')) {
             $builder->where(function (Builder $builder) use ($transfer_in_min) {
                 $builder->where('state', VoucherTransaction::STATE_PENDING);
-                $builder->where('transfer_at', '>=', now()->addDays($transfer_in_min));
+                $builder->where('transfer_at', '>=', now()->addDays((float)$transfer_in_min));
                 $builder->whereNull('voucher_transaction_bulk_id');
             });
         }
@@ -83,7 +126,11 @@ class VoucherTransactionsSearch extends BaseSearch
         }
 
         if ($this->hasFilter('fund_state') && ($fund_state = $this->getFilter('fund_state'))) {
-            $builder->whereHas('voucher.fund', fn (Builder $b) => $b->where('state', '=', $fund_state));
+            $builder->whereHas('voucher.fund', fn(Builder $b) => $b->where('state', '=', $fund_state));
+        }
+
+        if ($this->hasFilter('bulk_state') && ($bulk_state = $this->getFilter('bulk_state'))) {
+            $builder->whereRelation('voucher_transaction_bulk', 'state', $bulk_state);
         }
 
         $builder->whereIn('target', is_array($targets) ? $targets : []);
@@ -125,7 +172,7 @@ class VoucherTransactionsSearch extends BaseSearch
             VoucherTransactionQuery::whereAvailableForBulking($builder);
         }
 
-        return $builder;
+        return self::appendSelectPaymentType(self::appendSelectRelation($builder));
     }
 
     /**
@@ -140,5 +187,88 @@ class VoucherTransactionsSearch extends BaseSearch
         }
 
         return VoucherTransactionQuery::whereOutgoing($builder);
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    public static function appendSelectPaymentType(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        $builder = self::appendFundRequestId($builder);
+        $builder = self::appendReservationField($builder);
+
+        return $builder->selectRaw(
+            'voucher_transactions.*, 
+            (
+                CASE WHEN `reimbursement_id` IS NOT NULL THEN "reimbursement"
+                ELSE (
+                    CASE WHEN `product_id` IS NOT NULL THEN (
+                        CASE 
+                            WHEN `product_reservation_id` IS NOT NULL THEN "product_reservation" 
+                            ELSE "product_voucher" END
+                    ) ELSE (
+                        CASE
+                            WHEN `initiator` = "' . VoucherTransaction::INITIATOR_PROVIDER . '" THEN "voucher_scan"
+                            WHEN `target` = "' . VoucherTransaction::TARGET_PROVIDER . '" THEN "direct_provider"
+                            WHEN `target` = "' . VoucherTransaction::TARGET_IBAN . '" THEN "direct_iban"
+                            WHEN `target` = "' . VoucherTransaction::TARGET_TOP_UP . '" THEN "direct_top_up"
+                            WHEN `target` = "' . VoucherTransaction::TARGET_PAYOUT . '" THEN (
+                                CASE WHEN `fund_request_id` IS NULL THEN (
+                                    CASE WHEN `upload_batch_id` IS NOT NULL THEN "payout_bulk" ELSE "payout_single" END
+                                ) ELSE "payout_request" END
+                            )
+                        ELSE NULL END
+                    ) END
+                ) END
+            ) as `payment_type`'
+        );
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    private static function appendSelectRelation(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        $builder->addSelect([
+            'relation' => PayoutRelation::query()
+                ->whereColumn('voucher_transactions.id', 'voucher_transaction_id')
+                ->orderBy('type')
+                ->select('value')
+                ->take(1),
+        ]);
+
+        return VoucherTransaction::fromSub($builder, 'voucher_transactions')->select('*');
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    private static function appendReservationField(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        $builder->addSelect([
+            'product_reservation_id' => ProductReservation::query()
+                ->whereColumn('voucher_transactions.id', 'voucher_transaction_id')
+                ->select('id')
+        ]);
+
+        return VoucherTransaction::fromSub($builder, 'voucher_transactions')->select('*');
+    }
+
+    /**
+     * @param Builder|QBuilder $builder
+     * @return Builder|QBuilder
+     */
+    private static function appendFundRequestId(Builder|QBuilder $builder): Builder|QBuilder
+    {
+        $builder->addSelect([
+            'fund_request_id' => Voucher::query()
+                ->whereColumn('id', 'voucher_id')
+                ->select('fund_request_id')
+        ]);
+
+        return VoucherTransaction::fromSub($builder, 'voucher_transactions')->select('*');
     }
 }

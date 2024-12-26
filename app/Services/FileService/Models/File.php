@@ -3,7 +3,6 @@
 namespace App\Services\FileService\Models;
 
 use App\Models\Traits\HasDbTokens;
-use App\Models\Traits\UpdatesModel;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,32 +28,33 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * @property string|null $fileable_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent $fileable
+ * @property-read Model|\Eloquent|null $fileable
  * @property-read string $url_public
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read Media|null $preview
- * @method static Builder|File newModelQuery()
- * @method static Builder|File newQuery()
- * @method static Builder|File query()
- * @method static Builder|File whereCreatedAt($value)
- * @method static Builder|File whereExt($value)
- * @method static Builder|File whereFileableId($value)
- * @method static Builder|File whereFileableType($value)
- * @method static Builder|File whereId($value)
- * @method static Builder|File whereIdentityAddress($value)
- * @method static Builder|File whereOrder($value)
- * @method static Builder|File whereOriginalName($value)
- * @method static Builder|File wherePath($value)
- * @method static Builder|File whereSize($value)
- * @method static Builder|File whereType($value)
- * @method static Builder|File whereUid($value)
- * @method static Builder|File whereUpdatedAt($value)
+ * @method static Builder<static>|File newModelQuery()
+ * @method static Builder<static>|File newQuery()
+ * @method static Builder<static>|File query()
+ * @method static Builder<static>|File whereCreatedAt($value)
+ * @method static Builder<static>|File whereExt($value)
+ * @method static Builder<static>|File whereFileableId($value)
+ * @method static Builder<static>|File whereFileableType($value)
+ * @method static Builder<static>|File whereId($value)
+ * @method static Builder<static>|File whereIdentityAddress($value)
+ * @method static Builder<static>|File whereOrder($value)
+ * @method static Builder<static>|File whereOriginalName($value)
+ * @method static Builder<static>|File wherePath($value)
+ * @method static Builder<static>|File whereSize($value)
+ * @method static Builder<static>|File whereType($value)
+ * @method static Builder<static>|File whereUid($value)
+ * @method static Builder<static>|File whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class File extends Model
 {
-    use HasDbTokens, HasMedia, UpdatesModel;
+    use HasMedia;
+    use HasDbTokens;
 
     /**
      * @return MorphTo

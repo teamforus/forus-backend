@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\SearchProductsRequest;
 use App\Http\Requests\BaseFormRequest;
+use App\Http\Resources\ProductBasicResource;
 use App\Http\Resources\Requester\ProductResource;
 use App\Models\Product;
-use App\Http\Controllers\Controller;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -34,6 +35,10 @@ class ProductsController extends Controller
 
         if (!$request->input('show_all', false)) {
             $query->where('show_on_webshop', true);
+        }
+
+        if ($request->has('simplified') && $request->input('simplified')) {
+            return ProductBasicResource::queryCollection($query, $request);
         }
 
         return ProductResource::queryCollection($query, $request);

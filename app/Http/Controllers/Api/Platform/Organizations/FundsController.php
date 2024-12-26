@@ -22,11 +22,14 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Scopes\Builders\FundQuery;
 use App\Searches\FundSearch;
+use App\Statistics\Funds\FinancialOverviewStatistic;
 use App\Statistics\Funds\FinancialStatistic;
+use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -66,7 +69,7 @@ class FundsController extends Controller
 
         return FundResource::queryCollection(FundQuery::sortByState($query, [
             'active', 'waiting', 'paused', 'closed',
-        ]), $request, $request->only('stats'))->additional(compact('meta'));
+        ]), $request, $request->only('stats', 'year'))->additional(compact('meta'));
     }
 
     /**
@@ -101,6 +104,8 @@ class FundsController extends Controller
             'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'email_required', 'contact_info_enabled', 'contact_info_required',
             'contact_info_message_custom', 'contact_info_message_text', 'hide_meta',
+            'voucher_amount_visible', 'outcome_type', 'provider_products_required',
+            'criteria_label_requirement_show',
         ]));
 
         $fund->attachMediaByUid($request->input('media_uid'));
@@ -169,30 +174,57 @@ class FundsController extends Controller
     public function update(
         UpdateFundRequest $request,
         Organization $organization,
-        Fund $fund
+        Fund $fund,
     ): FundResource {
         $this->authorize('show', $organization);
 
         $manageFund = Gate::allows('update', [$fund, $organization]);
         $manageFundTexts = Gate::allows('updateTexts', [$fund, $organization]);
 
-        $fund->update($request->only(array_merge($manageFundTexts || $manageFund ? [
-            'name', 'description', 'description_short', 'description_position', 'request_btn_text',
-            'external_link_text', 'external_link_url', 'faq_title', 'external_page', 'external_page_url',
-        ] : [], $manageFund ? [
-            'notification_amount', 'default_validator_employee_id',
-            'auto_requests_validation', 'request_btn_text',
-        ] : [])));
+        if ($manageFundTexts && !$manageFund) {
+            $fund->update($request->only([
+                'name', 'description', 'description_short', 'description_position', 'request_btn_text',
+                'external_link_text', 'external_link_url', 'faq_title', 'external_page', 'external_page_url',
+            ]));
+        }
 
         if ($manageFund) {
+            $fund->update([
+                ...$request->only([
+                    'name', 'description', 'description_short', 'description_position', 'request_btn_text',
+                    'external_link_text', 'external_link_url', 'faq_title', 'external_page', 'external_page_url',
+                    'notification_amount', 'default_validator_employee_id',
+                    'auto_requests_validation', 'request_btn_text',
+                ]),
+                ...($fund->isWaiting() ? $request->only([
+                    'start_date', 'end_date',
+                ]) : [])
+            ]);
+
             if (!$fund->default_validator_employee_id) {
                 $fund->updateModelValue('auto_requests_validation', false);
             }
 
-            $fund->updateFundsConfig($request->only([
-                'email_required', 'contact_info_enabled', 'contact_info_required',
-                'contact_info_message_custom', 'contact_info_message_text', 'hide_meta',
-            ]));
+            $fund->updateFundsConfig([
+                ...$request->only([
+                    'email_required', 'contact_info_enabled', 'contact_info_required',
+                    'contact_info_message_custom', 'contact_info_message_text',
+                    'hide_meta', 'voucher_amount_visible', 'provider_products_required',
+                    'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
+                    'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
+                    'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
+                    'criteria_label_requirement_show',
+                ]),
+                ...($fund->organization->allow_payouts ? $request->only([
+                    'custom_amount_min', 'custom_amount_max',
+                    'allow_preset_amounts', 'allow_preset_amounts_validator',
+                    'allow_custom_amounts', 'allow_custom_amounts_validator',
+                ]) : [])
+            ]);
+
+            if ($fund->organization->allow_payouts && is_array($request->input('amount_presets'))) {
+                $fund->syncAmountPresets($request->input('amount_presets'));
+            }
 
             if ($fund->isWaiting()) {
                 $fund->updateFundsConfig($request->only([
@@ -224,7 +256,7 @@ class FundsController extends Controller
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
 
-        FundUpdatedEvent::dispatch($fund);
+        Event::dispatch(new FundUpdatedEvent($fund));
 
         return FundResource::create($fund);
     }
@@ -333,21 +365,15 @@ class FundsController extends Controller
      */
     public function financesOverview(
         FinanceOverviewRequest $request,
-        Organization $organization
+        Organization $organization,
     ): JsonResponse {
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);
 
-        $query = $organization->funds()->where('archived', false);
-        $fundsQuery = (clone $query)->where('state', '!=', Fund::STATE_WAITING);
-        $activeFundsQuery = (clone $query)->where([
-            'type' => Fund::TYPE_BUDGET,
-        ])->where('state', '=', Fund::STATE_ACTIVE);
+        $year = $request->input('year');
+        $statistics = new FinancialOverviewStatistic();
 
-        return $request->isAuthenticated() ? new JsonResponse([
-            'funds' => Fund::getFundTotals($fundsQuery->get()),
-            'budget_funds' => Fund::getFundTotals($activeFundsQuery->get()),
-        ]) : new JsonResponse([], 403);
+        return new JsonResponse($statistics->getStatistics($organization, $year));
     }
 
     /**
@@ -369,15 +395,19 @@ class FundsController extends Controller
         $this->authorize('showFinances', $organization);
 
         $detailed = $request->input('detailed', false);
+        $year = $request->input('year');
+        $from = Carbon::createFromFormat('Y', $year)->startOfYear();
+        $to = $year < now()->year ? Carbon::createFromFormat('Y', $year)->endOfYear() : today();
         $exportType = $request->input('export_type', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
 
         $fundsQuery = $organization->funds()->where('state', '!=', Fund::STATE_WAITING);
-        $activeFundsQuery = $organization->funds()->where([
+        $budgetFundsQuery = $organization->funds()->where([
             'type' => Fund::TYPE_BUDGET,
-        ])->where('state', '=', Fund::STATE_ACTIVE);
+        ]);
 
-        $exportData = new FundsExport(($detailed ? $activeFundsQuery : $fundsQuery)->get(), $detailed);
+        $exportDataQuery = $detailed ? $budgetFundsQuery : $fundsQuery;
+        $exportData = new FundsExport($exportDataQuery->get(), $from, $to, $detailed);
 
         return resolve('excel')->download($exportData, $fileName);
     }

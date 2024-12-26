@@ -9,13 +9,12 @@ use App\Events\Vouchers\VoucherCreated;
 use App\Events\Vouchers\VoucherDeactivated;
 use App\Events\Vouchers\VoucherExpired;
 use App\Events\Vouchers\VoucherExpireSoon;
+use App\Events\Vouchers\VoucherLimitUpdated;
 use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Events\Vouchers\VoucherSendToEmailEvent;
-use App\Events\Vouchers\VoucherLimitUpdated;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
-use App\Notifications\Identities\Voucher\IdentityVoucherPhysicalCardRequestedNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherAddedNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherExpiredNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherReservedNotification;
@@ -29,6 +28,7 @@ use App\Notifications\Identities\Voucher\IdentityVoucherDeactivatedNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpiredNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonBudgetNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonProductNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherPhysicalCardRequestedNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherSharedByEmailNotification;
 use App\Notifications\Organizations\PhysicalCardRequest\PhysicalCardRequestCreatedSponsorNotification;
 use Illuminate\Events\Dispatcher;
@@ -45,13 +45,13 @@ class VoucherSubscriber
         $product = $voucher->product;
 
         $voucher->tokens()->create([
-            'address'           => resolve('token_generator')->address(),
+            'address' => resolve('token_generator')->address(),
             'need_confirmation' => true,
         ]);
 
         /** @var VoucherToken $voucherToken */
         $voucher->tokens()->create([
-            'address'           => resolve('token_generator')->address(),
+            'address' => resolve('token_generator')->address(),
             'need_confirmation' => false,
         ]);
 
@@ -68,6 +68,10 @@ class VoucherSubscriber
                 'employee' => $voucher->employee,
                 'implementation' => $voucher->fund->getImplementation(),
             ], $voucher->only('note'));
+
+            if ($voucher->identity) {
+                VoucherAssigned::dispatch($voucher, !$voucher->product_reservation_id);
+            }
 
             if ($voucherCreated->shouldNotifyRequesterAdded()) {
                 IdentityProductVoucherAddedNotification::send($event);
@@ -88,15 +92,19 @@ class VoucherSubscriber
             if ($voucher->identity && $voucher->fund->fund_formulas->count() > 0) {
                 VoucherAssigned::dispatch($voucher);
 
-                if ($voucher->fund->isTypeSubsidy()) {
-                    IdentityVoucherAddedSubsidyNotification::send($event);
-                } else {
-                    IdentityVoucherAddedBudgetNotification::send($event);
+                if (!$voucher->isTypePayout()) {
+                    if ($voucher->fund->isTypeSubsidy()) {
+                        IdentityVoucherAddedSubsidyNotification::send($event);
+                    } else {
+                        IdentityVoucherAddedBudgetNotification::send($event);
+                    }
                 }
             }
         }
 
-        $voucher->reportBackofficeReceived();
+        if (!$voucher->isTypePayout()) {
+            $voucher->reportBackofficeReceived();
+        }
     }
 
     /**
@@ -138,13 +146,17 @@ class VoucherSubscriber
             'implementation_name' => $voucher->fund->fund_config->implementation->name,
         ]);
 
-        switch ($type) {
-            case 'budget': IdentityVoucherAssignedBudgetNotification::send($event); break;
-            case 'subsidy': IdentityVoucherAssignedSubsidyNotification::send($event); break;
-            case 'product': IdentityVoucherAssignedProductNotification::send($event); break;
+        if ($voucherAssigned->shouldNotifyRequesterAssigned() && !$voucher->isTypePayout()) {
+            switch ($type) {
+                case 'budget': IdentityVoucherAssignedBudgetNotification::send($event); break;
+                case 'subsidy': IdentityVoucherAssignedSubsidyNotification::send($event); break;
+                case 'product': IdentityVoucherAssignedProductNotification::send($event); break;
+            }
         }
 
-        $voucher->reportBackofficeReceived();
+        if (!$voucher->isTypePayout()) {
+            $voucher->reportBackofficeReceived();
+        }
     }
 
     /**

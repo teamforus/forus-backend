@@ -3,7 +3,6 @@
 namespace App\Services\MediaService\Models;
 
 use App\Helpers\Color;
-use App\Models\Traits\UpdatesModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -26,31 +25,29 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read bool|null $is_dark
- * @property-read Model|\Eloquent $mediable
+ * @property-read Model|\Eloquent|null $mediable
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\MediaPreset[] $presets
  * @property-read int|null $presets_count
  * @property-read \App\Services\MediaService\Models\MediaPreset|null $size_original
- * @method static Builder|Media newModelQuery()
- * @method static Builder|Media newQuery()
- * @method static Builder|Media query()
- * @method static Builder|Media whereCreatedAt($value)
- * @method static Builder|Media whereDominantColor($value)
- * @method static Builder|Media whereExt($value)
- * @method static Builder|Media whereId($value)
- * @method static Builder|Media whereIdentityAddress($value)
- * @method static Builder|Media whereMediableId($value)
- * @method static Builder|Media whereMediableType($value)
- * @method static Builder|Media whereOrder($value)
- * @method static Builder|Media whereOriginalName($value)
- * @method static Builder|Media whereType($value)
- * @method static Builder|Media whereUid($value)
- * @method static Builder|Media whereUpdatedAt($value)
+ * @method static Builder<static>|Media newModelQuery()
+ * @method static Builder<static>|Media newQuery()
+ * @method static Builder<static>|Media query()
+ * @method static Builder<static>|Media whereCreatedAt($value)
+ * @method static Builder<static>|Media whereDominantColor($value)
+ * @method static Builder<static>|Media whereExt($value)
+ * @method static Builder<static>|Media whereId($value)
+ * @method static Builder<static>|Media whereIdentityAddress($value)
+ * @method static Builder<static>|Media whereMediableId($value)
+ * @method static Builder<static>|Media whereMediableType($value)
+ * @method static Builder<static>|Media whereOrder($value)
+ * @method static Builder<static>|Media whereOriginalName($value)
+ * @method static Builder<static>|Media whereType($value)
+ * @method static Builder<static>|Media whereUid($value)
+ * @method static Builder<static>|Media whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Media extends Model
 {
-    use UpdatesModel;
-
     /**
      * The attributes that are mass assignable.
      *

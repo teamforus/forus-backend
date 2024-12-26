@@ -5,14 +5,14 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Events\Employees\EmployeeDeleted;
 use App\Events\Employees\EmployeeUpdated;
 use App\Exports\EmployeesExport;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Employees\IndexEmployeesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\StoreEmployeeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
-use App\Models\Organization;
-use App\Http\Controllers\Controller;
 use App\Models\Identity;
+use App\Models\Organization;
 use App\Searches\EmployeesSearch;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\JsonResponse;
@@ -61,7 +61,7 @@ class EmployeesController extends Controller
      */
     public function store(
         StoreEmployeeRequest $request,
-        Organization $organization
+        Organization $organization,
     ): EmployeeResource {
         $this->throttleWithKey('to_many_attempts', $request, 'invite_employee');
 
@@ -70,9 +70,10 @@ class EmployeesController extends Controller
 
         $email = $request->input('email');
         $roles = $request->input('roles');
+        $office_id = $request->input('office_id');
 
         $identity = Identity::findByEmail($email) ?: Identity::make($email);
-        $employee = $organization->addEmployee($identity, $roles);
+        $employee = $organization->addEmployee($identity, $roles, $office_id);
 
         return EmployeeResource::create($employee);
     }
@@ -111,7 +112,12 @@ class EmployeesController extends Controller
         $this->authorize('update', [$employee, $organization]);
 
         $previousRoles = $employee->roles()->pluck('key');
-        $employee->roles()->sync($request->input('roles', []));
+
+        if ($employee->identity_address != $organization->identity_address) {
+            $employee->roles()->sync($request->input('roles', []));
+        }
+
+        $employee->update($request->only('office_id'));
 
         EmployeeUpdated::dispatch($employee, $previousRoles->toArray());
 

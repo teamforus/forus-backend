@@ -7,9 +7,9 @@ use Closure;
 /**
  * App\Models\BaseModel
  *
- * @method static \Illuminate\Database\Eloquent\Builder|BaseModel newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BaseModel newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BaseModel query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BaseModel newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BaseModel newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BaseModel query()
  * @mixin \Eloquent
  */
 class BaseModel extends \Illuminate\Database\Eloquent\Model

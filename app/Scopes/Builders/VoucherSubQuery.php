@@ -6,7 +6,6 @@ use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Query\Builder as QBuilder;
 
 class VoucherSubQuery
 {
@@ -14,8 +13,9 @@ class VoucherSubQuery
      * @param Builder|Relation|Voucher $builder
      * @return Builder|Relation|Voucher
      */
-    public static function appendFirstUseFields(Builder|Relation|Voucher $builder): Builder|Relation|Voucher
-    {
+    public static function appendFirstUseFields(
+        Builder|Relation|Voucher $builder,
+    ): Builder|Relation|Voucher {
         $builder = $builder->addSelect([
             'vouchers.*',
             'first_transaction_date' => static::limitFirst(
@@ -37,18 +37,19 @@ class VoucherSubQuery
     }
 
     /**
-     * @param Builder|QBuilder $builder
-     * @return Builder|QBuilder
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    private static function limitFirst(Builder|QBuilder $builder): Builder|QBuilder
-    {
+    private static function limitFirst(
+        Builder|Relation|Voucher $builder,
+    ): Builder|Relation|Voucher {
         return $builder->orderBy('created_at')->select('created_at')->limit(1);
     }
 
     /**
-     * @return Builder|QBuilder
+     * @return Builder|Relation|VoucherTransaction
      */
-    private static function getFirstTransactionSubQuery(): Builder|QBuilder
+    private static function getFirstTransactionSubQuery(): Builder|Relation|VoucherTransaction
     {
         return VoucherTransactionQuery::whereOutgoing(VoucherTransaction::whereColumn([
             'voucher_transactions.voucher_id' => 'vouchers.id'
@@ -57,9 +58,9 @@ class VoucherSubQuery
 
     /**
      * Product vouchers and product vouchers from reservations
-     * @return Builder|QBuilder
+     * @return Builder|Relation|Voucher
      */
-    private static function getFirstReservationOrProductVoucherSubQuery(): Builder|QBuilder
+    private static function getFirstReservationOrProductVoucherSubQuery(): Builder|Relation|Voucher
     {
         return Voucher::query()
             ->from('vouchers as product_vouchers')

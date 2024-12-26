@@ -8,11 +8,7 @@ use App\Models\Organization;
 use App\Services\Forus\Notification\NotificationService;
 use Carbon\Carbon;
 
-/**
- * Class BaseOrganizationDigest
- * @package App\Digests
- */
-abstract class BaseOrganizationDigest
+abstract class BaseOrganizationDigest extends BaseDigest
 {
     /**
      * @var string

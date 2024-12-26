@@ -14,11 +14,11 @@ use Illuminate\Support\Arr;
  */
 class EventLogResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'identity.primary_email',
     ];
 
-    public const LOAD_MORPH = [
+    public const array LOAD_MORPH = [
         'loggable' => [
             Voucher::class => ['fund'],
         ],

@@ -1,0 +1,42 @@
+name: Psalm Security Scan
+
+on:
+  push:
+    branches: ["test123"]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ "test123" ]
+  # schedule:
+  #   - cron: '09 00 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  php-security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y php-bcmath php-gd php-soap php-zip php-intl
+
+      - name: Install psalm dependency
+        run: composer require --dev vimeo/psalm
+
+      - name: Psalm Security Scan run
+        run: ./vendor/bin/psalm --output-format=github --report="results.sarif"
+
+      - name: Upload Security Analysis results to GitHub
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif

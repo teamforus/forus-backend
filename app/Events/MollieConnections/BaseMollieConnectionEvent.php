@@ -4,9 +4,9 @@ namespace App\Events\MollieConnections;
 
 use App\Models\Employee;
 use App\Services\MollieService\Models\MollieConnection;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
 
 abstract class BaseMollieConnectionEvent
 {

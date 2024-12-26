@@ -49,7 +49,7 @@ class ProductReservationPolicy
      */
     public function view(Identity $identity, ProductReservation $productReservation): bool
     {
-        return $productReservation->voucher->identity_address === $identity->address;
+        return $productReservation->voucher->identity_id === $identity->id;
     }
 
     /**
@@ -118,7 +118,7 @@ class ProductReservationPolicy
             return $this->deny('Only pending reservations can be canceled.');
         }
 
-        if ($productReservation->voucher->identity_address !== $identity->address) {
+        if ($productReservation->voucher->identity_id !== $identity->id) {
             return false;
         }
 
@@ -129,7 +129,7 @@ class ProductReservationPolicy
         $expiresIn = $productReservation->expiresIn();
         $isCancelable = $productReservation->extra_payment->isCancelable();
 
-        if ($isCancelable || $expiresIn <= 0) {
+        if ($isCancelable || ($productReservation->isWaiting() && $expiresIn <= 0)) {
             return true;
         }
 
@@ -180,15 +180,23 @@ class ProductReservationPolicy
             return $this->deny('Extra payment not paid.');
         }
 
+        if ($productReservation->extra_payment && $productReservation->extra_payment->isPartlyRefunded()) {
+            return $this->deny('Extra payment is partly refunded.');
+        }
+
         if ($productReservation->extra_payment && $productReservation->extra_payment->isFullyRefunded()) {
             return $this->deny('Extra payment is refunded.');
+        }
+
+        if ($productReservation->extra_payment && $productReservation->extra_payment->hasPendingRefunds()) {
+            return $this->deny('Extra payment has pending refunds.');
         }
 
         if (!$productReservation->voucher->activated) {
             return $this->deny('The voucher used to make the reservation, is not active.');
         }
 
-        if ($productReservation->voucher->expired) {
+        if ($productReservation->voucher->reservation_approval_time_expired) {
             return $this->deny('The voucher used to make the reservation, has expired.');
         }
 
@@ -311,7 +319,7 @@ class ProductReservationPolicy
             return $this->deny('Checkout time expired expired.');
         }
 
-        return $reservation->voucher->identity_address === $identity->address;
+        return $reservation->voucher->identity_id === $identity->id;
     }
 
     /**
@@ -343,8 +351,9 @@ class ProductReservationPolicy
     ): bool {
         return
             $this->updateProvider($identity, $productReservation, $organization) &&
-            $productReservation->extra_payment?->isPaid() &&
-            $productReservation->extra_payment?->refunds()->doesntExist() &&
-            $productReservation->extra_payment?->isMollieType();
+            $productReservation->extra_payment &&
+            $productReservation->extra_payment->isPaid() &&
+            $productReservation->extra_payment->isRefundable() &&
+            $productReservation->extra_payment->isMollieType();
     }
 }

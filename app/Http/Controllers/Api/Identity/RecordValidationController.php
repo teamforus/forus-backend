@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Identity\ApproveRecordValidationRequest;
 use App\Http\Requests\Api\RecordValidations\RecordValidationStoreRequest;
 use App\Http\Requests\BaseFormRequest;
-use App\Http\Resources\RecordValidationResource;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Record;
 use App\Models\RecordValidation;
 use Illuminate\Http\JsonResponse;
@@ -43,8 +43,10 @@ class RecordValidationController extends Controller
         }
 
         $organizations = Organization::queryByIdentityPermissions(
-            $identityAddress, 'validate_records',
-        )->select('id', 'name')->get();
+            $identityAddress, Permission::VALIDATE_RECORDS
+        )
+            ->select('id', 'name')
+            ->get();
 
         $organizations = $organizations->map(function (Organization $organization) {
             return $organization->only('id', 'name');

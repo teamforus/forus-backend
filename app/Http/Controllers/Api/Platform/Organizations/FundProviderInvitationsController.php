@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\FundProviderInvitations\IndexFundProviderInvitationRequest;
 use App\Http\Requests\Api\Platform\Organizations\FundProviderInvitations\UpdateFundProviderInvitationRequest;
+use App\Http\Resources\FundProviderInvitationResource;
 use App\Models\FundProvider;
 use App\Models\FundProviderInvitation;
 use App\Models\Organization;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\FundProviderInvitationResource;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;

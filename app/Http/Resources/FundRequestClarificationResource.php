@@ -9,7 +9,7 @@ use App\Models\FundRequestClarification;
  */
 class FundRequestClarificationResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'files',
         'fund_request_record.record_type',
     ];

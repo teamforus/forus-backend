@@ -22,7 +22,7 @@ class RolesTableSeeder extends Seeder
         ],
         'supervisor_validator' => [
             'en' => 'Supervisor validator',
-            'nl' => 'Manager beoordelaars',
+            'nl' => 'Toezichthouder beoordelaar',
         ],
         'policy_officer' => [
             'en' => 'Providers manager',
@@ -31,14 +31,6 @@ class RolesTableSeeder extends Seeder
         'operation_officer' => [
             'en' => 'Operation manager',
             'nl' => 'Kassa',
-        ],
-        'implementation_manager' => [
-            'en' => 'Implementation manager',
-            'nl' => 'Implementatie manager',
-        ],
-        'implementation_cms_manager' => [
-            'en' => 'Implementation CMS manager',
-            'nl' => 'CMS manager',
         ],
         'implementation_communication_manager' => [
             'en' => 'Implementation communication manager',
@@ -54,7 +46,15 @@ class RolesTableSeeder extends Seeder
         ],
         'voucher_officer' => [
             'en' => 'Voucher admin',
-            'nl' => 'Voucher beheerder',
+            'nl' => 'Tegoed beheerder',
+        ],
+        'payouts_manager' => [
+            'en' => 'Payouts manage',
+            'nl' => 'Uitbetalingen beheerder',
+        ],
+        'voucher_reader' => [
+            'en' => 'Voucher viewer',
+            'nl' => 'Raadpleger',
         ]
     ];
 

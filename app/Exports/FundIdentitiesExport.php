@@ -3,8 +3,8 @@
 namespace App\Exports;
 
 use App\Models\Identity;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 
@@ -21,9 +21,9 @@ class FundIdentitiesExport extends BaseFieldedExport
     protected static array $exportFields = [
         'id' => 'ID',
         'email' => 'E-mail',
-        'count_vouchers' => 'Voucher total',
-        'count_vouchers_active' => 'Active vouchers',
-        'count_vouchers_active_with_balance' => 'Active vouchers with balance',
+        'count_vouchers' => 'Totaal aantal vouchers',
+        'count_vouchers_active' => 'Actieve vouchers',
+        'count_vouchers_active_with_balance' => 'Actieve vouchers met saldo',
     ];
 
     /**

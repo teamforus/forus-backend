@@ -2,11 +2,15 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Fund;
 use App\Models\FundCriterion;
 use App\Models\Implementation;
 use App\Models\PreCheck;
 use App\Models\PreCheckRecord;
+use App\Scopes\Builders\FundQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
 /**
@@ -14,9 +18,10 @@ use Illuminate\Support\Arr;
  */
 class ImplementationPreChecksResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'pre_checks',
-        'pre_checks_records',
+        'pre_checks_records.settings.fund.logo.presets',
+        'pre_checks_records.settings.fund.fund_config.implementation',
     ];
 
     /**
@@ -25,7 +30,7 @@ class ImplementationPreChecksResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $implementation = $this->resource;
         $preChecks = $this->getPreChecks($implementation);
@@ -76,7 +81,11 @@ class ImplementationPreChecksResource extends BaseJsonResource
         $fundCriteria = FundCriterion::query()
             ->where('optional', false)
             ->whereRelation('fund.fund_config', 'implementation_id', $implementation->id)
-            ->groupBy('record_type_key')
+            ->whereRelation('fund.fund_config', 'pre_check_excluded', false)
+            ->whereRelation('fund', 'archived', false)
+            ->whereHas('fund', fn (Builder $q) => FundQuery::whereActiveFilter($q))
+            ->whereRelation('record_type', 'pre_check', true)
+            ->with('fund.fund_config.implementation')
             ->get()
             ->groupBy('record_type_key');
 
@@ -85,6 +94,7 @@ class ImplementationPreChecksResource extends BaseJsonResource
             /** @var PreCheckRecord $preChecksRecord */
             /** @var FundCriterion $fundCriterion */
             $fundCriterion = $fundCriteria->first();
+            $funds = $fundCriteria->map(fn(FundCriterion $fundCriterion) => $fundCriterion->fund)->unique('id');
             $recordType = $fundCriterion->record_type;
             $preChecksRecord = $preChecksRecords->firstWhere('record_type_key', $recordType->key);
 
@@ -96,19 +106,41 @@ class ImplementationPreChecksResource extends BaseJsonResource
                 $values = [$fundCriterion->value];
             }
 
-            return [
-                ...$preChecksRecord ? $preChecksRecord->only([
-                    'record_type_key', 'title', 'title_short', 'description', 'order', 'pre_check_id',
-                ]) : [
-                    'record_type_key' => $recordType->key,
-                    'title' => $recordType->name,
-                    'title_short' => $recordType->name,
-                    'description' => $recordType->name,
-                    'order' => 999,
-                    'pre_check_id' => null,
-                ],
+            $data = [
                 'value' => $values[0] ?? '',
+                'funds' => $funds->map(fn(Fund $fund) => [
+                    'id' => $fund->id,
+                    'name' => $fund->name,
+                    'implementation' => [
+                        'id' => $fund->fund_config->implementation?->id,
+                        'name' => $fund->fund_config->implementation?->name,
+                        'url_webshop' => $fund->fund_config->implementation?->urlWebshop(),
+                    ],
+                ])->toArray(),
                 'record_type' => RecordTypeResource::create($recordType)->toArray(request()),
+            ];
+
+            if ($preChecksRecord) {
+                return [
+                    ...$preChecksRecord->only([
+                        'record_type_key', 'title', 'title_short', 'description', 'order', 'pre_check_id',
+                    ]),
+                    'record_settings' => PreCheckRecordSettingResource::collection(
+                        $preChecksRecord->settings,
+                    ),
+                    ...$data,
+                ];
+            }
+
+            return [
+                'record_type_key' => $recordType->key,
+                'title' => $recordType->name ?? $recordType->key,
+                'title_short' => $recordType->name ?? $recordType->key,
+                'description' => $recordType->name,
+                'order' => 999,
+                'pre_check_id' => null,
+                'record_settings' => [],
+                ...$data,
             ];
         })->toArray();
     }

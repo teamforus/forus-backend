@@ -6,9 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 
 /**
- * Class UpdateOrganizationAcceptReservationsRequest
  * @property Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations
  */
 class UpdateOrganizationAcceptReservationsRequest extends BaseFormRequest
 {
@@ -19,7 +17,8 @@ class UpdateOrganizationAcceptReservationsRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->isAuthenticated() &&
+        return
+            $this->isAuthenticated() &&
             $this->organization->identity_address === $this->auth_address();
     }
 

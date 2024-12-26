@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Api\Platform\Funds;
 
 use App\Events\FundRequests\FundRequestCreated;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestValidationRequest;
 use App\Http\Resources\FundRequestResource;
 use App\Models\Fund;
 use App\Models\FundRequest;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundRequestsController extends Controller
@@ -29,7 +29,7 @@ class FundRequestsController extends Controller
         $this->authorize('viewAnyAsRequester', [FundRequest::class, $fund]);
 
         return FundRequestResource::queryCollection($fund->fund_requests()->where([
-            'identity_address' => $request->auth_address()
+            'identity_id' => $request->auth_id()
         ]), $request);
     }
 

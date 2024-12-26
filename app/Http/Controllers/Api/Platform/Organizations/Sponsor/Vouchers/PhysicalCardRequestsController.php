@@ -8,10 +8,6 @@ use App\Http\Resources\PhysicalCardRequestResource;
 use App\Models\Organization;
 use App\Models\VoucherToken;
 
-/**
- * Class PhysicalCardRequestsController
- * @package App\Http\Controllers\Api\Platform\Vouchers
- */
 class PhysicalCardRequestsController extends Controller
 {
     /**

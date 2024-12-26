@@ -8,13 +8,13 @@ use SimpleXMLElement;
 
 class BulkPayment
 {
-    protected $requestedExecutionDate;
-    protected $paymentInitiator;
-    protected $redirectToken;
-    protected $bulkPaymentId;
-    protected $messageId;
-    protected $payments;
-    protected $debtor;
+    protected ?string $requestedExecutionDate;
+    protected PaymentInitiator $paymentInitiator;
+    protected string $redirectToken;
+    protected string $bulkPaymentId;
+    protected ?string $messageId;
+    protected array $payments;
+    protected Account $debtor;
 
     /**
      * @param PaymentInitiator $paymentInitiator
@@ -143,7 +143,7 @@ class BulkPayment
             $creditTransferTransactionInformation->addChild('Amt')->addChild('InstdAmt', $amount->getAmount())->addAttribute('Ccy', $amount->getCurrency());
             $creditTransferTransactionInformation->addChild('Cdtr')->addChild('Nm', htmlspecialchars($payment->getCreditor()->getName()));
             $creditTransferTransactionInformation->addChild('CdtrAcct')->addChild('Id')->addChild('IBAN', $payment->getCreditor()->getIban());
-            $creditTransferTransactionInformation->addChild('RmtInf')->addChild('Ustrd', htmlspecialchars($payment->getDescription()));
+            $creditTransferTransactionInformation->addChild('RmtInf')->addChild('Ustrd', htmlspecialchars($payment->getDescription() ?: ' '));
         }
 
         return $document->asXML();

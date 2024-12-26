@@ -2,23 +2,26 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Funds\CheckFundRequest;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 use App\Http\Requests\Api\Platform\Funds\RedeemFundsRequest;
+use App\Http\Requests\Api\Platform\Funds\ViewFundRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\PrevalidationResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
-use App\Http\Controllers\Controller;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Searches\FundSearch;
+use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Gate;
 
 class FundsController extends Controller
@@ -58,19 +61,13 @@ class FundsController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param ViewFundRequest $request
      * @param Fund $fund
-     * @return FundResource
+     * @return FundResource|null
      */
-    public function show(Fund $fund): FundResource {
-        if (!in_array($fund->state, [
-            Fund::STATE_ACTIVE,
-            Fund::STATE_PAUSED,
-            Fund::STATE_CLOSED
-        ], true)) {
-            abort(404);
-        }
-
-        return FundResource::create($fund);
+    public function show(ViewFundRequest $request, Fund $fund): ?FundResource
+    {
+        return $request->authorize() ? FundResource::create($fund) : null;
     }
 
     /**
@@ -108,17 +105,22 @@ class FundsController extends Controller
      * @param BaseFormRequest $request
      * @param Fund $fund
      * @return VoucherResource|null
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
      */
     public function apply(BaseFormRequest $request, Fund $fund): ?VoucherResource
     {
         $this->authorize('apply', [$fund, 'apply']);
 
-        $voucher = $fund->makeVoucher($request->auth_address());
-        $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($request->auth_address());
+        if ($error = $fund->getResolvingError()) {
+            $fund->logError('[invalid_iban_record_keys]', ['action' => 'fund_apply']);
+            throw new Exception(App::hasDebugModeEnabled() ? $error : 'Niet beschikbaar.', 403);
+        }
+
+        $voucher = $fund->makeVoucher($request->identity());
+        $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($request->identity());
 
         $voucher = $voucher ?: array_first($formulaProductVouchers) ?: $fund->vouchers()->where([
-            'identity_address' => $request->auth_address(),
+            'identity_id' => $request->auth_id(),
         ])->first();
 
         return $voucher ? new VoucherResource($voucher) : null;

@@ -43,11 +43,13 @@ class AuthenticationTest extends DuskTestCase
             $browser->assertSeeIn('@headerTitle', $implementation->name);
 
             // Click on the navbar start button to go to the auth page
+            $browser->waitFor('@btnStart');
             $browser->element('@btnStart')->click();
             $browser->waitFor('@authOptionEmailRestore');
 
             // Select the login by option
             $browser->element('@authOptionEmailRestore')->click();
+            $browser->waitFor('@authEmailForm');
             $browser->assertVisible('@authEmailForm');
 
             // Type the email and submit the form
@@ -66,7 +68,6 @@ class AuthenticationTest extends DuskTestCase
 
             // Get and follow the auth link from the email then check if the user is authenticated
             $browser->visit($this->findFirstEmailRestoreLink($identity->email, $startTime));
-            $browser->pause(500);
             $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
 
             // Logout identity
@@ -95,15 +96,17 @@ class AuthenticationTest extends DuskTestCase
 
             // Visit the implementation webshop and wait for the page to load
             $browser->visit($implementation->urlWebshop());
-            $browser->waitFor('@header', 10);
+            $browser->waitFor('@header');
             $browser->assertSeeIn('@headerTitle', $implementation->name);
 
             // Click on the navbar start button to go to the auth page
+            $browser->waitFor('@btnStart');
             $browser->element('@btnStart')->click();
             $browser->waitFor('@authOptionEmailRegister');
 
             // Select the registration by email option
             $browser->element('@authOptionEmailRegister')->click();
+            $browser->waitFor('@authEmailForm');
             $browser->assertVisible('@authEmailForm');
 
             // Type the email and submit the form
@@ -122,7 +125,7 @@ class AuthenticationTest extends DuskTestCase
 
             // Get and follow the auth link from the email then check if the user is authenticated
             $browser->visit($this->findFirstEmailConfirmationLink($email, $startTime));
-            $browser->pause(1000);
+            $browser->waitFor('#main-content');
 
             // Logout identity
             $this->logout($browser);

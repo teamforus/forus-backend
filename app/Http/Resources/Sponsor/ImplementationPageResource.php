@@ -13,7 +13,7 @@ use App\Models\ImplementationPage;
  */
 class ImplementationPageResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'faq',
     ];
 
@@ -32,6 +32,7 @@ class ImplementationPageResource extends BaseJsonResource
             'description', 'description_alignment', 'description_position', 'description_html',
             'blocks_per_row',
         ]), [
+            'title' => $page->title ?: '',
             'blocks' => ImplementationBlockResource::collection($page->blocks),
             'url_webshop' => $this->webshopUrl($page),
             'implementation' => $this->getImplementationData($page->implementation),

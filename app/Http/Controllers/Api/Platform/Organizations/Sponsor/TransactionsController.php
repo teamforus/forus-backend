@@ -38,7 +38,7 @@ class TransactionsController extends Controller
      */
     public function index(
         IndexTransactionsRequest $request,
-        Organization $organization
+        Organization $organization,
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
@@ -55,7 +55,11 @@ class TransactionsController extends Controller
 
         if (!$organization->show_provider_transactions &&
             ($request->has('voucher_id') || $request->has('reservation_voucher_id'))) {
-            $options['target'] = [VoucherTransaction::TARGET_TOP_UP, VoucherTransaction::TARGET_IBAN];
+            $options['target'] = [
+                VoucherTransaction::TARGET_IBAN,
+                VoucherTransaction::TARGET_PAYOUT,
+                VoucherTransaction::TARGET_TOP_UP,
+            ];
             $options['initiator'] = VoucherTransaction::INITIATOR_SPONSOR;
         }
 
@@ -63,7 +67,8 @@ class TransactionsController extends Controller
         $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($organization, $options, $query);
 
         $total_amount = currency_format((clone $query)->sum('amount'));
-        $meta = compact('total_amount');
+        $total_amount_locale = currency_format_locale($total_amount);
+        $meta = compact('total_amount', 'total_amount_locale');
 
         return SponsorVoucherTransactionResource::queryCollection(VoucherTransactionQuery::order(
             $query,
@@ -98,23 +103,33 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('useAsSponsor', [$voucher, $provider]);
 
-        $fields = array_merge(match($target) {
-            VoucherTransaction::TARGET_PROVIDER => $request->only([
-                'amount', 'organization_id', 'note', 'note_shared',
-            ]),
-            VoucherTransaction::TARGET_IBAN => array_merge($reimbursement ? [
-                'target_iban' => $reimbursement->iban,
-                'target_name' => $reimbursement->iban_name,
-                'target_reimbursement_id' => $reimbursement->id,
-            ] : $request->only([
-                'target_iban', 'target_name',
-            ]), $request->only('amount', 'note')),
-            default => $request->only([
-                'amount', 'note'
-            ]),
-        }, compact('target'));
+        $reimbursementFields = $reimbursement ? [
+            'target_iban' => $reimbursement->iban,
+            'target_name' => $reimbursement->iban_name,
+            'target_reimbursement_id' => $reimbursement->id,
+        ] : [];
 
-        return SponsorVoucherTransactionResource::create($voucher->makeTransactionBySponsor($employee, $fields));
+        return SponsorVoucherTransactionResource::create(match ($target) {
+            VoucherTransaction::TARGET_PROVIDER => $voucher->makeTransactionBySponsor(
+                $employee,
+                $request->only('target', 'amount', 'organization_id'),
+                $request->input('note'),
+                $request->boolean('note_shared')
+            ),
+            VoucherTransaction::TARGET_IBAN => $voucher->makeTransactionBySponsor(
+                $employee,
+                [
+                    ...$request->only('target', 'amount', 'target_iban', 'target_name'),
+                    ...$reimbursementFields,
+                ],
+                $request->input('note'),
+            ),
+            VoucherTransaction::TARGET_TOP_UP => $voucher->makeTransactionBySponsor(
+                $employee,
+                $request->only('target', 'amount'),
+                $request->input('note'),
+            ),
+        });
     }
 
     /**
@@ -140,16 +155,19 @@ class TransactionsController extends Controller
      */
     public function storeBatch(
         StoreTransactionBatchRequest $request,
-        Organization $organization
+        Organization $organization,
     ) {
         $this->authorize('storeBatchAsSponsor', [VoucherTransaction::class, $organization]);
 
-        $transactions = $request->input('transactions');
+        $file = $request->post('file');
         $employee = $request->employee($organization);
+        $transactions = $request->input('transactions');
 
         $index = 0;
         $createdItems = [];
         $errorsItems = [];
+
+        $event = $employee->logCsvUpload($employee::EVENT_UPLOADED_TRANSACTIONS, $file, $transactions);
 
         while (count($transactions) > $index) {
             $slice = array_slice($transactions, $index++, 1, true);
@@ -157,19 +175,25 @@ class TransactionsController extends Controller
             $validator = $request->validateRows($slice);
 
             if ($validator->passes()) {
-                $voucher = Voucher::find(Arr::get($item, 'voucher_id'));
+                $voucher = Voucher::firstWhere('number', Arr::get($item, 'voucher_number'));
 
-                $createdItems[] = $voucher->makeTransactionBySponsor($employee, array_merge([
+                $createdItems[] = $voucher->makeTransactionBySponsor($employee, [
                     'target_iban' => $item['direct_payment_iban'],
                     'target_name' => $item['direct_payment_name'],
                     'target' => VoucherTransaction::TARGET_IBAN,
-                ], array_only($item, ['amount', 'uid', 'note'])))->id;
+                    ...Arr::only($item, ['amount', 'uid']),
+                ], Arr::get($item, 'note'))->id;
             } else {
                 $errorsItems[] = $validator->messages()->toArray();
             }
         }
 
         $query = VoucherTransaction::query()->whereIn('id', $createdItems);
+
+        $event->forceFill([
+            'data->uploaded_file_meta->state' => 'success',
+            'data->uploaded_file_meta->created_ids' => (clone $query)->pluck('id')->toArray(),
+        ])->update();
 
         return new JsonResponse([
             'created' => SponsorVoucherTransactionResource::queryCollection($query, (clone $query)->count()),
@@ -226,7 +250,7 @@ class TransactionsController extends Controller
      */
     public function show(
         Organization $organization,
-        VoucherTransaction $voucherTransaction
+        VoucherTransaction $voucherTransaction,
     ): SponsorVoucherTransactionResource {
         $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucherTransaction, $organization]);

@@ -39,6 +39,6 @@ class ReservationExtraPaymentPolicy
         return
             $organization->isEmployee($identity) &&
             $organization->identityCan($identity, 'view_funds_extra_payments') &&
-            $payment?->product_reservation?->voucher?->fund?->organization_id === $organization->id;
+            $payment->product_reservation?->voucher?->fund?->organization_id === $organization->id;
     }
 }

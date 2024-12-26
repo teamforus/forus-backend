@@ -14,14 +14,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $role_id
  * @property string $locale
  * @property-read \App\Models\Role $role
- * @method static \Illuminate\Database\Eloquent\Builder|RoleTranslation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|RoleTranslation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|RoleTranslation query()
- * @method static \Illuminate\Database\Eloquent\Builder|RoleTranslation whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RoleTranslation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RoleTranslation whereLocale($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RoleTranslation whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RoleTranslation whereRoleId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RoleTranslation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RoleTranslation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RoleTranslation query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RoleTranslation whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RoleTranslation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RoleTranslation whereLocale($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RoleTranslation whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RoleTranslation whereRoleId($value)
  * @mixin \Eloquent
  */
 class RoleTranslation extends Model

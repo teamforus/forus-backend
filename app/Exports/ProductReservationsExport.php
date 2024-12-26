@@ -26,8 +26,10 @@ class ProductReservationsExport extends BaseFieldedExport
         'address'       => 'Adres',
         'birth_date'    => 'Geboortedatum',
         'state'         => 'Status',
-        'created_at'    => 'Indien datum',
+        'created_at'    => 'Aangemaakt op',
         'expire_at'     => 'Verlopen op',
+        'ean'           => 'EAN',
+        'sku'           => 'SKU',
     ];
 
     /**
@@ -71,6 +73,8 @@ class ProductReservationsExport extends BaseFieldedExport
                 'state'         => $reservation->state_locale,
                 'created_at'    => format_date_locale($reservation->created_at),
                 'expire_at'     => format_date_locale($reservation->expire_at),
+                'ean'           => $reservation->product->ean,
+                'sku'           => $reservation->product->sku,
             ], $this->fields);
         });
 

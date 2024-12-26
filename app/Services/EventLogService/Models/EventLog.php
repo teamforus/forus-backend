@@ -32,24 +32,24 @@ use Illuminate\Support\Arr;
  * @property-read string|null $loggable_locale_dashboard
  * @property-read Identity|null $identity
  * @property-read Model|\Eloquent $loggable
- * @method static Builder|EventLog newModelQuery()
- * @method static Builder|EventLog newQuery()
- * @method static Builder|EventLog query()
- * @method static Builder|EventLog whereCreatedAt($value)
- * @method static Builder|EventLog whereData($value)
- * @method static Builder|EventLog whereEvent($value)
- * @method static Builder|EventLog whereId($value)
- * @method static Builder|EventLog whereIdentityAddress($value)
- * @method static Builder|EventLog whereLoggableId($value)
- * @method static Builder|EventLog whereLoggableType($value)
- * @method static Builder|EventLog whereOriginal($value)
- * @method static Builder|EventLog whereUpdatedAt($value)
+ * @method static Builder<static>|EventLog newModelQuery()
+ * @method static Builder<static>|EventLog newQuery()
+ * @method static Builder<static>|EventLog query()
+ * @method static Builder<static>|EventLog whereCreatedAt($value)
+ * @method static Builder<static>|EventLog whereData($value)
+ * @method static Builder<static>|EventLog whereEvent($value)
+ * @method static Builder<static>|EventLog whereId($value)
+ * @method static Builder<static>|EventLog whereIdentityAddress($value)
+ * @method static Builder<static>|EventLog whereLoggableId($value)
+ * @method static Builder<static>|EventLog whereLoggableType($value)
+ * @method static Builder<static>|EventLog whereOriginal($value)
+ * @method static Builder<static>|EventLog whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class EventLog extends Model
 {
-    const TRANSLATION_DASHBOARD = 'dashboard';
-    const TRANSLATION_WEBSHOP = 'webshop';
+    const string TRANSLATION_DASHBOARD = 'dashboard';
+    const string TRANSLATION_WEBSHOP = 'webshop';
 
     protected $fillable = [
         'event', 'data', 'identity_address', 'original',
@@ -107,7 +107,9 @@ class EventLog extends Model
      */
     public function getLoggableLocaleDashboardAttribute(): ?string
     {
-        $attributes = array_dot($this->data);
+        $attributes = array_filter(array_dot($this->data), function ($value) {
+            return is_string($value) || is_numeric($value);
+        });
 
         foreach ($attributes as $key => $attribute) {
             $attributes[$key] = e($attribute);
@@ -160,6 +162,7 @@ class EventLog extends Model
 
             $attributes = array_merge([
                 'id' => Arr::get($this->data, 'voucher_id'),
+                'number' => Arr::get($this->data, 'voucher_number'),
                 'amount_locale' => Arr::get($this->data, 'voucher_transaction_amount_locale'),
                 'transaction_type' => $transactionType,
             ]);
