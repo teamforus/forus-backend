@@ -29,9 +29,8 @@ class FundRequestRuleTest extends TestCase
     public function testFundRequestValidationEmptyRecords(): void
     {
         $fund = $this->prepareFund();
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
 
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
         $response = $this->makeValidationRequest($identity, $fund);
         $response->assertJsonValidationErrors('records');
     }
@@ -47,8 +46,8 @@ class FundRequestRuleTest extends TestCase
         $fund = $this->prepareFund();
 
         // values not valid, no files presents
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 2),
             $this->makeRecordValue($identity, $fund, 'net_worth', 900),
@@ -63,8 +62,8 @@ class FundRequestRuleTest extends TestCase
         $response->assertJsonMissingValidationErrors('records.2.files');
 
         // values valid, files presents
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 3, true),
             $this->makeRecordValue($identity, $fund, 'net_worth', 500, true),
@@ -76,8 +75,8 @@ class FundRequestRuleTest extends TestCase
         $response->assertJsonValidationErrors('records.2.files');
 
         // values valid, no files presents
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 3),
             $this->makeRecordValue($identity, $fund, 'net_worth', 500),
@@ -98,8 +97,8 @@ class FundRequestRuleTest extends TestCase
         ]);
 
         // values not valid, no files presents
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 2),
             $this->makeRecordValue($identity, $fund, 'net_worth', 900),
@@ -114,8 +113,8 @@ class FundRequestRuleTest extends TestCase
         $response->assertJsonValidationErrors('records.2.files');
 
         // values valid, no files presents
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 3),
             $this->makeRecordValue($identity, $fund, 'net_worth', 500),
@@ -127,8 +126,8 @@ class FundRequestRuleTest extends TestCase
         $response->assertJsonValidationErrors('records.2.files');
 
         // values valid, files presents
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 3, true),
             $this->makeRecordValue($identity, $fund, 'net_worth', 500, true),
@@ -150,8 +149,8 @@ class FundRequestRuleTest extends TestCase
         ]);
 
         // values not valid, no files presents
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 2),
             $this->makeRecordValue($identity, $fund, 'net_worth', 900),
@@ -166,8 +165,8 @@ class FundRequestRuleTest extends TestCase
         $response->assertJsonMissingValidationErrors('records.2.files');
 
         // values valid, no files presents
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 3),
             $this->makeRecordValue($identity, $fund, 'net_worth', 500),
@@ -177,8 +176,8 @@ class FundRequestRuleTest extends TestCase
         $response->assertSuccessful();
 
         // values nullable, no files presents
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', null),
             $this->makeRecordValue($identity, $fund, 'net_worth', null),
@@ -188,8 +187,8 @@ class FundRequestRuleTest extends TestCase
         $response->assertSuccessful();
 
         // values nullable, files presents
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', null, true),
             $this->makeRecordValue($identity, $fund, 'net_worth', null, true),
