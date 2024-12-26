@@ -4,18 +4,14 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Funds\FundProviders;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\Products\IndexFundProviderProductsRequest;
-use App\Scopes\Builders\ProductQuery;
-use App\Http\Resources\Sponsor\SponsorProviderProductResource;
+use App\Http\Resources\Sponsor\SponsorProductResource;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Scopes\Builders\ProductQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class ProductsController
- * @package App\Http\Controllers\Api\Platform\Organizations\Funds\FundProviders
- */
 class ProductsController extends Controller
 {
     /**
@@ -42,7 +38,7 @@ class ProductsController extends Controller
             $query = ProductQuery::queryFilter($query, $request->input('q'));
         }
 
-        return SponsorProviderProductResource::queryCollection($query, $request);
+        return SponsorProductResource::queryCollection($query, $request);
     }
 
     /**
@@ -52,7 +48,7 @@ class ProductsController extends Controller
      * @param Fund $fund
      * @param FundProvider $fundProvider
      * @param Product $product
-     * @return SponsorProviderProductResource
+     * @return SponsorProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
@@ -60,9 +56,9 @@ class ProductsController extends Controller
         Fund $fund,
         FundProvider $fundProvider,
         Product $product
-    ): SponsorProviderProductResource {
+    ): SponsorProductResource {
         $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
 
-        return SponsorProviderProductResource::create($product);
+        return SponsorProductResource::create($product);
     }
 }

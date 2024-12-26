@@ -16,14 +16,10 @@ use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection as SupportCollection;
 
-/**
- * Class SponsorDigest
- * @package App\Digests
- */
 class SponsorDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
@@ -331,7 +327,7 @@ class SponsorDigest extends BaseOrganizationDigest
 
                 foreach ($logsByProvider as $logs) {
                     $logsByProduct = collect($logs)->groupBy('product_id');
-                    $emailBody->h5(trans("digests/sponsor.feedback.item_header", $logs[0]), [
+                    $emailBody->h5(trans("digests/sponsor.feedback.item_header", self::arrayOnlyString($logs[0])), [
                         'margin_less'
                     ]);
 
@@ -340,7 +336,7 @@ class SponsorDigest extends BaseOrganizationDigest
                             $logsByProduct
                         ), array_merge([
                             'count_messages' => count($logsByProduct)
-                        ], $_logsByProduct[0])));
+                        ], self::arrayOnlyString($_logsByProduct[0]))));
                     }
                 }
 

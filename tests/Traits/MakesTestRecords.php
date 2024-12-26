@@ -33,7 +33,7 @@ trait MakesTestRecords
     protected function assertTrustedRecords(Identity $identity, Fund $fund, array $records): void
     {
         foreach ($records as $key => $value) {
-            $this->assertEquals($value, $fund->getTrustedRecordOfType($identity->address, $key)?->value);
+            $this->assertEquals($value, $fund->getTrustedRecordOfType($identity, $key)?->value);
         }
     }
 }

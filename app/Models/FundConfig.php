@@ -32,6 +32,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property array $bunq_allowed_ip
  * @property int $bunq_sandbox
  * @property string|null $csv_primary_key
+ * @property int $reservation_approve_offset
+ * @property int $reimbursement_approve_offset
  * @property bool $allow_physical_cards
  * @property bool $allow_fund_requests
  * @property bool $allow_prevalidations
@@ -83,6 +85,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string $iconnect_cert_pass
  * @property string $iconnect_cert_trust
  * @property bool $provider_products_required
+ * @property bool $pre_check_excluded
+ * @property string|null $pre_check_note
  * @property bool $help_enabled
  * @property string|null $help_title
  * @property string|null $help_block_text
@@ -102,130 +106,134 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read \App\Models\Fund $fund
  * @property-read string $help_description_html
  * @property-read \App\Models\Implementation|null $implementation
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowBlockingVouchers($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowCustomAmounts($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowCustomAmountsValidator($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectPayments($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectRequests($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowFundRequests($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowGeneratorDirectPayments($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPresetAmounts($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPresetAmountsValidator($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowReimbursements($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowReservations($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherRecords($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowVoucherTopUps($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAuth2faPolicy($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAuth2faRememberIp($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAuth2faRestrictAuthSessions($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAuth2faRestrictEmails($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAuth2faRestrictReimbursements($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCheckPartner($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeClientCert($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeClientCertKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeEnabled($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeFallback($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeIneligiblePolicy($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeIneligibleRedirectUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBsnConfirmationApiTime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBsnConfirmationTime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqAllowedIp($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqSandbox($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoEnabled($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoMessageCustom($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoMessageText($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereContactInfoRequired($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCriteriaLabelRequirementShow($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCsvPrimaryKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCustomAmountMax($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCustomAmountMin($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereEmailRequired($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereEmployeeCanSeeProductVouchers($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereGeneratorIgnoreFundBudget($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsn($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsnSalt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashPartnerDeny($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpBlockText($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpButtonText($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpChat($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpEnabled($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpPhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpShowChat($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpShowEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpShowPhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpShowWebsite($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHelpWebsite($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHideMeta($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIbanNameRecordKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIbanRecordKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectApiOin($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectBaseUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectCert($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectCertPass($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectCertTrust($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectEnv($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectKeyPass($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectTargetBinding($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIsConfigured($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTopUpAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitVoucherTotalAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereOutcomeType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereProviderProductsRequired($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityStartDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVoucherAmountVisible($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereVouchersType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowBlockingVouchers($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowCustomAmounts($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowCustomAmountsValidator($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowDirectPayments($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowDirectRequests($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowFundRequests($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowGeneratorDirectPayments($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPhysicalCards($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPresetAmounts($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPresetAmountsValidator($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPrevalidations($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReimbursements($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReservations($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherRecords($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherTopUps($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAuth2faPolicy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAuth2faRememberIp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAuth2faRestrictAuthSessions($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAuth2faRestrictEmails($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAuth2faRestrictReimbursements($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBackofficeCertificate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBackofficeCheckPartner($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBackofficeClientCert($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBackofficeClientCertKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBackofficeEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBackofficeFallback($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBackofficeIneligiblePolicy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBackofficeIneligibleRedirectUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBackofficeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBackofficeUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBsnConfirmationApiTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBsnConfirmationTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBunqAllowedIp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBunqKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereBunqSandbox($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereContactInfoEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereContactInfoMessageCustom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereContactInfoMessageText($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereContactInfoRequired($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereCriteriaLabelRequirementShow($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereCsvPrimaryKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereCustomAmountMax($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereCustomAmountMin($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereEmailRequired($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereEmployeeCanSeeProductVouchers($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereGeneratorIgnoreFundBudget($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHashBsn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHashBsnSalt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHashPartnerDeny($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpBlockText($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpButtonText($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpChat($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpPhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpShowChat($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpShowEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpShowPhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpShowWebsite($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpWebsite($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHideMeta($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIbanNameRecordKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIbanRecordKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectApiOin($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectBaseUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectCert($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectCertPass($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectCertTrust($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectEnv($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectKeyPass($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectTargetBinding($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIsConfigured($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereLimitGeneratorAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereLimitVoucherTopUpAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereLimitVoucherTotalAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereOutcomeType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig wherePreCheckExcluded($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig wherePreCheckNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereProviderProductsRequired($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereRecordValidityDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereRecordValidityStartDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereReimbursementApproveOffset($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereReservationApproveOffset($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereVoucherAmountVisible($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereVouchersType($value)
  * @mixin \Eloquent
  */
 class FundConfig extends BaseModel
 {
-    public const BACKOFFICE_INELIGIBLE_POLICY_REDIRECT = 'redirect';
-    public const BACKOFFICE_INELIGIBLE_POLICY_FUND_REQUEST = 'fund_request';
+    public const string BACKOFFICE_INELIGIBLE_POLICY_REDIRECT = 'redirect';
+    public const string BACKOFFICE_INELIGIBLE_POLICY_FUND_REQUEST = 'fund_request';
 
-    public const BACKOFFICE_INELIGIBLE_POLICIES = [
+    public const array BACKOFFICE_INELIGIBLE_POLICIES = [
         self::BACKOFFICE_INELIGIBLE_POLICY_REDIRECT,
         self::BACKOFFICE_INELIGIBLE_POLICY_FUND_REQUEST,
     ];
 
-    public const VOUCHERS_TYPE_EXTERNAL = 'external';
-    public const VOUCHERS_TYPE_INTERNAL = 'internal';
+    public const string VOUCHERS_TYPE_EXTERNAL = 'external';
+    public const string VOUCHERS_TYPE_INTERNAL = 'internal';
 
-    public const AUTH_2FA_POLICY_GLOBAL = 'global';
-    public const AUTH_2FA_POLICY_OPTIONAL = 'optional';
-    public const AUTH_2FA_POLICY_REQUIRED = 'required';
-    public const AUTH_2FA_POLICY_RESTRICT = 'restrict_features';
+    public const string AUTH_2FA_POLICY_GLOBAL = 'global';
+    public const string AUTH_2FA_POLICY_OPTIONAL = 'optional';
+    public const string AUTH_2FA_POLICY_REQUIRED = 'required';
+    public const string AUTH_2FA_POLICY_RESTRICT = 'restrict_features';
 
-    public const AUTH_2FA_POLICIES = [
+    public const array AUTH_2FA_POLICIES = [
         self::AUTH_2FA_POLICY_GLOBAL,
         self::AUTH_2FA_POLICY_OPTIONAL,
         self::AUTH_2FA_POLICY_REQUIRED,
         self::AUTH_2FA_POLICY_RESTRICT,
     ];
 
-    public const OUTCOME_TYPE_PAYOUT = 'payout';
-    public const OUTCOME_TYPE_VOUCHER = 'voucher';
+    public const string OUTCOME_TYPE_PAYOUT = 'payout';
+    public const string OUTCOME_TYPE_VOUCHER = 'voucher';
 
-    public const OUTCOME_TYPES = [
+    public const array OUTCOME_TYPES = [
         self::OUTCOME_TYPE_PAYOUT,
         self::OUTCOME_TYPE_VOUCHER,
     ];
@@ -243,6 +251,8 @@ class FundConfig extends BaseModel
         'help_button_text', 'help_email', 'help_phone', 'help_website', 'help_chat',
         'help_description', 'help_show_email', 'help_show_phone', 'help_show_website',
         'provider_products_required', 'criteria_label_requirement_show',
+        'pre_check_excluded', 'pre_check_note',
+        'reservation_approve_offset', 'reimbursement_approve_offset',
     ];
 
     /**
@@ -289,6 +299,7 @@ class FundConfig extends BaseModel
         'contact_info_enabled' => 'boolean',
         'contact_info_required' => 'boolean',
         'contact_info_message_custom' => 'boolean',
+        'pre_check_excluded' => 'boolean',
         'allow_reservations' => 'boolean',
         'allow_reimbursements' => 'boolean',
         'limit_generator_amount' => 'string',

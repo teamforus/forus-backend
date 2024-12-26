@@ -6,8 +6,8 @@ use App\Services\BNGService\Data\ResponseData;
 
 class Balances extends Value
 {
-    public const BALANCE_TYPE_EXPECTED = 'Expected';
-    public const BALANCE_TYPE_CLOSING_BOOKING = 'ClosingBooked';
+    public const string BALANCE_TYPE_EXPECTED = 'Expected';
+    public const string BALANCE_TYPE_CLOSING_BOOKING = 'ClosingBooked';
 
     /**
      * @param string|null $type

@@ -33,7 +33,7 @@ class FundRequestClarificationPolicy
         }
 
         // only fund requester is allowed to see records
-        if ($fundRequest->identity_address !== $identity->address) {
+        if ($fundRequest->identity_id !== $identity->id) {
             return $this->deny('fund_requests.not_requester');
         }
 

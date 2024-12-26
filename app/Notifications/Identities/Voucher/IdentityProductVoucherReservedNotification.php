@@ -3,9 +3,9 @@
 namespace App\Notifications\Identities\Voucher;
 
 use App\Mail\Vouchers\ProductReservedRequesterMail;
+use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Voucher;
-use App\Models\Identity;
 
 /**
  * Product reservation (legacy reservation) was reserved

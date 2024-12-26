@@ -3,7 +3,6 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\IdentityEmail;
 use App\Models\Organization;
@@ -14,21 +13,16 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Query\Builder as QBuilder;
-use PharIo\Manifest\Email;
 
-/**
- * Class VoucherQuery
- * @package App\Scopes\Builders
- */
 class VoucherTransactionQuery
 {
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|VoucherTransaction $builder
+     * @return Builder|Relation|VoucherTransaction
      */
-    protected static function whereReadyForPayment(Builder $builder): Builder
-    {
+    protected static function whereReadyForPayment(
+        Builder|Relation|VoucherTransaction $builder
+    ): Builder|Relation|VoucherTransaction {
         VoucherTransactionQuery::whereOutgoing($builder);
 
         $builder->where('voucher_transactions.state', VoucherTransaction::STATE_PENDING);
@@ -48,42 +42,45 @@ class VoucherTransactionQuery
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|VoucherTransaction $builder
+     * @return Builder|Relation|VoucherTransaction
      */
-    public static function whereAvailableForBulking(Builder $builder): Builder
-    {
+    public static function whereAvailableForBulking(
+        Builder|Relation|VoucherTransaction $builder,
+    ): Builder|Relation|VoucherTransaction {
         return static::whereReadyForPayment($builder->where('voucher_transactions.amount', '>', 0));
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|VoucherTransaction $builder
+     * @return Builder|Relation|VoucherTransaction
      */
-    public static function whereReadyForPayoutAndAmountIsZero(Builder $builder): Builder
-    {
+    public static function whereReadyForPayoutAndAmountIsZero(
+        Builder|Relation|VoucherTransaction $builder
+    ): Builder|Relation|VoucherTransaction {
         return self::whereReadyForPayment($builder->where('voucher_transactions.amount', '=', 0));
     }
 
     /**
-     * @param Builder $builder
+     * @param Builder|Relation|VoucherTransaction $builder
      * @param string|null $orderBy
      * @param string|null $orderDir
-     * @return Builder
+     * @return Builder|Relation|VoucherTransaction
      */
     public static function order(
-        Builder $builder,
+        Builder|Relation|VoucherTransaction $builder,
         ?string $orderBy = 'created_at',
         ?string $orderDir = 'desc'
-    ): Builder {
+    ): Builder|Relation|VoucherTransaction {
         $fields = VoucherTransaction::SORT_BY_FIELDS;
 
         $builder->addSelect([
             'fund_name' => self::orderFundNameQuery(),
             'product_name' => self::orderProductNameQuery(),
             'provider_name' => self::orderProviderNameQuery(),
-            'transaction_in' => self::orderVoucherTransactionIn(),
+            'transfer_in' => self::orderVoucherTransferIn(),
             'bulk_state' => self::orderBulkState(),
+            'bulk_id' => self::orderBulkId(),
             'employee_email' => self::orderEmployeeEmail(),
         ]);
 
@@ -98,9 +95,9 @@ class VoucherTransactionQuery
     }
 
     /**
-     * @return Builder|QBuilder
+     * @return Builder|Relation|Fund
      */
-    protected static function orderFundNameQuery(): Builder|QBuilder
+    protected static function orderFundNameQuery(): Builder|Relation|Fund
     {
         return Fund::whereHas('vouchers', function(Builder $builder) {
             $builder->whereColumn('voucher_transactions.voucher_id', 'vouchers.id');
@@ -108,25 +105,25 @@ class VoucherTransactionQuery
     }
 
     /**
-     * @return Builder|QBuilder
+     * @return Builder|Relation|Organization
      */
-    protected static function orderProviderNameQuery(): Builder|QBuilder
+    protected static function orderProviderNameQuery(): Builder|Relation|Organization
     {
         return Organization::whereColumn('id', 'organization_id')->select('name');
     }
 
     /**
-     * @return Builder|QBuilder
+     * @return Builder|Relation|Product
      */
-    protected static function orderProductNameQuery(): Builder|QBuilder
+    protected static function orderProductNameQuery(): Builder|Relation|Product
     {
         return Product::whereColumn('id', 'product_id')->select('name');
     }
 
     /**
-     * @return Builder|QBuilder
+     * @return Builder|Relation|VoucherTransactionBulk
      */
-    protected static function orderBulkState(): Builder|QBuilder
+    protected static function orderBulkState(): Builder|Relation|VoucherTransactionBulk
     {
         return VoucherTransactionBulk::query()
             ->whereColumn('id', 'voucher_transaction_bulk_id')
@@ -134,9 +131,19 @@ class VoucherTransactionQuery
     }
 
     /**
-     * @return Builder|QBuilder
+     * @return Builder|Relation|VoucherTransactionBulk
      */
-    protected static function orderEmployeeEmail(): Builder|QBuilder
+    protected static function orderBulkId(): Builder|Relation|VoucherTransactionBulk
+    {
+        return VoucherTransactionBulk::query()
+            ->whereColumn('id', 'voucher_transaction_bulk_id')
+            ->select('id');
+    }
+
+    /**
+     * @return Builder|Relation|IdentityEmail
+     */
+    protected static function orderEmployeeEmail(): Builder|Relation|IdentityEmail
     {
         return IdentityEmail::query()
             ->where('primary', true)
@@ -147,41 +154,43 @@ class VoucherTransactionQuery
     }
 
     /**
-     * @param Builder|QBuilder $builder
-     * @return Builder|QBuilder
+     * @param Builder|Relation|VoucherTransaction $builder
+     * @return Builder|Relation|VoucherTransaction
      */
-    public static function whereOutgoing(Builder|QBuilder $builder): Builder|QBuilder
-    {
+    public static function whereOutgoing(
+        Builder|Relation|VoucherTransaction $builder,
+    ): Builder|Relation|VoucherTransaction {
         return $builder->whereIn('target', VoucherTransaction::TARGETS_OUTGOING);
     }
 
     /**
-     * @param Builder|QBuilder $builder
-     * @return Builder|QBuilder
+     * @param Builder|Relation|VoucherTransaction $builder
+     * @return Builder|Relation|VoucherTransaction
      */
-    public static function whereIncoming(Builder|QBuilder $builder): Builder|QBuilder
-    {
+    public static function whereIncoming(
+        Builder|Relation|VoucherTransaction $builder,
+    ): Builder|Relation|VoucherTransaction {
         return $builder->whereIn('target', VoucherTransaction::TARGETS_INCOMING);
     }
 
     /**
      * @return \Illuminate\Database\Query\Expression
      */
-    private static function orderVoucherTransactionIn(): Expression
+    private static function orderVoucherTransferIn(): Expression
     {
         return DB::raw(implode(" ", [
             "IF(",
             "`state` = '" . VoucherTransaction::STATE_PENDING . "' AND `transfer_at` IS NOT NULL,",
             "GREATEST((UNIX_TIMESTAMP(`transfer_at`) - UNIX_TIMESTAMP(current_date)) / 86400, 0), 
             IF(`voucher_transaction_bulk_id` IS NOT NULL, -1, -2)",
-            ") as `transaction_in`",
+            ") as `transfer_in`",
         ]));
     }
 
     /**
      * @param Builder|Relation|VoucherTransaction $query
      * @param string $q
-     * @return Builder|QBuilder|VoucherTransaction
+     * @return Builder|Relation|VoucherTransaction
      */
     public static function whereQueryFilter(
         Builder|Relation|VoucherTransaction $query,
@@ -207,14 +216,14 @@ class VoucherTransactionQuery
     }
 
     /**
-     * @param Builder|VoucherTransaction $builder
+     * @param Builder|Relation|VoucherTransaction $builder
      * @param bool $hasPayouts
-     * @return Builder
+     * @return Builder|Relation|VoucherTransaction
      */
     public static function whereIsPaidOutQuery(
-        Builder|VoucherTransaction $builder,
+        Builder|Relation|VoucherTransaction $builder,
         bool $hasPayouts = true,
-    ): Builder {
+    ): Builder|Relation|VoucherTransaction {
         return $builder->where(function(Builder|VoucherTransaction $builder) use ($hasPayouts) {
             $builder->whereRelation('voucher_transaction_bulk', function(
                 Builder|VoucherTransactionBulk $builder

@@ -19,10 +19,8 @@ use League\CommonMark\Exception\CommonMarkException;
 use Mews\Purifier\Facades\Purifier;
 
 /**
- * Class ImplementationMail
  * @property string $email Destination email
  * @property string|null $identityId Destination email
- * @package App\Mail
  */
 class ImplementationMail extends Mailable implements ShouldQueue
 {

@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Announcements\IndexAnnouncementRequest;
 use App\Http\Resources\AnnouncementResource;
+use App\Models\Announcement;
 use App\Models\Organization;
 use App\Searches\AnnouncementSearch;
-use App\Models\Announcement;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class AnnouncementController extends Controller

@@ -10,13 +10,13 @@ namespace App\Models;
  * @property string $locale
  * @property string $name
  * @property-read \App\Models\ProductCategory $product_category
- * @method static \Illuminate\Database\Eloquent\Builder|ProductCategoryTranslation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ProductCategoryTranslation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ProductCategoryTranslation query()
- * @method static \Illuminate\Database\Eloquent\Builder|ProductCategoryTranslation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductCategoryTranslation whereLocale($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductCategoryTranslation whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductCategoryTranslation whereProductCategoryId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductCategoryTranslation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductCategoryTranslation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductCategoryTranslation query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductCategoryTranslation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductCategoryTranslation whereLocale($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductCategoryTranslation whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductCategoryTranslation whereProductCategoryId($value)
  * @mixin \Eloquent
  */
 class ProductCategoryTranslation extends BaseModel

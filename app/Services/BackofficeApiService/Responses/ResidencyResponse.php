@@ -7,16 +7,11 @@ namespace App\Services\BackofficeApiService\Responses;
 use App\Models\FundBackofficeLog;
 use App\Services\BackofficeApiService\BackofficeApi;
 
-/**
- * Class ResidencyResponse
- * @package App\Services\BackofficeApiService\Responses
- */
 class ResidencyResponse
 {
-    protected $log;
+    protected FundBackofficeLog $log;
 
     /**
-     * ResidencyResponse constructor.
      * @param FundBackofficeLog $log
      */
     public function __construct(FundBackofficeLog $log)
@@ -29,7 +24,8 @@ class ResidencyResponse
      */
     public function isResident(): bool
     {
-        return $this->log->state === BackofficeApi::STATE_SUCCESS &&
+        return
+            $this->log->state === BackofficeApi::STATE_SUCCESS &&
             $this->log->response_body['resident'] ?? false;
     }
 

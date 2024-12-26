@@ -23,19 +23,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Models\RecordType|null $record_type
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PreCheckRecordSetting[] $settings
  * @property-read int|null $settings_count
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord query()
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord wherePreCheckId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereRecordTypeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereTitleShort($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PreCheckRecord whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord wherePreCheckId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereRecordTypeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereTitleShort($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class PreCheckRecord extends BaseModel

@@ -13,7 +13,7 @@ class VoucherTransactionPayoutResource extends SponsorVoucherTransactionResource
     /**
      * @var string[]
      */
-    public const LOAD = [
+    public const array LOAD = [
         'voucher.fund:id,name',
         'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
         'employee.identity.primary_email',
@@ -41,6 +41,8 @@ class VoucherTransactionPayoutResource extends SponsorVoucherTransactionResource
             ]),
             'amount' => currency_format($transaction->amount),
             'amount_locale' => currency_format_locale($transaction->amount),
+            'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
+            'amount_extra_cash_locale' => currency_format_locale($transaction->amount_extra_cash),
             'transfer_in' => $transaction->daysBeforeTransaction(),
             'transfer_in_pending' => $transaction->transfer_at?->isFuture() && $transaction->isPending(),
             'fund' => [

@@ -2,27 +2,27 @@
 
 namespace App\Notifications;
 
+use App\Mail\ImplementationMail;
+use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
-use App\Models\Identity;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Mail\Mailable;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Notification;
-use App\Mail\ImplementationMail;
+use Illuminate\Support\Collection;
 
 abstract class BaseNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public const SCOPE_WEBSHOP = 'webshop';
-    public const SCOPE_SPONSOR = 'sponsor';
-    public const SCOPE_PROVIDER = 'provider';
-    public const SCOPE_VALIDATOR = 'validator';
+    public const string SCOPE_WEBSHOP = 'webshop';
+    public const string SCOPE_SPONSOR = 'sponsor';
+    public const string SCOPE_PROVIDER = 'provider';
+    public const string SCOPE_VALIDATOR = 'validator';
 
     protected static ?string $key;
     protected static ?string $scope;
@@ -32,7 +32,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     protected array $meta = [];
     protected ?Implementation $implementation;
 
-    public const VARIABLES = [
+    public const array VARIABLES = [
         "notifications_identities.added_employee" => [
             "dashboard_auth_button", "employee_roles", "organization_name",
             "download_me_app_link", "download_me_app_button",

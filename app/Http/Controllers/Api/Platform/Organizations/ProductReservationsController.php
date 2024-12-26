@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Exports\ProductReservationsExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\ProductReservations\AcceptProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\FetchExtraPaymentProductReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\IndexProductReservationsRequest;
+use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RejectProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationBatchRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationRequest;
-use App\Http\Requests\Api\Platform\Organizations\ProductReservations\AcceptProductReservationRequest;
-use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RejectProductReservationRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\ProductReservationResource;
@@ -102,7 +102,7 @@ class ProductReservationsController extends Controller
      */
     public function storeBatch(
         StoreProductReservationBatchRequest $request,
-        Organization $organization
+        Organization $organization,
     ): array {
         $this->authorize('createProviderBatch', [ProductReservation::class, $organization]);
 

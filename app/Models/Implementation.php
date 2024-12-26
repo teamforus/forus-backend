@@ -10,12 +10,12 @@ use App\Models\Traits\ValidatesValues;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
+use App\Scopes\Builders\VoucherQuery;
 use App\Searches\AnnouncementSearch;
+use App\Services\DigIdService\DigIdException;
 use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\DigIdService\Repositories\DigIdCgiRepo;
 use App\Services\DigIdService\Repositories\DigIdSamlRepo;
-use App\Services\DigIdService\DigIdException;
-use App\Scopes\Builders\VoucherQuery;
 use App\Services\DigIdService\Repositories\Interfaces\DigIdRepo;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\MediaImageConfig;
@@ -24,18 +24,18 @@ use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Traits\HasMarkdownDescription;
 use Illuminate\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
-use App\Traits\HasMarkdownDescription;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -127,86 +127,86 @@ use Illuminate\Support\Facades\Gate;
  * @property-read int|null $pre_checks_records_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationSocialMedia[] $social_medias
  * @property-read int|null $social_medias_count
- * @method static Builder|Implementation newModelQuery()
- * @method static Builder|Implementation newQuery()
- * @method static Builder|Implementation query()
- * @method static Builder|Implementation whereAllowPerFundNotificationTemplates($value)
- * @method static Builder|Implementation whereCreatedAt($value)
- * @method static Builder|Implementation whereCurrencyRound($value)
- * @method static Builder|Implementation whereCurrencySign($value)
- * @method static Builder|Implementation whereDescription($value)
- * @method static Builder|Implementation whereDescriptionAlignment($value)
- * @method static Builder|Implementation whereDigidASelectServer($value)
- * @method static Builder|Implementation whereDigidAppId($value)
- * @method static Builder|Implementation whereDigidCgiTlsCert($value)
- * @method static Builder|Implementation whereDigidCgiTlsKey($value)
- * @method static Builder|Implementation whereDigidConnectionType($value)
- * @method static Builder|Implementation whereDigidEnabled($value)
- * @method static Builder|Implementation whereDigidEnv($value)
- * @method static Builder|Implementation whereDigidForusApiUrl($value)
- * @method static Builder|Implementation whereDigidRequired($value)
- * @method static Builder|Implementation whereDigidSamlContext($value)
- * @method static Builder|Implementation whereDigidSharedSecret($value)
- * @method static Builder|Implementation whereDigidSignUpAllowed($value)
- * @method static Builder|Implementation whereDigidTrustedCert($value)
- * @method static Builder|Implementation whereEmailColor($value)
- * @method static Builder|Implementation whereEmailFromAddress($value)
- * @method static Builder|Implementation whereEmailFromName($value)
- * @method static Builder|Implementation whereEmailSignature($value)
- * @method static Builder|Implementation whereHeaderTextColor($value)
- * @method static Builder|Implementation whereId($value)
- * @method static Builder|Implementation whereInformalCommunication($value)
- * @method static Builder|Implementation whereKey($value)
- * @method static Builder|Implementation whereLat($value)
- * @method static Builder|Implementation whereLon($value)
- * @method static Builder|Implementation whereName($value)
- * @method static Builder|Implementation whereOrganizationId($value)
- * @method static Builder|Implementation whereOverlayEnabled($value)
- * @method static Builder|Implementation whereOverlayOpacity($value)
- * @method static Builder|Implementation whereOverlayType($value)
- * @method static Builder|Implementation wherePageTitleSuffix($value)
- * @method static Builder|Implementation wherePreCheckBannerDescription($value)
- * @method static Builder|Implementation wherePreCheckBannerLabel($value)
- * @method static Builder|Implementation wherePreCheckBannerState($value)
- * @method static Builder|Implementation wherePreCheckBannerTitle($value)
- * @method static Builder|Implementation wherePreCheckDescription($value)
- * @method static Builder|Implementation wherePreCheckEnabled($value)
- * @method static Builder|Implementation wherePreCheckTitle($value)
- * @method static Builder|Implementation whereShowHomeMap($value)
- * @method static Builder|Implementation whereShowHomeProducts($value)
- * @method static Builder|Implementation whereShowOfficeMap($value)
- * @method static Builder|Implementation whereShowProductMap($value)
- * @method static Builder|Implementation whereShowProviderMap($value)
- * @method static Builder|Implementation whereShowProvidersMap($value)
- * @method static Builder|Implementation whereShowVoucherMap($value)
- * @method static Builder|Implementation whereTitle($value)
- * @method static Builder|Implementation whereUpdatedAt($value)
- * @method static Builder|Implementation whereUrlApp($value)
- * @method static Builder|Implementation whereUrlProvider($value)
- * @method static Builder|Implementation whereUrlSponsor($value)
- * @method static Builder|Implementation whereUrlValidator($value)
- * @method static Builder|Implementation whereUrlWebshop($value)
+ * @method static Builder<static>|Implementation newModelQuery()
+ * @method static Builder<static>|Implementation newQuery()
+ * @method static Builder<static>|Implementation query()
+ * @method static Builder<static>|Implementation whereAllowPerFundNotificationTemplates($value)
+ * @method static Builder<static>|Implementation whereCreatedAt($value)
+ * @method static Builder<static>|Implementation whereCurrencyRound($value)
+ * @method static Builder<static>|Implementation whereCurrencySign($value)
+ * @method static Builder<static>|Implementation whereDescription($value)
+ * @method static Builder<static>|Implementation whereDescriptionAlignment($value)
+ * @method static Builder<static>|Implementation whereDigidASelectServer($value)
+ * @method static Builder<static>|Implementation whereDigidAppId($value)
+ * @method static Builder<static>|Implementation whereDigidCgiTlsCert($value)
+ * @method static Builder<static>|Implementation whereDigidCgiTlsKey($value)
+ * @method static Builder<static>|Implementation whereDigidConnectionType($value)
+ * @method static Builder<static>|Implementation whereDigidEnabled($value)
+ * @method static Builder<static>|Implementation whereDigidEnv($value)
+ * @method static Builder<static>|Implementation whereDigidForusApiUrl($value)
+ * @method static Builder<static>|Implementation whereDigidRequired($value)
+ * @method static Builder<static>|Implementation whereDigidSamlContext($value)
+ * @method static Builder<static>|Implementation whereDigidSharedSecret($value)
+ * @method static Builder<static>|Implementation whereDigidSignUpAllowed($value)
+ * @method static Builder<static>|Implementation whereDigidTrustedCert($value)
+ * @method static Builder<static>|Implementation whereEmailColor($value)
+ * @method static Builder<static>|Implementation whereEmailFromAddress($value)
+ * @method static Builder<static>|Implementation whereEmailFromName($value)
+ * @method static Builder<static>|Implementation whereEmailSignature($value)
+ * @method static Builder<static>|Implementation whereHeaderTextColor($value)
+ * @method static Builder<static>|Implementation whereId($value)
+ * @method static Builder<static>|Implementation whereInformalCommunication($value)
+ * @method static Builder<static>|Implementation whereKey($value)
+ * @method static Builder<static>|Implementation whereLat($value)
+ * @method static Builder<static>|Implementation whereLon($value)
+ * @method static Builder<static>|Implementation whereName($value)
+ * @method static Builder<static>|Implementation whereOrganizationId($value)
+ * @method static Builder<static>|Implementation whereOverlayEnabled($value)
+ * @method static Builder<static>|Implementation whereOverlayOpacity($value)
+ * @method static Builder<static>|Implementation whereOverlayType($value)
+ * @method static Builder<static>|Implementation wherePageTitleSuffix($value)
+ * @method static Builder<static>|Implementation wherePreCheckBannerDescription($value)
+ * @method static Builder<static>|Implementation wherePreCheckBannerLabel($value)
+ * @method static Builder<static>|Implementation wherePreCheckBannerState($value)
+ * @method static Builder<static>|Implementation wherePreCheckBannerTitle($value)
+ * @method static Builder<static>|Implementation wherePreCheckDescription($value)
+ * @method static Builder<static>|Implementation wherePreCheckEnabled($value)
+ * @method static Builder<static>|Implementation wherePreCheckTitle($value)
+ * @method static Builder<static>|Implementation whereShowHomeMap($value)
+ * @method static Builder<static>|Implementation whereShowHomeProducts($value)
+ * @method static Builder<static>|Implementation whereShowOfficeMap($value)
+ * @method static Builder<static>|Implementation whereShowProductMap($value)
+ * @method static Builder<static>|Implementation whereShowProviderMap($value)
+ * @method static Builder<static>|Implementation whereShowProvidersMap($value)
+ * @method static Builder<static>|Implementation whereShowVoucherMap($value)
+ * @method static Builder<static>|Implementation whereTitle($value)
+ * @method static Builder<static>|Implementation whereUpdatedAt($value)
+ * @method static Builder<static>|Implementation whereUrlApp($value)
+ * @method static Builder<static>|Implementation whereUrlProvider($value)
+ * @method static Builder<static>|Implementation whereUrlSponsor($value)
+ * @method static Builder<static>|Implementation whereUrlValidator($value)
+ * @method static Builder<static>|Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
  */
 class Implementation extends BaseModel
 {
     use HasMedia, HasMarkdownDescription, ValidatesValues;
 
-    public const KEY_GENERAL = 'general';
+    public const string KEY_GENERAL = 'general';
 
-    public const FRONTEND_WEBSHOP = 'webshop';
-    public const FRONTEND_SPONSOR_DASHBOARD = 'sponsor';
-    public const FRONTEND_PROVIDER_DASHBOARD = 'provider';
-    public const FRONTEND_VALIDATOR_DASHBOARD = 'validator';
+    public const string FRONTEND_WEBSHOP = 'webshop';
+    public const string FRONTEND_SPONSOR_DASHBOARD = 'sponsor';
+    public const string FRONTEND_PROVIDER_DASHBOARD = 'provider';
+    public const string FRONTEND_VALIDATOR_DASHBOARD = 'validator';
 
-    public const FRONTEND_WEBSITE = 'website';
-    public const FRONTEND_PIN_CODE = 'pin_code-auth';
+    public const string FRONTEND_WEBSITE = 'website';
+    public const string FRONTEND_PIN_CODE = 'pin_code-auth';
 
-    public const ME_APP_IOS = 'me_app-ios';
-    public const ME_APP_ANDROID = 'me_app-android';
-    public const ME_APP_DEPRECATED = 'app-me_app';
+    public const string ME_APP_IOS = 'me_app-ios';
+    public const string ME_APP_ANDROID = 'me_app-android';
+    public const string ME_APP_DEPRECATED = 'app-me_app';
 
-    public const FRONTEND_KEYS = [
+    public const array FRONTEND_KEYS = [
         self::FRONTEND_WEBSHOP,
         self::FRONTEND_SPONSOR_DASHBOARD,
         self::FRONTEND_PROVIDER_DASHBOARD,
@@ -528,9 +528,9 @@ class Implementation extends BaseModel
 
     /**
      * @param ...$states
-     * @return Builder
+     * @return Builder|Fund
      */
-    public static function queryFundsByState(...$states): Builder
+    public static function queryFundsByState(...$states): Builder|Fund
     {
         return self::queryFunds()->whereIn('state', is_array($states[0] ?? null) ? $states[0] : $states);
     }
@@ -743,9 +743,14 @@ class Implementation extends BaseModel
                     'overlay_opacity' => min(max($implementation->overlay_opacity, 0), 100) / 100,
                     'banner_text_color' => $implementation->getBannerTextColor(),
                 ]),
-                'fronts' => $implementation->only([
-                    'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app',
-                ]),
+                'fronts' => [
+                    ...$implementation->only([
+                        'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app',
+                    ]),
+                    'url_sponsor_sign_up' => $implementation->urlSponsorDashboard('aanmelden'),
+                    'url_provider_sign_up' => $implementation->urlProviderDashboard('aanmelden'),
+                    'url_validator_sign_up' => $implementation->urlValidatorDashboard('aanmelden'),
+                ],
                 'map' => $implementation->only('lon', 'lat'),
                 'banner' => $banner ? array_only((new MediaResource($banner))->toArray(request()), [
                     'dominant_color', 'ext', 'sizes', 'uid', 'is_bright',
@@ -979,11 +984,11 @@ class Implementation extends BaseModel
                 return $vouchers;
             }
 
-            if ($voucher = $fund->makeVoucher($identity->address)) {
+            if ($voucher = $fund->makeVoucher($identity)) {
                 $vouchers[] = $voucher;
             }
 
-            return array_merge($vouchers, $fund->makeFundFormulaProductVouchers($identity->address));
+            return array_merge($vouchers, $fund->makeFundFormulaProductVouchers($identity));
         }, []);
     }
 
@@ -1021,10 +1026,6 @@ class Implementation extends BaseModel
         ];
     }
 
-    /**
-     * @param array $pre_checks
-     * @return void
-     */
     public function syncPreChecks(array $pre_checks): void
     {
         $this->pre_checks()

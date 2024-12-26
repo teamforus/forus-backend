@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Products\FundProviderChats;
 
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Events\Funds\FundProviderChatMessageEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\FundsProviderChats\StoreFundProviderChatMessageRequest;
@@ -12,6 +11,7 @@ use App\Models\FundProviderChatMessage;
 use App\Models\Organization;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundProviderChatMessagesController extends Controller
 {

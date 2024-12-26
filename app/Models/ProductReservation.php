@@ -11,14 +11,15 @@ use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Interfaces\MollieServiceInterface;
+use App\Services\MollieService\Objects\Payment;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use App\Services\MollieService\Objects\Payment;
 
 /**
  * App\Models\ProductReservation
@@ -45,22 +46,22 @@ use App\Services\MollieService\Objects\Payment;
  * @property string|null $house_nr_addition
  * @property string|null $postal_code
  * @property string|null $city
- * @property \Illuminate\Support\Carbon|null $birth_date
+ * @property Carbon|null $birth_date
  * @property string|null $user_note
  * @property string|null $note
  * @property bool $archived
- * @property \Illuminate\Support\Carbon|null $accepted_at
- * @property \Illuminate\Support\Carbon|null $canceled_at
- * @property \Illuminate\Support\Carbon|null $rejected_at
- * @property \Illuminate\Support\Carbon|null $expire_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $accepted_at
+ * @property Carbon|null $canceled_at
+ * @property Carbon|null $rejected_at
+ * @property Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservationFieldValue[] $custom_fields
  * @property-read int|null $custom_fields_count
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\ReservationExtraPayment|null $extra_payment
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read Carbon $expire_at
  * @property-read string $state_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -68,77 +69,76 @@ use App\Services\MollieService\Objects\Payment;
  * @property-read \App\Models\Voucher|null $product_voucher
  * @property-read \App\Models\Voucher $voucher
  * @property-read \App\Models\VoucherTransaction|null $voucher_transaction
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation query()
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAcceptedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereAmountExtra($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereArchived($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereBirthDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCanceledAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCity($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereEmployeeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereExpireAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFirstName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFundProviderProductId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereHouseNr($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereHouseNrAddition($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereLastName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereNote($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePostalCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePrice($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePriceDiscount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePriceType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereProductId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereRejectedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereStreet($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereUserNote($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereVoucherId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereVoucherTransactionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAcceptedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAmountExtra($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereArchived($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereBirthDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereCanceledAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereCity($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereEmployeeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereFirstName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereFundProviderProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereHouseNr($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereHouseNrAddition($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereLastName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation wherePhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation wherePostalCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation wherePrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation wherePriceDiscount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation wherePriceType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereRejectedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereStreet($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereUserNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereVoucherId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereVoucherTransactionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation withoutTrashed()
  * @mixin \Eloquent
  */
 class ProductReservation extends BaseModel
 {
     use SoftDeletes, HasLogs;
 
-    public const EVENT_CREATED = 'created';
-    public const EVENT_REJECTED = 'rejected';
-    public const EVENT_ACCEPTED = 'accepted';
-    public const EVENT_PENDING = 'pending';
-    public const EVENT_CANCELED_BY_PROVIDER = 'canceled';
-    public const EVENT_CANCELED_BY_CLIENT = 'canceled_by_client';
-    public const EVENT_CANCELED_PAYMENT_FAILED = 'canceled_payment_failed';
-    public const EVENT_CANCELED_PAYMENT_EXPIRED = 'canceled_payment_expired';
-    public const EVENT_CANCELED_PAYMENT_CANCELED = 'canceled_payment_canceled';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_REJECTED = 'rejected';
+    public const string EVENT_ACCEPTED = 'accepted';
+    public const string EVENT_PENDING = 'pending';
+    public const string EVENT_CANCELED_BY_PROVIDER = 'canceled';
+    public const string EVENT_CANCELED_BY_CLIENT = 'canceled_by_client';
+    public const string EVENT_CANCELED_PAYMENT_FAILED = 'canceled_payment_failed';
+    public const string EVENT_CANCELED_PAYMENT_EXPIRED = 'canceled_payment_expired';
+    public const string EVENT_CANCELED_PAYMENT_CANCELED = 'canceled_payment_canceled';
 
-    public const STATE_WAITING = 'waiting';
-    public const STATE_PENDING = 'pending';
-    public const STATE_ACCEPTED = 'accepted';
-    public const STATE_REJECTED = 'rejected';
-    public const STATE_CANCELED_BY_PROVIDER = 'canceled';
-    public const STATE_CANCELED_BY_CLIENT = 'canceled_by_client';
-    public const STATE_CANCELED_PAYMENT_FAILED = 'canceled_payment_failed';
-    public const STATE_CANCELED_PAYMENT_EXPIRED = 'canceled_payment_expired';
-    public const STATE_CANCELED_PAYMENT_CANCELED = 'canceled_payment_canceled';
-    public const EVENT_ARCHIVED = 'archived';
-    public const EVENT_UNARCHIVED = 'unarchived';
+    public const string STATE_WAITING = 'waiting';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_ACCEPTED = 'accepted';
+    public const string STATE_REJECTED = 'rejected';
+    public const string STATE_CANCELED_BY_PROVIDER = 'canceled';
+    public const string STATE_CANCELED_BY_CLIENT = 'canceled_by_client';
+    public const string STATE_CANCELED_PAYMENT_FAILED = 'canceled_payment_failed';
+    public const string STATE_CANCELED_PAYMENT_EXPIRED = 'canceled_payment_expired';
+    public const string STATE_CANCELED_PAYMENT_CANCELED = 'canceled_payment_canceled';
+    public const string EVENT_ARCHIVED = 'archived';
+    public const string EVENT_UNARCHIVED = 'unarchived';
 
     /**
      * The events of the product reservation.
      */
-    public const EVENTS = [
+    public const array EVENTS = [
         self::EVENT_CREATED,
         self::EVENT_REJECTED,
         self::EVENT_ACCEPTED,
@@ -153,7 +153,7 @@ class ProductReservation extends BaseModel
     /**
      * The states of the product reservation.
      */
-    public const STATES = [
+    public const array STATES = [
         self::STATE_WAITING,
         self::STATE_PENDING,
         self::STATE_ACCEPTED,
@@ -168,7 +168,7 @@ class ProductReservation extends BaseModel
     /**
      * The states of a canceled product reservation.
      */
-    public const STATES_CANCELED = [
+    public const array STATES_CANCELED = [
         self::STATE_CANCELED_BY_CLIENT,
         self::STATE_CANCELED_BY_PROVIDER,
         self::STATE_CANCELED_PAYMENT_FAILED,
@@ -179,14 +179,14 @@ class ProductReservation extends BaseModel
     /**
      * The number of days the transaction payout has to be delayed.
      */
-    public const TRANSACTION_DELAY = 14;
+    public const int TRANSACTION_DELAY = 14;
 
     /**
      * @var string[]
      */
     protected $fillable = [
         'product_id', 'voucher_id', 'voucher_transaction_id', 'fund_provider_product_id',
-        'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
+        'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at',
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
         'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'archived',
         'street', 'house_nr', 'house_nr_addition', 'postal_code', 'city', 'amount_extra',
@@ -197,7 +197,6 @@ class ProductReservation extends BaseModel
      */
     protected $casts = [
         'archived' => 'boolean',
-        'expire_at' => 'datetime',
         'birth_date' => 'datetime',
         'accepted_at' => 'datetime',
         'rejected_at' => 'datetime',
@@ -225,6 +224,15 @@ class ProductReservation extends BaseModel
         return trim($value ?: sprintf("%s %s", $this->street ?: '', implode(', ', array_filter([
             $this->house_nr, $this->house_nr_addition, $this->postal_code, $this->city,
         ]))));
+    }
+
+    /**
+     * @return Carbon
+     * @noinspection PhpUnused
+     */
+    public function getExpireAtAttribute(): Carbon
+    {
+        return $this->voucher->calcExpireDateForProduct();
     }
 
     /**

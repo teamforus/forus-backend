@@ -130,6 +130,26 @@ class IdentityEmailTest extends TestCase
     }
 
     /**
+     * @return void
+     */
+    public function testMaxIdentityEmails()
+    {
+        $proxy = $this->makeIdentityProxy($this->makeIdentity());
+
+        for ($i = 1; $i <= config('forus.mail.max_identity_emails'); $i++) {
+            $email = microtime(true) . "@example.com";
+            $response = $this->storeNewEmailRequest($email, $proxy);
+
+            $response->assertStatus(201);
+            $response->assertJsonStructure(['data' => $this->resourceStructure]);
+        }
+
+        $email = microtime(true) . "@example.com";
+        $response = $this->storeNewEmailRequest($email, $proxy);
+        $response->assertJsonValidationErrorFor('email');
+    }
+
+    /**
      * @param string|null $target
      * @return string|null
      */

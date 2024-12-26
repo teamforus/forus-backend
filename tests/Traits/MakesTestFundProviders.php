@@ -33,13 +33,14 @@ trait MakesTestFundProviders
 
     /**
      * @param Fund $fund
-     * @return Product[][]
+     * @param int $countProducts
+     * @return array
      */
-    protected function makeProviderAndProducts(Fund $fund): array
+    protected function makeProviderAndProducts(Fund $fund, int $countProducts = 5): array
     {
-        $approvedProducts = $this->makeProductsFundFund(5);
-        $emptyStockProducts = $this->makeProductsFundFund(5);
-        $unapprovedProducts = $this->makeProductsFundFund(5);
+        $approvedProducts = $this->makeProductsFundFund($countProducts);
+        $emptyStockProducts = $this->makeProductsFundFund($countProducts);
+        $unapprovedProducts = $this->makeProductsFundFund($countProducts);
 
         foreach ($approvedProducts as $product) {
             $this->addProductFundToFund($fund, $product, false);
@@ -85,7 +86,7 @@ trait MakesTestFundProviders
     protected function makeProductsFundFund(int $count): array
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail('provider_'));
-        $provider = $this->makeTestOrganization($identity);
+        $provider = $this->makeTestProviderOrganization($identity);
         $products = $this->makeTestProducts($provider, $count);
 
         $this->assertNotEmpty($products, 'Products not created');
@@ -112,7 +113,7 @@ trait MakesTestFundProviders
             'organization_id' => $product->organization_id,
         ]);
 
-        if (!$approveGlobal) {
+        if (!$approveGlobal || $fund->isTypeSubsidy()) {
             $this->updateProductsRequest($fund, $fundProvider, [
                 'enable_products' => [[
                     'id' => $product->id,

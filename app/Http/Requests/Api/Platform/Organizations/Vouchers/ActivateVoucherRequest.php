@@ -3,15 +3,13 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Http\Requests\BaseFormRequest;
-use Illuminate\Support\Facades\Gate;
 use App\Models\Organization;
 use App\Models\Voucher;
+use Illuminate\Support\Facades\Gate;
 
 /**
- * Class AssignVoucherRequest
  * @property-read Organization $organization
  * @property-read Voucher $voucher
- * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
  */
 class ActivateVoucherRequest extends BaseFormRequest
 {

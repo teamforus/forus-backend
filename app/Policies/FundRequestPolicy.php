@@ -54,7 +54,7 @@ class FundRequestPolicy
             return $this->deny('invalid_endpoint');
         }
 
-        if ($fundRequest->identity_address !== $identity->address) {
+        if ($fundRequest->identity_id !== $identity->id) {
             return $this->deny('not_requester');
         }
 
@@ -85,7 +85,7 @@ class FundRequestPolicy
 
         // has pending fund requests
         if ($fund->fund_requests()->where([
-            'identity_address' => $identity->address,
+            'identity_id' => $identity->id,
             'state' => FundRequest::STATE_PENDING,
         ])->exists()) {
             return $this->deny('pending_request_exists');
@@ -94,7 +94,7 @@ class FundRequestPolicy
         // has approved fund requests where voucher is not expired
         if (FundRequestQuery::whereApprovedAndVoucherIsActive(
             $fund->fund_requests(),
-            $identity->address
+            $identity->id
         )->exists()) {
             return $this->deny('approved_request_exists');
         }
@@ -315,7 +315,7 @@ class FundRequestPolicy
 
         $query = FundRequest::where([
             'fund_id' => $fundRequest->fund_id,
-            'identity_address' => $fundRequest->identity_address,
+            'identity_id' => $fundRequest->identity_id,
         ])->where('id', '!=', $fundRequest->id);
 
         // has other pending requests
@@ -326,7 +326,7 @@ class FundRequestPolicy
         // has other approved requests
         if (FundRequestQuery::whereApprovedAndVoucherIsActive(
             (clone $query),
-            $fundRequest->identity_address,
+            $fundRequest->identity->id,
         )->exists()) {
             return $this->deny('approved_request_exists');
         }

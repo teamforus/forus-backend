@@ -19,24 +19,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Services\MailDatabaseLoggerService\Models\EmailLog $email_log
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLogAttachment newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLogAttachment newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLogAttachment query()
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLogAttachment whereContentId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLogAttachment whereContentType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLogAttachment whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLogAttachment whereEmailLogId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLogAttachment whereFileName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLogAttachment whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLogAttachment wherePath($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLogAttachment whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|EmailLogAttachment whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLogAttachment newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLogAttachment newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLogAttachment query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLogAttachment whereContentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLogAttachment whereContentType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLogAttachment whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLogAttachment whereEmailLogId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLogAttachment whereFileName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLogAttachment whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLogAttachment wherePath($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLogAttachment whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailLogAttachment whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class EmailLogAttachment extends Model
 {
-    public const TYPE_RAW = 'raw';
-    public const TYPE_ATTACHMENT = 'attachment';
+    public const string TYPE_RAW = 'raw';
+    public const string TYPE_ATTACHMENT = 'attachment';
 
     /**
      * @var string[]

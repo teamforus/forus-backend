@@ -41,6 +41,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use Kalnoy\Nestedset\Collection as NestedsetCollection;
@@ -248,6 +249,7 @@ class TestData
      */
     public function applyFunds(Identity $identity): void
     {
+        /** @var Prevalidation[] $prevalidations */
         $prevalidations = Prevalidation::where([
             'state' => 'pending',
             'identity_address' => $identity->address
@@ -271,8 +273,8 @@ class TestData
                 'state' => 'used'
             ]);
 
-            $voucher = $prevalidation->fund->makeVoucher($identity->address);
-            $prevalidation->fund->makeFundFormulaProductVouchers($identity->address);
+            $voucher = $prevalidation->fund->makeVoucher($identity);
+            $prevalidation->fund->makeFundFormulaProductVouchers($identity);
 
             /** @var Product $product */
             $productsQuery = ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $prevalidation->fund->id);
@@ -351,7 +353,7 @@ class TestData
     ): Organization {
         $data = [
             'kvk' => Organization::GENERIC_KVK,
-            'iban' => $this->config('default_organization_iban') ?: $this->faker->iban('NL'),
+            'iban' => $this->faker->iban('NL'),
             'phone' => '123456789',
             'email' => sprintf(
                 $this->config('organization_email_pattern'),
@@ -629,6 +631,7 @@ class TestData
         $recordType = RecordType::firstOrCreate([
             'key' => $eligibility_key,
             'type' => 'bool',
+            'control_type' => 'checkbox',
         ], [
             'name' => "$fund->name eligible",
             'system' => false,
@@ -1052,7 +1055,9 @@ class TestData
      */
     public function separator(): void
     {
-        echo str_repeat('-', 80) . "\n";
+        if (!App::runningUnitTests()) {
+            echo str_repeat('-', 80) . "\n";
+        }
     }
 
     /**
@@ -1061,7 +1066,9 @@ class TestData
      */
     public function info(string $msg, bool $timestamp = true): void
     {
-        echo ($timestamp ? $this->timestamp() : null) . "\e[0;34m$msg\e[0m\n";
+        if (!App::runningUnitTests()) {
+            echo ($timestamp ? $this->timestamp() : null) . "\e[0;34m$msg\e[0m\n";
+        }
     }
 
     /**
@@ -1070,7 +1077,9 @@ class TestData
      */
     public function success(string $msg, bool $timestamp = true): void
     {
-        echo ($timestamp ? $this->timestamp() : null) . "\e[0;32m$msg\e[0m\n";
+        if (!App::runningUnitTests()) {
+            echo ($timestamp ? $this->timestamp() : null) . "\e[0;32m$msg\e[0m\n";
+        }
     }
 
     /**
@@ -1079,7 +1088,9 @@ class TestData
      */
     public function error(string $msg, bool $timestamp = true): void
     {
+        if (!App::runningUnitTests()) {
         echo ($timestamp ? $this->timestamp() : null) . "\e[0;31m$msg\e[0m\n";
+        }
     }
 
     /**
@@ -1174,11 +1185,11 @@ class TestData
 
         foreach ($funds as $fund) {
             for ($i = 1; $i <= $vouchersPerFund; ++$i) {
-                $identity_address = $this->makeIdentity();
+                $identity = $this->makeIdentity();
                 $note = 'Test data seeder!';
 
-                $fund->makeVoucher($identity_address, compact('note'));
-                $fund->makeFundFormulaProductVouchers($identity_address, compact('note'));
+                $fund->makeVoucher($identity, compact('note'));
+                $fund->makeFundFormulaProductVouchers($identity, compact('note'));
             }
         }
     }

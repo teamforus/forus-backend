@@ -4,10 +4,6 @@ namespace App\Events\Vouchers;
 
 use App\Models\Voucher;
 
-/**
- * Class VoucherCreated
- * @package App\Events\Vouchers
- */
 class VoucherCreated extends BaseVoucherEvent
 {
     protected bool $notifyRequesterAdded;

@@ -6,24 +6,21 @@ namespace App\Scopes\Builders;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
-/**
- * Class VoucherTransactionBulkQuery
- * @package App\Scopes\Builders
- */
 class VoucherTransactionBulkQuery
 {
     /**
-     * @param Builder $builder
+     * @param Builder|Relation|VoucherTransactionBulk $builder
      * @param string|null $orderBy
      * @param string|null $orderDir
-     * @return Builder
+     * @return Builder|Relation|VoucherTransactionBulk
      */
     public static function order(
-        Builder $builder,
+        Builder|Relation|VoucherTransactionBulk $builder,
         ?string $orderBy = 'created_at',
         ?string $orderDir = 'desc'
-    ): Builder {
+    ): Builder|Relation|VoucherTransactionBulk {
         $fields = VoucherTransactionBulk::SORT_BY_FIELDS;
 
         $builder->addSelect([
@@ -39,9 +36,9 @@ class VoucherTransactionBulkQuery
     }
 
     /**
-     * @return Builder
+     * @return Builder|Relation|VoucherTransactionBulk
      */
-    protected static function orderVoucherTransactionsCountQuery(): Builder
+    protected static function orderVoucherTransactionsCountQuery(): Builder|Relation|VoucherTransactionBulk
     {
         return VoucherTransaction::query()->whereColumn(
             'voucher_transaction_bulk_id', 'voucher_transaction_bulks.id'

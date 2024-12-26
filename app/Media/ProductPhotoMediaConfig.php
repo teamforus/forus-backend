@@ -5,19 +5,14 @@ namespace App\Media;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 
-/**
- * Class OrganizationLogoMediaConfig
- * @package App\Media
- */
 class ProductPhotoMediaConfig extends MediaImageConfig
 {
     /**
-     * @var array
+     * @var ?string
      */
-    protected $name = 'product_photo';
+    protected ?string $name = 'product_photo';
 
     /**
-     * ProductPhotoMediaConfig constructor.
      * @throws \App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException
      */
     public function __construct()

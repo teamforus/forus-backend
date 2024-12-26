@@ -3,8 +3,8 @@
 namespace App\Exports;
 
 use App\Models\Identity;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 

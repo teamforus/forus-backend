@@ -7,8 +7,7 @@ use App\Services\BNGService\Responses\Value;
 class PaginationLink extends Value
 {
     /**
-     * @return string
-     * @noinspection PhpUnused
+     * @return string|null
      */
     public function getHref(): ?string
     {

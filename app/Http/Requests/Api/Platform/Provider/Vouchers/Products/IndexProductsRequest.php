@@ -6,10 +6,6 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Scopes\Builders\OrganizationQuery;
 
-/**
- * Class IndexProductsRequest
- * @package App\Http\Requests\Api\Platform\Provider\Vouchers\Products
- */
 class IndexProductsRequest extends BaseFormRequest
 {
     /**

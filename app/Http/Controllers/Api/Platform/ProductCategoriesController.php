@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\IndexProductCategoriesRequest;
 use App\Http\Resources\ProductCategoryResource;
-use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
 use App\Searches\ProductCategorySearch;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;

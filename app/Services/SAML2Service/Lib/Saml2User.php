@@ -2,8 +2,8 @@
 
 namespace App\Services\SAML2Service\Lib;
 
-use SAML2\Assertion;
 use Exception;
+use SAML2\Assertion;
 
 class Saml2User
 {

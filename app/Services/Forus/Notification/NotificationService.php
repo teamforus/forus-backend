@@ -10,22 +10,18 @@ use App\Mail\User\IdentityEmailVerificationMail;
 use App\Models\Identity;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Notification\Models\NotificationToken;
+use Exception;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Notification;
-use Exception;
 
-/**
- * Class MailService
- * @package App\Services\Forus\MailNotification
- */
 class NotificationService
 {
-    public const TYPE_PUSH_IOS = NotificationToken::TYPE_PUSH_IOS;
-    public const TYPE_PUSH_ANDROID = NotificationToken::TYPE_PUSH_ANDROID;
+    public const string TYPE_PUSH_IOS = NotificationToken::TYPE_PUSH_IOS;
+    public const string TYPE_PUSH_ANDROID = NotificationToken::TYPE_PUSH_ANDROID;
 
-    public const TYPES = [
+    public const array TYPES = [
         self::TYPE_PUSH_IOS,
         self::TYPE_PUSH_ANDROID,
     ];

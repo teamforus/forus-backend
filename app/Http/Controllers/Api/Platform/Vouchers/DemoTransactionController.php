@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Demo\StoreTransactionRequest;
 use App\Http\Requests\Api\Platform\Demo\UpdateTransactionRequest;
 use App\Http\Resources\DemoTransactionResource;
 use App\Models\DemoTransaction;
-use App\Http\Controllers\Controller;
 
 class DemoTransactionController extends Controller
 {

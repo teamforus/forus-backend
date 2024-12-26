@@ -9,7 +9,7 @@ use Eduardokum\LaravelMailAutoEmbed\Models\EmbeddableEntity;
  */
 class EmbedQrCode implements EmbeddableEntity
 {
-    protected $value = '';
+    protected string $value = '';
 
     public function __construct($value)
     {

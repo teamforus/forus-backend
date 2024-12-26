@@ -34,6 +34,7 @@ class StorePayoutTransactionBatchRequest extends StorePayoutTransactionRequest
             'payouts.*.target_iban' => $this->targetIbanRules(),
             'payouts.*.target_name' => $this->targetNameRules(),
             'payouts.*.description' => $this->descriptionRules(),
+            ...$this->uploadedCSVFileRules(),
         ];
     }
 

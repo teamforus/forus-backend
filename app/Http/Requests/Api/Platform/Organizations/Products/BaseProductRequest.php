@@ -5,6 +5,8 @@ namespace App\Http\Requests\Api\Platform\Organizations\Products;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Rules\EanCodeRule;
+use App\Rules\MediaUidRule;
 use Illuminate\Validation\Rule;
 
 /**
@@ -12,6 +14,33 @@ use Illuminate\Validation\Rule;
  */
 abstract class BaseProductRequest extends BaseFormRequest
 {
+    /**
+     * @param string|null $price_type
+     * @return array
+     */
+    protected function baseProductRules(?string $price_type): array
+    {
+        return [
+            'name' => 'required|between:2,200',
+            'description' => 'required|between:5,2500',
+            'alternative_text' => 'nullable|between:2,500',
+            'price' => 'required_if:price_type,regular|numeric|min:.2',
+            'media_uid' => ['nullable', new MediaUidRule('product_photo')],
+            'price_type' => ['required', Rule::in(Product::PRICE_TYPES)],
+
+            'price_discount' => match ($price_type) {
+                'discount_fixed' => 'required|numeric|min:.1',
+                'discount_percentage' => 'required|numeric|between:.1,100',
+                default => [],
+            },
+
+            'expire_at' => 'nullable|date_format:Y-m-d|after:today',
+            'product_category_id' => 'required|exists:product_categories,id',
+            'sku' => 'nullable|string|alpha_num|max:200',
+            'ean' => ['nullable', 'string', new EanCodeRule()],
+        ];
+    }
+
     /**
      * @return string[]
      */
@@ -31,10 +60,32 @@ abstract class BaseProductRequest extends BaseFormRequest
             'reservation_phone' => "nullable|in:$options",
             'reservation_address' => "nullable|in:$options",
             'reservation_birth_date' => "nullable|in:$options",
-            'reservation_extra_payments' => [
-                'nullable',
-                ...$extraPaymentRules,
-            ],
+            'reservation_extra_payments' => ['nullable', ...$extraPaymentRules],
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'price_discount.required_if' => 'Het kortingsveld is verplicht.',
+            'expire_at.after' => trans('validation.after', [
+                'date' => trans('validation.attributes.today')
+            ]),
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function attributes(): array
+    {
+        return [
+            'price_type.free' => 'gratis',
+            'price_type.discount_fixed' => 'korting',
+            'price_type.discount_percentage' => 'korting',
         ];
     }
 }

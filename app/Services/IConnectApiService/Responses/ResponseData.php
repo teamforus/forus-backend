@@ -41,7 +41,7 @@ class ResponseData
     }
 
     /**
-     * @return array
+     * @return array|null
      */
     public function getData(): ?array
     {

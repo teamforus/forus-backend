@@ -50,7 +50,7 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
         }
 
         $records = $criterion->fund_criterion_rules->pluck('record_type_key')->toArray();
-        $recordsValues = $this->fund->getTrustedRecordOfTypes($this->request->auth_address(), $records, $criterion);
+        $recordsValues = $this->fund->getTrustedRecordOfTypes($this->request->identity(), $records);
 
         $allValues = array_merge($recordsValues, $values);
         $isExcluded = $criterion->isExcludedByRules($allValues);

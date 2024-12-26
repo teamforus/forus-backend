@@ -14,7 +14,7 @@ use App\Scopes\Builders\FundQuery;
  */
 class ProductFundResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'logo.presets',
         'organization.logo.presets',
         'organization.employees',

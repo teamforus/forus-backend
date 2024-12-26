@@ -9,43 +9,22 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 abstract class MediaPreset
 {
     /**
-     * Preset name
-     * @var int
+     * @var ?string
      */
-    public $name = null;
-
-    /**
-     * Media final quality
-     * @var int
-     */
-    public $quality = 75;
-
-    /**
-     * Media preset format
-     * @var string
-     */
-    public $format = 'jpg';
-
-    /**
-     * @var null|string
-     */
-    public $queue = null;
+    public ?string $queue = null;
 
     /**
      * MediaPreset constructor.
+     *
      * @param string $name
      * @param string|null $format
-     * @param string $quality
+     * @param int $quality
      */
     public function __construct(
-        string $name,
-        ?string $format,
-        string $quality
-    ) {
-        $this->name = $name;
-        $this->format = $format;
-        $this->quality = $quality;
-    }
+        public string $name,
+        public ?string $format = 'jpg',
+        public int $quality = 75,
+    ) {}
 
     /**
      * Returns a unique string that is free to be used as media name
@@ -103,7 +82,7 @@ abstract class MediaPreset
         Filesystem $storage,
         string $storagePath,
         Media $media
-    );
+    ): mixed;
 
     /**
      * @param Filesystem $storage
@@ -116,6 +95,6 @@ abstract class MediaPreset
         Filesystem $storage,
         string $storagePath,
         PresetModel $presetModel,
-        Media $media
-    );
+        Media $media,
+    ): mixed;
 }

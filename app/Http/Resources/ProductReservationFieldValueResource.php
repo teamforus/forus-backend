@@ -9,7 +9,7 @@ use App\Models\ProductReservationFieldValue;
  */
 class ProductReservationFieldValueResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'organization_reservation_field',
     ];
 

@@ -16,15 +16,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Services\MediaService\Models\Media $media
- * @method static \Illuminate\Database\Eloquent\Builder|MediaPreset newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|MediaPreset newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|MediaPreset query()
- * @method static \Illuminate\Database\Eloquent\Builder|MediaPreset whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|MediaPreset whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|MediaPreset whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|MediaPreset whereMediaId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|MediaPreset wherePath($value)
- * @method static \Illuminate\Database\Eloquent\Builder|MediaPreset whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MediaPreset newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MediaPreset newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MediaPreset query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MediaPreset whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MediaPreset whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MediaPreset whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MediaPreset whereMediaId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MediaPreset wherePath($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MediaPreset whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class MediaPreset extends Model

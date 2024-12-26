@@ -11,15 +11,15 @@ namespace App\Models;
  * @property int $base
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|Language newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Language newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Language query()
- * @method static \Illuminate\Database\Eloquent\Builder|Language whereBase($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Language whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Language whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Language whereLocale($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Language whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Language whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Language newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Language newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Language query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Language whereBase($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Language whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Language whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Language whereLocale($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Language whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Language whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Language extends BaseModel

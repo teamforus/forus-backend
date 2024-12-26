@@ -15,18 +15,18 @@ namespace App\Models;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Office $office
- * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule query()
- * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule whereBreakEndTime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule whereBreakStartTime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule whereEndTime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule whereOfficeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule whereStartTime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|OfficeSchedule whereWeekDay($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OfficeSchedule newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OfficeSchedule newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OfficeSchedule query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OfficeSchedule whereBreakEndTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OfficeSchedule whereBreakStartTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OfficeSchedule whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OfficeSchedule whereEndTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OfficeSchedule whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OfficeSchedule whereOfficeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OfficeSchedule whereStartTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OfficeSchedule whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OfficeSchedule whereWeekDay($value)
  * @mixin \Eloquent
  */
 class OfficeSchedule extends BaseModel

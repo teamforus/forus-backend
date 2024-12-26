@@ -13,13 +13,13 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property string $scope
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
- * @method static \Illuminate\Database\Eloquent\Builder|Tag newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Tag newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Tag query()
- * @method static \Illuminate\Database\Eloquent\Builder|Tag whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Tag whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Tag whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Tag whereScope($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tag newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tag newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tag query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tag whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tag whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tag whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tag whereScope($value)
  * @mixin \Eloquent
  */
 class Tag extends BaseModel

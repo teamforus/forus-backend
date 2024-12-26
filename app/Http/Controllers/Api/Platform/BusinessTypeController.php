@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\SearchBusinessTypesRequest;
 use App\Http\Resources\BusinessTypeResource;
 use App\Models\BusinessType;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class BusinessTypeController extends Controller

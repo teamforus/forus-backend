@@ -7,7 +7,6 @@ use App\Models\Organization;
 
 /**
  * @property Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
 class FinanceOverviewRequest extends BaseFormRequest
 {
@@ -31,6 +30,7 @@ class FinanceOverviewRequest extends BaseFormRequest
         return [
             'export_type'       => 'nullable|in:xls,csv',
             'detailed'          => 'nullable|boolean',
+            'year'              => 'nullable|integer',
         ];
     }
 }

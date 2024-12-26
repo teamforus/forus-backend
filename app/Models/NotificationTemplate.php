@@ -23,19 +23,19 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read \App\Models\Fund|null $fund
  * @property-read \App\Models\Implementation $implementation
  * @property-read \App\Models\Implementation $system_notification
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate query()
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereContent($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereFormal($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereSystemNotificationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationTemplate whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereContent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereFormal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereSystemNotificationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class NotificationTemplate extends Model

@@ -6,8 +6,8 @@ use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherRecord;
-use Illuminate\Auth\Access\Response;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class VoucherRecordPolicy
 {

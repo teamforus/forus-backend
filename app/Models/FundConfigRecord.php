@@ -15,15 +15,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord whereRecordType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord whereRecordValidityDays($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfigRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfigRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfigRecord query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfigRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfigRecord whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfigRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfigRecord whereRecordType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfigRecord whereRecordValidityDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfigRecord whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundConfigRecord extends Model

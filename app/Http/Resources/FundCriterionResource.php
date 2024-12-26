@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
  */
 class FundCriterionResource extends BaseJsonResource
 {
-    const LOAD = [
+    const array LOAD = [
         'fund_criterion_rules',
         'record_type.translation',
         'record_type.record_type_options',
@@ -41,7 +41,7 @@ class FundCriterionResource extends BaseJsonResource
             ]))->toArray(),
             'record_type' => [
                 ...$criterion->record_type->only([
-                    'name', 'key', 'type'
+                    'name', 'key', 'type', 'control_type',
                 ]),
                 'options' => $criterion->record_type->getOptions(),
             ],
@@ -78,7 +78,7 @@ class FundCriterionResource extends BaseJsonResource
         $checkCriteria = $request->get('check_criteria', false);
 
         if ($checkCriteria && $identity) {
-            return !empty($fund->getTrustedRecordOfType($identity->address, $this->resource->record_type_key));
+            return !empty($fund->getTrustedRecordOfType($identity, $this->resource->record_type_key));
         }
 
         return $checkCriteria ? false : null;

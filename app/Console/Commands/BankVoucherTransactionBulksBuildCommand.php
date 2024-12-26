@@ -24,8 +24,7 @@ class BankVoucherTransactionBulksBuildCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
-     * @throws \Throwable
+     * @return void
      */
     public function handle(): void
     {

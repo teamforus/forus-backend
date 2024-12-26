@@ -1,28 +1,18 @@
 <?php
 
-namespace App\Rules\Misc;
+namespace App\Rules;
 
+use App\Models\IdentityEmail;
 use Illuminate\Contracts\Validation\Rule;
 
-/**
- * Class ProxyRule
- * @package App\Rules\Misc
- */
-class ProxyRule implements Rule
+class IdentityEmailMaxRule implements Rule
 {
-    protected $shouldPass;
-    protected $errorMessage;
-
     /**
      * Create a new rule instance.
      *
      * @return void
      */
-    public function __construct($shouldPass = false, $errorMessage = 'The validation error message.')
-    {
-        $this->shouldPass = $shouldPass;
-        $this->errorMessage = $errorMessage;
-    }
+    public function __construct(protected ?string $identity_address) {}
 
     /**
      * Determine if the validation rule passes.
@@ -30,10 +20,13 @@ class ProxyRule implements Rule
      * @param  string  $attribute
      * @param  mixed  $value
      * @return bool
+     * @throws \Exception
      */
     public function passes($attribute, $value): bool
     {
-        return $this->shouldPass;
+        $count = IdentityEmail::where('identity_address', $this->identity_address)->count();
+
+        return $count < config('forus.mail.max_identity_emails');
     }
 
     /**
@@ -43,6 +36,8 @@ class ProxyRule implements Rule
      */
     public function message(): string
     {
-        return $this->errorMessage;
+        return trans('validation.max_emails_reached', [
+            'max' => config('forus.mail.max_identity_emails')
+        ]);
     }
 }

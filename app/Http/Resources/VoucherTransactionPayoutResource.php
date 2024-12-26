@@ -2,15 +2,12 @@
 
 namespace App\Http\Resources;
 
-use App\Models\VoucherTransaction;
-use App\Searches\VoucherTransactionsSearch;
-
 class VoucherTransactionPayoutResource extends VoucherTransactionResource
 {
     /**
      * @var string[]
      */
-    public const LOAD = [
+    public const array LOAD = [
         'voucher.fund.organization',
     ];
 

@@ -3,9 +3,9 @@
 
 namespace App\Helpers;
 
+use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\Facades\Validator as ValidatorFacade;
 use Illuminate\Validation\Validator;
-use Illuminate\Contracts\Validation\Rule;
 
 class Validation
 {

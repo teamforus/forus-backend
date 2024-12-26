@@ -6,10 +6,6 @@ use App\Http\Requests\BaseFormRequest;
 use App\Rules\RecordCategoryIdRule;
 use App\Rules\RecordTypeKeyExistsRule;
 
-/**
- * Class RecordStoreRequest
- * @package App\Http\Requests\Api\Records
- */
 class RecordStoreRequest extends BaseFormRequest
 {
     /**

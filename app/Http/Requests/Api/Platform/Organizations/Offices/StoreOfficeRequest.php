@@ -2,10 +2,6 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Offices;
 
-/**
- * Class StoreOfficeRequest
- * @package App\Http\Requests\Api\Platform\Organizations\Offices
- */
 class StoreOfficeRequest extends BaseOfficeRequest
 {
     /**

@@ -5,12 +5,8 @@ namespace App\Events\Funds;
 use App\Models\Employee;
 use App\Models\Fund;
 
-/**
- * Class FundCreated
- * @package App\Events\Funds
- */
 class FundArchivedEvent extends BaseFundEvent {
-    protected $employee;
+    protected Employee $employee;
 
     /**
      * @param Fund $fund

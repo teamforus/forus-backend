@@ -18,19 +18,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
  * @property-read string $amount_locale
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|FundAmountPreset withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundAmountPreset withoutTrashed()
  * @mixin \Eloquent
  */
 class FundAmountPreset extends Model

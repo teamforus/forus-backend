@@ -71,49 +71,49 @@ use Throwable;
  * @property-read int|null $logs_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
- * @method static Builder|VoucherTransactionBulk newModelQuery()
- * @method static Builder|VoucherTransactionBulk newQuery()
- * @method static Builder|VoucherTransactionBulk query()
- * @method static Builder|VoucherTransactionBulk whereAcceptedManually($value)
- * @method static Builder|VoucherTransactionBulk whereAccessToken($value)
- * @method static Builder|VoucherTransactionBulk whereAuthParams($value)
- * @method static Builder|VoucherTransactionBulk whereAuthUrl($value)
- * @method static Builder|VoucherTransactionBulk whereBankConnectionId($value)
- * @method static Builder|VoucherTransactionBulk whereCode($value)
- * @method static Builder|VoucherTransactionBulk whereCreatedAt($value)
- * @method static Builder|VoucherTransactionBulk whereExecutionDate($value)
- * @method static Builder|VoucherTransactionBulk whereId($value)
- * @method static Builder|VoucherTransactionBulk whereImplementationId($value)
- * @method static Builder|VoucherTransactionBulk whereIsExported($value)
- * @method static Builder|VoucherTransactionBulk whereMonetaryAccountIban($value)
- * @method static Builder|VoucherTransactionBulk whereMonetaryAccountId($value)
- * @method static Builder|VoucherTransactionBulk whereMonetaryAccountName($value)
- * @method static Builder|VoucherTransactionBulk wherePaymentId($value)
- * @method static Builder|VoucherTransactionBulk whereRedirectToken($value)
- * @method static Builder|VoucherTransactionBulk whereSepaXml($value)
- * @method static Builder|VoucherTransactionBulk whereState($value)
- * @method static Builder|VoucherTransactionBulk whereStateFetchedAt($value)
- * @method static Builder|VoucherTransactionBulk whereStateFetchedTimes($value)
- * @method static Builder|VoucherTransactionBulk whereUpdatedAt($value)
+ * @method static Builder<static>|VoucherTransactionBulk newModelQuery()
+ * @method static Builder<static>|VoucherTransactionBulk newQuery()
+ * @method static Builder<static>|VoucherTransactionBulk query()
+ * @method static Builder<static>|VoucherTransactionBulk whereAcceptedManually($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereAccessToken($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereAuthParams($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereAuthUrl($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereBankConnectionId($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereCode($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereCreatedAt($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereExecutionDate($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereId($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereImplementationId($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereIsExported($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereMonetaryAccountIban($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereMonetaryAccountId($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereMonetaryAccountName($value)
+ * @method static Builder<static>|VoucherTransactionBulk wherePaymentId($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereRedirectToken($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereSepaXml($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereState($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereStateFetchedAt($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereStateFetchedTimes($value)
+ * @method static Builder<static>|VoucherTransactionBulk whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class VoucherTransactionBulk extends BaseModel
 {
     use HasLogs, HasDbTokens;
 
-    public const EVENT_RESET = 'reset';
-    public const EVENT_CREATED = 'created';
-    public const EVENT_SUBMITTED = 'submitted';
-    public const EVENT_ACCEPTED = 'accepted';
-    public const EVENT_ACCEPTED_MANUALLY = 'accepted_manually';
-    public const EVENT_REJECTED = 'rejected';
-    public const EVENT_ERROR = 'error';
-    public const EVENT_EXPORTED = 'exported';
+    public const string EVENT_RESET = 'reset';
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_SUBMITTED = 'submitted';
+    public const string EVENT_ACCEPTED = 'accepted';
+    public const string EVENT_ACCEPTED_MANUALLY = 'accepted_manually';
+    public const string EVENT_REJECTED = 'rejected';
+    public const string EVENT_ERROR = 'error';
+    public const string EVENT_EXPORTED = 'exported';
 
     /**
      * @noinspection PhpUnused
      */
-    public const EVENTS = [
+    public const array EVENTS = [
         self::EVENT_RESET,
         self::EVENT_CREATED,
         self::EVENT_SUBMITTED,
@@ -122,13 +122,13 @@ class VoucherTransactionBulk extends BaseModel
         self::EVENT_ERROR,
     ];
 
-    public const STATE_DRAFT = 'draft';
-    public const STATE_ERROR = 'error';
-    public const STATE_PENDING = 'pending';
-    public const STATE_ACCEPTED = 'accepted';
-    public const STATE_REJECTED = 'rejected';
+    public const string STATE_DRAFT = 'draft';
+    public const string STATE_ERROR = 'error';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_ACCEPTED = 'accepted';
+    public const string STATE_REJECTED = 'rejected';
 
-    public const STATES = [
+    public const array STATES = [
         self::STATE_DRAFT,
         self::STATE_ERROR,
         self::STATE_PENDING,
@@ -136,7 +136,7 @@ class VoucherTransactionBulk extends BaseModel
         self::STATE_REJECTED,
     ];
 
-    public const SORT_BY_FIELDS = [
+    public const array SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'voucher_transactions_count',
     ];
 
@@ -285,7 +285,7 @@ class VoucherTransactionBulk extends BaseModel
      * @return VoucherTransactionBulk
      * @throws Throwable
      */
-    public function setAccepted(DraftPayment $draftPayment): self
+    public function setAcceptedBunq(DraftPayment $draftPayment): self
     {
         DB::transaction(function() use ($draftPayment) {
             $this->update([
@@ -299,12 +299,7 @@ class VoucherTransactionBulk extends BaseModel
                     $transaction, $draftPayment
                 ) : null;
 
-                $transaction->forceFill([
-                    'state' => VoucherTransaction::STATE_SUCCESS,
-                    'payment_id' => $payment?->getId(),
-                    'payment_time' => now(),
-                ])->save();
-
+                $transaction->setPaid($payment?->getId(), now());
                 VoucherTransactionBunqSuccess::dispatch($transaction);
             }
         });
@@ -316,10 +311,11 @@ class VoucherTransactionBulk extends BaseModel
 
     /**
      * @param Employee|null $employee
+     * @param bool $throttle
      * @return self
      * @throws Throwable
      */
-    public function setAcceptedBNG(?Employee $employee = null): self
+    public function setAcceptedBNG(?Employee $employee = null, bool $throttle = true): self
     {
         DB::transaction(function() use ($employee) {
             $this->update([
@@ -331,17 +327,14 @@ class VoucherTransactionBulk extends BaseModel
             $this->log($event, $this->getLogModels($employee));
 
             foreach ($this->voucher_transactions as $transaction) {
-                $transaction->forceFill([
-                    'state'             => VoucherTransaction::STATE_SUCCESS,
-                    'payment_id'        => null,
-                    'payment_time'      => now(),
-                ])->save();
-
+                $transaction->setPaid(null, now());
                 VoucherTransactionBunqSuccess::dispatch($transaction);
             }
         });
 
-        sleep(1);
+        if ($throttle) {
+            sleep(1);
+        }
 
         return $this->fresh();
     }
@@ -684,7 +677,7 @@ class VoucherTransactionBulk extends BaseModel
             case static::STATE_REJECTED: $this->setRejected(); break;
             case static::STATE_ACCEPTED: {
                 if ($this->bank_connection->bank->isBunq()) {
-                    $this->setAccepted($payment);
+                    $this->setAcceptedBunq($payment);
                 }
 
                 if ($this->bank_connection->bank->isBNG()) {

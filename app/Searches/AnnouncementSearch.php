@@ -4,9 +4,9 @@
 namespace App\Searches;
 
 
+use App\Models\Announcement;
 use App\Models\BankConnection;
 use App\Models\Implementation;
-use App\Models\Announcement;
 use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Database\Eloquent\Builder;
 

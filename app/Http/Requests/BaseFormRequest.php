@@ -3,10 +3,10 @@
 namespace App\Http\Requests;
 
 use App\Models\Employee;
-use App\Models\Implementation;
-use App\Models\Organization;
 use App\Models\Identity;
 use App\Models\IdentityProxy;
+use App\Models\Implementation;
+use App\Models\Organization;
 use App\Rules\BsnRule;
 use App\Services\Forus\Notification\NotificationService;
 use App\Traits\ThrottleWithMeta;
@@ -61,6 +61,14 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     public function auth_address(): ?string
     {
         return $this->identity()?->address;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function auth_id(): ?int
+    {
+        return $this->identity()?->id;
     }
 
     /**
@@ -304,5 +312,21 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     public function isDashboard(): bool
     {
         return $this->isSponsorDashboard() || $this->isProviderDashboard() || $this->isValidatorDashboard();
+    }
+
+    /**
+     * @return string[]
+     */
+    protected function uploadedCSVFileRules(): array
+    {
+        return [
+            'file' => 'nullable|array|size:6',
+            'file.name' => 'required_with:file|string',
+            'file.content' => 'required_with:file|string',
+            'file.total' => 'required_with:file|numeric',
+            'file.chunk' => 'required_with:file|numeric',
+            'file.chunks' => 'required_with:file|numeric',
+            'file.chunkSize' => 'required_with:file|numeric',
+        ];
     }
 }

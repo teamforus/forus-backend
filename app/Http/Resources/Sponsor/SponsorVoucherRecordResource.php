@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
  */
 class SponsorVoucherRecordResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'record_type',
     ];
 

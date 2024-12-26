@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\DigID\ResolveDigIdRequest;
 use App\Http\Requests\DigID\StartDigIdRequest;
-use App\Services\DigIdService\Models\DigIdSession;
 use App\Models\Identity;
+use App\Services\DigIdService\Models\DigIdSession;
 use Illuminate\Http\RedirectResponse;
 
 class DigIdController extends Controller

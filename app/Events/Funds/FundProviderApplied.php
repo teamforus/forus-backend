@@ -7,7 +7,7 @@ use App\Models\FundProvider;
 
 class FundProviderApplied extends BaseFundEvent
 {
-    private $fundProvider;
+    private FundProvider $fundProvider;
 
     /**
      * Create a new event instance.

@@ -8,9 +8,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Validation\Rule;
 
 /**
- * Class TransferOrganizationOwnershipRequest
  * @property-read Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\Employees
  */
 class TransferOrganizationOwnershipRequest extends BaseFormRequest
 {

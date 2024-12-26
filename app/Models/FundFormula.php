@@ -18,16 +18,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read string|null $amount_locale
  * @property-read string|null $type_locale
  * @property-read \App\Models\RecordType|null $record_type
- * @method static \Illuminate\Database\Eloquent\Builder|FundFormula newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundFormula newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundFormula query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundFormula whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundFormula whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundFormula whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundFormula whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundFormula whereRecordTypeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundFormula whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundFormula whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundFormula newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundFormula newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundFormula query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundFormula whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundFormula whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundFormula whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundFormula whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundFormula whereRecordTypeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundFormula whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundFormula whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundFormula extends BaseModel

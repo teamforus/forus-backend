@@ -5,9 +5,7 @@ namespace App\Http\Resources;
 use App\Models\IdentityEmail;
 
 /**
- * Class IdentityEmailResource
  * @property IdentityEmail $resource
- * @package App\Http\Resources
  */
 class IdentityEmailResource extends BaseJsonResource
 {

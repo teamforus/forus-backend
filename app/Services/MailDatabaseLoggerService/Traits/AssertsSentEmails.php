@@ -4,11 +4,11 @@ namespace App\Services\MailDatabaseLoggerService\Traits;
 
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Carbon\Carbon;
+use DOMDocument;
+use DOMElement;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use DOMDocument;
-use DOMElement;
 
 /**
  * @mixin \Illuminate\Foundation\Testing\TestCase

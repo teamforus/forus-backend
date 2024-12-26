@@ -8,12 +8,19 @@ use App\Services\MediaService\MediaImagePreset;
 class ReimbursementFilePreviewMediaConfig extends MediaImageConfig
 {
     /**
-     * @var array
+     * @var ?string
      */
-    protected $name = 'reimbursement_file_preview';
+    protected ?string $name = 'reimbursement_file_preview';
 
-    protected $preview_aspect_ratio = 1.33;
-    protected $save_dominant_color = true;
+    /**
+     * @var float
+     */
+    protected float $preview_aspect_ratio = 1.33;
+
+    /**
+     * @var bool
+     */
+    protected bool $save_dominant_color = true;
 
     /**
      * @throws \App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException

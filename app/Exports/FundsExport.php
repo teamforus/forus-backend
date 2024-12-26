@@ -4,8 +4,11 @@ namespace App\Exports;
 
 use App\Exports\Traits\FormatsExportedData;
 use App\Models\Fund;
-use Illuminate\Support\Collection;
+use App\Statistics\Funds\FinancialOverviewStatistic;
+use App\Statistics\Funds\FinancialOverviewStatisticQueries;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
@@ -22,7 +25,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
      * @var array[]
      */
     protected array $formats = [
-        NumberFormat::FORMAT_CURRENCY_EUR_SIMPLE => [
+        NumberFormat::FORMAT_CURRENCY_EUR => [
             'balance',
             'expenses',
             'transactions',
@@ -56,23 +59,21 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
 
     protected Collection $data;
 
-    protected bool $detailed;
-
-    protected bool $withTotal;
-
     /**
      * FundsExport constructor.
      * @param EloquentCollection $funds
      * @param bool $detailed
      * @param bool $withTotal
+     * @param Carbon $from
+     * @param Carbon $to
      */
     public function __construct(
         EloquentCollection $funds,
-        bool $detailed = true,
-        bool $withTotal = true
+        protected Carbon $from,
+        protected Carbon $to,
+        protected bool $detailed = true,
+        protected bool $withTotal = true,
     ) {
-        $this->detailed = $detailed;
-        $this->withTotal = $withTotal;
         $this->data = $this->exportTransform($funds);
     }
 
@@ -98,8 +99,8 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
         return (!$this->detailed && $this->withTotal) ? [[
             "name" => $this->trans("total"),
             "total_top_up" => currency_format($this->data->sum('total_top_up')),
-            "balance" => currency_format($this->data->sum('balance')),
             "expenses" => currency_format($this->data->sum('expenses')),
+            "balance" => currency_format($this->data->sum('balance')),
             "transactions" => currency_format($this->data->sum('transactions')),
         ]] : [];
     }
@@ -127,13 +128,19 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
     protected function exportTransform(Collection $funds): Collection
     {
         if (!$this->detailed) {
-            return $funds->map(fn(Fund $fund) => [
-                "name" => $fund->name,
-                "total_top_up" => currency_format($fund->budget_total),
-                "expenses" => currency_format($fund->budget_used),
-                "balance" => currency_format($fund->budget_left),
-                "transactions" => currency_format($fund->getTransactionCosts()),
-            ]);
+            return $funds->map(function (Fund $fund) {
+                $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $this->from, $this->to);
+                $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $this->from, $this->to);
+                $costs = FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $this->from, $this->to);
+
+                return [
+                    "name" => $fund->name,
+                    "total_top_up" => currency_format($total),
+                    "expenses" => currency_format($used),
+                    "balance" => currency_format(round($total - $used, 2)),
+                    "transactions" => currency_format($costs),
+                ];
+            });
         }
 
         $funds = $funds->map(fn(Fund $fund) => $this->getVoucherData($fund));
@@ -156,9 +163,10 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
     protected function getVoucherData(Fund $fund): array
     {
         $detailsByType = [
-            'budget'  => Fund::getFundDetails($fund->budget_vouchers()->getQuery()),
-            'product' => Fund::getFundDetails($fund->product_vouchers()->getQuery()),
+            'budget'  => FinancialOverviewStatistic::getFundDetails($fund->budget_vouchers()->getQuery(), $this->from, $this->to),
+            'product' => FinancialOverviewStatistic::getFundDetails($fund->product_vouchers()->getQuery(), $this->from, $this->to),
         ];
+        $usedActiveVouchers = FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $this->from, $this->to);
 
         $voucherData = [
             "name" => $fund->name,
@@ -186,7 +194,7 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
                 $voucherData = array_merge($voucherData, [
                     "budget_amount_per_voucher"            => currency_format($fund->fund_formulas->sum('amount')),
                     "budget_average_per_voucher"           => currency_format($averagePerVoucher),
-                    "budget_total_spent_amount"            => currency_format($fund->budget_used_active_vouchers),
+                    "budget_total_spent_amount"            => currency_format($usedActiveVouchers),
                     "budget_total_left_amount"             => currency_format($budgetLeftAmount),
                     "budget_total_spent_percentage"        => currency_format($budgetUsedPercentage / 100, 4),
                     "budget_total_left_percentage"         => currency_format($budgetLeftPercentage / 100, 4),

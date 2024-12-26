@@ -9,7 +9,7 @@ use App\Models\ReservationExtraPayment;
  */
 class ReservationExtraPaymentResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'refunds',
     ];
 

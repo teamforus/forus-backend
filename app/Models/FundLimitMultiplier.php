@@ -14,15 +14,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
- * @method static \Illuminate\Database\Eloquent\Builder|FundLimitMultiplier newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundLimitMultiplier newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FundLimitMultiplier query()
- * @method static \Illuminate\Database\Eloquent\Builder|FundLimitMultiplier whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundLimitMultiplier whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundLimitMultiplier whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundLimitMultiplier whereMultiplier($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundLimitMultiplier whereRecordTypeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundLimitMultiplier whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundLimitMultiplier newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundLimitMultiplier newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundLimitMultiplier query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundLimitMultiplier whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundLimitMultiplier whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundLimitMultiplier whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundLimitMultiplier whereMultiplier($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundLimitMultiplier whereRecordTypeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundLimitMultiplier whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundLimitMultiplier extends BaseModel

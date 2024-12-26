@@ -3,7 +3,6 @@
 namespace App\Scopes\Builders;
 
 use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationRequestedMail;
-use App\Mail\Funds\FundRequestRecords\FundRequestRecordDeclinedMail;
 use App\Mail\Funds\FundRequests\FundRequestApprovedMail;
 use App\Mail\Funds\FundRequests\FundRequestCreatedMail;
 use App\Mail\Funds\FundRequests\FundRequestDeniedMail;
@@ -19,18 +18,17 @@ class EmailLogQuery
     /**
      * @param Builder|Relation|EmailLog $builder
      * @param FundRequest $fundRequest
-     * @return Builder
+     * @return Builder|Relation|EmailLog
      */
     public static function whereFundRequest(
         Builder|Relation|EmailLog $builder,
         FundRequest $fundRequest,
-    ): Builder {
+    ): Builder|Relation|EmailLog {
         return $builder->whereIn('mailable', [
             FundRequestDeniedMail::class,
             FundRequestCreatedMail::class,
             FundRequestApprovedMail::class,
             FundRequestDisregardedMail::class,
-            FundRequestRecordDeclinedMail::class,
             FundRequestClarificationRequestedMail::class,
         ])->whereHas('event_log', function (Builder $builder) use ($fundRequest) {
             $builder->where(function (Builder $builder) use ($fundRequest) {

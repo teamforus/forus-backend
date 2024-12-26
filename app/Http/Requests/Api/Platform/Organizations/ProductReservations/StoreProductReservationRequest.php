@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 /**
- * Class AcceptProductReservationRequest
  * @property Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\ProductReservations
  */
 class StoreProductReservationRequest extends BaseFormRequest
 {

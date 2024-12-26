@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor\Providers;
 
 use App\Events\Products\ProductCreated;
-use App\Events\Products\ProductUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\Products\IndexProductsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\Products\StoreProductsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\Products\UpdateProductsRequest;
-use App\Http\Resources\Sponsor\SponsorProviderProductResource;
+use App\Http\Resources\Sponsor\SponsorProductResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Product;
@@ -16,10 +15,6 @@ use App\Scopes\Builders\ProductQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class ProductsController
- * @package App\Http\Controllers\Api\Platform\Organizations\Sponsor\Providers
- */
 class ProductsController extends Controller
 {
     /**
@@ -43,7 +38,7 @@ class ProductsController extends Controller
             'sponsor_organization_id' => $sponsor->id
         ]))->latest();
 
-        return SponsorProviderProductResource::queryCollection($query, $request);
+        return SponsorProductResource::queryCollection($query, $request);
     }
 
     /**
@@ -52,14 +47,14 @@ class ProductsController extends Controller
      * @param StoreProductsRequest $request
      * @param Organization $sponsor
      * @param Organization $provider
-     * @return SponsorProviderProductResource
+     * @return SponsorProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
         StoreProductsRequest $request,
         Organization $sponsor,
         Organization $provider
-    ): SponsorProviderProductResource {
+    ): SponsorProductResource {
         $this->authorize('storeSponsorProduct', [Product::class, $provider, $sponsor]);
 
         $product = Product::storeFromRequest($provider, $request);
@@ -68,7 +63,7 @@ class ProductsController extends Controller
             'sponsor_organization_id' => $sponsor->id,
         ]));
 
-        return SponsorProviderProductResource::create($product)->additional([
+        return SponsorProductResource::create($product)->additional([
             'fund_provider' => null,
         ]);
     }
@@ -79,19 +74,19 @@ class ProductsController extends Controller
      * @param Organization $sponsor
      * @param Organization $provider
      * @param Product $product
-     * @return SponsorProviderProductResource
+     * @return SponsorProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
         Organization $sponsor,
         Organization $provider,
         Product $product
-    ): SponsorProviderProductResource {
+    ): SponsorProductResource {
         $this->authorize('show', $sponsor);
         $this->authorize('viewAnySponsor', [FundProvider::class, $sponsor]);
         $this->authorize('showSponsorProduct', [$product, $provider, $sponsor]);
 
-        return SponsorProviderProductResource::create($product);
+        return SponsorProductResource::create($product);
     }
 
     /**
@@ -101,7 +96,7 @@ class ProductsController extends Controller
      * @param Organization $sponsor
      * @param Organization $provider
      * @param \App\Models\Product $product
-     * @return SponsorProviderProductResource
+     * @return SponsorProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(
@@ -109,15 +104,14 @@ class ProductsController extends Controller
         Organization $sponsor,
         Organization $provider,
         Product $product
-    ): SponsorProviderProductResource {
+    ): SponsorProductResource {
         $this->authorize('show', $sponsor);
         $this->authorize('viewAnySponsor', [FundProvider::class, $sponsor]);
         $this->authorize('updateSponsorProduct', [$product, $provider, $sponsor]);
 
-        $product->updateFromRequest($request);
-        ProductUpdated::dispatch($product);
+        $product->updateFromRequest($request, true);
 
-        return SponsorProviderProductResource::create($product);
+        return SponsorProductResource::create($product);
     }
 
     /**

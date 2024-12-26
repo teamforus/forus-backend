@@ -209,7 +209,7 @@ class VoucherBatchTest extends DuskTestCase
             $browser->waitUntilMissing('@modalDuplicatesPicker');
         }
 
-        $browser->waitFor('@successUploadIcon', 25);
+        $browser->waitFor('@successUploadIcon');
 
         $browser->element('@closeModalButton')->click();
         $browser->waitUntilMissing('@modalVoucherUpload');

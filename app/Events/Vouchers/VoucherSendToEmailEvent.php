@@ -6,7 +6,7 @@ use App\Models\Voucher;
 
 class VoucherSendToEmailEvent extends BaseVoucherEvent
 {
-    protected $email;
+    protected string $email;
 
     /**
      * Create a new event instance.

@@ -61,11 +61,11 @@ class ProductReservationTest extends DuskTestCase
             $browser->visit($implementation->urlWebshop());
 
             $identity = $this->makeIdentity($this->makeUniqueEmail());
-            $provider = $this->makeProviderOrganization($this->makeIdentity($this->makeUniqueEmail()));
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity($this->makeUniqueEmail()));
 
             $this->makeTestProductForReservation($provider);
 
-            $implementation->funds->each(fn (Fund $fund) => $fund->makeVoucher($identity->address));
+            $implementation->funds->each(fn (Fund $fund) => $fund->makeVoucher($identity));
             $implementation->funds->each(fn (Fund $fund) => $this->makeTestFundProvider($provider, $fund));
 
             // Authorize identity
@@ -78,7 +78,7 @@ class ProductReservationTest extends DuskTestCase
 
             $this->loginIdentity($browser, $identity);
             $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
-            $browser->waitFor('@headerTitle', 10);
+            $browser->waitFor('@headerTitle');
 
             // Assert at lease one fund exist
             $this->assertCount(1, $funds);
@@ -119,7 +119,7 @@ class ProductReservationTest extends DuskTestCase
 
             $browser->waitFor('@reservationsPage');
             $browser->element('@reservationsPage')->click();
-            $browser->waitFor('@reservationsTitle', 10);
+            $browser->waitFor('@reservationsTitle');
 
             $this->checkReservationState($browser, $reservation);
 
@@ -157,7 +157,7 @@ class ProductReservationTest extends DuskTestCase
     private function checkReservationState(Browser $browser, ProductReservation $reservation): void
     {
         $browser
-            ->waitFor("@reservationRow$reservation->id", 10)
+            ->waitFor("@reservationRow$reservation->id")
             ->assertSeeIn("@reservationRow$reservation->id @reservationState", $reservation->state_locale);
     }
 
@@ -184,8 +184,8 @@ class ProductReservationTest extends DuskTestCase
         $this->goToVoucherPage($browser, $fund);
 
         // Find available product and open it
-        $browser->waitFor('@productItem', 8)->press('@productItem');
-        $browser->waitFor('@fundItem', 10);
+        $browser->waitFor('@productItem')->press('@productItem');
+        $browser->waitFor('@fundItem');
         $productName = trim($browser->waitFor('@productName')->element('@productName')->getText());
 
         // Find available fund and reserve product
@@ -200,7 +200,7 @@ class ProductReservationTest extends DuskTestCase
         $browser->within('@modalProductReserve', fn(Browser $el) => $el->click('@btnSelectVoucher'));
 
         // Fill reservation fields (except notes)
-        $browser->waitFor('@productReserveForm', 10);
+        $browser->waitFor('@productReserveForm');
         $browser->within('@productReserveForm', function(Browser $browser) use ($user) {
             $browser->press('@btnSubmit');
             $browser->waitFor('.form-error');
@@ -271,7 +271,8 @@ class ProductReservationTest extends DuskTestCase
     {
         $selector = '@voucherItem';
 
-        $browser->waitFor($selector,5);
+        $browser->waitFor($selector);
+
         foreach ($browser->elements($selector) as $element) {
             $text = $element->findElement(WebDriverBy::xpath(".//*[@data-dusk='voucherName']"))->getText();
 
@@ -292,7 +293,8 @@ class ProductReservationTest extends DuskTestCase
     private function findFundReservationOptionElement(Browser $browser, string $fundTitle): ?RemoteWebElement
     {
         $selector = '@fundItem';
-        $browser->waitFor($selector, 10);
+
+        $browser->waitFor($selector);
 
         $element = Arr::first($browser->elements($selector), function(RemoteWebElement $element) use ($fundTitle) {
             $fundNameElement = $element->findElement(WebDriverBy::xpath(".//*[@data-dusk='fundName']"));

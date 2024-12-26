@@ -5,8 +5,8 @@ namespace App\Http\Requests\Api\Platform\Organizations\Transactions;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
-use App\Models\VoucherTransaction;
 use App\Models\ProductReservation;
+use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use Illuminate\Validation\Rule;
 
@@ -60,6 +60,8 @@ abstract class BaseIndexTransactionsRequest extends BaseFormRequest
             'non_cancelable_from' => 'nullable|date_format:Y-m-d',
             'non_cancelable_to' => 'nullable|date_format:Y-m-d',
             'bulk_state' => ['nullable', Rule::in(VoucherTransactionBulk::STATES)],
+
+            'identity_address' => 'nullable|exists:identities,address',
 
             'voucher_id' => [
                 'nullable',

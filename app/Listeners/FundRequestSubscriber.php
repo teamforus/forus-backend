@@ -115,13 +115,13 @@ class FundRequestSubscriber
                                 $fundRequest->getIbanName(),
                             ),
                             voucherFields: [
+                                'identity_id' => $fundRequest->identity_id,
                                 'fund_request_id' => $fundRequest->id,
-                                'identity_address' => $fundRequest->identity_address,
                             ],
                         );
                     } else {
                         $fund->makeVoucher(
-                            $fundRequest->identity_address,
+                            $fundRequest->identity,
                             voucherFields: [
                                 'fund_request_id' => $fundRequest->id,
                             ],
@@ -130,7 +130,7 @@ class FundRequestSubscriber
                     }
 
                     $fund->makeFundFormulaProductVouchers(
-                        $fundRequest->identity_address,
+                        $fundRequest->identity,
                         voucherFields: [
                             'fund_request_id' => $fundRequest->id,
                         ]

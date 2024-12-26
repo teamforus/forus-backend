@@ -12,14 +12,14 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationUnsubscriptionToken newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationUnsubscriptionToken newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationUnsubscriptionToken query()
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationUnsubscriptionToken whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationUnsubscriptionToken whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationUnsubscriptionToken whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationUnsubscriptionToken whereToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|NotificationUnsubscriptionToken whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationUnsubscriptionToken newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationUnsubscriptionToken newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationUnsubscriptionToken query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationUnsubscriptionToken whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationUnsubscriptionToken whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationUnsubscriptionToken whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationUnsubscriptionToken whereToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationUnsubscriptionToken whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class NotificationUnsubscriptionToken extends Model
@@ -47,7 +47,7 @@ class NotificationUnsubscriptionToken extends Model
      *
      * @param string $token
      * @param bool $onlyActive
-     * @return null|self|Model
+     * @return NotificationUnsubscriptionToken|null
      */
     public static function findByToken(string $token, bool $onlyActive = true): ?self
     {

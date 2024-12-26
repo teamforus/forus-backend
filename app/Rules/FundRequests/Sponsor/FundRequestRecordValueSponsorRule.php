@@ -36,7 +36,7 @@ class FundRequestRecordValueSponsorRule extends BaseFundRequestRule
     {
         $values = $this->fund_request->records->pluck('value', 'record_type_key')->toArray();
         $records = $this->criterion->fund_criterion_rules->pluck('record_type_key')->toArray();
-        $recordsValues = $this->fund->getTrustedRecordOfTypes($this->request->auth_address(), $records, $this->criterion);
+        $recordsValues = $this->fund->getTrustedRecordOfTypes($this->request->identity(), $records);
 
         $values = array_merge($recordsValues, $values);
         $validator = static::validateRecordValue($this->criterion, $value);

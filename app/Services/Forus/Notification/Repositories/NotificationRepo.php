@@ -7,6 +7,7 @@ use App\Mail\Digest\DigestProviderFundsMail;
 use App\Mail\Digest\DigestProviderProductsMail;
 use App\Mail\Digest\DigestRequesterMail;
 use App\Mail\Digest\DigestSponsorMail;
+use App\Mail\Digest\DigestSponsorProductUpdatesMail;
 use App\Mail\Digest\DigestValidatorMail;
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\ProviderAppliedMail;
@@ -83,10 +84,6 @@ use App\Services\Forus\Notification\Models\NotificationUnsubscriptionToken;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
-/**
- * Class NotificationServiceRepo
- * @package App\Services\Forus\Notification\Repositories
- */
 class NotificationRepo implements INotificationRepo
 {
     protected static array $notifications = [
@@ -199,6 +196,7 @@ class NotificationRepo implements INotificationRepo
         'digest.daily_requester' => DigestRequesterMail::class,
         'digest.daily_provider_funds' => DigestProviderFundsMail::class,
         'digest.daily_provider_products' => DigestProviderProductsMail::class,
+        'digest.daily_sponsor_product_updates' => DigestSponsorProductUpdatesMail::class,
     ];
 
     /**
@@ -267,9 +265,10 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
+     * @param bool $visibleOnly
      * @return Collection|SystemNotification[]
      */
-    public function getSystemNotifications(bool $visibleOnly = false): Collection
+    public function getSystemNotifications(bool $visibleOnly = false): Collection|array
     {
         return $this->getSystemNotificationsQuery($visibleOnly)->get();
     }

@@ -6,10 +6,6 @@ use App\Models\Fund;
 use App\Models\Product;
 use App\Scopes\Builders\ProductQuery;
 
-/**
- * Class ProductIdInStockRule
- * @package App\Rules
- */
 class ProductIdInStockRule extends BaseRule
 {
     protected string $messageTransPrefix = 'validation.product_voucher.';

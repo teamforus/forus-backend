@@ -12,16 +12,16 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 class IdentityQuery
 {
     /**
-     * @param Relation|Builder $builder
+     * @param Builder|Relation|Identity $builder
      * @param Fund $fund
      * @param bool $withReservations
-     * @return Relation|Builder
+     * @return Builder|Relation|Identity
      */
     public static function appendVouchersCountFields(
-        Relation|Builder $builder,
+        Builder|Relation|Identity $builder,
         Fund $fund,
-        bool $withReservations = false
-    ): Relation|Builder {
+        bool $withReservations = false,
+    ): Builder|Relation|Identity {
         $vouchersQuery = $fund
             ->vouchers()
             ->selectRaw('count(*)')
@@ -39,11 +39,12 @@ class IdentityQuery
     }
 
     /**
-     * @param Relation|Builder $builder
-     * @return Relation|Builder
+     * @param Builder|Relation|Identity $builder
+     * @return Builder|Relation|Identity
      */
-    public static function appendEmailField(Relation|Builder $builder): Relation|Builder
-    {
+    public static function appendEmailField(
+        Builder|Relation|Identity $builder,
+    ): Builder|Relation|Identity {
         return $builder->addSelect([
             'email' => IdentityEmail::query()
                 ->whereColumn('identities.address', 'identity_emails.identity_address')
@@ -79,6 +80,36 @@ class IdentityQuery
         return $builder->whereHas('records', function(Builder $builder) use ($bsn) {
             $builder->where('value', 'LIKE', "%$bsn%");
             $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
+        });
+    }
+
+    /**
+     * @param Builder|Relation|Identity $builder
+     * @param array|int $organizationId
+     * @param array|int|null $fundId
+     * @return Builder|Relation|Identity
+     */
+    public static function relatedToOrganization(
+        Builder|Relation|Identity $builder,
+        array|int $organizationId,
+        array|int $fundId = null,
+    ): Builder|Relation|Identity  {
+        return $builder->where(function(Builder $builder) use ($organizationId, $fundId) {
+            $builder->whereHas('vouchers.fund', function (Builder $builder) use ($organizationId, $fundId) {
+                $builder->whereIn('organization_id', (array) $organizationId);
+
+                if ($fundId) {
+                    $builder->whereIn('id', (array) $fundId);
+                }
+            });
+
+            $builder->orWhereHas('fund_requests.fund', function (Builder $builder) use ($organizationId, $fundId) {
+                $builder->whereIn('organization_id', (array) $organizationId);
+
+                if ($fundId) {
+                    $builder->whereIn('id', (array) $fundId);
+                }
+            });
         });
     }
 }

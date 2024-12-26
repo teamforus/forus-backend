@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
  */
 class ReimbursementResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'files.preview',
         'voucher.identity',
         'voucher.fund.organization',
@@ -34,7 +34,7 @@ class ReimbursementResource extends BaseJsonResource
      * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $reimbursement = $this->resource;
 
@@ -47,13 +47,13 @@ class ReimbursementResource extends BaseJsonResource
             'fund' => $this->fundResource($reimbursement->voucher->fund, $request),
             'files' => FileResource::collection($reimbursement->files),
             'voucher_transaction' => VoucherTransactionResource::create($reimbursement->voucher_transaction),
-            'resolved_at' => $reimbursement->resolved_at?->format('Y-m-d'),
-            'resolved_at_locale' => $reimbursement->resolved_at_locale,
-            'submitted_at' => $reimbursement->submitted_at?->format('Y-m-d'),
-            'submitted_at_locale' => $reimbursement->submitted_at_locale,
-            'expire_at' => $reimbursement->expire_at?->format('Y-m-d'),
-            'expire_at_locale' => $reimbursement->expire_at_locale,
-        ], $this->timestamps($reimbursement, 'created_at'));
+            ...$this->makeTimestamps($reimbursement->only([
+                'resolved_at', 'submitted_at', 'expire_at',
+            ]), true),
+            ...$this->makeTimestamps($reimbursement->only([
+                'created_at',
+            ])),
+        ]);
     }
 
     /**

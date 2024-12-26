@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
  */
 class TopUpResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'fund.organization.bank_connection_active.bank_connection_default_account',
     ];
 

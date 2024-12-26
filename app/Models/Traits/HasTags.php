@@ -2,8 +2,8 @@
 
 namespace App\Models\Traits;
 
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use App\Models\Tag;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
  * @mixin \Eloquent

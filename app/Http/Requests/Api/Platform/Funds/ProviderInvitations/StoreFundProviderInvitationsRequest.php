@@ -7,9 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Class StoreFundProviderInvitationsRequest
  * @property Fund|null $fund
- * @package App\Http\Requests\Api\Platform\Funds\ProviderInvitations
  */
 class StoreFundProviderInvitationsRequest extends FormRequest
 {
