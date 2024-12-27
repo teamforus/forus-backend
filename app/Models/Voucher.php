@@ -1301,7 +1301,7 @@ class Voucher extends BaseModel
             $zip->addFromString($name . '_QR_codes_PDF.pdf', $domPdfFile->output());
         }
 
-        $export = new VoucherExport(Arr::pluck($data, 'values'));
+        $export = new VoucherExport(Arr::pluck($data, 'values'), $fields);
         $files = [];
 
         if ($dataFormat === 'xls' || $dataFormat === 'all') {

@@ -90,6 +90,10 @@ class ProductReservationsExport extends BaseFieldedExport
      */
     public function headings(): array
     {
-        return array_keys($this->collection()->first());
+        $collection = $this->collection();
+
+        return $collection->isNotEmpty()
+            ? array_keys($collection->first())
+            : array_map(fn ($key) => static::$exportFields[$key] ?? $key, $this->fields);
     }
 }
