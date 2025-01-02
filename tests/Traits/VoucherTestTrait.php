@@ -106,7 +106,7 @@ trait VoucherTestTrait
         if ($assert['existing_identity'] ?? false) {
             $identity = null;
             if ($assert['assign_by'] === 'bsn') {
-                $identity = $this->makeIdentity(null, ['bsn' => (string) $this->randomFakeBsn()]);
+                $identity = $this->makeIdentity(bsn: $this->randomFakeBsn());
                 $params['bsn'] = $identity->record_bsn->value;
             } elseif ($assert['assign_by'] === 'email') {
                 $identity = $this->makeIdentity($this->makeUniqueEmail());
@@ -302,7 +302,7 @@ trait VoucherTestTrait
         $this->assertNotNull($voucher->voucher_relation);
         $this->assertEquals($voucherArr['bsn'], $voucher->voucher_relation->bsn);
 
-        $identity = $this->makeIdentity(null, ['bsn' => $voucher->voucher_relation->bsn]);
+        $identity = $this->makeIdentity(bsn: $voucher->voucher_relation->bsn);
 
         $headers = $this->makeApiHeaders($identity);
         $response = $this->post(sprintf($this->apiFundUrl . '/check', $voucher->fund_id), [], $headers);

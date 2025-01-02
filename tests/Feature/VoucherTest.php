@@ -110,8 +110,8 @@ class VoucherTest extends TestCase
     public function testVoucherFundFormulaProductMultiplier(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+
         $fund = $this->makeTestFund($organization, [], [
             'limit_generator_amount' => 100,
             'limit_voucher_total_amount' => 100,
@@ -297,7 +297,7 @@ class VoucherTest extends TestCase
 
             if ($existingIdentity) {
                 if ($assign_by === 'bsn') {
-                    $identity = $this->makeIdentity(null, ['bsn' => (string) $this->randomFakeBsn()]);
+                    $identity = $this->makeIdentity(bsn: $this->randomFakeBsn());
                     $params['bsn'] = $identity->record_bsn->value;
                 } elseif ($assign_by === 'email') {
                     $identity = $this->makeIdentity($this->makeUniqueEmail());

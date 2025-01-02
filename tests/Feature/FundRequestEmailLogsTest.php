@@ -31,9 +31,8 @@ class FundRequestEmailLogsTest extends TestCase
     public function testRequestFundEmailLogCreated()
     {
         // create sponsor and requester identities
-        $sponsorIdentity = $this->makeIdentity($this->makeUniqueEmail());
-        $requesterIdentity = $this->makeIdentity($this->makeUniqueEmail());
-        $requesterIdentity->setBsnRecord('123456789');
+        $sponsorIdentity = $this->makeIdentity(email: $this->makeUniqueEmail());
+        $requesterIdentity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
 
         // create the organization and fund
         $organization = $this->makeTestOrganization($sponsorIdentity);

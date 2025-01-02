@@ -14,11 +14,21 @@ trait DoesTesting
     /**
      * @param string|null $email
      * @param array $records
+     * @param string|null $bsn
      * @return Identity
      */
-    protected function makeIdentity(string $email = null, array $records = []): Identity
-    {
-        return Identity::make($email, $records);
+    protected function makeIdentity(
+        string $email = null,
+        string $bsn = null,
+        array $records = [],
+    ): Identity {
+        $identity = Identity::make($email, $records);
+
+        if ($bsn) {
+            $identity->setBsnRecord($bsn);
+        }
+
+        return $identity;
     }
 
     /**
