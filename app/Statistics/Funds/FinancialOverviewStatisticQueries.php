@@ -20,11 +20,9 @@ class FinancialOverviewStatisticQueries
      * @param Carbon|null $to
      * @return Builder|Relation
      */
-    public static function whereNotExpired(Builder|Relation $builder, ?Carbon $from, ?Carbon $to): Builder|Relation
+    public static function whereDate(Builder|Relation $builder, ?Carbon $from, ?Carbon $to): Builder|Relation
     {
         return $builder->where(static function(Builder $builder) use ($from, $to) {
-            VoucherQuery::whereNotExpired($builder);
-
             if ($from) {
                 $builder->where('vouchers.created_at', '>=', $from);
             }
@@ -47,40 +45,30 @@ class FinancialOverviewStatisticQueries
 
     /**
      * @param Builder|Relation $builder
-     * @param Carbon|null $from
-     * @param Carbon|null $to
      * @return Builder|Relation
      */
-    public static function whereNotExpiredAndActive(Builder|Relation $builder, ?Carbon $from, ?Carbon $to): Builder|Relation
+    public static function whereNotExpired(Builder|Relation $builder): Builder|Relation
     {
-        return self::whereNotExpired(self::whereActive($builder, $from, $to), $from, $to);
+        return VoucherQuery::whereNotExpired($builder);
+    }
+
+    /**
+     * @param Builder|Relation $builder
+     * @return Builder|Relation
+     */
+    public static function whereNotExpiredAndActive(Builder|Relation $builder): Builder|Relation
+    {
+        return self::whereNotExpired(self::whereActive($builder));
     }
 
     /**
      * @param Builder|Relation|Voucher $builder
-     * @param Carbon|null $from
-     * @param Carbon|null $to
      * @return Builder|Relation|Voucher
      */
     public static function whereActive(
         Builder|Relation|Voucher $builder,
-        ?Carbon $from,
-        ?Carbon $to,
     ): Builder|Relation|Voucher {
-        return $builder->where(static function (Builder $builder) use ($from, $to) {
-            $builder->where('state', Voucher::STATE_ACTIVE);
-
-            $builder->orWhere(static function (Builder $builder) use ($from, $to) {
-                if ($from) {
-                    $builder->where('expire_at', '>=', $from);
-                    $builder->where('created_at', '>=', $from);
-                }
-
-                if ($to) {
-                    $builder->where('created_at', '<=', $to);
-                }
-            });
-        });
+        return $builder->where('state', Voucher::STATE_ACTIVE);
     }
 
     /**
@@ -99,34 +87,6 @@ class FinancialOverviewStatisticQueries
     public static function whereDeactivated(Builder $builder): Builder
     {
         return $builder->where('state', Voucher::STATE_DEACTIVATED);
-    }
-
-    /**
-     * @param Builder $builder
-     * @param Carbon|null $from
-     * @param Carbon|null $to
-     * @return Builder
-     */
-    public static function whereNotExpiredAndPending(
-        Builder $builder,
-        ?Carbon $from,
-        ?Carbon $to,
-    ): Builder {
-        return self::whereNotExpired(self::wherePending($builder), $from, $to);
-    }
-
-    /**
-     * @param Builder $builder
-     * @param Carbon|null $from
-     * @param Carbon|null $to
-     * @return Builder
-     */
-    public static function whereNotExpiredAndDeactivated(
-        Builder $builder,
-        ?Carbon $from,
-        ?Carbon $to,
-    ): Builder {
-        return self::whereNotExpired(self::whereDeactivated($builder), $from, $to);
     }
 
     /**
