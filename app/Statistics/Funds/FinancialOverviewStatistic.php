@@ -68,10 +68,10 @@ class FinancialOverviewStatistic
         $transaction_costs = 0;
 
         $query = Voucher::query()->whereNull('parent_id')->whereIn('fund_id', $funds->pluck('id'));
-        $vouchersQuery = FinancialOverviewStatisticQueries::whereNotExpired($query, $from, $to);
-        $activeVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndActive((clone $vouchersQuery), $from, $to);
-        $inactiveVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndPending((clone $vouchersQuery), $from, $to);
-        $deactivatedVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndDeactivated((clone $vouchersQuery), $from, $to);
+        $vouchersQuery = FinancialOverviewStatisticQueries::whereDate($query, $from, $to);
+        $activeVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndActive((clone $vouchersQuery));
+        $inactiveVouchersQuery = FinancialOverviewStatisticQueries::wherePending((clone $vouchersQuery));
+        $deactivatedVouchersQuery = FinancialOverviewStatisticQueries::whereDeactivated((clone $vouchersQuery));
 
         $vouchersAmount = $vouchersQuery->sum('amount');
         $activeVouchersAmount = $activeVouchersQuery->sum('amount');
@@ -257,10 +257,10 @@ class FinancialOverviewStatistic
         ?Carbon $from,
         ?Carbon $to,
     ) : array {
-        $vouchersQuery = FinancialOverviewStatisticQueries::whereNotExpired($vouchersQuery, $from, $to);
-        $activeVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndActive((clone $vouchersQuery), $from, $to);
-        $inactiveVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndPending((clone $vouchersQuery), $from, $to);
-        $deactivatedVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndDeactivated((clone $vouchersQuery), $from, $to);
+        $vouchersQuery = FinancialOverviewStatisticQueries::whereDate($vouchersQuery, $from, $to);
+        $activeVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndActive((clone $vouchersQuery));
+        $inactiveVouchersQuery = FinancialOverviewStatisticQueries::wherePending((clone $vouchersQuery));
+        $deactivatedVouchersQuery = FinancialOverviewStatisticQueries::whereDeactivated((clone $vouchersQuery));
 
         $vouchers_count = $vouchersQuery->count();
         $inactive_count = $inactiveVouchersQuery->count();
