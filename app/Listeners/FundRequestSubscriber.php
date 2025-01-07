@@ -115,7 +115,7 @@ class FundRequestSubscriber
                                 $fundRequest->getIbanName(),
                             ),
                             voucherFields: [
-                                'identity_id' => $fundRequest->identity?->id,
+                                'identity_id' => $fundRequest->identity_id,
                                 'fund_request_id' => $fundRequest->id,
                             ],
                         );

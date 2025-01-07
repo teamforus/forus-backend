@@ -17,6 +17,7 @@ use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\VerifyCsrfToken;
 use App\Services\Forus\Auth2FAService\Middleware\Auth2FAMiddleware;
 use App\Services\Forus\Session\Middleware\ForusSessionMiddleware;
+use App\Services\QueryCounterService\Middleware\LogQueryCountMiddleware;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Http\Middleware\HandleCors;
 
@@ -37,6 +38,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         TrustProxies::class,
         HandleCors::class,
+        LogQueryCountMiddleware::class,
     ];
 
     /**

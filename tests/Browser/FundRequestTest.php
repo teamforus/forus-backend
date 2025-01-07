@@ -48,7 +48,7 @@ class FundRequestTest extends DuskTestCase
             $browser->waitFor('@headerTitle');
 
             $fundRequests = (new FundRequestSearch($search))->query()->where([
-                'identity_address' => $identity->address
+                'identity_id' => $identity->id
             ])->take(10)->get();
 
             $this->goToIdentityFundRequests($browser);
