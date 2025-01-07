@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Traits\Translations\BusinessTypeTranslationTrait;
 use App\Scopes\Builders\FundProviderQuery;
+use App\Services\TranslationService\Traits\TranslatableTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -44,7 +45,7 @@ use Illuminate\Http\Request;
  */
 class BusinessType extends BaseModel
 {
-    use Translatable, BusinessTypeTranslationTrait;
+    use Translatable, BusinessTypeTranslationTrait, TranslatableTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -59,6 +60,7 @@ class BusinessType extends BaseModel
      * The attributes that are translatable.
      *
      * @var array
+     * @noinspection PhpUnused
      */
     public array $translatedAttributes = [
         'name'

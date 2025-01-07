@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\Translations\RecordTranslationsTrait;
+use App\Services\TranslationService\Traits\TranslatableTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -62,7 +63,7 @@ use Illuminate\Support\Arr;
  */
 class RecordType extends BaseModel
 {
-    use Translatable, RecordTranslationsTrait;
+    use Translatable, RecordTranslationsTrait, TranslatableTrait;
 
     public const string TYPE_BOOL = 'bool';
     public const string TYPE_IBAN = 'iban';
