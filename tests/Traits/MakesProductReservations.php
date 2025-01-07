@@ -23,6 +23,36 @@ trait MakesProductReservations
     use MakesTestProducts;
 
     /**
+     * @var array
+     */
+    protected array $resourceStructure = [
+        'id',
+        'state',
+        'state_locale',
+        'amount',
+        'code',
+        'first_name',
+        'last_name',
+        'user_note',
+        'created_at',
+        'created_at_locale',
+        'accepted_at',
+        'accepted_at_locale',
+        'rejected_at',
+        'rejected_at_locale',
+        'canceled_at',
+        'canceled_at_locale',
+        'expire_at',
+        'expire_at_locale',
+        'expired',
+        'product',
+        'fund',
+        'voucher_transaction',
+        'price',
+        'price_locale',
+    ];
+
+    /**
      * @param Organization $organization
      * @param string $fundType
      * @return Voucher
@@ -38,7 +68,10 @@ trait MakesProductReservations
         )->whereNull('product_id')->first();
 
         if (!$voucher) {
-            $voucher = $funds->first()->makeVoucher($organization->identity, [
+            /** @var Fund $fund */
+            $fund = $funds->first();
+
+            $voucher = $fund->makeVoucher($organization->identity, [
                 'state' => Voucher::STATE_ACTIVE
             ], 10000);
         }
@@ -140,6 +173,36 @@ trait MakesProductReservations
         if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
             $reservation->acceptProvider();
         }
+
+        return $reservation;
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Product $product
+     * @return ProductReservation
+     */
+    public function makeReservation(Voucher $voucher, Product $product): ProductReservation
+    {
+        $response = $this->makeReservationStoreRequest($voucher, $product, [
+            'first_name' => '',
+            'last_name' => '',
+            'user_note' => [],
+        ]);
+
+        $response->assertJsonValidationErrors([
+            'first_name',
+            'last_name',
+            'user_note',
+        ]);
+
+        $response = $this->makeReservationStoreRequest($voucher, $product);
+        $response->assertSuccessful();
+        $response->assertJsonStructure(['data' => $this->resourceStructure]);
+
+        /** @var ProductReservation $reservation */
+        $reservation = ProductReservation::find($response->json('data.id'));
+        $this->assertNotNull($reservation);
 
         return $reservation;
     }

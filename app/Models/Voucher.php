@@ -1549,6 +1549,7 @@ class Voucher extends BaseModel
      * @param bool $notifyByEmail
      * @param Employee|null $employee
      * @return $this
+     * @throws \Throwable
      */
     public function deactivate(
         string $note = '',
@@ -1558,6 +1559,10 @@ class Voucher extends BaseModel
         $this->update([
             'state' => self::STATE_DEACTIVATED,
         ]);
+
+        $this->product_reservations->each(function (ProductReservation $reservation) use ($employee) {
+            $employee ? $reservation->cancelBySponsor() : $reservation->cancelByClient();
+        });
 
         VoucherDeactivated::dispatch($this, $note, $employee, $notifyByEmail);
 

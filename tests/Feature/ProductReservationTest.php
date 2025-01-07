@@ -26,36 +26,6 @@ class ProductReservationTest extends TestCase
     use MakesProductReservations;
 
     /**
-     * @var array
-     */
-    protected array $resourceStructure = [
-        'id',
-        'state',
-        'state_locale',
-        'amount',
-        'code',
-        'first_name',
-        'last_name',
-        'user_note',
-        'created_at',
-        'created_at_locale',
-        'accepted_at',
-        'accepted_at_locale',
-        'rejected_at',
-        'rejected_at_locale',
-        'canceled_at',
-        'canceled_at_locale',
-        'expire_at',
-        'expire_at_locale',
-        'expired',
-        'product',
-        'fund',
-        'voucher_transaction',
-        'price',
-        'price_locale',
-    ];
-
-    /**
      * @return void
      * @throws \Exception
      */
@@ -364,35 +334,6 @@ class ProductReservationTest extends TestCase
         if ($assertSuccess) {
             $this->assertTrue(!$reservation->refresh()->isArchived());
         }
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @param Product $product
-     * @return ProductReservation
-     */
-    public function makeReservation(Voucher $voucher, Product $product): ProductReservation
-    {
-        $response = $this->makeReservationStoreRequest($voucher, $product, [
-            'first_name' => '',
-            'last_name' => '',
-            'user_note' => [],
-        ]);
-
-        $response->assertJsonValidationErrors([
-            'first_name',
-            'last_name',
-            'user_note',
-        ]);
-
-        $response = $this->makeReservationStoreRequest($voucher, $product);
-        $response->assertSuccessful();
-        $response->assertJsonStructure(['data' => $this->resourceStructure]);
-
-        $reservation = ProductReservation::find($response->json('data.id'));
-        $this->assertNotNull($reservation);
-
-        return $reservation;
     }
 
     /**

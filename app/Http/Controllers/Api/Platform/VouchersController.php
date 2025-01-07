@@ -108,7 +108,7 @@ class VouchersController extends Controller
      * @param DeactivateVoucherRequest $request
      * @param Voucher $voucher
      * @return VoucherResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Throwable
      */
     public function deactivate(
         DeactivateVoucherRequest $request,
