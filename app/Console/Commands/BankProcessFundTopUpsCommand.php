@@ -60,7 +60,7 @@ class BankProcessFundTopUpsCommand extends Command
         FundQuery::whereIsInternal($funds);
         FundQuery::whereIsConfiguredByForus($funds);
 
-        foreach ($funds as $fund) {
+        foreach ($funds->get() as $fund) {
             DB::transaction(function() use ($fund) {
                 $this->processFund($fund);
                 sleep($this->fetchInterval);
