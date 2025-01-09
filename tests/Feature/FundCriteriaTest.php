@@ -369,8 +369,7 @@ class FundCriteriaTest extends TestCase
     public function assertPrevalidationSuccess(bool $assertRedeem = true): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord('123456789');
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
         $fund = $this->makeTestFund($organization);
 
         $identityHeaders = [
@@ -411,8 +410,7 @@ class FundCriteriaTest extends TestCase
     {
         $bsn = '123456789';
         $organization = $this->makeTestOrganization($this->makeIdentity(), ['bsn_enabled' => true]);
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $identity->setBsnRecord($bsn);
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: $bsn);
         $fund = $this->makeTestFund($organization, [], ['csv_primary_key' => 'bsn']);
 
         $identityHeaders = [

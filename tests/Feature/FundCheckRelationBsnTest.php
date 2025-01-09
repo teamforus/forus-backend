@@ -25,8 +25,7 @@ class FundCheckRelationBsnTest extends TestCase
     public function testBsnRelationVoucherReceived(): void
     {
         $voucher = $this->makeFundForCheckTest();
-        $requester = $this->makeIdentity($this->makeUniqueEmail());
-        $requester->setBsnRecord($voucher->voucher_relation->bsn);
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), $voucher->voucher_relation->bsn);
 
         self::assertEquals($voucher->voucher_relation->bsn, $requester->bsn);
 
@@ -49,8 +48,7 @@ class FundCheckRelationBsnTest extends TestCase
     public function testInactiveBsnRelationVoucherNotReceived(): void
     {
         $voucher = $this->makeFundForCheckTest();
-        $requester = $this->makeIdentity($this->makeUniqueEmail());
-        $requester->setBsnRecord($voucher->voucher_relation->bsn);
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), $voucher->voucher_relation->bsn);
 
         self::assertEquals($voucher->voucher_relation->bsn, $requester->bsn);
 
@@ -78,8 +76,7 @@ class FundCheckRelationBsnTest extends TestCase
     public function testExpiredBsnRelationVoucherNotReceived(): void
     {
         $voucher = $this->makeFundForCheckTest();
-        $requester = $this->makeIdentity($this->makeUniqueEmail());
-        $requester->setBsnRecord($voucher->voucher_relation->bsn);
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), $voucher->voucher_relation->bsn);
 
         self::assertEquals($voucher->voucher_relation->bsn, $requester->bsn);
 
