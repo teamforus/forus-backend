@@ -81,6 +81,7 @@ class FundActionsTest extends DuskTestCase
             // assert fund request created and pending request link available on funds page
             $browser->visit($implementation->urlWebshop("fondsen"));
             $browser->waitFor('@fundsSearchForm');
+            $browser->waitFor('@fundsList');
 
             // type the fund name in search form
             $browser->within('@fundsSearchForm', function(Browser $browser) use ($fund) {
@@ -121,8 +122,8 @@ class FundActionsTest extends DuskTestCase
 
             // assert fund request created and pending request link available on funds page
             $browser->visit($implementation->urlWebshop("fondsen"));
-
             $browser->waitFor('@fundsSearchForm');
+            $browser->waitFor('@fundsList');
 
             // type the fund name in search form
             $browser->within('@fundsSearchForm', function(Browser $browser) use ($fund) {
