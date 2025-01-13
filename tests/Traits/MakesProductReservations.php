@@ -25,7 +25,7 @@ trait MakesProductReservations
     /**
      * @var array
      */
-    protected array $resourceStructure = [
+    protected array $productReservationResourceStructure = [
         'id',
         'state',
         'state_locale',
@@ -62,16 +62,12 @@ trait MakesProductReservations
         $funds = $organization->funds()->where('type', $fundType)->get();
         $this->assertNotNull($funds->count() ?: null);
 
-        /** @var Voucher $voucher */
         $voucher = VoucherQuery::whereNotExpiredAndActive(
             $organization->identity->vouchers()->whereIn('fund_id', $funds->pluck('id'))
         )->whereNull('product_id')->first();
 
         if (!$voucher) {
-            /** @var Fund $fund */
-            $fund = $funds->first();
-
-            $voucher = $fund->makeVoucher($organization->identity, [
+            $voucher = $funds->first()->makeVoucher($organization->identity, [
                 'state' => Voucher::STATE_ACTIVE
             ], 10000);
         }
@@ -198,9 +194,8 @@ trait MakesProductReservations
 
         $response = $this->makeReservationStoreRequest($voucher, $product);
         $response->assertSuccessful();
-        $response->assertJsonStructure(['data' => $this->resourceStructure]);
+        $response->assertJsonStructure(['data' => $this->productReservationResourceStructure]);
 
-        /** @var ProductReservation $reservation */
         $reservation = ProductReservation::find($response->json('data.id'));
         $this->assertNotNull($reservation);
 

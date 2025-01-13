@@ -244,7 +244,7 @@ class ProductReservationTest extends TestCase
         $response = $this->makeReservationGetRequest($reservation);
 
         $response->assertSuccessful();
-        $response->assertJsonStructure(['data' => $this->resourceStructure]);
+        $response->assertJsonStructure(['data' => $this->productReservationResourceStructure]);
 
         $this->makeReservationCancelRequest($reservation)->assertSuccessful();
 
@@ -295,7 +295,7 @@ class ProductReservationTest extends TestCase
 
         if ($assertSuccess) {
             $response->assertSuccessful();
-            $response->assertJsonStructure(['data' => $this->resourceStructure]);
+            $response->assertJsonStructure(['data' => $this->productReservationResourceStructure]);
         } else {
             $response->assertForbidden();
         }
@@ -326,7 +326,7 @@ class ProductReservationTest extends TestCase
 
         if ($assertSuccess) {
             $response->assertSuccessful();
-            $response->assertJsonStructure(['data' => $this->resourceStructure]);
+            $response->assertJsonStructure(['data' => $this->productReservationResourceStructure]);
         } else {
             $response->assertForbidden();
         }

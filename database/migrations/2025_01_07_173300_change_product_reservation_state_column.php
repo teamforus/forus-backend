@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -15,25 +17,13 @@ return new class extends Migration
             'canceled_by_sponsor',
         ];
 
-        DB::statement(
-            "ALTER TABLE `product_reservations` CHANGE `state` `state` " .
-            "ENUM('" . implode("', '", $states) . "') DEFAULT 'pending';",
-        );
+        Schema::table('product_reservations', function (Blueprint $table) use ($states) {
+            $table->enum('state', $states)->default('pending')->change();
+        });
     }
 
     /**
      * Reverse the migrations.
      */
-    public function down(): void
-    {
-        $states = [
-            'waiting', 'pending', 'accepted', 'rejected', 'canceled', 'canceled_by_client',
-            'canceled_payment_failed', 'canceled_payment_expired', 'canceled_payment_canceled',
-        ];
-
-        DB::statement(
-            "ALTER TABLE `product_reservations` CHANGE `state` `state` " .
-            "ENUM('" . implode("', '", $states) . "') DEFAULT 'pending';",
-        );
-    }
+    public function down(): void {}
 };
