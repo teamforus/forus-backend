@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\FundRequest;
+use App\Models\Voucher;
 
 /**
  * @property FundRequest $resource
@@ -22,6 +23,16 @@ class FundRequestResource extends BaseJsonResource
         ]), [
             'fund' => new FundResource($this->resource->fund),
             'records' => FundRequestRecordResource::collection($this->resource->records),
+            'active_current_period' => $this->activePeriod($this->resource),
         ], $this->timestamps($this->resource, 'created_at', 'updated_at'));
+    }
+
+    /**
+     * @param FundRequest $fundRequest
+     * @return bool
+     */
+    public function activePeriod(FundRequest $fundRequest): bool
+    {
+        return (bool)$fundRequest->vouchers->first(fn (Voucher $voucher) => !$voucher->expired);
     }
 }
