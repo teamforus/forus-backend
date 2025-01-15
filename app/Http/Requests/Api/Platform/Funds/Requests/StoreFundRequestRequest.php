@@ -4,10 +4,12 @@ namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
+use App\Models\FundRequest;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordCriterionIdRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordFilesRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordValueRule;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * @property Fund $fund
@@ -23,7 +25,11 @@ class StoreFundRequestRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->fund->state === Fund::STATE_ACTIVE && !$this->fund->getResolvingError();
+        return
+            Gate::allows('check', $this->fund) &&
+            Gate::allows('createAsRequester', [FundRequest::class, $this->fund]) &&
+            $this->fund->state === Fund::STATE_ACTIVE &&
+            !$this->fund->getResolvingError();
     }
 
     /**
