@@ -2,7 +2,9 @@
 
 namespace Tests\Traits;
 
+use App\Helpers\Arr;
 use App\Models\Fund;
+use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\Identity;
 use App\Models\Implementation;
@@ -334,4 +336,57 @@ trait MakesTestFunds
         ], $this->makeApiHeaders($this->makeIdentityProxy($fund->organization?->identity)));
     }
 
+    /**
+     * @param Organization $organization
+     * @param array $settings
+     * @return Fund
+     */
+    protected function makeTestFundAndConfigureForFundRequest(
+        Organization $organization,
+        array $settings
+    ): Fund {
+        $fund = $this->makeTestFund($organization, $settings['fund'], $settings['fund_config']);
+
+        $fund->criteria()->delete();
+
+        foreach ($settings['fund_criteria'] as $criterion) {
+            $stepTitle = Arr::get($criterion, 'step', Arr::get($criterion, 'step.title'));
+            $stepFields = is_array(Arr::get($criterion, 'step')) ? Arr::get($criterion, 'step') : [];
+
+            /** @var FundCriteriaStep $stepModel */
+            $stepModel = $stepTitle ?
+                ($fund->criteria_steps()->firstWhere([
+                    'title' => $stepTitle,
+                    ...$stepFields,
+                ]) ?: $fund->criteria_steps()->forceCreate([
+                    'title' => $stepTitle,
+                    ...$stepFields,
+                ])) : null;
+
+            /** @var FundCriterion $criterionModel */
+            $criterionModel = $fund->criteria()->create([
+                ...array_except($criterion, ['rules', 'step']),
+                'fund_criteria_step_id' => $stepModel?->id,
+            ]);
+
+            foreach ($criterion['rules'] ?? [] as $rule) {
+                $criterionModel->fund_criterion_rules()->forceCreate($rule);
+            }
+        }
+
+        $fundFormula = [[
+            'type' => 'fixed',
+            'amount' => $fund->isTypeBudget() ? 600 : 0,
+            'fund_id' => $fund->id,
+        ]];
+
+        $fund->fund_formulas()->delete();
+        $fund->fund_formulas()->createMany($fundFormula);
+
+        $organization->forceFill([
+            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
+        ])->save();
+
+        return $fund->refresh();
+    }
 }

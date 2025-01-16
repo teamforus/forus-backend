@@ -3,12 +3,9 @@
 namespace Browser;
 
 use App\Helpers\Arr;
-use App\Models\Fund;
-use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\FundRequest;
 use App\Models\Implementation;
-use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\RecordType;
 use App\Models\Voucher;
@@ -149,7 +146,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
         $implementation->forceFill($testCase['implementation'])->save();
 
         $requester = $this->makeIdentity($this->makeUniqueEmail());
-        $fund = $this->createFundAndConfigure($implementation->organization, $testCase);
+        $fund = $this->makeTestFundAndConfigureForFundRequest($implementation->organization, $testCase);
 
         if ($testCase['apply_option'] === 'digid') {
             $requester->setBsnRecord('12345678');
@@ -406,58 +403,6 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
         $this->assertNotNull($element);
 
         return $element;
-    }
-
-    /**
-     * @param Organization $organization
-     * @param array $settings
-     * @return Fund
-     */
-    protected function createFundAndConfigure(Organization $organization, array $settings): Fund
-    {
-        $fund = $this->makeTestFund($organization, $settings['fund'], $settings['fund_config']);
-
-        $fund->criteria()->delete();
-
-        foreach ($settings['fund_criteria'] as $criterion) {
-            $stepTitle = Arr::get($criterion, 'step', Arr::get($criterion, 'step.title'));
-            $stepFields = is_array(Arr::get($criterion, 'step')) ? Arr::get($criterion, 'step') : [];
-
-            /** @var FundCriteriaStep $stepModel */
-            $stepModel = $stepTitle ?
-                ($fund->criteria_steps()->firstWhere([
-                    'title' => $stepTitle,
-                    ...$stepFields,
-                ]) ?: $fund->criteria_steps()->forceCreate([
-                    'title' => $stepTitle,
-                    ...$stepFields,
-                ])) : null;
-
-            /** @var FundCriterion $criterionModel */
-            $criterionModel = $fund->criteria()->create([
-                ...array_except($criterion, ['rules', 'step']),
-                'fund_criteria_step_id' => $stepModel?->id,
-            ]);
-
-            foreach ($criterion['rules'] ?? [] as $rule) {
-                $criterionModel->fund_criterion_rules()->forceCreate($rule);
-            }
-        }
-
-        $fundFormula = [[
-            'type' => 'fixed',
-            'amount' => $fund->isTypeBudget() ? 600 : 0,
-            'fund_id' => $fund->id,
-        ]];
-
-        $fund->fund_formulas()->delete();
-        $fund->fund_formulas()->createMany($fundFormula);
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        return $fund->refresh();
     }
 
     /**
