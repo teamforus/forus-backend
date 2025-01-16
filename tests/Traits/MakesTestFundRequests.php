@@ -4,6 +4,7 @@ namespace Tests\Traits;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
+use App\Models\FundRequestRecord;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Traits\DoesTesting;
@@ -20,6 +21,7 @@ trait MakesTestFundRequests
      * @param Fund $fund
      * @param mixed $records
      * @param bool $validate
+     * @param array $headers
      * @return TestResponse
      */
     protected function makeFundRequest(
@@ -34,6 +36,26 @@ trait MakesTestFundRequests
         $identity->setBsnRecord('123456789');
 
         return $this->postJson($url, compact('records'), $this->makeApiHeaders($proxy, $headers));
+    }
+
+    /**
+     * @param FundRequest $fundRequest
+     * @param FundRequestRecord $fundRequestRecord
+     * @param string|int $value
+     * @return TestResponse
+     */
+    protected function updateFundRequestRecordRequest(
+        FundRequest $fundRequest,
+        FundRequestRecord $fundRequestRecord,
+        string|int $value,
+    ): TestResponse {
+        $organization = $fundRequest->fund->organization;
+
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/records/$fundRequestRecord->id",
+            ['value' => $value],
+            $this->makeApiHeaders($organization->identity),
+        );
     }
 
     /**

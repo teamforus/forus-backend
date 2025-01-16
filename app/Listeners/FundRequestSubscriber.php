@@ -108,6 +108,7 @@ class FundRequestSubscriber
 
                     if ($fund->fund_config->isPayoutOutcome()) {
                         $fund->makePayout(
+                            identity: $fundRequest->identity,
                             amount: $amount,
                             employee: $fundRequest->employee,
                             bankAccount: new BankAccount(
@@ -115,7 +116,6 @@ class FundRequestSubscriber
                                 $fundRequest->getIbanName(),
                             ),
                             voucherFields: [
-                                'identity_id' => $fundRequest->identity_id,
                                 'fund_request_id' => $fundRequest->id,
                             ],
                         );
