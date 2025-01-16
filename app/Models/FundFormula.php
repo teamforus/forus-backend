@@ -33,7 +33,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class FundFormula extends BaseModel
 {
     protected $fillable = [
-        'id', 'fund_id', 'type', 'amount', 'record_type_key'
+        'id', 'fund_id', 'type', 'amount', 'record_type_key',
     ];
 
     /**
@@ -42,7 +42,7 @@ class FundFormula extends BaseModel
      */
     public function getAmountLocaleAttribute(): ?string
     {
-        return currency_format_locale($this->amount, $this->fund->getImplementation());
+        return currency_format_locale($this->amount);
     }
 
     /**

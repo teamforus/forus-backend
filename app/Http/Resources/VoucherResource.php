@@ -11,6 +11,7 @@ use App\Scopes\Builders\ProductSubQuery;
 use App\Services\EventLogService\Models\EventLog;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Config;
@@ -67,7 +68,7 @@ class VoucherResource extends BaseJsonResource
      * @return array
      * @throws \Exception
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $voucher = $this->resource;
         $physicalCard = $voucher->physical_cards[0] ?? null;
@@ -169,7 +170,7 @@ class VoucherResource extends BaseJsonResource
                     'total_amount', 'sold_amount', 'product_category_id',
                     'organization_id',
                 ]),
-                'price_locale' => $voucher->product->priceLocale($voucher->fund->getImplementation()),
+                'price_locale' => $voucher->product->priceLocale(),
                 'product_category' => $voucher->product->product_category,
                 'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : '',
                 'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
@@ -183,7 +184,7 @@ class VoucherResource extends BaseJsonResource
         return [
             'used' => $used,
             'amount' => currency_format($amount),
-            'amount_locale' => currency_format_locale($amount, $voucher->fund->getImplementation()),
+            'amount_locale' => currency_format_locale($amount),
             'product' => $productResource,
         ];
     }
@@ -281,10 +282,7 @@ class VoucherResource extends BaseJsonResource
             ]), [
                 'address' => $product_voucher->token_with_confirmation?->address,
                 'amount' => currency_format($product_voucher->amount),
-                'amount_locale' => currency_format_locale(
-                    $product_voucher->amount,
-                    $product_voucher->fund->getImplementation()
-                ),
+                'amount_locale' => currency_format_locale($product_voucher->amount),
                 'date' => $product_voucher->created_at->format('M d, Y'),
                 'date_time' => $product_voucher->created_at->format('M d, Y H:i'),
                 'timestamp' => $product_voucher->created_at->timestamp,

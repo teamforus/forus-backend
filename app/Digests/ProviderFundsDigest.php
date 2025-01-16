@@ -13,7 +13,6 @@ use App\Models\Product;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class ProviderFundsDigest extends BaseOrganizationDigest
