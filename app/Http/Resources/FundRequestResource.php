@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\FundRequest;
 use App\Models\Voucher;
+use Illuminate\Http\Request;
 
 /**
  * @property FundRequest $resource
@@ -16,14 +17,14 @@ class FundRequestResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return array_merge($this->resource->only([
             'id', 'state', 'employee_id', 'fund_id', 'contact_information',
         ]), [
             'fund' => new FundResource($this->resource->fund),
             'records' => FundRequestRecordResource::collection($this->resource->records),
-            'active_current_period' => $this->activePeriod($this->resource),
+            'current_period' => $this->activePeriod($this->resource),
         ], $this->timestamps($this->resource, 'created_at', 'updated_at'));
     }
 

@@ -172,12 +172,11 @@ trait MakesTestFunds
     /**
      * @param Fund $fund
      * @param string $key
-     * @param string|int|null $value
+     * @param string|int $value
      * @return array
      */
-    protected function makeRequestCriterionValue(Fund $fund, string $key, string|int|null $value): array
+    protected function makeRequestCriterionValue(Fund $fund, string $key, string|int $value): array
     {
-        /** @var FundCriterion|null $criterion */
         $criterion = $fund->criteria->firstWhere('record_type_key', $key);
 
         return [

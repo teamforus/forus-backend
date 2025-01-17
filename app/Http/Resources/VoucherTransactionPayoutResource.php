@@ -27,7 +27,7 @@ class VoucherTransactionPayoutResource extends VoucherTransactionResource
             'iban_to_name' => $this->resource->getTargetName(),
             'amount' => currency_format($this->resource->amount),
             'amount_locale' => currency_format_locale($this->resource->amount),
-            'voucher_expired' => $this->resource->voucher->expired,
+            'expired' => $this->resource->voucher->expired,
             'fund' => [
                 ...$this->resource->voucher->fund->only('id', 'name', 'organization_id'),
                 'organization_name' => $this->resource->voucher->fund->organization?->name,
