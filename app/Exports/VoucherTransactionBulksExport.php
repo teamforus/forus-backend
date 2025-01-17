@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 
 class VoucherTransactionBulksExport extends BaseFieldedExport
 {
+    protected array $fields;
+
     /**
      * @var array|string[]
      */
@@ -28,5 +30,19 @@ class VoucherTransactionBulksExport extends BaseFieldedExport
     public function __construct(Request $request, Organization $organization, array $fields)
     {
         $this->data = VoucherTransactionBulk::export($request, $organization, $fields);
+        $this->fields = $fields;
+    }
+
+    /**
+     * @return array
+     */
+    public function headings(): array
+    {
+        $collection = $this->collection();
+
+        return array_map(
+            fn ($key) => static::$exportFields[$key] ?? $key,
+            $collection->isNotEmpty() ? array_keys($collection->first()) : $this->fields
+        );
     }
 }

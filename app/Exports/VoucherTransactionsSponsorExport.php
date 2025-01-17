@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 class VoucherTransactionsSponsorExport extends BaseFieldedExport
 {
     protected Collection $data;
+    protected array $fields;
 
     /**
      * @var array|string[]
@@ -37,5 +38,19 @@ class VoucherTransactionsSponsorExport extends BaseFieldedExport
     public function __construct(Request $request, Organization $organization, array $fields)
     {
         $this->data = VoucherTransaction::exportSponsor($request, $organization, $fields);
+        $this->fields = $fields;
+    }
+
+    /**
+     * @return array
+     */
+    public function headings(): array
+    {
+        $collection = $this->collection();
+
+        return array_map(
+            fn ($key) => static::$exportFields[$key] ?? $key,
+            $collection->isNotEmpty() ? array_keys($collection->first()) : $this->fields
+        );
     }
 }
