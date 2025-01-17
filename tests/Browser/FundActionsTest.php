@@ -225,6 +225,54 @@ class FundActionsTest extends DuskTestCase
     }
 
     /**
+     * @throws \Throwable
+     */
+    public function testFundActivatePageWithFundRequestsFromPreviousPeriods(string $type = 'voucher')
+    {
+        $this->travelTo('2020-01-01');
+
+        // Select implementation
+        $implementation = Implementation::byKey('nijmegen');
+        $this->assertTrue(in_array($type, ['voucher', 'payout']));
+
+        $fundConfigs = match ($type) {
+            'voucher' => $this->getVoucherFundSettings(),
+            'payout' => $this->getPayoutFundSettings(),
+        };
+
+        $requester = $this->makeIdentity($this->makeUniqueEmail());
+        $fund = $this->createFund($implementation->organization, $fundConfigs);
+
+        $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fund, $fundConfigs['requester_records']);
+        $this->approveFundRequest($fundRequest);
+
+        $this->travelBack();
+
+        $fund->update([
+            'end_date' => now()->addYear(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($implementation, $fund, $requester) {
+            $browser->visit($implementation->urlWebshop())->waitFor('@headerTitle');
+            $this->loginIdentity($browser, $requester);
+
+            // Fund activate page: assert pending fund request shown
+            $browser->visit($implementation->urlWebshop("fondsen/$fund->id/activeer"));
+            $browser->waitFor('@fundRequestOptions')->assertPresent('@fundRequestOptions');
+            $browser->assertMissing('@approvedFundRequest');
+            $browser->assertMissing('@existingFundRequest');
+        });
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    public function testFundActivatePageWithFundRequestsFromPreviousPeriodsOnPayoutFund()
+    {
+        $this->testFundActivatePageWithFundRequestsFromPreviousPeriods('payout');
+    }
+
+    /**
      * @param Organization $organization
      * @param array $settings
      * @return Fund
