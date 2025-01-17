@@ -65,7 +65,7 @@ class FundStatisticsOverviewProductVouchersTest extends TestCase
     public function assertActiveProductVouchers(
         Fund $fund,
         int $vouchersCount,
-        int $childrenCount
+        int $childrenCount,
     ): void {
         $vouchers = $this->makeProductVouchers($fund, $vouchersCount, $childrenCount);
         $childrenCount = $childrenCount * $vouchersCount;
@@ -140,12 +140,12 @@ class FundStatisticsOverviewProductVouchersTest extends TestCase
     public function assertPendingProductVouchers(
         Fund $fund,
         int $vouchersCount,
-        int $childrenCount
+        int $childrenCount,
     ): void {
         $vouchers = $this->makeProductVouchers($fund, $vouchersCount, $childrenCount);
         $childrenCount = $childrenCount * $vouchersCount;
         $vouchersAmount = $vouchers->sum('amount');
-        $vouchers->each(fn (Voucher $voucher) => $voucher->setPending());
+        $vouchers->each(fn(Voucher $voucher) => $voucher->setPending());
 
         $response = $this->getJson(
             "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all&year=" . now()->year,
@@ -200,12 +200,12 @@ class FundStatisticsOverviewProductVouchersTest extends TestCase
     public function assertDeactivatedProductVouchers(
         Fund $fund,
         int $vouchersCount,
-        int $childrenCount
+        int $childrenCount,
     ): void {
         $vouchers = $this->makeProductVouchers($fund, $vouchersCount, $childrenCount);
         $childrenCount = $childrenCount * $vouchersCount;
         $vouchersAmount = $vouchers->sum('amount');
-        $vouchers->each(fn (Voucher $voucher) => $voucher->deactivate());
+        $vouchers->each(fn(Voucher $voucher) => $voucher->deactivate());
 
         $response = $this->getJson(
             "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all&year=" . now()->year,
@@ -260,7 +260,7 @@ class FundStatisticsOverviewProductVouchersTest extends TestCase
     public function assertExpiredProductVouchers(
         Fund $fund,
         int $vouchersCount,
-        int $childrenCount
+        int $childrenCount,
     ): void {
         $vouchers = $this->makeProductVouchers($fund, $vouchersCount, $childrenCount);
         $childrenCount = $childrenCount * $vouchersCount;

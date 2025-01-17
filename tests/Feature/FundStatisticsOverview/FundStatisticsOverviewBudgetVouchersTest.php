@@ -42,17 +42,17 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         $this->travelTo('2022-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
         $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertActiveVouchers($fund, 2, 4,50);
+        $this->assertActiveVouchers($fund, 2, 4, 50);
 
         $this->travelTo('2023-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
         $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertActiveVouchers($fund, 5, 6,70);
+        $this->assertActiveVouchers($fund, 5, 6, 70);
 
         $this->travelTo('2024-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
         $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertActiveVouchers($fund, 12, 0,120);
+        $this->assertActiveVouchers($fund, 12, 0, 120);
     }
 
     /**
@@ -66,7 +66,7 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         Fund $fund,
         int $vouchersCount,
         int $childrenCount,
-        int|float $transactionAmount
+        int|float $transactionAmount,
     ): void {
         $vouchers = $this->makeVouchers($fund, $vouchersCount, $childrenCount);
         $vouchersAmount = $vouchers->sum('amount');
@@ -140,7 +140,7 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
     public function assertPendingVouchers(Fund $fund, int $vouchersCount, int $childrenCount): void
     {
         $vouchers = $this->makeVouchers($fund, $vouchersCount, $childrenCount);
-        $vouchers->each(fn (Voucher $voucher) => $voucher->setPending());
+        $vouchers->each(fn(Voucher $voucher) => $voucher->setPending());
         $vouchersAmount = $vouchers->sum('amount');
         $childrenCount = $childrenCount * $vouchersCount;
 
@@ -179,17 +179,17 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         $this->travelTo('2022-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
         $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertDeactivatedVouchers($fund, 2, 5,50);
+        $this->assertDeactivatedVouchers($fund, 2, 5, 50);
 
         $this->travelTo('2023-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
         $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertDeactivatedVouchers($fund, 5, 12,70);
+        $this->assertDeactivatedVouchers($fund, 5, 12, 70);
 
         $this->travelTo('2024-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
         $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertDeactivatedVouchers($fund, 12, 0,120);
+        $this->assertDeactivatedVouchers($fund, 12, 0, 120);
     }
 
     /**
@@ -203,7 +203,7 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         Fund $fund,
         int $vouchersCount,
         int $childrenCount,
-        int|float $transactionAmount
+        int|float $transactionAmount,
     ): void {
         $vouchers = $this->makeVouchers($fund, $vouchersCount, $childrenCount);
         $vouchersAmount = $vouchers->sum('amount');
@@ -262,12 +262,12 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         $this->travelTo('2023-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
         $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertExpiredVouchers($fund, 5, 12,70);
+        $this->assertExpiredVouchers($fund, 5, 12, 70);
 
         $this->travelTo('2024-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
         $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertExpiredVouchers($fund, 12, 0,120);
+        $this->assertExpiredVouchers($fund, 12, 0, 120);
     }
 
     /**
@@ -281,7 +281,7 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         Fund $fund,
         int $vouchersCount,
         int $childrenCount,
-        int|float $transactionAmount
+        int|float $transactionAmount,
     ): void {
         $vouchers = $this->makeVouchers($fund, $vouchersCount, $childrenCount);
         $employee = $fund->organization->employees[0];
