@@ -10,6 +10,7 @@ return [
     ],
     'Nijmegen' => [
         'implementation' => [
+            'digid_enabled' => true,
             'digid_connection_type' => 'saml',
             'digid_sign_up_allowed' => true,
             'informal_communication' => true,
