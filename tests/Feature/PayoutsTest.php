@@ -540,10 +540,8 @@ class PayoutsTest extends TestCase
      */
     protected function makeFundRequest(Fund $fund, array $records): FundRequest
     {
-        $requester = $this->makeIdentity($this->makeUniqueEmail());
+        $requester = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
         $requesterIdentityAuth = $this->makeApiHeaders($requester);
-
-        $requester->setBsnRecord('123456789');
 
         // make the fund request
         $response = $this->postJson("/api/v1/platform/funds/$fund->id/requests", [
