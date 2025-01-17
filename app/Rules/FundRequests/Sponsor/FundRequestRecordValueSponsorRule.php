@@ -66,7 +66,7 @@ class FundRequestRecordValueSponsorRule extends BaseFundRequestRule
 
         // If there are conflicts, set the error message and stop
         if (!empty($criteriaDiff)) {
-            $this->messageText = "This value conflicts with an existing rule in the current criteria.";
+            $this->messageText = "Deze waarde kan niet worden aangepast, omdat dit een conflict veroorzaakt met andere eigenschappen.";
             return false;
         }
 
