@@ -724,7 +724,9 @@ class Fund extends BaseModel
      */
     public function getBudgetUsedAttribute(): float
     {
-        return round($this->voucher_transactions()->sum('voucher_transactions.amount'), 2);
+        return round($this->voucher_transactions()
+            ->where('voucher_transactions.state', VoucherTransaction::STATE_SUCCESS)
+            ->sum('voucher_transactions.amount'), 2);
     }
 
     /**
