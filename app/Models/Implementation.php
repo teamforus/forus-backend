@@ -61,8 +61,6 @@ use Illuminate\Support\Facades\Gate;
  * @property float|null $lon
  * @property float|null $lat
  * @property bool $informal_communication
- * @property string|null $currency_sign
- * @property bool $currency_round
  * @property string|null $email_from_address
  * @property string|null $email_from_name
  * @property string|null $email_color
@@ -132,8 +130,6 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation query()
  * @method static Builder<static>|Implementation whereAllowPerFundNotificationTemplates($value)
  * @method static Builder<static>|Implementation whereCreatedAt($value)
- * @method static Builder<static>|Implementation whereCurrencyRound($value)
- * @method static Builder<static>|Implementation whereCurrencySign($value)
  * @method static Builder<static>|Implementation whereDescription($value)
  * @method static Builder<static>|Implementation whereDescriptionAlignment($value)
  * @method static Builder<static>|Implementation whereDigidASelectServer($value)
@@ -229,7 +225,7 @@ class Implementation extends BaseModel
         'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
-        'currency_sign', 'currency_round', 'digid_cgi_tls_key', 'digid_cgi_tls_cert',
+        'digid_cgi_tls_key', 'digid_cgi_tls_cert',
         'pre_check_enabled', 'pre_check_title', 'pre_check_banner_state', 'pre_check_banner_title',
         'pre_check_description', 'pre_check_banner_description', 'pre_check_banner_label',
         'page_title_suffix',

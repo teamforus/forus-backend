@@ -710,13 +710,12 @@ class Product extends BaseModel
     }
 
     /**
-     * @param Implementation|null $implementation
      * @return string
      */
-    public function priceLocale(?Implementation $implementation = null): string
+    public function priceLocale(): string
     {
         switch ($this->price_type) {
-            case self::PRICE_TYPE_REGULAR: return currency_format_locale($this->price, $implementation);
+            case self::PRICE_TYPE_REGULAR: return currency_format_locale($this->price);
             case self::PRICE_TYPE_FREE: return 'Gratis';
             case self::PRICE_TYPE_DISCOUNT_FIXED:
             case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
