@@ -1218,6 +1218,7 @@ class Fund extends BaseModel
     }
 
     /**
+     * @param Identity|null $identity
      * @param FundAmountPreset|string|null $amount
      * @param Employee $employee
      * @param BankAccount $bankAccount
@@ -1226,13 +1227,14 @@ class Fund extends BaseModel
      * @return VoucherTransaction
      */
     public function makePayout(
+        Identity|null $identity,
         FundAmountPreset|string|null $amount,
         Employee $employee,
         BankAccount $bankAccount,
         array $voucherFields = [],
         array $transactionFields = [],
     ): VoucherTransaction {
-        $voucher = $this->makeVoucher(null, [
+        $voucher = $this->makeVoucher($identity, [
             'voucher_type' => Voucher::VOUCHER_TYPE_PAYOUT,
             'employee_id' => $employee->id,
             ...$voucherFields,
