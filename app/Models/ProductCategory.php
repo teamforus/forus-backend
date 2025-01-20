@@ -155,7 +155,7 @@ class ProductCategory extends BaseModel
      */
     public function root_category(): BelongsTo
     {
-        return $this->belongsTo(self::class, 'root_od');
+        return $this->belongsTo(self::class, 'root_id');
     }
 
     /**

@@ -40,6 +40,12 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
 
         if (Schema::hasColumns($model->getTable(), [$model->getLftName(), $model->getRgtName()])) {
             ProductCategory::fixTree();
+
+            ProductCategory::whereIsRoot()->each(function(ProductCategory $category) {
+                $category->descendants()->update([
+                    'root_id' => $category->id,
+                ]);
+            });
         }
     }
 

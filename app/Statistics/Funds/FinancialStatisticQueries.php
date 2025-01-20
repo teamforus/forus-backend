@@ -32,24 +32,17 @@ class FinancialStatisticQueries
         $query = $query->with('translations')->select('id');
 
         $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
-        $voucherTransactionsQuery = clone $transactionsQuery;
 
         $query->addSelect([
-            'product_transactions' => $transactionsQuery->where(function(Builder $builder) {
+            'transactions' => $transactionsQuery->where(function(Builder $builder) {
                 $builder->whereHas('product_category', function(Builder $builder) {
                     $builder->whereColumn('categories.id', 'root_id');
                 });
-            })->selectRaw('count(*)'),
-            'voucher_transactions' => $voucherTransactionsQuery->where(function(Builder $builder) {
-                $builder->whereHas('voucher.product_category', function(Builder $builder) {
+                $builder->orWhereHas('voucher.product_category', function(Builder $builder) {
                     $builder->whereColumn('categories.id', 'root_id');
                 });
             })->selectRaw('count(*)'),
-        ]);
-
-        $query = ProductCategory::fromSub($query, 'categories')
-            ->selectRaw('id, product_transactions + voucher_transactions as transactions')
-            ->orderByDesc('transactions');
+        ])->orderByDesc('transactions');
 
         return $this->collectionOnly($query->get(), [
             'id', 'name', 'transactions'
