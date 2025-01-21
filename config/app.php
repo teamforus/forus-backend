@@ -222,6 +222,8 @@ return [
         App\Services\MailDatabaseLoggerService\MailDatabaseLoggerServiceProvider::class,
         App\Services\Forus\Auth2FAService\Auth2FAServiceProvider::class,
         App\Services\MollieService\MollieServiceProvider::class,
+
+        App\Services\TranslationService\TranslationServiceProvider::class,
     ],
 
     /*
