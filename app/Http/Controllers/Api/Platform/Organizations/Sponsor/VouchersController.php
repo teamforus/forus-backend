@@ -342,7 +342,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @param Voucher $voucher
      * @return SponsorVoucherResource
-     * @throws AuthorizationException|Exception
+     * @throws AuthorizationException|Exception|\Throwable
      * @noinspection PhpUnused
      */
     public function deactivate(

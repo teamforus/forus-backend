@@ -141,6 +141,8 @@ class FundStatisticsTest extends TestCase
             $this->makeApiHeaders($fund->organization->identity),
         )->assertJsonPath('data.0.budget.left', currency_format(10000));
 
+        $this->assertEquals(10000, $fund->refresh()->budget_left);
+
         $transaction->setPaid(null, now());
 
         $this->assertTrue($transaction->fresh()->isPaid());
@@ -149,5 +151,7 @@ class FundStatisticsTest extends TestCase
             "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all",
             $this->makeApiHeaders($fund->organization->identity),
         )->assertJsonPath('data.0.budget.left', currency_format(9000));
+
+        $this->assertEquals(9000, $fund->refresh()->budget_left);
     }
 }

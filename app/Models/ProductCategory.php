@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TranslationService\Traits\TranslatableTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -100,7 +101,7 @@ use Kalnoy\Nestedset\NodeTrait;
  */
 class ProductCategory extends BaseModel
 {
-    use Translatable, NodeTrait;
+    use Translatable, NodeTrait, TranslatableTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -155,7 +156,7 @@ class ProductCategory extends BaseModel
      */
     public function root_category(): BelongsTo
     {
-        return $this->belongsTo(self::class, 'root_od');
+        return $this->belongsTo(self::class, 'root_id');
     }
 
     /**

@@ -255,10 +255,7 @@ class EventLogService implements IEventLogService
             'id' => $reservation->id,
             'state' => $reservation->state,
             'amount' => currency_format($reservation->amount),
-            'amount_locale' => currency_format_locale(
-                $reservation->amount,
-                $reservation->voucher->fund->getImplementation(),
-            ),
+            'amount_locale' => currency_format_locale($reservation->amount),
         ], 'product_reservation_');
     }
 
@@ -272,10 +269,7 @@ class EventLogService implements IEventLogService
             'id' => $voucher->id,
             'number' => $voucher->number,
             'amount' => currency_format($voucher->amount_available),
-            'amount_locale' => currency_format_locale(
-                $voucher->amount_available,
-                $voucher->fund->getImplementation(),
-            ),
+            'amount_locale' => currency_format_locale($voucher->amount_available),
             'voucher_type' => $voucher->voucher_type,
             'fund_amount_preset_id' => $voucher->fund_amount_preset_id,
             'expire_date' => $voucher->last_active_day->format('Y-m-d'),
@@ -292,11 +286,8 @@ class EventLogService implements IEventLogService
     {
         return $this->keyPrepend(array_merge([
             'id' => $transaction->id,
-            'amount' => $transaction->amount,
-            'amount_locale' => currency_format_locale(
-                $transaction->amount,
-                $transaction->voucher->fund->getImplementation(),
-            ),
+            'amount' => currency_format($transaction->amount),
+            'amount_locale' => currency_format_locale($transaction->amount),
             'iban_to' => $transaction->iban_to,
             'iban_from' => $transaction->iban_from,
             'initiator' => $transaction->initiator,
