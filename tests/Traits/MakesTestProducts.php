@@ -33,9 +33,10 @@ trait MakesTestProducts
 
     /**
      * @param Organization $organization
+     * @param array $attributes
      * @return Product
      */
-    public function makeTestProduct(Organization $organization): Product
+    public function makeTestProduct(Organization $organization, array $attributes = []): Product
     {
         return $organization->products()->forceCreate([
             'name' => $this->faker->text(60),
@@ -50,6 +51,7 @@ trait MakesTestProducts
             'price_type' => Product::PRICE_TYPE_REGULAR,
             'price_discount' => 0,
             'reservation_enabled' => 1,
+            ...$attributes,
         ]);
     }
 

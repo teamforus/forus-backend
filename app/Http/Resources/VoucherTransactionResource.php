@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\VoucherTransaction;
+use Illuminate\Http\Request;
 
 /**
  * @property VoucherTransaction $resource
@@ -15,7 +16,7 @@ class VoucherTransactionResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $transaction = $this->resource;
 
@@ -25,15 +26,9 @@ class VoucherTransactionResource extends BaseJsonResource
             'cancelable' => $transaction->isCancelable(),
             'transfer_in' => $transaction->daysBeforeTransaction(),
             'amount' => currency_format($transaction->amount),
-            'amount_locale' => currency_format_locale(
-                $transaction->amount,
-                $transaction->voucher->fund->getImplementation(),
-            ),
+            'amount_locale' => currency_format_locale($transaction->amount),
             'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
-            'amount_extra_cash_locale' => currency_format_locale(
-                $transaction->amount_extra_cash,
-                $transaction->voucher->fund->getImplementation(),
-            ),
+            'amount_extra_cash_locale' => currency_format_locale($transaction->amount_extra_cash),
             'timestamp' => $transaction->created_at->timestamp,
             'organization' => $transaction->provider ? array_merge($transaction->provider->only([
                 'id', 'name'
