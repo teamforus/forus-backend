@@ -140,7 +140,10 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
 
         // store previous model attributes to reset it after test
         $recordTypes = RecordType::all()->toArray();
-        $this->configureRecordTypes($testCase['record_types']);
+
+        array_walk($testCase['record_types'], function ($value) {
+            RecordType::where('key', $value['key'])->update($value);
+        });
 
         $implementationData = $implementation->only(array_keys($testCase['implementation']));
         $implementation->forceFill($testCase['implementation'])->save();
@@ -403,16 +406,5 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
         $this->assertNotNull($element);
 
         return $element;
-    }
-
-    /**
-     * @param array $settings
-     * @return void
-     */
-    protected function configureRecordTypes(array $settings): void
-    {
-        array_walk($settings, function ($value) {
-            RecordType::where('key', $value['key'])->update($value);
-        });
     }
 }

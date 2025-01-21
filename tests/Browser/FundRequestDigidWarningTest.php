@@ -100,7 +100,6 @@ class FundRequestDigidWarningTest extends DuskTestCase
             $implementation, $fund, $requester, $testCase
         ) {
             $browser->visit($implementation->urlWebshop());
-
             $this->loginIdentity($browser, $requester);
             $browser->waitFor('@headerTitle');
 
@@ -109,24 +108,24 @@ class FundRequestDigidWarningTest extends DuskTestCase
             $browser->waitFor('@fundTitle');
             $browser->assertSeeIn('@fundTitle', $fund->name);
 
+            // set a BSN for the requester to enable fund request option
             $requester->setBsnRecord('12345678');
-
             $browser->waitFor('@requestButton')->click('@requestButton');
 
-            // select digid option
+            // select the DigID option and ensure the fund request form loads
             $browser->waitFor('@digidOption')->click('@digidOption');
             $browser->waitFor('@fundRequestForm');
 
+            // verify the warning and expiration messages is not shown ahead of time
             $browser->assertMissing('@bsnWarning');
             $browser->assertMissing('@digidExpired');
 
-            // don't include identity bsn time as it's small in this case and hard to determine
-            // precisely when frontend fetch this information - diff about 1-2 sec,
-            // if we have bsn_confirmation_time greater for example then 20 sec we can skip it
+            // time offset calculation for warning and expiration checks
             $timeOffset = $testCase['fund_config']['bsn_confirmation_time'] / 2;
             $timeBeforeReConfirmation = $testCase['fund_config']['bsn_confirmation_time'];
             $timeBeforeWarning = $timeBeforeReConfirmation - $timeOffset;
 
+            // verify the warning and expiration messages appear at the correct times
             $browser->waitFor('@bsnWarning', $timeBeforeWarning);
             $browser->waitFor('@digidExpired', $timeBeforeReConfirmation);
 
@@ -134,6 +133,7 @@ class FundRequestDigidWarningTest extends DuskTestCase
             $this->logout($browser);
         });
 
+        // clean up test-created data and restore the implementation state
         $fund->criteria()->delete();
         $fund->criteria_steps()->delete();
         $fund->delete();
