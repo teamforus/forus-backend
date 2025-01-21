@@ -336,19 +336,15 @@ trait MakesTestFunds
     }
 
     /**
-     * @param Organization $organization
-     * @param array $settings
-     * @return Fund
+     * @param Fund $fund
+     * @param array $criteria
+     * @return void
      */
-    protected function makeTestFundAndConfigureForFundRequest(
-        Organization $organization,
-        array $settings
-    ): Fund {
-        $fund = $this->makeTestFund($organization, $settings['fund'], $settings['fund_config']);
-
+    protected function makeFundCriteria(Fund $fund, array $criteria): void
+    {
         $fund->criteria()->delete();
 
-        foreach ($settings['fund_criteria'] as $criterion) {
+        foreach ($criteria as $criterion) {
             $stepTitle = Arr::get($criterion, 'step', Arr::get($criterion, 'step.title'));
             $stepFields = is_array(Arr::get($criterion, 'step')) ? Arr::get($criterion, 'step') : [];
 
@@ -372,20 +368,20 @@ trait MakesTestFunds
                 $criterionModel->fund_criterion_rules()->forceCreate($rule);
             }
         }
+    }
 
-        $fundFormula = [[
-            'type' => 'fixed',
-            'amount' => $fund->isTypeBudget() ? 600 : 0,
-            'fund_id' => $fund->id,
-        ]];
+    /**
+     * @param Fund $fund
+     * @return void
+     */
+    protected function deleteFund(Fund $fund): void
+    {
+        $fund->criteria()
+            ->get()
+            ->each(fn (FundCriterion $criteria) => $criteria->fund_criterion_rules()->delete());
 
-        $fund->fund_formulas()->delete();
-        $fund->fund_formulas()->createMany($fundFormula);
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        return $fund->refresh();
+        $fund->criteria()->delete();
+        $fund->criteria_steps()->delete();
+        $fund->delete();
     }
 }

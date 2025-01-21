@@ -2,7 +2,9 @@
 
 namespace Browser;
 
+use App\Models\Fund;
 use App\Models\Implementation;
+use App\Models\Organization;
 use App\Services\DigIdService\Models\DigIdSession;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -18,39 +20,48 @@ class FundRequestDigidWarningTest extends DuskTestCase
     use HasFrontendActions;
     use MakesTestOrganizations;
 
-    /** @var array|array[] */
-    public static array $applyDigidTestCase = [
-        'implementation' => [
-            'key' => 'nijmegen',
+    /**
+     * @throws \Throwable
+     */
+    public function testWebshopFundRequestDigidWarningAndExpired(): void
+    {
+        // Configure implementation and fund
+        $implementation = Implementation::byKey('nijmegen');
+
+        $this->assertNotNull($implementation);
+        $this->assertNotNull($implementation->organization);
+        $organization = $implementation->organization;
+
+        // configure implementation and organization
+        $implementationData = $implementation->only([
+            'digid_enabled', 'digid_required', 'digid_connection_type', 'digid_app_id',
+            'digid_shared_secret', 'digid_a_select_server'
+        ]);
+
+        $implementation->forceFill([
             'digid_enabled' => true,
             'digid_required' => true,
             'digid_connection_type' => DigIdSession::CONNECTION_TYPE_CGI,
             'digid_app_id' => 'test',
             'digid_shared_secret' => 'test',
             'digid_a_select_server' => 'test',
-        ],
-        'fund' => [
+        ])->save();
+
+        $organization->forceFill([
+            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
+        ])->save();
+
+        $fund = $this->makeTestFund($organization, [
             'type' => 'budget',
-            'criteria_editable_after_start' => true,
-        ],
-        'fund_config' => [
+        ], [
             'outcome_type' => 'voucher',
-            'auth_2fa_restrict_emails' => true,
-            'auth_2fa_restrict_auth_sessions' => true,
-            'auth_2fa_restrict_reimbursements' => true,
-            'custom_amount_min' => 100,
-            'custom_amount_max' => 200,
-            'allow_custom_amounts' => true,
-            'allow_custom_amounts_validator' => true,
-            'allow_preset_amounts' => true,
-            'allow_preset_amounts_validator' => true,
             'bsn_confirmation_time' => 20,
             'bsn_confirmation_api_time' => 30,
-            'allow_direct_requests' => true,
             'allow_fund_requests' => true,
             'allow_prevalidations' => true,
-        ],
-        'fund_criteria' => [[
+        ]);
+
+        $this->makeFundCriteria($fund, [[
             'title' => 'Choose your municipality',
             'description' => 'Choose your municipality description',
             'record_type_key' => 'municipality',
@@ -66,38 +77,26 @@ class FundRequestDigidWarningTest extends DuskTestCase
             'value' => 2,
             'show_attachment' => false,
             'step' => 'Step #1',
-        ]],
-    ];
+        ]]);
 
-    /**
-     * @throws \Throwable
-     */
-    public function testWebshopFundRequestApplyOptionDigid(): void
-    {
-        $this->processFundRequestTestCase(self::$applyDigidTestCase);
+        $this->processFundRequestTestCase($implementation, $fund);
+
+        $this->deleteFund($fund);
+        $implementation->forceFill($implementationData)->save();
     }
 
     /**
-     * @param array $testCase
+     * @param Implementation $implementation
+     * @param Fund $fund
      * @return void
      * @throws \Throwable
      */
-    protected function processFundRequestTestCase(array $testCase): void
+    protected function processFundRequestTestCase(Implementation $implementation, Fund $fund): void
     {
-        // Configure implementation and fund
-        $implementation = Implementation::byKey($testCase['implementation']['key']);
-
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
-
-        $implementationData = $implementation->only(array_keys($testCase['implementation']));
-        $implementation->forceFill($testCase['implementation'])->save();
-
         $requester = $this->makeIdentity($this->makeUniqueEmail());
-        $fund = $this->makeTestFundAndConfigureForFundRequest($implementation->organization, $testCase);
 
         $this->browse(function (Browser $browser) use (
-            $implementation, $fund, $requester, $testCase
+            $implementation, $fund, $requester
         ) {
             $browser->visit($implementation->urlWebshop());
             $this->loginIdentity($browser, $requester);
@@ -121,8 +120,8 @@ class FundRequestDigidWarningTest extends DuskTestCase
             $browser->assertMissing('@digidExpired');
 
             // time offset calculation for warning and expiration checks
-            $timeOffset = $testCase['fund_config']['bsn_confirmation_time'] / 2;
-            $timeBeforeReConfirmation = $testCase['fund_config']['bsn_confirmation_time'];
+            $timeOffset = $fund->fund_config->bsn_confirmation_time / 2;
+            $timeBeforeReConfirmation = $fund->fund_config->bsn_confirmation_time;
             $timeBeforeWarning = $timeBeforeReConfirmation - $timeOffset;
 
             // verify the warning and expiration messages appear at the correct times
@@ -132,12 +131,5 @@ class FundRequestDigidWarningTest extends DuskTestCase
             // Logout user
             $this->logout($browser);
         });
-
-        // clean up test-created data and restore the implementation state
-        $fund->criteria()->delete();
-        $fund->criteria_steps()->delete();
-        $fund->delete();
-
-        $implementation->forceFill($implementationData)->save();
     }
 }
