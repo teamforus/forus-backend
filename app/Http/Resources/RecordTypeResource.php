@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\RecordType;
+use Illuminate\Http\Request;
 
 /**
  * @property-read RecordType $resource
@@ -12,6 +13,7 @@ class RecordTypeResource extends BaseJsonResource
     public static $wrap = false;
 
     const array LOAD = [
+        'translations',
         'record_type_options',
     ];
 
@@ -21,7 +23,7 @@ class RecordTypeResource extends BaseJsonResource
      * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $recordType = $this->resource;
 

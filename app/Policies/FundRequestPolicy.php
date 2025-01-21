@@ -219,7 +219,11 @@ class FundRequestPolicy
         }
 
         // has to be assigned
-        return $fundRequest->employee?->identity_address === $identity->address;
+        if ($fundRequest->employee?->identity_address !== $identity->address) {
+            return $this->deny('not_assigned');
+        }
+
+        return true;
     }
 
     /**

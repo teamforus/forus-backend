@@ -92,7 +92,8 @@ trait HasFrontendActions
      */
     private function logout(Browser $browser): void
     {
-        $browser->waitFor('@userProfile')->waitFor('@userProfile');
+        $browser->pause(100);
+        $browser->waitFor('@userProfile');
         $browser->element('@userProfile')->click();
 
         $browser->waitFor('@btnUserLogout')->waitFor('@btnUserLogout');

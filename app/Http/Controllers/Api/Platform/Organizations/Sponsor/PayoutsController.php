@@ -105,7 +105,7 @@ class PayoutsController extends Controller
             $request->input('target_name'),
         );
 
-        $transaction = $fund->makePayout($amount, $employee, $bankAccount, transactionFields: [
+        $transaction = $fund->makePayout(null, $amount, $employee, $bankAccount, transactionFields: [
             'description' => $request->input('description'),
         ]);
 
@@ -151,8 +151,9 @@ class PayoutsController extends Controller
                 Arr::get($payout, 'amount');
 
             $transaction = $fund->makePayout(
-                $amount,
-                $employee,
+                identity: null,
+                amount: $amount,
+                employee: $employee,
                 bankAccount: new BankAccount(
                     Arr::get($payout, 'target_iban'),
                     Arr::get($payout, 'target_name'),

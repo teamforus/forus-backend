@@ -3,13 +3,14 @@
 namespace App\Http\Requests\Api\Platform\Funds\Requests\Records;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
 use App\Rules\FundRequests\Sponsor\FundRequestRecordValueSponsorRule;
 
 /**
  * @property-read Organization $organization
- * @property-read FundRequestRecord $fund_request
+ * @property-read FundRequest $fund_request
  * @property-read FundRequestRecord $fund_request_record
  */
 class UpdateFundRequestRecordRequest extends BaseFormRequest

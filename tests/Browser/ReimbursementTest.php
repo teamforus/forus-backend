@@ -10,7 +10,6 @@ use App\Models\Voucher;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Laravel\Dusk\Browser;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -204,7 +203,7 @@ class ReimbursementTest extends DuskTestCase
 
                 $reimbursement->voucher->update(['expire_at' => now()->subDay()]);
                 $reimbursement->refresh();
-                $this->assertTrue($reimbursement->isExpired());;
+                $this->assertTrue($reimbursement->isExpired());
 
                 $reimbursement->voucher->fund->fund_config->update([
                     'reimbursement_approve_offset' => $prev,
@@ -266,7 +265,7 @@ class ReimbursementTest extends DuskTestCase
      * @throws TimeOutException
      */
     private function goToReimbursementsPage(Browser $browser) : void {
-        $browser->pause(200);
+        $browser->pause(100);
         $browser->waitFor('@userVouchers');
         $browser->press('@userVouchers');
         $browser->waitFor('@menuBtnReimbursements');
@@ -362,10 +361,7 @@ class ReimbursementTest extends DuskTestCase
         $browser->within($duskSelector, function(Browser $browser) use ($reimbursement, $data) {
             $browser->assertSeeIn('@reimbursementsItemTitle', $data['title']);
             $browser->assertSeeIn('@reimbursementsItemFundName', $data['fund_name']);
-            $browser->assertSeeIn('@reimbursementsItemAmount', currency_format_locale(
-                $data['amount'],
-                $reimbursement->voucher->fund->getImplementation(),
-            ));
+            $browser->assertSeeIn('@reimbursementsItemAmount', currency_format_locale($data['amount']));
             $browser->assertSeeIn('@reimbursementsItemCode', "#$reimbursement->code");
 
             if (!$reimbursement->isExpired()) {
@@ -484,10 +480,7 @@ class ReimbursementTest extends DuskTestCase
             '@reimbursementIdentityEmail' . $reimbursement->id,
             $reimbursement->voucher->identity->email ?: 'Geen E-mail'
         );
-        $browser->assertSeeIn('@reimbursementAmount'.$reimbursement->id, currency_format_locale(
-            $data['amount'],
-            $reimbursement->voucher->fund->getImplementation(),
-        ));
+        $browser->assertSeeIn('@reimbursementAmount'.$reimbursement->id, currency_format_locale($data['amount']));
         $browser->assertSeeIn('@reimbursementState'.$reimbursement->id, $reimbursement->state_locale);
     }
 
@@ -518,10 +511,7 @@ class ReimbursementTest extends DuskTestCase
     ) : void {
         $browser->assertSeeIn('@reimbursementIBAN', $data['iban']);
         $browser->assertSeeIn('@reimbursementIBANName', $data['iban_name']);
-        $browser->assertSeeIn('@reimbursementAmount', currency_format_locale(
-            $data['amount'],
-            $reimbursement->voucher->fund->getImplementation(),
-        ));
+        $browser->assertSeeIn('@reimbursementAmount', currency_format_locale($data['amount']));
         $browser->assertSeeIn('@reimbursementState', $reimbursement->state_locale);
         $browser->assertSeeIn('@reimbursementTitle', $data['title']);
         $browser->assertSeeIn('@reimbursementDescription', $data['description']);
@@ -612,10 +602,7 @@ class ReimbursementTest extends DuskTestCase
         $browser->waitFor('@reimbursementOverview');
         $browser->within('@reimbursementOverview', function(Browser $browser) use ($data, $reimbursement) {
             $browser->assertSeeIn('@reimbursementOverviewTitle', $data['title']);
-            $browser->assertSeeIn('@reimbursementOverviewAmount', currency_format_locale(
-                $data['amount'],
-                $reimbursement->voucher->fund->getImplementation(),
-            ));
+            $browser->assertSeeIn('@reimbursementOverviewAmount', currency_format_locale($data['amount']));
             $browser->assertSeeIn('@reimbursementOverviewSponsorName', $data['sponsor_name']);
             $browser->assertSeeIn('@reimbursementOverviewFundName', $data['fund_name']);
             $browser->assertSeeIn('@reimbursementOverviewIban', $data['iban']);
