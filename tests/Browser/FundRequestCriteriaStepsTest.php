@@ -2,7 +2,6 @@
 
 namespace Browser;
 
-use App\Helpers\Arr;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Implementation;
@@ -16,6 +15,7 @@ use Facebook\WebDriver\Remote\RemoteWebElement;
 use Facebook\WebDriver\WebDriverBy;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\Traits\MakesTestFundRequests;
@@ -29,1444 +29,778 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     use HasFrontendActions;
     use MakesTestFundRequests;
     use MakesTestOrganizations;
+    use RollbackModelsTrait;
 
     /**
-     * Check field "gender" control type as checkbox if fund criteria operator is "="
-     * and record type "control_type" attribute was ignored in this case
-     *
      * @throws \Throwable
      */
-    public function testWebshopFundRequestControlTypeByFundCriteria(): void
+    public function testWebshopFundRequestControlTypes(): void
     {
-        // Configure implementation and fund
-        $implementation = Implementation::byKey('nijmegen');
-
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
-        $organization = $implementation->organization;
-
-        // configure implementation and organization
-        $implementationData = $implementation->only('digid_enabled', 'digid_required');
-
-        $implementation->forceFill([
-            'digid_enabled' => false,
-            'digid_required' => false,
-        ])->save();
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        // configure record types and store previous types to reset it after test
-        $prevRecordTypes = $this->configureRecordTypes([[
-            'key' => 'municipality',
-            'control_type' => 'select',
-        ], [
-            'key' => 'children_nth',
-            'control_type' => 'step',
-        ], [
-            'key' => 'gender',
-            'control_type' => 'text',
-        ]]);
-
-        $fund = $this->makeTestFund($organization, [
-            'type' => 'budget',
-        ], [
-            'outcome_type' => 'voucher',
-            'bsn_confirmation_time' => null,
-            'bsn_confirmation_api_time' => null,
-            'allow_fund_requests' => true,
-            'allow_prevalidations' => false,
+        $this->checkControlTypes('string', [
+            'text' => [
+                '*' => [
+                    'value' => 'any',
+                    'assert_valid' => 'something',
+                ],
+            ],
         ]);
 
-        $this->makeFundCriteria($fund, [[
-            'title' => 'Choose your municipality',
-            'description' => 'Choose your municipality description',
-            'record_type_key' => 'municipality',
-            'operator' => '=',
-            'value' => '268',
-            'show_attachment' => false,
-        ], [
-            'title' => 'Choose the number of children',
-            'description' => 'Choose the number of children description',
-            'record_type_key' => 'children_nth',
-            'operator' => '>',
-            'value' => 2,
-            'show_attachment' => false,
-        ], [
-            'title' => 'Choose gender',
-            'description' => 'Choose gender description',
-            'record_type_key' => 'gender',
-            'operator' => '=',
-            'value' => 'Female',
-            'show_attachment' => false,
-        ], [
-            'title' => 'Choose the salary',
-            'description' => 'Choose the salary description',
-            'record_type_key' => 'base_salary',
-            'operator' => '<',
-            'value' => 300,
-            'show_attachment' => false,
-        ]]);
-
-        $applyCase = [
-            'apply_option' => 'request',
-            'skip_apply_option_select' => true,
-            'available_apply_options' => [],
-            'assert_overview_titles' => [
-                'Choose your municipality',
-                'Choose the number of children',
-                'Choose gender',
-                'Choose the salary',
+        $this->checkControlTypes('bool', [
+            'checkbox' => [
+                '*' => [
+                    'value' => 'Ja',
+                    'assert_valid' => true,
+                    'assert_invalid' => false,
+                ],
+                '=' => [
+                    'value' => 'Nee',
+                    'assert_valid' => true,
+                    'assert_invalid' => false,
+                ],
             ],
-        ];
+        ]);
 
-        $stepsData = [[
-            'title' => 'Choose your municipality',
-            'fields' => [[
-                'title' => 'Choose your municipality',
-                'description' => 'Choose your municipality description',
-                'type' => 'select',
-                'value' => 'Nijmegen',
-            ]],
-        ], [
-            'title' => 'Choose the number of children',
-            'fields' => [[
-                'title' => 'Choose the number of children',
-                'description' => 'Choose the number of children description',
-                'type' => 'step',
-                'value' => 3,
-            ]],
-        ], [
-            'title' => 'Choose gender',
-            'fields' => [[
-                'title' => 'Choose gender',
-                'description' => 'Choose gender description',
-                'type' => 'checkbox',
-                'value' => true,
-            ]],
-        ], [
-            'title' => 'Choose the salary',
-            'fields' => [[
-                'title' => 'Choose the salary',
-                'description' => 'Choose the salary description',
-                'type' => 'currency',
-                'value' => 200,
-            ]],
-        ]];
+        $this->checkControlTypes('email', [
+            'text' => [
+                '*' => [
+                    'value' => '',
+                    'assert_valid' => $this->faker->email,
+                    'assert_invalid' => 'invalid_email',
+                ],
+            ],
+        ]);
 
-        $this->processFundRequestTestCase($implementation, $fund, $applyCase, $stepsData);
+        $this->checkControlTypes('iban', [
+            'text' => [
+                '*' => [
+                    'value' => '',
+                    'assert_valid' => $this->faker->iban,
+                    'assert_invalid' => 'invalid_iban',
+                ],
+            ],
+        ]);
 
-        $this->deleteFund($fund);
+        $this->checkControlTypes('number', [
+            'text' => [
+                '<' => [
+                    'value' => 10,
+                    'assert_valid' => 5,
+                    'assert_invalid' => 15,
+                ],
+                '<=' => [
+                    'value' => 10,
+                    'assert_valid' => 10,
+                    'assert_invalid' => 15,
+                ],
+                '=' => [
+                    'value' => 10,
+                    'assert_valid' => 10,
+                    'assert_invalid' => 15,
+                ],
+                '>=' => [
+                    'value' => 10,
+                    'assert_valid' => 10,
+                    'assert_invalid' => 5,
+                ],
+                '>' => [
+                    'value' => 10,
+                    'assert_valid' => 15,
+                    'assert_invalid' => 5,
+                ],
+                '*' => [
+                    'value' => '',
+                    'assert_valid' => 5,
+                ],
+            ],
+            'number' => [
+                '<' => [
+                    'value' => 10,
+                    'assert_valid' => 5,
+                    'assert_invalid' => 15,
+                ],
+                '<=' => [
+                    'value' => 10,
+                    'assert_valid' => 10,
+                    'assert_invalid' => 15,
+                ],
+                '=' => [
+                    'value' => 10,
+                    'assert_valid' => 10,
+                    'assert_invalid' => 15,
+                ],
+                '>=' => [
+                    'value' => 10,
+                    'assert_valid' => 10,
+                    'assert_invalid' => 5,
+                ],
+                '>' => [
+                    'value' => 10,
+                    'assert_valid' => 15,
+                    'assert_invalid' => 5,
+                ],
+                '*' => [
+                    'value' => '',
+                    'assert_valid' => 5,
+                ],
+            ],
+            'currency' => [
+                '<' => [
+                    'value' => 10,
+                    'assert_valid' => 5,
+                    'assert_invalid' => 15,
+                ],
+                '<=' => [
+                    'value' => 10,
+                    'assert_valid' => 10,
+                    'assert_invalid' => 15,
+                ],
+                '=' => [
+                    'value' => 10,
+                    'assert_valid' => 10,
+                    'assert_invalid' => 15,
+                ],
+                '>=' => [
+                    'value' => 10,
+                    'assert_valid' => 10,
+                    'assert_invalid' => 5,
+                ],
+                '>' => [
+                    'value' => 10,
+                    'assert_valid' => 15,
+                    'assert_invalid' => 5,
+                ],
+                '*' => [
+                    'value' => '',
+                    'assert_valid' => 5,
+                ],
+            ],
+            'step' => [
+                '<' => [
+                    'value' => 10,
+                    'assert_valid' => 5,
+                    'assert_invalid' => 15,
+                ],
+                '<=' => [
+                    'value' => 10,
+                    'assert_valid' => 10,
+                    'assert_invalid' => 15,
+                ],
+                '=' => [
+                    'value' => 10,
+                    'assert_valid' => 10,
+                    'assert_invalid' => 15,
+                ],
+                '>=' => [
+                    'value' => 10,
+                    'assert_valid' => 10,
+                    'assert_invalid' => 5,
+                ],
+                '>' => [
+                    'value' => 10,
+                    'assert_valid' => 15,
+                    'assert_invalid' => 5,
+                ],
+                '*' => [
+                    'value' => '',
+                    'assert_valid' => 5,
+                ],
+            ],
+        ]);
 
-        // reset models to previous attributes
-        $this->rollbackRecordTypes($prevRecordTypes);
-        $implementation->forceFill($implementationData)->save();
+        $this->checkControlTypes('select', [
+            'select' => [
+                '=' => [
+                    'value' => 'option 1',
+                    'options' => [[
+                        'value' => 'option 1',
+                        'name' => 'option 1',
+                    ], [
+                        'value' => 'option 2',
+                        'name' => 'option 2',
+                    ]],
+                    'assert_valid' => 'option 1',
+                    'assert_invalid' => 'option 2',
+                ],
+                '*' => [
+                    'value' => 'option 1',
+                    'options' => [[
+                        'value' => 'option 1',
+                        'name' => 'option 1',
+                    ], [
+                        'value' => 'option 2',
+                        'name' => 'option 2',
+                    ]],
+                    'assert_valid' => 'option 2',
+                ],
+            ],
+        ]);
+
+        $this->checkControlTypes('select_number', [
+            'select' => [
+                '=' => [
+                    'value' => 1,
+                    'options' => [[
+                        'value' => 1,
+                        'name' => '1',
+                    ], [
+                        'value' => 2,
+                        'name' => '2',
+                    ]],
+                    'assert_valid' => '1',
+                    'assert_invalid' => '2',
+                ],
+                '>=' => [
+                    'value' => 2,
+                    'options' => [[
+                        'value' => 1,
+                        'name' => '1',
+                    ], [
+                        'value' => 2,
+                        'name' => '2',
+                    ]],
+                    'assert_valid' => '2',
+                    'assert_invalid' => '1',
+                ],
+                '<=' => [
+                    'value' => 2,
+                    'options' => [[
+                        'value' => 1,
+                        'name' => '1',
+                    ], [
+                        'value' => 2,
+                        'name' => '2',
+                    ], [
+                        'value' => 3,
+                        'name' => '3',
+                    ]],
+                    'assert_valid' => '2',
+                    'assert_invalid' => '3',
+                ],
+                '*' => [
+                    'value' => 1,
+                    'options' => [[
+                        'value' => 1,
+                        'name' => '1',
+                    ], [
+                        'value' => 2,
+                        'name' => '2',
+                    ]],
+                    'assert_valid' => '2',
+                ],
+            ],
+        ]);
+
+        $this->checkControlTypes('date', [
+            'text' => [
+                '>' => [
+                    'value' => '01-01-2024',
+                    'assert_valid' => '01-02-2024',
+                    'assert_invalid' => '2023-12-31',
+                ],
+                '=' => [
+                    'value' => '01-01-2024',
+                    'assert_valid' => '01-01-2024',
+                    'assert_invalid' => '2023-12-31',
+                ],
+            ],
+            'date' => [
+                '>' => [
+                    'value' => '01-01-2024',
+                    'assert_valid' => '01-02-2024',
+                    'assert_invalid' => '2023-12-31',
+                ],
+                '=' => [
+                    'value' => '01-01-2024',
+                    'assert_valid' => '01-01-2024',
+                    'assert_invalid' => '2023-12-31',
+                ],
+            ],
+        ]);
     }
 
     /**
-     * Check fields control type depends on record type "control_type" attribute
-     * is set as text
-     *
      * @throws \Throwable
      */
-    public function testWebshopFundRequestControlTypeByRecordType(): void
+    public function testWebshopFundRequestCriteriaSteps(): void
     {
-        // Configure implementation and fund
-        $implementation = Implementation::byKey('nijmegen');
-
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
-        $organization = $implementation->organization;
-
-        // configure implementation and organization
-        $implementationData = $implementation->only('digid_enabled', 'digid_required');
-
-        $implementation->forceFill([
-            'digid_enabled' => false,
-            'digid_required' => false,
-        ])->save();
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        // configure record types and store previous types to reset it after test
-        $prevRecordTypes = $this->configureRecordTypes([[
-            'key' => 'municipality',
-            'control_type' => 'select',
-        ], [
-            'key' => 'children_nth',
-            'control_type' => 'number',
-        ], [
-            'key' => 'gender',
+        $configs = [[
+            'record_type' => 'string',
+            'record_key' => token_generator()->generate(16),
             'control_type' => 'text',
-        ]]);
-
-        $fund = $this->makeTestFund($organization, [
-            'type' => 'budget',
-        ], [
-            'outcome_type' => 'voucher',
-            'bsn_confirmation_time' => null,
-            'bsn_confirmation_api_time' => null,
-            'allow_fund_requests' => true,
-            'allow_prevalidations' => false,
-        ]);
-
-        $this->makeFundCriteria($fund, [[
-            'title' => 'Choose your municipality',
-            'description' => 'Choose your municipality description',
-            'record_type_key' => 'municipality',
-            'operator' => '=',
-            'value' => '268',
-            'show_attachment' => false,
-        ], [
-            'title' => 'Choose the number of children',
-            'description' => 'Choose the number of children description',
-            'record_type_key' => 'children_nth',
-            'operator' => '>',
-            'value' => 2,
-            'show_attachment' => false,
-        ], [
-            'title' => 'Choose gender',
-            'description' => 'Choose gender description',
-            'record_type_key' => 'gender',
             'operator' => '*',
-            'show_attachment' => false,
-        ], [
-            'title' => 'Choose the salary',
-            'description' => 'Choose the salary description',
-            'record_type_key' => 'base_salary',
-            'operator' => '<',
-            'value' => 300,
-            'show_attachment' => false,
-        ]]);
-
-        $applyCase = [
-            'apply_option' => 'request',
-            'skip_apply_option_select' => true,
-            'available_apply_options' => [],
-            'assert_overview_titles' => [
-                'Choose your municipality',
-                'Choose the number of children',
-                'Choose gender',
-                'Choose the salary',
-            ],
-        ];
-
-        $stepsData = [[
-            'title' => 'Choose your municipality',
-            'fields' => [[
-                'title' => 'Choose your municipality',
-                'description' => 'Choose your municipality description',
-                'type' => 'select',
-                'value' => 'Nijmegen',
-            ]],
-        ], [
-            'title' => 'Choose the number of children',
-            'fields' => [[
-                'title' => 'Choose the number of children',
-                'description' => 'Choose the number of children description',
-                'type' => 'number',
-                'value' => 3,
-            ]],
-        ], [
-            'title' => 'Choose gender',
-            'fields' => [[
-                'title' => 'Choose gender',
-                'description' => 'Choose gender description',
-                'type' => 'text',
-                'value' => 'Female',
-            ]],
-        ], [
-            'title' => 'Choose the salary',
-            'fields' => [[
-                'title' => 'Choose the salary',
-                'description' => 'Choose the salary description',
-                'type' => 'currency',
-                'value' => 200,
-            ]],
-        ]];
-
-        $this->processFundRequestTestCase($implementation, $fund, $applyCase, $stepsData);
-
-        $this->deleteFund($fund);
-
-        // reset models to previous attributes
-        $this->rollbackRecordTypes($prevRecordTypes);
-        $implementation->forceFill($implementationData)->save();
-    }
-
-    /**
-     * Check criteria steps configured. Assert criteria steps are visible, criteria grouped by criteria step,
-     * if criteria doesn't related to criteria step - must be on separate fund request step and
-     * step title must be criteria title
-     *
-     * @throws \Throwable
-     */
-    public function testWebshopFundRequestCriteriaStepsAndSingleCriteria(): void
-    {
-        // Configure implementation and fund
-        $implementation = Implementation::byKey('nijmegen');
-
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
-        $organization = $implementation->organization;
-
-        // configure implementation and organization
-        $implementationData = $implementation->only('digid_enabled', 'digid_required');
-
-        $implementation->forceFill([
-            'digid_enabled' => false,
-            'digid_required' => false,
-        ])->save();
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        // configure record types and store previous types to reset it after test
-        $prevRecordTypes = $this->configureRecordTypes([[
-            'key' => 'municipality',
-            'control_type' => 'select',
-        ], [
-            'key' => 'children_nth',
-            'control_type' => 'step',
-        ], [
-            'key' => 'gender',
-            'control_type' => 'text',
-        ]]);
-
-        $fund = $this->makeTestFund($organization, [
-            'type' => 'budget',
-        ], [
-            'outcome_type' => 'voucher',
-            'bsn_confirmation_time' => null,
-            'bsn_confirmation_api_time' => null,
-            'allow_fund_requests' => true,
-            'allow_prevalidations' => false,
-        ]);
-
-        $this->makeFundCriteria($fund, [[
-            'title' => 'Choose your municipality',
-            'description' => 'Choose your municipality description',
-            'record_type_key' => 'municipality',
-            'operator' => '=',
-            'value' => '268',
-            'show_attachment' => false,
+            'value' => 'any',
+            'assert_valid' => 'something',
             'step' => 'Step #1',
         ], [
-            'title' => 'Choose the number of children',
-            'description' => 'Choose the number of children description',
-            'record_type_key' => 'children_nth',
-            'operator' => '>',
-            'value' => 2,
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ], [
-            'title' => 'Choose gender',
-            'description' => 'Choose gender description',
-            'record_type_key' => 'gender',
-            'operator' => '=',
-            'value' => 'Female',
-            'show_attachment' => false,
-            'step' => 'Step #2',
-        ], [
-            'title' => 'Choose the salary',
-            'description' => 'Choose the salary description',
-            'record_type_key' => 'base_salary',
-            'operator' => '<',
-            'value' => 300,
-            'show_attachment' => false,
-        ]]);
-
-        $applyCase = [
-            'apply_option' => 'request',
-            'skip_apply_option_select' => true,
-            'available_apply_options' => [],
-            'assert_overview_titles' => [
-                'Step #1',
-                'Step #2',
-                'Choose the salary',
-            ],
-        ];
-
-        $stepsData = [[
-            'title' => 'Step #1',
-            'fields' => [[
-                'title' => 'Choose your municipality',
-                'description' => 'Choose your municipality description',
-                'type' => 'select',
-                'value' => 'Nijmegen',
-            ], [
-                'title' => 'Choose the number of children',
-                'description' => 'Choose the number of children description',
-                'type' => 'step',
-                'value' => 3,
-            ]],
-        ], [
-            'title' => 'Step #2',
-            'fields' => [[
-                'title' => 'Choose gender',
-                'description' => 'Choose gender description',
-                'type' => 'checkbox',
-                'value' => true,
-            ]],
-        ], [
-            'title' => 'Choose the salary',
-            'fields' => [[
-                'title' => 'Choose the salary',
-                'description' => 'Choose the salary description',
-                'type' => 'currency',
-                'value' => 200,
-            ]],
-        ]];
-
-        $this->processFundRequestTestCase($implementation, $fund, $applyCase, $stepsData);
-
-        $this->deleteFund($fund);
-
-        // reset models to previous attributes
-        $this->rollbackRecordTypes($prevRecordTypes);
-        $implementation->forceFill($implementationData)->save();
-    }
-
-    /**
-     * Check criteria steps configured. Assert all criteria connected to criteria steps
-     * and fund request steps has criteria steps titles
-     *
-     * @throws \Throwable
-     */
-    public function testWebshopFundRequestAllCriteriaConfiguredWithCriteriaSteps(): void
-    {
-        // Configure implementation and fund
-        $implementation = Implementation::byKey('nijmegen');
-
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
-        $organization = $implementation->organization;
-
-        // configure implementation and organization
-        $implementationData = $implementation->only('digid_enabled', 'digid_required');
-
-        $implementation->forceFill([
-            'digid_enabled' => false,
-            'digid_required' => false,
-        ])->save();
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        // configure record types and store previous types to reset it after test
-        $prevRecordTypes = $this->configureRecordTypes([[
-            'key' => 'municipality',
-            'control_type' => 'select',
-        ], [
-            'key' => 'children_nth',
-            'control_type' => 'step',
-        ], [
-            'key' => 'gender',
-            'control_type' => 'text',
-        ]]);
-
-        $fund = $this->makeTestFund($organization, [
-            'type' => 'budget',
-        ], [
-            'outcome_type' => 'voucher',
-            'bsn_confirmation_time' => null,
-            'bsn_confirmation_api_time' => null,
-            'allow_fund_requests' => true,
-            'allow_prevalidations' => false,
-        ]);
-
-        $this->makeFundCriteria($fund, [[
-            'title' => 'Choose your municipality',
-            'description' => 'Choose your municipality description',
-            'record_type_key' => 'municipality',
-            'operator' => '=',
-            'value' => '268',
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ], [
-            'title' => 'Choose the number of children',
-            'description' => 'Choose the number of children description',
-            'record_type_key' => 'children_nth',
-            'operator' => '>',
-            'value' => 2,
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ], [
-            'title' => 'Choose gender',
-            'description' => 'Choose gender description',
-            'record_type_key' => 'gender',
-            'operator' => '=',
-            'value' => 'Female',
-            'show_attachment' => false,
-            'step' => 'Step #2',
-        ], [
-            'title' => 'Choose the salary',
-            'description' => 'Choose the salary description',
-            'record_type_key' => 'base_salary',
-            'operator' => '<',
-            'value' => 300,
-            'show_attachment' => false,
-            'step' => 'Step #3',
-        ]]);
-
-        $applyCase = [
-            'apply_option' => 'request',
-            'skip_apply_option_select' => true,
-            'available_apply_options' => [],
-            'assert_overview_titles' => [
-                'Step #1',
-                'Step #2',
-                'Step #3',
-            ],
-        ];
-
-        $stepsData = [[
-            'title' => 'Step #1',
-            'fields' => [[
-                'title' => 'Choose your municipality',
-                'description' => 'Choose your municipality description',
-                'type' => 'select',
-                'value' => 'Nijmegen',
-            ], [
-                'title' => 'Choose the number of children',
-                'description' => 'Choose the number of children description',
-                'type' => 'step',
-                'value' => 3,
-            ]],
-        ], [
-            'title' => 'Step #2',
-            'fields' => [[
-                'title' => 'Choose gender',
-                'description' => 'Choose gender description',
-                'type' => 'checkbox',
-                'value' => true,
-            ]],
-        ], [
-            'title' => 'Step #3',
-            'fields' => [[
-                'title' => 'Choose the salary',
-                'description' => 'Choose the salary description',
-                'type' => 'currency',
-                'value' => 200,
-            ]],
-        ]];
-
-        $this->processFundRequestTestCase($implementation, $fund, $applyCase, $stepsData);
-
-        $this->deleteFund($fund);
-
-        // reset models to previous attributes
-        $this->rollbackRecordTypes($prevRecordTypes);
-        $implementation->forceFill($implementationData)->save();
-    }
-
-    /**
-     * Check if criteria step with criteria "children_nth" not visible on start screen
-     * in steps list as it depends on "municipality" value
-     *
-     * @throws \Throwable
-     */
-    public function testWebshopConditionalStepOverviewVisibility(): void
-    {
-        // Configure implementation and fund
-        $implementation = Implementation::byKey('nijmegen');
-
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
-        $organization = $implementation->organization;
-
-        // configure implementation and organization
-        $implementationData = $implementation->only('digid_enabled', 'digid_required');
-
-        $implementation->forceFill([
-            'digid_enabled' => false,
-            'digid_required' => false,
-        ])->save();
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        // configure record types and store previous types to reset it after test
-        $prevRecordTypes = $this->configureRecordTypes([[
-            'key' => 'municipality',
-            'control_type' => 'select',
-        ], [
-            'key' => 'children_nth',
-            'control_type' => 'step',
-        ], [
-            'key' => 'gender',
-            'control_type' => 'text',
-        ]]);
-
-        $fund = $this->makeTestFund($organization, [
-            'type' => 'budget',
-        ], [
-            'outcome_type' => 'voucher',
-            'bsn_confirmation_time' => null,
-            'bsn_confirmation_api_time' => null,
-            'allow_fund_requests' => true,
-            'allow_prevalidations' => false,
-        ]);
-
-        $this->makeFundCriteria($fund, [[
-            'title' => 'Choose your municipality',
-            'description' => 'Choose your municipality description',
-            'record_type_key' => 'municipality',
-            'operator' => '=',
-            'value' => '268',
-            'show_attachment' => false,
-            'step' => [
-                'title' => 'Step #1',
-                'description' => 'The _short_ __description__ of the step.',
-            ],
-        ], [
-            'title' => 'Choose the number of children',
-            'description' => 'Choose the number of children description',
-            'record_type_key' => 'children_nth',
-            'operator' => '>',
-            'value' => 2,
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ], [
-            'title' => 'Choose gender',
-            'description' => 'Choose gender description',
-            'record_type_key' => 'gender',
-            'operator' => '=',
-            'value' => 'Female',
-            'show_attachment' => false,
-            'step' => 'Step #2',
-            'rules' => [[
-                'record_type_key' => 'municipality',
-                'operator' => '=',
-                'value' => '268',
-            ]]
-        ], [
-            'title' => 'Choose the salary',
-            'description' => 'Choose the salary description',
-            'record_type_key' => 'base_salary',
-            'operator' => '<',
-            'value' => 300,
-            'show_attachment' => false,
-        ]]);
-
-        $applyCase = [
-            'apply_option' => 'request',
-            'skip_apply_option_select' => true,
-            'available_apply_options' => [],
-            'assert_overview_titles' => [
-                'Step #1',
-                'Choose the salary',
-            ],
-            'assert_overview_titles_missed' => [
-                'Step #2',
-            ],
-        ];
-
-        $stepsData = [[
-            'title' => 'Step #1',
-            'fields' => [[
-                'title' => 'Choose your municipality',
-                'description' => 'Choose your municipality description',
-                'type' => 'select',
-                'value' => 'Nijmegen',
-            ], [
-                'title' => 'Choose the number of children',
-                'description' => 'Choose the number of children description',
-                'type' => 'step',
-                'value' => 3,
-            ]],
-        ], [
-            'title' => 'Step #2',
-            'fields' => [[
-                'title' => 'Choose gender',
-                'description' => 'Choose gender description',
-                'type' => 'checkbox',
-                'value' => true,
-            ]],
-        ], [
-            'title' => 'Choose the salary',
-            'fields' => [[
-                'title' => 'Choose the salary',
-                'description' => 'Choose the salary description',
-                'type' => 'currency',
-                'value' => 200,
-            ]],
-        ]];
-
-        $this->processFundRequestTestCase($implementation, $fund, $applyCase, $stepsData);
-
-        $this->deleteFund($fund);
-
-        // reset models to previous attributes
-        $this->rollbackRecordTypes($prevRecordTypes);
-        $implementation->forceFill($implementationData)->save();
-    }
-
-    /**
-     * Check conditional criteria steps - as example was taken two fields "net_worth" record,
-     * and it depends on "children_nth" record value, for value 5-9 we show one "net_worth" field,
-     * for 10+ another "net_worth" field. In this test we fill "children_nth" not in condition range
-     * with value "3", so all "net_worth" fields must be missed.
-     *
-     * @throws \Throwable
-     */
-    public function testWebshopFundRequestCriteriaNotVisibleByCondition(): void
-    {
-        // Configure implementation and fund
-        $implementation = Implementation::byKey('nijmegen');
-
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
-        $organization = $implementation->organization;
-
-        // configure implementation and organization
-        $implementationData = $implementation->only('digid_enabled', 'digid_required');
-
-        $implementation->forceFill([
-            'digid_enabled' => false,
-            'digid_required' => false,
-        ])->save();
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        // configure record types and store previous types to reset it after test
-        $prevRecordTypes = $this->configureRecordTypes([[
-            'key' => 'municipality',
-            'control_type' => 'select',
-        ], [
-            'key' => 'children_nth',
-            'control_type' => 'step',
-        ], [
-            'key' => 'gender',
-            'control_type' => 'text',
-        ]]);
-
-        $fund = $this->makeTestFund($organization, [
-            'type' => 'budget',
-        ], [
-            'outcome_type' => 'voucher',
-            'bsn_confirmation_time' => null,
-            'bsn_confirmation_api_time' => null,
-            'allow_fund_requests' => true,
-            'allow_prevalidations' => false,
-        ]);
-
-        $this->makeFundCriteria($fund, [[
-            'title' => 'Choose your municipality',
-            'description' => 'Choose your municipality description',
-            'record_type_key' => 'municipality',
-            'operator' => '=',
-            'value' => '268',
-            'show_attachment' => false,
-            'step' => [
-                'title' => 'Step #1',
-                'description' => 'The _short_ __description__ of the step.',
-            ],
-        ], [
-            'title' => 'Choose the number of children',
-            'description' => 'Choose the number of children description',
-            'record_type_key' => 'children_nth',
-            'operator' => '>',
-            'value' => 2,
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ], [
-            'title' => 'Income for 5-9 children',
-            'description' => 'Income for 5-9 children description',
-            'record_type_key' => 'net_worth',
-            'operator' => '<=',
-            'value' => 1000,
-            'show_attachment' => false,
-            'step' => 'Step #1',
-            'rules' => [[
-                'record_type_key' => 'children_nth',
-                'operator' => '>=',
-                'value' => '5',
-            ], [
-                'record_type_key' => 'children_nth',
-                'operator' => '<=',
-                'value' => '9',
-            ]]
-        ], [
-            'title' => 'Income for 10+ children',
-            'description' => 'Income for 10+ children description',
-            'record_type_key' => 'net_worth',
-            'operator' => '<=',
-            'value' => 2000,
-            'show_attachment' => false,
-            'step' => 'Step #1',
-            'rules' => [[
-                'record_type_key' => 'children_nth',
-                'operator' => '>=',
-                'value' => '10',
-            ]]
-        ], [
-            'title' => 'Choose gender',
-            'description' => 'Choose gender description',
-            'record_type_key' => 'gender',
-            'operator' => '=',
-            'value' => 'Female',
-            'show_attachment' => false,
-            'step' => 'Step #2',
-        ], [
-            'title' => 'Choose the salary',
-            'description' => 'Choose the salary description',
-            'record_type_key' => 'base_salary',
-            'operator' => '<',
-            'value' => 300,
-            'show_attachment' => false,
-        ]]);
-
-        $applyCase = [
-            'apply_option' => 'request',
-            'skip_apply_option_select' => true,
-            'available_apply_options' => [],
-            'assert_overview_titles' => [
-                'Step #1',
-                'Step #2',
-                'Choose the salary',
-            ],
-        ];
-
-        $stepsData = [[
-            'title' => 'Step #1',
-            'fields' => [[
-                'title' => 'Choose your municipality',
-                'description' => 'Choose your municipality description',
-                'type' => 'select',
-                'value' => 'Nijmegen',
-            ], [
-                'title' => 'Choose the number of children',
-                'description' => 'Choose the number of children description',
-                'type' => 'step',
-                'value' => 3,
-            ]],
-            'missed_fields' => [
-                'Income for 5-9 children',
-                'Income for 10+ children',
-            ],
-        ], [
-            'title' => 'Step #2',
-            'fields' => [[
-                'title' => 'Choose gender',
-                'description' => 'Choose gender description',
-                'type' => 'checkbox',
-                'value' => true,
-            ]],
-        ], [
-            'title' => 'Choose the salary',
-            'fields' => [[
-                'title' => 'Choose the salary',
-                'description' => 'Choose the salary description',
-                'type' => 'currency',
-                'value' => 200,
-            ]],
-        ]];
-
-        $this->processFundRequestTestCase($implementation, $fund, $applyCase, $stepsData);
-
-        $this->deleteFund($fund);
-
-        // reset models to previous attributes
-        $this->rollbackRecordTypes($prevRecordTypes);
-        $implementation->forceFill($implementationData)->save();
-    }
-
-    /**
-     * Check conditional criteria steps - as example was taken two fields "net_worth" record,
-     * and it depends on "children_nth" record value, for value 5-9 we show one "net_worth" field,
-     * for 10+ another "net_worth" field. In this test we fill "children_nth" in condition range
-     * with value "6", so first "net_worth" field (for 5-9) must be visible and other one - not.
-     *
-     * @throws \Throwable
-     */
-    public function testWebshopFundRequestCriteriaIsVisibleByCondition(): void
-    {
-        // Configure implementation and fund
-        $implementation = Implementation::byKey('nijmegen');
-
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
-        $organization = $implementation->organization;
-
-        // configure implementation and organization
-        $implementationData = $implementation->only('digid_enabled', 'digid_required');
-
-        $implementation->forceFill([
-            'digid_enabled' => false,
-            'digid_required' => false,
-        ])->save();
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        // configure record types and store previous types to reset it after test
-        $prevRecordTypes = $this->configureRecordTypes([[
-            'key' => 'municipality',
-            'control_type' => 'select',
-        ], [
-            'key' => 'children_nth',
-            'control_type' => 'step',
-        ], [
-            'key' => 'gender',
-            'control_type' => 'text',
-        ], [
-            'key' => 'net_worth',
+            'record_type' => 'number',
+            'record_key' => token_generator()->generate(16),
             'control_type' => 'number',
-        ]]);
-
-        $fund = $this->makeTestFund($organization, [
-            'type' => 'budget',
-        ], [
-            'outcome_type' => 'voucher',
-            'bsn_confirmation_time' => null,
-            'bsn_confirmation_api_time' => null,
-            'allow_fund_requests' => true,
-            'allow_prevalidations' => false,
-        ]);
-
-        $this->makeFundCriteria($fund, [[
-            'title' => 'Choose your municipality',
-            'description' => 'Choose your municipality description',
-            'record_type_key' => 'municipality',
             'operator' => '=',
-            'value' => '268',
-            'show_attachment' => false,
-            'step' => [
-                'title' => 'Step #1',
-                'description' => 'The _short_ __description__ of the step.',
-            ],
-        ], [
-            'title' => 'Choose the number of children',
-            'description' => 'Choose the number of children description',
-            'record_type_key' => 'children_nth',
-            'operator' => '>',
-            'value' => 2,
-            'show_attachment' => false,
+            'value' => 10,
+            'assert_valid' => 10,
+            'assert_invalid' => 12,
             'step' => 'Step #1',
         ], [
-            'title' => 'Income for 5-9 children',
-            'description' => 'Income for 5-9 children description',
-            'record_type_key' => 'net_worth',
-            'operator' => '<=',
-            'value' => 1000,
-            'show_attachment' => false,
-            'step' => 'Step #1',
-            'rules' => [[
-                'record_type_key' => 'children_nth',
-                'operator' => '>=',
-                'value' => '5',
-            ], [
-                'record_type_key' => 'children_nth',
-                'operator' => '<=',
-                'value' => '9',
-            ]]
-        ], [
-            'title' => 'Income for 10+ children',
-            'description' => 'Income for 10+ children description',
-            'record_type_key' => 'net_worth',
-            'operator' => '<=',
-            'value' => 2000,
-            'show_attachment' => false,
-            'step' => 'Step #1',
-            'rules' => [[
-                'record_type_key' => 'children_nth',
-                'operator' => '>=',
-                'value' => '10',
-            ]]
-        ], [
-            'title' => 'Choose gender',
-            'description' => 'Choose gender description',
-            'record_type_key' => 'gender',
-            'operator' => '=',
-            'value' => 'Female',
-            'show_attachment' => false,
+            'record_type' => 'email',
+            'record_key' => token_generator()->generate(16),
+            'control_type' => 'text',
+            'operator' => '*',
+            'value' => '',
+            'assert_valid' => $this->faker->email,
             'step' => 'Step #2',
         ], [
-            'title' => 'Choose the salary',
-            'description' => 'Choose the salary description',
-            'record_type_key' => 'base_salary',
-            'operator' => '<',
-            'value' => 300,
-            'show_attachment' => false,
-        ]]);
-
-        $applyCase = [
-            'apply_option' => 'request',
-            'skip_apply_option_select' => true,
-            'available_apply_options' => [],
-            'assert_overview_titles' => [
-                'Step #1',
-                'Step #2',
-                'Choose the salary',
-            ],
-        ];
-
-        $stepsData = [[
-            'title' => 'Step #1',
-            'fields' => [[
-                'title' => 'Choose your municipality',
-                'description' => 'Choose your municipality description',
-                'type' => 'select',
-                'value' => 'Nijmegen',
-            ], [
-                'title' => 'Choose the number of children',
-                'description' => 'Choose the number of children description',
-                'type' => 'step',
-                'value' => 6,
-            ], [
-                'title' => 'Income for 5-9 children',
-                'description' => 'Income for 5-9 children description',
-                'type' => 'number',
-                'value' => 500,
-            ]],
-            'missed_fields' => [
-                'Income for 10+ children',
-            ],
-        ], [
-            'title' => 'Step #2',
-            'fields' => [[
-                'title' => 'Choose gender',
-                'description' => 'Choose gender description',
-                'type' => 'checkbox',
-                'value' => true,
-            ]],
-        ], [
-            'title' => 'Choose the salary',
-            'fields' => [[
-                'title' => 'Choose the salary',
-                'description' => 'Choose the salary description',
-                'type' => 'currency',
-                'value' => 200,
-            ]],
+            'record_type' => 'string',
+            'record_key' => token_generator()->generate(16),
+            'control_type' => 'text',
+            'operator' => '*',
+            'value' => 'any',
+            'assert_valid' => 'another single field without step',
+            'step' => null,
         ]];
 
-        $this->processFundRequestTestCase($implementation, $fund, $applyCase, $stepsData);
-
-        $this->deleteFund($fund);
-
-        // reset models to previous attributes
-        $this->rollbackRecordTypes($prevRecordTypes);
-        $implementation->forceFill($implementationData)->save();
-    }
-
-    /**
-     * Assert visible apply option digid and code as it configured
-     *
-     * @throws \Throwable
-     */
-    public function testWebshopFundRequestApplyOptionDigidWithSeveralOptions(): void
-    {
-        // Configure implementation and fund
         $implementation = Implementation::byKey('nijmegen');
-
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
         $organization = $implementation->organization;
-
-        // configure implementation and organization
-        $implementationData = $implementation->only([
-            'digid_enabled', 'digid_required', 'digid_connection_type', 'digid_app_id',
-            'digid_shared_secret', 'digid_a_select_server'
-        ]);
-
-        $implementation->forceFill([
-            'digid_enabled' => true,
-            'digid_required' => true,
-            'digid_connection_type' => DigIdSession::CONNECTION_TYPE_CGI,
-            'digid_app_id' => 'test',
-            'digid_shared_secret' => 'test',
-            'digid_a_select_server' => 'test',
-        ])->save();
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        // configure record types and store previous types to reset it after test
-        $prevRecordTypes = $this->configureRecordTypes([[
-            'key' => 'municipality',
-            'control_type' => 'select',
-        ], [
-            'key' => 'children_nth',
-            'control_type' => 'step',
-        ], [
-            'key' => 'gender',
-            'control_type' => 'text',
-        ]]);
 
         $fund = $this->makeTestFund($organization, [
             'type' => 'budget',
         ], [
-            'outcome_type' => 'voucher',
-            'bsn_confirmation_time' => 900,
-            'bsn_confirmation_api_time' => 900,
-            'allow_fund_requests' => true,
-            'allow_prevalidations' => true,
-        ]);
-
-        $this->makeFundCriteria($fund, [[
-            'title' => 'Choose your municipality',
-            'description' => 'Choose your municipality description',
-            'record_type_key' => 'municipality',
-            'operator' => '=',
-            'value' => '268',
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ], [
-            'title' => 'Choose the number of children',
-            'description' => 'Choose the number of children description',
-            'record_type_key' => 'children_nth',
-            'operator' => '>',
-            'value' => 2,
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ]]);
-
-        $applyCase = [
-            'apply_option' => 'digid',
-            'skip_apply_option_select' => false,
-            'available_apply_options' => [
-                'digid', 'code',
-            ],
-            'assert_overview_titles' => [
-                'Step #1',
-            ],
-        ];
-
-        $stepsData = [[
-            'title' => 'Step #1',
-            'fields' => [[
-                'title' => 'Choose your municipality',
-                'description' => 'Choose your municipality description',
-                'type' => 'select',
-                'value' => 'Nijmegen',
-            ], [
-                'title' => 'Choose the number of children',
-                'description' => 'Choose the number of children description',
-                'type' => 'step',
-                'value' => 3,
-            ]],
-        ]];
-
-        $this->processFundRequestTestCase($implementation, $fund, $applyCase, $stepsData);
-
-        $this->deleteFund($fund);
-
-        // reset models to previous attributes
-        $this->rollbackRecordTypes($prevRecordTypes);
-        $implementation->forceFill($implementationData)->save();
-    }
-
-    /**
-     * @throws \Throwable
-     */
-    public function testWebshopFundRequestApplyOptionDigidWithOnlyDigidOption(): void
-    {
-        // Configure implementation and fund
-        $implementation = Implementation::byKey('nijmegen');
-
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
-        $organization = $implementation->organization;
-
-        // configure implementation and organization
-        $implementationData = $implementation->only([
-            'digid_enabled', 'digid_required', 'digid_connection_type', 'digid_app_id',
-            'digid_shared_secret', 'digid_a_select_server'
-        ]);
-
-        $implementation->forceFill([
-            'digid_enabled' => true,
-            'digid_required' => true,
-            'digid_connection_type' => DigIdSession::CONNECTION_TYPE_CGI,
-            'digid_app_id' => 'test',
-            'digid_shared_secret' => 'test',
-            'digid_a_select_server' => 'test',
-        ])->save();
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        // configure record types and store previous types to reset it after test
-        $prevRecordTypes = $this->configureRecordTypes([[
-            'key' => 'municipality',
-            'control_type' => 'select',
-        ], [
-            'key' => 'children_nth',
-            'control_type' => 'step',
-        ], [
-            'key' => 'gender',
-            'control_type' => 'text',
-        ]]);
-
-        $fund = $this->makeTestFund($organization, [
-            'type' => 'budget',
-        ], [
-            'outcome_type' => 'voucher',
-            'bsn_confirmation_time' => 900,
-            'bsn_confirmation_api_time' => 900,
-            'allow_fund_requests' => true,
-            'allow_prevalidations' => false,
-        ]);
-
-        $this->makeFundCriteria($fund, [[
-            'title' => 'Choose your municipality',
-            'description' => 'Choose your municipality description',
-            'record_type_key' => 'municipality',
-            'operator' => '=',
-            'value' => '268',
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ], [
-            'title' => 'Choose the number of children',
-            'description' => 'Choose the number of children description',
-            'record_type_key' => 'children_nth',
-            'operator' => '>',
-            'value' => 2,
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ]]);
-
-        $applyCase = [
-            'apply_option' => 'digid',
-            'skip_apply_option_select' => false,
-            'available_apply_options' => [
-                'digid',
-            ],
-            'assert_overview_titles' => [
-                'Step #1',
-            ],
-        ];
-
-        $stepsData = [[
-            'title' => 'Step #1',
-            'fields' => [[
-                'title' => 'Choose your municipality',
-                'description' => 'Choose your municipality description',
-                'type' => 'select',
-                'value' => 'Nijmegen',
-            ], [
-                'title' => 'Choose the number of children',
-                'description' => 'Choose the number of children description',
-                'type' => 'step',
-                'value' => 3,
-            ]],
-        ]];
-
-        $this->processFundRequestTestCase($implementation, $fund, $applyCase, $stepsData);
-
-        $this->deleteFund($fund);
-
-        // reset models to previous attributes
-        $this->rollbackRecordTypes($prevRecordTypes);
-        $implementation->forceFill($implementationData)->save();
-    }
-
-    /**
-     * @throws \Throwable
-     */
-    public function testWebshopFundRequestApplyOptionRequestSkipped(): void
-    {
-        // Configure implementation and fund
-        $implementation = Implementation::byKey('nijmegen');
-
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
-        $organization = $implementation->organization;
-
-        // configure implementation and organization
-        $implementationData = $implementation->only('digid_enabled', 'digid_required');
-
-        $implementation->forceFill([
-            'digid_enabled' => false,
-            'digid_required' => false,
-        ])->save();
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        // configure record types and store previous types to reset it after test
-        $prevRecordTypes = $this->configureRecordTypes([[
-            'key' => 'municipality',
-            'control_type' => 'select',
-        ], [
-            'key' => 'children_nth',
-            'control_type' => 'step',
-        ], [
-            'key' => 'gender',
-            'control_type' => 'text',
-        ]]);
-
-        $fund = $this->makeTestFund($organization, [
-            'type' => 'budget',
-        ], [
-            'outcome_type' => 'voucher',
             'bsn_confirmation_time' => null,
             'bsn_confirmation_api_time' => null,
             'allow_fund_requests' => true,
             'allow_prevalidations' => false,
         ]);
 
-        $this->makeFundCriteria($fund, [[
-            'title' => 'Choose your municipality',
-            'description' => 'Choose your municipality description',
-            'record_type_key' => 'municipality',
-            'operator' => '=',
-            'value' => '268',
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ], [
-            'title' => 'Choose the number of children',
-            'description' => 'Choose the number of children description',
-            'record_type_key' => 'children_nth',
-            'operator' => '>',
-            'value' => 2,
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ]]);
+        $criteria = [];
+        $recordTypes = [];
+        array_walk($configs, function($config) use ($organization, &$criteria, &$recordTypes) {
+            $recordType = RecordType::create([
+                'key' => $config['record_key'],
+                'type' => $config['record_type'],
+                'criteria' => true,
+                'control_type' => $config['control_type'],
+                'organization_id' => $organization->id,
+            ]);
 
-        $applyCase = [
-            'apply_option' => 'request',
-            'skip_apply_option_select' => true,
-            'available_apply_options' => [],
-            'assert_overview_titles' => [
-                'Step #1',
-            ],
-        ];
+            $recordTypes[] = $recordType;
 
-        $stepsData = [[
-            'title' => 'Step #1',
-            'fields' => [[
-                'title' => 'Choose your municipality',
-                'description' => 'Choose your municipality description',
-                'type' => 'select',
-                'value' => 'Nijmegen',
-            ], [
-                'title' => 'Choose the number of children',
-                'description' => 'Choose the number of children description',
-                'type' => 'step',
-                'value' => 3,
-            ]],
-        ]];
+            $criteria[] = [
+                'step' => $config['step'],
+                'title' => "Choose item $recordType->key",
+                'value' => $config['value'],
+                'operator' => $config['operator'],
+                'description' => "Choose item $recordType->key description",
+                'assert_valid' => $config['assert_valid'],
+                'assert_control' => $recordType->control_type,
+                'assert_invalid' => $config['assert_invalid'] ?? null,
+                'record_type_key' => $recordType->key,
+                'show_attachment' => false,
+            ];
+        });
 
-        $this->processFundRequestTestCase($implementation, $fund, $applyCase, $stepsData);
+        $this->rollbackModels([
+            [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
+            [$organization, $organization->only(['fund_request_resolve_policy'])],
+        ], function() use ($implementation, $organization, $fund, $criteria) {
+            $organization->forceFill([
+                'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
+            ])->save();
 
-        $this->deleteFund($fund);
+            $implementation->forceFill([
+                'digid_enabled' => false,
+                'digid_required' => false,
+            ])->save();
 
-        // reset models to previous attributes
-        $this->rollbackRecordTypes($prevRecordTypes);
-        $implementation->forceFill($implementationData)->save();
+            $this->makeFundCriteria($fund, $criteria);
+
+            $this->processFundRequestTestCase($implementation, $fund, $criteria);
+        }, function() use ($fund, $recordTypes) {
+            $fund && $this->deleteFund($fund);
+            array_walk($recordTypes, fn(RecordType $recordType) => $recordType->delete());
+        });
     }
 
     /**
      * @throws \Throwable
      */
-    public function testWebshopFundRequestApplyOptionRequest(): void
+    public function testWebshopFundRequestConditionalSteps(): void
     {
-        // Configure implementation and fund
-        $implementation = Implementation::byKey('nijmegen');
+        $textRecordTypeKey = token_generator()->generate(16);
+        $numberRecordTypeKey = token_generator()->generate(16);
 
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
-        $organization = $implementation->organization;
-
-        // configure implementation and organization
-        $implementationData = $implementation->only('digid_enabled', 'digid_required');
-
-        $implementation->forceFill([
-            'digid_enabled' => false,
-            'digid_required' => false,
-        ])->save();
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        // configure record types and store previous types to reset it after test
-        $prevRecordTypes = $this->configureRecordTypes([[
-            'key' => 'municipality',
-            'control_type' => 'select',
-        ], [
-            'key' => 'children_nth',
-            'control_type' => 'step',
-        ], [
-            'key' => 'gender',
+        $configs = [[
+            'record_type' => 'string',
+            'record_key' => $textRecordTypeKey,
             'control_type' => 'text',
-        ]]);
+            'operator' => '*',
+            'value' => 'any',
+            'assert_valid' => 'something',
+            'step' => 'Step #1',
+        ], [
+            'record_type' => 'number',
+            'record_key' => $numberRecordTypeKey,
+            'control_type' => 'number',
+            'operator' => '=',
+            'value' => 10,
+            'assert_valid' => 10,
+            'assert_invalid' => 12,
+            'step' => 'Step #1',
+            'rules' => [[
+                'record_type_key' => $textRecordTypeKey,
+                'operator' => '=',
+                'value' => 'something',
+            ]],
+        ], [
+            'record_type' => 'number',
+            'record_key' => token_generator()->generate(16),
+            'control_type' => 'step',
+            'operator' => '>',
+            'value' => 1,
+            'assert_valid' => 5,
+            'assert_invalid' => 1,
+            'step' => 'Step #1',
+            'rules' => [[
+                'record_type_key' => $numberRecordTypeKey,
+                'operator' => '=',
+                'value' => 10,
+            ]],
+        ], [
+            'record_type' => 'date',
+            'record_key' => token_generator()->generate(16),
+            'control_type' => 'date',
+            'operator' => '*',
+            'value' => '',
+            'assert_valid' => '01-01-2021',
+            'assert_hidden_control' => true,
+            'step' => 'Step #1',
+            'rules' => [[
+                'record_type_key' => $numberRecordTypeKey,
+                'operator' => '<',
+                'value' => 5,
+            ]],
+        ], [
+            'record_type' => 'email',
+            'record_key' => token_generator()->generate(16),
+            'control_type' => 'text',
+            'operator' => '*',
+            'value' => '',
+            'assert_valid' => $this->faker->email,
+            'step' => 'Step #2',
+            'assert_hidden_step' => false,
+            'assert_hidden_step_in_overview' => true,
+            'rules' => [[
+                'record_type_key' => $numberRecordTypeKey,
+                'operator' => '>',
+                'value' => 5,
+            ]]
+        ], [
+            'record_type' => 'email',
+            'record_key' => token_generator()->generate(16),
+            'control_type' => 'text',
+            'operator' => '*',
+            'value' => '',
+            'assert_valid' => $this->faker->email,
+            'step' => 'Step #3',
+            'assert_hidden_step' => true,
+            'assert_hidden_step_in_overview' => true,
+            'rules' => [[
+                'record_type_key' => $numberRecordTypeKey,
+                'operator' => '=',
+                'value' => 15,
+            ]]
+        ]];
+
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
 
         $fund = $this->makeTestFund($organization, [
             'type' => 'budget',
         ], [
-            'outcome_type' => 'voucher',
+            'bsn_confirmation_time' => null,
+            'bsn_confirmation_api_time' => null,
+            'allow_fund_requests' => true,
+            'allow_prevalidations' => false,
+        ]);
+
+        $criteria = [];
+        $recordTypes = [];
+        array_walk($configs, function($config) use ($organization, &$criteria, &$recordTypes) {
+            $recordType = RecordType::create([
+                'key' => $config['record_key'],
+                'type' => $config['record_type'],
+                'criteria' => true,
+                'control_type' => $config['control_type'],
+                'organization_id' => $organization->id,
+            ]);
+
+            $recordTypes[] = $recordType;
+
+            $criteria[] = [
+                'title' => "Choose item $recordType->key",
+                'description' => "Choose item $recordType->key description",
+                'step' => $config['step'],
+                'value' => $config['value'],
+                'rules' => $config['rules'] ?? [],
+                'operator' => $config['operator'],
+                'assert_valid' => $config['assert_valid'],
+                'assert_invalid' => $config['assert_invalid'] ?? null,
+                'assert_control' => $recordType->control_type,
+                'record_type_key' => $recordType->key,
+                'show_attachment' => false,
+                'assert_hidden_control' => $config['assert_hidden_control'] ?? false,
+                'assert_hidden_step' => $config['assert_hidden_step'] ?? false,
+                'assert_hidden_step_in_overview' => $config['assert_hidden_step_in_overview'] ?? false,
+            ];
+        });
+
+        $this->rollbackModels([
+            [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
+            [$organization, $organization->only(['fund_request_resolve_policy'])],
+        ], function() use ($implementation, $organization, $fund, $criteria) {
+            $organization->forceFill([
+                'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
+            ])->save();
+
+            $implementation->forceFill([
+                'digid_enabled' => false,
+                'digid_required' => false,
+            ])->save();
+
+            $this->makeFundCriteria($fund, $criteria);
+
+            $this->processFundRequestTestCase($implementation, $fund, $criteria);
+        }, function() use ($fund, $recordTypes) {
+            $fund && $this->deleteFund($fund);
+            array_walk($recordTypes, fn(RecordType $recordType) => $recordType->delete());
+        });
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    public function testWebshopFundRequestApplyOptionsOnlyDigidOption(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+
+        $fund = $this->makeTestFund($implementation->organization, [
+            'type' => 'budget',
+        ], [
+            'bsn_confirmation_time' => 900,
+            'bsn_confirmation_api_time' => 900,
+            'allow_fund_requests' => true,
+            'allow_prevalidations' => false,
+        ]);
+
+        $this->rollbackModels([
+            [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
+        ], function() use ($implementation, $fund) {
+            $implementation->forceFill([
+                'digid_enabled' => true,
+                'digid_required' => true,
+                'digid_connection_type' => DigIdSession::CONNECTION_TYPE_CGI,
+                'digid_app_id' => 'test',
+                'digid_shared_secret' => 'test',
+                'digid_a_select_server' => 'test',
+            ])->save();
+
+            $requester = $this->makeIdentity($this->makeUniqueEmail());
+
+            $this->browse(function (Browser $browser) use (
+                $implementation, $fund, $requester
+            ) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $requester);
+                $browser->waitFor('@headerTitle');
+
+                // visit fund page and assert request button available
+                $browser->visit($implementation->urlWebshop("fondsen/$fund->id"));
+                $browser->waitFor('@fundTitle');
+                $browser->assertSeeIn('@fundTitle', $fund->name);
+
+                // assert request button available
+                $browser->waitFor('@requestButton')->click('@requestButton');
+
+                $browser->waitFor('@digidOption');
+                $browser->assertPresent('@digidOption');
+                $browser->assertMissing('@codeOption');
+                $browser->assertMissing('@requestOption');
+
+                // Logout user
+                $this->logout($browser);
+            });
+        }, function() use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    public function testWebshopFundRequestApplyOptionsDigidAndCode(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+
+        $fund = $this->makeTestFund($implementation->organization, [
+            'type' => 'budget',
+        ], [
+            'bsn_confirmation_time' => 900,
+            'bsn_confirmation_api_time' => 900,
+            'allow_fund_requests' => true,
+            'allow_prevalidations' => true,
+        ]);
+
+        $this->rollbackModels([
+            [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
+        ], function() use ($implementation, $fund) {
+            $implementation->forceFill([
+                'digid_enabled' => true,
+                'digid_required' => true,
+                'digid_connection_type' => DigIdSession::CONNECTION_TYPE_CGI,
+                'digid_app_id' => 'test',
+                'digid_shared_secret' => 'test',
+                'digid_a_select_server' => 'test',
+            ])->save();
+
+            $requester = $this->makeIdentity($this->makeUniqueEmail());
+
+            $this->browse(function (Browser $browser) use (
+                $implementation, $fund, $requester
+            ) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $requester);
+                $browser->waitFor('@headerTitle');
+
+                // visit fund page and assert request button available
+                $browser->visit($implementation->urlWebshop("fondsen/$fund->id"));
+                $browser->waitFor('@fundTitle');
+                $browser->assertSeeIn('@fundTitle', $fund->name);
+
+                // assert request button available
+                $browser->waitFor('@requestButton')->click('@requestButton');
+
+                $browser->waitFor('@digidOption');
+                $browser->assertPresent('@digidOption');
+                $browser->assertPresent('@codeOption');
+                $browser->assertMissing('@requestOption');
+
+                // Logout user
+                $this->logout($browser);
+            });
+        }, function() use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    public function testWebshopFundRequestApplyOptionsSelectSkippedAndUseRequestOption(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+
+        $fund = $this->makeTestFund($implementation->organization, [
+            'type' => 'budget',
+        ], [
+            'bsn_confirmation_time' => null,
+            'bsn_confirmation_api_time' => null,
+            'allow_fund_requests' => true,
+            'allow_prevalidations' => false,
+        ]);
+
+        $this->rollbackModels([
+            [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
+        ], function() use ($implementation, $fund) {
+            $implementation->forceFill([
+                'digid_enabled' => false,
+                'digid_required' => false,
+            ])->save();
+
+            $requester = $this->makeIdentity($this->makeUniqueEmail());
+
+            $this->browse(function (Browser $browser) use (
+                $implementation, $fund, $requester
+            ) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $requester);
+                $browser->waitFor('@headerTitle');
+
+                // visit fund page and assert request button available
+                $browser->visit($implementation->urlWebshop("fondsen/$fund->id"));
+                $browser->waitFor('@fundTitle');
+                $browser->assertSeeIn('@fundTitle', $fund->name);
+
+                // assert request button available
+                $browser->waitFor('@requestButton')->click('@requestButton');
+
+                $browser->assertMissing('@requestOption');
+                $browser->assertMissing('@codeOption');
+                $browser->assertMissing('@digidOption');
+
+                $browser->waitFor('@criteriaStepsOverview')->assertPresent('@criteriaStepsOverview');
+
+                // Logout user
+                $this->logout($browser);
+            });
+        }, function() use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    public function testWebshopFundRequestApplyOptionsRequestAndCode(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+
+        $fund = $this->makeTestFund($implementation->organization, [
+            'type' => 'budget',
+        ], [
             'bsn_confirmation_time' => null,
             'bsn_confirmation_api_time' => null,
             'allow_fund_requests' => true,
             'allow_prevalidations' => true,
         ]);
 
-        $this->makeFundCriteria($fund, [[
-            'title' => 'Choose your municipality',
-            'description' => 'Choose your municipality description',
-            'record_type_key' => 'municipality',
-            'operator' => '=',
-            'value' => '268',
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ], [
-            'title' => 'Choose the number of children',
-            'description' => 'Choose the number of children description',
-            'record_type_key' => 'children_nth',
-            'operator' => '>',
-            'value' => 2,
-            'show_attachment' => false,
-            'step' => 'Step #1',
-        ]]);
+        $this->rollbackModels([
+            [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
+        ], function() use ($implementation, $fund) {
+            $implementation->forceFill([
+                'digid_enabled' => false,
+                'digid_required' => false,
+            ])->save();
 
-        $applyCase = [
-            'apply_option' => 'request',
-            'skip_apply_option_select' => false,
-            'available_apply_options' => [
-                'request', 'code',
-            ],
-            'assert_overview_titles' => [
-                'Step #1',
-            ],
-        ];
+            $requester = $this->makeIdentity($this->makeUniqueEmail());
 
-        $stepsData = [[
-            'title' => 'Step #1',
-            'fields' => [[
-                'title' => 'Choose your municipality',
-                'description' => 'Choose your municipality description',
-                'type' => 'select',
-                'value' => 'Nijmegen',
-            ], [
-                'title' => 'Choose the number of children',
-                'description' => 'Choose the number of children description',
-                'type' => 'step',
-                'value' => 3,
-            ]],
-        ]];
+            $this->browse(function (Browser $browser) use (
+                $implementation, $fund, $requester
+            ) {
+                $browser->visit($implementation->urlWebshop());
 
-        $this->processFundRequestTestCase($implementation, $fund, $applyCase, $stepsData);
+                $this->loginIdentity($browser, $requester);
+                $browser->waitFor('@headerTitle');
 
-        $this->deleteFund($fund);
+                // visit fund page and assert request button available
+                $browser->visit($implementation->urlWebshop("fondsen/$fund->id"));
+                $browser->waitFor('@fundTitle');
+                $browser->assertSeeIn('@fundTitle', $fund->name);
 
-        // reset models to previous attributes
-        $this->rollbackRecordTypes($prevRecordTypes);
-        $implementation->forceFill($implementationData)->save();
+                // assert request button available
+                $browser->waitFor('@requestButton')->click('@requestButton');
+
+                $browser->waitFor('@requestOption');
+                $browser->assertPresent('@requestOption');
+                $browser->assertPresent('@codeOption');
+                $browser->assertMissing('@digidOption');
+
+                // Logout user
+                $this->logout($browser);
+            });
+        }, function() use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
     }
 
     /**
@@ -1476,23 +810,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     {
         $now = now();
 
-        // Configure implementation and fund
         $implementation = Implementation::byKey('nijmegen');
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
         $organization = $implementation->organization;
-
-        // configure implementation and organization
-        $implementationData = $implementation->only('digid_enabled', 'digid_required');
-
-        $implementation->forceFill([
-            'digid_enabled' => false,
-            'digid_required' => false,
-        ])->save();
-
-        $organization->forceFill([
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
 
         $fund = $this->makeTestFund($organization, [
             'type' => 'budget',
@@ -1502,38 +821,132 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             'allow_prevalidations' => true,
         ]);
 
-        $this->addTestCriteriaToFund($fund);
-        $prevalidation = $this->makePrevalidationForTestCriteria($implementation->organization, $fund);
+        $this->rollbackModels([
+            [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
+            [$organization, $organization->only(['fund_request_resolve_policy'])],
+        ], function() use ($implementation, $organization, $fund) {
+            $implementation->forceFill([
+                'digid_enabled' => false,
+                'digid_required' => false,
+            ])->save();
 
-        $this->processApplyWithCodeTestCase($implementation, $fund, $prevalidation);
+            $organization->forceFill([
+                'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
+            ])->save();
 
-        $this->deleteFund($fund);
-        $implementation->forceFill($implementationData)->save();
-        RecordType::where('created_at', '>=', $now)->delete();
+            $this->addTestCriteriaToFund($fund);
+            $prevalidation = $this->makePrevalidationForTestCriteria($implementation->organization, $fund);
+
+            $this->processApplyWithCodeTestCase($implementation, $fund, $prevalidation);
+        }, function() use ($fund, $now) {
+            $fund && $this->deleteFund($fund);
+            RecordType::where('created_at', '>=', $now)->delete();
+        });
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    protected function checkControlTypes(string $type, array $configs = []): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+
+        $fund = $this->makeTestFund($organization, [
+            'type' => 'budget',
+        ], [
+            'bsn_confirmation_time' => null,
+            'bsn_confirmation_api_time' => null,
+            'allow_fund_requests' => true,
+            'allow_prevalidations' => false,
+        ]);
+
+        $recordTypes = collect($configs)
+            ->mapWithKeys(function($config, $control) use ($organization, $type) {
+                $types = [];
+
+                foreach ($config as $operator => $value) {
+                    $recordType = RecordType::create([
+                        'key' => token_generator()->generate(16),
+                        'type' => $type,
+                        'criteria' => true,
+                        'control_type' => $control,
+                        'organization_id' => $organization->id,
+                    ]);
+
+                    $recordType->record_type_options()->createMany($value['options'] ?? []);
+
+                    $types[$operator] = $recordType;
+                }
+
+                return [$control => $types];
+            });
+
+        $this->rollbackModels([
+            [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
+            [$organization, $organization->only(['fund_request_resolve_policy'])],
+        ], function() use ($implementation, $organization, $fund, $configs, $recordTypes) {
+            $organization->forceFill([
+                'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
+            ])->save();
+
+            $implementation->forceFill([
+                'digid_enabled' => false,
+                'digid_required' => false,
+            ])->save();
+
+            $criteria = [];
+
+            /**
+             * @var string $operator
+             * @var RecordType $type
+             */
+            foreach ($recordTypes as $control => $config) {
+                foreach ($config as $operator => $type) {
+                    $config = $configs[$control][$operator];
+
+                    $criteria[] = [
+                        'step' => null,
+                        'value' => $config['value'],
+                        'title' => "Choose item $type->key",
+                        'operator' => $operator,
+                        'description' => "Choose item $type->key description",
+                        'assert_valid' => $config['assert_valid'],
+                        'assert_control' => $control,
+                        'assert_invalid' => $config['assert_invalid'] ?? null,
+                        'record_type_key' => $type->key,
+                        'show_attachment' => false,
+                    ];
+                }
+            }
+
+            $this->makeFundCriteria($fund, $criteria);
+
+            $this->processFundRequestTestCase($implementation, $fund, $criteria);
+        }, function() use ($fund, $recordTypes) {
+            $fund && $this->deleteFund($fund);
+            $recordTypes->each(fn (array $recordTypes) => array_walk(
+                $recordTypes, fn(RecordType $recordType) => $recordType->delete()
+            ));
+        });
     }
 
     /**
      * @param Implementation $implementation
      * @param Fund $fund
-     * @param array $applyCase
-     * @param array $stepsData
+     * @param array $criteria
      * @return void
      * @throws \Throwable
      */
     protected function processFundRequestTestCase(
         Implementation $implementation,
         Fund $fund,
-        array $applyCase,
-        array $stepsData
+        array $criteria,
     ): void {
         $requester = $this->makeIdentity($this->makeUniqueEmail());
 
-        if ($applyCase['apply_option'] === 'digid') {
-            $requester->setBsnRecord('12345678');
-        }
-
         $this->browse(function (Browser $browser) use (
-            $implementation, $fund, $requester, $applyCase, $stepsData
+            $implementation, $fund, $requester, $criteria
         ) {
             $browser->visit($implementation->urlWebshop());
 
@@ -1548,30 +961,22 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             // assert request button available
             $browser->waitFor('@requestButton')->click('@requestButton');
 
-            // check available options and select needed
-            if (!$applyCase['skip_apply_option_select']) {
-                foreach ($applyCase['available_apply_options'] as $applyOption) {
-                    $selector = $this->getApplyOptionSelector($applyOption);
-                    $selector && $browser->waitFor($selector);
-                }
-
-                $selector = $this->getApplyOptionSelector($applyCase['apply_option']);
-                $selector && $browser->waitFor($selector)->click($selector);
-            }
-
+            // assert steps overview
             $browser
                 ->waitFor('@criteriaStepsOverview')
-                ->within('@criteriaStepsOverview', function (Browser $b) use ($applyCase) {
-                    array_walk($applyCase['assert_overview_titles'], fn($title) => $b->assertSee($title));
+                ->within('@criteriaStepsOverview', function (Browser $browser) use ($criteria) {
+                    array_walk($criteria, function ($criterion) use ($browser) {
+                        $title = $criterion['step'] ? : $criterion['title'];
 
-                    if (isset($applyCase['assert_overview_titles_missed'])) {
-                        array_walk($applyCase['assert_overview_titles_missed'], fn($title) => $b->assertDontSee($title));
-                    }
+                        $criterion['assert_hidden_step_in_overview'] ?? false
+                            ? $browser->assertDontSee($title)
+                            : $browser->assertSee($title);
+                    });
                 });
 
             $browser->waitFor('@nextStepButton')->click('@nextStepButton');
 
-            $this->fillRequestForm($browser, $stepsData);
+            $this->fillRequestForm($browser, $criteria);
 
             // Logout user
             $this->logout($browser);
@@ -1586,65 +991,158 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @param array $stepsData
+     * @param array $criteria
      * @return void
      * @throws TimeoutException
      */
-    protected function fillRequestForm(Browser $browser, array $stepsData): void
+    protected function fillRequestForm(Browser $browser, array $criteria): void
     {
         $browser->waitFor('@fundRequestForm');
 
-        $browser->within('@fundRequestForm', function (Browser $browser) use ($stepsData) {
-            foreach ($stepsData as $step) {
-                $browser->waitForTextIn('.sign_up-pane-header', $step['title']);
+        $browser->within('@fundRequestForm', function (Browser $browser) use ($criteria) {
+            // group criteria by steps
+            $criteria = collect($criteria);
+            $singleCriteria = $criteria->whereNull('step')->map(fn($criterion) => [$criterion]);
+            $criteriaSteps = $criteria->whereNotNull('step')->groupBy('step');
+            $data = $criteriaSteps->merge($singleCriteria);
 
-                foreach ($step['fields'] as $field) {
-                    $field['title'] && $browser->waitForText($field['title']);
-                    $field['description'] && $browser->waitForText($field['description']);
+            foreach ($data as $step) {
+                $hiddenFields = collect($step)->filter(fn($field) => $field['assert_hidden_step'] ?? false);
+                if (count($step) === count($hiddenFields)) {
+                    // this step is hidden, asser don't see it and go to next step in test
+                    $browser->assertDontSeeIn('.sign_up-pane-header', $step[0]['step']);
+                    continue;
+                }
 
-                    switch ($field['type']) {
-                        case 'select':
-                            $browser->waitFor('@selectControl')->click('@selectControl');
-                            $this->findOptionElement($browser, $field['value'])->click();
-                            break;
-                        case 'text':
-                            $browser->waitFor('@controlText');
-                            $browser->type('@controlText', $field['value']);
-                            break;
-                        case 'number':
-                            $browser->waitFor('@controlNumber');
-                            $browser->type('@controlNumber', $field['value']);
-                            break;
-                        case 'currency':
-                            $browser->waitFor('@controlCurrency');
-                            $browser->type('@controlCurrency', $field['value']);
-                            break;
-                        case 'checkbox':
-                            $browser->waitFor('@controlCheckbox')->click('@controlCheckbox');
-                            break;
-                        case 'step':
-                            $browser->waitFor('@controlStep');
-                            $browser->within('@controlStep', function (Browser $browser) use ($field) {
-                                for ($i = 0; $i < $field['value']; $i++) {
-                                    $browser->click('@increaseStep');
-                                }
-                            });
-                            break;
+                foreach ($step as $field) {
+                    $selector = $this->getControlSelector($field['assert_control']);
+
+                    // control can be hidden by rules
+                    if ($field['assert_hidden_control'] ?? false) {
+                        $browser->assertMissing($selector);
+                        continue;
                     }
+
+                    $browser->waitForTextIn('.sign_up-pane-header', $field['step'] ?: $field['title']);
+                    $field['description'] && !$field['step'] && $browser->waitForText($field['description']);
+
+                    // assert invalid value if exists
+                    if ($field['assert_invalid']) {
+                        $this->fillInput($browser, $field['assert_control'], $field['assert_invalid']);
+                        $browser->click('@nextStepButton');
+                        $browser->waitFor('.form-error');
+                        // clear input
+                        $selector && $this->clearCustom($browser, $selector, $field['assert_invalid']);
+                    }
+
+                    // assert valid value
+                    $this->fillInput($browser, $field['assert_control'], $field['assert_valid']);
                 }
 
-                foreach ($step['missed_fields'] ?? [] as $field) {
-                    $browser->assertDontSee($field);
-                }
-
-                // go to last criteria values screen
                 $browser->click('@nextStepButton');
             }
+
+            // need pause before submit form - sometimes on frontend it doesn't work immediately after steps
+            $browser->pause(100);
 
             // submit fund request form
             $browser->waitFor('@submitButton')->click('@submitButton');
             $browser->waitFor('@fundRequestSuccess');
         });
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @param string|int|null $value
+     * @return void
+     * @throws TimeoutException
+     */
+    protected function clearCustom(
+        Browser $browser,
+        string $selector,
+        string|int|null $value = null
+    ): void {
+        if ($selector === '@controlDate') {
+            return;
+        }
+
+        if ($selector === '@controlStep') {
+            $browser->waitFor($selector);
+            $browser->within($selector, function (Browser $browser) use ($value) {
+                for ($i = 0; $i < $value; $i++) {
+                    $browser->click('@decreaseStep');
+                }
+            });
+
+            return;
+        }
+
+        /** @var string $value */
+        $value = $browser->value($selector);
+        $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $control
+     * @param string|int|null $value
+     * @return void
+     * @throws TimeoutException
+     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
+     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
+     */
+    protected function fillInput(Browser $browser, string $control, string|int|null $value): void
+    {
+        $selector = $this->getControlSelector($control);
+
+        switch ($control) {
+            case 'select':
+                $browser->waitFor($selector);
+                $browser->click("$selector .select-control-search");
+                $this->findOptionElement($browser, $value)->click();
+                break;
+            case 'number':
+            case 'currency':
+            case 'text':
+                $browser->waitFor($selector);
+                $browser->type($selector, $value);
+                break;
+            case 'checkbox':
+                $value && $browser->waitFor($selector)->click($selector);
+                break;
+            case 'step':
+                $browser->waitFor($selector);
+                $browser->within($selector, function (Browser $browser) use ($value) {
+                    for ($i = 0; $i < $value; $i++) {
+                        $browser->click('@increaseStep');
+                    }
+                });
+                break;
+            case 'date':
+                $browser->waitFor($selector);
+                $this->clearCustom($browser,  "$selector input[type='text']");
+                $browser->type("$selector input[type='text']", $value);
+                break;
+        }
+    }
+
+    /**
+     * @param string $control
+     * @return string|null
+     */
+    protected function getControlSelector(string $control): ?string
+    {
+        return match ($control) {
+            'step' => '@controlStep',
+            'date' => '@controlDate',
+            'text' => '@controlText',
+            'select' => '@selectControl',
+            'number' => '@controlNumber',
+            'currency' => '@controlCurrency',
+            'checkbox' => '@controlCheckbox',
+            default => null
+        };
     }
 
     /**
@@ -1711,21 +1209,6 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
         $this->assertTrue($voucher);
     }
 
-
-    /**
-     * @param string $option
-     * @return string|null
-     */
-    protected function getApplyOptionSelector(string $option): ?string
-    {
-        return match ($option) {
-            'code' => '@codeOption',
-            'digid' => '@digidOption',
-            'request' => '@requestOption',
-            default => null,
-        };
-    }
-
     /**
      * @param Browser $browser
      * @param string $title
@@ -1751,33 +1234,5 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
         $this->assertNotNull($element);
 
         return $element;
-    }
-
-    /**
-     * @param array $recordTypes
-     * @return void
-     */
-    protected function rollbackRecordTypes(array $recordTypes): void
-    {
-        array_walk($recordTypes, function ($type) {
-            RecordType::where('id', $type['id'])->update(Arr::only($type, [
-                'key', 'type', 'system', 'criteria', 'vouchers', 'organization_id', 'control_type',
-            ]));
-        });
-    }
-
-    /**
-     * @param array $recordTypesConfigs
-     * @return array
-     */
-    protected function configureRecordTypes(array $recordTypesConfigs): array
-    {
-        $recordTypes = RecordType::all()->toArray();
-
-        array_walk($recordTypesConfigs, function ($value) {
-            RecordType::where('key', $value['key'])->update($value);
-        });
-
-        return $recordTypes;
     }
 }
