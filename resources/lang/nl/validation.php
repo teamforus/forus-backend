@@ -171,7 +171,7 @@ return [
     'validation.prevalidation_missing_primary_key' => 'Het sleutelveld ontbreekt in het bestand.',
     'fund_request_request_field_incomplete' => 'Dit veld mag niet leeg zijn.',
     'fund_request_request_eligible_field_incomplete' => 'Ga akkoord met de voorwaarden.',
-    'email_already_used' => 'Dit e-mailadres is al ingenomen door een ander account.',
+    'email_already_used' => 'De e-mail is verstuurd naar het opgegeven e-mailadres. Let op: als het e-mailadres al in het systeem staat, kan het niet opnieuw worden toegevoegd en wordt er geen e-mail verstuurd.',
     'max_emails_reached' => 'Het maximale aantal van :max e-mailadressen is bereikt. Verwijder eerst een bestaand e-mailadres om een nieuw e-mailadres toe te voegen.',
     'iban' => 'Vul een geldig IBAN-nummer in, bijvoorbeeld NL02ABNA0123456789',
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
