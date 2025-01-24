@@ -105,7 +105,7 @@ class QueryCounter
      */
     protected function isExcludedRoute(): bool
     {
-        return in_array($this->request->route()->getName(), $this->config->getExcludedRoutes());
+        return in_array($this->getRouteName(), $this->config->getExcludedRoutes());
     }
 
     /**
