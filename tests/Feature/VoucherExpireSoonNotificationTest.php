@@ -26,7 +26,7 @@ class VoucherExpireSoonNotificationTest extends TestCase
         $expireDate = $voucher->expire_at->clone();
 
         $this->travelTo($expireDate->clone()->subWeeks(6)->subDay());
-        $this->artisan('forus.voucher:check-expire');
+        $this->artisan('forus.voucher:check-expire-soon');
 
         self::assertEquals(
             0,
@@ -50,13 +50,13 @@ class VoucherExpireSoonNotificationTest extends TestCase
         $expireDate = $voucher->expire_at->clone();
 
         $this->travelTo($expireDate->clone()->subWeeks(6));
-        $this->artisan('forus.voucher:check-expire');
+        $this->artisan('forus.voucher:check-expire-soon');
 
         $this->travelTo($expireDate->clone()->subWeeks(6)->addDay());
-        $this->artisan('forus.voucher:check-expire');
+        $this->artisan('forus.voucher:check-expire-soon');
 
         $this->travelTo($expireDate->clone()->subWeeks(6)->addDays(2));
-        $this->artisan('forus.voucher:check-expire');
+        $this->artisan('forus.voucher:check-expire-soon');
 
         self::assertEquals(
             1,
@@ -80,13 +80,13 @@ class VoucherExpireSoonNotificationTest extends TestCase
         $expireDate = $voucher->expire_at->clone();
 
         $this->travelTo($expireDate->clone()->subWeeks(3));
-        $this->artisan('forus.voucher:check-expire');
+        $this->artisan('forus.voucher:check-expire-soon');
 
         $this->travelTo($expireDate->clone()->subWeeks(3)->addDays(2));
-        $this->artisan('forus.voucher:check-expire');
+        $this->artisan('forus.voucher:check-expire-soon');
 
-        $this->travelTo($expireDate->clone());
-        $this->artisan('forus.voucher:check-expire');
+        $this->travelTo($expireDate->clone()->addDay());
+        $this->artisan('forus.voucher:check-expired');
 
         self::assertEquals(
             1,
@@ -112,7 +112,8 @@ class VoucherExpireSoonNotificationTest extends TestCase
         while ($date->isBefore($voucher->expire_at->clone()->addWeek())) {
             $date->addDay();
             $this->travelTo($date);
-            $this->artisan('forus.voucher:check-expire');
+            $this->artisan('forus.voucher:check-expired');
+            $this->artisan('forus.voucher:check-expire-soon');
         }
 
         /** @var EventLog[]|Collection $events */
