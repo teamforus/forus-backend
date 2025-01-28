@@ -939,8 +939,10 @@ class TestData
                 $records = $fund->criteria->map(fn (FundCriterion $criterion) => [
                     'value' => match($criterion->operator) {
                         '=' => $criterion->value,
-                        '>' => (int) $criterion->value * 2,
-                        '<' => (int) ((int) $criterion->value / 2),
+                        '>',
+                        '>=' => (int) $criterion->value * 2,
+                        '<',
+                        '<=' => (int) ((int) $criterion->value / 2),
                         '*' => match ($criterion->record_type_key) {
                             'iban' => 'NL50RABO3741207772',
                             'iban_name' => 'John Doe',

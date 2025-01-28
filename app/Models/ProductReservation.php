@@ -119,6 +119,7 @@ class ProductReservation extends BaseModel
     public const string EVENT_PENDING = 'pending';
     public const string EVENT_CANCELED_BY_PROVIDER = 'canceled';
     public const string EVENT_CANCELED_BY_CLIENT = 'canceled_by_client';
+    public const string EVENT_CANCELED_BY_SPONSOR = 'canceled_by_sponsor';
     public const string EVENT_CANCELED_PAYMENT_FAILED = 'canceled_payment_failed';
     public const string EVENT_CANCELED_PAYMENT_EXPIRED = 'canceled_payment_expired';
     public const string EVENT_CANCELED_PAYMENT_CANCELED = 'canceled_payment_canceled';
@@ -129,6 +130,7 @@ class ProductReservation extends BaseModel
     public const string STATE_REJECTED = 'rejected';
     public const string STATE_CANCELED_BY_PROVIDER = 'canceled';
     public const string STATE_CANCELED_BY_CLIENT = 'canceled_by_client';
+    public const string STATE_CANCELED_BY_SPONSOR = 'canceled_by_sponsor';
     public const string STATE_CANCELED_PAYMENT_FAILED = 'canceled_payment_failed';
     public const string STATE_CANCELED_PAYMENT_EXPIRED = 'canceled_payment_expired';
     public const string STATE_CANCELED_PAYMENT_CANCELED = 'canceled_payment_canceled';
@@ -144,6 +146,7 @@ class ProductReservation extends BaseModel
         self::EVENT_ACCEPTED,
         self::EVENT_PENDING,
         self::EVENT_CANCELED_BY_CLIENT,
+        self::EVENT_CANCELED_BY_SPONSOR,
         self::EVENT_CANCELED_BY_PROVIDER,
         self::EVENT_CANCELED_PAYMENT_FAILED,
         self::EVENT_CANCELED_PAYMENT_EXPIRED,
@@ -159,6 +162,7 @@ class ProductReservation extends BaseModel
         self::STATE_ACCEPTED,
         self::STATE_REJECTED,
         self::STATE_CANCELED_BY_CLIENT,
+        self::STATE_CANCELED_BY_SPONSOR,
         self::STATE_CANCELED_BY_PROVIDER,
         self::STATE_CANCELED_PAYMENT_FAILED,
         self::STATE_CANCELED_PAYMENT_EXPIRED,
@@ -170,6 +174,7 @@ class ProductReservation extends BaseModel
      */
     public const array STATES_CANCELED = [
         self::STATE_CANCELED_BY_CLIENT,
+        self::STATE_CANCELED_BY_SPONSOR,
         self::STATE_CANCELED_BY_PROVIDER,
         self::STATE_CANCELED_PAYMENT_FAILED,
         self::STATE_CANCELED_PAYMENT_EXPIRED,
@@ -347,6 +352,15 @@ class ProductReservation extends BaseModel
     public function isCanceledByProvider(): bool
     {
         return $this->state === self::STATE_CANCELED_BY_PROVIDER;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function isCanceledBySponsor(): bool
+    {
+        return $this->state === self::STATE_CANCELED_BY_SPONSOR;
     }
 
     /**
@@ -577,6 +591,14 @@ class ProductReservation extends BaseModel
     }
 
     /**
+     * @return bool
+     */
+    public function isCancelableBySponsor(): bool
+    {
+        return $this->isCancelableByRequester();
+    }
+
+    /**
      * @return Voucher
      */
     public function makeVoucher(): Voucher
@@ -590,20 +612,16 @@ class ProductReservation extends BaseModel
      */
     public function cancelByClient(): ?bool
     {
-        DB::transaction(function () {
-            if ($this->product_voucher) {
-                $this->product_voucher->delete();
-            }
+        return $this->cancelByState(self::STATE_CANCELED_BY_CLIENT);
+    }
 
-            $this->update([
-                'state' => self::STATE_CANCELED_BY_CLIENT,
-                'canceled_at' => now(),
-            ]);
-
-            Event::dispatch(new ProductReservationCanceled($this));
-        });
-
-        return true;
+    /**
+     * @return bool|null
+     * @throws \Throwable
+     */
+    public function cancelBySponsor(): ?bool
+    {
+        return $this->cancelByState(self::STATE_CANCELED_BY_SPONSOR);
     }
 
     /**
@@ -621,7 +639,7 @@ class ProductReservation extends BaseModel
                 'canceled_at' => now(),
             ]);
 
-            ProductReservationCanceled::dispatch($this);
+            Event::dispatch(new ProductReservationCanceled($this));
         });
 
         return true;

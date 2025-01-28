@@ -15,6 +15,14 @@ abstract class DuskTestCase extends BaseTestCase
 {
     use CreatesApplication, DoesTesting;
 
+    /**
+     * @var string[]
+     */
+    protected $defaultHeaders = [
+        'Accept' => 'application/json',
+        'Client-Type' => 'webshop',
+    ];
+
     protected function setUp(): void
     {
         parent::setUp();

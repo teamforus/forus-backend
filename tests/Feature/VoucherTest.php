@@ -21,14 +21,21 @@ use Illuminate\Support\Str;
 use Random\RandomException;
 use Tests\TestCase;
 use Tests\TestCases\VoucherTestCases;
+use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\TestsReservations;
 use Tests\Traits\VoucherTestTrait;
 use Throwable;
 
 class VoucherTest extends TestCase
 {
-    use VoucherTestTrait, DatabaseTransactions, MakesTestFunds, MakesTestOrganizations;
+    use MakesTestFunds;
+    use VoucherTestTrait;
+    use TestsReservations;
+    use DatabaseTransactions;
+    use MakesTestOrganizations;
+    use MakesProductReservations;
 
     /**
      * @var string
@@ -918,5 +925,69 @@ class VoucherTest extends TestCase
     protected function getIdentityApiUrl(Voucher $voucher, string $append = ''): string
     {
         return "$this->apiBaseUrl/vouchers/$voucher->number" . $append;
+    }
+
+    /**
+     * @return void
+     * @throws \Exception
+     */
+    public function testDeactivateVoucherBySponsor(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
+        $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $product = $this->findProductForReservation($voucher);
+
+        $reservation = $this->makeReservation($voucher, $product);
+        $response = $this->makeReservationGetRequest($reservation);
+
+        $response->assertSuccessful();
+
+        $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
+        $url = $this->getSponsorApiUrl($voucher, '/deactivate');
+
+        $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
+        $response->assertSuccessful();
+
+        $this->assertTrue($voucher->refresh()->isDeactivated(), 'Voucher deactivation failed');
+
+        $reservation->refresh();
+        $this->assertTrue($reservation->isCanceledBySponsor(), 'Reservation cancel failed');
+    }
+
+    /**
+     * @return void
+     * @throws \Exception
+     */
+    public function testDeactivateVoucherByRequester(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
+        $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestFund($organization, [], [
+            'allow_blocking_vouchers' => true,
+        ]), 1);
+
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $product = $this->findProductForReservation($voucher);
+
+        $reservation = $this->makeReservation($voucher, $product);
+        $response = $this->makeReservationGetRequest($reservation);
+
+        $response->assertSuccessful();
+
+        $headers = $this->makeApiHeaders($voucher->identity);
+        $url = $this->getIdentityApiUrl($voucher, '/deactivate');
+
+        $response = $this->post($url, ['note' => $this->faker->sentence()], $headers);
+        $response->assertSuccessful();
+
+        $this->assertTrue($voucher->refresh()->isDeactivated(), 'Voucher deactivation failed');
+
+        $reservation->refresh();
+        $this->assertTrue($reservation->isCanceledByClient(), 'Reservation cancel failed');
     }
 }

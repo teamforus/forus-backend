@@ -41,6 +41,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Maatwebsite\Excel\Excel as ExcelModel;
 use Maatwebsite\Excel\Facades\Excel;
@@ -1549,17 +1550,31 @@ class Voucher extends BaseModel
      * @param bool $notifyByEmail
      * @param Employee|null $employee
      * @return $this
+     * @throws \Throwable
      */
     public function deactivate(
         string $note = '',
         bool $notifyByEmail = false,
-        ?Employee $employee = null
+        ?Employee $employee = null,
     ): Voucher {
-        $this->update([
-            'state' => self::STATE_DEACTIVATED,
-        ]);
+        DB::transaction(function () use ($employee, $note, $notifyByEmail) {
+            $this->update([
+                'state' => self::STATE_DEACTIVATED,
+            ]);
 
-        VoucherDeactivated::dispatch($this, $note, $employee, $notifyByEmail);
+            foreach ($this->product_reservations as $reservation) {
+                if ($employee && $reservation->isCancelableBySponsor()) {
+                    $reservation->cancelBySponsor();
+                    continue;
+                }
+
+                if (!$employee && $reservation->isCancelableByRequester()) {
+                    $reservation->cancelByClient();
+                }
+            }
+
+            Event::dispatch(new VoucherDeactivated($this, $note, $employee, $notifyByEmail));
+        });
 
         return $this;
     }

@@ -1,7 +1,5 @@
 <?php
 
-use App\Http\Requests\BaseFormRequest;
-use App\Models\Implementation;
 use App\Models\RecordType;
 use App\Services\Forus\Session\Services\Browser;
 use App\Services\Forus\Session\Services\Data\AgentData;
@@ -79,22 +77,16 @@ if (!function_exists('currency_format')) {
 if (!function_exists('currency_format_locale')) {
     /**
      * @param $number
-     * @param Implementation|null $implementation
      * @return string
      */
-    function currency_format_locale($number, Implementation $implementation = null): string
+    function currency_format_locale($number): string
     {
-        $implementation = $implementation ?: BaseFormRequest::createFrom(request())->implementation();
-        $currencySign = ($implementation?->currency_sign ?: '€') . ' ';
-        $currencyRound = $implementation?->currency_round;
-
-        if ($currencyRound) {
-            return $currencySign . currency_format(floor($number), 0, ',', '.');
-        }
-
         $isWhole = ($number - round($number)) === 0.0;
 
-        return $currencySign . currency_format($number, $isWhole ? 0 : 2, ',', '.') . ($isWhole ? ',-' : '');
+        return '€ ' . implode('', [
+            currency_format($number, $isWhole ? 0 : 2, ',', '.'),
+            $isWhole ? ',-' : '',
+        ]);
     }
 }
 

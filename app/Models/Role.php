@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\Translations\RoleTranslationsTrait;
+use App\Services\TranslationService\Traits\TranslatableTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -42,6 +43,7 @@ class Role extends BaseModel
 {
     use Translatable;
     use RoleTranslationsTrait;
+    use TranslatableTrait;
 
     protected $fillable = [
         'key'

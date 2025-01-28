@@ -2,12 +2,12 @@
 
 namespace App\Http\Requests\Api\Platform\Vouchers;
 
-use App\Models\VoucherToken;
+use App\Models\Voucher;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * @property-read VoucherToken $voucher_token_address
+ * @property-read Voucher $voucher_number_or_address
  */
 class DeactivateVoucherRequest extends FormRequest
 {
@@ -18,7 +18,7 @@ class DeactivateVoucherRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Gate::allows('deactivateRequester', $this->voucher_token_address->voucher);
+        return Gate::allows('deactivateRequester', $this->voucher_number_or_address);
     }
 
     /**

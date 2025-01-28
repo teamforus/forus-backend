@@ -98,6 +98,12 @@ return [
             'level' => 'debug',
         ],
 
+        'deepl' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/deepl.log'),
+            'level' => 'debug',
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
