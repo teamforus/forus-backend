@@ -595,7 +595,7 @@ class ProductReservation extends BaseModel
      */
     public function isCancelableBySponsor(): bool
     {
-        return $this->isCancelableByRequester() || $this->isCancelableByProvider();
+        return $this->isCancelableByRequester();
     }
 
     /**
@@ -612,20 +612,7 @@ class ProductReservation extends BaseModel
      */
     public function cancelByClient(): ?bool
     {
-        DB::transaction(function () {
-            if ($this->product_voucher) {
-                $this->product_voucher->delete();
-            }
-
-            $this->update([
-                'state' => self::STATE_CANCELED_BY_CLIENT,
-                'canceled_at' => now(),
-            ]);
-
-            Event::dispatch(new ProductReservationCanceled($this));
-        });
-
-        return true;
+        return $this->cancelByState(self::STATE_CANCELED_BY_CLIENT);
     }
 
     /**
@@ -634,20 +621,7 @@ class ProductReservation extends BaseModel
      */
     public function cancelBySponsor(): ?bool
     {
-        DB::transaction(function () {
-            if ($this->product_voucher) {
-                $this->product_voucher->delete();
-            }
-
-            $this->update([
-                'state' => self::STATE_CANCELED_BY_SPONSOR,
-                'canceled_at' => now(),
-            ]);
-
-            Event::dispatch(new ProductReservationCanceled($this));
-        });
-
-        return true;
+        return $this->cancelByState(self::STATE_CANCELED_BY_SPONSOR);
     }
 
     /**
@@ -665,7 +639,7 @@ class ProductReservation extends BaseModel
                 'canceled_at' => now(),
             ]);
 
-            ProductReservationCanceled::dispatch($this);
+            Event::dispatch(new ProductReservationCanceled($this));
         });
 
         return true;
