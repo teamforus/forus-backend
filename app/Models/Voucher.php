@@ -1554,15 +1554,22 @@ class Voucher extends BaseModel
     public function deactivate(
         string $note = '',
         bool $notifyByEmail = false,
-        ?Employee $employee = null
+        ?Employee $employee = null,
     ): Voucher {
         $this->update([
             'state' => self::STATE_DEACTIVATED,
         ]);
 
-        $this->product_reservations->each(function (ProductReservation $reservation) use ($employee) {
-            $employee ? $reservation->cancelBySponsor() : $reservation->cancelByClient();
-        });
+        foreach ($this->product_reservations as $reservation) {
+            if ($employee && $reservation->isCancelableBySponsor()) {
+                $reservation->cancelBySponsor();
+                continue;
+            }
+
+            if (!$employee && $reservation->isCancelableByRequester()) {
+                $reservation->cancelByClient();
+            }
+        }
 
         VoucherDeactivated::dispatch($this, $note, $employee, $notifyByEmail);
 

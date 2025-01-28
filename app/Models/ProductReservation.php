@@ -591,6 +591,14 @@ class ProductReservation extends BaseModel
     }
 
     /**
+     * @return bool
+     */
+    public function isCancelableBySponsor(): bool
+    {
+        return $this->isCancelableByRequester() || $this->isCancelableByProvider();
+    }
+
+    /**
      * @return Voucher
      */
     public function makeVoucher(): Voucher
