@@ -12,7 +12,7 @@ use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesVoucherTransaction;
 
-class VoucherExpireSoonNotificationTest extends TestCase
+class VoucherExpirationNotificationsTest extends TestCase
 {
     use MakesVoucherTransaction;
     use WithFaker;
@@ -20,7 +20,12 @@ class VoucherExpireSoonNotificationTest extends TestCase
     use MakesTestFunds;
     use MakesTestOrganizations;
 
-    public function testNoVoucherExpireNotificationSentToSoon(): void
+    /**
+     * Test that no "expire soon" notification is sent before 6 weeks.
+     *
+     * @return void
+     */
+    public function testExpireSoonNotificationIsNotSentBefore6Weeks(): void
     {
         $voucher = $this->makeVoucherForTest();
         $expireDate = $voucher->expire_at->clone();
@@ -31,20 +36,16 @@ class VoucherExpireSoonNotificationTest extends TestCase
         self::assertEquals(
             0,
             $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRING_SOON_BUDGET)->count(),
-            'No expire soon notification was sent before time.',
-        );
-
-        self::assertEquals(
-            0,
-            $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRED_BUDGET)->count(),
-            'No expired notification sent before time.',
+            'Expire soon notification should not be sent before 6 weeks.',
         );
     }
 
     /**
+     * Test that an "expire soon" notification is sent exactly at 6 weeks and not repeated after.
+     *
      * @return void
      */
-    public function testOnlyOneExpireSoonVoucherNotificationSentFor6Weeks(): void
+    public function testExpireSoonNotificationIsSentOnceAt6Weeks(): void
     {
         $voucher = $this->makeVoucherForTest();
         $expireDate = $voucher->expire_at->clone();
@@ -61,20 +62,16 @@ class VoucherExpireSoonNotificationTest extends TestCase
         self::assertEquals(
             1,
             $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRING_SOON_BUDGET)->count(),
-            'Only one expire soon notification sent for 6 weeks.',
-        );
-
-        self::assertEquals(
-            0,
-            $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRED_BUDGET)->count(),
-            'No expired notification sent before time.',
+            'Expire soon notification should be sent only once at 6 weeks.',
         );
     }
 
     /**
+     * Test that an "expire soon" notification is sent exactly at 3 weeks and not repeated after.
+     *
      * @return void
      */
-    public function testOnlyOneExpireSoonVoucherNotificationSentFor3Weeks(): void
+    public function testExpireSoonNotificationIsSentOnceAt3Weeks(): void
     {
         $voucher = $this->makeVoucherForTest();
         $expireDate = $voucher->expire_at->clone();
@@ -85,26 +82,19 @@ class VoucherExpireSoonNotificationTest extends TestCase
         $this->travelTo($expireDate->clone()->subWeeks(3)->addDays(2));
         $this->artisan('forus.voucher:check-expire-soon');
 
-        $this->travelTo($expireDate->clone()->addDay());
-        $this->artisan('forus.voucher:check-expired');
-
         self::assertEquals(
             1,
             $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRING_SOON_BUDGET)->count(),
-            'Only one expire soon notification sent for 3 weeks.',
-        );
-
-        self::assertEquals(
-            1,
-            $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRED_BUDGET)->count(),
-            'No expired notification sent before time.',
+            'Expire soon notification should be sent only once at 3 weeks.',
         );
     }
 
     /**
+     * Test that "expire soon" notifications are sent exactly at 6 and 3 weeks.
+     *
      * @return void
      */
-    public function testOnlyOneExpiredAndExpireSoonNotificationSentFor3and6Weeks(): void
+    public function testExpireSoonNotificationsAreSentOnceAt6And3Weeks(): void
     {
         $voucher = $this->makeVoucherForTest();
         $date = $voucher->expire_at->clone()->subWeeks(8);
@@ -112,7 +102,6 @@ class VoucherExpireSoonNotificationTest extends TestCase
         while ($date->isBefore($voucher->expire_at->clone()->addWeek())) {
             $date->addDay();
             $this->travelTo($date);
-            $this->artisan('forus.voucher:check-expired');
             $this->artisan('forus.voucher:check-expire-soon');
         }
 
@@ -122,23 +111,53 @@ class VoucherExpireSoonNotificationTest extends TestCase
         self::assertEquals(
             2,
             $events->count(),
-            'Only 2 expire soon notifications sent in total.'
+            'Expire soon notifications should be sent exactly at 6 and 3 weeks before expiration.',
         );
+
+        self::assertTrue(
+            $events[0]->created_at->isSameDay($voucher->expire_at->clone()->subWeeks(6)),
+            'First expire soon notification should be at 6 weeks before expiration.'
+        );
+
+        self::assertTrue(
+            $events[1]->created_at->isSameDay($voucher->expire_at->clone()->subWeeks(3)),
+            'Second expire soon notification should be at 3 weeks before expiration.'
+        );
+    }
+
+    /**
+     * Test that an "expired" notification is sent exactly when the voucher expires.
+     *
+     * @return void
+     */
+    public function testExpiredNotificationIsSentOnceOnExpiration(): void
+    {
+        $voucher = $this->makeVoucherForTest();
+        $expireDate = $voucher->expire_at->clone();
+
+        $this->travelTo($expireDate->clone());
+        $this->artisan('forus.voucher:check-expired');
+
+        $this->travelTo($expireDate->clone()->addDay());
+        $this->artisan('forus.voucher:check-expired');
+
+        $this->travelTo($expireDate->clone()->addDays(2));
+        $this->artisan('forus.voucher:check-expired');
 
         self::assertEquals(
             1,
             $voucher->fresh()->logs()->where('event', Voucher::EVENT_EXPIRED_BUDGET)->count(),
-            'Only one expired notification sent in total.'
+            'Expired notification should be sent only once when the voucher expires.',
         );
-
-        self::assertTrue($events[0]->created_at->isSameDay($voucher->expire_at->clone()->subWeeks(6)));
-        self::assertTrue($events[1]->created_at->isSameDay($voucher->expire_at->clone()->subWeeks(3)));
     }
 
     /**
+     * Create a test voucher.
+     *
      * @return Voucher
      */
-    protected function makeVoucherForTest(): voucher {
+    protected function makeVoucherForTest(): voucher
+    {
         $identityRequester = $this->makeIdentity($this->makeUniqueEmail());
         $identitySponsor = $this->makeIdentity($this->makeUniqueEmail());
 
@@ -153,7 +172,7 @@ class VoucherExpireSoonNotificationTest extends TestCase
             "fund_id" => $fund->id,
             "expire_at" => $expireDate->format('Y-m-d'),
             "activate" => 1,
-            "assign_by_type" => "email"
+            "assign_by_type" => "email",
         ], $this->makeApiHeaders($this->makeIdentityProxy($identitySponsor)));
 
         $response->assertSuccessful();
