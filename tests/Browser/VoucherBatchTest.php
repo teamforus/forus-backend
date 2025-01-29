@@ -185,6 +185,7 @@ class VoucherBatchTest extends DuskTestCase
         $browser->waitFor('@uploadVouchersBatchButton');
         $browser->element('@uploadVouchersBatchButton')->click();
 
+        $browser->waitFor('@modalFundSelectSubmit');
         $browser->element('@modalFundSelectSubmit')->click();
 
         $browser->waitFor('@modalVoucherUpload');
