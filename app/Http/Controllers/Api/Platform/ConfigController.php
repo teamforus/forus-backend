@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Controllers\Controller;
+use App\Models\Implementation;
+use Illuminate\Http\JsonResponse;
 
 class ConfigController extends Controller
 {
     /**
-     * @param $config
-     * @return mixed
+     * @param string $type
+     * @return JsonResponse
      */
-    public function getConfig($config) {
-        return $config;
+    public function getConfig(string $type): JsonResponse
+    {
+        return new JsonResponse(Implementation::platformConfig($type));
     }
 }

@@ -119,6 +119,10 @@ class AppServiceProvider extends ServiceProvider
             ini_set('memory_limit', Config::get('app.memory_limit'));
         }
 
+        if (Config::get('app.exception_max_line_length')) {
+            ini_set('zend.exception_string_param_max_len', Config::get('app.exception_max_line_length'));
+        }
+
         if (App::runningUnitTests()) {
             Config::set('mail.default', 'array');
             Config::set('queue.default', 'sync');

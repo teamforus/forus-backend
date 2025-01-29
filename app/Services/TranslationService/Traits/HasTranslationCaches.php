@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 /**
  * @extends Eloquent
  */
-trait TranslatableTrait
+trait HasTranslationCaches
 {
     /**
      * Define a morphMany relationship for translation caches.

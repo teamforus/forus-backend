@@ -24,6 +24,7 @@ use App\Services\Forus\Notification\EmailFrom;
 use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -152,6 +153,8 @@ use Illuminate\Support\Facades\Log;
  * @property-read int|null $top_up_transactions_count
  * @property-read Collection|\App\Models\FundTopUp[] $top_ups
  * @property-read int|null $top_ups_count
+ * @property-read Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
@@ -190,7 +193,13 @@ use Illuminate\Support\Facades\Log;
  */
 class Fund extends BaseModel
 {
-    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasFaq;
+    use HasFaq;
+    use HasLogs;
+    use HasTags;
+    use HasMedia;
+    use HasDigests;
+    use HasMarkdownDescription;
+    use HasOnDemandTranslations;
 
     public const string EVENT_CREATED = 'created';
     public const string EVENT_UPDATED = 'updated';

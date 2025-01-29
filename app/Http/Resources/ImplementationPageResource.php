@@ -25,14 +25,19 @@ class ImplementationPageResource extends BaseJsonResource
     {
         $page = $this->resource;
 
-        return array_merge($page->only(
-            'page_type', 'external', 'description_position', 'description_alignment', 'blocks_per_row',
-        ), [
-            'title' => $page->title,
-            'description_html' => $page->external ? '' : $page->description_html,
+        return [
+            ...$page->only([
+                'page_type', 'external', 'blocks_per_row', 'description_position', 'description_alignment',
+                'description_html',
+            ]),
+            ...$page->translateColumns(
+                $this->isCollection() || $page->external
+                    ? $page->only(['name'])
+                    : $page->only(['name', 'description_html']),
+            ),
             'external_url' => $page->external ? $page->external_url : '',
             'blocks' => ImplementationBlockResource::collection($page->blocks),
             'faq' => FaqResource::collection($page->faq),
-        ]);
+        ];
     }
 }

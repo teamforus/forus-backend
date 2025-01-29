@@ -254,7 +254,8 @@ class VoucherResource extends BaseJsonResource
      */
     protected function getFundResource(Fund $fund): array
     {
-        return array_merge($fund->only('id', 'name', 'state', 'type'), [
+        return array_merge($fund->only('id', 'state', 'type'), [
+            ...$fund->translateColumns($fund->only(['name'])),
             'url_webshop' => $fund->fund_config->implementation->url_webshop ?? null,
             'logo' => new MediaCompactResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d H:i'),
