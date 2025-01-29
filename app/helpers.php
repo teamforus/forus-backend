@@ -83,7 +83,7 @@ if (!function_exists('currency_format_locale')) {
     {
         $isWhole = ($number - round($number)) === 0.0;
 
-        return implode('', [
+        return '€ ' . implode('', [
             currency_format($number, $isWhole ? 0 : 2, ',', '.'),
             $isWhole ? ',-' : '',
         ]);
