@@ -23,7 +23,8 @@ use App\Console\Commands\ExportPhysicalCardsRequestsCommand;
 use App\Console\Commands\FundsExtendPeriodCommand;
 use App\Console\Commands\FundsUpdateStateCommand;
 use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
-use App\Console\Commands\NotifyAboutVoucherExpireCommand;
+use App\Console\Commands\NotifyAboutVoucherExpiredCommand;
+use App\Console\Commands\NotifyAboutVoucherExpireSoonCommand;
 use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
 use App\Console\Commands\ReservationExtraPaymentExpireCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
@@ -66,7 +67,8 @@ class Kernel extends ConsoleKernel
         CalculateFundUsersCommand::class,
 
         // notifications
-        NotifyAboutVoucherExpireCommand::class,
+        NotifyAboutVoucherExpiredCommand::class,
+        NotifyAboutVoucherExpireSoonCommand::class,
         NotifyAboutReachedNotificationFundAmount::class,
 
         // provider invitations
@@ -154,10 +156,16 @@ class Kernel extends ConsoleKernel
             ->monthly()->withoutOverlapping()->onOneServer();
 
         /**
-         * NotifyAboutVoucherExpireCommand:
+         * NotifyAboutVoucherExpireSoonCommand:
          */
-        $schedule->command('forus.voucher:check-expire')
+        $schedule->command('forus.voucher:check-expire-soon')
             ->dailyAt('09:00')->withoutOverlapping()->onOneServer();
+
+        /**
+         * NotifyAboutVoucherExpiredCommand:
+         */
+        $schedule->command('forus.voucher:check-expired')
+            ->dailyAt('00:00')->withoutOverlapping()->onOneServer();
 
         /**
          * UpdateFundProviderInvitationExpireStateCommand

@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Events\Vouchers\VoucherExpired;
 use App\Events\Vouchers\VoucherExpireSoon;
 use App\Models\Voucher;
 use App\Scopes\Builders\VoucherQuery;
@@ -10,14 +9,14 @@ use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-class NotifyAboutVoucherExpireCommand extends Command
+class NotifyAboutVoucherExpireSoonCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'forus.voucher:check-expire';
+    protected $signature = 'forus.voucher:check-expire-soon';
 
     /**
      * The console command description.
@@ -38,7 +37,6 @@ class NotifyAboutVoucherExpireCommand extends Command
 
         foreach ($vouchers as $voucher) {
             $expireInWeeks = ceil(now()->diffInWeeks($voucher->expire_at));
-            $expireInDays = ceil(now()->diffInDays($voucher->expire_at));
 
             $has6weeksLogs = $voucher->logs()->where(function(Builder $builder) use ($voucher) {
                 $builder->whereIn('event', [
@@ -68,17 +66,6 @@ class NotifyAboutVoucherExpireCommand extends Command
 
             if (!$has3weeksLogs && ($expireInWeeks <= 3 && $expireInWeeks > 0) ) {
                 VoucherExpireSoon::dispatch($voucher);
-            }
-
-            $hasExpiredLog = $voucher->logs()->where(function(Builder $builder) use ($voucher) {
-                $builder->whereIn('event', [
-                    Voucher::EVENT_EXPIRED_BUDGET,
-                    Voucher::EVENT_EXPIRED_PRODUCT,
-                ]);
-            })->exists();
-
-            if (!$hasExpiredLog && ($expireInDays <= 0) ) {
-                VoucherExpired::dispatch($voucher);
             }
         }
     }
