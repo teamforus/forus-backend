@@ -103,6 +103,8 @@ class VoucherTransactionBatchTest extends DuskTestCase
      */
     private function goToTransactionsPage(Browser $browser): void
     {
+        $browser->waitFor('@asideMenuGroupFinancial');
+        $browser->element('@asideMenuGroupFinancial')->click();
         $browser->waitFor('@transactionsPage');
         $browser->element('@transactionsPage')->click();
     }
