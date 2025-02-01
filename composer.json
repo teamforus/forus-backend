@@ -61,7 +61,7 @@
         "nunomaduro/collision": "^8.1",
         "phpunit/phpunit": "^10.0",
         "spatie/laravel-ignition": "^2.0",
-        "vimeo/psalm": "^5.23"
+        "vimeo/psalm": "^6.1"
     },
     "autoload": {
         "files": [
