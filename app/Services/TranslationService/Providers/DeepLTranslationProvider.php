@@ -17,10 +17,12 @@ class DeepLTranslationProvider implements TranslationProviderInterface
      * @var string|null
      */
     protected ?string $apiKey;
+    protected ?bool $apiFree;
 
     public function __construct()
     {
         $this->apiKey = (string) Config::get('translation-service.deepl.api_key');
+        $this->apiFree = (boolean) Config::get('translation-service.deepl.free');
 
         if (empty($this->apiKey)) {
             throw new InvalidArgumentException('DeepL API key is missing in the configuration.');
@@ -58,6 +60,10 @@ class DeepLTranslationProvider implements TranslationProviderInterface
         $validEntries = [];
         $originalIndices = [];
 
+        $apiUrl = $this->apiFree ?
+            'https://api-free.deepl.com/v2/translate' :
+            'https://api.deepl.com/v2/translate';
+
         foreach ($texts as $index => $text) {
             if (is_string($text) && trim($text) !== '') {
                 $validEntries[] = $text;
@@ -75,7 +81,7 @@ class DeepLTranslationProvider implements TranslationProviderInterface
             ->withHeaders([
                 'Authorization' => "DeepL-Auth-Key $this->apiKey",
             ])
-            ->post('https://api.deepl.com/v2/translate', [
+            ->post($apiUrl, [
                 'text' => $validEntries,
                 'source_lang' => strtoupper($source),
                 'target_lang' => strtoupper($target),

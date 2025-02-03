@@ -16,6 +16,7 @@ return [
 
     'deepl' => [
         'api_key' => env('TRANSLATION_SERVICE_DEEPL_KEY'),
+        'free' => env('TRANSLATION_SERVICE_DEEPL_FREE', false),
     ],
 
     'translations_map' => [

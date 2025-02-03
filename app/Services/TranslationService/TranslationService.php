@@ -155,7 +155,7 @@ class TranslationService
     {
         foreach ($this->targetLanguages as $locale) {
             $localeMap = $this->getTranslationsMapValue($locale);
-            $translationsPath = resource_path("lang/$localeMap.json");
+            $translationsPath = resource_path("lang/$locale.json");
 
             $existingTranslations = File::exists($translationsPath)
                 ? json_decode(File::get($translationsPath), true)
