@@ -39,13 +39,44 @@ class DeepLTranslationProvider implements TranslationProviderInterface
      */
     public function translate(string $text, string $source, string $target): string
     {
-        // Retry 3 times with a 1-second delay between retries
+        return $this->translateBatch([$text], $source, $target)[0] ?? '';
+    }
+
+    /**
+     * Translate an array of texts in a single batch request using DeepL API.
+     *
+     * @param array $texts The array of texts to be translated
+     * @param string $source The source language
+     * @param string $target The target language
+     * @throws TranslationException
+     * @throws ConnectionException
+     * @return array The translated texts in the same order as input
+     */
+    public function translateBatch(array $texts, string $source, string $target): array
+    {
+        // Filter out empty or non-string values
+        $validEntries = [];
+        $originalIndices = [];
+
+        foreach ($texts as $index => $text) {
+            if (is_string($text) && trim($text) !== '') {
+                $validEntries[] = $text;
+                $originalIndices[] = $index;
+            }
+        }
+
+        // If no valid entries exist, return an array of empty strings
+        if (empty($validEntries)) {
+            return array_fill(0, count($texts), '');
+        }
+
+        // Send batch request to DeepL
         $response = Http::retry(3, 200)
             ->withHeaders([
                 'Authorization' => "DeepL-Auth-Key $this->apiKey",
             ])
             ->post('https://api.deepl.com/v2/translate', [
-                'text' => [$text],
+                'text' => $validEntries,
                 'source_lang' => strtoupper($source),
                 'target_lang' => strtoupper($target),
                 'tag_handling' => 'html',
@@ -60,9 +91,23 @@ class DeepLTranslationProvider implements TranslationProviderInterface
         }
 
         try {
-            return $response->json('translations.0.text');
+            $translations = $response->json('translations', []);
+
+            if (!is_array($translations)) {
+                throw new TranslationException('DeepL API response is not an array.');
+            }
+
+            // Create an output array initialized with empty strings
+            $translatedTexts = array_fill(0, count($texts), '');
+
+            // Map translated results back to their original positions
+            foreach ($originalIndices as $resultIndex => $originalIndex) {
+                $translatedTexts[$originalIndex] = $translations[$resultIndex]['text'] ?? '';
+            }
+
+            return $translatedTexts;
         } catch (Throwable $e) {
-            $errorMessage = "DeepL API error - failed to extract translated value: {$e->getMessage()}";
+            $errorMessage = "DeepL API error - failed to extract translated values: {$e->getMessage()}";
 
             Log::channel('deepl')->error($errorMessage);
             throw new TranslationException($errorMessage);

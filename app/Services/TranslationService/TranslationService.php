@@ -312,6 +312,14 @@ class TranslationService
     }
 
     /**
+     * @throws TranslationException
+     */
+    public function translateBatch(array $text, string $sourceLocale, string $targetLocale): array
+    {
+        return $this->provider->translateBatch($text, $sourceLocale, $targetLocale);
+    }
+
+    /**
      * @return LoggerInterface
      */
     public function logger(): LoggerInterface

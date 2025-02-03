@@ -77,10 +77,21 @@ class TranslateStaticCommand extends Command
             $progressBar->start();
 
             $translations = [];
+            $batchSize = 100;
+            $keys = array_keys($addedKeys);
+            $values = array_values($addedKeys);
 
-            foreach ($addedKeys as $key => $value) {
-                $translations[$key] = $this->service->translateText($value, $this->service->getSourceLanguage(), $locale);
-                $progressBar->advance();
+            for ($i = 0; $i < $totalKeys; $i += $batchSize) {
+                $batchKeys = array_slice($keys, $i, $batchSize);
+                $batchValues = array_slice($values, $i, $batchSize);
+
+                $translatedBatch = $this->service->translateBatch($batchValues, $this->service->getSourceLanguage(), $locale);
+
+                foreach ($batchKeys as $index => $key) {
+                    $translations[$key] = $translatedBatch[$index] ?? '';
+                }
+
+                $progressBar->advance(min($batchSize, $totalKeys - $i));
             }
 
             $progressBar->finish();
