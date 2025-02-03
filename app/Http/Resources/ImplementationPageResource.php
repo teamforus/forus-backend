@@ -31,7 +31,7 @@ class ImplementationPageResource extends BaseJsonResource
                 'description_html',
             ]),
             ...$page->translateColumns(
-                $this->isCollection() || $page->external
+                $page->external
                     ? $page->only(['name'])
                     : $page->only(['name', 'description_html']),
             ),

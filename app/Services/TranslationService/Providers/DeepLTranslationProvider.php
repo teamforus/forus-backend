@@ -48,6 +48,7 @@ class DeepLTranslationProvider implements TranslationProviderInterface
                 'text' => [$text],
                 'source_lang' => strtoupper($source),
                 'target_lang' => strtoupper($target),
+                'tag_handling' => 'html',
             ]);
 
         if ($response->failed()) {

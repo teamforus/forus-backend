@@ -7,7 +7,9 @@ use App\Models\Implementation;
 use App\Services\TranslationService\Models\TranslationValue;
 use App\Services\TranslationService\TranslationService;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Lang;
+use Mews\Purifier\Facades\Purifier;
 use Throwable;
 
 /**
@@ -35,12 +37,13 @@ trait HasOnDemandTranslations
      */
     public function getTranslationValue(string $key, string $locale, string|null $from): ?string
     {
-        return $this->translation_values()
-            ->where('key', $key)
-            ->where('locale', $locale)
-            ->where('from', $from)
-            ->first()
-            ?->to;
+        $translation = $this->translation_values()->where([
+            'key' => $key,
+            'from' => $from,
+            'locale' => $locale,
+        ])->first();
+
+        return $translation?->to ? $this->purifyTranslation($translation?->to) : null;
     }
 
     /**
@@ -102,6 +105,15 @@ trait HasOnDemandTranslations
             ...$translatedColumns,
             ...$newlyTranslatedColumns,
         ];
+    }
+
+    /**
+     * @param string $translation
+     * @return string
+     */
+    protected function purifyTranslation(string $translation): string
+    {
+        return Purifier::clean($translation, Config::get('forus.purifier.purifier_html_config'));
     }
 
     /**
@@ -178,8 +190,8 @@ trait HasOnDemandTranslations
 
         try {
             if ($sourceValue && $sourceLocale !== $targetLocale) {
-                $translatedValue = $translationService
-                    ->translateText($sourceValue, $sourceLocale, $targetLocale);
+                $translatedValue = $translationService->translateText($sourceValue, $sourceLocale, $targetLocale);
+                $translatedValue = $this->purifyTranslation($translatedValue);
 
                 $this->storeColumnTranslation($key, $sourceValue, $translatedValue, $targetLocale);
 
