@@ -414,6 +414,8 @@ class ReimbursementTest extends DuskTestCase
         $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
         $this->selectDashboardOrganization($browser, $organization);
 
+        $browser->waitFor('@asideMenuGroupVouchers');
+        $browser->element('@asideMenuGroupVouchers')->click();
         $browser->waitFor('@reimbursementsPage');
         $browser->element('@reimbursementsPage')->click();
     }

@@ -117,6 +117,8 @@ class ProductReservationTest extends DuskTestCase
             $this->assertIdentityAuthenticatedOnProviderDashboard($browser, $identity);
             $this->selectDashboardOrganization($browser, $provider);
 
+            $browser->waitFor('@asideMenuGroupSales');
+            $browser->element('@asideMenuGroupSales')->click();
             $browser->waitFor('@reservationsPage');
             $browser->element('@reservationsPage')->click();
             $browser->waitFor('@reservationsTitle');
