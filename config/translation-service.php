@@ -9,7 +9,6 @@ return [
 
     // Updated models and columns structure
     'models' => [
-        \App\Models\Role::class => ['name', 'description'],
         \App\Models\RecordType::class => ['name'],
         \App\Models\BusinessType::class => ['name'],
         \App\Models\ProductCategory::class => ['name'],
