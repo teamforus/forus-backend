@@ -108,19 +108,12 @@ class TranslationService
 
             if (!empty($sourceText)) {
                 foreach ($this->targetLanguages as $targetLanguage) {
-                    $translatedText = $this->translateText(
+                    Arr::set($translatedColumns, "$targetLanguage.$column", $this->translateText(
                         $sourceText,
                         $this->sourceLanguage,
                         $targetLanguage,
-                    );
-
-                    Arr::set(
-                        $translatedColumns,
-                        $this->getTranslationsMapValue($targetLanguage) . '.' . $column,
-                        $translatedText,
-                    );
+                    ));
                 }
-
             }
 
             $model->update($translatedColumns);
