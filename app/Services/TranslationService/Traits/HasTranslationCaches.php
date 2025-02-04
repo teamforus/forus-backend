@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 /**
  * @extends Eloquent
  */
-trait TranslatableTrait
+trait HasTranslationCaches
 {
     /**
      * Define a morphMany relationship for translation caches.
@@ -51,5 +51,19 @@ trait TranslatableTrait
             ['key' => $key, 'locale' => $locale],
             ['value' => $value]
         );
+    }
+
+    /**
+     * Set the translations cache for a given key and locale.
+     *
+     * @param array $columns
+     * @param string $locale
+     * @return void
+     */
+    public function cacheTranslations(array $columns, string $locale): void
+    {
+        foreach ($columns as $key => $value) {
+            $this->cacheTranslation($key, $value, $locale);
+        }
     }
 }

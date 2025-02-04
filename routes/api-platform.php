@@ -81,7 +81,7 @@ $router->group([], static function() use ($router) {
         ->only('show');
 
     $router->get(
-        'config/{platform_config}',
+        'config/{type}',
         'Api\Platform\ConfigController@getConfig'
     );
 

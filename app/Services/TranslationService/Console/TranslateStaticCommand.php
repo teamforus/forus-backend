@@ -6,6 +6,7 @@ use App\Services\TranslationService\Exceptions\TranslationException;
 use App\Services\TranslationService\TranslationService;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use Illuminate\Support\Facades\Config;
 
 class TranslateStaticCommand extends Command
 {
@@ -77,10 +78,22 @@ class TranslateStaticCommand extends Command
             $progressBar->start();
 
             $translations = [];
+            $batchSize = Config::get('translation-service.deepl.batch_size');
 
-            foreach ($addedKeys as $key => $value) {
-                $translations[$key] = $this->service->translateText($value, $this->service->getSourceLanguage(), $locale);
-                $progressBar->advance();
+            $keys = array_keys($addedKeys);
+            $values = array_values($addedKeys);
+
+            for ($i = 0; $i < $totalKeys; $i += $batchSize) {
+                $batchKeys = array_slice($keys, $i, $batchSize);
+                $batchValues = array_slice($values, $i, $batchSize);
+
+                $translatedBatch = $this->service->translateBatch($batchValues, $this->service->getSourceLanguage(), $locale);
+
+                foreach ($batchKeys as $index => $key) {
+                    $translations[$key] = $translatedBatch[$index] ?? '';
+                }
+
+                $progressBar->advance(min($batchSize, $totalKeys - $i));
             }
 
             $progressBar->finish();

@@ -24,18 +24,18 @@ class OrganizationBasicResource extends JsonResource
             return null;
         }
 
-        $privateData = [
-            'email' => $organization->email_public ? $organization->email ?? null: null,
-            'phone' => $organization->phone_public ? $organization->phone ?? null: null,
-            'website' => $organization->website_public ? $organization->website ?? null: null,
-        ];
-
-        return array_merge($organization->only([
-            'id', 'name', 'business_type_id',
-            'email_public', 'phone_public', 'website_public',
-        ]), (array_merge($privateData, [
+        return [
+            ...$organization->only([
+                'id', 'name', 'business_type_id', 'email_public', 'phone_public', 'website_public',
+            ]),
+            ...$organization->translateColumns($organization->only([
+                'name',
+            ])),
+            'email' => $organization->email_public ? $organization->email ?? null : null,
+            'phone' => $organization->phone_public ? $organization->phone ?? null : null,
+            'website' => $organization->website_public ? $organization->website ?? null : null,
             'logo' => new MediaCompactResource($organization->logo),
             'business_type' => new BusinessTypeResource($organization->business_type),
-        ])));
+        ];
     }
 }

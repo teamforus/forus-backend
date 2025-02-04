@@ -198,7 +198,6 @@ class RouteServiceProvider extends ServiceProvider
             })->firstOrFail();
         });
 
-        $router->bind('platform_config', fn ($value) => Implementation::platformConfig($value));
         $router->bind('voucher_transaction_bulks', fn ($id) => VoucherTransactionBulk::findOrFail($id));
 
         $router->bind('identity2fa', fn ($id) => Identity2FA::findOrFail($id));

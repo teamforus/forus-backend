@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Models\Traits\Translations\BusinessTypeTranslationTrait;
 use App\Scopes\Builders\FundProviderQuery;
-use App\Services\TranslationService\Traits\TranslatableTrait;
+use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -21,6 +21,8 @@ use Illuminate\Http\Request;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $organizations
  * @property-read int|null $organizations_count
  * @property-read \App\Models\BusinessTypeTranslation|null $translation
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationCache[] $translation_caches
+ * @property-read int|null $translation_caches_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BusinessTypeTranslation[] $translations
  * @property-read int|null $translations_count
  * @method static Builder<static>|BusinessType listsTranslations(string $translationField)
@@ -45,7 +47,7 @@ use Illuminate\Http\Request;
  */
 class BusinessType extends BaseModel
 {
-    use Translatable, BusinessTypeTranslationTrait, TranslatableTrait;
+    use Translatable, BusinessTypeTranslationTrait, HasTranslationCaches;
 
     /**
      * The attributes that are mass assignable.

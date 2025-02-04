@@ -48,7 +48,7 @@ class OrganizationsController extends Controller
         ], Organization::query());
 
         $organizations = $search->query()
-            ->with(OrganizationResource::load($request))
+            ->with(OrganizationResource::loadDeps($request))
             ->orderBy('name')
             ->paginate($request->input('per_page', 10));
 
@@ -103,7 +103,7 @@ class OrganizationsController extends Controller
     {
         $this->authorize('show', $organization);
 
-        return new OrganizationResource($organization->load(OrganizationResource::load($request)));
+        return new OrganizationResource($organization->load(OrganizationResource::loadDeps($request)));
     }
 
     /**
@@ -116,7 +116,7 @@ class OrganizationsController extends Controller
      */
     public function update(
         UpdateOrganizationRequest $request,
-        Organization $organization
+        Organization $organization,
     ): OrganizationResource {
         $this->authorize('update', $organization);
 
@@ -128,6 +128,8 @@ class OrganizationsController extends Controller
             'name', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
             'business_type_id', 'description', 'auth_2fa_policy', 'auth_2fa_remember_ip',
+            'translations_enabled', 'translations_daily_limit', 'translations_weekly_limit',
+            'translations_monthly_limit',
         ]));
 
         if ($organization->allow_2fa_restrictions) {
@@ -145,7 +147,7 @@ class OrganizationsController extends Controller
 
         if ($request->has('iban') && Gate::allows('updateIban', $organization)) {
             $organization->update([
-                'iban' => strtoupper($request->get('iban'))
+                'iban' => strtoupper($request->get('iban')),
             ]);
         }
 
@@ -214,7 +216,7 @@ class OrganizationsController extends Controller
         $this->authorize('updateAutoAllowReservations', $organization);
 
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
-            'reservations_auto_accept'
+            'reservations_auto_accept',
         ])));
 
         return new OrganizationResource($organization);
@@ -264,7 +266,7 @@ class OrganizationsController extends Controller
         $employee = $organization->employeesOfRoleQuery('admin')->find($employee_id);
 
         $organization->update([
-            'identity_address' => $employee->identity_address
+            'identity_address' => $employee->identity_address,
         ]);
 
         return new JsonResponse();

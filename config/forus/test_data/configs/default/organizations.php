@@ -14,9 +14,11 @@ return [
         'offices_count' => 0,
         'organization' => [
             'backoffice_available' => true,
+            'translations_enabled' => true,
             'allow_payouts' => true,
             'allow_profiles' => true,
             'allow_pre_checks' => true,
+            'allow_translations' => true,
             'allow_bi_connection' => true,
             'allow_product_updates' => true,
             'allow_2fa_restrictions' => true,

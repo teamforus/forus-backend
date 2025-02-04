@@ -159,18 +159,21 @@ class ImplementationMail extends Mailable implements ShouldQueue
         $data = Arr::where($data, fn ($value) => $this->dataValueIsValid($value));
 
         foreach ($data as $key => $value) {
-            if (is_null($value)) {
-                $data[$key] = '';
-            }
-
-            $data[$key] = !Str::endsWith($key, '_html') ?
-                Purifier::clean($value, Config::get('forus.mail_purifier_config')) :
-                e($value);
+            $data[$key] = Str::endsWith($key, '_html') ? $this->purifyValue($value ?: '') : e($value);
         }
 
         ksort($data);
 
         return $data;
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    protected function purifyValue(string $value): string
+    {
+        return Purifier::clean($value, Config::get('forus.purifier.purifier_mail_config'));
     }
 
     /**

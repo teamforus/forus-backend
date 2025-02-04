@@ -53,7 +53,7 @@ class SearchResource extends JsonResource
         return match (get_class($model)) {
             Fund::class => new FundResource($model),
             Product::class => new ProductResource($model->load(ProductResource::load())),
-            Organization::class => new ProviderResource($model->load(OrganizationResource::load())),
+            Organization::class => new ProviderResource($model->load(OrganizationResource::loadDeps())),
             default => throw new Exception('Unknown search type!'),
         };
     }

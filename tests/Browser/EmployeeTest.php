@@ -191,6 +191,8 @@ class EmployeeTest extends DuskTestCase
      */
     private function goToEmployeesPage(Browser $browser): void
     {
+        $browser->waitFor('@asideMenuGroupOrganization');
+        $browser->element('@asideMenuGroupOrganization')->click();
         $browser->waitFor('@employeesPage');
         $browser->element('@employeesPage')->click();
     }

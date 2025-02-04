@@ -75,6 +75,7 @@ return array(
         'app/Services/Forus/Identity/Models',
         'app/Services/Forus/Notification/Models',
         'app/Services/Forus/Auth2FAService/Models',
+        'app/Services/TranslationService/Models',
         'app/Services/DigIdService/Models',
         'app/Services/EventLogService/Models',
         'app/Services/MailDatabaseLoggerService/Models',

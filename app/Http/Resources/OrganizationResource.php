@@ -5,18 +5,20 @@ namespace App\Http\Resources;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Identity;
+use App\Models\Language;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Services\MollieService\Models\MollieConnection;
+use App\Services\TranslationService\Models\TranslationValue;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 
 /**
  * @property Organization $resource
  */
-class OrganizationResource extends JsonResource
+class OrganizationResource extends BaseJsonResource
 {
     public const array DEPENDENCIES = [
         'logo',
@@ -33,7 +35,7 @@ class OrganizationResource extends JsonResource
      * @param null $request
      * @return array
      */
-    public static function load($request = null): array
+    public static function loadDeps($request = null): array
     {
         $load = [
             'tags',
@@ -76,7 +78,7 @@ class OrganizationResource extends JsonResource
         $fundsCountDep = api_dependency_requested('funds_count', $request, false);
         $permissionsCountDep = api_dependency_requested('permissions', $request, $baseRequest->isDashboard());
 
-        $ownerData = $baseRequest->isDashboard() ? $this->ownerData($organization) : [];
+        $ownerData = $baseRequest->isDashboard() ? $this->ownerData($organization, $baseRequest) : [];
         $biConnectionData = $baseRequest->isDashboard() ? $this->getBIConnectionData($organization) : [];
         $extraPaymentsData = $baseRequest->isProviderDashboard() ? $this->getExtraPaymentsData($organization) : [];
         $privateData = $this->privateData($organization);
@@ -84,20 +86,31 @@ class OrganizationResource extends JsonResource
         $funds2FAOnlyData = $baseRequest->isDashboard() ? $this->funds2FAOnlyData($organization) : [];
         $permissionsData = $permissionsCountDep ? $this->getIdentityPermissions($organization, $baseRequest->identity()) : null;
 
-        return array_filter(array_merge($organization->only([
-            'id', 'identity_address', 'name', 'business_type_id',
-            'email_public', 'phone_public', 'website_public',
-            'description', 'description_html', 'reservation_phone',
-            'reservation_address', 'reservation_birth_date',
-        ]), $privateData, $ownerData, $biConnectionData, $employeeOnlyData, $funds2FAOnlyData, $extraPaymentsData, [
+        return array_filter([
+            ...$organization->only([
+                'id', 'identity_address', 'business_type_id', 'email_public', 'phone_public',
+                'website_public', 'description', 'reservation_phone', 'reservation_address',
+                'reservation_birth_date', 'description_html',
+            ]),
+            ...$organization->translateColumns(
+                $this->isCollection()
+                    ? $organization->only(['name'])
+                    : $organization->only(['name', 'description_html']),
+            ),
+            ...$privateData,
+            ...$ownerData,
+            ...$biConnectionData,
+            ...$employeeOnlyData,
+            ...$funds2FAOnlyData,
+            ...$extraPaymentsData,
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),
             'business_type' => new BusinessTypeResource($organization->business_type),
-            'funds' => $fundsDep ? $organization->funds->map(fn(Fund $fund) => $fund->only('id', 'name')) : '_null_',
+            'funds' => $fundsDep ? $organization->funds->map(fn (Fund $fund) => $fund->only('id', 'name')) : '_null_',
             'funds_count' => $fundsCountDep ? $organization->funds_count : '_null_',
             'permissions' => is_array($permissionsData) ? $permissionsData : '_null_',
             'offices_count' => $organization->offices->count(),
-        ]), static function ($item) {
+        ], static function ($item) {
             return $item !== '_null_';
         });
     }
@@ -185,9 +198,10 @@ class OrganizationResource extends JsonResource
 
     /**
      * @param Organization $organization
+     * @param BaseFormRequest $baseRequest
      * @return array
      */
-    protected function ownerData(Organization $organization): array
+    protected function ownerData(Organization $organization, BaseFormRequest $baseRequest): array
     {
         $canUpdate = Gate::allows('update', $organization);
 
@@ -197,6 +211,7 @@ class OrganizationResource extends JsonResource
         ]), [
             'contacts' => OrganizationContactResource::collection($organization->contacts),
             'reservation_fields' => OrganizationReservationFieldResource::collection($organization->reservation_fields),
+            ...$baseRequest->isSponsorDashboard() ? $this->getAvailableLanguages($organization) : []
         ]) : [];
     }
 
@@ -222,5 +237,30 @@ class OrganizationResource extends JsonResource
         return $canUpdate ? $organization->only([
             'reservation_allow_extra_payments',
         ]) : [];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return array
+     */
+    protected function getAvailableLanguages(Organization $organization): array
+    {
+        return [
+            'allow_translations' => $organization->allow_translations,
+            'translations_enabled' => $organization->translations_enabled,
+            'translations_daily_limit' => $organization->translations_daily_limit,
+            'translations_weekly_limit' => $organization->translations_weekly_limit,
+            'translations_monthly_limit' => $organization->translations_monthly_limit,
+            'translations_monthly_limit_max' => TranslationValue::maxMonthlyLimit(),
+            'translations_price_per_mill' => TranslationValue::pricePerMillionSymbols(),
+            'translations_languages' => LanguageResource::collection(Language::getAllLanguages()->where('base', false)),
+            'translations_usage' => Cache::driver('array')->remember('languages', 0, function () use ($organization) {
+                return [
+                    'month' => TranslationValue::getUsage($organization->id, now()->startOfMonth(), now()->endOfMonth()),
+                    'week' => TranslationValue::getUsage($organization->id, now()->startOfWeek(), now()->endOfWeek()),
+                    'day' => TranslationValue::getUsage($organization->id, now()->startOfDay(), now()->endOfDay()),
+                ];
+            }),
+        ];
     }
 }

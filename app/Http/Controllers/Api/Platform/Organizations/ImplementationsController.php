@@ -97,6 +97,10 @@ class ImplementationsController extends Controller
             $request->boolean('announcement.replace')
         );
 
+        if ($implementation->organization->allow_translations && $request->has('languages')) {
+            $implementation->languages()->sync($request->input('languages'));
+        }
+
         $implementation->attachMediaByUid($request->input('banner_media_uid'));
         $implementation->syncDescriptionMarkdownMedia('cms_media');
 

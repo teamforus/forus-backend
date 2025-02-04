@@ -104,6 +104,12 @@ return [
             'level' => 'debug',
         ],
 
+        'translate-service' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/translate-service.log'),
+            'level' => 'debug',
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

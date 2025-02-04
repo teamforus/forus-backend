@@ -9,6 +9,7 @@ use App\Models\OrganizationContact;
 use App\Rules\Base\BtwRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\Base\KvkRule;
+use App\Services\TranslationService\Models\TranslationValue;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\Rule;
 
@@ -65,6 +66,7 @@ class UpdateOrganizationRequest extends BaseFormRequest
             'business_type_id'      => 'nullable|exists:business_types,id',
             ...$this->auth2FARules(),
             ...$this->contactsRules(),
+            ...$this->translationsRules(),
         ];
     }
 
@@ -103,6 +105,32 @@ class UpdateOrganizationRequest extends BaseFormRequest
                 'nullable',
                 ...$this->emailRules(),
             ],
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function translationsRules(): array
+    {
+        $maxLimit = TranslationValue::maxMonthlyLimit();
+
+        return [
+            'translations_enabled' => 'sometimes|boolean',
+            'translations_daily_limit' => 'sometimes|integer|min:0',
+            'translations_weekly_limit' => 'sometimes|integer|min:0|gte:translations_daily_limit',
+            'translations_monthly_limit' => "sometimes|integer|min:0|gte:translations_weekly_limit|max:$maxLimit",
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function messages(): array
+    {
+        return [
+            'translations_weekly_limit.gte' => 'De wekelijkse vertaallimiet moet groter of gelijk zijn aan de dagelijkse limiet.',
+            'translations_monthly_limit.gte' => 'De maandelijkse vertaallimiet moet groter of gelijk zijn aan de wekelijkse limiet.',
         ];
     }
 

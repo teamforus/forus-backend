@@ -3,7 +3,7 @@
 namespace App\Models;
 
 /**
- * App\Models\BusinessTypeTranslation
+ * App\Models\BusinessTypeTranslation.
  *
  * @property int $id
  * @property int $business_type_id
@@ -20,5 +20,14 @@ namespace App\Models;
  */
 class BusinessTypeTranslation extends BaseModel
 {
-    //
+    public $timestamps = false;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'name',
+    ];
 }

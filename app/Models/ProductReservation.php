@@ -36,7 +36,7 @@ use Illuminate\Support\Facades\Event;
  * @property string $price_discount
  * @property string $code
  * @property string $price_type
- * @property string|null $state
+ * @property string $state
  * @property string|null $first_name
  * @property string|null $last_name
  * @property string|null $phone

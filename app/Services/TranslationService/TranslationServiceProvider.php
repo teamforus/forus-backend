@@ -20,16 +20,22 @@ class TranslationServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        // Register TranslationConfig singleton
-        $this->app->singleton(TranslationConfig::class, function () {
-            return new TranslationConfig();
-        });
-
-        // Register TranslationService singleton
-        $this->app->singleton(TranslationService::class, function ($app) {
+        $translationBuilder = function ($app) {
             $config = $app->make(TranslationConfig::class);
             return new TranslationService($config);
-        });
+        };
+
+        $translationConfigBuilder = function () {
+            return new TranslationConfig();
+        };
+
+        // Register TranslationConfig singleton
+        $this->app->singleton(TranslationConfig::class, $translationConfigBuilder);
+        $this->app->singleton('translation_service.config', $translationConfigBuilder);
+
+        // Register TranslationService singleton
+        $this->app->singleton(TranslationService::class, $translationBuilder);
+        $this->app->singleton('translation_service', $translationBuilder);
 
         $this->commands([
             TranslateCommand::class,

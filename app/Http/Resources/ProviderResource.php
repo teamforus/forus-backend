@@ -29,19 +29,23 @@ class ProviderResource extends BaseJsonResource
     {
         $organization = $this->resource;
 
-        $fields = array_merge([
-            'id', 'name', 'description', 'business_type_id',
-        ], array_filter([
-            $organization->email_public ? 'email': null,
-            $organization->phone_public ? 'phone': null,
-            $organization->website_public ? 'website': null,
-        ]));
-
-        return array_merge($organization->only($fields), [
-            'description_html' => $organization->description_html,
+        return [
+            ...$organization->only([
+                'id', 'description', 'business_type_id', 'description_html',
+                ...array_filter([
+                    $organization->email_public ? 'email' : null,
+                    $organization->phone_public ? 'phone' : null,
+                    $organization->website_public ? 'website' : null,
+                ]),
+            ]),
+            ...$organization->translateColumns(
+                $this->isCollection()
+                    ? $organization->only(['name'])
+                    : $organization->only(['name', 'description_html']),
+            ),
             'business_type' => new BusinessTypeResource($organization->business_type),
             'offices' => OfficeResource::collection($organization->offices),
             'logo' => new MediaCompactResource($organization->logo),
-        ]);
+        ];
     }
 }

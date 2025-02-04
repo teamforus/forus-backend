@@ -115,8 +115,16 @@ class AppServiceProvider extends ServiceProvider
             Artisan::call('test-data:seed');
         });
 
+        if (Config::get('translation-service.target_languages')) {
+            Config::set('translatable.locales', Config::get('translation-service.target_languages'));
+        }
+
         if (Config::get('app.memory_limit')) {
             ini_set('memory_limit', Config::get('app.memory_limit'));
+        }
+
+        if (Config::get('app.exception_max_line_length')) {
+            ini_set('zend.exception_string_param_max_len', Config::get('app.exception_max_line_length'));
         }
 
         if (App::runningUnitTests()) {
