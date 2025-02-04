@@ -5,10 +5,14 @@ namespace App\Services\TranslationService;
 use App\Models\Organization;
 use App\Services\TranslationService\Exceptions\TranslationException;
 use App\Services\TranslationService\Models\TranslationValue;
+use App\Services\TranslationService\Providers\TranslationProvider;
 use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Contracts\Translatable;
 use Carbon\Carbon;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +24,7 @@ class TranslationService
 {
     private string $sourceLanguage;
     private array $targetLanguages;
-    private TranslationProviderInterface $provider;
+    private TranslationProvider $provider;
     private TranslationConfig $config;
     private string $cachePath;
 
@@ -69,9 +73,9 @@ class TranslationService
 
     /**
      * @param string $provider
-     * @return TranslationProviderInterface
+     * @return TranslationProvider
      */
-    private function createProvider(string $provider): TranslationProviderInterface
+    private function createProvider(string $provider): TranslationProvider
     {
         return match ($provider) {
             'deepl' => new Providers\DeepLTranslationProvider(),
@@ -81,43 +85,80 @@ class TranslationService
     }
 
     /**
-     * @param object $model The model to translate.
+     * @param Model $model The model to translate.
      * @throws TranslationException
      */
-    public function translate(object $model): void
+    public function translate(Model $model): void
     {
-        /** @var HasTranslationCaches|Translatable $model */
-        $modelClass = $model::class;
-        $columns = $this->config->getColumnsForModel($modelClass);
+        $this->translateBatchModels([$model]);
+    }
 
-        if (!$columns) {
+    /**
+     * Translate a batch of models at once.
+     *
+     * @param Collection|Model[] $models The models to translate.
+     * @throws TranslationException
+     */
+    public function translateBatchModels(Collection|Arrayable $models): void
+    {
+        if ($models->isEmpty()) {
             return;
         }
 
-        $translatedModel = $model->getTranslation($this->sourceLanguage);
+        $modelClass = $models->first()::class;
+        $columns = $this->config->getColumnsForModel($modelClass);
+        $translationsToProcess = [];
 
-        foreach ($columns as $column) {
-            $sourceText = $translatedModel[$column] ?? '';
-            $existing = $model->getCachedTranslation($column, $this->sourceLanguage);
-            $translatedColumns = [];
+        foreach ($models as $model) {
+            /** @var HasTranslationCaches|Translatable $model */
+            $translatedModel = $model->getTranslation($this->sourceLanguage);
 
-            // Skip if source text hasn't changed from last time
-            if ($existing && $existing === $sourceText) {
-                continue;
+            foreach ($columns as $column) {
+                $sourceText = $translatedModel[$column] ?? '';
+                $existing = $model->getCachedTranslation($column, $this->sourceLanguage);
+
+                if ($existing && $existing === $sourceText) {
+                    continue;
+                }
+
+                if (!empty($sourceText)) {
+                    foreach ($this->targetLanguages as $targetLanguage) {
+                        $translationsToProcess[$targetLanguage][$model->getKey()][$column] = $sourceText;
+                    }
+                }
             }
+        }
 
-            if (!empty($sourceText)) {
-                foreach ($this->targetLanguages as $targetLanguage) {
-                    Arr::set($translatedColumns, "$targetLanguage.$column", $this->translateText(
-                        $sourceText,
-                        $this->sourceLanguage,
-                        $targetLanguage,
-                    ));
+        foreach ($translationsToProcess as $targetLanguage => $modelsToTranslate) {
+            $textBatch = [];
+
+            foreach ($modelsToTranslate as $columns) {
+                foreach ($columns as $text) {
+                    $textBatch[] = $text;
                 }
             }
 
-            $model->update($translatedColumns);
-            $model->cacheTranslation($column, $sourceText, $this->sourceLanguage);
+            $translatedTexts = $this->translateBatch($textBatch, $this->sourceLanguage, $targetLanguage);
+            $textIndex = 0;
+
+            foreach ($modelsToTranslate as $modelId => $columns) {
+                $translatedColumns = [];
+                /** @var Model|HasTranslationCaches $model */
+                $model = $models->firstWhere('id', $modelId);
+                $columnsToCache = [];
+
+                foreach ($columns as $column => $text) {
+                    $index = $textIndex++;
+                    $textValue = $translatedTexts[$index] ?? '';
+                    $sourceValue = $textBatch[$index] ?? '';
+
+                    $columnsToCache[$column] = $sourceValue;
+                    Arr::set($translatedColumns, "$targetLanguage.$column", $textValue);
+                }
+
+                $model->update($translatedColumns);
+                $model->cacheTranslations($columnsToCache, $this->sourceLanguage);
+            }
         }
     }
 
@@ -154,7 +195,6 @@ class TranslationService
     public function applyStatic(): void
     {
         foreach ($this->targetLanguages as $locale) {
-            $localeMap = $this->getTranslationsMapValue($locale);
             $translationsPath = resource_path("lang/$locale.json");
 
             $existingTranslations = File::exists($translationsPath)
@@ -314,9 +354,9 @@ class TranslationService
     /**
      * @throws TranslationException
      */
-    public function translateBatch(array $text, string $sourceLocale, string $targetLocale): array
+    public function translateBatch(array $texts, string $sourceLocale, string $targetLocale): array
     {
-        return $this->provider->translateBatch($text, $sourceLocale, $targetLocale);
+        return $this->provider->translateBatch($texts, $sourceLocale, $targetLocale);
     }
 
     /**

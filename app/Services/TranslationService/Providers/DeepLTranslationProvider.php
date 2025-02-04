@@ -3,7 +3,6 @@
 namespace App\Services\TranslationService\Providers;
 
 use App\Services\TranslationService\Exceptions\TranslationException;
-use App\Services\TranslationService\TranslationProviderInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
@@ -11,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Throwable;
 
-class DeepLTranslationProvider implements TranslationProviderInterface
+class DeepLTranslationProvider extends TranslationProvider
 {
     /**
      * @var string|null
@@ -41,6 +40,13 @@ class DeepLTranslationProvider implements TranslationProviderInterface
      */
     public function translate(string $text, string $source, string $target): string
     {
+        $this->log([
+            'type' => 'single',
+            'source' => $source,
+            'target' => $target,
+            'text' => $text,
+        ]);
+
         return $this->translateBatch([$text], $source, $target)[0] ?? '';
     }
 
@@ -56,6 +62,13 @@ class DeepLTranslationProvider implements TranslationProviderInterface
      */
     public function translateBatch(array $texts, string $source, string $target): array
     {
+        $this->log([
+            'type' => 'batch',
+            'source' => $source,
+            'target' => $target,
+            'texts' => $texts,
+        ]);
+
         // Filter out empty or non-string values
         $validEntries = [];
         $originalIndices = [];

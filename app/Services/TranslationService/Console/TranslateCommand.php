@@ -6,6 +6,7 @@ use App\Services\TranslationService\Exceptions\TranslationException;
 use App\Services\TranslationService\TranslationConfig;
 use App\Services\TranslationService\TranslationService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -36,19 +37,30 @@ class TranslateCommand extends Command
     public function handle(): void
     {
         $models = $this->getModels();
+        $batchSize = Config::get('translation-service.deepl.batch_size');
 
         foreach ($models as $modelClass) {
             $this->info('[' . Str::padRight($modelClass, 78, '_') . ']');
+
             $modelInstances = $modelClass::all();
+            $totalModels = $modelInstances->count();
 
-            $this->withProgressBar($modelInstances, function ($model) {
-                try {
-                    $this->translationService->translate($model);
-                } catch (TranslationException | Throwable $e) {
-                    $message = "\nFailed to translate " . $model::class . " (ID: $model->id): " . $e->getMessage();
+            if ($totalModels === 0) {
+                $this->info('No records found for translation.');
+                continue;
+            }
 
-                    $this->error($message);
-                    $this->translationService->logger()->error("$message\n" . $e->getTraceAsString());
+            $this->withProgressBar($totalModels, function () use ($modelInstances, $batchSize) {
+                foreach ($modelInstances->chunk($batchSize) as $batch) {
+                    try {
+                        $this->translationService->translateBatchModels($batch);
+                    } catch (TranslationException | Throwable $e) {
+                        foreach ($batch as $model) {
+                            $message = "\nFailed to translate " . $model::class . " (ID: $model->id): " . $e->getMessage();
+                            $this->error($message);
+                            $this->translationService->logger()->error("$message\n" . $e->getTraceAsString());
+                        }
+                    }
                 }
             });
 
