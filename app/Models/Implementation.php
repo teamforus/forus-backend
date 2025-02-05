@@ -819,7 +819,7 @@ class Implementation extends BaseModel
         $languages = Language::getAllLanguages();
 
         if (!$this->organization?->allow_translations || !$this?->organization->translations_enabled) {
-            return $languages->where('base', true)->toArray();
+            return $languages->where('base', true)->values()->toArray();
         }
 
         return $languages->filter(function (Language $language) {

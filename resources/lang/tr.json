@@ -5,6 +5,7 @@
     "agent.localhost": "Yerel uygulama",
     "agent.on": "at",
     "agent.television": "televizyon",
+    "agent.unknown": "Konum algılanmadı",
     "agent.unknown_bot": "bilinmeyen bot",
     "agent.unknown_browser_based_on": ":engine tabanlı bilinmeyen bir tarayıcı",
     "agent.unknown_client": "Müşteri bilinmiyor",

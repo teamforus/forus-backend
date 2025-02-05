@@ -5,6 +5,7 @@
     "agent.localhost": "Application locale",
     "agent.on": "à",
     "agent.television": "télévision",
+    "agent.unknown": "Emplacement non détecté",
     "agent.unknown_bot": "bot inconnu",
     "agent.unknown_browser_based_on": "un navigateur inconnu basé sur :engine",
     "agent.unknown_client": "Client inconnu",

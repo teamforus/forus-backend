@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
@@ -24,6 +25,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  */
 class Tag extends BaseModel
 {
+    use HasOnDemandTranslations;
+
     /**
      * The attributes that are mass assignable.
      *

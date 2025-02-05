@@ -11,4 +11,5 @@ return [
     'unknown_bot' => 'onbekende bot',
     'unknown_client' => 'Client onbekend',
     'localhost' => "Local application",
+    'unknown' => "Locatie niet gedetecteerd",
 ];

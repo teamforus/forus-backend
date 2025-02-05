@@ -5,6 +5,7 @@
     "agent.localhost": "التطبيق المحلي",
     "agent.on": "في",
     "agent.television": "التلفاز",
+    "agent.unknown": "الموقع غير مكتشف",
     "agent.unknown_bot": "روبوت غير معروف",
     "agent.unknown_browser_based_on": "متصفح غير معروف يستند إلى :engine___",
     "agent.unknown_client": "العميل غير معروف",

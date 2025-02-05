@@ -5,6 +5,7 @@
     "agent.localhost": "Локальне застосування",
     "agent.on": "за адресою",
     "agent.television": "телебачення",
+    "agent.unknown": "Місцезнаходження не виявлено",
     "agent.unknown_bot": "невідомий бот",
     "agent.unknown_browser_based_on": "невідомий браузер на основі :engine",
     "agent.unknown_client": "Клієнт невідомий",
