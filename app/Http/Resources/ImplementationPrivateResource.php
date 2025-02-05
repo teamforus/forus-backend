@@ -39,6 +39,7 @@ class ImplementationPrivateResource extends BaseJsonResource
                 'pre_check_enabled', 'pre_check_title', 'pre_check_description',
                 'pre_check_banner_state', 'pre_check_banner_title',
                 'pre_check_banner_description', 'pre_check_banner_label', 'page_title_suffix',
+                'show_privacy_checkbox', 'show_terms_checkbox',
             ]),
             'pre_check_url' => $implementation->urlWebshop('/fund-pre-check'),
             'communication_type' => $implementation->informal_communication ? 'informal' : 'formal',
