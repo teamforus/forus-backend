@@ -317,7 +317,7 @@ class ProductReservation extends BaseModel
      */
     public function getStateLocaleAttribute(): string
     {
-        return trans('states/product_reservations.' . $this->state);
+        return trans('states.product_reservations.' . $this->state);
     }
 
     /**

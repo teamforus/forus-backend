@@ -101,8 +101,8 @@ trait ThrottleWithMeta
             'max_attempts' => $this->maxAttempts(),
         ];
 
-        $title = trans("throttles/$type.$error.title", $meta);
-        $message = trans("throttles/$type.$error.message", $meta);
+        $title = trans("throttles.$type.$error.title", $meta);
+        $message = trans("throttles.$type.$error.message", $meta);
 
         if (!$request->expectsJson()) {
             abort($code, $message);

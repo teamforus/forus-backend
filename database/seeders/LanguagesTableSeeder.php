@@ -33,5 +33,13 @@ class LanguagesTableSeeder extends DatabaseSeeder
                 Language::create($language);
             }
         }
+
+        Language::whereNotNull('locale')->update([
+            'base' => false,
+        ]);
+
+        Language::where('locale', 'nl')->update([
+            'base' => true,
+        ]);
     }
 }

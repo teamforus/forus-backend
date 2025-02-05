@@ -10,6 +10,6 @@ class DigestProviderProductsMail extends BaseDigestMail
     {
         parent::__construct($viewData);
 
-        $this->subject(trans('digests/provider_products.subject'));
+        $this->subject(trans('digests.provider_products.subject'));
     }
 }

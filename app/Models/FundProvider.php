@@ -528,7 +528,7 @@ class FundProvider extends BaseModel
      */
     public function getStateLocaleAttribute(): string
     {
-        return trans('states/fund_providers.' . $this->state);
+        return trans('states.fund_providers.' . $this->state);
     }
 
     /**

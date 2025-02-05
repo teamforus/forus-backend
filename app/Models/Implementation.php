@@ -24,6 +24,7 @@ use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
@@ -191,7 +192,7 @@ use Illuminate\Support\Facades\Gate;
  */
 class Implementation extends BaseModel
 {
-    use HasMedia, HasMarkdownDescription, ValidatesValues;
+    use HasMedia, HasMarkdownDescription, ValidatesValues, HasOnDemandTranslations;
 
     public const string KEY_GENERAL = 'general';
 
@@ -769,13 +770,16 @@ class Implementation extends BaseModel
             'digid_mandatory' => $implementation->digid_required ?? true,
             'digid_api_url' => rtrim($implementation->digid_forus_api_url ?: url('/'), '/') . '/api/v1',
             'communication_type' => $implementation->communicationType(),
-            'settings' => array_merge($implementation->only([
-                'title', 'description', 'description_alignment', 'description_html',
-                'overlay_enabled', 'overlay_type',
-            ]), [
+            'settings' => [
+                ...$implementation->only([
+                    'description', 'description_alignment', 'overlay_enabled', 'overlay_type',
+                ]),
+                ...$implementation->translateColumns($implementation->only([
+                    'title', 'description_html',
+                ])),
                 'overlay_opacity' => min(max($implementation->overlay_opacity, 0), 100) / 100,
                 'banner_text_color' => $implementation->getBannerTextColor(),
-            ]),
+            ],
             'fronts' => [
                 ...$implementation->only([
                     'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app',
@@ -789,7 +793,9 @@ class Implementation extends BaseModel
                 'dominant_color', 'ext', 'sizes', 'uid', 'is_bright',
             ]) : null,
             'languages' => $implementation->getAvailableLanguages(),
-            'implementation_name' => $implementation->name,
+            'implementation' => $implementation->translateColumns($implementation->only([
+                'name'
+            ])),
             'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
             'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
             // 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
@@ -1067,14 +1073,19 @@ class Implementation extends BaseModel
     {
         return [
             'pre_check_banner' => new MediaResource($this->pre_check_banner),
-            ...$this->only([
-                'pre_check_enabled', 'pre_check_title', 'pre_check_description',
-                'pre_check_banner_state', 'pre_check_banner_title', 'pre_check_banner_description',
-                'pre_check_banner_label',
-            ]),
+            'pre_check_enabled' => $this->pre_check_enabled,
+            'pre_check_banner_state' => $this->pre_check_banner_state,
+            ...$this->translateColumns($this->only([
+                'pre_check_title', 'pre_check_description', 'pre_check_banner_title',
+                'pre_check_banner_description', 'pre_check_banner_label',
+            ])),
         ];
     }
 
+    /**
+     * @param array $pre_checks
+     * @return void
+     */
     public function syncPreChecks(array $pre_checks): void
     {
         $this->pre_checks()

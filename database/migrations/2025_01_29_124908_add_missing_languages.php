@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
 use Database\Seeders\LanguagesTableSeeder;
 
 return new class extends Migration
@@ -13,13 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $languages = LanguagesTableSeeder::LANGUAGES;
-
-        foreach ($languages as $language) {
-            if (DB::table('languages')->where('locale', $language['locale'])->doesntExist()) {
-                DB::table('languages')->insert($language);
-            }
-        }
+        (new LanguagesTableSeeder())->run();
     }
 
     /**

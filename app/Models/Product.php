@@ -724,10 +724,10 @@ class Product extends BaseModel
     {
         switch ($this->price_type) {
             case self::PRICE_TYPE_REGULAR: return currency_format_locale($this->price);
-            case self::PRICE_TYPE_FREE: return 'Gratis';
+            case self::PRICE_TYPE_FREE: return trans('prices.free');
             case self::PRICE_TYPE_DISCOUNT_FIXED:
             case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
-                return 'Korting: ' . $this->price_discount_locale;
+                return trans('prices.discount', ['amount' => $this->price_discount_locale]);
             }
         }
 

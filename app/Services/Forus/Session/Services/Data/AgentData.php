@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Services\Forus\Session\Services\Data;
 
 use WhichBrowser\Parser;
@@ -19,13 +18,11 @@ class AgentData extends Parser
     /**
      * Return the input string prefixed with 'a' or 'an' depending on the first letter of the string
      *
-     * @param  string $s The string that will be prefixed
      * @return string
      */
-    private function a($s): string
+    private function a(): string
     {
-        // return (preg_match("/^[aeiou]/i", $s) ? 'an ' : 'a ') . $s;
-        return 'een ';
+        return trans('agent.a');
     }
 
     /**
@@ -34,34 +31,35 @@ class AgentData extends Parser
     public function toString(): string
     {
         try {
-            $prefix = $this->camouflage ? 'een onbekende imititatie browser van ' : '';
+            $prefix = $this->camouflage ? trans('agent.unknown_imitation_browser') : '';
             $browser = $this->browser->toString();
             $os = $this->os->toString();
             $engine = $this->engine->toString();
             $device = $this->device->toString();
 
             if (empty($device) && empty($os) && $this->device->type == 'television') {
-                $device = 'televisie';
+                $device = trans('agent.television');
             }
 
             if (empty($device) && $this->device->type == 'emulator') {
-                $device = 'emulator';
+                $device = trans('agent.emulator');
             }
 
             if (!empty($browser) && !empty($os) && !empty($device)) {
-                return $prefix . $browser . ' op ' . $this->a($device) . ' heeft besturingssysteem: ' . $os;
+                return $prefix . $browser . ' ' . trans('agent.on') . ' ' . $this->a() . $device .
+                    ' ' . trans('agent.has_os') . ': ' . $os;
             }
 
             if (!empty($browser) && empty($os) && !empty($device)) {
-                return $prefix . $browser . ' op ' . $this->a($device);
+                return $prefix . $browser . ' ' . trans('agent.on') . ' ' . $this->a() . $device;
             }
 
             if (!empty($browser) && !empty($os) && empty($device)) {
-                return $prefix . $browser . ' op ' . $os;
+                return $prefix . $browser . ' ' . trans('agent.on') . ' ' . $os;
             }
 
             if (empty($browser) && !empty($os) && !empty($device)) {
-                return $prefix . $this->a($device) . ' heeft besturingssysteem: ' . $os;
+                return $prefix . $this->a() . $device . ' ' . trans('agent.has_os') . ': ' . $os;
             }
 
             if (!empty($browser) && empty($os) && empty($device)) {
@@ -69,11 +67,12 @@ class AgentData extends Parser
             }
 
             if (empty($browser) && empty($os) && !empty($device)) {
-                return $prefix . $this->a($device);
+                return $prefix . $this->a() . $device;
             }
 
             if ($this->device->type == 'desktop' && !empty($os) && !empty($engine) && empty($device)) {
-                return 'een onbekende browser gebasseerd op ' . $engine . ' heeft besturingssysteem: ' . $os;
+                return trans('agent.unknown_browser_based_on', ['engine' => $engine]) .
+                    ' ' . trans('agent.has_os') . ': ' . $os;
             }
 
             if ($this->browser->stock && !empty($os) && empty($device)) {
@@ -81,14 +80,14 @@ class AgentData extends Parser
             }
 
             if ($this->browser->stock && !empty($engine) && empty($device)) {
-                return 'een onbekende browser gebasseerd op ' . $engine;
+                return trans('agent.unknown_browser_based_on', ['engine' => $engine]);
             }
 
             if ($this->device->type == 'bot') {
-                return 'onbekende bot';
+                return trans('agent.unknown_bot');
             }
 
-            return 'Client onbekend';
+            return trans('agent.unknown_client');
         } catch (\Throwable $e) {
             return parent::toString();
         }

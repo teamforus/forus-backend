@@ -39,8 +39,8 @@ class SponsorDigest extends BaseOrganizationDigest
         NotificationService $notificationService
     ): void {
         $emailBody = new MailBodyBuilder();
-        $emailBody->h1(trans('digests/sponsor.title'));
-        $emailBody->text(trans('digests/sponsor.greetings', [
+        $emailBody->h1(trans('digests.sponsor.title'));
+        $emailBody->text(trans('digests.sponsor.greetings', [
             'organization_name' => $organization->name,
         ]), ["margin_less"]);
 
@@ -62,7 +62,7 @@ class SponsorDigest extends BaseOrganizationDigest
             $emailBody->separator();
             $emailBody->button_primary(
                 Implementation::general()->urlSponsorDashboard(),
-                trans('digests/sponsor.dashboard_button')
+                trans('digests.sponsor.dashboard_button')
             );
 
             $this->sendOrganizationDigest($organization, $emailBody, $notificationService);
@@ -79,7 +79,7 @@ class SponsorDigest extends BaseOrganizationDigest
         bool $approved
     ): ?MailBodyBuilder {
         $emailBody = new MailBodyBuilder();
-        $transKey = $approved ? 'digests/sponsor.providers_approved' : 'digests/sponsor.providers_pending';
+        $transKey = $approved ? 'digests.sponsor.providers_approved' : 'digests.sponsor.providers_pending';
 
         $fundProvidersList = $organization->funds_active->map(function(Fund $fund) use ($organization, $approved) {
             $query = FundProvider::query()
@@ -151,7 +151,7 @@ class SponsorDigest extends BaseOrganizationDigest
         }
 
         $emailBody->separator();
-        $emailBody->h2(trans("digests/sponsor.providers_unsubscriptions.title"));
+        $emailBody->h2(trans("digests.sponsor.providers_unsubscriptions.title"));
 
         /** @var Fund $fund */
         /** @var int $count */
@@ -161,11 +161,11 @@ class SponsorDigest extends BaseOrganizationDigest
                 continue;
             }
 
-            $emailBody->h3(trans("digests/sponsor.providers_unsubscriptions.header", [
+            $emailBody->h3(trans("digests.sponsor.providers_unsubscriptions.header", [
                 'fund_name' => $fund->name,
             ]), ['margin_less']);
 
-            $emailBody->text(trans_choice("digests/sponsor.providers_unsubscriptions.details", $count, [
+            $emailBody->text(trans_choice("digests.sponsor.providers_unsubscriptions.details", $count, [
                 'fund_name' => $fund->name,
                 'providers_count' => $count,
                 'providers_list' => $fundProviders->pluck('organization.name')->implode("\n- "),
@@ -184,7 +184,7 @@ class SponsorDigest extends BaseOrganizationDigest
         Organization $organization,
         bool $manuallyApproved,
     ): ?MailBodyBuilder {
-        $transKey = $manuallyApproved ? 'digests/sponsor.products_manual' : 'digests/sponsor.products_auto';
+        $transKey = $manuallyApproved ? 'digests.sponsor.products_manual' : 'digests.sponsor.products_auto';
 
         $productsList = $organization->funds_active->map(function(Fund $fund) use ($organization, $manuallyApproved) {
             $providerQuery = FundProviderQuery::whereApprovedForFundsFilter(FundProvider::query(), $fund->id);
@@ -216,7 +216,7 @@ class SponsorDigest extends BaseOrganizationDigest
      */
     private function getProductsPendingEmailBody(Organization $organization): ?MailBodyBuilder
     {
-        $transKey = 'digests/sponsor.products_pending';
+        $transKey = 'digests.sponsor.products_pending';
 
         $productsList = $organization->funds_active->map(function(Fund $fund) use ($organization) {
             $providerQuery = FundProviderQuery::whereApprovedForFundsFilter(
@@ -308,7 +308,7 @@ class SponsorDigest extends BaseOrganizationDigest
 
         if ($total_messages > 0) {
             $emailBody->separator();
-            $emailBody->h2(trans('digests/sponsor.feedback.title'));
+            $emailBody->h2(trans('digests.sponsor.feedback.title'));
 
             /** @var Fund $fund */
             /** @var int $countEvents */
@@ -318,7 +318,7 @@ class SponsorDigest extends BaseOrganizationDigest
                     continue;
                 }
 
-                $emailBody->h3(trans_choice('digests/sponsor.feedback.header', $countEvents, [
+                $emailBody->h3(trans_choice('digests.sponsor.feedback.header', $countEvents, [
                     'count_messages' => $countEvents,
                     'fund_name' => $fund->name,
                 ]));
@@ -327,12 +327,12 @@ class SponsorDigest extends BaseOrganizationDigest
 
                 foreach ($logsByProvider as $logs) {
                     $logsByProduct = collect($logs)->groupBy('product_id');
-                    $emailBody->h5(trans("digests/sponsor.feedback.item_header", self::arrayOnlyString($logs[0])), [
+                    $emailBody->h5(trans("digests.sponsor.feedback.item_header", self::arrayOnlyString($logs[0])), [
                         'margin_less'
                     ]);
 
                     foreach ($logsByProduct as $_logsByProduct) {
-                        $emailBody->text(trans_choice('digests/sponsor.feedback.item', count(
+                        $emailBody->text(trans_choice('digests.sponsor.feedback.item', count(
                             $logsByProduct
                         ), array_merge([
                             'count_messages' => count($logsByProduct)

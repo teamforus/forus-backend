@@ -162,10 +162,12 @@ class FundProviderProduct extends BaseModel
     ): string {
         switch ($price_type) {
             case $this->product::PRICE_TYPE_REGULAR: return currency_format_locale($price);
-            case $this->product::PRICE_TYPE_FREE: return 'Gratis';
+            case $this->product::PRICE_TYPE_FREE: return trans('prices.free');
             case $this->product::PRICE_TYPE_DISCOUNT_FIXED:
             case $this->product::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
-                return 'Korting: ' . $this->getPriceDiscountLocale($price_type, $price_discount);
+                return trans('prices.discount', [
+                    'amount' => $this->getPriceDiscountLocale($price_type, $price_discount),
+                ]);
             }
             default: return '';
         }

@@ -86,8 +86,20 @@ class TranslateStaticCommand extends Command
             for ($i = 0; $i < $totalKeys; $i += $batchSize) {
                 $batchKeys = array_slice($keys, $i, $batchSize);
                 $batchValues = array_slice($values, $i, $batchSize);
+                $batchValuesReplaced = array_map(fn ($row) => $this->replaceVars($row), $batchValues);
 
-                $translatedBatch = $this->service->translateBatch($batchValues, $this->service->getSourceLanguage(), $locale);
+                $translatedBatch = $this->service->translateBatch(
+                    array_pluck($batchValuesReplaced, 'text'),
+                    $this->service->getSourceLanguage(),
+                    $locale,
+                );
+
+                foreach (array_keys($translatedBatch) as $key) {
+                    $translatedBatch[$key] = $this->replaceVarsBack(
+                        $translatedBatch[$key],
+                        $batchValuesReplaced[$key]['replacements'],
+                    );
+                }
 
                 foreach ($batchKeys as $index => $key) {
                     $translations[$key] = $translatedBatch[$index] ?? '';
@@ -101,4 +113,38 @@ class TranslateStaticCommand extends Command
             $this->service->writeStaticCache("cache_translated_$locale.json", $translations);
         }
     }
+
+    /**
+     * @param string $text
+     * @return array
+     */
+    protected function replaceVars(string $text): array
+    {
+        preg_match_all('/:([a-zA-Z_]+)/', $text, $matches);
+
+        $placeholders = $matches[0];
+        $replacements = [];
+
+        foreach ($placeholders as $index => $placeholder) {
+            $replacements["__PLACEHOLDER_{$index}__"] = $placeholder;
+        }
+
+        $processedText = str_replace($placeholders, array_keys($replacements), $text);
+
+        return [
+            'text' => $processedText,
+            'replacements' => $replacements,
+        ];
+    }
+
+    /**
+     * @param string $translatedText
+     * @param array $replacements
+     * @return string
+     */
+    protected function replaceVarsBack(string $translatedText, array $replacements): string
+    {
+        return str_replace(array_keys($replacements), array_values($replacements), $translatedText);
+    }
+
 }

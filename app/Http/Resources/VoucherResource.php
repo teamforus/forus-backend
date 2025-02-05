@@ -170,6 +170,9 @@ class VoucherResource extends BaseJsonResource
                     'total_amount', 'sold_amount', 'product_category_id',
                     'organization_id',
                 ]),
+                ...$voucher->product->translateColumns($voucher->product->only([
+                    'name',
+                ])),
                 'price_locale' => $voucher->product->priceLocale(),
                 'product_category' => $voucher->product->product_category,
                 'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : '',

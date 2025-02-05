@@ -42,23 +42,23 @@ class ValidatorDigest extends BaseOrganizationDigest
         }
 
         $emailBody = new MailBodyBuilder();
-        $emailBody->h1(trans_choice('digests/validator.title', $total_requests, [
+        $emailBody->h1(trans_choice('digests.validator.title', $total_requests, [
             'count_requests' => $total_requests
         ]));
-        $emailBody->text(trans_choice('digests/validator.greetings', $total_requests, [
+        $emailBody->text(trans_choice('digests.validator.greetings', $total_requests, [
             'organization_name' => $organization->name,
             'count_requests' => $total_requests,
         ]))->space();
 
         foreach ($events as $event) {
             $emailBody->h3(trans_choice(
-                "digests/validator.fund_header",
+                "digests.validator.fund_header",
                 $event['count_requests'],
                 self::arrayOnlyString($event)
             ));
 
             $emailBody->text(trans_choice(
-                "digests/validator.fund_details",
+                "digests.validator.fund_details",
                 $event['count_requests'],
                 self::arrayOnlyString($event)
             ))->space();
@@ -66,7 +66,7 @@ class ValidatorDigest extends BaseOrganizationDigest
 
         $emailBody->button_primary(
             Implementation::general()->url_validator,
-            trans('digests/validator.dashboard_button')
+            trans('digests.validator.dashboard_button')
         );
 
         $this->sendOrganizationDigest($organization, $emailBody, $notificationService);

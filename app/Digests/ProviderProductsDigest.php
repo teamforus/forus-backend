@@ -43,7 +43,7 @@ class ProviderProductsDigest extends BaseOrganizationDigest
         }
 
         foreach ($logsProductsReserved as $logsProductReserved) {
-            $emailBodyProducts->h3(trans('digests/provider_products.fund_title', [
+            $emailBodyProducts->h3(trans('digests.provider_products.fund_title', [
                 'fund_name' => $logsProductReserved[0]['fund_name'],
             ]));
 
@@ -52,7 +52,7 @@ class ProviderProductsDigest extends BaseOrganizationDigest
             foreach ($logsProductReserved as $_logsProductReserved) {
                 $count_reservations = $_logsProductReserved->count();
                 $emailBodyProducts->text(trans_choice(
-                    'digests/provider_products.fund_products',
+                    'digests.provider_products.fund_products',
                     $count_reservations,
                     self::arrayOnlyString(
                         array_merge($_logsProductReserved[0], compact('count_reservations'))
@@ -62,19 +62,19 @@ class ProviderProductsDigest extends BaseOrganizationDigest
         }
 
         $emailBody = new MailBodyBuilder();
-        $emailBody->h1(trans_choice("digests/provider_products.title", $totalProducts, [
+        $emailBody->h1(trans_choice("digests.provider_products.title", $totalProducts, [
             'provider_name' => $organization->name,
             'count_products' => $totalProducts,
         ]));
 
-        $emailBody->text(trans_choice("digests/provider_products.greetings", $totalProducts, [
+        $emailBody->text(trans_choice("digests.provider_products.greetings", $totalProducts, [
             'provider_name' => $organization->name,
             'count_products' => $totalProducts,
         ]));
 
         $emailBody = $emailBody->merge($emailBodyProducts)->space()->button_primary(
             Implementation::general()->url_provider,
-            trans('digests/provider_products.dashboard_button')
+            trans('digests.provider_products.dashboard_button')
         );
 
         $this->sendOrganizationDigest($organization, $emailBody, $notificationService);
