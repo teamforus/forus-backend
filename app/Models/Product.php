@@ -473,8 +473,9 @@ class Product extends BaseModel
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getExpiredAttribute(): bool {
-        return $this->expire_at && $this->expire_at->isPast();
+    public function getExpiredAttribute(): bool
+    {
+        return $this->expire_at && $this->expire_at->endOfDay()->isPast();
     }
 
     /**
