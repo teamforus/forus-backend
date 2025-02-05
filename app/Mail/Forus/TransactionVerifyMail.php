@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class TransactionVerifyMail extends ImplementationMail
 {
-    protected string $subjectKey = 'mails/system_mails.forus_transaction_verify.title';
+    protected string $subjectKey = 'mails.system_mails.forus_transaction_verify.title';
 
     /**
      * @return Mailable

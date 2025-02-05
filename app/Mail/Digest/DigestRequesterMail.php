@@ -8,6 +8,6 @@ class DigestRequesterMail extends BaseDigestMail
     {
         parent::__construct($viewData);
 
-        $this->subject(trans('digests/requester.subject'));
+        $this->subject(trans('digests.requester.subject'));
     }
 }

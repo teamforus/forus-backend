@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class UserLoginMail extends ImplementationMail
 {
-    protected string $subjectKey = 'mails/system_mails.user_login.title';
+    protected string $subjectKey = 'mails.system_mails.user_login.title';
 
     /**
      * @return Mailable

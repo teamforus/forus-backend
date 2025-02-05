@@ -36,7 +36,7 @@ use Illuminate\Support\Facades\Event;
  * @property string $price_discount
  * @property string $code
  * @property string $price_type
- * @property string|null $state
+ * @property string $state
  * @property string|null $first_name
  * @property string|null $last_name
  * @property string|null $phone
@@ -317,7 +317,7 @@ class ProductReservation extends BaseModel
      */
     public function getStateLocaleAttribute(): string
     {
-        return trans('states/product_reservations.' . $this->state);
+        return trans('states.product_reservations.' . $this->state);
     }
 
     /**

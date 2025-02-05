@@ -34,7 +34,7 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         NotificationService $notificationService
     ): void {
         $mailBody = new MailBodyBuilder();
-        $mailBody->h1(trans('digests/provider_funds.title', [
+        $mailBody->h1(trans('digests.provider_funds.title', [
             'provider_name' => $organization->name,
         ]));
 
@@ -54,7 +54,7 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
         $mailBody->space()->button_primary(
             Implementation::general()->url_provider,
-            trans('digests/provider_funds.dashboard_button')
+            trans('digests.provider_funds.dashboard_button')
         );
 
         $this->sendOrganizationDigest($organization, $mailBody, $notificationService);
@@ -107,18 +107,18 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         if ($logsApprovedBudget->count() > 0) {
             $count_funds = $logsApprovedBudget->count();
             $mailBody->h3(trans_choice(
-                "digests/provider_funds.budget_approved.title",
+                "digests.provider_funds.budget_approved.title",
                 $count_funds,
                 compact('count_funds')
             ));
 
             $mailBody->text(trans_choice(
-                'digests/provider_funds.budget_approved.funds_list',
+                'digests.provider_funds.budget_approved.funds_list',
                     $logsApprovedBudget->count()
                 ) . "\n- " . $logsApprovedBudget->pluck('fund_name')->implode("\n- ")
             );
 
-            $mailBody->text(trans('digests/provider_funds.budget_approved.details'));
+            $mailBody->text(trans('digests.provider_funds.budget_approved.details'));
             $mailBody->separator();
         }
 
@@ -143,13 +143,13 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         if ($logsApprovedProducts->count() > 0) {
             $count_funds = $logsApprovedProducts->count();
             $mailBody->h3(trans_choice(
-                "digests/provider_funds.products_approved.title",
+                "digests.provider_funds.products_approved.title",
                 $count_funds,
                 compact('count_funds')
             ));
 
             $mailBody->text(trans_choice(
-                'digests/provider_funds.products_approved.funds_list',
+                'digests.provider_funds.products_approved.funds_list',
                 $logsApprovedProducts->count()
                 ) . "\n- " . $logsApprovedProducts->pluck('fund_name')->implode("\n- ")
             )->separator();
@@ -176,18 +176,18 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         if ($logsRejectedBudget->count() > 0) {
             $count_funds = $logsRejectedBudget->count();
             $mailBody->h3(trans_choice(
-                "digests/provider_funds.budget_revoked.title",
+                "digests.provider_funds.budget_revoked.title",
                 $count_funds,
                 compact('count_funds')
             ));
 
             $mailBody->text(trans_choice(
-                'digests/provider_funds.budget_revoked.funds_list',
+                'digests.provider_funds.budget_revoked.funds_list',
                 $logsRejectedBudget->count()
                 ) . "\n - " . $logsRejectedBudget->pluck('fund_name')->implode("\n- ")
             );
 
-            $mailBody->text(trans('digests/provider_funds.budget_revoked.details'));
+            $mailBody->text(trans('digests.provider_funds.budget_revoked.details'));
             $mailBody->separator();
         }
 
@@ -212,13 +212,13 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         if ($logsRejectedProducts->count() > 0) {
             $count_funds = $logsRejectedProducts->count();
             $mailBody->h3(trans_choice(
-                'digests/provider_funds.products_revoked.title',
+                'digests.provider_funds.products_revoked.title',
                 $count_funds,
                 compact('count_funds')
             ));
 
             $mailBody->text(trans_choice(
-                'digests/provider_funds.products_revoked.funds_list',
+                'digests.provider_funds.products_revoked.funds_list',
                 $logsRejectedProducts->count()
                 ) . "\n- " . $logsRejectedProducts->pluck('fund_name')->implode("\n- "));
 
@@ -229,12 +229,12 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
             if ($fundsWithSomeProducts->count() > 0) {
                 $mailBody->text(trans_choice(
-                    'digests/provider_funds.products_revoked.funds_list_individual',
+                    'digests.provider_funds.products_revoked.funds_list_individual',
                     $fundsWithSomeProducts->count()
                     ) . "\n- " . $fundsWithSomeProducts->implode("\n- "));
             }
 
-            $mailBody->text(trans('digests/provider_funds.products_revoked.details'));
+            $mailBody->text(trans('digests.provider_funds.products_revoked.details'));
             $mailBody->separator();
         }
 
@@ -258,14 +258,14 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         $logsProductsApproved = $query->get()->pluck('data');
 
         if ($logsProductsApproved->count() > 0) {
-            $mailBody->h3(trans("digests/provider_funds.individual_products.title"));
-            $mailBody->text(trans("digests/provider_funds.individual_products.details"));
+            $mailBody->h3(trans("digests.provider_funds.individual_products.title"));
+            $mailBody->text(trans("digests.provider_funds.individual_products.details"));
 
             foreach ($logsProductsApproved->groupBy('fund_id') as $logsProductApproved) {
                 $mailBody->h5($logsProductApproved[0]['fund_name'], ['margin_less']);
                 $mailBody->text(implode("\n", array_map(static function($log) {
                     return trans(
-                        'digests/provider_funds.individual_products.product',
+                        'digests.provider_funds.individual_products.product',
                         self::arrayOnlyString($log)
                     );
                 }, $logsProductApproved->toArray())) . "\n");
@@ -293,25 +293,25 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
         if ($logsProductsFeedback->count() > 0) {
             $count_products = $logsProductsFeedback->count();
-            $mailBody->h3(trans_choice('digests/provider_funds.feedback.title',
+            $mailBody->h3(trans_choice('digests.provider_funds.feedback.title',
                 $count_products,
                 compact('count_products')
             ));
-            $mailBody->text(trans_choice('digests/provider_funds.feedback.details',
+            $mailBody->text(trans_choice('digests.provider_funds.feedback.details',
                 $count_products,
                 compact('count_products')
             ));
 
             foreach ($logsProductsFeedback as $logsProductFeedback) {
                 $mailBody->h5(trans(
-                    'digests/provider_funds.feedback.product_title',
+                    'digests.provider_funds.feedback.product_title',
                     self::arrayOnlyString($logsProductFeedback[0])
                 ), ['margin_less']);
 
                 foreach ($logsProductFeedback->groupBy('fund_id') as $logsProductFeedbackLog) {
                     $count_messages = $logsProductFeedbackLog->count();
                     $mailBody->text(trans_choice(
-                        'digests/provider_funds.feedback.product_details',
+                        'digests.provider_funds.feedback.product_details',
                         $count_messages,
                         self::arrayOnlyString([
                             ...$logsProductFeedback[0],

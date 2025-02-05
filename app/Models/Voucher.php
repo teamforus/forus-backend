@@ -743,7 +743,7 @@ class Voucher extends BaseModel
      */
     public function getStateLocaleAttribute(): string
     {
-        return trans('states/vouchers.' . $this->state);
+        return trans('states.vouchers.' . $this->state);
     }
 
     /**

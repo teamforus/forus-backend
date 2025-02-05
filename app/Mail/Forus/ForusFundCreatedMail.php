@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class ForusFundCreatedMail extends ImplementationMail
 {
-    protected string $subjectKey = 'mails/system_mails.forus_fund_created.title';
+    protected string $subjectKey = 'mails.system_mails.forus_fund_created.title';
 
     /**
      * @return Mailable

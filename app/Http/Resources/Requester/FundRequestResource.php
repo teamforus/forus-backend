@@ -38,16 +38,21 @@ class FundRequestResource extends BaseJsonResource
      */
     public function toArray(Request $request): array
     {
-        return array_merge($this->resource->only([
-            'id', 'fund_id', 'contact_information', 'note', 'state', 'state_locale',
-        ]), [
-            'fund' => new FundTinyResource($this->resource->fund),
+        return [
+            ...$this->resource->only([
+                'id', 'fund_id', 'contact_information', 'note', 'state', 'state_locale',
+            ]),
+            'fund' => [
+                ...(new FundTinyResource($this->resource->fund))->toArray($request),
+                ...$this->resource->fund->translateColumns($this->resource->fund->only('name')),
+            ],
             'records' => $this->getRecordsDetails($this->resource),
-            'vouchers' => VoucherResource::collection($this->getVouchers($this->resource)),
             'payouts' => VoucherTransactionPayoutResource::collection($this->getPayouts($this->resource)),
-        ], $this->makeTimestamps($this->resource->only([
-            'created_at', 'updated_at',
-        ])));
+            'vouchers' => VoucherResource::collection($this->getVouchers($this->resource)),
+            ...$this->makeTimestamps($this->resource->only([
+                'created_at', 'updated_at',
+            ])),
+        ];
     }
 
     /**

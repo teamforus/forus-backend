@@ -76,11 +76,15 @@ class FundResource extends BaseJsonResource
         $organizationFunds2FAData = $this->organizationFunds2FAData($organization);
 
         $data = array_merge($fund->only([
-            'id', 'name', 'description', 'description_html', 'description_short', 'description_position',
-            'organization_id', 'state', 'notification_amount', 'type', 'type_locale', 'archived',
-            'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
-            'external_page', 'external_page_url',
+            'id', 'description', 'description_position', 'organization_id', 'state',
+            'notification_amount', 'type', 'type_locale', 'archived', 'external_link_url',
+            'is_external', 'external_page', 'external_page_url', 'description_html',
         ]), [
+            ...$fund->translateColumns(
+                $this->isCollection()
+                    ? $fund->only(['name', 'description_short', 'request_btn_text', 'external_link_text', 'faq_title'])
+                    : $fund->only(['name', 'description_short', 'request_btn_text', 'external_link_text', 'faq_title', 'description_html']),
+            ),
             'outcome_type' => $fund->fund_config?->outcome_type ?: FundConfig::OUTCOME_TYPE_VOUCHER,
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
             'tags' => TagResource::collection($fund->tags_webshop),

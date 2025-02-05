@@ -18,7 +18,31 @@ class BaseJsonResource extends JsonResource
     public const LOAD_COUNT = [];
     public const LOAD_MORPH = [];
 
+    /**
+     * @var string
+     */
     protected string $resource_type = 'default';
+
+    /**
+     * @var bool
+     */
+    private bool $collection = false;
+
+    /**
+     * @return bool
+     */
+    public function isCollection(): bool
+    {
+        return $this->collection;
+    }
+
+    /**
+     * @return void
+     */
+    private function markAsCollection(): void
+    {
+        $this->collection = true;
+    }
 
     /**
      * @param string|null $append
@@ -26,7 +50,7 @@ class BaseJsonResource extends JsonResource
      */
     public static function load(?string $append = null): array
     {
-        return $append ? array_map(function($load) use ($append) {
+        return $append ? array_map(function ($load) use ($append) {
             return "$append.$load";
         }, static::LOAD) : static::LOAD;
     }
@@ -50,7 +74,7 @@ class BaseJsonResource extends JsonResource
      */
     public static function load_count(?string $append = null): array
     {
-        return $append ? array_map(function($load) use ($append) {
+        return $append ? array_map(function ($load) use ($append) {
             return "$append.$load";
         }, static::LOAD_COUNT) : static::LOAD_COUNT;
     }
@@ -89,7 +113,23 @@ class BaseJsonResource extends JsonResource
             ->withCount(static::load_count());
 
         $collection = self::collection($query->paginate(is_numeric($request) ? $request : null));
-        $collection->collection->map(fn (self $resource) => $resource->setAttributes($attributes));
+
+        $collection->collection->map(function (self $resource) use ($attributes) {
+            $resource->setAttributes($attributes);
+            $resource->markAsCollection();
+        });
+
+        return $collection;
+    }
+
+    /**
+     * @param $resource
+     * @return AnonymousResourceCollection
+     */
+    public static function collection($resource): AnonymousResourceCollection
+    {
+        $collection = parent::collection($resource);
+        $collection->collection->map(fn (self $resource) => $resource->markAsCollection());
 
         return $collection;
     }
@@ -125,7 +165,7 @@ class BaseJsonResource extends JsonResource
     protected static function staticTimestamps($model, ...$key): array
     {
         if (is_array($key[0] ?? null) || count($key) > 1) {
-            return array_reduce(is_array($key[0] ?? null) ? $key[0] : $key, function($prev, $key) use ($model) {
+            return array_reduce(is_array($key[0] ?? null) ? $key[0] : $key, function ($prev, $key) use ($model) {
                 return array_merge($prev, static::staticTimestamps($model, $key));
             }, []);
         }
@@ -143,7 +183,7 @@ class BaseJsonResource extends JsonResource
      */
     protected static function makeTimestampsStatic(array $dates, bool $dateOnly = false, string $format = null): array
     {
-        return array_reduce(array_keys($dates), function($out, $key) use ($dates, $format, $dateOnly) {
+        return array_reduce(array_keys($dates), function ($out, $key) use ($dates, $format, $dateOnly) {
             $date = $dates[$key] instanceof Carbon ? $dates[$key] : null;
 
             return array_merge($out, [

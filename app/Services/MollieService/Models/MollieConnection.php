@@ -197,7 +197,7 @@ class MollieConnection extends Model
      */
     public function getOnboardingStateLocaleAttribute(): string
     {
-        return trans("states/mollie_connection.$this->onboarding_state");
+        return trans("states.mollie_connection.$this->onboarding_state");
     }
 
     /**

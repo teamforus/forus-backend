@@ -24,11 +24,11 @@ class GeoIp
     }
 
     private static function countryToString(Country $country) {
-        return trans_fb('geo_ip/countries.' . $country->isoCode, $country->name);
+        return trans_fb('geo_ip.countries.' . $country->isoCode, $country->name);
     }
 
     private static function cityToString(City $city) {
-        return trans_fb('geo_ip/cities.' . $city->geonameId, $city->name);
+        return trans_fb('geo_ip.cities.' . $city->geonameId, $city->name);
     }
 
     /**
@@ -37,7 +37,7 @@ class GeoIp
      */
     public static function getLocation(string $ip) {
         if ($ip == '127.0.0.1') {
-            return new LocationData($ip, "Local application");
+            return new LocationData($ip, trans('agent.localhost'));
         }
 
         if (self::isDatabaseAvailable()) {

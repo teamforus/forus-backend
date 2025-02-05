@@ -172,12 +172,7 @@ class FundRequest extends BaseModel
      */
     public function getStateLocaleAttribute(): string
     {
-        return [
-            self::STATE_PENDING => 'Wachten',
-            self::STATE_APPROVED => 'Geaccepteerd',
-            self::STATE_DECLINED => 'Geweigerd',
-            self::STATE_DISREGARDED => 'Buiten behandeling geplaatst',
-        ][$this->state] ?? '';
+        return trans('states.fund_requests.' . $this->state);
     }
 
     /**

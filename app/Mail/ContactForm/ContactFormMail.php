@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class ContactFormMail extends ImplementationMail
 {
-    protected string $subjectKey = 'mails/system_mails.contact_form.title';
+    protected string $subjectKey = 'mails.system_mails.contact_form.title';
 
     /**
      * @return Mailable

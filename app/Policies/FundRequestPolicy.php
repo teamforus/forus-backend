@@ -475,7 +475,7 @@ class FundRequestPolicy
      */
     protected function deny(mixed $message, ?int $code = null): Response
     {
-        return Response::deny(trans("policies/fund_requests.$message"), $code);
+        return Response::deny(trans("policies.fund_requests.$message"), $code);
     }
 
     /**

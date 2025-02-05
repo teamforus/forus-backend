@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Traits\HasFaq;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +37,8 @@ use Illuminate\Support\Arr;
  * @property-read \App\Models\Implementation|null $implementation
  * @property-read Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
+ * @property-read Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage onlyTrashed()
@@ -60,7 +63,11 @@ use Illuminate\Support\Arr;
  */
 class ImplementationPage extends BaseModel
 {
-    use HasMedia, HasMarkdownDescription, HasFaq, SoftDeletes;
+    use HasFaq;
+    use HasMedia;
+    use SoftDeletes;
+    use HasMarkdownDescription;
+    use HasOnDemandTranslations;
 
     const string TYPE_HOME = 'home';
     const string TYPE_PRODUCTS = 'products';
