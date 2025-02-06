@@ -98,15 +98,15 @@ class PhysicalCardPolicy
     protected function baseCreatePolicy(Voucher $voucher): Response|bool
     {
         if (!$voucher->fund->fund_config->allow_physical_cards) {
-            return $this->deny("physical_cards_not_allowed");
+            return $this->deny(trans('policies.physical_cards.not_allowed'));
         }
 
         if ($voucher->physical_cards()->exists()) {
-            return $this->deny("physical_card_already_attached");
+            return $this->deny(trans('policies.physical_cards.already_attached'));
         }
 
         if (!$voucher->isBudgetType()) {
-            return $this->deny("only_budget_vouchers");
+            return $this->deny(trans('policies.physical_cards.only_budget_vouchers'));
         }
 
         if (!$voucher->isPending() && !$voucher->activated) {

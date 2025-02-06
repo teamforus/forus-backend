@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class SendVoucherMail extends ImplementationMail
 {
-    protected string $subjectKey = 'mails/system_mails.voucher_send_to_email.title';
+    public $subject = 'Hierbij ontvangt u uw :fund_name';
 
     /**
      * @return Mailable

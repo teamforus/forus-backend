@@ -10,6 +10,6 @@ class DigestValidatorMail extends BaseDigestMail
     {
         parent::__construct($viewData);
 
-        $this->subject(trans('digests/validator.subject'));
+        $this->subject(trans('digests.validator.subject'));
     }
 }

@@ -112,7 +112,7 @@ class EmailLog extends Model
         $html = $insertStats ? $this->addEmailStats($html) : $html;
         $html = $addBase64 ? $this->addBase64Attachments($html) : $html;
 
-        return Purifier::clean($html, Config::get('forus.mail_purifier_config'));
+        return Purifier::clean($html, Config::get('forus.purifier.purifier_mail_config'));
     }
 
     /**

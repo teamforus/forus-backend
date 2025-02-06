@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Faq;
+use Illuminate\Http\Request;
 
 /**
  * @property Faq $resource
@@ -12,13 +13,19 @@ class FaqResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
-        return $this->resource->only([
-            'id', 'title', 'description', 'description_html'
-        ]);
+        $faq = $this->resource;
+
+        return [
+            'id' => $faq->id,
+            'description' => $faq->description,
+            ...$faq->translateColumns($faq->only([
+                'title', 'description_html',
+            ]))
+        ];
     }
 }

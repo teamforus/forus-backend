@@ -170,6 +170,9 @@ class VoucherResource extends BaseJsonResource
                     'total_amount', 'sold_amount', 'product_category_id',
                     'organization_id',
                 ]),
+                ...$voucher->product->translateColumns($voucher->product->only([
+                    'name', 'description_html',
+                ])),
                 'price_locale' => $voucher->product->priceLocale(),
                 'product_category' => $voucher->product->product_category,
                 'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : '',
@@ -254,7 +257,8 @@ class VoucherResource extends BaseJsonResource
      */
     protected function getFundResource(Fund $fund): array
     {
-        return array_merge($fund->only('id', 'name', 'state', 'type'), [
+        return array_merge($fund->only('id', 'state', 'type'), [
+            ...$fund->translateColumns($fund->only(['name'])),
             'url_webshop' => $fund->fund_config->implementation->url_webshop ?? null,
             'logo' => new MediaCompactResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d H:i'),

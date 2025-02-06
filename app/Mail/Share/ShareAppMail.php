@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class ShareAppMail extends ImplementationMail
 {
-    protected string $subjectKey = 'share/email.me_app_download_link.title';
+    public $subject = 'Download Me makkelijk via de link';
 
     /**
      * Build the message.

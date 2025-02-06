@@ -3,11 +3,13 @@
 namespace App\Http\Requests\Api\Platform\ProductReservations;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\OrganizationReservationField;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Rules\ProductReservations\ProductIdToReservationRule;
 use App\Rules\Vouchers\IdentityVoucherAddressRule;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 
 class StoreProductReservationRequest extends BaseFormRequest
@@ -139,10 +141,18 @@ class StoreProductReservationRequest extends BaseFormRequest
     {
         $product = Product::find($this->input('product_id'));
 
-        return $product?->organization->reservation_fields->reduce(fn (array $result, $field) => [
-            ...$result,
-            "custom_fields.$field->id" => $field->label,
-        ], []) ?: [];
+        return [
+            ...parent::attributes(),
+            ...$product?->organization->reservation_fields->reduce(fn (
+                array $result,
+                OrganizationReservationField $field,
+            ) => [
+                ...$result,
+                "custom_fields.$field->id" => Arr::get($field->translateColumns($field->only([
+                    'label',
+                ])), 'label', $field?->label || ''),
+            ], []) ?: [],
+        ];
     }
 
     /**

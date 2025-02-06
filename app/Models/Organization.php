@@ -16,6 +16,7 @@ use App\Services\Forus\Session\Models\Session;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MollieService\Models\MollieConnection;
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
@@ -58,6 +59,10 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $is_validator
  * @property bool $reservations_budget_enabled
  * @property bool $reservations_subsidy_enabled
+ * @property bool $translations_enabled
+ * @property int $translations_daily_limit
+ * @property int $translations_weekly_limit
+ * @property int $translations_monthly_limit
  * @property bool $reservations_auto_accept
  * @property string $reservation_phone
  * @property string $reservation_address
@@ -75,6 +80,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_pre_checks
  * @property bool $allow_payouts
  * @property bool $allow_profiles
+ * @property bool $allow_translations
  * @property bool $allow_product_updates
  * @property bool $reservation_allow_extra_payments
  * @property int $pre_approve_external_funds
@@ -163,6 +169,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $supplied_funds_count
  * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
+ * @property-read Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @property-read Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
  * @property-read int|null $voucher_transaction_bulks_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
@@ -184,6 +192,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereAllowProductUpdates($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProfiles($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProviderExtraPayments($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowTranslations($value)
  * @method static EloquentBuilder<static>|Organization whereAuth2faFundsPolicy($value)
  * @method static EloquentBuilder<static>|Organization whereAuth2faFundsRememberIp($value)
  * @method static EloquentBuilder<static>|Organization whereAuth2faFundsRestrictAuthSessions($value)
@@ -234,6 +243,10 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereReservationsBudgetEnabled($value)
  * @method static EloquentBuilder<static>|Organization whereReservationsSubsidyEnabled($value)
  * @method static EloquentBuilder<static>|Organization whereShowProviderTransactions($value)
+ * @method static EloquentBuilder<static>|Organization whereTranslationsDailyLimit($value)
+ * @method static EloquentBuilder<static>|Organization whereTranslationsEnabled($value)
+ * @method static EloquentBuilder<static>|Organization whereTranslationsMonthlyLimit($value)
+ * @method static EloquentBuilder<static>|Organization whereTranslationsWeeklyLimit($value)
  * @method static EloquentBuilder<static>|Organization whereUpdatedAt($value)
  * @method static EloquentBuilder<static>|Organization whereWebsite($value)
  * @method static EloquentBuilder<static>|Organization whereWebsitePublic($value)
@@ -241,9 +254,14 @@ use Illuminate\Support\Collection as SupportCollection;
  */
 class Organization extends BaseModel
 {
-    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasLogs;
+    use HasLogs;
+    use HasTags;
+    use HasMedia;
+    use HasDigests;
+    use HasMarkdownDescription;
+    use HasOnDemandTranslations;
 
-    public const string GENERIC_KVK = "00000000";
+    public const string GENERIC_KVK = '00000000';
 
     public const string FUND_REQUEST_POLICY_MANUAL = 'apply_manually';
     public const string FUND_REQUEST_POLICY_AUTO_REQUESTED = 'apply_auto_requested';
@@ -291,55 +309,58 @@ class Organization extends BaseModel
         'auth_2fa_restrict_bi_connections',
         'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time',
         'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
-        'bank_note', 'bank_reservation_number', 'bank_separator',
+        'bank_note', 'bank_reservation_number', 'bank_separator', 'translations_enabled',
+        'translations_daily_limit', 'translations_weekly_limit', 'translations_monthly_limit',
     ];
 
     /**
      * @var string[]
      */
     protected $casts = [
-        'btw'                                       => 'string',
-        'email_public'                              => 'boolean',
-        'phone_public'                              => 'boolean',
-        'website_public'                            => 'boolean',
-        'is_sponsor'                                => 'boolean',
-        'is_provider'                               => 'boolean',
-        'is_validator'                              => 'boolean',
-        'backoffice_available'                      => 'boolean',
-        'manage_provider_products'                  => 'boolean',
-        'reservations_budget_enabled'               => 'boolean',
-        'reservations_subsidy_enabled'              => 'boolean',
-        'reservations_auto_accept'                  => 'boolean',
-        'allow_batch_reservations'                  => 'boolean',
-        'allow_custom_fund_notifications'           => 'boolean',
-        'allow_budget_fund_limits'                  => 'boolean',
-        'allow_manual_bulk_processing'              => 'boolean',
-        'allow_2fa_restrictions'                    => 'boolean',
-        'allow_fund_request_record_edit'            => 'boolean',
-        'allow_bi_connection'                       => 'boolean',
-        'allow_product_updates'                     => 'boolean',
-        'bsn_enabled'                               => 'boolean',
-        'auth_2fa_remember_ip'                      => 'boolean',
-        'auth_2fa_funds_remember_ip'                => 'boolean',
-        'auth_2fa_funds_restrict_emails'            => 'boolean',
-        'auth_2fa_funds_restrict_auth_sessions'     => 'boolean',
-        'auth_2fa_funds_restrict_reimbursements'    => 'boolean',
-        'auth_2fa_restrict_bi_connections'          => 'boolean',
-        'allow_provider_extra_payments'             => 'boolean',
-        'allow_pre_checks'                          => 'boolean',
-        'allow_payouts'                             => 'boolean',
-        'allow_profiles'                            => 'boolean',
-        'reservation_allow_extra_payments'          => 'boolean',
-        'show_provider_transactions'                => 'boolean',
-        'bank_transaction_id'                       => 'boolean',
-        'bank_transaction_date'                     => 'boolean',
-        'bank_transaction_time'                     => 'boolean',
-        'bank_reservation_number'                   => 'boolean',
-        'bank_branch_number'                        => 'boolean',
-        'bank_branch_id'                            => 'boolean',
-        'bank_branch_name'                          => 'boolean',
-        'bank_fund_name'                            => 'boolean',
-        'bank_note'                                 => 'boolean',
+        'btw' => 'string',
+        'email_public' => 'boolean',
+        'phone_public' => 'boolean',
+        'website_public' => 'boolean',
+        'is_sponsor' => 'boolean',
+        'is_provider' => 'boolean',
+        'is_validator' => 'boolean',
+        'backoffice_available' => 'boolean',
+        'manage_provider_products' => 'boolean',
+        'reservations_budget_enabled' => 'boolean',
+        'reservations_subsidy_enabled' => 'boolean',
+        'translations_enabled' => 'boolean',
+        'reservations_auto_accept' => 'boolean',
+        'allow_batch_reservations' => 'boolean',
+        'allow_custom_fund_notifications' => 'boolean',
+        'allow_budget_fund_limits' => 'boolean',
+        'allow_manual_bulk_processing' => 'boolean',
+        'allow_2fa_restrictions' => 'boolean',
+        'allow_fund_request_record_edit' => 'boolean',
+        'allow_bi_connection' => 'boolean',
+        'allow_product_updates' => 'boolean',
+        'bsn_enabled' => 'boolean',
+        'auth_2fa_remember_ip' => 'boolean',
+        'auth_2fa_funds_remember_ip' => 'boolean',
+        'auth_2fa_funds_restrict_emails' => 'boolean',
+        'auth_2fa_funds_restrict_auth_sessions' => 'boolean',
+        'auth_2fa_funds_restrict_reimbursements' => 'boolean',
+        'auth_2fa_restrict_bi_connections' => 'boolean',
+        'allow_provider_extra_payments' => 'boolean',
+        'allow_pre_checks' => 'boolean',
+        'allow_payouts' => 'boolean',
+        'allow_profiles' => 'boolean',
+        'allow_translations' => 'boolean',
+        'reservation_allow_extra_payments' => 'boolean',
+        'show_provider_transactions' => 'boolean',
+        'bank_transaction_id' => 'boolean',
+        'bank_transaction_date' => 'boolean',
+        'bank_transaction_time' => 'boolean',
+        'bank_reservation_number' => 'boolean',
+        'bank_branch_number' => 'boolean',
+        'bank_branch_id' => 'boolean',
+        'bank_branch_name' => 'boolean',
+        'bank_fund_name' => 'boolean',
+        'bank_note' => 'boolean',
     ];
 
     /**

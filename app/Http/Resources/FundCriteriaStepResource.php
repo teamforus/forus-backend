@@ -18,8 +18,14 @@ class FundCriteriaStepResource extends BaseJsonResource
      */
     public function toArray(Request $request): array
     {
-        return $this->resource->only([
-            'id', 'title', 'order', 'description_html',
-        ]);
+        $step = $this->resource;
+
+        return [
+            'id' => $step->id,
+            'order' => $step->order,
+            ...$step->translateColumns($step->only([
+                'title', 'description_html',
+            ]))
+        ];
     }
 }

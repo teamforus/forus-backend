@@ -816,7 +816,7 @@ class VoucherTest extends TestCase
             'house' => $this->faker()->numberBetween(1, 100),
             'house_addition' => $this->faker()->word,
             'postcode' => $this->faker()->postcode,
-            'city' => $this->faker()->city,
+            'city' => Str::limit($this->faker()->city, 0, 15),
         ], $headers);
 
         $response->assertSuccessful();

@@ -37,15 +37,15 @@ class SponsorProductUpdatesDigest extends BaseOrganizationDigest
         }
 
         $emailBody = new MailBodyBuilder();
-        $emailBody->h1(trans('digests/sponsor_product_updates.title'), ['text_center']);
+        $emailBody->h1(trans('digests.sponsor_product_updates.title'), ['text_center']);
 
-        $emailBody->text(trans('digests/sponsor.greetings', [
+        $emailBody->text(trans('digests.sponsor.greetings', [
             'organization_name' => $organization->name,
         ]), ["text_center"]);
 
         $numberOfChanges = $this->getUpdatedProductsQuery($organization)->count();
 
-        $emailBody->text(trans('digests/sponsor_product_updates.details', [
+        $emailBody->text(trans('digests.sponsor_product_updates.details', [
             'nr_changes' => $numberOfChanges,
             'sponsor_dashboard_link' => Implementation::general()->urlProviderDashboard(),
         ]), ['text_center']);
@@ -54,7 +54,7 @@ class SponsorProductUpdatesDigest extends BaseOrganizationDigest
 
         $emailBody->button_primary(
             Implementation::general()->urlSponsorDashboard("/organisaties/$organization->id/producten?view=history"),
-            trans('digests/sponsor_product_updates.dashboard_button')
+            trans('digests.sponsor_product_updates.dashboard_button')
         );
 
         if ($numberOfChanges > 0) {

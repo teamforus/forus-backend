@@ -39,7 +39,7 @@ class RequesterDigest extends BaseDigest
             $identity = $identityFunds['identity'];
 
             $emailBody = new MailBodyBuilder();
-            $emailBody->h1(trans('digests/requester.title'));
+            $emailBody->h1(trans('digests.requester.title'));
 
             foreach ($identityFunds['funds'] as $fundId) {
                 if (isset($fundsProvidersBody[$fundId])) {
@@ -48,7 +48,7 @@ class RequesterDigest extends BaseDigest
                     if (isset($funds[$fundId]->fund_config->implementation)) {
                         $emailBody->button_primary(
                             $funds[$fundId]->fund_config->implementation->urlWebshop(),
-                            trans('digests/requester.button_webshop')
+                            trans('digests.requester.button_webshop')
                         )->space();
                     }
                 }
@@ -65,7 +65,7 @@ class RequesterDigest extends BaseDigest
                     if (isset($funds[$fundId]->fund_config->implementation)) {
                         $emailBody->button_primary(
                             $funds[$fundId]->fund_config->implementation->urlWebshop(),
-                            trans('digests/requester.button_webshop')
+                            trans('digests.requester.button_webshop')
                         )->space();
                     }
                 }
@@ -124,14 +124,14 @@ class RequesterDigest extends BaseDigest
             if ($events->count() > 0) {
                 $array[$fund->id] = MailBodyBuilder::create();
                 $array[$fund->id]->h3(trans_choice(
-                    'digests/requester.providers.title', $events->count(), [
+                    'digests.requester.providers.title', $events->count(), [
                         'count_providers' => $events->count(),
                         'sponsor_name' => $fund->organization->name,
                         'fund_name' => $fund->name
                     ]));
 
                 $array[$fund->id]->text(trans(
-                    'digests/requester.providers.description', [
+                    'digests.requester.providers.description', [
                         'providers_list' => $events->pluck('provider_name')->implode("\n- ")
                     ]));
             }
@@ -159,7 +159,7 @@ class RequesterDigest extends BaseDigest
 
                 $array[$fund->id] = new MailBodyBuilder();
                 $array[$fund->id]->h3(trans_choice(
-                    'digests/requester.products.title', $events->count(), [
+                    'digests.requester.products.title', $events->count(), [
                     'count_products' => $events->count(),
                     'sponsor_name' => $fund->organization->name,
                     'fund_name' => $fund->name
@@ -169,7 +169,7 @@ class RequesterDigest extends BaseDigest
                     $array[$fund->id]->h5($productEventByProvider[0]['provider_name']);
                     $textList = $productEventByProvider->map(static function(array $data) {
                         return trans(
-                            'digests/requester.products.price',
+                            'digests.requester.products.price',
                             self::arrayOnlyString($data)
                         );
                     })->toArray();

@@ -413,9 +413,9 @@ class VoucherTransaction extends BaseModel
     public function getStateLocaleAttribute(): string
     {
         return [
-            static::STATE_PENDING => 'In afwachting',
-            static::STATE_CANCELED => 'Geannuleerd',
-            static::STATE_SUCCESS => 'Voltooid',
+            static::STATE_PENDING => trans('states.voucher_transactions.pending'),
+            static::STATE_SUCCESS => trans('states.voucher_transactions.success'),
+            static::STATE_CANCELED => trans('states.voucher_transactions.canceled'),
         ][$this->state] ?? $this->state;
     }
 

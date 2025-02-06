@@ -9,7 +9,7 @@ use Symfony\Component\Mime\Email;
 
 class EmailActivationMail extends ImplementationMail
 {
-    protected string $subjectKey = 'mails/system_mails.email_activation.title';
+    public $subject = 'E-mailadres bevestigen';
 
     /**
      * @return Mailable

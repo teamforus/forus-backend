@@ -27,23 +27,24 @@ class RecordTypeResource extends BaseJsonResource
     {
         $recordType = $this->resource;
 
-        return array_merge($recordType->only([
-            'key', 'type', 'system', 'criteria', 'control_type',
-        ]), [
+        return [
+            ...$recordType->only([
+                'key', 'type', 'system', 'criteria', 'control_type',
+            ]),
             'name' => $recordType->name ?: $recordType->key,
             'validations' => $recordType->getValidations(),
             'operators' => array_map(fn ($operator) => [
                 'key' => $operator,
                 'name' => [
-                    '*' => 'n.v.t.',
-                    '=' => 'gelijk aan',
-                    '<' => 'is kleiner dan',
-                    '>' => 'is groter dan',
-                    '<=' => 'is kleiner dan of gelijk aan',
-                    '>=' => 'is groter dan of gelijk aan',
-                ][$operator] ?? ''
+                        '*' => 'n.v.t.',
+                        '=' => 'gelijk aan',
+                        '<' => 'is kleiner dan',
+                        '>' => 'is groter dan',
+                        '<=' => 'is kleiner dan of gelijk aan',
+                        '>=' => 'is groter dan of gelijk aan',
+                    ][$operator] ?? ''
             ], $recordType->getOperators()),
             'options' => $recordType->getOptions(),
-        ]);
+        ];
     }
 }
