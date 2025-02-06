@@ -36,7 +36,6 @@ class ImplementationMail extends Mailable implements ShouldQueue
     protected array $mailData = [];
     protected string $globalBuilderStyles = 'text_center';
 
-    protected string $subjectKey = "";
     protected string $viewKey = "";
 
     protected ?string $preferencesLink = null;
@@ -129,7 +128,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
     public function buildBase(): Mailable
     {
         $data = $this->getTransData();
-        $subject = $this->getSubject(trans($this->subjectKey, $data));
+        $subject = $this->getSubject(trans($this->subject, $data));
 
         return $this->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
             ->with(compact('subject', 'data'))
@@ -254,7 +253,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
         return $this
             ->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
             ->view('emails.mail-builder-template')
-            ->subject($this->getSubject(trans($this->subjectKey, $data)));
+            ->subject($this->getSubject(str_var_replace($this->subject, $data)));
     }
 
     /**

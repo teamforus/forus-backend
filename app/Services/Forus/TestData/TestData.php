@@ -23,6 +23,7 @@ use App\Models\FundFormula;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Implementation;
+use App\Models\Language;
 use App\Models\Office;
 use App\Models\Organization;
 use App\Models\Prevalidation;
@@ -511,7 +512,12 @@ class TestData
         $cgiCertData = $this->makeImplementationCgiCertData();
         $configData = $this->config("implementations.$name.implementation", []);
 
-        return Implementation::forceCreate([
+        $languages = $configData['languages'] ?? [];
+        $languages = Language::whereIn('locale', $languages)->pluck('id')->toArray();
+
+        unset($configData['languages']);
+
+        $implementation = Implementation::forceCreate([
             'key' => $key,
             'name' => $name,
             'organization_id' => $organization?->id,
@@ -523,6 +529,10 @@ class TestData
             ...$cgiCertData,
             ...$configData,
         ]);
+
+        $implementation->languages()->sync($languages);
+
+        return $implementation;
     }
 
     /**
