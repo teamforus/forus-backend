@@ -92,7 +92,10 @@ class FundRequestResource extends BaseJsonResource
             return array_merge($record->only([
                 'id', 'state', 'record_type_key', 'fund_request_id', 'value',
             ]), [
-                'record_type' => $record->record_type->only('id', 'key', 'type', 'system', 'name'),
+                'record_type' => [
+                    ...$record->record_type->only('id', 'key', 'type', 'system', 'name'),
+                    'name' => $record->record_type?->name ?: $record->record_type->key,
+                ],
                 'clarifications' => FundRequestClarificationResource::collection(
                     $record->fund_request_clarifications->sortByDesc('created_at')
                 ),

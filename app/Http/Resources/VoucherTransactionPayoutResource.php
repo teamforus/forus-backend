@@ -2,6 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Helpers\Arr;
+use Illuminate\Http\Request;
+
 class VoucherTransactionPayoutResource extends VoucherTransactionResource
 {
     /**
@@ -17,8 +20,10 @@ class VoucherTransactionPayoutResource extends VoucherTransactionResource
      * @param  \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
+        $fund = $this->resource->voucher->fund;
+
         return [
             ...$this->resource->only([
                 'state', 'state_locale', 'iban_from',
@@ -29,8 +34,15 @@ class VoucherTransactionPayoutResource extends VoucherTransactionResource
             'amount_locale' => currency_format_locale($this->resource->amount),
             'expired' => $this->resource->voucher->expired,
             'fund' => [
-                ...$this->resource->voucher->fund->only('id', 'name', 'organization_id'),
-                'organization_name' => $this->resource->voucher->fund->organization?->name,
+                ...$fund->only([
+                    'id', 'name', 'organization_id',
+                ]),
+                $fund->translateColumns($fund->only([
+                    'name',
+                ])),
+                'organization_name' => Arr::get($fund->organization?->translateColumns($fund->organization->only([
+                    'name',
+                ])), 'name'),
             ],
             ...$this->makeTimestamps($this->resource->only([
                 'created_at', 'updated_at',

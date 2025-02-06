@@ -3,8 +3,12 @@
 namespace App\Services\TranslationService\Models;
 
 use App\Models\Announcement;
+use App\Models\FundConfig;
+use App\Models\FundCriteriaStep;
+use App\Models\FundCriterion;
 use App\Models\Language;
 use App\Models\OrganizationReservationField;
+use App\Models\RecordTypeOption;
 use Carbon\Carbon;
 use Eloquent;
 use Illuminate\Database\Eloquent\Model;
@@ -64,6 +68,10 @@ class TranslationValue extends Model
         'product' => 'Producten',
         'organization' => 'Organisaties',
         'implementation' => 'Implementaties',
+        FundConfig::class => 'Aanvraagformulier hulpknop',
+        FundCriterion::class => 'Aanvraagformulier voorwaarden',
+        FundCriteriaStep::class => 'Aanvraagformulier stappen',
+        RecordTypeOption::class => 'Aanvraagformulier waarden',
         Announcement::class => 'Aankondigingen',
         'cms_page' => 'Cms-pagina\'s',
         OrganizationReservationField::class => 'Reservering aangepaste velden',
