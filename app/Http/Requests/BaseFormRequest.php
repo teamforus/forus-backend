@@ -97,7 +97,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      */
     public function implementation_key(): ?string
     {
-        return Implementation::activeKey();
+        return $this->header('Client-Key', Implementation::KEY_GENERAL);
     }
 
     /**
@@ -105,11 +105,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      */
     public function implementation(): ?Implementation
     {
-        if ($this->implementationModel) {
-            return $this->implementationModel;
-        }
-
-        return $this->implementationModel = Implementation::active();
+        return Implementation::findAndMemo($this->implementation_key());
     }
 
     /**

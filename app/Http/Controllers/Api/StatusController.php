@@ -17,7 +17,9 @@ class StatusController extends Controller
     {
         try {
             DB::connection()->getPdo();
-            return new JsonResponse();
+            return new JsonResponse([
+                'success' => true,
+            ]);
         } catch (\Throwable) {
             return new JsonResponse(null, 503);
         }
