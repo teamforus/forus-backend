@@ -54,10 +54,9 @@ class SendContactFormRequest extends BaseFormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Deze informatie hebben we nodig om uw aanvraag goed te verwerken.',
-            'email.required' => 'Deze informatie hebben we nodig om uw aanvraag goed te verwerken.',
-            'accept_privacy_terms.accepted' => 'Om verder te gaan, dient u toestemming geven voor '.
-                'het verwerken en opslaan van uw persoonsgegevens.',
+            'name.required' => trans('requests.contact_form.name_required'),
+            'email.required' => trans('requests.contact_form.email_required'),
+            'accept_privacy_terms.accepted' => trans('requests.contact_form.accept_privacy_terms_accepted'),
         ];
     }
 }

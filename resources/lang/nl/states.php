@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\FundRequest;
-
 return [
     'fund_providers' => [
         'pending' => 'Wachtend',
@@ -9,10 +7,10 @@ return [
         'rejected' => 'Geweigerd',
     ],
     'fund_requests' => [
-        FundRequest::STATE_PENDING => 'Wachten',
-        FundRequest::STATE_APPROVED => 'Geaccepteerd',
-        FundRequest::STATE_DECLINED => 'Geweigerd',
-        FundRequest::STATE_DISREGARDED => 'Buiten behandeling geplaatst',
+        'pending' => 'Wachten',
+        'approved' => 'Geaccepteerd',
+        'declined' => 'Geweigerd',
+        'disregarded' => 'Buiten behandeling geplaatst',
     ],
     'mollie_connection' => [
         'needs-data' => 'In afwachting',
@@ -51,5 +49,23 @@ return [
         'active' => 'Actief',
         'pending' => 'Inactief',
         'deactivated' => 'Gedeactiveerd',
+    ],
+    'voucher_transactions' => [
+        'pending' => 'In afwachting',
+        'success' => 'Voltooid',
+        'canceled' => 'Geannuleerd',
+    ],
+    'voucher_transaction_bulks' => [
+        'pending' => 'In afwachting',
+        'accepted' => 'Geaccepteerd',
+        'rejected' => 'Geweigerd',
+        'error' => 'Mislukt',
+        'draft' => 'In voorbereiding',
+    ],
+    'reimbursements' => [
+        'draft' => 'Nog niet ingediend',
+        'pending' => 'In afwachting',
+        'approved' => 'Uitbetaald',
+        'declined' => 'Afgewezen',
     ],
 ];

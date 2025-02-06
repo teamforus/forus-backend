@@ -37,7 +37,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @throws AuthorizationException
      * @noinspection PhpUnused
      */
-    public function deny(string $message = 'This action is unauthorized.'): void
+    public function deny(string $message): void
     {
         $this->message = $message;
         $this->failedAuthorization();

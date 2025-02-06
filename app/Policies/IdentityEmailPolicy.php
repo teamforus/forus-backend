@@ -85,11 +85,11 @@ class IdentityEmailPolicy
         bool $auth2FAConfirmed = false,
     ): Response|bool {
         if ($identityEmail->primary) {
-            return $this->deny("Already primary");
+            return $this->deny(trans('policies.email.already_primary'));
         }
 
         if (!$identityEmail->verified) {
-            return $this->deny("Please verify email first.");
+            return $this->deny(trans('policies.email.not_verified'));
         }
 
         if ($identityEmail->identity_address !== $identity->address) {
@@ -112,7 +112,7 @@ class IdentityEmailPolicy
         IdentityEmail $identityEmail,
     ): Response|bool {
         if ($identityEmail->verified) {
-            return $this->deny("You already have verified your email.");
+            return $this->deny(trans('policies.email.already_verified'));
         }
 
         return !$identity || $identity->exists();
@@ -133,7 +133,7 @@ class IdentityEmailPolicy
         bool $auth2FAConfirmed = false
     ): Response|bool {
         if ($identityEmail->verified) {
-            return $this->deny("Email already verified.");
+            return $this->deny(trans('policies.email.already_verified'));
         }
 
         if ($identityEmail->identity_address !== $identity->address) {
@@ -158,7 +158,7 @@ class IdentityEmailPolicy
         bool $auth2FAConfirmed = false
     ): Response|bool {
         if ($identityEmail->primary) {
-            return $this->deny("Can't delete primary email.");
+            return $this->deny(trans('policies.email.cant_delete_primary_email'));
         }
 
         if ($identityEmail->identity_address !== $identity->address) {
@@ -176,7 +176,7 @@ class IdentityEmailPolicy
     protected function validate2FAFeatureRestriction(Identity $identity, bool $auth2FAConfirmed = false): Response|bool
     {
         if ($identity->load('funds')->isFeature2FARestricted('emails') && !$auth2FAConfirmed) {
-            return $this->deny('Invalid 2FA state.');
+            return $this->deny(trans('policies.email.invalid_2fa'));
         }
 
         return true;
