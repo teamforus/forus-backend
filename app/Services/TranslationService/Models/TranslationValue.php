@@ -59,13 +59,14 @@ class TranslationValue extends Model
     ];
 
     protected static array $fieldMap = [
-        'implementation' => 'implementaties',
-        'fund' => 'fondsen',
-        'product' => 'producten',
-        'organization' => 'organisaties',
-        Announcement::class => 'aankondigingen',
-        'cms_page' => 'cms-pagina\'s',
-        OrganizationReservationField::class => 'reservering aangepaste velden',
+        'faq' => 'Veelgesteld vragen',
+        'fund' => 'Fondsen',
+        'product' => 'Producten',
+        'organization' => 'Organisaties',
+        'implementation' => 'Implementaties',
+        Announcement::class => 'Aankondigingen',
+        'cms_page' => 'Cms-pagina\'s',
+        OrganizationReservationField::class => 'Reservering aangepaste velden',
     ];
 
     /**
