@@ -52,24 +52,27 @@ trait HasOnDemandTranslations
      * @param array $columns Columns to translate.
      * @param string|null $sourceLocale The source locale.
      * @param string|null $targetLocale The target locale.
+     * @param BaseFormRequest|null $request
      * @return array Translated columns.
      */
     public function translateColumns(
         array $columns,
         ?string $sourceLocale = null,
         ?string $targetLocale = null,
+        BaseFormRequest $request = null,
     ): array {
         // Resolve translation service and determine locales
         $service = $this->getTranslationService();
+        $request = $request ?: BaseFormRequest::createFromBase(request());
         $sourceLocale = $sourceLocale ?? $service->getSourceLanguage();
         $targetLocale = $service->getTranslationsMapValue($targetLocale ?? Lang::getLocale());
-        $implementation = Implementation::active() ?: Implementation::general();
+        $implementation = $request->implementation() ?: Implementation::general();
 
         $translatedColumns = [];
         $columnsToTranslate = [];
         $newlyTranslatedColumns = [];
 
-        if ($this->isGeneralImplementationOrNotWebshop($implementation)) {
+        if ($implementation->isGeneral() || !$request->isWebshop()) {
             return $columns;
         }
 
@@ -90,13 +93,13 @@ trait HasOnDemandTranslations
         }
 
         // Now, check if translation should be skipped due to limits or settings
-        if ($this->shouldSkipTranslation($implementation)) {
+        if ($this->shouldSkipTranslation($columns, $implementation)) {
             return [...$columns, ...$translatedColumns];
         }
 
         foreach ($columns as $key => $sourceValue) {
             $newlyTranslatedColumns[$key] = $sourceValue ?
-                $this->findTranslatedValue($key, $sourceValue, $sourceLocale, $targetLocale) :
+                $this->findTranslatedValue($key, $sourceValue, $sourceLocale, $targetLocale, $implementation) :
                 $sourceValue;
         }
 
@@ -119,13 +122,20 @@ trait HasOnDemandTranslations
     /**
      * Check if translation should be skipped.
      *
+     * @param array $columns
      * @param Implementation $implementation
      * @return bool
      */
-    private function shouldSkipTranslation(Implementation $implementation): bool
+    private function shouldSkipTranslation(array $columns, Implementation $implementation): bool
     {
-        $organization = $implementation->organization;
         $service = $this->getTranslationService();
+        $organization = $implementation->organization;
+
+        $daily_limit = $organization->translations_daily_limit;
+        $weekly_limit = $organization->translations_weekly_limit;
+        $monthly_limit = $organization->translations_monthly_limit;
+
+        $columns_str_len = array_sum(array_map(fn($value) => strlen((string) $value), $columns));
 
         // If translations are not allowed or translations are disabled for the organization, skip translation
         if (!$organization || !$organization->allow_translations || !$organization->translations_enabled) {
@@ -133,36 +143,24 @@ trait HasOnDemandTranslations
         }
 
         // Check daily limit
-        if (!$organization->translations_daily_limit ||
-            $service->getTranslationsTodayCount($organization) >= $organization->translations_daily_limit) {
+        if (!$daily_limit ||
+            ($service->getTranslationsTodayCount($organization) + $columns_str_len) > $daily_limit) {
             return true;
         }
 
         // Check weekly limit
-        if (!$organization->translations_weekly_limit ||
-            $service->getTranslationsThisWeekCount($organization) >= $organization->translations_weekly_limit) {
+        if (!$weekly_limit ||
+            ($service->getTranslationsThisWeekCount($organization) + $columns_str_len) > $weekly_limit) {
             return true;
         }
 
         // Check monthly limit
-        if (!$organization->translations_monthly_limit ||
-            $service->getTranslationsThisMonthCount($organization) >= $organization->translations_monthly_limit) {
+        if (!$monthly_limit ||
+            ($service->getTranslationsThisMonthCount($organization) + $columns_str_len) > $monthly_limit) {
             return true;
         }
 
         return false;
-    }
-
-    /**
-     * Check if translation should be skipped because it's not a webshop.
-     *
-     * @param Implementation $implementation
-     * @return bool
-     */
-    private function isGeneralImplementationOrNotWebshop(Implementation $implementation): bool
-    {
-        // Skip translation for general implementations or non-webshop requests
-        return $implementation->isGeneral() || !BaseFormRequest::createFromBase(request())->isWebshop();
     }
 
     /**
@@ -179,6 +177,7 @@ trait HasOnDemandTranslations
         string $sourceValue,
         string $sourceLocale,
         string $targetLocale,
+        Implementation $implementation,
     ): string {
         // Check if translation already exists
         $existingTranslation = $this->getTranslationValue($key, $targetLocale, $sourceValue);
@@ -193,7 +192,7 @@ trait HasOnDemandTranslations
                 $translatedValue = $translationService->translateText($sourceValue, $sourceLocale, $targetLocale);
                 $translatedValue = $this->purifyTranslation($translatedValue);
 
-                $this->storeColumnTranslation($key, $sourceValue, $translatedValue, $targetLocale);
+                $this->storeColumnTranslation($key, $sourceValue, $translatedValue, $targetLocale, $implementation);
 
                 return $translatedValue;
             }
@@ -211,6 +210,7 @@ trait HasOnDemandTranslations
      * @param string $sourceValue Original value.
      * @param string $translatedValue Translated value.
      * @param string $locale The locale of the translation.
+     * @param Implementation $implementation
      * @return void
      */
     private function storeColumnTranslation(
@@ -218,9 +218,8 @@ trait HasOnDemandTranslations
         string $sourceValue,
         string $translatedValue,
         string $locale,
+        Implementation $implementation,
     ): void {
-        $implementation = Implementation::active() ?: Implementation::general();
-
         $this->translation_values()->create([
             'key' => $key,
             'from' => $sourceValue,

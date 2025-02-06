@@ -468,7 +468,7 @@ class Implementation extends BaseModel
      */
     public static function activeKey(): array|string|null
     {
-        return request()->header('Client-Key', self::KEY_GENERAL);
+        return BaseFormRequest::createFromBase(request())->implementation_key();
     }
 
     /**
