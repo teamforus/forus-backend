@@ -30,12 +30,16 @@ class FundCriterionResource extends BaseJsonResource
         $identity =  BaseFormRequest::createFrom($request)->identity();
         $criterion = $this->resource;
 
-        return array_merge($criterion->only([
-            'id', 'record_type_key', 'operator', 'show_attachment', 'order',
-            'title', 'description', 'description_html', 'record_type', 'label',
-            'min', 'max', 'optional', 'value', 'fund_criteria_step_id',
-            'extra_description', 'extra_description_html',
-        ]), [
+        return [
+            ...$criterion->only([
+                'id', 'record_type_key', 'operator', 'show_attachment', 'order',
+                'title', 'description', 'description_html', 'record_type', 'label',
+                'min', 'max', 'optional', 'value', 'fund_criteria_step_id',
+                'extra_description', 'extra_description_html',
+            ]),
+            ...$criterion->translateColumns($criterion->only([
+                'title',  'description_html', 'label', 'extra_description_html',
+            ])),
             'rules' => $criterion->fund_criterion_rules->map(fn ($criterion) => $criterion->only([
                 'record_type_key', 'operator', 'value',
             ]))->toArray(),
@@ -43,11 +47,12 @@ class FundCriterionResource extends BaseJsonResource
                 ...$criterion->record_type->only([
                     'name', 'key', 'type', 'control_type',
                 ]),
+                'name' => $criterion->record_type?->name ?: $criterion->record_type?->key,
                 'options' => $criterion->record_type->getOptions(),
             ],
             'is_valid' => $this->isValid($request, $criterion->fund, $identity),
             'has_record' => $this->hasTrustedRecord($request, $criterion->fund, $identity),
-        ]);
+        ];
     }
 
     /**
