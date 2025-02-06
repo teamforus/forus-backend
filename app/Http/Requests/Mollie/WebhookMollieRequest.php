@@ -21,8 +21,6 @@ class WebhookMollieRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return [
-            // 'id' => 'required|string',
-        ];
+        return [];
     }
 }

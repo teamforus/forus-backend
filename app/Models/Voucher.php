@@ -752,7 +752,11 @@ class Voucher extends BaseModel
      */
     public function getSourceLocaleAttribute(): string
     {
-        return trans('vouchers.source.' . ($this->employee_id ? 'employee' : 'user'));
+        if ($this->employee_id) {
+            return trans('vouchers.source.employee');
+        }
+
+        return trans('vouchers.source.user');
     }
 
     /**

@@ -37,7 +37,7 @@ class Identity2FAPolicy
     public function store(Identity $identity, string $type): Response|bool
     {
         if ($identity->auth_2fa_providers_active()->where('type', $type)->exists()) {
-            return $this->deny('You already have a connection of the same type.');
+            return $this->deny(trans('policies.2fa.same_type_exists'));
         }
 
         return true;
@@ -56,11 +56,11 @@ class Identity2FAPolicy
         ])->where('uuid', '!=', $identity2FA->uuid)->exists();
 
         if ($phoneUsed) {
-            return $this->deny('Phone number already used.');
+            return $this->deny(trans('policies.2fa.phone_exists'));
         }
 
         if (!$identity2FA->isTypePhone()) {
-            return $this->deny('Invalid provider type.');
+            return $this->deny(trans('policies.2fa.invalid_provider'));
         }
 
         return $identity->address == $identity2FA->identity_address;
@@ -83,11 +83,11 @@ class Identity2FAPolicy
         ])->where('uuid', '!=', $identity2FA->uuid)->exists();
 
         if ($phoneUsed) {
-            return $this->deny('Phone number already used.');
+            return $this->deny(trans('policies.2fa.phone_exists'));
         }
 
         if ($sameTypeExists) {
-            return $this->deny('You already have a connection of the same type.');
+            return $this->deny(trans('policies.2fa.same_type_exists'));
         }
 
         return $identity2FA->isPending() && $identity->address == $identity2FA->identity_address;
@@ -101,7 +101,7 @@ class Identity2FAPolicy
     public function authenticate(Identity $identity, Identity2FA $identity2FA): Response|bool
     {
         if (!$identity2FA->isActive()) {
-            return $this->deny('Connection is not active.');
+            return $this->deny(trans('policies.2fa.connection_not_active'));
         }
 
         return $identity->address == $identity2FA->identity_address;
@@ -115,7 +115,7 @@ class Identity2FAPolicy
     public function deactivate(Identity $identity, Identity2FA $identity2FA): Response|bool
     {
         if (!$identity2FA->isActive()) {
-            return $this->deny('Connection is not active.');
+            return $this->deny(trans('policies.2fa.connection_not_active'));
         }
 
         return $identity->address == $identity2FA->identity_address;

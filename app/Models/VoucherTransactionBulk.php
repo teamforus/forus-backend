@@ -196,11 +196,11 @@ class VoucherTransactionBulk extends BaseModel
     public function getStateLocaleAttribute(): string
     {
         return [
-            static::STATE_PENDING => 'In afwachting',
-            static::STATE_ACCEPTED => 'Geaccepteerd',
-            static::STATE_REJECTED => 'Geweigerd',
-            static::STATE_ERROR => 'Mislukt',
-            static::STATE_DRAFT => 'In voorbereiding',
+            static::STATE_PENDING => trans('states.voucher_transaction_bulks.pending'),
+            static::STATE_ACCEPTED => trans('states.voucher_transaction_bulks.accepted'),
+            static::STATE_REJECTED => trans('states.voucher_transaction_bulks.rejected'),
+            static::STATE_ERROR => trans('states.voucher_transaction_bulks.error'),
+            static::STATE_DRAFT => trans('states.voucher_transaction_bulks.draft'),
         ][$this->state] ?? $this->state;
     }
 

@@ -30,12 +30,12 @@ class FundRequestRecordPolicy
         Fund $fund,
     ): Response|bool {
         if (!$this->checkIntegrityRequester($fund, $fundRequest)) {
-            return $this->deny('fund_requests.invalid_endpoint');
+            return $this->deny(trans('policies.fund_requests.invalid_endpoint'));
         }
 
         // only fund requester is allowed to see records
         if ($fundRequest->identity_id !== $identity->id) {
-            return $this->deny('fund_requests.not_requester');
+            return $this->deny(trans('policies.fund_requests.invalid_requester'));
         }
 
         return true;
@@ -58,12 +58,12 @@ class FundRequestRecordPolicy
         Fund $fund,
     ): Response|bool {
         if (!$this->checkIntegrityRequester($fund, $request, $requestRecord)) {
-            return $this->deny('fund_requests.invalid_endpoint');
+            return $this->deny(trans('policies.fund_requests.invalid_endpoint'));
         }
 
         // only fund requester is allowed to see records
         if ($request->identity_id !== $identity->id) {
-            return $this->deny('fund_requests.not_requester');
+            return $this->deny(trans('policies.fund_requests.invalid_requester'));
         }
 
         return true;
@@ -84,11 +84,11 @@ class FundRequestRecordPolicy
         Organization $organization,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
-            return $this->deny('fund_requests.invalid_endpoint');
+            return $this->deny(trans('policies.fund_requests.invalid_endpoint'));
         }
 
         if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
-            return $this->deny('fund_requests.invalid_validator');
+            return $this->deny(trans('policies.fund_requests.invalid_validator'));
         }
 
         return true;
@@ -111,11 +111,11 @@ class FundRequestRecordPolicy
         Organization $organization,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $request, $requestRecord)) {
-            return $this->deny('fund_requests.invalid_endpoint');
+            return $this->deny(trans('policies.fund_requests.invalid_endpoint'));
         }
 
         if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
-            return $this->deny('fund_requests.invalid_validator');
+            return $this->deny(trans('policies.fund_requests.invalid_validator'));
         }
 
         return true;
@@ -138,11 +138,11 @@ class FundRequestRecordPolicy
         Organization $organization,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $request, $requestRecord)) {
-            return $this->deny('fund_requests.invalid_endpoint');
+            return $this->deny(trans('policies.fund_requests.invalid_endpoint'));
         }
 
         if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
-            return $this->deny('fund_requests.invalid_validator');
+            return $this->deny(trans('policies.fund_requests.invalid_validator'));
         }
 
         return

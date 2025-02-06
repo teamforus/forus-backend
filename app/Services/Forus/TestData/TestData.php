@@ -19,6 +19,7 @@ use App\Models\Fund;
 use App\Models\FundConfig;
 use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
+use App\Models\FundFormula;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Implementation;
@@ -659,7 +660,7 @@ class TestData
         ]] : ($configLimitMultiplier ?: []);
 
         $fundFormula = $configFormula ?: [[
-            'type' => 'fixed',
+            'type' => FundFormula::TYPE_FIXED,
             'amount' => $fund->isTypeBudget() ? $this->config('voucher_amount') : 0,
             'fund_id' => $fund->id,
         ]];

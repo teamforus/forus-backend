@@ -239,8 +239,8 @@ class RecordType extends BaseModel
     {
         if ($this->type == 'bool') {
             return [
-                ['value' => 'Ja', 'name' =>  'Ja'],
-                ['value' => 'Nee', 'name' =>  'Nee'],
+                ['value' => 'Ja', 'name' => trans('record_types.options.yes')],
+                ['value' => 'Nee', 'name' =>  trans('record_types.options.no')],
             ];
         }
 
