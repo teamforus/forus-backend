@@ -24,11 +24,9 @@ class ImplementationBlockResource extends BaseJsonResource
                 'id', 'description', 'button_link', 'button_target_blank', 'button_enabled',
                 'button_link_label', 'description_html',
             ]),
-            ...$block->translateColumns(
-                $this->isCollection()
-                    ? $block->only(['label', 'title', 'button_text'])
-                    : $block->only(['label', 'title', 'button_text', 'description_html']),
-            ),
+            ...$block->translateColumns($block->only([
+                'label', 'title', 'button_text', 'description_html',
+            ])),
             'media' => new MediaResource($block->photo),
         ];
     }

@@ -2,7 +2,9 @@
 
 namespace App\Services\TranslationService\Models;
 
+use App\Models\Announcement;
 use App\Models\Language;
+use App\Models\OrganizationReservationField;
 use Carbon\Carbon;
 use Eloquent;
 use Illuminate\Database\Eloquent\Model;
@@ -54,6 +56,16 @@ class TranslationValue extends Model
     protected $fillable = [
         'translatable_type', 'translatable_id', 'key', 'from', 'to', 'locale',
         'organization_id', 'implementation_id', 'from_length', 'to_length',
+    ];
+
+    protected static array $fieldMap = [
+        'implementation' => 'implementaties',
+        'fund' => 'fondsen',
+        'product' => 'producten',
+        'organization' => 'organisaties',
+        Announcement::class => 'aankondigingen',
+        'cms_page' => 'cms-pagina\'s',
+        OrganizationReservationField::class => 'reservering aangepaste velden',
     ];
 
     /**
@@ -163,13 +175,14 @@ class TranslationValue extends Model
         // Format the result
         $result = [
             'total' => self::formatAndCalculateCost($totalSymbols),
-            'count_per_type' => (object) [],
-            'total_per_locale' => (object) [],
-            'total_per_type_and_locale' => (object) [],
+            'count_per_type' => (object)[],
+            'total_per_locale' => (object)[],
+            'total_per_type_and_locale' => (object)[],
         ];
 
         foreach ($countPerType as $type => $symbols) {
-            $result['count_per_type']->$type = (object) self::formatAndCalculateCost($symbols);
+            $typeKey = static::$fieldMap[$type] ?? $type;
+            $result['count_per_type']->$typeKey = (object) self::formatAndCalculateCost($symbols);
         }
 
         foreach ($totalPerLocale as $locale => $symbols) {

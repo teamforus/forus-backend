@@ -325,4 +325,20 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
             'file.chunkSize' => 'required_with:file|numeric',
         ];
     }
+
+    /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        $attributes = trans('validation.attributes');
+        $attributes = is_array($attributes) ? $attributes : [];
+        $keys = [];
+
+        foreach (array_keys($attributes) as $key) {
+            $keys[$key] = trans("validation.attributes.$key");
+        }
+
+        return $keys;
+    }
 }
