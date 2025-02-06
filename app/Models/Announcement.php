@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -62,7 +63,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Announcement extends Model
 {
-    use HasMarkdownDescription, SoftDeletes;
+    use HasMarkdownDescription, SoftDeletes, HasOnDemandTranslations;
 
     /**
      * @var string[]

@@ -12,6 +12,7 @@ use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeNumericRule;
 use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeSelectNumberRule;
 use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeSelectRule;
 use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeStringRule;
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -70,6 +71,8 @@ use League\CommonMark\Exception\CommonMarkException;
  */
 class FundCriterion extends BaseModel
 {
+    use HasOnDemandTranslations;
+
     /**
      * The attributes that are mass assignable.
      *

@@ -101,6 +101,7 @@ class StoreReimbursementRequest extends BaseFormRequest
     public function attributes(): array
     {
         return [
+            ...parent::attributes(),
             'voucher_address' => 'tegoeden',
             'amount' => 'bedrag',
             'files.*' => trans('validation.attributes.file'),

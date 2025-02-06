@@ -171,7 +171,7 @@ class VoucherResource extends BaseJsonResource
                     'organization_id',
                 ]),
                 ...$voucher->product->translateColumns($voucher->product->only([
-                    'name',
+                    'name', 'description_html',
                 ])),
                 'price_locale' => $voucher->product->priceLocale(),
                 'product_category' => $voucher->product->product_category,

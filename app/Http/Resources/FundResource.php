@@ -173,20 +173,25 @@ class FundResource extends BaseJsonResource
     protected function getFundConfigData(Fund $fund, bool $isDashboard): array
     {
         return [
-            ...$fund->fund_config ? $fund->fund_config->only([
-                'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
-                'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
-                'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
-                'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
-                'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',
-                'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails',
-                'hide_meta', 'voucher_amount_visible', 'provider_products_required',
-                'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
-                'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
-                'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
-                'help_description_html', 'criteria_label_requirement_show',
-                'pre_check_excluded', 'pre_check_note',
-            ]) : [],
+            ...$fund->fund_config ? [
+                ...$fund->fund_config->only([
+                    'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+                    'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
+                    'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
+                    'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
+                    'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',
+                    'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails',
+                    'hide_meta', 'voucher_amount_visible', 'provider_products_required',
+                    'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
+                    'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
+                    'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
+                    'help_description_html', 'criteria_label_requirement_show',
+                    'pre_check_excluded', 'pre_check_note',
+                ]),
+                ...$fund->fund_config->translateColumns($fund->fund_config->only([
+                    'help_title', 'help_block_text', 'help_button_text', 'help_description_html',
+                ]))
+            ] : [],
             ...$isDashboard && $fund->fund_config ? $fund->fund_config->only([
                 'allow_custom_amounts', 'allow_preset_amounts',
                 'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
