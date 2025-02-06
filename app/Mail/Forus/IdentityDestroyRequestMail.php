@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class IdentityDestroyRequestMail extends ImplementationMail
 {
-    protected string $subjectKey = 'mails.system_mails.identity_destroy_request.title';
+    public $subject = 'Verzoek tot verwijdering van account';
 
     /**
      * @return Mailable

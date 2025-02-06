@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class FundStatisticsMail extends ImplementationMail
 {
-    protected string $subjectKey = 'mails.system_mails.fund_statistics.title';
+    public $subject = 'Totaal aantal gebruikers :sponsor_name - :fund_name';
 
     /**
      * @return Mailable

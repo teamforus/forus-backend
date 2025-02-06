@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class ProviderInvitationMail extends ImplementationMail
 {
-    protected string $subjectKey = 'mails.system_mails.provider_invitation.title';
+    public $subject = 'U wordt uitgenodigd voor :fund_name';
 
     /**
      * @return Mailable

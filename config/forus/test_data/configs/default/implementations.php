@@ -16,6 +16,9 @@ return [
             'digid_sign_up_allowed' => true,
             'informal_communication' => true,
             'allow_per_fund_notification_templates' => true,
+            'languages' => [
+                'en', 'de', 'ru', 'uk', 'ro', 'ar',
+            ],
         ],
     ],
     'Stadjerspas' => [

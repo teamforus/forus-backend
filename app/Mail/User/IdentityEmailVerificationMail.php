@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class IdentityEmailVerificationMail extends ImplementationMail
 {
-    protected string $subjectKey = 'mails.system_mails.identity_email_verification.title';
+    public $subject = 'E-mailadres bevestigen';
 
     /**
      * @return Mailable
