@@ -36,7 +36,6 @@ class ImplementationMail extends Mailable implements ShouldQueue
     protected array $mailData = [];
     protected string $globalBuilderStyles = 'text_center';
 
-    protected string $subjectKey = "";
     protected string $viewKey = "";
 
     protected ?string $preferencesLink = null;
@@ -129,7 +128,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
     public function buildBase(): Mailable
     {
         $data = $this->getTransData();
-        $subject = $this->getSubject(trans($this->subjectKey, $data));
+        $subject = $this->getSubject(trans($this->subject, $data));
 
         return $this->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
             ->with(compact('subject', 'data'))
@@ -159,18 +158,21 @@ class ImplementationMail extends Mailable implements ShouldQueue
         $data = Arr::where($data, fn ($value) => $this->dataValueIsValid($value));
 
         foreach ($data as $key => $value) {
-            if (is_null($value)) {
-                $data[$key] = '';
-            }
-
-            $data[$key] = !Str::endsWith($key, '_html') ?
-                Purifier::clean($value, Config::get('forus.mail_purifier_config')) :
-                e($value);
+            $data[$key] = Str::endsWith($key, '_html') ? $this->purifyValue($value ?: '') : e($value);
         }
 
         ksort($data);
 
         return $data;
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    protected function purifyValue(string $value): string
+    {
+        return Purifier::clean($value, Config::get('forus.purifier.purifier_mail_config'));
     }
 
     /**
@@ -251,7 +253,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
         return $this
             ->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
             ->view('emails.mail-builder-template')
-            ->subject($this->getSubject(trans($this->subjectKey, $data)));
+            ->subject($this->getSubject(str_var_replace($this->subject, $data)));
     }
 
     /**

@@ -62,9 +62,9 @@ class ImplementationPreChecksResource extends BaseJsonResource
             ]))->toArray(),
             ...$preChecks->where('default', true)->isEmpty() ? [[
                 'id' => null,
-                'title' => 'Default',
-                'title_short' => 'Default',
-                'description' => 'Default',
+                'title' => trans('fund.pre_check.default_title'),
+                'title_short' => trans('fund.pre_check.default_title_short'),
+                'description' => trans('fund.pre_check.default_description'),
                 'default' => true,
             ]] : [],
         ];

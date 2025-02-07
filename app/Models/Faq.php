@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -35,7 +36,9 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class Faq extends BaseModel
 {
-    use HasMarkdownDescription, HasMedia;
+    use HasMedia;
+    use HasMarkdownDescription;
+    use HasOnDemandTranslations;
 
     protected $table = 'faq';
 

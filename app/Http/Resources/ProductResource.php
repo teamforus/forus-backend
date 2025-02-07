@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductSubQuery;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 /**
@@ -38,7 +39,7 @@ class ProductResource extends BaseJsonResource
      * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $baseRequest = BaseFormRequest::createFrom($request);
         $product = $this->resource;
@@ -46,7 +47,6 @@ class ProductResource extends BaseJsonResource
         return array_merge($this->baseFields($product), [
             'photo' => new MediaResource($product->photo),
             'organization' => new OrganizationBasicResource($product->organization),
-            'description_html' => $product->description_html,
             'total_amount' => $product->total_amount,
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->countReservedCached(),
@@ -74,14 +74,21 @@ class ProductResource extends BaseJsonResource
      */
     protected function baseFields(Product $product): array
     {
-        return array_merge($product->only([
-            'id', 'name', 'description', 'product_category_id', 'sold_out',
-            'organization_id', 'reservation_enabled', 'reservation_policy', 'alternative_text',
-        ]), [
+        return [
+            ...$product->only([
+                'id', 'name', 'description', 'product_category_id', 'sold_out',
+                'organization_id', 'reservation_enabled', 'reservation_policy', 'alternative_text',
+                'description_html',
+            ]),
+            ...$product->translateColumns(
+                $this->isCollection()
+                    ? $product->only(['name'])
+                    : $product->only(['name', 'description_html']),
+            ),
             'price' => is_null($product->price) ? null : currency_format($product->price),
             'price_locale' => $product->price_locale,
             'organization' => $product->organization->only('id', 'name'),
-        ]);
+        ];
     }
 
     /**
@@ -126,13 +133,18 @@ class ProductResource extends BaseJsonResource
             'organization', 'logo',
         ]);
 
-        return $fundsQuery->get()->map(function(Fund $fund) use ($product, $request) {
+        return $fundsQuery->get()->map(function (Fund $fund) use ($product, $request) {
             $data = [
                 'id' => $fund->id,
-                'name' => $fund->name,
+                ...$fund->translateColumns($fund->only(['name'])),
                 'logo' => new MediaResource($fund->logo),
                 'type' => $fund->type,
-                'organization' => $fund->organization->only('id', 'name'),
+                'organization' => [
+                    ...$fund->organization->only('id'),
+                    ...$fund->organization->translateColumns($fund->organization->only([
+                        'name',
+                    ])),
+                ],
                 'end_at' => $fund->end_date?->format('Y-m-d'),
                 'end_at_locale' => format_date_locale($fund->end_date ?? null),
                 'reservations_enabled' => $product->reservationsEnabled($fund),

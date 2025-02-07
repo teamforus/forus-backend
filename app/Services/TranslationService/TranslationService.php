@@ -2,18 +2,29 @@
 
 namespace App\Services\TranslationService;
 
+use App\Models\Organization;
 use App\Services\TranslationService\Exceptions\TranslationException;
-use App\Services\TranslationService\Traits\TranslatableTrait;
+use App\Services\TranslationService\Models\TranslationValue;
+use App\Services\TranslationService\Providers\TranslationProvider;
+use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Contracts\Translatable;
+use Carbon\Carbon;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
+use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 class TranslationService
 {
     private string $sourceLanguage;
     private array $targetLanguages;
-    private TranslationProviderInterface $provider;
+    private TranslationProvider $provider;
     private TranslationConfig $config;
     private string $cachePath;
 
@@ -44,6 +55,15 @@ class TranslationService
     }
 
     /**
+     * @param string $key
+     * @return string
+     */
+    public function getTranslationsMapValue(string $key): string
+    {
+        return $this->config->getTranslationsMapValue($key);
+    }
+
+    /**
      * @return array
      */
     public function getTargetLanguages(): array
@@ -53,62 +73,92 @@ class TranslationService
 
     /**
      * @param string $provider
-     * @return TranslationProviderInterface
+     * @return TranslationProvider
      */
-    private function createProvider(string $provider): TranslationProviderInterface
+    private function createProvider(string $provider): TranslationProvider
     {
         return match ($provider) {
             'deepl' => new Providers\DeepLTranslationProvider(),
             'debug' => new Providers\DebugTranslationProvider(),
-            default => throw new \InvalidArgumentException("Unsupported translation provider: $provider"),
+            default => throw new InvalidArgumentException("Unsupported translation provider: $provider"),
         };
     }
 
     /**
-     * @param object $model The model to translate.
+     * @param Model $model The model to translate.
      * @throws TranslationException
      */
-    public function translate(object $model): void
+    public function translate(Model $model): void
     {
-        /** @var TranslatableTrait|Translatable $model */
-        $modelClass = $model::class;
-        $columns = $this->config->getColumnsForModel($modelClass);
+        $this->translateBatchModels([$model]);
+    }
 
-        if (!$columns) {
+    /**
+     * Translate a batch of models at once.
+     *
+     * @param Collection|Model[] $models The models to translate.
+     * @throws TranslationException
+     */
+    public function translateBatchModels(Collection|Arrayable $models): void
+    {
+        if ($models->isEmpty()) {
             return;
         }
 
-        $translatedModel = $model->getTranslation($this->sourceLanguage);
+        $modelClass = $models->first()::class;
+        $columns = $this->config->getColumnsForModel($modelClass);
+        $translationsToProcess = [];
 
-        foreach ($columns as $column) {
-            $sourceText = $translatedModel[$column];
-            $existing = $model->getCachedTranslation($column, $this->sourceLanguage);
-            $translatedColumns = [];
+        foreach ($models as $model) {
+            /** @var HasTranslationCaches|Translatable $model */
+            $translatedModel = $model->getTranslation($this->sourceLanguage);
 
-            // Skip if source text hasn't changed from last time
-            if ($existing && $existing === $sourceText) {
-                continue;
-            }
+            foreach ($columns as $column) {
+                $sourceText = $translatedModel[$column] ?? '';
+                $existing = $model->getCachedTranslation($column, $this->sourceLanguage);
 
-            if (!empty($sourceText)) {
-                foreach ($this->targetLanguages as $targetLanguage) {
-                    $translatedText = $this->translateText(
-                        $sourceText,
-                        $this->sourceLanguage,
-                        $targetLanguage,
-                    );
-
-                    Arr::set(
-                        $translatedColumns,
-                        $this->config->getTranslationsMapValue($targetLanguage) . '.' . $column,
-                        $translatedText,
-                    );
+                if ($existing && $existing === $sourceText) {
+                    continue;
                 }
 
+                if (!empty($sourceText)) {
+                    foreach ($this->targetLanguages as $targetLanguage) {
+                        $translationsToProcess[$targetLanguage][$model->getKey()][$column] = $sourceText;
+                    }
+                }
+            }
+        }
+
+        foreach ($translationsToProcess as $targetLanguage => $modelsToTranslate) {
+            $textBatch = [];
+
+            foreach ($modelsToTranslate as $columns) {
+                foreach ($columns as $text) {
+                    $textBatch[] = $text;
+                }
             }
 
-            $model->update($translatedColumns);
-            $model->cacheTranslation($column, $sourceText, $this->sourceLanguage);
+            $translatedTexts = $this->translateBatch($textBatch, $this->sourceLanguage, $targetLanguage);
+            $textIndex = 0;
+
+            foreach ($modelsToTranslate as $modelId => $columns) {
+                $translatedColumns = [];
+                /** @var Model|HasTranslationCaches $model */
+                $model = $models->firstWhere('id', $modelId);
+                $columnsToCache = [];
+
+                foreach ($columns as $column => $text) {
+                    $index = $textIndex++;
+                    $textValue = $translatedTexts[$index] ?? '';
+                    $sourceValue = $textBatch[$index] ?? '';
+
+                    $columnsToCache[$column] = $sourceValue;
+                    Arr::set($translatedColumns, "$targetLanguage.$column", $textValue);
+                }
+
+                $model->update($translatedColumns);
+                $model->cacheTranslations($columnsToCache, $this->sourceLanguage);
+            }
         }
     }
 
@@ -145,8 +195,7 @@ class TranslationService
     public function applyStatic(): void
     {
         foreach ($this->targetLanguages as $locale) {
-            $localeMap = $this->config->getTranslationsMapValue($locale);
-            $translationsPath = resource_path("lang/$localeMap.json");
+            $translationsPath = resource_path("lang/$locale.json");
 
             $existingTranslations = File::exists($translationsPath)
                 ? json_decode(File::get($translationsPath), true)
@@ -164,7 +213,7 @@ class TranslationService
 
         foreach ($removedKeys as $key) {
             foreach ($this->targetLanguages as $locale) {
-                $localeMap = $this->config->getTranslationsMapValue($locale);
+                $localeMap = $this->getTranslationsMapValue($locale);
                 $translationsPath = resource_path("lang/$localeMap.json");
 
                 if (File::exists($translationsPath)) {
@@ -220,7 +269,7 @@ class TranslationService
         $localePath = resource_path("lang/$locale");
 
         if (!File::exists($localePath)) {
-            throw new \RuntimeException("Translation directory for locale '$locale' not found.");
+            throw new RuntimeException("Translation directory for locale '$locale' not found.");
         }
 
         $translations = [];
@@ -300,5 +349,70 @@ class TranslationService
     public function translateText(string $text, string $sourceLocale, string $targetLocale): string
     {
         return $this->provider->translate($text, $sourceLocale, $targetLocale);
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    public function translateBatch(array $texts, string $sourceLocale, string $targetLocale): array
+    {
+        return $this->provider->translateBatch($texts, $sourceLocale, $targetLocale);
+    }
+
+    /**
+     * @return LoggerInterface
+     */
+    public function logger(): LoggerInterface
+    {
+        return Log::channel('translate-service');
+    }
+
+    /**
+     * Get the count of translations today.
+     *
+     * @param Organization $organization
+     * @return int
+     */
+    public function getTranslationsTodayCount(Organization $organization): int
+    {
+        return $this->getTranslationsCount($organization, now()->startOfDay(), now()->endOfDay());
+    }
+
+    /**
+     * Get the count of translations this week.
+     *
+     * @param Organization $organization
+     * @return int
+     */
+    public function getTranslationsThisWeekCount(Organization $organization): int
+    {
+        return $this->getTranslationsCount($organization, now()->startOfWeek(), now()->endOfWeek());
+    }
+
+    /**
+     * Get the count of translations this month.
+     *
+     * @param Organization $organization
+     * @return int
+     */
+    public function getTranslationsThisMonthCount(Organization $organization): int
+    {
+        return $this->getTranslationsCount($organization, now()->startOfMonth(), now()->endOfMonth());
+    }
+
+    /**
+     * Get the count of translations this month.
+     *
+     * @param Organization $organization
+     * @param Carbon $from
+     * @param Carbon $to
+     * @return int
+     */
+    public function getTranslationsCount(Organization $organization, Carbon $from, Carbon $to): int
+    {
+        return TranslationValue::query()
+            ->where('organization_id', $organization->id)
+            ->whereBetween('created_at', [$from, $to])
+            ->sum('from_length');
     }
 }

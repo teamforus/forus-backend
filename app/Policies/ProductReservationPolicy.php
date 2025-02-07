@@ -133,9 +133,10 @@ class ProductReservationPolicy
             return true;
         }
 
-        return $this->deny(implode(" ", [
-            "Het is op dit moment niet mogelijk om uw reservering te annuleren.",
-            "Probeer het " . now()->addSeconds($expiresIn)->diffForHumans(now()) . ".",
+        $time = now()->addSeconds($expiresIn)->diffForHumans(now());
+
+        return $this->deny(trans('policies.reservations.timeout_extra_payment', [
+            'time' => $time,
         ]));
     }
 
@@ -304,19 +305,19 @@ class ProductReservationPolicy
     public function checkoutExtraPayment(Identity $identity, ProductReservation $reservation): Response|bool
     {
         if (!$reservation->isWaiting()) {
-            return $this->deny('Reservation payment not waiting.');
+            return $this->deny(trans('policies.reservations.not_waiting'));
         }
 
         if (!$reservation->extra_payment?->payment_id) {
-            return $this->deny('Invalid reservation.');
+            return $this->deny(trans('policies.reservations.extra_payment_invalid'));
         }
 
         if ($reservation->extra_payment?->isPaid()) {
-            return $this->deny('Extra payment already paid.');
+            return $this->deny(trans('policies.reservations.extra_payment_is_paid'));
         }
 
         if ($reservation->extra_payment?->expiresIn() <= 30) {
-            return $this->deny('Checkout time expired expired.');
+            return $this->deny(trans('policies.reservations.extra_payment_time_expired'));
         }
 
         return $reservation->voucher->identity_id === $identity->id;

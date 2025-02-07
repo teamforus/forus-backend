@@ -3,6 +3,7 @@
 namespace App\Models;
 
 
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -41,6 +42,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class OrganizationReservationField extends BaseModel
 {
     use SoftDeletes;
+    use HasOnDemandTranslations;
 
     public const string TYPE_TEXT = 'text';
     public const string TYPE_NUMBER = 'number';

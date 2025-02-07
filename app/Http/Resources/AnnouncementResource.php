@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use Illuminate\Http\Request;
 use App\Models\Announcement;
 use Throwable;
 
@@ -17,10 +18,15 @@ class AnnouncementResource extends BaseJsonResource
      * @return array
      * @throws Throwable
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
-        return $this->resource->only([
-            'id', 'type', 'title', 'description_html', 'scope', 'dismissible',
-        ]);
+        return [
+            ...$this->resource->only([
+                'id', 'type', 'scope', 'dismissible',
+            ]),
+            ...$this->resource->translateColumns($this->resource->only([
+                'title', 'description_html',
+            ]))
+        ];
     }
 }

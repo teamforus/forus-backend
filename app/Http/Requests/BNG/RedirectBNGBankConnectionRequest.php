@@ -17,15 +17,15 @@ class RedirectBNGBankConnectionRequest extends BaseBNGRedirectRequest
     public function authorize(): bool
     {
         if ($this->bngBankConnectionToken->auth_params['state'] !== $this->get('state')) {
-            abort(403, 'Invalid request.');
+            abort(403, trans('requests.bng_bulk.invalid_request'));
         }
 
         if (!$this->bngBankConnectionToken->isPending()) {
-            abort(403, 'Bulk is not pending.');
+            abort(403, trans('requests.bng_bulk.not_pending'));
         }
 
         if (!$this->bngBankConnectionToken->bank->isBNG()) {
-            abort(403, 'Invalid connection type.');
+            abort(403, trans('requests.bng_bulk.invalid_connection_type'));
         }
 
         return true;

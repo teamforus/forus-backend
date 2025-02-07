@@ -41,7 +41,7 @@ class LocationData
         } else if ($this->city && !$this->country) {
             return $this->city;
         } else {
-            return "Locatie niet gedetecteerd";
+            return trans("agent.unknown");
         }
     }
 

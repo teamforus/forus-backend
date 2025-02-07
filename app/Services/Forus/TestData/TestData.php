@@ -19,9 +19,11 @@ use App\Models\Fund;
 use App\Models\FundConfig;
 use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
+use App\Models\FundFormula;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Implementation;
+use App\Models\Language;
 use App\Models\Office;
 use App\Models\Organization;
 use App\Models\Prevalidation;
@@ -510,7 +512,12 @@ class TestData
         $cgiCertData = $this->makeImplementationCgiCertData();
         $configData = $this->config("implementations.$name.implementation", []);
 
-        return Implementation::forceCreate([
+        $languages = $configData['languages'] ?? [];
+        $languages = Language::whereIn('locale', $languages)->pluck('id')->toArray();
+
+        unset($configData['languages']);
+
+        $implementation = Implementation::forceCreate([
             'key' => $key,
             'name' => $name,
             'organization_id' => $organization?->id,
@@ -522,6 +529,10 @@ class TestData
             ...$cgiCertData,
             ...$configData,
         ]);
+
+        $implementation->languages()->sync($languages);
+
+        return $implementation;
     }
 
     /**
@@ -659,7 +670,7 @@ class TestData
         ]] : ($configLimitMultiplier ?: []);
 
         $fundFormula = $configFormula ?: [[
-            'type' => 'fixed',
+            'type' => FundFormula::TYPE_FIXED,
             'amount' => $fund->isTypeBudget() ? $this->config('voucher_amount') : 0,
             'fund_id' => $fund->id,
         ]];

@@ -17,7 +17,7 @@ class UpdateNotificationPreferencesRequest extends BaseFormRequest
     public function authorize(): bool
     {
         if ($this->isAuthenticated() && !$this->identity()->email) {
-            $this->deny("You can't unsubscribe from the email notifications before you add an email first.");
+            $this->deny(trans('requests.notification_unsubscribe.email_required'));
         }
 
         return true;

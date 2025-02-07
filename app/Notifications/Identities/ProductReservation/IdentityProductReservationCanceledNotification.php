@@ -22,7 +22,7 @@ class IdentityProductReservationCanceledNotification extends BaseProductReservat
         $reservation = $this->eventLog->loggable;
         $implementation = $reservation->voucher->fund->fund_config->implementation;
         $refundedExtra = $reservation->extra_payment && $reservation->extra_payment->isFullyRefunded();
-        $transKey = 'mails/reservations.extra_payment';
+        $transKey = 'mails.reservations.extra_payment';
 
         $mailable = new ProductReservationCanceledMail([
             ...$this->eventLog->data,

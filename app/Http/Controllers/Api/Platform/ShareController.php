@@ -45,13 +45,13 @@ class ShareController extends Controller
         $this->throttleWithKey('to_many_attempts', $request, 'share_app_sms');
 
         $result = $this->smsService->sendSms(
-            trans('share/sms.me_app_download_link.messages'),
+            trans('share.sms.me_app_download_link.messages'),
             $request->input('phone')
         );
 
         return $result ? response()->json(): response()->json([
             'errors' => [
-                'phone' => (array) trans('share/sms.me_app_download_link.failed')
+                'phone' => (array) trans('share.sms.me_app_download_link.failed')
             ]
         ], 422);
     }

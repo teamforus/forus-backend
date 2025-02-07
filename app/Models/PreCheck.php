@@ -119,6 +119,9 @@ class PreCheck extends BaseModel
                     'id', 'name', 'description', 'description_short',
                     'external_link_text', 'external_link_url', 'is_external',
                 ]),
+                ...$fund->translateColumns($fund->only([
+                    'name', 'description_short', 'external_link_text',
+                ])),
                 'logo' => new MediaResource($fund->logo),
                 'parent' => $fund->parent ? new FundResource($fund->parent) : null,
                 'children' => $fund->children ? FundResource::collection($fund->children) : [],
@@ -199,14 +202,22 @@ class PreCheck extends BaseModel
     public static function getFundFormulaProducts(Fund $fund, array $records = null): array
     {
         $products = $fund->fund_formula_products->sortByDesc('product_id')->map(fn ($formula) => [
-            'record' => $formula->record_type ? $formula->record_type->name : 'Product tegoed',
-            'type' => $formula->record_type_key_multiplier ? 'Multiply' : 'Vastgesteld',
-            'name' => $formula->product->name,
-            'count' => $formula->record_type_key_multiplier ? Arr::get($records, $formula->record_type_key_multiplier) : 1,
+            'record' => $formula->record_type ?
+                $formula->record_type->name :
+                trans('fund.pre_check.product_voucher'),
+            'type' => $formula->record_type_key_multiplier ?
+                trans('fund.fund_formulas.multiply') :
+                trans('fund.fund_formulas.fixed'),
+            ...$formula->product->translateColumns($formula->product->only([
+                'name',
+            ])),
+            'count' => $formula->record_type_key_multiplier ?
+                Arr::get($records, $formula->record_type_key_multiplier) :
+                1,
         ]);
 
         $formula = $fund->fund_formulas->map(fn ($formula) => [
-            'record' => $formula->record_type ? $formula->record_type->name : 'Vastbedrag',
+            'record' => $formula->record_type ? $formula->record_type->name : trans('fund.pre_check.fixed_amount'),
             'type' => $formula->type_locale,
             'value' => $formula->amount_locale,
             'count' => $formula->record_type_key ? Arr::get($records, $formula->record_type_key) : 1,

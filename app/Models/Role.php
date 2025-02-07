@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\Translations\RoleTranslationsTrait;
-use App\Services\TranslationService\Traits\TranslatableTrait;
+use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RolePermission[] $role_permissions
  * @property-read int|null $role_permissions_count
  * @property-read \App\Models\RoleTranslation|null $translation
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationCache[] $translation_caches
+ * @property-read int|null $translation_caches_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RoleTranslation[] $translations
  * @property-read int|null $translations_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Role listsTranslations(string $translationField)
@@ -43,7 +45,7 @@ class Role extends BaseModel
 {
     use Translatable;
     use RoleTranslationsTrait;
-    use TranslatableTrait;
+    use HasTranslationCaches;
 
     protected $fillable = [
         'key'

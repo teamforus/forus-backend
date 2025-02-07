@@ -164,6 +164,8 @@ class VoucherBatchTest extends DuskTestCase
      */
     private function goToVouchersPage(Browser $browser): void
     {
+        $browser->waitFor('@asideMenuGroupVouchers');
+        $browser->element('@asideMenuGroupVouchers')->click();
         $browser->waitFor('@vouchersPage');
         $browser->element('@vouchersPage')->click();
         $browser->waitFor('@vouchersTitle');

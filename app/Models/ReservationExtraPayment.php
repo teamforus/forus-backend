@@ -181,7 +181,7 @@ class ReservationExtraPayment extends Model
      */
     public function getStateLocaleAttribute(): string
     {
-        return trans("states/reservation_extra_payments.$this->state");
+        return trans("states.reservation_extra_payments.$this->state");
     }
 
     /**

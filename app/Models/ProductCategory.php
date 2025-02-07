@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Services\TranslationService\Traits\TranslatableTrait;
+use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -33,6 +33,8 @@ use Kalnoy\Nestedset\NodeTrait;
  * @property-read int|null $products_count
  * @property-read ProductCategory|null $root_category
  * @property-read \App\Models\ProductCategoryTranslation|null $translation
+ * @property-read Collection|\App\Services\TranslationService\Models\TranslationCache[] $translation_caches
+ * @property-read int|null $translation_caches_count
  * @property-read Collection|\App\Models\ProductCategoryTranslation[] $translations
  * @property-read int|null $translations_count
  * @method static \Kalnoy\Nestedset\Collection|static[] all($columns = ['*'])
@@ -101,7 +103,7 @@ use Kalnoy\Nestedset\NodeTrait;
  */
 class ProductCategory extends BaseModel
 {
-    use Translatable, NodeTrait, TranslatableTrait;
+    use Translatable, NodeTrait, HasTranslationCaches;
 
     /**
      * The attributes that are mass assignable.
