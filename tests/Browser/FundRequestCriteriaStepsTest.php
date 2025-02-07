@@ -1,6 +1,6 @@
 <?php
 
-namespace Browser;
+namespace Tests\Browser;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
@@ -9,18 +9,18 @@ use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\RecordType;
 use App\Models\Voucher;
-use App\Services\DigIdService\Models\DigIdSession;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Facebook\WebDriver\Remote\RemoteWebElement;
 use Facebook\WebDriver\WebDriverBy;
+use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Throwable;
 
 class FundRequestCriteriaStepsTest extends DuskTestCase
 {
@@ -32,7 +32,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     use RollbackModelsTrait;
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testWebshopFundRequestControlTypes(): void
     {
@@ -319,7 +319,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testWebshopFundRequestCriteriaSteps(): void
     {
@@ -372,7 +372,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
 
         $criteria = [];
         $recordTypes = [];
-        array_walk($configs, function($config) use ($organization, &$criteria, &$recordTypes) {
+
+        array_walk($configs, function ($config) use ($organization, &$criteria, &$recordTypes) {
             $recordType = RecordType::create([
                 'key' => $config['record_key'],
                 'type' => $config['record_type'],
@@ -400,7 +401,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
         $this->rollbackModels([
             [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
             [$organization, $organization->only(['fund_request_resolve_policy'])],
-        ], function() use ($implementation, $organization, $fund, $criteria) {
+        ], function () use ($implementation, $organization, $fund, $criteria) {
             $organization->forceFill([
                 'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
             ])->save();
@@ -411,16 +412,15 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             ])->save();
 
             $this->makeFundCriteria($fund, $criteria);
-
             $this->processFundRequestTestCase($implementation, $fund, $criteria);
-        }, function() use ($fund, $recordTypes) {
+        }, function () use ($fund, $recordTypes) {
             $fund && $this->deleteFund($fund);
-            array_walk($recordTypes, fn(RecordType $recordType) => $recordType->delete());
+            array_walk($recordTypes, fn (RecordType $recordType) => $recordType->delete());
         });
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testWebshopFundRequestConditionalSteps(): void
     {
@@ -491,7 +491,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 'record_type_key' => $numberRecordTypeKey,
                 'operator' => '>',
                 'value' => 5,
-            ]]
+            ]],
         ], [
             'record_type' => 'email',
             'record_key' => token_generator()->generate(16),
@@ -506,7 +506,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 'record_type_key' => $numberRecordTypeKey,
                 'operator' => '=',
                 'value' => 15,
-            ]]
+            ]],
         ]];
 
         $implementation = Implementation::byKey('nijmegen');
@@ -523,7 +523,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
 
         $criteria = [];
         $recordTypes = [];
-        array_walk($configs, function($config) use ($organization, &$criteria, &$recordTypes) {
+
+        array_walk($configs, function ($config) use ($organization, &$criteria, &$recordTypes) {
             $recordType = RecordType::create([
                 'key' => $config['record_key'],
                 'type' => $config['record_type'],
@@ -555,7 +556,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
         $this->rollbackModels([
             [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
             [$organization, $organization->only(['fund_request_resolve_policy'])],
-        ], function() use ($implementation, $organization, $fund, $criteria) {
+        ], function () use ($implementation, $organization, $fund, $criteria) {
             $organization->forceFill([
                 'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
             ])->save();
@@ -566,190 +567,15 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             ])->save();
 
             $this->makeFundCriteria($fund, $criteria);
-
             $this->processFundRequestTestCase($implementation, $fund, $criteria);
-        }, function() use ($fund, $recordTypes) {
+        }, function () use ($fund, $recordTypes) {
             $fund && $this->deleteFund($fund);
-            array_walk($recordTypes, fn(RecordType $recordType) => $recordType->delete());
+            array_walk($recordTypes, fn (RecordType $recordType) => $recordType->delete());
         });
     }
 
     /**
-     * @throws \Throwable
-     */
-    public function testWebshopFundRequestApplyOptionsOnlyDigidOption(): void
-    {
-        $implementation = Implementation::byKey('nijmegen');
-
-        $fund = $this->makeTestFund($implementation->organization, [
-            'type' => 'budget',
-        ], [
-            'bsn_confirmation_time' => 900,
-            'bsn_confirmation_api_time' => 900,
-            'allow_fund_requests' => true,
-            'allow_prevalidations' => false,
-        ]);
-
-        $this->rollbackModels([
-            [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
-        ], function() use ($implementation, $fund) {
-            $implementation->forceFill([
-                'digid_enabled' => true,
-                'digid_required' => true,
-                'digid_connection_type' => DigIdSession::CONNECTION_TYPE_CGI,
-                'digid_app_id' => 'test',
-                'digid_shared_secret' => 'test',
-                'digid_a_select_server' => 'test',
-            ])->save();
-
-            $requester = $this->makeIdentity($this->makeUniqueEmail());
-
-            $this->browse(function (Browser $browser) use (
-                $implementation, $fund, $requester
-            ) {
-                $browser->visit($implementation->urlWebshop());
-
-                $this->loginIdentity($browser, $requester);
-                $browser->waitFor('@headerTitle');
-
-                // visit fund page and assert request button available
-                $browser->visit($implementation->urlWebshop("fondsen/$fund->id"));
-                $browser->waitFor('@fundTitle');
-                $browser->assertSeeIn('@fundTitle', $fund->name);
-
-                // assert request button available
-                $browser->waitFor('@requestButton')->click('@requestButton');
-
-                $browser->waitFor('@digidOption');
-                $browser->assertPresent('@digidOption');
-                $browser->assertMissing('@codeOption');
-                $browser->assertMissing('@requestOption');
-
-                // Logout user
-                $this->logout($browser);
-            });
-        }, function() use ($fund) {
-            $fund && $this->deleteFund($fund);
-        });
-    }
-
-    /**
-     * @throws \Throwable
-     */
-    public function testWebshopFundRequestApplyOptionsDigidAndCode(): void
-    {
-        $implementation = Implementation::byKey('nijmegen');
-
-        $fund = $this->makeTestFund($implementation->organization, [
-            'type' => 'budget',
-        ], [
-            'bsn_confirmation_time' => 900,
-            'bsn_confirmation_api_time' => 900,
-            'allow_fund_requests' => true,
-            'allow_prevalidations' => true,
-        ]);
-
-        $this->rollbackModels([
-            [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
-        ], function() use ($implementation, $fund) {
-            $implementation->forceFill([
-                'digid_enabled' => true,
-                'digid_required' => true,
-                'digid_connection_type' => DigIdSession::CONNECTION_TYPE_CGI,
-                'digid_app_id' => 'test',
-                'digid_shared_secret' => 'test',
-                'digid_a_select_server' => 'test',
-            ])->save();
-
-            $requester = $this->makeIdentity($this->makeUniqueEmail());
-
-            $this->browse(function (Browser $browser) use (
-                $implementation, $fund, $requester
-            ) {
-                $browser->visit($implementation->urlWebshop());
-
-                $this->loginIdentity($browser, $requester);
-                $browser->waitFor('@headerTitle');
-
-                // visit fund page and assert request button available
-                $browser->visit($implementation->urlWebshop("fondsen/$fund->id"));
-                $browser->waitFor('@fundTitle');
-                $browser->assertSeeIn('@fundTitle', $fund->name);
-
-                // assert request button available
-                $browser->waitFor('@requestButton')->click('@requestButton');
-
-                $browser->waitFor('@digidOption');
-                $browser->assertPresent('@digidOption');
-                $browser->assertPresent('@codeOption');
-                $browser->assertMissing('@requestOption');
-
-                // Logout user
-                $this->logout($browser);
-            });
-        }, function() use ($fund) {
-            $fund && $this->deleteFund($fund);
-        });
-    }
-
-    /**
-     * @throws \Throwable
-     */
-    public function testWebshopFundRequestApplyOptionsSelectSkippedAndUseRequestOption(): void
-    {
-        $implementation = Implementation::byKey('nijmegen');
-
-        $fund = $this->makeTestFund($implementation->organization, [
-            'type' => 'budget',
-        ], [
-            'bsn_confirmation_time' => null,
-            'bsn_confirmation_api_time' => null,
-            'allow_fund_requests' => true,
-            'allow_prevalidations' => false,
-        ]);
-
-        $this->rollbackModels([
-            [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
-        ], function() use ($implementation, $fund) {
-            $implementation->forceFill([
-                'digid_enabled' => false,
-                'digid_required' => false,
-            ])->save();
-
-            $requester = $this->makeIdentity($this->makeUniqueEmail());
-
-            $this->browse(function (Browser $browser) use (
-                $implementation, $fund, $requester
-            ) {
-                $browser->visit($implementation->urlWebshop());
-
-                $this->loginIdentity($browser, $requester);
-                $browser->waitFor('@headerTitle');
-
-                // visit fund page and assert request button available
-                $browser->visit($implementation->urlWebshop("fondsen/$fund->id"));
-                $browser->waitFor('@fundTitle');
-                $browser->assertSeeIn('@fundTitle', $fund->name);
-
-                // assert request button available
-                $browser->waitFor('@requestButton')->click('@requestButton');
-
-                $browser->assertMissing('@requestOption');
-                $browser->assertMissing('@codeOption');
-                $browser->assertMissing('@digidOption');
-
-                $browser->waitFor('@criteriaStepsOverview')->assertPresent('@criteriaStepsOverview');
-
-                // Logout user
-                $this->logout($browser);
-            });
-        }, function() use ($fund) {
-            $fund && $this->deleteFund($fund);
-        });
-    }
-
-    /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testWebshopFundRequestApplyOptionsRequestAndCode(): void
     {
@@ -766,7 +592,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
 
         $this->rollbackModels([
             [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
-        ], function() use ($implementation, $fund) {
+        ], function () use ($implementation, $fund) {
             $implementation->forceFill([
                 'digid_enabled' => false,
                 'digid_required' => false,
@@ -775,7 +601,9 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             $requester = $this->makeIdentity($this->makeUniqueEmail());
 
             $this->browse(function (Browser $browser) use (
-                $implementation, $fund, $requester
+                $implementation,
+                $requester,
+                $fund,
             ) {
                 $browser->visit($implementation->urlWebshop());
 
@@ -798,13 +626,13 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 // Logout user
                 $this->logout($browser);
             });
-        }, function() use ($fund) {
+        }, function () use ($fund) {
             $fund && $this->deleteFund($fund);
         });
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testWebshopFundRequestApplyOptionCode(): void
     {
@@ -824,7 +652,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
         $this->rollbackModels([
             [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
             [$organization, $organization->only(['fund_request_resolve_policy'])],
-        ], function() use ($implementation, $organization, $fund) {
+        ], function () use ($implementation, $organization, $fund) {
             $implementation->forceFill([
                 'digid_enabled' => false,
                 'digid_required' => false,
@@ -838,16 +666,16 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             $prevalidation = $this->makePrevalidationForTestCriteria($implementation->organization, $fund);
 
             $this->processApplyWithCodeTestCase($implementation, $fund, $prevalidation);
-        }, function() use ($fund, $now) {
+        }, function () use ($fund, $now) {
             $fund && $this->deleteFund($fund);
             RecordType::where('created_at', '>=', $now)->delete();
         });
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
-    protected function checkControlTypes(string $type, array $configs = []): void
+    protected function checkControlTypes(string $inputType, array $criteriaConfigs = []): void
     {
         $implementation = Implementation::byKey('nijmegen');
         $organization = $implementation->organization;
@@ -861,31 +689,31 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             'allow_prevalidations' => false,
         ]);
 
-        $recordTypes = collect($configs)
-            ->mapWithKeys(function($config, $control) use ($organization, $type) {
-                $types = [];
+        $recordTypes = collect($criteriaConfigs)
+            ->mapWithKeys(function ($criteriaConfigs, $controlType) use ($organization, $inputType) {
+                $operatorRecordTypes = [];
 
-                foreach ($config as $operator => $value) {
+                foreach ($criteriaConfigs as $operator => $criteriaConfig) {
                     $recordType = RecordType::create([
                         'key' => token_generator()->generate(16),
-                        'type' => $type,
+                        'type' => $inputType,
                         'criteria' => true,
-                        'control_type' => $control,
+                        'control_type' => $controlType,
                         'organization_id' => $organization->id,
                     ]);
 
-                    $recordType->record_type_options()->createMany($value['options'] ?? []);
+                    $recordType->record_type_options()->createMany($criteriaConfig['options'] ?? []);
 
-                    $types[$operator] = $recordType;
+                    $operatorRecordTypes[$operator] = $recordType;
                 }
 
-                return [$control => $types];
+                return [$controlType => $operatorRecordTypes];
             });
 
         $this->rollbackModels([
             [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
             [$organization, $organization->only(['fund_request_resolve_policy'])],
-        ], function() use ($implementation, $organization, $fund, $configs, $recordTypes) {
+        ], function () use ($implementation, $organization, $fund, $criteriaConfigs, $recordTypes) {
             $organization->forceFill([
                 'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
             ])->save();
@@ -899,34 +727,34 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
 
             /**
              * @var string $operator
-             * @var RecordType $type
+             * @var RecordType $recordType
              */
-            foreach ($recordTypes as $control => $config) {
-                foreach ($config as $operator => $type) {
-                    $config = $configs[$control][$operator];
+            foreach ($recordTypes as $controlType => $criteriaConfig) {
+                foreach ($criteriaConfig as $operator => $recordType) {
+                    $criteriaConfig = $criteriaConfigs[$controlType][$operator];
 
                     $criteria[] = [
                         'step' => null,
-                        'value' => $config['value'],
-                        'title' => "Choose item $type->key",
+                        'value' => $criteriaConfig['value'],
+                        'title' => "Choose item $recordType->key",
                         'operator' => $operator,
-                        'description' => "Choose item $type->key description",
-                        'assert_valid' => $config['assert_valid'],
-                        'assert_control' => $control,
-                        'assert_invalid' => $config['assert_invalid'] ?? null,
-                        'record_type_key' => $type->key,
+                        'description' => "Choose item $recordType->key description",
+                        'assert_valid' => $criteriaConfig['assert_valid'],
+                        'assert_control' => $controlType,
+                        'assert_invalid' => $criteriaConfig['assert_invalid'] ?? null,
+                        'record_type_key' => $recordType->key,
                         'show_attachment' => false,
                     ];
                 }
             }
 
             $this->makeFundCriteria($fund, $criteria);
-
             $this->processFundRequestTestCase($implementation, $fund, $criteria);
-        }, function() use ($fund, $recordTypes) {
+        }, function () use ($fund, $recordTypes) {
             $fund && $this->deleteFund($fund);
             $recordTypes->each(fn (array $recordTypes) => array_walk(
-                $recordTypes, fn(RecordType $recordType) => $recordType->delete()
+                $recordTypes,
+                fn (RecordType $recordType) => $recordType->delete()
             ));
         });
     }
@@ -935,8 +763,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
      * @param Implementation $implementation
      * @param Fund $fund
      * @param array $criteria
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function processFundRequestTestCase(
         Implementation $implementation,
@@ -946,7 +774,10 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
         $requester = $this->makeIdentity($this->makeUniqueEmail());
 
         $this->browse(function (Browser $browser) use (
-            $implementation, $fund, $requester, $criteria
+            $implementation,
+            $requester,
+            $criteria,
+            $fund,
         ) {
             $browser->visit($implementation->urlWebshop());
 
@@ -966,7 +797,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ->waitFor('@criteriaStepsOverview')
                 ->within('@criteriaStepsOverview', function (Browser $browser) use ($criteria) {
                     array_walk($criteria, function ($criterion) use ($browser) {
-                        $title = $criterion['step'] ? : $criterion['title'];
+                        $title = $criterion['step'] ?: $criterion['title'];
 
                         $criterion['assert_hidden_step_in_overview'] ?? false
                             ? $browser->assertDontSee($title)
@@ -992,8 +823,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param array $criteria
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function fillRequestForm(Browser $browser, array $criteria): void
     {
@@ -1002,12 +833,13 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
         $browser->within('@fundRequestForm', function (Browser $browser) use ($criteria) {
             // group criteria by steps
             $criteria = collect($criteria);
-            $singleCriteria = $criteria->whereNull('step')->map(fn($criterion) => [$criterion]);
+            $singleCriteria = $criteria->whereNull('step')->map(fn ($criterion) => [$criterion]);
             $criteriaSteps = $criteria->whereNotNull('step')->groupBy('step');
             $data = $criteriaSteps->merge($singleCriteria);
 
             foreach ($data as $step) {
-                $hiddenFields = collect($step)->filter(fn($field) => $field['assert_hidden_step'] ?? false);
+                $hiddenFields = collect($step)->filter(fn ($field) => $field['assert_hidden_step'] ?? false);
+
                 if (count($step) === count($hiddenFields)) {
                     // this step is hidden, asser don't see it and go to next step in test
                     $browser->assertDontSeeIn('.sign_up-pane-header', $step[0]['step']);
@@ -1055,8 +887,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
      * @param Browser $browser
      * @param string $selector
      * @param string|int|null $value
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function clearCustom(
         Browser $browser,
@@ -1087,10 +919,10 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
      * @param Browser $browser
      * @param string $control
      * @param string|int|null $value
-     * @return void
      * @throws TimeoutException
      * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
      * @throws \Facebook\WebDriver\Exception\NoSuchElementException
+     * @return void
      */
     protected function fillInput(Browser $browser, string $control, string|int|null $value): void
     {
@@ -1121,7 +953,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 break;
             case 'date':
                 $browser->waitFor($selector);
-                $this->clearCustom($browser,  "$selector input[type='text']");
+                $this->clearCustom($browser, "$selector input[type='text']");
                 $browser->type("$selector input[type='text']", $value);
                 break;
         }
@@ -1149,8 +981,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
      * @param Implementation $implementation
      * @param Fund $fund
      * @param Prevalidation $prevalidation
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function processApplyWithCodeTestCase(
         Implementation $implementation,
@@ -1160,7 +992,10 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
         $requester = $this->makeIdentity($this->makeUniqueEmail());
 
         $this->browse(function (Browser $browser) use (
-            $implementation, $fund, $requester, $prevalidation
+            $implementation,
+            $prevalidation,
+            $requester,
+            $fund,
         ) {
             $browser->visit($implementation->urlWebshop());
 
@@ -1212,8 +1047,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param string $title
-     * @return RemoteWebElement|null
      * @throws TimeoutException
+     * @return RemoteWebElement|null
      */
     protected function findOptionElement(Browser $browser, string $title): ?RemoteWebElement
     {
