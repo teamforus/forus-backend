@@ -6,6 +6,7 @@ use App\Helpers\Arr;
 use App\Models\Fund;
 use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
+use App\Models\FundFormula;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
@@ -91,7 +92,7 @@ trait MakesTestFunds
         ]);
 
         $fund->fund_formulas()->create([
-            'type' => 'fixed',
+            'type' => FundFormula::TYPE_FIXED,
             'amount' => 300,
         ]);
 

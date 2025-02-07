@@ -23,19 +23,19 @@ class StartDigIdRequest extends BaseFormRequest
         $isAuthRequest = $this->input('request') === 'auth';
 
         if (!$clientType || !in_array($clientType, Implementation::FRONTEND_KEYS, true)) {
-            $this->deny("Invalid client type.");
+            $this->deny(trans('requests.digid.invalid_client_type'));
         }
 
         if (!$implementation) {
-            $this->deny("Invalid implementation.");
+            $this->deny(trans('requests.digid.invalid_client_type'));
         }
 
         if (!$implementation->digidEnabled()) {
-            $this->deny("DigId not enabled for this implementation.");
+            $this->deny(trans('requests.digid.digid_not_enabled'));
         }
 
         if (!$isAuthRequest && !$isAuthenticated) {
-            $this->deny("Please sign-in first.");
+            $this->deny(trans('requests.digid.sign_in_first'));
         }
 
         return true;

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -28,6 +29,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class RecordTypeOption extends Model
 {
+    use HasOnDemandTranslations;
+
     /**
      * @return BelongsTo
      */

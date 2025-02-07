@@ -34,7 +34,7 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
         NotificationService $notificationService
     ): void {
         $mailBody = new MailBodyBuilder();
-        $mailBody->h1(trans('digests/provider_reservations.title', [
+        $mailBody->h1(trans('digests.provider_reservations.title', [
             'provider_name' => $organization->name,
         ]));
 
@@ -47,13 +47,13 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
             return;
         }
 
-        $mailBody->text(trans('digests/provider_reservations.description', [
+        $mailBody->text(trans('digests.provider_reservations.description', [
             'provider_name' => $organization->name,
         ]));
 
         $mailBody->space()->button_primary(
             Implementation::general()->url_provider,
-            trans('digests/provider_funds.dashboard_button')
+            trans('digests.provider_funds.dashboard_button')
         );
 
         $this->sendOrganizationDigest($organization, $mailBody, $notificationService);
@@ -119,7 +119,7 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
             $provider_name = $organization->name;
 
             $mailBody->text(trans_choice(
-                "digests/provider_reservations.reservations.title",
+                "digests.provider_reservations.reservations.title",
                 $count_reservations,
                 compact('count_reservations', 'provider_name', 'count_pending_reservations')
             ));
@@ -130,21 +130,21 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
                 $groups = $group->groupBy('product_reservation_state');
                 $count = count($group);
 
-                $mailBody->h5(trans("digests/provider_reservations.reservations.product_item.title", [
+                $mailBody->h5(trans("digests.provider_reservations.reservations.product_item.title", [
                     'product_name' => $group[0]['product_name'] ?? '',
                     'product_price_locale' => $group[0]['product_price_locale'] ?? '',
                 ]), ['margin_less']);
 
-                $mailBody->text(trans_choice("digests/provider_reservations.reservations.product_item.description_total", $count, [
+                $mailBody->text(trans_choice("digests.provider_reservations.reservations.product_item.description_total", $count, [
                     'count_total' => $count,
                 ]), ['strong', 'margin_less']);
 
                 $mailBody->text($groups->keys()->map(function ($state) use ($groups) {
                     $count = count($groups[$state]);
 
-                    return trans_choice("digests/provider_reservations.reservations.product_item.description", $count, [
+                    return trans_choice("digests.provider_reservations.reservations.product_item.description", $count, [
                         'count' => $count,
-                        'state' => strtolower(trans("states/product_reservations.$state")),
+                        'state' => strtolower(trans("states.product_reservations.$state")),
                     ]);
                 })->join("\n"));
             }

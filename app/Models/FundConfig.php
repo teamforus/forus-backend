@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Helpers\Markdown;
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use League\CommonMark\Exception\CommonMarkException;
 
@@ -207,6 +208,8 @@ use League\CommonMark\Exception\CommonMarkException;
  */
 class FundConfig extends BaseModel
 {
+    use HasOnDemandTranslations;
+
     public const string BACKOFFICE_INELIGIBLE_POLICY_REDIRECT = 'redirect';
     public const string BACKOFFICE_INELIGIBLE_POLICY_FUND_REQUEST = 'fund_request';
 

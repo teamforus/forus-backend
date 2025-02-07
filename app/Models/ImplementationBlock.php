@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,6 +34,8 @@ use Illuminate\Support\Facades\Config;
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read Media|null $photo
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationBlock newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationBlock newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationBlock query()
@@ -55,7 +58,9 @@ use Illuminate\Support\Facades\Config;
  */
 class ImplementationBlock extends Model
 {
-    use HasMedia, HasMarkdownDescription;
+    use HasMedia;
+    use HasMarkdownDescription;
+    use HasOnDemandTranslations;
 
     protected $casts = [
         'button_enabled' => 'bool',

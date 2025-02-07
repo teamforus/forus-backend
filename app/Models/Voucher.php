@@ -41,6 +41,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Maatwebsite\Excel\Excel as ExcelModel;
 use Maatwebsite\Excel\Facades\Excel;
@@ -742,7 +743,7 @@ class Voucher extends BaseModel
      */
     public function getStateLocaleAttribute(): string
     {
-        return trans('states/vouchers.' . $this->state);
+        return trans('states.vouchers.' . $this->state);
     }
 
     /**
@@ -751,7 +752,11 @@ class Voucher extends BaseModel
      */
     public function getSourceLocaleAttribute(): string
     {
-        return trans('vouchers.source.' . ($this->employee_id ? 'employee' : 'user'));
+        if ($this->employee_id) {
+            return trans('vouchers.source.employee');
+        }
+
+        return trans('vouchers.source.user');
     }
 
     /**
@@ -1554,17 +1559,26 @@ class Voucher extends BaseModel
     public function deactivate(
         string $note = '',
         bool $notifyByEmail = false,
-        ?Employee $employee = null
+        ?Employee $employee = null,
     ): Voucher {
-        $this->update([
-            'state' => self::STATE_DEACTIVATED,
-        ]);
+        DB::transaction(function () use ($employee, $note, $notifyByEmail) {
+            $this->update([
+                'state' => self::STATE_DEACTIVATED,
+            ]);
 
-        $this->product_reservations->each(function (ProductReservation $reservation) use ($employee) {
-            $employee ? $reservation->cancelBySponsor() : $reservation->cancelByClient();
+            foreach ($this->product_reservations as $reservation) {
+                if ($employee && $reservation->isCancelableBySponsor()) {
+                    $reservation->cancelBySponsor();
+                    continue;
+                }
+
+                if (!$employee && $reservation->isCancelableByRequester()) {
+                    $reservation->cancelByClient();
+                }
+            }
+
+            Event::dispatch(new VoucherDeactivated($this, $note, $employee, $notifyByEmail));
         });
-
-        VoucherDeactivated::dispatch($this, $note, $employee, $notifyByEmail);
 
         return $this;
     }

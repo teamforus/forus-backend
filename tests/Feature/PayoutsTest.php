@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Fund;
 use App\Models\FundAmountPreset;
 use App\Models\FundConfig;
+use App\Models\FundFormula;
 use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
@@ -276,7 +277,7 @@ class PayoutsTest extends TestCase
         $this->assertFundRequestGeneratedPayout($fundRequest);
 
         self::assertEquals(
-            $fundRequest->fund->fund_formulas->where('type', 'fixed')->sum('amount'),
+            $fundRequest->fund->fund_formulas->where('type', FundFormula::TYPE_FIXED)->sum('amount'),
             $fundRequest->vouchers[0]?->transactions[0]?->amount,
         );
     }

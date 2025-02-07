@@ -24,22 +24,24 @@ use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
-use Illuminate\Config\Repository;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * App\Models\Implementation
+ * App\Models\Implementation.
  *
  * @property int $id
  * @property int|null $organization_id
@@ -95,18 +97,22 @@ use Illuminate\Support\Facades\Gate;
  * @property string $pre_check_banner_state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
+ * @property-read EloquentCollection|\App\Models\Announcement[] $announcements_webshop
  * @property-read int|null $announcements_webshop_count
  * @property-read Media|null $banner
  * @property-read Media|null $email_logo
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
+ * @property-read EloquentCollection|\App\Models\FundConfig[] $fund_configs
  * @property-read int|null $fund_configs_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read EloquentCollection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\NotificationTemplate[] $mail_templates
+ * @property-read EloquentCollection|\App\Models\ImplementationLanguage[] $implementation_languages
+ * @property-read int|null $implementation_languages_count
+ * @property-read EloquentCollection|\App\Models\Language[] $languages
+ * @property-read int|null $languages_count
+ * @property-read EloquentCollection|\App\Models\NotificationTemplate[] $mail_templates
  * @property-read int|null $mail_templates_count
- * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
+ * @property-read EloquentCollection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\ImplementationPage|null $page_accessibility
@@ -114,16 +120,16 @@ use Illuminate\Support\Facades\Gate;
  * @property-read \App\Models\ImplementationPage|null $page_privacy
  * @property-read \App\Models\ImplementationPage|null $page_provider
  * @property-read \App\Models\ImplementationPage|null $page_terms_and_conditions
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages
+ * @property-read EloquentCollection|\App\Models\ImplementationPage[] $pages
  * @property-read int|null $pages_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages_public
+ * @property-read EloquentCollection|\App\Models\ImplementationPage[] $pages_public
  * @property-read int|null $pages_public_count
  * @property-read Media|null $pre_check_banner
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PreCheck[] $pre_checks
+ * @property-read EloquentCollection|\App\Models\PreCheck[] $pre_checks
  * @property-read int|null $pre_checks_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PreCheckRecord[] $pre_checks_records
+ * @property-read EloquentCollection|\App\Models\PreCheckRecord[] $pre_checks_records
  * @property-read int|null $pre_checks_records_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationSocialMedia[] $social_medias
+ * @property-read EloquentCollection|\App\Models\ImplementationSocialMedia[] $social_medias
  * @property-read int|null $social_medias_count
  * @method static Builder<static>|Implementation newModelQuery()
  * @method static Builder<static>|Implementation newQuery()
@@ -186,7 +192,7 @@ use Illuminate\Support\Facades\Gate;
  */
 class Implementation extends BaseModel
 {
-    use HasMedia, HasMarkdownDescription, ValidatesValues;
+    use HasMedia, HasMarkdownDescription, ValidatesValues, HasOnDemandTranslations;
 
     public const string KEY_GENERAL = 'general';
 
@@ -432,11 +438,37 @@ class Implementation extends BaseModel
     }
 
     /**
+     * Define a one-to-many relationship with ImplementationLanguage.
+     *
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function implementation_languages(): HasMany
+    {
+        return $this->hasMany(ImplementationLanguage::class);
+    }
+
+    /**
+     * Define a many-to-many relationship with Language through the pivot table.
+     *
+     * @return BelongsToMany
+     */
+    public function languages(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Language::class,
+            'implementation_languages',
+            'implementation_id',
+            'language_id',
+        );
+    }
+
+    /**
      * @return array|string|null
      */
     public static function activeKey(): array|string|null
     {
-        return request()->header('Client-Key', self::KEY_GENERAL);
+        return BaseFormRequest::createFromBase(request())->implementation_key();
     }
 
     /**
@@ -694,80 +726,107 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @param string $value
-     * @return array|Repository|Application|mixed|void
+     * @param string $configKey
+     * @return array
      */
-    public static function platformConfig(string $value)
+    public static function platformConfig(string $configKey): array
     {
         if (!self::isValidKey(self::activeKey())) {
             abort(403, 'unknown_implementation_key');
         }
 
-        $ver = request()->input('ver');
+        $config = match ($configKey) {
+            'ios' => Config::get('forus.features.ios'),
+            'me_app' => Config::get('forus.features.me_app'),
+            'website' => Config::get('forus.features.website'),
+            'webshop' => Config::get('forus.features.webshop'),
+            'android' => Config::get('forus.features.android'),
+            'dashboard' => Config::get('forus.features.dashboard'),
+            default => null,
+        };
 
-        if ($ver && self::validateValueStatic($ver, 'alpha_num')->fails()) {
-            abort(403);
+        if (!is_array($config)) {
+            return [];
         }
 
-        $config = config('forus.features.' . $value . ($ver ? '.' . $ver : ''));
+        $implementation = self::active() ?? abort(403);
+        $banner = $implementation->banner;
+        $request = BaseFormRequest::createFromBase(request());
+        $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
 
-        if (is_array($config)) {
-            $implementation = self::active() ?? abort(403);
-            $banner = $implementation->banner;
-            $request = BaseFormRequest::createFromBase(request());
-            $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
-
-            $config = array_merge($config, [
-                'media' => self::getPlatformMediaConfig(),
-                'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
-                'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
-                'has_reimbursements' => $implementation->hasReimbursements(),
-                'has_payouts' => $implementation->hasPayouts(),
-                'announcements' => AnnouncementResource::collection((new AnnouncementSearch([
-                    'client_type' => $request->client_type(),
-                    'implementation_id' => $implementation->id,
-                ]))->query()->get())->toArray($request),
-                'digid' => $implementation->digidEnabled(),
-                'digid_sign_up_allowed' => $implementation->digid_sign_up_allowed,
-                'digid_mandatory' => $implementation->digid_required ?? true,
-                'digid_api_url' => rtrim($implementation->digid_forus_api_url ?: url('/'), '/') . '/api/v1',
-                'communication_type' => $implementation->communicationType(),
-                'settings' => array_merge($implementation->only([
-                    'title', 'description', 'description_alignment', 'description_html',
-                    'overlay_enabled', 'overlay_type',
-                ]), [
-                    'overlay_opacity' => min(max($implementation->overlay_opacity, 0), 100) / 100,
-                    'banner_text_color' => $implementation->getBannerTextColor(),
-                ]),
-                'fronts' => [
-                    ...$implementation->only([
-                        'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app',
-                    ]),
-                    'url_sponsor_sign_up' => $implementation->urlSponsorDashboard('aanmelden'),
-                    'url_provider_sign_up' => $implementation->urlProviderDashboard('aanmelden'),
-                    'url_validator_sign_up' => $implementation->urlValidatorDashboard('aanmelden'),
-                ],
-                'map' => $implementation->only('lon', 'lat'),
-                'banner' => $banner ? array_only((new MediaResource($banner))->toArray(request()), [
-                    'dominant_color', 'ext', 'sizes', 'uid', 'is_bright',
-                ]): null,
-                'implementation_name' => $implementation->name,
-                'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
-                'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
-                // 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
-                'pages' => Arr::keyBy($pages, 'page_type'),
-                'social_medias' => $implementation->social_medias->map(fn (ImplementationSocialMedia $media) => $media->only([
-                    'url', 'type', 'title',
-                ])),
-                ...$implementation->isGeneral() ? [] : $implementation->getPreCheckFields(),
+        return [
+            ...$config,
+            'media' => self::getPlatformMediaConfig(),
+            'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
+            'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
+            'has_reimbursements' => $implementation->hasReimbursements(),
+            'has_payouts' => $implementation->hasPayouts(),
+            'announcements' => AnnouncementResource::collection((new AnnouncementSearch([
+                'client_type' => $request->client_type(),
+                'implementation_id' => $implementation->id,
+            ]))->query()->get())->toArray($request),
+            'digid' => $implementation->digidEnabled(),
+            'digid_sign_up_allowed' => $implementation->digid_sign_up_allowed,
+            'digid_mandatory' => $implementation->digid_required ?? true,
+            'digid_api_url' => rtrim($implementation->digid_forus_api_url ?: url('/'), '/') . '/api/v1',
+            'communication_type' => $implementation->communicationType(),
+            'settings' => [
                 ...$implementation->only([
-                    'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
-                    'show_office_map', 'show_voucher_map', 'show_product_map', 'page_title_suffix',
-                ])
-            ]);
+                    'description', 'description_alignment', 'overlay_enabled', 'overlay_type',
+                ]),
+                ...$implementation->translateColumns($implementation->only([
+                    'title', 'description_html',
+                ])),
+                'overlay_opacity' => min(max($implementation->overlay_opacity, 0), 100) / 100,
+                'banner_text_color' => $implementation->getBannerTextColor(),
+            ],
+            'fronts' => [
+                ...$implementation->only([
+                    'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app',
+                ]),
+                'url_sponsor_sign_up' => $implementation->urlSponsorDashboard('aanmelden'),
+                'url_provider_sign_up' => $implementation->urlProviderDashboard('aanmelden'),
+                'url_validator_sign_up' => $implementation->urlValidatorDashboard('aanmelden'),
+            ],
+            'map' => $implementation->only('lon', 'lat'),
+            'banner' => $banner ? array_only((new MediaResource($banner))->toArray(request()), [
+                'dominant_color', 'ext', 'sizes', 'uid', 'is_bright',
+            ]) : null,
+            'languages' => $implementation->getAvailableLanguages(),
+            'implementation' => $implementation->translateColumns($implementation->only([
+                'name'
+            ])),
+            'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
+            'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
+            // 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
+            'pages' => Arr::keyBy($pages, 'page_type'),
+            'social_medias' => $implementation->social_medias->map(fn (ImplementationSocialMedia $media) => $media->only([
+                'url', 'type', 'title',
+            ])),
+            ...$implementation->isGeneral() ? [] : $implementation->getPreCheckFields(),
+            ...$implementation->only([
+                'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
+                'show_office_map', 'show_voucher_map', 'show_product_map', 'page_title_suffix',
+            ]),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function getAvailableLanguages(): array
+    {
+        $languages = Language::getAllLanguages();
+
+        if (!$this->organization?->allow_translations || !$this?->organization->translations_enabled) {
+            return $languages->where('base', true)->values()->toArray();
         }
 
-        return $config ?: [];
+        return $languages->filter(function (Language $language) {
+            return $language->base || $this->languages->contains('id', $language->id);
+        })->map(fn (Language $language) => $language->only([
+            'id', 'locale', 'name', 'base',
+        ]))->values()->toArray();
     }
 
     /**
@@ -1014,14 +1073,19 @@ class Implementation extends BaseModel
     {
         return [
             'pre_check_banner' => new MediaResource($this->pre_check_banner),
-            ...$this->only([
-                'pre_check_enabled', 'pre_check_title', 'pre_check_description',
-                'pre_check_banner_state', 'pre_check_banner_title', 'pre_check_banner_description',
-                'pre_check_banner_label',
-            ]),
+            'pre_check_enabled' => $this->pre_check_enabled,
+            'pre_check_banner_state' => $this->pre_check_banner_state,
+            ...$this->translateColumns($this->only([
+                'pre_check_title', 'pre_check_description', 'pre_check_banner_title',
+                'pre_check_banner_description', 'pre_check_banner_label',
+            ])),
         ];
     }
 
+    /**
+     * @param array $pre_checks
+     * @return void
+     */
     public function syncPreChecks(array $pre_checks): void
     {
         $this->pre_checks()

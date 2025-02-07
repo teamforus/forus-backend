@@ -265,7 +265,6 @@ class ReimbursementTest extends DuskTestCase
      * @throws TimeOutException
      */
     private function goToReimbursementsPage(Browser $browser) : void {
-        $browser->pause(100);
         $browser->waitFor('@userVouchers');
         $browser->press('@userVouchers');
         $browser->waitFor('@menuBtnReimbursements');
@@ -415,6 +414,8 @@ class ReimbursementTest extends DuskTestCase
         $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
         $this->selectDashboardOrganization($browser, $organization);
 
+        $browser->waitFor('@asideMenuGroupVouchers');
+        $browser->element('@asideMenuGroupVouchers')->click();
         $browser->waitFor('@reimbursementsPage');
         $browser->element('@reimbursementsPage')->click();
     }
