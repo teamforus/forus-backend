@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations;
 
+use App\Models\Language;
 use App\Rules\MediaUidRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -35,6 +36,8 @@ class UpdateImplementationCmsRequest extends FormRequest
             'overlay_opacity' => 'nullable|numeric|min:0|max:100',
             'header_text_color' => 'nullable|in:bright,dark,auto',
             'page_title_suffix' => 'nullable|string|max:60',
+            'languages' => 'array',
+            'languages.*' => 'required|in:' . Language::getAllLanguages()->pluck('id')->join(','),
         ], $this->announcementsRules(), $this->showBlockFlags());
     }
 

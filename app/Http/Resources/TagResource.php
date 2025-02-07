@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Tag;
+use Illuminate\Http\Request;
 
 /**
  * @property Tag $resource
@@ -15,10 +16,16 @@ class TagResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
-        return $this->resource->only([
-            'id', 'name', 'key',
-        ]);
+        $tag = $this->resource;
+
+        return [
+            'id' => $tag->id,
+            'key' => $tag->key,
+            ...$tag->translateColumns($tag->only([
+                'name',
+            ])),
+        ];
     }
 }

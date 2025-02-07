@@ -6,6 +6,7 @@ use App\Models\Identity;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
+use Illuminate\Http\Request;
 
 /**
  * @property ProductReservation $resource
@@ -29,7 +30,7 @@ class ProductReservationResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $reservation = $this->resource;
         $voucher = $this->resource->voucher;
@@ -65,13 +66,22 @@ class ProductReservationResource extends BaseJsonResource
             'acceptable' => $reservation->isAcceptable(),
             'rejectable' => $reservation->isCancelableByProvider(),
             'archivable' => $reservation->isArchivable(),
-            'product' => array_merge($reservation->product->only('id', 'name', 'organization_id'), [
+            'product' => [
+                'id' => $reservation->product->id,
+                ...$reservation->product->translateColumns($reservation->product->only('name')),
                 'deleted' => $reservation->product->trashed(),
-                'organization' => $reservation->product->organization->only('id', 'name'),
+                'organization_id' => $reservation->product->organization_id,
+                'organization' => [
+                    'id' => $reservation->product->organization->id,
+                    ...$reservation->product->organization->translateColumns(
+                        $reservation->product->organization->only('name'),
+                    ),
+                ],
                 'photo' => new MediaResource($reservation->product->photo),
-            ]),
+            ],
             'fund' => [
-                ...$voucher->fund->only('id', 'name'),
+                'id' => $voucher->fund->id,
+                ...$voucher->fund->translateColumns($voucher->fund->only('name')),
                 'organization' => $voucher->fund->organization->only('id', 'name'),
             ],
             'voucher_transaction' => $transaction?->only('id', 'address'),

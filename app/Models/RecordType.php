@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\Translations\RecordTranslationsTrait;
-use App\Services\TranslationService\Traits\TranslatableTrait;
+use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -33,6 +33,8 @@ use Illuminate\Support\Arr;
  * @property-read Collection|\App\Models\RecordTypeOption[] $record_type_options
  * @property-read int|null $record_type_options_count
  * @property-read \App\Models\RecordTypeTranslation|null $translation
+ * @property-read Collection|\App\Services\TranslationService\Models\TranslationCache[] $translation_caches
+ * @property-read int|null $translation_caches_count
  * @property-read Collection|\App\Models\RecordTypeTranslation[] $translations
  * @property-read int|null $translations_count
  * @method static Builder<static>|RecordType listsTranslations(string $translationField)
@@ -63,7 +65,7 @@ use Illuminate\Support\Arr;
  */
 class RecordType extends BaseModel
 {
-    use Translatable, RecordTranslationsTrait, TranslatableTrait;
+    use Translatable, RecordTranslationsTrait, HasTranslationCaches;
 
     public const string TYPE_BOOL = 'bool';
     public const string TYPE_IBAN = 'iban';
@@ -237,14 +239,15 @@ class RecordType extends BaseModel
     {
         if ($this->type == 'bool') {
             return [
-                ['value' => 'Ja', 'name' =>  'Ja'],
-                ['value' => 'Nee', 'name' =>  'Nee'],
+                ['value' => 'Ja', 'name' => trans('record_types.options.yes')],
+                ['value' => 'Nee', 'name' =>  trans('record_types.options.no')],
             ];
         }
 
         return $this->record_type_options->map(fn (RecordTypeOption $option) => [
             'value' => $option->value,
             'name' => $option->name,
+            ...$option->translateColumns($option->only('name')),
         ])->toArray();
     }
 }

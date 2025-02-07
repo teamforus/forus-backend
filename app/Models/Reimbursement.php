@@ -240,10 +240,10 @@ class Reimbursement extends Model
     public function getStateLocaleAttribute(): string
     {
         return [
-            self::STATE_DRAFT => 'Nog niet ingediend',
-            self::STATE_PENDING => 'In afwachting',
-            self::STATE_APPROVED => 'Uitbetaald',
-            self::STATE_DECLINED => 'Afgewezen',
+            self::STATE_DRAFT => trans('states.reimbursements.draft'),
+            self::STATE_PENDING => trans('states.reimbursements.pending'),
+            self::STATE_APPROVED => trans('states.reimbursements.approved'),
+            self::STATE_DECLINED => trans('states.reimbursements.declined'),
         ][$this->state] ?? '';
     }
 

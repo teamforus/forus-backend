@@ -24,6 +24,7 @@ use App\Services\Forus\Notification\EmailFrom;
 use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -152,6 +153,8 @@ use Illuminate\Support\Facades\Log;
  * @property-read int|null $top_up_transactions_count
  * @property-read Collection|\App\Models\FundTopUp[] $top_ups
  * @property-read int|null $top_ups_count
+ * @property-read Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
@@ -190,7 +193,13 @@ use Illuminate\Support\Facades\Log;
  */
 class Fund extends BaseModel
 {
-    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, HasFaq;
+    use HasFaq;
+    use HasLogs;
+    use HasTags;
+    use HasMedia;
+    use HasDigests;
+    use HasMarkdownDescription;
+    use HasOnDemandTranslations;
 
     public const string EVENT_CREATED = 'created';
     public const string EVENT_UPDATED = 'updated';
@@ -703,9 +712,9 @@ class Fund extends BaseModel
     public function getTypeLocaleAttribute(): string
     {
         return [
-            self::TYPE_SUBSIDIES => 'Acties',
-            self::TYPE_EXTERNAL => 'External',
-            self::TYPE_BUDGET => 'Budget',
+            self::TYPE_SUBSIDIES => trans('fund.types.subsidies'),
+            self::TYPE_EXTERNAL => trans('fund.types.external'),
+            self::TYPE_BUDGET => trans('fund.types.budget'),
         ][$this->type] ?? $this->type;
     }
 
@@ -1031,8 +1040,8 @@ class Fund extends BaseModel
 
         return $this->fund_formulas->map(function(FundFormula $formula) use ($identity, $records) {
             switch ($formula->type) {
-                case 'fixed': return $formula->amount;
-                case 'multiply': {
+                case FundFormula::TYPE_FIXED: return $formula->amount;
+                case FundFormula::TYPE_MULTIPLY: {
                     if ($records) {
                         $value = $records[$formula->record_type_key] ?? null;
                     } else {
@@ -1082,7 +1091,7 @@ class Fund extends BaseModel
         }
 
         if ($fundFormula->filter(static function (FundFormula $formula){
-            return $formula->type !== 'fixed';
+            return $formula->type !== FundFormula::TYPE_FIXED;
         })->count()) {
             return null;
         }
@@ -1109,7 +1118,7 @@ class Fund extends BaseModel
                 ?->toArray() ?? [];
 
         $formulaKeys = $this->fund_formulas
-            ?->where('type', 'multiply')
+            ?->where('type', FundFormula::TYPE_MULTIPLY)
             ?->pluck('record_type_key')
             ?->toArray() ?? [];
 

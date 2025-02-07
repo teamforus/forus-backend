@@ -38,7 +38,7 @@ class SponsorVoucherRecordResource extends BaseJsonResource
             'value_locale', 'voucher_id',
         ]), [
             'record_type_key' => $voucherRecord->record_type?->key,
-            'record_type_name' => $voucherRecord->record_type?->name,
+            'record_type_name' => $voucherRecord->record_type?->name ?: $voucherRecord->record_type?->key,
         ]);
 
         $sponsorData = array_merge($voucherRecord->only([

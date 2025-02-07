@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class FeedbackFormMail extends ImplementationMail
 {
-    protected string $subjectKey = 'mails/system_mails.feedback_form.title';
+    public $subject = 'New feedback from customer :customer_email';
 
     /**
      * @return Mailable

@@ -19,12 +19,15 @@ class ImplementationBlockResource extends BaseJsonResource
     {
         $block = $this->resource;
 
-        return array_merge($block->only([
-            'id', 'label', 'title', 'description', 'description_html',
-            'button_text', 'button_link', 'button_target_blank', 'button_enabled',
-            'button_link_label'
-        ]), [
+        return [
+            ...$block->only([
+                'id', 'description', 'button_link', 'button_target_blank', 'button_enabled',
+                'button_link_label', 'description_html',
+            ]),
+            ...$block->translateColumns($block->only([
+                'label', 'title', 'button_text', 'description_html',
+            ])),
             'media' => new MediaResource($block->photo),
-        ]);
+        ];
     }
 }

@@ -12,4 +12,20 @@ return [
         'Wij verzoeken je om je contactgegevens te vermelden, zodat we je eenvoudig kunnen bereiken.',
         'Indien we tijdens de beoordeling aanvullende informatie nodig hebben, zullen we via de opgegeven contactgegevens contact met je opnemen.',
     ]),
+    'types' => [
+        'subsidies' => 'Acties',
+        'external' => 'External',
+        'budget' => 'Budget',
+    ],
+    'fund_formulas' => [
+        'fixed' => 'Vastgesteld',
+        'multiply' => 'Multiply',
+    ],
+    'pre_check' => [
+        'fixed_amount' => 'Vastbedrag',
+        'product_voucher' => 'Product tegoed',
+        'default_title' => 'Default',
+        'default_title_short' => 'Default',
+        'default_description' => 'Default',
+    ]
 ];

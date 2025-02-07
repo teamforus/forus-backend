@@ -64,7 +64,7 @@ $router->group([], static function() use ($router) {
     ]);
 
     $router->post('pre-checks/calculate', 'Api\Platform\PreCheckController@calculateTotals');
-    $router->post('pre-checks/download-pdf', 'Api\Platform\PreCheckController@downloadPDF');
+    $router->post('pre-checks/download-pdf', 'Api\Platform\PreCheckController@downloadPDF')->name('pre-check.download-pdf');
 
     $router->resource('pre-checks', "Api\Platform\PreCheckController")
         ->only('index');
@@ -81,7 +81,7 @@ $router->group([], static function() use ($router) {
         ->only('show');
 
     $router->get(
-        'config/{platform_config}',
+        'config/{type}',
         'Api\Platform\ConfigController@getConfig'
     );
 

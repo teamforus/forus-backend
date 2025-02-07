@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Fund;
+use App\Models\FundFormula;
 use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\Organization;
@@ -80,7 +81,7 @@ class FundRequestTest extends TestCase
 
         $fund->fund_formulas()->delete();
         $fund->fund_formulas()->create([
-            'type' => 'fixed',
+            'type' => FundFormula::TYPE_FIXED,
             'amount' => 10,
         ]);
 
@@ -108,7 +109,7 @@ class FundRequestTest extends TestCase
 
         $fund->fund_formulas()->delete();
         $fund->fund_formulas()->create([
-            'type' => 'fixed',
+            'type' => FundFormula::TYPE_FIXED,
             'amount' => 10,
         ]);
 

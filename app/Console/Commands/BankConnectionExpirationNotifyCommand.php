@@ -73,10 +73,10 @@ class BankConnectionExpirationNotifyCommand extends Command
             'dismissible' => false,
             'scope' => 'sponsor',
             'active' => true,
-            'title' => trans('notifications/notifications_bank_connections.announcement.title', [
+            'title' => trans('notifications.notifications_bank_connections.announcement.title', [
                 'expire_at_locale' => format_date_locale($connection->expire_at),
             ]),
-            'description' => trans('notifications/notifications_bank_connections.announcement.description', [
+            'description' => trans('notifications.notifications_bank_connections.announcement.description', [
                 'expire_at_locale' => format_date_locale($connection->expire_at),
             ]),
         ]));

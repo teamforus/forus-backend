@@ -16,6 +16,7 @@ use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -94,6 +95,8 @@ use Illuminate\Support\Arr;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservation[] $product_reservations_pending
  * @property-read int|null $product_reservations_pending_count
  * @property-read \App\Models\Organization|null $sponsor_organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
@@ -136,7 +139,12 @@ use Illuminate\Support\Arr;
  */
 class Product extends BaseModel
 {
-    use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription, HasBookmarks;
+    use HasLogs;
+    use HasMedia;
+    use SoftDeletes;
+    use HasBookmarks;
+    use HasMarkdownDescription;
+    use HasOnDemandTranslations;
 
     public const string EVENT_CREATED = 'created';
     public const string EVENT_SOLD_OUT = 'sold_out';
@@ -716,10 +724,10 @@ class Product extends BaseModel
     {
         switch ($this->price_type) {
             case self::PRICE_TYPE_REGULAR: return currency_format_locale($this->price);
-            case self::PRICE_TYPE_FREE: return 'Gratis';
+            case self::PRICE_TYPE_FREE: return trans('prices.free');
             case self::PRICE_TYPE_DISCOUNT_FIXED:
             case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
-                return 'Korting: ' . $this->price_discount_locale;
+                return trans('prices.discount', ['amount' => $this->price_discount_locale]);
             }
         }
 

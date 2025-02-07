@@ -77,7 +77,7 @@ class FundRequestPersonArrResource extends JsonResource
         }
 
         return array_reduce(array_keys($baseFields), fn($arr, $key) => array_merge($arr, [[
-            'label' => trans_fb("iconnect/person_fields.$key", $key),
+            'label' => trans_fb("iconnect.person_fields.$key", $key),
             'value' => $baseFields[$key],
         ]]), []);
     }

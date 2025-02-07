@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Implementation;
 use Closure;
 use Illuminate\Http\JsonResponse;
@@ -29,12 +30,21 @@ class ImplementationKeyMiddleware
             return $next($request);
         }
 
-        if (Implementation::implementationKeysAvailable()->search(Implementation::activeKey()) === false) {
+        if (Implementation::implementationKeysAvailable()->search($this->implementationKey($request)) === false) {
             return new JsonResponse([
                 "message" => 'unknown_implementation_key',
             ], 403);
         }
 
         return $next($request);
+    }
+
+    /**
+     * @param Request $request
+     * @return string|null
+     */
+    public function implementationKey(Request $request):? string
+    {
+        return BaseFormRequest::createFromBase($request)?->implementation_key();
     }
 }

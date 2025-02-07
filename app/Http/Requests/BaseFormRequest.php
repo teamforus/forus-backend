@@ -37,7 +37,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @throws AuthorizationException
      * @noinspection PhpUnused
      */
-    public function deny(string $message = 'This action is unauthorized.'): void
+    public function deny(string $message): void
     {
         $this->message = $message;
         $this->failedAuthorization();
@@ -97,7 +97,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      */
     public function implementation_key(): ?string
     {
-        return Implementation::activeKey();
+        return $this->header('Client-Key', Implementation::KEY_GENERAL);
     }
 
     /**
@@ -105,11 +105,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      */
     public function implementation(): ?Implementation
     {
-        if ($this->implementationModel) {
-            return $this->implementationModel;
-        }
-
-        return $this->implementationModel = Implementation::active();
+        return Implementation::findAndMemo($this->implementation_key());
     }
 
     /**
@@ -328,5 +324,21 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
             'file.chunks' => 'required_with:file|numeric',
             'file.chunkSize' => 'required_with:file|numeric',
         ];
+    }
+
+    /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        $attributes = trans('validation.attributes');
+        $attributes = is_array($attributes) ? $attributes : [];
+        $keys = [];
+
+        foreach (array_keys($attributes) as $key) {
+            $keys[$key] = trans("validation.attributes.$key");
+        }
+
+        return $keys;
     }
 }

@@ -7,19 +7,26 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Announcement;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
+use Illuminate\Http\Request;
 use League\CommonMark\Exception\CommonMarkException;
 
 class ImplementationPrivateResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'pages',
+        'banner',
+        'languages',
+    ];
+
     /**
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return ?array
      * @throws CommonMarkException
+     * @return ?array
      * @property Implementation $resource
      */
-    public function toArray($request): ?array
+    public function toArray(Request $request): ?array
     {
         $request = BaseFormRequest::createFrom($request);
 
@@ -27,7 +34,7 @@ class ImplementationPrivateResource extends BaseJsonResource
         if (is_null($implementation = $this->resource)) {
             return null;
         }
-      
+
         $data = [
             ...$implementation->only([
                 'id', 'key', 'name', 'url_webshop', 'title', 'organization_id',
@@ -47,6 +54,7 @@ class ImplementationPrivateResource extends BaseJsonResource
             'banner' => new MediaResource($implementation->banner),
             'pre_check_banner' => new MediaResource($implementation->pre_check_banner),
             'announcement' => $this->getAnnouncement($implementation),
+            'languages' => LanguageResource::collection($implementation->languages),
         ];
 
         $data = array_merge($data, [

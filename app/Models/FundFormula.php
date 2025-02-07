@@ -32,6 +32,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class FundFormula extends BaseModel
 {
+    public const string TYPE_FIXED = 'fixed';
+    public const string TYPE_MULTIPLY = 'multiply';
+
     protected $fillable = [
         'id', 'fund_id', 'type', 'amount', 'record_type_key',
     ];
@@ -51,7 +54,11 @@ class FundFormula extends BaseModel
      */
     public function getTypeLocaleAttribute(): ?string
     {
-        return $this->type === 'fixed' ? 'Vastgesteld' : 'Multiply';
+        return match ($this->type) {
+            self::TYPE_FIXED => trans('fund.fund_formulas.fixed'),
+            self::TYPE_MULTIPLY=> trans('fund.fund_formulas.multiply'),
+            default => $this->type,
+        };
     }
 
     /**
