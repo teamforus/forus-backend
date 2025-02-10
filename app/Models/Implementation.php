@@ -74,6 +74,8 @@ use Illuminate\Support\Facades\Gate;
  * @property bool $show_office_map
  * @property bool $show_voucher_map
  * @property bool $show_product_map
+ * @property bool $show_privacy_checkbox
+ * @property bool $show_terms_checkbox
  * @property bool $allow_per_fund_notification_templates
  * @property bool $digid_enabled
  * @property bool $digid_required
@@ -177,9 +179,11 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation whereShowHomeMap($value)
  * @method static Builder<static>|Implementation whereShowHomeProducts($value)
  * @method static Builder<static>|Implementation whereShowOfficeMap($value)
+ * @method static Builder<static>|Implementation whereShowPrivacyCheckbox($value)
  * @method static Builder<static>|Implementation whereShowProductMap($value)
  * @method static Builder<static>|Implementation whereShowProviderMap($value)
  * @method static Builder<static>|Implementation whereShowProvidersMap($value)
+ * @method static Builder<static>|Implementation whereShowTermsCheckbox($value)
  * @method static Builder<static>|Implementation whereShowVoucherMap($value)
  * @method static Builder<static>|Implementation whereTitle($value)
  * @method static Builder<static>|Implementation whereUpdatedAt($value)
@@ -234,7 +238,7 @@ class Implementation extends BaseModel
         'digid_cgi_tls_key', 'digid_cgi_tls_cert',
         'pre_check_enabled', 'pre_check_title', 'pre_check_banner_state', 'pre_check_banner_title',
         'pre_check_description', 'pre_check_banner_description', 'pre_check_banner_label',
-        'page_title_suffix',
+        'page_title_suffix', 'show_privacy_checkbox', 'show_terms_checkbox',
     ];
 
     /**
@@ -268,6 +272,8 @@ class Implementation extends BaseModel
         'allow_per_fund_notification_templates' => 'boolean',
         'currency_round' => 'boolean',
         'pre_check_enabled' => 'boolean',
+        'show_privacy_checkbox' => 'boolean',
+        'show_terms_checkbox' => 'boolean',
     ];
 
     /**
@@ -807,6 +813,7 @@ class Implementation extends BaseModel
             ...$implementation->only([
                 'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
                 'show_office_map', 'show_voucher_map', 'show_product_map', 'page_title_suffix',
+                'show_privacy_checkbox', 'show_terms_checkbox',
             ]),
         ];
     }
