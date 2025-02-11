@@ -47,6 +47,14 @@ class TranslationService
     }
 
     /**
+     * @return TranslationConfig
+     */
+    public function getConfig(): TranslationConfig
+    {
+        return $this->config;
+    }
+
+    /**
      * @return string
      */
     public function getSourceLanguage(): string

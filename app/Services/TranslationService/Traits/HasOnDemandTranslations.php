@@ -7,6 +7,7 @@ use App\Models\Implementation;
 use App\Services\TranslationService\Models\TranslationValue;
 use App\Services\TranslationService\TranslationService;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Lang;
 use Mews\Purifier\Facades\Purifier;
@@ -37,13 +38,95 @@ trait HasOnDemandTranslations
      */
     public function getTranslationValue(string $key, string $locale, string|null $from): ?string
     {
+        if (empty($from)) {
+            return $from;
+        }
+
+        $cacheEnabled = $this->getTranslationService()->getConfig()->isCacheEnabled();
+        $translationCache = $cacheEnabled ? $this->getTranslationCache($key, $locale, $from) : null;
+
+        if ($cacheEnabled && $translationCache !== null) {
+            return $this->purifyTranslation($translationCache);
+        }
+
         $translation = $this->translation_values()->where([
             'key' => $key,
             'from' => $from,
             'locale' => $locale,
-        ])->first();
+        ])->first()?->to;
 
-        return $translation?->to ? $this->purifyTranslation($translation?->to) : null;
+        if ($cacheEnabled && $translation !== null) {
+            $this->setTranslationCache($key, $locale, $from, $translation);
+
+            return $this->purifyTranslation($translation);
+        }
+
+        return $translation;
+    }
+
+    /**
+     * @param string $key
+     * @param string $locale
+     * @param string|null $from
+     * @return string|null
+     */
+    protected function getTranslationCache(string $key, string $locale, string|null $from): ?string
+    {
+        try {
+            $driver = $this->getTranslationService()->getConfig()->getCacheDriver();
+            $cacheKey = $this->getTranslationCacheKey($key, $locale, $from);
+
+            return Cache::driver($driver)->get($cacheKey);
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * @param string $key
+     * @param string $locale
+     * @param string|null $from
+     * @param string|null $to
+     * @return bool
+     */
+    protected function setTranslationCache(string $key, string $locale, string|null $from, string|null $to): bool
+    {
+        try {
+            $service = $this->getTranslationService();
+            $driver = $service->getConfig()->getCacheDriver();
+            $cacheKey = $this->getTranslationCacheKey($key, $locale, $from);
+            $cacheTime = $service->getConfig()->getCacheTime();
+
+            return Cache::driver($driver)->put($cacheKey, $to, $cacheTime);
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Generate a unique cache key for translations.
+     *
+     * @param string $key
+     * @param string $locale
+     * @param string|null $from
+     * @return string
+     */
+    protected function getTranslationCacheKey(string $key, string $locale, ?string $from): string
+    {
+        // Concatenate the components into a single string
+        $rawKey = implode('.', [
+            $this->getMorphClass(),
+            $this->id,
+            $key,
+            $locale,
+            $from ?? 'default'  // Handle null values explicitly
+        ]);
+
+        // Generate SHA-256 hash of the concatenated string
+        $hashedKey = hash('sha256', $rawKey);
+
+        // Return with a namespace prefix for clarity
+        return 'translation.' . $hashedKey;
     }
 
     /**
@@ -78,10 +161,13 @@ trait HasOnDemandTranslations
 
         // First, check if translations already exist
         foreach ($columns as $key => $value) {
-            $existingTranslation = $this->getTranslationValue($key, $targetLocale, $value);
+            if (empty($value)) {
+                $translatedColumns[$key] = $value;
+                continue;
+            }
 
-            if ($existingTranslation) {
-                $translatedColumns[$key] = $existingTranslation;
+            if (!empty($translation = $this->getTranslationValue($key, $targetLocale, $value))) {
+                $translatedColumns[$key] = $translation;
             } else {
                 $columnsToTranslate[$key] = $value;
             }
@@ -220,6 +306,10 @@ trait HasOnDemandTranslations
         string $locale,
         Implementation $implementation,
     ): void {
+        if ($this->getTranslationService()?->getConfig()?->isCacheEnabled()) {
+            $this->setTranslationCache($key, $locale, $sourceValue, $translatedValue ?: '');
+        }
+
         $this->translation_values()->create([
             'key' => $key,
             'from' => $sourceValue,
