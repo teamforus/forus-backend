@@ -9,15 +9,17 @@ return [
 
     // Updated models and columns structure
     'models' => [
+        \App\Models\Tag::class => ['name'],
         \App\Models\RecordType::class => ['name'],
         \App\Models\BusinessType::class => ['name'],
         \App\Models\ProductCategory::class => ['name'],
+        \App\Models\RecordTypeOption::class => ['name'],
     ],
 
     'deepl' => [
         'free' => env('TRANSLATION_SERVICE_DEEPL_FREE', false),
         'api_key' => env('TRANSLATION_SERVICE_DEEPL_KEY'),
-        'batch_size' => env('TRANSLATION_SERVICE_DEEPL_BATCH_SIZE', 1000),
+        'batch_size' => env('TRANSLATION_SERVICE_DEEPL_BATCH_SIZE', 250),
     ],
 
     'translations_map' => [

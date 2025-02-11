@@ -244,10 +244,8 @@ class RecordType extends BaseModel
             ];
         }
 
-        return $this->record_type_options->map(fn (RecordTypeOption $option) => [
-            'value' => $option->value,
-            'name' => $option->name,
-            ...$option->translateColumns($option->only('name')),
-        ])->toArray();
+        return $this->record_type_options->map(fn (RecordTypeOption $option) => $option->only([
+            'value', 'name',
+        ]))->toArray();
     }
 }

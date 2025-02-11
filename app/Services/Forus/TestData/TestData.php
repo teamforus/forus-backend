@@ -30,7 +30,6 @@ use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\RecordType;
-use App\Models\Tag;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
@@ -158,11 +157,11 @@ class TestData
             $recordType = RecordType::firstOrCreate(Arr::only($type, 'key'), $type);
 
             foreach (Arr::get($type, 'options', []) as $option) {
-                $recordType->record_type_options()->updateOrCreate([
+                $recordType->record_type_options()->firstOrCreate([
                     'value' => $option[0],
-                ], [
+                ])->translateOrNew(app()->getLocale())->fill([
                     'name' => $option[1],
-                ]);
+                ])->save();
             }
         }
     }
@@ -1143,11 +1142,14 @@ class TestData
             $fund = $this->makeFund($sponsor, $fundName);
             $this->makeFundConfig($fund);
 
-            $fund->tags()->save(Tag::firstOrCreate([
+            $tag = $fund->tags()->firstOrCreate([
                 'key' => Str::slug($fundTag),
-                'name' => $fundTag,
                 'scope' => 'provider',
-            ]));
+            ]);
+
+            $tag->translateOrNew(app()->getLocale())->fill([
+                'name' => $fundTag,
+            ])->save();
 
             // Make prevalidations
             if ($fund->fund_config->allow_prevalidations) {

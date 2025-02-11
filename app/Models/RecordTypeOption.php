@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Services\TranslationService\Traits\HasOnDemandTranslations;
+use App\Services\TranslationService\Traits\HasTranslationCaches;
+use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -29,7 +30,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class RecordTypeOption extends Model
 {
-    use HasOnDemandTranslations;
+    use Translatable;
+    use HasTranslationCaches;
 
     /**
      * @return BelongsTo
@@ -39,7 +41,20 @@ class RecordTypeOption extends Model
         return $this->belongsTo(RecordType::class);
     }
 
+    /**
+     * The attributes that are translatable.
+     *
+     * @var array
+     * @noinspection PhpUnused
+     */
+    public array $translatedAttributes = [
+        'name',
+    ];
+
+    /**
+     * @var string[]
+     */
     protected $fillable = [
-        'value', 'name',
+        'value',
     ];
 }

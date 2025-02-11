@@ -72,7 +72,7 @@ trait HasOnDemandTranslations
         $columnsToTranslate = [];
         $newlyTranslatedColumns = [];
 
-        if ($implementation->isGeneral() || !$request->isWebshop()) {
+        if ($implementation->isGeneral() || !$request->isWebshop() || $sourceLocale === $targetLocale) {
             return $columns;
         }
 

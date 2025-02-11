@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
  */
 class TagResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'translations',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -20,12 +24,8 @@ class TagResource extends BaseJsonResource
     {
         $tag = $this->resource;
 
-        return [
-            'id' => $tag->id,
-            'key' => $tag->key,
-            ...$tag->translateColumns($tag->only([
-                'name',
-            ])),
-        ];
+        return $tag->only([
+            'id', 'key', 'name',
+        ]);
     }
 }

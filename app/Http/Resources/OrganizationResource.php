@@ -38,11 +38,11 @@ class OrganizationResource extends BaseJsonResource
     public static function loadDeps($request = null): array
     {
         $load = [
-            'tags',
             'offices',
             'contacts',
             'offices',
             'business_type',
+            'tags.translations',
             'reservation_fields',
             'bank_connection_active',
             'employees.roles.permissions',
