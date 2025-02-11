@@ -15,8 +15,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read \App\Models\TagTranslation|null $translation
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
- * @property-read int|null $translation_values_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationCache[] $translation_caches
+ * @property-read int|null $translation_caches_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\TagTranslation[] $translations
  * @property-read int|null $translations_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tag listsTranslations(string $translationField)

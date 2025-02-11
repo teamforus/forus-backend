@@ -28,13 +28,13 @@ use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
@@ -133,6 +133,8 @@ use Illuminate\Support\Facades\Gate;
  * @property-read int|null $pre_checks_records_count
  * @property-read EloquentCollection|\App\Models\ImplementationSocialMedia[] $social_medias
  * @property-read int|null $social_medias_count
+ * @property-read EloquentCollection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @method static Builder<static>|Implementation newModelQuery()
  * @method static Builder<static>|Implementation newQuery()
  * @method static Builder<static>|Implementation query()

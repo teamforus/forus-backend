@@ -9,17 +9,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * 
  *
  * @property int $id
- * @property int $tag_id
+ * @property int $record_type_option_id
  * @property string $locale
  * @property string $name
- * @property-read \App\Models\Tag $tag
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TagTranslation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TagTranslation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TagTranslation query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TagTranslation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TagTranslation whereLocale($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TagTranslation whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TagTranslation whereTagId($value)
+ * @property-read \App\Models\Tag|null $tag
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeOptionTranslation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeOptionTranslation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeOptionTranslation query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeOptionTranslation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeOptionTranslation whereLocale($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeOptionTranslation whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordTypeOptionTranslation whereRecordTypeOptionId($value)
  * @mixin \Eloquent
  */
 class RecordTypeOptionTranslation extends Model

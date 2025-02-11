@@ -107,6 +107,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read \App\Models\Fund $fund
  * @property-read string $help_description_html
  * @property-read \App\Models\Implementation|null $implementation
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig query()
