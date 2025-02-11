@@ -4,10 +4,10 @@ namespace App\Services\TranslationService\Traits;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Implementation;
+use App\Services\TranslationService\Cache\TranslationCacheService;
 use App\Services\TranslationService\Models\TranslationValue;
 use App\Services\TranslationService\TranslationService;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Lang;
 use Mews\Purifier\Facades\Purifier;
@@ -36,14 +36,18 @@ trait HasOnDemandTranslations
      * @param string|null $from
      * @return string|null
      */
-    public function getTranslationValue(string $key, string $locale, string|null $from): ?string
+    public function getTranslationValue(string $key, string $locale, ?string $from): ?string
     {
         if (empty($from)) {
             return $from;
         }
 
-        $cacheEnabled = $this->getTranslationService()->getConfig()->isCacheEnabled();
-        $translationCache = $cacheEnabled ? $this->getTranslationCache($key, $locale, $from) : null;
+        $service = $this->getTranslationService();
+        $cacheEnabled = $service->getConfig()->isCacheEnabled();
+
+        $translationCache = $cacheEnabled
+            ? $this->getTranslationCacheService()->get($this, $key, $locale, $from)
+            : null;
 
         if ($cacheEnabled && $translationCache !== null) {
             return $this->purifyTranslation($translationCache);
@@ -56,77 +60,12 @@ trait HasOnDemandTranslations
         ])->first()?->to;
 
         if ($cacheEnabled && $translation !== null) {
-            $this->setTranslationCache($key, $locale, $from, $translation);
+            $this->getTranslationCacheService()->set($this, $key, $locale, $from, $translation);
 
             return $this->purifyTranslation($translation);
         }
 
         return $translation;
-    }
-
-    /**
-     * @param string $key
-     * @param string $locale
-     * @param string|null $from
-     * @return string|null
-     */
-    protected function getTranslationCache(string $key, string $locale, string|null $from): ?string
-    {
-        try {
-            $driver = $this->getTranslationService()->getConfig()->getCacheDriver();
-            $cacheKey = $this->getTranslationCacheKey($key, $locale, $from);
-
-            return Cache::driver($driver)->get($cacheKey);
-        } catch (Throwable) {
-            return null;
-        }
-    }
-
-    /**
-     * @param string $key
-     * @param string $locale
-     * @param string|null $from
-     * @param string|null $to
-     * @return bool
-     */
-    protected function setTranslationCache(string $key, string $locale, string|null $from, string|null $to): bool
-    {
-        try {
-            $service = $this->getTranslationService();
-            $driver = $service->getConfig()->getCacheDriver();
-            $cacheKey = $this->getTranslationCacheKey($key, $locale, $from);
-            $cacheTime = $service->getConfig()->getCacheTime();
-
-            return Cache::driver($driver)->put($cacheKey, $to, $cacheTime);
-        } catch (Throwable) {
-            return false;
-        }
-    }
-
-    /**
-     * Generate a unique cache key for translations.
-     *
-     * @param string $key
-     * @param string $locale
-     * @param string|null $from
-     * @return string
-     */
-    protected function getTranslationCacheKey(string $key, string $locale, ?string $from): string
-    {
-        // Concatenate the components into a single string
-        $rawKey = implode('.', [
-            $this->getMorphClass(),
-            $this->id,
-            $key,
-            $locale,
-            $from ?? 'default'  // Handle null values explicitly
-        ]);
-
-        // Generate SHA-256 hash of the concatenated string
-        $hashedKey = hash('sha256', $rawKey);
-
-        // Return with a namespace prefix for clarity
-        return 'translation.' . $hashedKey;
     }
 
     /**
@@ -221,7 +160,7 @@ trait HasOnDemandTranslations
         $weekly_limit = $organization->translations_weekly_limit;
         $monthly_limit = $organization->translations_monthly_limit;
 
-        $columns_str_len = array_sum(array_map(fn($value) => strlen((string) $value), $columns));
+        $columns_str_len = array_sum(array_map(fn ($value) => strlen((string) $value), $columns));
 
         // If translations are not allowed or translations are disabled for the organization, skip translation
         if (!$organization || !$organization->allow_translations || !$organization->translations_enabled) {
@@ -256,6 +195,7 @@ trait HasOnDemandTranslations
      * @param string $sourceValue Original value.
      * @param string $sourceLocale The source locale.
      * @param string $targetLocale The target locale.
+     * @param Implementation $implementation
      * @return string Translated value.
      */
     private function findTranslatedValue(
@@ -290,7 +230,7 @@ trait HasOnDemandTranslations
     }
 
     /**
-     * Store a new translation in the database.
+     * Store a new translation in the database and cache it.
      *
      * @param string $key Column key.
      * @param string $sourceValue Original value.
@@ -307,7 +247,7 @@ trait HasOnDemandTranslations
         Implementation $implementation,
     ): void {
         if ($this->getTranslationService()?->getConfig()?->isCacheEnabled()) {
-            $this->setTranslationCache($key, $locale, $sourceValue, $translatedValue ?: '');
+            $this->getTranslationCacheService()->set($this, $key, $locale, $sourceValue, $translatedValue ?: '');
         }
 
         $this->translation_values()->create([
@@ -330,5 +270,15 @@ trait HasOnDemandTranslations
     private function getTranslationService(): TranslationService
     {
         return resolve(TranslationService::class);
+    }
+
+    /**
+     * Get an instance of the TranslationCacheService.
+     *
+     * @return TranslationCacheService
+     */
+    private function getTranslationCacheService(): TranslationCacheService
+    {
+        return resolve(TranslationCacheService::class);
     }
 }

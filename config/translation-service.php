@@ -41,7 +41,7 @@ return [
     'max_monthly_limit' => env('TRANSLATION_SERVICE_MAX_MONTHLY_LIMIT', 100_000_000),
 
     // Caching settings.
-    'cache_enabled' => env('TRANSLATION_SERVICE_CACHE_ENABLED', false),
+    'cache_enabled' => env('TRANSLATION_SERVICE_CACHE_ENABLED', true),
     'cache_driver' => env('TRANSLATION_SERVICE_CACHE_DRIVER', 'file'),
-    'cache_time' => env('TRANSLATION_SERVICE_CACHE_TIME', 3600), // Cache in seconds
+    'cache_time' => env('TRANSLATION_SERVICE_CACHE_TIME', 900), // Cache in seconds
 ];

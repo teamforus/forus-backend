@@ -80,19 +80,6 @@ class TranslationService
     }
 
     /**
-     * @param string $provider
-     * @return TranslationProvider
-     */
-    private function createProvider(string $provider): TranslationProvider
-    {
-        return match ($provider) {
-            'deepl' => new Providers\DeepLTranslationProvider(),
-            'debug' => new Providers\DebugTranslationProvider(),
-            default => throw new InvalidArgumentException("Unsupported translation provider: $provider"),
-        };
-    }
-
-    /**
      * @param Model $model The model to translate.
      * @throws TranslationException
      */
@@ -269,63 +256,6 @@ class TranslationService
     }
 
     /**
-     * @param string $locale
-     * @return array
-     */
-    private function getStaticTranslations(string $locale): array
-    {
-        $localePath = resource_path("lang/$locale");
-
-        if (!File::exists($localePath)) {
-            throw new RuntimeException("Translation directory for locale '$locale' not found.");
-        }
-
-        $translations = [];
-
-        foreach (File::allFiles($localePath) as $file) {
-            if ($file->getExtension() === 'php') {
-                $relativePath = $file->getRelativePathname();
-                $content = include $file->getPathname();
-
-                if (is_array($content)) {
-                    $keyPrefix = str_replace(DIRECTORY_SEPARATOR, '.', pathinfo($relativePath, PATHINFO_DIRNAME));
-                    $fileKey = pathinfo($relativePath, PATHINFO_FILENAME);
-
-                    // Add prefix if within a subdirectory
-                    $keyPrefix = $keyPrefix === '.' ? '' : "$keyPrefix.";
-
-                    // Merge translations under their appropriate keys
-                    $translations = array_merge($translations, $this->flattenArray([$keyPrefix . $fileKey => $content]));
-                }
-            }
-        }
-
-        return $translations;
-    }
-
-    /**
-     * @param array $array
-     * @param string $prefix
-     * @return array
-     */
-    private function flattenArray(array $array, string $prefix = ''): array
-    {
-        $flattened = [];
-
-        foreach ($array as $key => $value) {
-            $newKey = $prefix === '' ? $key : "$prefix.$key";
-
-            if (is_array($value)) {
-                $flattened = array_merge($flattened, $this->flattenArray($value, $newKey));
-            } else {
-                $flattened[$newKey] = $value;
-            }
-        }
-
-        return $flattened;
-    }
-
-    /**
      * @throws FileNotFoundException
      */
     public function readCache(string $fileName): array
@@ -409,7 +339,7 @@ class TranslationService
     }
 
     /**
-     * Get the count of translations this month.
+     * Get the count of translations.
      *
      * @param Organization $organization
      * @param Carbon $from
@@ -422,5 +352,75 @@ class TranslationService
             ->where('organization_id', $organization->id)
             ->whereBetween('created_at', [$from, $to])
             ->sum('from_length');
+    }
+
+    /**
+     * @param string $provider
+     * @return TranslationProvider
+     */
+    private function createProvider(string $provider): TranslationProvider
+    {
+        return match ($provider) {
+            'deepl' => new Providers\DeepLTranslationProvider(),
+            'debug' => new Providers\DebugTranslationProvider(),
+            default => throw new InvalidArgumentException("Unsupported translation provider: $provider"),
+        };
+    }
+
+    /**
+     * @param string $locale
+     * @return array
+     */
+    private function getStaticTranslations(string $locale): array
+    {
+        $localePath = resource_path("lang/$locale");
+
+        if (!File::exists($localePath)) {
+            throw new RuntimeException("Translation directory for locale '$locale' not found.");
+        }
+
+        $translations = [];
+
+        foreach (File::allFiles($localePath) as $file) {
+            if ($file->getExtension() === 'php') {
+                $relativePath = $file->getRelativePathname();
+                $content = include $file->getPathname();
+
+                if (is_array($content)) {
+                    $keyPrefix = str_replace(DIRECTORY_SEPARATOR, '.', pathinfo($relativePath, PATHINFO_DIRNAME));
+                    $fileKey = pathinfo($relativePath, PATHINFO_FILENAME);
+
+                    // Add prefix if within a subdirectory
+                    $keyPrefix = $keyPrefix === '.' ? '' : "$keyPrefix.";
+
+                    // Merge translations under their appropriate keys
+                    $translations = array_merge($translations, $this->flattenArray([$keyPrefix . $fileKey => $content]));
+                }
+            }
+        }
+
+        return $translations;
+    }
+
+    /**
+     * @param array $array
+     * @param string $prefix
+     * @return array
+     */
+    private function flattenArray(array $array, string $prefix = ''): array
+    {
+        $flattened = [];
+
+        foreach ($array as $key => $value) {
+            $newKey = $prefix === '' ? $key : "$prefix.$key";
+
+            if (is_array($value)) {
+                $flattened = array_merge($flattened, $this->flattenArray($value, $newKey));
+            } else {
+                $flattened[$newKey] = $value;
+            }
+        }
+
+        return $flattened;
     }
 }

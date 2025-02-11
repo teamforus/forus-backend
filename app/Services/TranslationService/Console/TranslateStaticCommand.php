@@ -7,6 +7,7 @@ use App\Services\TranslationService\TranslationService;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Facades\Config;
+use Throwable;
 
 class TranslateStaticCommand extends Command
 {
@@ -35,15 +36,48 @@ class TranslateStaticCommand extends Command
                 'auto' => $this->auto(),
                 default => $this->error('Invalid action. Use prepare, translate, apply, or update-cache.'),
             };
-        } catch (\Throwable $e) {
-            $this->error("An error occurred: " . $e->getMessage());
+        } catch (Throwable $e) {
+            $this->error('An error occurred: ' . $e->getMessage());
         }
     }
 
     /**
-     * @return void
+     * @param string $text
+     * @return array
+     */
+    protected function replaceVars(string $text): array
+    {
+        preg_match_all('/:([a-zA-Z_]+)/', $text, $matches);
+
+        $placeholders = $matches[0];
+        $replacements = [];
+
+        foreach ($placeholders as $index => $placeholder) {
+            $replacements["__PLACEHOLDER_{$index}__"] = $placeholder;
+        }
+
+        $processedText = str_replace($placeholders, array_keys($replacements), $text);
+
+        return [
+            'text' => $processedText,
+            'replacements' => $replacements,
+        ];
+    }
+
+    /**
+     * @param string $translatedText
+     * @param array $replacements
+     * @return string
+     */
+    protected function replaceVarsBack(string $translatedText, array $replacements): string
+    {
+        return str_replace(array_keys($replacements), array_values($replacements), $translatedText);
+    }
+
+    /**
      * @throws FileNotFoundException
      * @throws TranslationException
+     * @return void
      */
     private function auto(): void
     {
@@ -65,10 +99,11 @@ class TranslateStaticCommand extends Command
 
         if ($totalKeys === 0) {
             $this->info('No new or updated keys to translate.');
+
             return;
         }
 
-        $totalSymbols = array_reduce($addedKeys, fn($carry, $item) => $carry + mb_strlen($item), 0);
+        $totalSymbols = array_reduce($addedKeys, fn ($carry, $item) => $carry + mb_strlen($item), 0);
         $this->info("Found $totalKeys keys and $totalSymbols symbols to translate.");
 
         foreach ($targetLangs as $locale) {
@@ -113,38 +148,4 @@ class TranslateStaticCommand extends Command
             $this->service->writeStaticCache("cache_translated_$locale.json", $translations);
         }
     }
-
-    /**
-     * @param string $text
-     * @return array
-     */
-    protected function replaceVars(string $text): array
-    {
-        preg_match_all('/:([a-zA-Z_]+)/', $text, $matches);
-
-        $placeholders = $matches[0];
-        $replacements = [];
-
-        foreach ($placeholders as $index => $placeholder) {
-            $replacements["__PLACEHOLDER_{$index}__"] = $placeholder;
-        }
-
-        $processedText = str_replace($placeholders, array_keys($replacements), $text);
-
-        return [
-            'text' => $processedText,
-            'replacements' => $replacements,
-        ];
-    }
-
-    /**
-     * @param string $translatedText
-     * @param array $replacements
-     * @return string
-     */
-    protected function replaceVarsBack(string $translatedText, array $replacements): string
-    {
-        return str_replace(array_keys($replacements), array_values($replacements), $translatedText);
-    }
-
 }

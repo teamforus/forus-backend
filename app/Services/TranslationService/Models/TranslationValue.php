@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Config;
  * @property string|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent $translatable
+ * @property-read Model|Eloquent $translatable
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue query()
@@ -64,7 +64,7 @@ class TranslationValue extends Model
     protected static array $fieldMap = [
         'webshop_content' => 'Webshop content',
         'fund_application' => 'Aanvraagformulier',
-        'providers_content' => 'Aanbieders content'
+        'providers_content' => 'Aanbieders content',
     ];
 
     /**
@@ -174,9 +174,9 @@ class TranslationValue extends Model
         // Format the result
         $result = [
             'total' => self::formatAndCalculateCost($totalSymbols),
-            'count_per_type' => (object)[],
-            'total_per_locale' => (object)[],
-            'total_per_type_and_locale' => (object)[],
+            'count_per_type' => (object) [],
+            'total_per_locale' => (object) [],
+            'total_per_type_and_locale' => (object) [],
         ];
 
         foreach ($countPerType as $type => $symbols) {
@@ -193,6 +193,22 @@ class TranslationValue extends Model
         }
 
         return $result;
+    }
+
+    /**
+     * @return int
+     */
+    public static function pricePerMillionSymbols(): int
+    {
+        return intval(Config::get('translation-service.price_per_mil'));
+    }
+
+    /**
+     * @return int
+     */
+    public static function maxMonthlyLimit(): int
+    {
+        return intval(Config::get('translation-service.max_monthly_limit'));
     }
 
     /**
@@ -221,22 +237,6 @@ class TranslationValue extends Model
         $cost = ($symbols / 1_000_000) * $pricePerMil;
 
         return currency_format_locale($cost);
-    }
-
-    /**
-     * @return int
-     */
-    public static function pricePerMillionSymbols(): int
-    {
-        return intval(Config::get('translation-service.price_per_mil'));
-    }
-
-    /**
-     * @return int
-     */
-    public static function maxMonthlyLimit(): int
-    {
-        return intval(Config::get('translation-service.max_monthly_limit'));
     }
 
     /**
