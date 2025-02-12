@@ -92,11 +92,9 @@ class OrganizationResource extends BaseJsonResource
                 'website_public', 'description', 'reservation_phone', 'reservation_address',
                 'reservation_birth_date', 'description_html',
             ]),
-            ...$organization->translateColumns(
-                $this->isCollection()
-                    ? $organization->only(['name'])
-                    : $organization->only(['name', 'description_html']),
-            ),
+            ...$this->isCollection() ? [] : $organization->translateColumns($organization->only([
+                'description_html',
+            ])),
             ...$privateData,
             ...$ownerData,
             ...$biConnectionData,

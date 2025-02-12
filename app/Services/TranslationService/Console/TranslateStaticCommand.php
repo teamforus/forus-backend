@@ -33,7 +33,7 @@ class TranslateStaticCommand extends Command
                 'translate' => $this->translateWithProgressBar(),
                 'apply' => $this->service->applyStatic(),
                 'update-cache' => $this->service->updateStaticCache(),
-                'auto' => $this->auto(),
+                'run-all' => $this->auto(),
                 default => $this->error('Invalid action. Use prepare, translate, apply, or update-cache.'),
             };
         } catch (Throwable $e) {
