@@ -31,7 +31,7 @@ class ProviderResource extends BaseJsonResource
 
         return [
             ...$organization->only([
-                'id', 'description', 'business_type_id', 'description_html',
+                'id', 'name', 'description', 'business_type_id', 'description_html',
                 ...array_filter([
                     $organization->email_public ? 'email' : null,
                     $organization->phone_public ? 'phone' : null,
