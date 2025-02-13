@@ -2,7 +2,10 @@
 
 namespace Tests\Traits;
 
+use App\Helpers\Arr;
 use App\Models\Fund;
+use App\Models\FundCriteriaStep;
+use App\Models\FundCriterion;
 use App\Models\FundFormula;
 use App\Models\Identity;
 use App\Models\Implementation;
@@ -333,4 +336,53 @@ trait MakesTestFunds
         ], $this->makeApiHeaders($this->makeIdentityProxy($fund->organization?->identity)));
     }
 
+    /**
+     * @param Fund $fund
+     * @param array $criteria
+     * @return void
+     */
+    protected function makeFundCriteria(Fund $fund, array $criteria): void
+    {
+        $fund->criteria()->delete();
+
+        foreach ($criteria as $criterion) {
+            $stepTitle = Arr::get($criterion, 'step', Arr::get($criterion, 'step.title'));
+            $stepFields = is_array(Arr::get($criterion, 'step')) ? Arr::get($criterion, 'step') : [];
+
+            /** @var FundCriteriaStep $stepModel */
+            $stepModel = $stepTitle ?
+                ($fund->criteria_steps()->firstWhere([
+                    'title' => $stepTitle,
+                    ...$stepFields,
+                ]) ?: $fund->criteria_steps()->forceCreate([
+                    'title' => $stepTitle,
+                    ...$stepFields,
+                ])) : null;
+
+            /** @var FundCriterion $criterionModel */
+            $criterionModel = $fund->criteria()->create([
+                ...array_except($criterion, ['rules', 'step']),
+                'fund_criteria_step_id' => $stepModel?->id,
+            ]);
+
+            foreach ($criterion['rules'] ?? [] as $rule) {
+                $criterionModel->fund_criterion_rules()->forceCreate($rule);
+            }
+        }
+    }
+
+    /**
+     * @param Fund $fund
+     * @return void
+     */
+    protected function deleteFund(Fund $fund): void
+    {
+        $fund->criteria()
+            ->get()
+            ->each(fn (FundCriterion $criteria) => $criteria->fund_criterion_rules()->delete());
+
+        $fund->criteria()->delete();
+        $fund->criteria_steps()->delete();
+        $fund->delete();
+    }
 }

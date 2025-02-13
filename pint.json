@@ -55,7 +55,7 @@
         "phpdoc_order": true,
         "phpdoc_scalar": true,
         "phpdoc_summary": true,
-        "phpdoc_to_comment": true,
+        "phpdoc_to_comment": false,
         "return_type_declaration": {
             "space_before": "none"
         },
