@@ -11,8 +11,10 @@ use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
+use App\Models\ProductReservation;
 use App\Models\RecordType;
 use App\Traits\DoesTesting;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Testing\TestResponse;
 use Throwable;
 
@@ -377,12 +379,19 @@ trait MakesTestFunds
      */
     protected function deleteFund(Fund $fund): void
     {
+        Schema::disableForeignKeyConstraints();
+
         $fund->criteria()
             ->get()
             ->each(fn (FundCriterion $criteria) => $criteria->fund_criterion_rules()->delete());
 
         $fund->criteria()->delete();
         $fund->criteria_steps()->delete();
+        ProductReservation::whereIn('voucher_id', $fund->vouchers()->pluck('id')->all())->forceDelete();
+        $fund->vouchers()->delete();
+        $fund->fund_requests()->delete();
         $fund->delete();
+
+        Schema::enableForeignKeyConstraints();
     }
 }

@@ -6,7 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Rules\FundRequests\BaseFundRequestRule;
 
-class FundRequestRecordValueRule extends BaseFundRequestRule
+class FundRequestRequiredRecordsRule extends BaseFundRequestRule
 {
     /**
      * Create a new rule instance.
@@ -32,25 +32,19 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
      */
     public function passes($attribute, mixed $value): bool
     {
-        $criterion = $this->findCriterion($attribute);
+        $requestCriteria = collect($value)->keyBy('fund_criterion_id')->toArray();
         $values = $this->mapRecordValues($this->records);
 
-        if (!$criterion) {
-            return $this->reject(trans('validation.in', compact('attribute')));
-        }
+        foreach ($this->fund->criteria as $criterion) {
+            $records = $criterion->fund_criterion_rules->pluck('record_type_key')->toArray();
+            $recordsValues = $this->fund->getTrustedRecordOfTypes($this->request->identity(), $records);
+            $allValues = array_merge($recordsValues, $values);
 
-        $records = $criterion->fund_criterion_rules->pluck('record_type_key')->toArray();
-        $recordsValues = $this->fund->getTrustedRecordOfTypes($this->request->identity(), $records);
-
-        $allValues = array_merge($recordsValues, $values);
-        $isExcluded = $criterion->isExcludedByRules($allValues);
-
-        if ($isExcluded) {
-            return $this->reject(trans('validation.in', compact('attribute')));
-        }
-
-        if (($validator = static::validateRecordValue($criterion, $value))->fails()) {
-            return $this->reject($validator->errors()->first('value'));
+            if (!$criterion->isExcludedByRules($allValues) && !array_key_exists($criterion->id, $requestCriteria)) {
+                return $this->reject(trans('validation.required', [
+                    'attribute' => $criterion->record_type_key
+                ]));
+            }
         }
 
         return true;

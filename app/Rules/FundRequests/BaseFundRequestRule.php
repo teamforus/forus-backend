@@ -74,4 +74,25 @@ abstract class BaseFundRequestRule extends BaseRule
     {
         return $this->request->input(implode('.', array_slice(explode('.', $attribute), 0, -1)));
     }
+
+    /**
+     * @param array $records
+     * @return array
+     */
+    protected function mapRecordValues(array $records): array
+    {
+        $fundCriteriaById = $this->fund->criteria->pluck('record_type_key', 'id');
+
+        return array_reduce(array_keys($records), function($list, $fund_criterion_id) use (
+            $fundCriteriaById, $records
+        ) {
+            $value = $records[$fund_criterion_id] ?? null;
+
+            if ($fundCriteriaById[$fund_criterion_id] ?? false) {
+                return [...$list, $fundCriteriaById[$fund_criterion_id] => $value];
+            }
+
+            return $list;
+        }, []);
+    }
 }

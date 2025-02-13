@@ -548,11 +548,17 @@ class FundCriteriaTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
-        $this->addTestCriteriaToFund($fund);
 
-        $fund->criteria()->update([
+        $fund->criteria->each(fn ($criterion) => $criterion->fund_criterion_rules()->delete());
+        $fund->criteria()->forceDelete();
+        $this->makeRecordType($fund->organization, RecordType::TYPE_DATE, "test_date");
+
+        $this->updateCriteriaRequest([[
+            ...$this->makeCriterion("test_date", '01-01-2000', '>=', '01-01-1990', '01-01-2020'),
             'show_attachment' => true,
-        ]);
+        ]], $fund)->assertSuccessful();
+
+        $fund->refresh();
 
         $file = UploadedFile::fake()->image('test.jpg');
         $fileModel = resolve('file')->uploadSingle($file, 'fund_request_record_proof');

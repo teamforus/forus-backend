@@ -8,6 +8,7 @@ use App\Models\FundRequest;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordCriterionIdRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordFilesRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordValueRule;
+use App\Rules\FundRequests\FundRequestRecords\FundRequestRequiredRecordsRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 
@@ -75,7 +76,14 @@ class StoreFundRequestRequest extends BaseFormRequest
         $values = is_array($values) ? array_pluck($values, 'value', 'fund_criterion_id') : [];
 
         return [
-            'records' => $this->isValidationRequest ? 'present|array' : 'present|array|min:1',
+            'records' => $this->isValidationRequest
+                ? 'present|array'
+                : [
+                    'present',
+                    'array',
+                    'min:1',
+                    new FundRequestRequiredRecordsRule($fund, $this, $values),
+                ],
             'records.*' => 'required|array',
             'records.*.value' => [
                 'present',
