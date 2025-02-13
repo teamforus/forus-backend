@@ -5,9 +5,12 @@ namespace Tests\Traits;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use Illuminate\Foundation\Testing\WithFaker;
 
 trait MakesTestProducts
 {
+    use WithFaker;
+
     /**
      * @param Organization $providerOrganization
      * @return Product
