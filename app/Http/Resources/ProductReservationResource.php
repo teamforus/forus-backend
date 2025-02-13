@@ -73,9 +73,7 @@ class ProductReservationResource extends BaseJsonResource
                 'organization_id' => $reservation->product->organization_id,
                 'organization' => [
                     'id' => $reservation->product->organization->id,
-                    ...$reservation->product->organization->translateColumns(
-                        $reservation->product->organization->only('name'),
-                    ),
+                    'name' => $reservation->product->organization->name,
                 ],
                 'photo' => new MediaResource($reservation->product->photo),
             ],

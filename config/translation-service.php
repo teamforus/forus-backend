@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     // The source language for translations.
     'source_language' => env('TRANSLATION_SERVICE_SOURCE', 'nl'),
 
