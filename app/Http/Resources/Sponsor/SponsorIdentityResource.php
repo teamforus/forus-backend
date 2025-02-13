@@ -168,7 +168,7 @@ class SponsorIdentityResource extends BaseJsonResource
         ])?->groupBy('key');
 
         return $groups
-            ?->map(fn (Collection $group) => $group->sortByDesc('timestamp'))
+            ?->map(fn (Collection $group) => $group->sortByDesc('timestamp')->values())
             ?->toArray() ?: [];
     }
 
