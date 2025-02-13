@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * 
+ * App\Models\ProfileRecord.
  *
  * @property int $id
  * @property int $profile_id
@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Employee|null $employee
+ * @property-read string|null $value_locale
  * @property-read \App\Models\Profile $profile
  * @property-read \App\Models\RecordType $record_type
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProfileRecord newModelQuery()
@@ -60,5 +61,21 @@ class ProfileRecord extends Model
     public function record_type(): BelongsTo
     {
         return $this->belongsTo(RecordType::class);
+    }
+
+    /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getValueLocaleAttribute(): ?string
+    {
+        return match ($this->record_type->type) {
+            'date' => $this->value ? format_date_locale($this->value) : $this->value,
+            'select',
+            'select_number' => $this->record_type
+                ?->record_type_options
+                ?->firstWhere('value', $this->value)?->name ?: $this->value,
+            default => $this->value,
+        };
     }
 }

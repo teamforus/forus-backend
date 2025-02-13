@@ -36,6 +36,7 @@ use App\Scopes\Builders\ProductQuery;
 use App\Services\FileService\Models\File;
 use Carbon\Carbon;
 use Database\Seeders\ImplementationsNotificationBrandingSeeder;
+use Exception;
 use Faker\Factory;
 use Faker\Generator;
 use Illuminate\Database\Eloquent\Builder;
@@ -46,16 +47,16 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use Kalnoy\Nestedset\Collection as NestedsetCollection;
+use Throwable;
 
 class TestData
 {
-    private mixed $tokenGenerator;
-
-    private array|NestedsetCollection $productCategories;
-
     public int $emailNth = 0;
 
     protected string $configKey = 'custom';
+    private mixed $tokenGenerator;
+
+    private array|NestedsetCollection $productCategories;
 
     private Generator $faker;
 
@@ -96,7 +97,8 @@ class TestData
         $emailSlug = Str::kebab(substr($this->faker->text(rand(15, 30)), 0, -1));
 
         $email = $email ?: strtolower(sprintf(
-            $emailPattern, $emailSlug . '-' . $this->integerToRoman($this->emailNth++),
+            $emailPattern,
+            $emailSlug . '-' . $this->integerToRoman($this->emailNth++),
         ));
 
         $identity = Identity::make($email, [
@@ -125,14 +127,14 @@ class TestData
 
     /**
      * @param string $identity_address
+     * @throws Throwable
      * @return array
-     * @throws \Throwable
      */
     public function makeSponsors(string $identity_address): array
     {
         $organizations = array_unique(Arr::pluck($this->config('funds'), 'organization_name'));
 
-        $organizations = array_map(function($implementation) use ($identity_address) {
+        $organizations = array_map(function ($implementation) use ($identity_address) {
             return $this->makeOrganization($implementation, $identity_address, [
                 'is_sponsor' => true,
             ]);
@@ -140,7 +142,7 @@ class TestData
 
         foreach ($organizations as $organization) {
             $this->makeOffices($organization, 2);
-            $organization->reimbursement_categories()->createMany(array_map(fn($name) => compact('name'), [
+            $organization->reimbursement_categories()->createMany(array_map(fn ($name) => compact('name'), [
                 'Sports (activity)', 'Sports (product)', 'Culture', 'Education',
             ]));
         }
@@ -169,22 +171,22 @@ class TestData
     /**
      * @param string $identityAddress
      * @param int|null $count
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function makeProviders(string $identityAddress, ?int $count = null): void
     {
         $count = $count ?: $this->config('providers_count');
         $countOffices = $this->config('provider_offices_count');
-        $organizations = $this->makeOrganizations("Provider", $identityAddress, $count, [], $countOffices);
+        $organizations = $this->makeOrganizations('Provider', $identityAddress, $count, [], $countOffices);
 
         foreach (array_random($organizations, ceil(count($organizations) / 2)) as $organization) {
             foreach (Fund::take(Fund::count() / 2)->get() as $fund) {
                 FundProviderApplied::dispatch($fund, $fund->providers()->forceCreate([
-                    'fund_id'           => $fund->id,
-                    'organization_id'   => $organization->id,
-                    'allow_budget'      => $fund->isTypeBudget() && random_int(0, 1) == 0,
-                    'allow_products'    => $fund->isTypeBudget() && random_int(0, 10) == 0,
-                    'state'             => FundProvider::STATE_ACCEPTED,
+                    'fund_id' => $fund->id,
+                    'organization_id' => $organization->id,
+                    'allow_budget' => $fund->isTypeBudget() && random_int(0, 1) == 0,
+                    'allow_products' => $fund->isTypeBudget() && random_int(0, 10) == 0,
+                    'state' => FundProvider::STATE_ACCEPTED,
                 ]));
             }
         }
@@ -207,15 +209,15 @@ class TestData
                 ]);
 
                 FundProviderApplied::dispatch($fund, $provider->updateModel([
-                    'allow_products'    => $fund->isTypeBudget(),
-                    'allow_budget'      => $fund->isTypeBudget(),
-                    'state'             => FundProvider::STATE_ACCEPTED,
+                    'allow_products' => $fund->isTypeBudget(),
+                    'allow_budget' => $fund->isTypeBudget(),
+                    'state' => FundProvider::STATE_ACCEPTED,
                 ]));
             }
         }
 
-        Fund::get()->each(static function(Fund $fund) {
-            $fund->providers()->get()->each(static function(FundProvider $provider) {
+        Fund::get()->each(static function (Fund $fund) {
+            $fund->providers()->get()->each(static function (FundProvider $provider) {
                 $products = $provider->organization->products;
                 $products = $products->shuffle()->take(ceil($products->count() / 2));
 
@@ -245,21 +247,21 @@ class TestData
 
     /**
      * @param Identity $identity
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function applyFunds(Identity $identity): void
     {
         /** @var Prevalidation[] $prevalidations */
         $prevalidations = Prevalidation::where([
             'state' => 'pending',
-            'identity_address' => $identity->address
-        ])->get()->groupBy('fund_id')->map(static function(SupportCollection $arr) {
+            'identity_address' => $identity->address,
+        ])->get()->groupBy('fund_id')->map(static function (SupportCollection $arr) {
             return $arr->first();
         });
 
         foreach ($prevalidations as $prevalidation) {
-            foreach($prevalidation->prevalidation_records as $record) {
+            foreach ($prevalidation->prevalidation_records as $record) {
                 if ($record->record_type->key === 'bsn') {
                     continue;
                 }
@@ -271,7 +273,7 @@ class TestData
             }
 
             $prevalidation->update([
-                'state' => 'used'
+                'state' => 'used',
             ]);
 
             $voucher = $prevalidation->fund->makeVoucher($identity);
@@ -313,10 +315,10 @@ class TestData
      * @param string $identity_address
      * @param int $count
      * @param array $fields
-     * @return Organization[]
      * @param int $offices_count
+     * @throws Throwable
+     * @return Organization[]
      * @return array
-     * @throws \Throwable
      */
     public function makeOrganizations(
         string $prefix,
@@ -343,8 +345,8 @@ class TestData
      * @param string $identity_address
      * @param array $fields
      * @param int $offices_count
+     * @throws Throwable
      * @return Organization
-     * @throws \Throwable
      */
     public function makeOrganization(
         string $name,
@@ -366,7 +368,7 @@ class TestData
             'business_type_id' => BusinessType::pluck('id')->random(),
             'reservations_budget_enabled' => true,
             'reservations_subsidy_enabled' => true,
-            ...$this->config("default.organizations", []),
+            ...$this->config('default.organizations', []),
             ...$this->config("organizations.$name.organization", []),
             ...$fields,
         ];
@@ -390,8 +392,8 @@ class TestData
      * @param Organization $organization
      * @param int $count
      * @param array $fields
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function makeOffices(Organization $organization, int $count = 1, array $fields = []): void
     {
@@ -403,8 +405,8 @@ class TestData
     /**
      * @param Organization $organization
      * @param array $fields
+     * @throws Throwable
      * @return Office
-     * @throws \Throwable
      */
     public function makeOffice(
         Organization $organization,
@@ -419,15 +421,15 @@ class TestData
         $postCode = $postCodes[random_int(0, count($postCodes) - 1)];
 
         $office = Office::forceCreate(array_merge([
-            'organization_id'   => $organization->id,
-            'address'           => "Osloweg 131, $postCode BK, Groningen",
-            'phone'             => '0123456789',
-            'postcode'          => "$postCode BK",
-            'postcode_number'   => $postCode,
+            'organization_id' => $organization->id,
+            'address' => "Osloweg 131, $postCode BK, Groningen",
+            'phone' => '0123456789',
+            'postcode' => "$postCode BK",
+            'postcode_number' => $postCode,
             'postcode_addition' => 'BK',
-            'lon'               => 6.606065989043237 + (random_int(-1000, 1000) / 10000),
-            'lat'               => 53.21694230132835 + (random_int(-1000, 1000) / 10000),
-            'parsed'            => true
+            'lon' => 6.606065989043237 + (random_int(-1000, 1000) / 10000),
+            'lat' => 53.21694230132835 + (random_int(-1000, 1000) / 10000),
+            'parsed' => true,
         ], $fields));
 
         $office->schedules()->insert(array_map(fn ($week_day) => [
@@ -444,8 +446,8 @@ class TestData
     /**
      * @param Organization $organization
      * @param string $name
+     * @throws Exception
      * @return Fund
-     * @throws \Exception
      */
     public function makeFund(Organization $organization, string $name): Fund
     {
@@ -464,21 +466,21 @@ class TestData
             'state' => Fund::STATE_ACTIVE,
             'start_date' => Carbon::now()->format('Y-m-d'),
             'end_date' => Carbon::now()->addDays(60)->format('Y-m-d'),
-            'description'=> $description,
+            'description' => $description,
             'description_short' => $this->faker->text(random_int(300, 500)),
             'notification_amount' => 10000,
             'auto_requests_validation' => $autoValidation,
             'default_validator_employee_id' => $autoValidation ? $validator->id : null,
             'criteria_editable_after_start' => false,
             'type' => Fund::TYPE_BUDGET,
-            ...$this->config("default.funds", []),
+            ...$this->config('default.funds', []),
             ...$config,
         ]);
 
         $topUp = $fund->getOrCreateTopUp();
         $transaction = $topUp->transactions()->forceCreate([
             'fund_top_up_id' => $topUp->id,
-            'bank_transaction_id' => "XXXX",
+            'bank_transaction_id' => 'XXXX',
             'amount' => 100000,
         ]);
 
@@ -522,7 +524,7 @@ class TestData
             'organization_id' => $organization?->id,
             'informal_communication' => false,
             'allow_per_fund_notification_templates' => false,
-            ...$this->config("default.implementations", []),
+            ...$this->config('default.implementations', []),
             ...$urlData,
             ...$samlData,
             ...$cgiCertData,
@@ -532,49 +534,6 @@ class TestData
         $implementation->languages()->sync($languages);
 
         return $implementation;
-    }
-
-    /**
-     * @param string $key
-     * @return array
-     */
-    protected function makeImplementationUrlData(string $key): array
-    {
-        return [
-            'url_webshop' => str_var_replace($this->config('url_webshop'), compact('key')),
-            'url_sponsor' => str_var_replace($this->config('url_sponsor'), compact('key')),
-            'url_provider' => str_var_replace($this->config('url_provider'), compact('key')),
-            'url_validator' => str_var_replace($this->config('url_validator'), compact('key')),
-            'url_app' => str_var_replace($this->config('url_app'), compact('key')),
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function makeImplementationSamlData(): array
-    {
-        return [
-            'digid_enabled' => $this->config('digid_enabled'),
-            'digid_required' => true,
-            'digid_sign_up_allowed' => true,
-            'digid_app_id' => $this->config('digid_app_id'),
-            'digid_shared_secret' => $this->config('digid_shared_secret'),
-            'digid_a_select_server' => $this->config('digid_a_select_server'),
-            'digid_trusted_cert' => $this->config('digid_trusted_cert'),
-            'digid_connection_type' => 'cgi',
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function makeImplementationCgiCertData(): array
-    {
-        return [
-            "digid_cgi_tls_key" => $this->config('digid_cgi_tls_key'),
-            "digid_cgi_tls_cert" => $this->config('digid_cgi_tls_cert'),
-        ];
     }
 
     /**
@@ -588,31 +547,31 @@ class TestData
         $implementation = $implementation ?: $this->makeImplementation($implementationName, $fund->organization);
 
         $config = $this->config("funds.$fund->name.fund_config", []);
-        $hashBsn = Arr::get($config, "hash_bsn", false);
-        $emailRequired = Arr::get($config, "email_required", true);
+        $hashBsn = Arr::get($config, 'hash_bsn', false);
+        $emailRequired = Arr::get($config, 'email_required', true);
 
         $backofficeConfig = $fund->organization->backoffice_available ? $this->getBackofficeConfigs() : [];
         $iConnectConfig = $this->getIConnectConfigs();
 
         $defaultData = [
-            'fund_id'                   => $fund->id,
-            'implementation_id'         => $implementation->id,
-            'key'                       => str_slug($fund->name . '_' . date('Y')),
-            'bunq_sandbox'              => true,
-            'csv_primary_key'           => 'uid',
-            'is_configured'             => true,
-            'allow_physical_cards'      => false,
-            'allow_reimbursements'      => false,
-            'allow_direct_payments'     => false,
+            'fund_id' => $fund->id,
+            'implementation_id' => $implementation->id,
+            'key' => str_slug($fund->name . '_' . date('Y')),
+            'bunq_sandbox' => true,
+            'csv_primary_key' => 'uid',
+            'is_configured' => true,
+            'allow_physical_cards' => false,
+            'allow_reimbursements' => false,
+            'allow_direct_payments' => false,
             'allow_generator_direct_payments' => false,
-            'allow_voucher_top_ups'     => false,
-            'allow_voucher_records'     => false,
-            'email_required'            => $emailRequired,
-            'contact_info_enabled'      => $emailRequired,
-            'contact_info_required'     => $emailRequired,
-            'hash_bsn'                  => $hashBsn,
-            'hash_bsn_salt'             => $hashBsn ? $fund->name : null,
-            'bunq_key'                  => $this->config('bunq_key'),
+            'allow_voucher_top_ups' => false,
+            'allow_voucher_records' => false,
+            'email_required' => $emailRequired,
+            'contact_info_enabled' => $emailRequired,
+            'contact_info_required' => $emailRequired,
+            'hash_bsn' => $hashBsn,
+            'hash_bsn_salt' => $hashBsn ? $fund->name : null,
+            'bunq_key' => $this->config('bunq_key'),
         ];
 
         /** @var FundConfig $fundConfig */
@@ -635,7 +594,7 @@ class TestData
         $configFundPresets = $this->config("funds.$fund->name.fund_amount_presets", []);
         $configLimitMultiplier = $this->config("funds.$fund->name.fund_limit_multiplier");
 
-        $eligibility_key = sprintf("%s_eligible", $fund->load('fund_config')->fund_config->key);
+        $eligibility_key = sprintf('%s_eligible', $fund->load('fund_config')->fund_config->key);
         $criteria = [];
 
         $recordType = RecordType::firstOrCreate([
@@ -707,7 +666,7 @@ class TestData
     /**
      * @return array
      */
-    public function getBackofficeConfigs (): array
+    public function getBackofficeConfigs(): array
     {
         $url = $this->config('backoffice_url');
         $key = $this->config('backoffice_server_key');
@@ -721,13 +680,14 @@ class TestData
             'backoffice_certificate' => $cert,
         ], $this->configOnly([
             'backoffice_fallback', 'backoffice_client_cert', 'backoffice_client_cert_key',
-        ])): [];
+        ])) : [];
     }
 
     /**
      * @return array
      */
-    public function getIConnectConfigs(): array {
+    public function getIConnectConfigs(): array
+    {
         return [
             'iconnect_api_oin' => $this->config('iconnect_oin'),
             'iconnect_base_url' => $this->config('iconnect_url'),
@@ -752,10 +712,10 @@ class TestData
     ): void {
         $recordTypes = RecordType::pluck('id', 'key');
 
-        collect($records)->map(static function($record) use ($recordTypes) {
+        collect($records)->map(static function ($record) use ($recordTypes) {
             $record = collect($record);
 
-            return $record->map(static function($value, $key) use ($recordTypes) {
+            return $record->map(static function ($value, $key) use ($recordTypes) {
                 $record_type_id = $recordTypes[$key] ?? null;
 
                 if (!$record_type_id || $key === 'primary_email') {
@@ -764,7 +724,7 @@ class TestData
 
                 return compact('record_type_id', 'value');
             })->filter()->toArray();
-        })->filter()->map(function($records) use ($fund, $identity) {
+        })->filter()->map(function ($records) use ($fund, $identity) {
             $prevalidation = Prevalidation::forceCreate([
                 'uid' => Prevalidation::makeNewUid(),
                 'state' => 'pending',
@@ -784,8 +744,8 @@ class TestData
      * @param Fund $fund
      * @param int $count
      * @param array $records
+     * @throws Throwable
      * @return array
-     * @throws \Throwable
      */
     public function generatePrevalidationData(
         Fund $fund,
@@ -814,7 +774,7 @@ class TestData
                 $envLoremBsn : self::randomFakeBsn();
 
             $prevalidation = array_merge($records, [
-                'gender' => 'Female',
+                'gender' => 'vrouwelijk',
                 'net_worth' => random_int(3, 6) * 100,
                 'children_nth' => random_int(3, 5),
                 'municipality' => Arr::get(RecordType::findByKey('municipality')->getOptions()[0] ?? [], 'value'),
@@ -841,8 +801,8 @@ class TestData
      * @param Organization $provider
      * @param int $count
      * @param array $data
+     * @throws Throwable
      * @return array
-     * @throws \Throwable
      */
     public function makeProducts(Organization $provider, int $count = 10, array $data = []): array
     {
@@ -852,14 +812,14 @@ class TestData
     /**
      * @param Organization $organization
      * @param array $fields
+     * @throws Throwable
      * @return Product
-     * @throws \Throwable
      */
     public function makeProduct(Organization $organization, array $fields = []): Product
     {
         do {
-            $name = '#' . random_int(100000, 999999) . " " . $this->makeName(10, 140);
-        } while(Product::query()->where('name', $name)->count() > 0);
+            $name = '#' . random_int(100000, 999999) . ' ' . $this->makeName(10, 140);
+        } while (Product::query()->where('name', $name)->count() > 0);
 
         $price = random_int(1, 20);
         $unlimited_stock = $fields['unlimited_stock'] ?? random_int(1, 10) < 3;
@@ -868,8 +828,8 @@ class TestData
         $expire_at = Carbon::now()->addDays(random_int(20, 60));
         $product_category_id = $this->productCategories->pluck('id')->random();
         $description = implode(' ', [
-            "Ut aliquet nisi felis ipsum consectetuer a vulputate.",
-            "Integer montes nulla in montes venenatis."
+            'Ut aliquet nisi felis ipsum consectetuer a vulputate.',
+            'Integer montes nulla in montes venenatis.',
         ]);
 
         $price = random_int(1, 100) >= 25 ? $price : 0;
@@ -883,13 +843,20 @@ class TestData
         }
 
         $product = Product::forceCreate(array_merge(compact(
-            'name', 'price', 'total_amount', 'sold_out',
-            'expire_at', 'product_category_id', 'description', 'unlimited_stock',
-            'price_type', 'price_discount'
+            'name',
+            'price',
+            'total_amount',
+            'sold_out',
+            'expire_at',
+            'product_category_id',
+            'description',
+            'unlimited_stock',
+            'price_type',
+            'price_discount'
         ), [
             'organization_id' => $organization->id,
         ], array_only($fields, [
-            'name', 'total_amount', 'sold_out', 'expire_at'
+            'name', 'total_amount', 'sold_out', 'expire_at',
         ])));
 
         ProductCreated::dispatch($product);
@@ -898,19 +865,8 @@ class TestData
     }
 
     /**
-     * @param int $minLength
-     * @param int $maxLength
-     * @return string
-     * @throws \Exception
-     */
-    protected function makeName(int $minLength = 75, int $maxLength = 150): string
-    {
-        return $this->faker->text(random_int($minLength, $maxLength));
-    }
-
-    /**
+     * @throws Throwable
      * @return int
-     * @throws \Throwable
      */
     public static function randomFakeBsn(): int
     {
@@ -919,7 +875,7 @@ class TestData
         do {
             try {
                 $bsn = random_int(100000000, 900000000);
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 $bsn = false;
             }
         } while ($bsn && in_array($bsn, $randomBsn, true));
@@ -928,16 +884,16 @@ class TestData
     }
 
     /**
-     * Make fund requests
+     * Make fund requests.
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function makeFundRequests(): void
     {
         $fundRequestCount = $this->config('fund_requests_count');
         $fundRequestFilesCount = $this->config('fund_requests_files_count');
 
-        $requesters = array_map(fn() => $this->makeIdentity(), range(1, $fundRequestCount));
+        $requesters = array_map(fn () => $this->makeIdentity(), range(1, $fundRequestCount));
 
         $funds = Fund::query()
             ->whereRelation('fund_config', 'allow_fund_requests', '=', true)
@@ -961,7 +917,7 @@ class TestData
                         default => '',
                     },
                     'files' => array_map(
-                        fn() => $this->makeFundRequestFile()->uid,
+                        fn () => $this->makeFundRequestFile()->uid,
                         range(1, $fundRequestFilesCount),
                     ),
                     'record_type_key' => $criterion->record_type_key,
@@ -974,21 +930,11 @@ class TestData
     }
 
     /**
-     * @return File
-     */
-    protected function makeFundRequestFile(): File
-    {
-        return resolve('file')->uploadSingle(
-            UploadedFile::fake()->image(Str::random() . '.jpg', 50, 50),
-            'fund_request_record_proof',
-        );
-    }
-
-    /**
      * @param int $integer
      * @return string
      */
-    public function integerToRoman(int $integer): string {
+    public function integerToRoman(int $integer): string
+    {
         $result = '';
         $lookup = [
             'M' => 1000,
@@ -1003,10 +949,10 @@ class TestData
             'IX' => 9,
             'V' => 5,
             'IV' => 4,
-            'I' => 1
+            'I' => 1,
         ];
 
-        foreach ($lookup as $roman => $value){
+        foreach ($lookup as $roman => $value) {
             $result .= str_repeat($roman, (int) ($integer / $value));
             $integer %= $value;
         }
@@ -1101,7 +1047,7 @@ class TestData
     public function error(string $msg, bool $timestamp = true): void
     {
         if (!App::runningUnitTests()) {
-        echo ($timestamp ? $this->timestamp() : null) . "\e[0;31m$msg\e[0m\n";
+            echo ($timestamp ? $this->timestamp() : null) . "\e[0;31m$msg\e[0m\n";
         }
     }
 
@@ -1115,8 +1061,8 @@ class TestData
 
     /**
      * @param Organization[] $sponsors
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function makeSponsorsFunds(array $sponsors): void
     {
@@ -1126,9 +1072,128 @@ class TestData
     }
 
     /**
-     * @param Organization $sponsor
+     * @throws Throwable
+     */
+    public function appendPhysicalCards(): void
+    {
+        $funds = Fund::whereHas('fund_config', function (Builder $builder) {
+            $builder->where('allow_physical_cards', true);
+        })->get();
+
+        foreach ($funds as $fund) {
+            foreach ($fund->vouchers as $voucher) {
+                $voucher->addPhysicalCard((string) random_int(11111111, 99999999));
+            }
+        }
+    }
+
+    /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
+     */
+    public function makeVouchers(): void
+    {
+        $funds = Fund::where(fn (Builder $q) => FundQuery::whereActiveFilter($q))->get();
+        $vouchersPerFund = $this->config('vouchers_per_fund_count');
+
+        foreach ($funds as $fund) {
+            for ($i = 1; $i <= $vouchersPerFund; ++$i) {
+                $identity = $this->makeIdentity();
+                $note = 'Test data seeder!';
+
+                $fund->makeVoucher($identity, compact('note'));
+                $fund->makeFundFormulaProductVouchers($identity, compact('note'));
+            }
+        }
+    }
+
+    /**
+     * @param string $configKey
+     * @noinspection PhpUnused
+     */
+    public function setConfigKey(string $configKey): void
+    {
+        $this->configKey = $configKey;
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getConfigKey(): string
+    {
+        return $this->configKey;
+    }
+
+    /**
+     * @param string $key
+     * @return array
+     */
+    protected function makeImplementationUrlData(string $key): array
+    {
+        return [
+            'url_webshop' => str_var_replace($this->config('url_webshop'), compact('key')),
+            'url_sponsor' => str_var_replace($this->config('url_sponsor'), compact('key')),
+            'url_provider' => str_var_replace($this->config('url_provider'), compact('key')),
+            'url_validator' => str_var_replace($this->config('url_validator'), compact('key')),
+            'url_app' => str_var_replace($this->config('url_app'), compact('key')),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function makeImplementationSamlData(): array
+    {
+        return [
+            'digid_enabled' => $this->config('digid_enabled'),
+            'digid_required' => true,
+            'digid_sign_up_allowed' => true,
+            'digid_app_id' => $this->config('digid_app_id'),
+            'digid_shared_secret' => $this->config('digid_shared_secret'),
+            'digid_a_select_server' => $this->config('digid_a_select_server'),
+            'digid_trusted_cert' => $this->config('digid_trusted_cert'),
+            'digid_connection_type' => 'cgi',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function makeImplementationCgiCertData(): array
+    {
+        return [
+            'digid_cgi_tls_key' => $this->config('digid_cgi_tls_key'),
+            'digid_cgi_tls_cert' => $this->config('digid_cgi_tls_cert'),
+        ];
+    }
+
+    /**
+     * @param int $minLength
+     * @param int $maxLength
+     * @throws Exception
+     * @return string
+     */
+    protected function makeName(int $minLength = 75, int $maxLength = 150): string
+    {
+        return $this->faker->text(random_int($minLength, $maxLength));
+    }
+
+    /**
+     * @return File
+     */
+    protected function makeFundRequestFile(): File
+    {
+        return resolve('file')->uploadSingle(
+            UploadedFile::fake()->image(Str::random() . '.jpg', 50, 50),
+            'fund_request_record_proof',
+        );
+    }
+
+    /**
+     * @param Organization $sponsor
+     * @throws Throwable
+     * @return void
      */
     private function makeSponsorFunds(Organization $sponsor): void
     {
@@ -1162,7 +1227,7 @@ class TestData
                             '>' => intval($criterion->value) + 1,
                             '<' => intval($criterion->value) - 1,
                             default => '',
-                        }
+                        },
                     ]);
                 }, []);
 
@@ -1170,60 +1235,6 @@ class TestData
             }
         }
 
-        (new ImplementationsNotificationBrandingSeeder)->run();
-    }
-
-    /**
-     * @throws \Throwable
-     */
-    public function appendPhysicalCards(): void
-    {
-        $funds = Fund::whereHas('fund_config', function(Builder $builder) {
-            $builder->where('allow_physical_cards', true);
-        })->get();
-
-        foreach ($funds as $fund) {
-            foreach ($fund->vouchers as $voucher) {
-                $voucher->addPhysicalCard((string) random_int(11111111, 99999999));
-            }
-        }
-    }
-
-    /**
-     * @return void
-     * @throws \Throwable
-     */
-    public function makeVouchers(): void
-    {
-        $funds = Fund::where(fn(Builder $q) => FundQuery::whereActiveFilter($q))->get();
-        $vouchersPerFund = $this->config('vouchers_per_fund_count');
-
-        foreach ($funds as $fund) {
-            for ($i = 1; $i <= $vouchersPerFund; ++$i) {
-                $identity = $this->makeIdentity();
-                $note = 'Test data seeder!';
-
-                $fund->makeVoucher($identity, compact('note'));
-                $fund->makeFundFormulaProductVouchers($identity, compact('note'));
-            }
-        }
-    }
-
-    /**
-     * @param string $configKey
-     * @noinspection PhpUnused
-     */
-    public function setConfigKey(string $configKey): void
-    {
-        $this->configKey = $configKey;
-    }
-
-    /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function getConfigKey(): string
-    {
-        return $this->configKey;
+        (new ImplementationsNotificationBrandingSeeder())->run();
     }
 }

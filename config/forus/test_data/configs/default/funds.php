@@ -189,7 +189,7 @@ return [
         ], [
             'record_type_key' => 'gender',
             'operator' => '=',
-            'value' => 'Female',
+            'value' => 'vrouwelijk',
             'show_attachment' => false,
             'step' => 'Step #2',
             'rules' => [[

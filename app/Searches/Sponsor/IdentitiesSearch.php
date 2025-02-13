@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Searches\Sponsor;
-
 
 use App\Models\Identity;
 use App\Scopes\Builders\IdentityQuery;
@@ -41,14 +39,15 @@ class IdentitiesSearch extends BaseSearch
      */
     public function querySearchIdentity(Builder|Identity $builder, string $q): Builder|Identity
     {
-        return $builder->where(function(Builder $builder) use ($q) {
+        return $builder->where(function (Builder $builder) use ($q) {
             $builder->whereRelation('primary_email', 'email', 'like', "%$q%");
             $builder->orWhereRelation('emails_verified', 'email', 'like', "%$q%");
             $builder->orWhereRelation('record_bsn', 'value', 'like', "%$q%");
-            $builder->orWhereHas('profiles.profile_records', function(Builder $builder) use ($q) {
+            $builder->orWhereHas('profiles.profile_records', function (Builder $builder) use ($q) {
                 $builder->where('value', 'like', "%$q%");
-                $builder->whereHas('record_type', fn(Builder $q) => $q->whereIn('key', [
+                $builder->whereHas('record_type', fn (Builder $q) => $q->whereIn('key', [
                     'given_name', 'family_name', 'mobile', 'city', 'street', 'house_number', 'postal_code',
+                    'client_number', 'municipality_name', 'neighborhood_name',
                 ]));
             });
         });
