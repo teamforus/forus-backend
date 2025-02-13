@@ -28,9 +28,6 @@ class OrganizationBasicResource extends JsonResource
             ...$organization->only([
                 'id', 'name', 'business_type_id', 'email_public', 'phone_public', 'website_public',
             ]),
-            ...$organization->translateColumns($organization->only([
-                'name',
-            ])),
             'email' => $organization->email_public ? $organization->email ?? null : null,
             'phone' => $organization->phone_public ? $organization->phone ?? null : null,
             'website' => $organization->website_public ? $organization->website ?? null : null,

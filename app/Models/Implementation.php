@@ -28,13 +28,13 @@ use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
@@ -133,6 +133,8 @@ use Illuminate\Support\Facades\Gate;
  * @property-read int|null $pre_checks_records_count
  * @property-read EloquentCollection|\App\Models\ImplementationSocialMedia[] $social_medias
  * @property-read int|null $social_medias_count
+ * @property-read EloquentCollection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @method static Builder<static>|Implementation newModelQuery()
  * @method static Builder<static>|Implementation newQuery()
  * @method static Builder<static>|Implementation query()
@@ -196,7 +198,10 @@ use Illuminate\Support\Facades\Gate;
  */
 class Implementation extends BaseModel
 {
-    use HasMedia, HasMarkdownDescription, ValidatesValues, HasOnDemandTranslations;
+    use HasMedia;
+    use HasMarkdownDescription;
+    use ValidatesValues;
+    use HasOnDemandTranslations;
 
     public const string KEY_GENERAL = 'general';
 
@@ -328,7 +333,7 @@ class Implementation extends BaseModel
     }
 
     /**
-     * Get fund banner
+     * Get fund banner.
      * @return MorphOne
      * @noinspection PhpUnused
      */
@@ -340,7 +345,7 @@ class Implementation extends BaseModel
     }
 
     /**
-     * Get fund banner
+     * Get fund banner.
      * @return MorphOne
      * @noinspection PhpUnused
      */
@@ -368,7 +373,7 @@ class Implementation extends BaseModel
     }
 
     /**
-     * Get fund banner
+     * Get fund banner.
      * @return MorphOne
      * @noinspection PhpUnused
      */
@@ -632,8 +637,8 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return DigIdRepo|null
      * @throws DigIdException
+     * @return DigIdRepo|null
      */
     public function getDigid(): ?DigIdRepo
     {
@@ -646,14 +651,6 @@ class Implementation extends BaseModel
                 ->setTrustedCertificate($this->digid_trusted_cert),
             default => null,
         };
-    }
-
-    /**
-     * @return array|null
-     */
-    protected function getDigidSamlContext(): ?array
-    {
-        return $this->digid_saml_context ?: Implementation::general()->digid_saml_context;
     }
 
     /**
@@ -674,21 +671,11 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @param string $url
-     * @param array $getParams
-     * @return string
-     */
-    protected function buildFrontendUrl(string $url, array $getParams = []): string
-    {
-        return implode('?', array_filter([$url, http_build_query($getParams)]));
-    }
-
-    /**
      * @param string $uri
      * @param array $params
      * @return string
      */
-    public function urlWebshop(string $uri = "/", array $params = []): string
+    public function urlWebshop(string $uri = '/', array $params = []): string
     {
         return $this->buildFrontendUrl(http_resolve_url($this->url_webshop, $uri), $params);
     }
@@ -698,7 +685,7 @@ class Implementation extends BaseModel
      * @param array $params
      * @return string
      */
-    public function urlSponsorDashboard(string $uri = "/", array $params = []): string
+    public function urlSponsorDashboard(string $uri = '/', array $params = []): string
     {
         return $this->buildFrontendUrl(http_resolve_url($this->url_sponsor, $uri), $params);
     }
@@ -708,7 +695,7 @@ class Implementation extends BaseModel
      * @param array $params
      * @return string
      */
-    public function urlProviderDashboard(string $uri = "/", array $params = []): string
+    public function urlProviderDashboard(string $uri = '/', array $params = []): string
     {
         return $this->buildFrontendUrl(http_resolve_url($this->url_provider, $uri), $params);
     }
@@ -718,7 +705,7 @@ class Implementation extends BaseModel
      * @param array $params
      * @return string
      */
-    public function urlValidatorDashboard(string $uri = "/", array $params = []): string
+    public function urlValidatorDashboard(string $uri = '/', array $params = []): string
     {
         return $this->buildFrontendUrl(http_resolve_url($this->url_validator, $uri), $params);
     }
@@ -800,7 +787,7 @@ class Implementation extends BaseModel
             ]) : null,
             'languages' => $implementation->getAvailableLanguages(),
             'implementation' => $implementation->translateColumns($implementation->only([
-                'name'
+                'name',
             ])),
             'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
             'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
@@ -868,29 +855,6 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return array
-     */
-    private static function getPlatformMediaConfig(): array
-    {
-        return array_map(function(MediaImageConfig $config) {
-            $sizes = array_filter($config->getPresets(), function(MediaPreset $mediaPreset) {
-                return get_class($mediaPreset) === MediaImagePreset::class;
-            });
-
-            $sizes = array_map(fn(MediaImagePreset $preset) => [
-                $preset->width,
-                $preset->height,
-                $preset->preserve_aspect_ratio,
-            ], $sizes);
-
-            return [
-                'aspect_ratio' => $config->getPreviewAspectRatio(),
-                'size' => $sizes,
-            ];
-        }, MediaService::getMediaConfigs());
-    }
-
-    /**
      * @param array $options
      * @param Builder|null $query
      * @return Builder
@@ -949,7 +913,9 @@ class Implementation extends BaseModel
                 ) use ($like) {
                     $builder->where(static function (Builder $query) use ($like) {
                         $query->where(
-                            'address', 'LIKE', $like
+                            'address',
+                            'LIKE',
+                            $like
                         );
                     });
                 });
@@ -996,18 +962,6 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return ?string
-     */
-    private function getBannerTextColor(): ?string
-    {
-        if ($this->header_text_color == 'auto') {
-            return $this->banner ? ($this->banner->is_dark ? 'bright' : 'dark') : 'dark';
-        }
-
-        return $this->header_text_color;
-    }
-
-    /**
      * @param array $attributes
      * @param bool $replace
      * @return Announcement
@@ -1041,7 +995,7 @@ class Implementation extends BaseModel
             ->whereNotIn('funds.id', VoucherQuery::whereNotExpired($identity->vouchers()->select('fund_id')))
             ->get();
 
-        return $funds->reduce(function(array $vouchers, Fund $fund) use ($identity) {
+        return $funds->reduce(function (array $vouchers, Fund $fund) use ($identity) {
             if (Gate::forUser($identity)->denies('apply', [$fund, 'apply'])) {
                 return $vouchers;
             }
@@ -1074,22 +1028,6 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @return array
-     */
-    private function getPreCheckFields(): array
-    {
-        return [
-            'pre_check_banner' => new MediaResource($this->pre_check_banner),
-            'pre_check_enabled' => $this->pre_check_enabled,
-            'pre_check_banner_state' => $this->pre_check_banner_state,
-            ...$this->translateColumns($this->only([
-                'pre_check_title', 'pre_check_description', 'pre_check_banner_title',
-                'pre_check_banner_description', 'pre_check_banner_label',
-            ])),
-        ];
-    }
-
-    /**
      * @param array $pre_checks
      * @return void
      */
@@ -1119,7 +1057,7 @@ class Implementation extends BaseModel
                 ], [
                     'order' => $order2,
                     'pre_check_id' => $pre_check->id,
-                    ...Arr::only($preCheckRecordType, ['title', 'title_short', 'description'])
+                    ...Arr::only($preCheckRecordType, ['title', 'title_short', 'description']),
                 ]);
 
                 foreach (Arr::get($preCheckRecordType, 'record_settings', []) as $recordSetting) {
@@ -1137,5 +1075,74 @@ class Implementation extends BaseModel
                 'default' => false,
             ]);
         }
+    }
+
+    /**
+     * @return array|null
+     */
+    protected function getDigidSamlContext(): ?array
+    {
+        return $this->digid_saml_context ?: Implementation::general()->digid_saml_context;
+    }
+
+    /**
+     * @param string $url
+     * @param array $getParams
+     * @return string
+     */
+    protected function buildFrontendUrl(string $url, array $getParams = []): string
+    {
+        return implode('?', array_filter([$url, http_build_query($getParams)]));
+    }
+
+    /**
+     * @return array
+     */
+    private static function getPlatformMediaConfig(): array
+    {
+        return array_map(function (MediaImageConfig $config) {
+            $sizes = array_filter($config->getPresets(), function (MediaPreset $mediaPreset) {
+                return get_class($mediaPreset) === MediaImagePreset::class;
+            });
+
+            $sizes = array_map(fn (MediaImagePreset $preset) => [
+                $preset->width,
+                $preset->height,
+                $preset->preserve_aspect_ratio,
+            ], $sizes);
+
+            return [
+                'aspect_ratio' => $config->getPreviewAspectRatio(),
+                'size' => $sizes,
+            ];
+        }, MediaService::getMediaConfigs());
+    }
+
+    /**
+     * @return ?string
+     */
+    private function getBannerTextColor(): ?string
+    {
+        if ($this->header_text_color == 'auto') {
+            return $this->banner ? ($this->banner->is_dark ? 'bright' : 'dark') : 'dark';
+        }
+
+        return $this->header_text_color;
+    }
+
+    /**
+     * @return array
+     */
+    private function getPreCheckFields(): array
+    {
+        return [
+            'pre_check_banner' => new MediaResource($this->pre_check_banner),
+            'pre_check_enabled' => $this->pre_check_enabled,
+            'pre_check_banner_state' => $this->pre_check_banner_state,
+            ...$this->translateColumns($this->only([
+                'pre_check_title', 'pre_check_description', 'pre_check_banner_title',
+                'pre_check_banner_description', 'pre_check_banner_label',
+            ])),
+        ];
     }
 }

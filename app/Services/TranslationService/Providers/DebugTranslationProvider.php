@@ -37,6 +37,6 @@ class DebugTranslationProvider extends TranslationProvider
             'texts' => $texts,
         ]);
 
-        return array_map(fn($text) => is_string($text) && trim($text) !== '' ? "$target: $text" : '', $texts);
+        return array_map(fn ($text) => is_string($text) && trim($text) !== '' ? "$target: $text" : '', $texts);
     }
 }

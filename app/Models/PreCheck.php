@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 
 /**
- * App\Models\PreCheck
+ * App\Models\PreCheck.
  *
  * @property int $id
  * @property int $default
@@ -144,7 +144,7 @@ class PreCheck extends BaseModel
             return [
                 ...$baseFields,
                 'criteria' => $criteria,
-                'is_valid' => $criteria->every(fn($criterion) => $criterion['is_valid']),
+                'is_valid' => $criteria->every(fn ($criterion) => $criterion['is_valid']),
                 'identity_multiplier' => $multiplier,
                 'allow_direct_requests' => $fund->fund_config?->allow_direct_requests ?? false,
                 'amount_total' => currency_format($amountIdentityTotal),
@@ -156,42 +156,6 @@ class PreCheck extends BaseModel
                 'products_amount_total' => array_sum(array_pluck($fund->fund_formula_products, 'price')),
             ];
         })->toArray();
-    }
-
-    protected static function buildPreCheckCriteriaList(Fund $fund, array $records)
-    {
-        $criteria = $fund->criteria
-            ->where('optional', false)
-            ->where('record_type.pre_check', true)
-            ->values();
-
-        return $criteria->map(function (FundCriterion $criterion) use ($records, $fund) {
-            /** @var PreCheckRecordSetting|null $setting */
-            /** @var PreCheckRecord|null $preCheckRecord */
-            $preCheckRecord = $fund->fund_config
-                ?->implementation
-                ?->pre_checks_records
-                ?->firstWhere('record_type_key', $criterion->record_type_key);
-
-            $setting = $preCheckRecord?->settings?->firstWhere('fund_id', $fund->id);
-            $value = $records[$criterion->record_type_key] ?? null;
-            $rule = BaseFundRequestRule::validateRecordValue($criterion, $value);
-
-            $productCount = $fund->fund_formula_products
-                ->where('record_type_key_multiplier', $criterion->record_type->key)
-                ->count();
-
-            return [
-                'id' => $criterion->id,
-                'name' => $criterion->record_type->name,
-                'value' => $value,
-                'is_valid' => $criterion->isExcludedByRules($records) || $rule->passes(),
-                'is_knock_out' => $setting?->is_knock_out ?? false,
-                'impact_level' => $setting?->impact_level ?? 100,
-                'knock_out_description' => $setting?->description ?? '',
-                'product_count' => $productCount,
-            ];
-        });
     }
 
     /**
@@ -230,5 +194,41 @@ class PreCheck extends BaseModel
             'products' => $products->toArray(),
             'items' => $formula,
         ];
+    }
+
+    protected static function buildPreCheckCriteriaList(Fund $fund, array $records)
+    {
+        $criteria = $fund->criteria
+            ->where('optional', false)
+            ->where('record_type.pre_check', true)
+            ->values();
+
+        return $criteria->map(function (FundCriterion $criterion) use ($records, $fund) {
+            /** @var PreCheckRecordSetting|null $setting */
+            /** @var PreCheckRecord|null $preCheckRecord */
+            $preCheckRecord = $fund->fund_config
+                ?->implementation
+                ?->pre_checks_records
+                ?->firstWhere('record_type_key', $criterion->record_type_key);
+
+            $setting = $preCheckRecord?->settings?->firstWhere('fund_id', $fund->id);
+            $value = $records[$criterion->record_type_key] ?? null;
+            $rule = BaseFundRequestRule::validateRecordValue($criterion, $value);
+
+            $productCount = $fund->fund_formula_products
+                ->where('record_type_key_multiplier', $criterion->record_type->key)
+                ->count();
+
+            return [
+                'id' => $criterion->id,
+                'name' => $criterion->record_type->name,
+                'value' => $value,
+                'is_valid' => $criterion->isExcludedByRules($records) || $rule->passes(),
+                'is_knock_out' => $setting?->is_knock_out ?? false,
+                'impact_level' => $setting?->impact_level ?? 100,
+                'knock_out_description' => $setting?->description ?? '',
+                'product_count' => $productCount,
+            ];
+        });
     }
 }

@@ -21,7 +21,7 @@ class ProductFundResource extends BaseJsonResource
         'organization.employees.roles.permissions',
         'organization.business_type.translations',
         'organization.bank_connection_active',
-        'organization.tags',
+        'organization.tags.translations',
         'organization.offices',
         'fund_config.implementation.page_provider'
     ];

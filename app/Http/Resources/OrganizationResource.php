@@ -38,11 +38,11 @@ class OrganizationResource extends BaseJsonResource
     public static function loadDeps($request = null): array
     {
         $load = [
-            'tags',
             'offices',
             'contacts',
             'offices',
             'business_type',
+            'tags.translations',
             'reservation_fields',
             'bank_connection_active',
             'employees.roles.permissions',
@@ -88,15 +88,13 @@ class OrganizationResource extends BaseJsonResource
 
         return array_filter([
             ...$organization->only([
-                'id', 'identity_address', 'business_type_id', 'email_public', 'phone_public',
+                'id', 'name', 'identity_address', 'business_type_id', 'email_public', 'phone_public',
                 'website_public', 'description', 'reservation_phone', 'reservation_address',
                 'reservation_birth_date', 'description_html',
             ]),
-            ...$organization->translateColumns(
-                $this->isCollection()
-                    ? $organization->only(['name'])
-                    : $organization->only(['name', 'description_html']),
-            ),
+            ...$this->isCollection() ? [] : $organization->translateColumns($organization->only([
+                'description_html',
+            ])),
             ...$privateData,
             ...$ownerData,
             ...$biConnectionData,

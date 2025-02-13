@@ -13,10 +13,10 @@ use Illuminate\Http\Request;
  */
 class FundCriterionResource extends BaseJsonResource
 {
-    const array LOAD = [
+    public const array LOAD = [
         'fund_criterion_rules',
         'record_type.translation',
-        'record_type.record_type_options',
+        'record_type.record_type_options.translations',
     ];
 
     /**
@@ -27,7 +27,7 @@ class FundCriterionResource extends BaseJsonResource
      */
     public function toArray(Request $request): array
     {
-        $identity =  BaseFormRequest::createFrom($request)->identity();
+        $identity = BaseFormRequest::createFrom($request)->identity();
         $criterion = $this->resource;
 
         return [

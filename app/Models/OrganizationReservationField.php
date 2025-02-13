@@ -21,6 +21,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\Organization $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationReservationField newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationReservationField newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationReservationField onlyTrashed()

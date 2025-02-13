@@ -31,18 +31,16 @@ class ProviderResource extends BaseJsonResource
 
         return [
             ...$organization->only([
-                'id', 'description', 'business_type_id', 'description_html',
+                'id', 'name', 'description', 'business_type_id', 'description_html',
                 ...array_filter([
                     $organization->email_public ? 'email' : null,
                     $organization->phone_public ? 'phone' : null,
                     $organization->website_public ? 'website' : null,
                 ]),
             ]),
-            ...$organization->translateColumns(
-                $this->isCollection()
-                    ? $organization->only(['name'])
-                    : $organization->only(['name', 'description_html']),
-            ),
+            ...$this->isCollection()
+                ? []
+                : $organization->translateColumns($organization->only(['description_html'])),
             'business_type' => new BusinessTypeResource($organization->business_type),
             'offices' => OfficeResource::collection($organization->offices),
             'logo' => new MediaCompactResource($organization->logo),

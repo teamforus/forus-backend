@@ -14,7 +14,7 @@ class RecordTypeResource extends BaseJsonResource
 
     const array LOAD = [
         'translations',
-        'record_type_options',
+        'record_type_options.translations',
     ];
 
     /**

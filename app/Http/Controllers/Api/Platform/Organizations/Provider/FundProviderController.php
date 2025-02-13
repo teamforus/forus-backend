@@ -60,7 +60,7 @@ class FundProviderController extends Controller
             }),
             'tags' => TagResource::collection(Tag::whereHas('funds', static function(Builder $builder) use ($query) {
                 return $builder->whereIn('funds.id', (clone($query))->select('funds.id'));
-            })->where('scope', 'provider')->get()),
+            })->where('scope', 'provider')->with('translations')->get()),
             'totals' => FundProvider::makeTotalsMeta($organization),
         ];
 

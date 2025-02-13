@@ -25,7 +25,7 @@ class FundCriteriaStepResource extends BaseJsonResource
             'order' => $step->order,
             ...$step->translateColumns($step->only([
                 'title', 'description_html',
-            ]))
+            ])),
         ];
     }
 }

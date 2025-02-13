@@ -11,6 +11,9 @@ class TranslationConfig
     private string $provider;
     private array $modelConfigs;
     private array $translationsMap;
+    private bool $cacheEnabled;
+    private string $cacheDriver;
+    private ?int $cacheTime;
 
     public function __construct()
     {
@@ -19,6 +22,9 @@ class TranslationConfig
         $this->provider = Config::get('translation-service.provider', 'debug');
         $this->modelConfigs = Config::get('translation-service.models', []);
         $this->translationsMap = Config::get('translation-service.translations_map', []);
+        $this->cacheEnabled = Config::get('translation-service.cache_enabled');
+        $this->cacheDriver = Config::get('translation-service.cache_driver');
+        $this->cacheTime = Config::get('translation-service.cache_time');
     }
 
     /**
@@ -27,6 +33,30 @@ class TranslationConfig
     public function getSourceLanguage(): string
     {
         return $this->sourceLanguage;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCacheDriver(): string
+    {
+        return $this->cacheDriver;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCacheEnabled(): bool
+    {
+        return $this->cacheEnabled;
+    }
+
+    /**
+     * @return ?int
+     */
+    public function getCacheTime(): ?int
+    {
+        return $this->cacheTime;
     }
 
     /**

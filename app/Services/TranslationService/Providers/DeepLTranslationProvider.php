@@ -21,7 +21,7 @@ class DeepLTranslationProvider extends TranslationProvider
     public function __construct()
     {
         $this->apiKey = (string) Config::get('translation-service.deepl.api_key');
-        $this->apiFree = (boolean) Config::get('translation-service.deepl.free');
+        $this->apiFree = (bool) Config::get('translation-service.deepl.free');
 
         if (empty($this->apiKey)) {
             throw new InvalidArgumentException('DeepL API key is missing in the configuration.');

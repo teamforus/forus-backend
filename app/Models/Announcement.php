@@ -35,6 +35,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read string $description_html
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\Role|null $role
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @method static Builder<static>|Announcement newModelQuery()
  * @method static Builder<static>|Announcement newQuery()
  * @method static Builder<static>|Announcement onlyTrashed()

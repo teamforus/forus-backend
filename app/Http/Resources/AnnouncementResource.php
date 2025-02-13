@@ -2,8 +2,8 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Http\Request;
 use App\Models\Announcement;
+use Illuminate\Http\Request;
 use Throwable;
 
 /**
@@ -15,8 +15,8 @@ class AnnouncementResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
      * @throws Throwable
+     * @return array
      */
     public function toArray(Request $request): array
     {
@@ -26,7 +26,7 @@ class AnnouncementResource extends BaseJsonResource
             ]),
             ...$this->resource->translateColumns($this->resource->only([
                 'title', 'description_html',
-            ]))
+            ])),
         ];
     }
 }

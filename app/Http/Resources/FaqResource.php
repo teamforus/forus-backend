@@ -25,7 +25,7 @@ class FaqResource extends BaseJsonResource
             'description' => $faq->description,
             ...$faq->translateColumns($faq->only([
                 'title', 'description_html',
-            ]))
+            ])),
         ];
     }
 }

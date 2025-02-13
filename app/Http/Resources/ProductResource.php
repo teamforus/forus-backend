@@ -95,7 +95,8 @@ class ProductResource extends BaseJsonResource
      * @param Product $product
      * @return array
      */
-    protected function priceFields(Product $product): array {
+    protected function priceFields(Product $product): array
+    {
         $price_min = $this->getProductSubsidyPrice($product, 'max');
         $price_max = $this->getProductSubsidyPrice($product, 'min');
         $lowest_price = min($product->price, $price_min);
@@ -139,12 +140,9 @@ class ProductResource extends BaseJsonResource
                 ...$fund->translateColumns($fund->only(['name'])),
                 'logo' => new MediaResource($fund->logo),
                 'type' => $fund->type,
-                'organization' => [
-                    ...$fund->organization->only('id'),
-                    ...$fund->organization->translateColumns($fund->organization->only([
-                        'name',
-                    ])),
-                ],
+                'organization' => $fund->organization->only([
+                    'id', 'name',
+                ]),
                 'end_at' => $fund->end_date?->format('Y-m-d'),
                 'end_at_locale' => format_date_locale($fund->end_date ?? null),
                 'reservations_enabled' => $product->reservationsEnabled($fund),
@@ -178,7 +176,7 @@ class ProductResource extends BaseJsonResource
     {
         return max($product->price - $product->fund_provider_products()->where([
             'product_id' => $product->id,
-        ])->whereHas('fund_provider.fund', function(Builder $builder) {
+        ])->whereHas('fund_provider.fund', function (Builder $builder) {
             $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
             $builder->whereIn('funds.id', $this->fundsQuery()->select('funds.id'));
         })->$type('amount'), 0);

@@ -22,6 +22,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterion[] $fund_criteria
  * @property-read int|null $fund_criteria_count
  * @property-read string $description_html
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriteriaStep query()

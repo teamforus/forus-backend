@@ -40,9 +40,7 @@ class VoucherTransactionPayoutResource extends VoucherTransactionResource
                 $fund->translateColumns($fund->only([
                     'name',
                 ])),
-                'organization_name' => Arr::get($fund->organization?->translateColumns($fund->organization->only([
-                    'name',
-                ])), 'name'),
+                'organization_name' => $fund->organization->name,
             ],
             ...$this->makeTimestamps($this->resource->only([
                 'created_at', 'updated_at',

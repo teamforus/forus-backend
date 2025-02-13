@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\FundProvider;
 use App\Scopes\Builders\ProductQuery;
+use Illuminate\Http\Request;
 
 /**
  * @property FundProvider $resource
@@ -12,7 +13,7 @@ class FundProviderResource extends BaseJsonResource
 {
     public const array LOAD = [
         'fund.faq',
-        'fund.tags',
+        'fund.tags.translations',
         'fund.logo.presets',
         'fund.criteria.fund',
         'fund.organization.logo.presets',
@@ -20,11 +21,11 @@ class FundProviderResource extends BaseJsonResource
         'fund.organization.employees.roles.permissions',
         'fund.organization.business_type.translations',
         'fund.organization.bank_connection_active',
-        'fund.organization.tags',
+        'fund.organization.tags.translations',
         'fund.fund_config.implementation',
         'fund.fund_formula_products',
         'fund.provider_organizations_approved.employees',
-        'fund.tags_webshop',
+        'fund.tags_webshop.translations',
         'fund.fund_formulas',
         'fund.top_up_transactions',
         'organization.offices.schedules',
@@ -41,10 +42,10 @@ class FundProviderResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $fundProvider = $this->resource;
         $lastActivity = $fundProvider->getLastActivity();

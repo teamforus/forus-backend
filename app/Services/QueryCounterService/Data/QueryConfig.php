@@ -7,6 +7,7 @@ use Illuminate\Support\Arr;
 class QueryConfig
 {
     protected bool $enabled;
+    protected ?string $locale;
     protected int $minQueries;
     protected int $minQueriesTime;
     protected array $minQueriesOverwrite;
@@ -19,6 +20,7 @@ class QueryConfig
      */
     public function __construct(protected array $config)
     {
+        $this->locale = Arr::get($this->config, 'locale');
         $this->enabled = Arr::get($this->config, 'enabled', false);
         $this->logChannel = Arr::get($this->config, 'log_channel', 'daily');
         $this->minQueries = (int) Arr::get($this->config, 'min_queries', 100);
@@ -34,6 +36,14 @@ class QueryConfig
     public function isEnabled(): bool
     {
         return $this->enabled;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getLocale(): ?string
+    {
+        return $this->locale;
     }
 
     /**

@@ -8,7 +8,6 @@ use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\Language;
 use App\Models\OrganizationReservationField;
-use App\Models\RecordTypeOption;
 use Carbon\Carbon;
 use Eloquent;
 use Illuminate\Database\Eloquent\Model;
@@ -32,7 +31,7 @@ use Illuminate\Support\Facades\Config;
  * @property string|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent $translatable
+ * @property-read Model|Eloquent $translatable
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue query()
@@ -63,18 +62,9 @@ class TranslationValue extends Model
     ];
 
     protected static array $fieldMap = [
-        'faq' => 'Veelgesteld vragen',
-        'fund' => 'Fondsen',
-        'product' => 'Producten',
-        'organization' => 'Organisaties',
-        'implementation' => 'Implementaties',
-        FundConfig::class => 'Aanvraagformulier hulpknop',
-        FundCriterion::class => 'Aanvraagformulier voorwaarden',
-        FundCriteriaStep::class => 'Aanvraagformulier stappen',
-        RecordTypeOption::class => 'Aanvraagformulier waarden',
-        Announcement::class => 'Aankondigingen',
-        'cms_page' => 'Cms-pagina\'s',
-        OrganizationReservationField::class => 'Reservering aangepaste velden',
+        'webshop_content' => 'Webshop content',
+        'fund_application' => 'Aanvraagformulier',
+        'providers_content' => 'Aanbieders content',
     ];
 
     /**
@@ -184,9 +174,9 @@ class TranslationValue extends Model
         // Format the result
         $result = [
             'total' => self::formatAndCalculateCost($totalSymbols),
-            'count_per_type' => (object)[],
-            'total_per_locale' => (object)[],
-            'total_per_type_and_locale' => (object)[],
+            'count_per_type' => (object) [],
+            'total_per_locale' => (object) [],
+            'total_per_type_and_locale' => (object) [],
         ];
 
         foreach ($countPerType as $type => $symbols) {
@@ -203,6 +193,22 @@ class TranslationValue extends Model
         }
 
         return $result;
+    }
+
+    /**
+     * @return int
+     */
+    public static function pricePerMillionSymbols(): int
+    {
+        return intval(Config::get('translation-service.price_per_mil'));
+    }
+
+    /**
+     * @return int
+     */
+    public static function maxMonthlyLimit(): int
+    {
+        return intval(Config::get('translation-service.max_monthly_limit'));
     }
 
     /**
@@ -234,22 +240,6 @@ class TranslationValue extends Model
     }
 
     /**
-     * @return int
-     */
-    public static function pricePerMillionSymbols(): int
-    {
-        return intval(Config::get('translation-service.price_per_mil'));
-    }
-
-    /**
-     * @return int
-     */
-    public static function maxMonthlyLimit(): int
-    {
-        return intval(Config::get('translation-service.max_monthly_limit'));
-    }
-
-    /**
      * Get the list of available translatable types.
      *
      * @return array
@@ -277,7 +267,15 @@ class TranslationValue extends Model
     private static function getTranslatableTypeGroups(): array
     {
         return [
-            'cms_page' => ['implementation_page', 'implementation_block'],
+            'fund_application' => [
+                FundConfig::class, FundCriteriaStep::class, FundCriterion::class,
+            ],
+            'webshop_content' => [
+                'faq', 'fund', 'implementation', 'implementation_block', 'implementation_page', Announcement::class,
+            ],
+            'providers_content' => [
+                'organization', OrganizationReservationField::class, 'product',
+            ],
         ];
     }
 }
