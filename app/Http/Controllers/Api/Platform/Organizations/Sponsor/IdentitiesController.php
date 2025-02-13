@@ -69,6 +69,8 @@ class IdentitiesController extends Controller
         $organization->findOrMakeProfile($identity)->updateRecords($request->only([
             'given_name', 'family_name', 'telephone', 'mobile', 'birth_date', 'city',
             'street', 'house_number', 'house_number_addition', 'postal_code',
+            'house_composition', 'gender', 'age', 'neighborhood_name', 'municipality_name',
+            'living_arrangement', 'marital_status', 'client_number',
         ]), $request->employee($organization));
 
         return SponsorIdentityResource::create($identity, [
