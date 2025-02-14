@@ -228,7 +228,7 @@ class FundRequest extends BaseModel
     /**
      * @param string|null $note
      * @return FundRequest
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function decline(?string $note = null): self
     {
