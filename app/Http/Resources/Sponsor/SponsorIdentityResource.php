@@ -45,7 +45,7 @@ class SponsorIdentityResource extends BaseJsonResource
         return [
             ...parent::load($append),
             $append ? "$append.sessions" : 'sessions' => function (Builder|Relation|Session $query) {
-                $query->orderBy('last_activity_at', 'desc')->limit(1);
+                $query->orderBy('last_activity_at', 'desc')->withTrashed()->limit(1);
             },
         ];
     }
@@ -76,7 +76,7 @@ class SponsorIdentityResource extends BaseJsonResource
                 'records' => static::getProfileRecords($profile, true),
                 ...static::makeTimestampsStatic([
                     'created_at' => $identity->created_at,
-                    'last_activity_at' => array_first($identity->sessions)?->last_activity_at,
+                    'last_activity_at' => $identity->sessions->first()?->last_activity_at,
                 ])
             ] : [],
         ];
