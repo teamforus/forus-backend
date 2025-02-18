@@ -23,8 +23,6 @@ use Illuminate\Support\Collection;
  */
 class SponsorIdentityResource extends BaseJsonResource
 {
-    public bool $detailed = false;
-
     public const array LOAD = [
         'emails',
         'vouchers',
@@ -35,6 +33,8 @@ class SponsorIdentityResource extends BaseJsonResource
         'profiles.profile_records.record_type.translations',
         'profiles.profile_records.employee.identity.primary_email',
     ];
+
+    public bool $detailed = false;
 
     /**
      * @param string|null $append
@@ -79,23 +79,8 @@ class SponsorIdentityResource extends BaseJsonResource
                     'created_at' => $identity->created_at,
                     'last_login_at' => $sessions->sortByDesc('created_at')->first()?->created_at,
                     'last_activity_at' => $sessions->sortByDesc('last_activity_at')->first()?->last_activity_at,
-                ])
+                ]),
             ] : [],
-        ];
-    }
-
-    /**
-     * Use IdentityQuery's addVouchersCountFields to load these columns
-     *
-     * @param Identity $identity
-     * @return array
-     */
-    protected function getVoucherStats(Identity $identity): array
-    {
-        return [
-            ...$identity->only([
-                'count_vouchers', 'count_vouchers_active', 'count_vouchers_active_with_balance',
-            ]),
         ];
     }
 
@@ -121,7 +106,7 @@ class SponsorIdentityResource extends BaseJsonResource
         }, collect());
 
         return [
-            ...$profile?->profile_bank_accounts->map(fn(ProfileBankAccount $profileBankAccount) => [
+            ...$profile?->profile_bank_accounts->map(fn (ProfileBankAccount $profileBankAccount) => [
                 'id' => $profileBankAccount->id,
                 'iban' => $profileBankAccount->iban,
                 'name' => $profileBankAccount->name,
@@ -130,9 +115,9 @@ class SponsorIdentityResource extends BaseJsonResource
                 ...static::makeTimestampsStatic([
                     'created_at' => $profileBankAccount->created_at,
                     'updated_at' => $profileBankAccount->updated_at,
-                ])
+                ]),
             ])->toArray() ?: [],
-            ...$reimbursements->map(fn($reimbursement) => [
+            ...$reimbursements->map(fn ($reimbursement) => [
                 'iban' => $reimbursement->iban,
                 'name' => $reimbursement->iban_name,
                 'created_by' => 'reimbursement',
@@ -140,9 +125,9 @@ class SponsorIdentityResource extends BaseJsonResource
                 ...static::makeTimestampsStatic([
                     'created_at' => $reimbursement->created_at,
                     'updated_at' => $reimbursement->updated_at,
-                ])
+                ]),
             ]),
-            ...collect($payoutTransactions)->map(fn(VoucherTransaction $transaction) => [
+            ...collect($payoutTransactions)->map(fn (VoucherTransaction $transaction) => [
                 'iban' => $transaction->target_iban,
                 'name' => $transaction->target_name,
                 'created_by' => 'payout',
@@ -150,8 +135,8 @@ class SponsorIdentityResource extends BaseJsonResource
                 ...static::makeTimestampsStatic([
                     'created_at' => $transaction->created_at,
                     'updated_at' => $transaction->updated_at,
-                ])
-            ])
+                ]),
+            ]),
         ];
     }
 
@@ -162,17 +147,12 @@ class SponsorIdentityResource extends BaseJsonResource
      */
     public static function getProfileRecords(?Profile $profile, bool $forSponsor = false): array
     {
-        $groups = $profile?->profile_records?->map(fn(ProfileRecord $record) => [
+        $groups = $profile?->profile_records?->map(fn (ProfileRecord $record) => [
             ...$record->only([
-                'id', 'value',
+                'id', 'value', 'value_locale',
             ]),
             ...self::makeTimestampsStatic([
                 'created_at' => $record->created_at,
-            ]),
-            ...($record->record_type->key === 'birth_date' && $record->value ? [
-                'value_locale' => format_date_locale($record->value),
-            ] : [
-                'value_locale' => $record->value,
             ]),
             'key' => $record->record_type?->key,
             'name' => $record->record_type?->name,
@@ -190,7 +170,22 @@ class SponsorIdentityResource extends BaseJsonResource
         ])?->groupBy('key');
 
         return $groups
-            ?->map(fn(Collection $group) => $group->sortByDesc('timestamp'))
+            ?->map(fn (Collection $group) => $group->sortByDesc('timestamp')->values())
             ?->toArray() ?: [];
+    }
+
+    /**
+     * Use IdentityQuery's addVouchersCountFields to load these columns.
+     *
+     * @param Identity $identity
+     * @return array
+     */
+    protected function getVoucherStats(Identity $identity): array
+    {
+        return [
+            ...$identity->only([
+                'count_vouchers', 'count_vouchers_active', 'count_vouchers_active_with_balance',
+            ]),
+        ];
     }
 }

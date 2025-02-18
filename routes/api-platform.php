@@ -829,9 +829,19 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'payouts' => 'transaction_address',
     ])->only('index', 'show', 'store', 'update');
 
+    $router->get(
+        'organizations/{organization}/sponsor/identities/export-fields',
+        'Api\Platform\Organizations\Sponsor\IdentitiesController@getExportFields',
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/identities/export',
+        'Api\Platform\Organizations\Sponsor\IdentitiesController@export',
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/identities',
-        'Api\Platform\Organizations\Sponsor\IdentitiesController'
+        'Api\Platform\Organizations\Sponsor\IdentitiesController',
     )->only('index', 'show', 'update');
 
     $router->post(
