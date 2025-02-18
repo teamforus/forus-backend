@@ -168,7 +168,9 @@ class ProductReservationTest extends DuskTestCase
      * @param Fund $fund
      * @param Identity $identity
      * @return void
-     * @throws TimeOutException
+     * @throws TimeoutException
+     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
+     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
      */
     private function makeReservation(
         Browser $browser,
@@ -187,12 +189,11 @@ class ProductReservationTest extends DuskTestCase
 
         // Find available product and open it
         $browser->waitFor('@productItem')->press('@productItem');
-        $browser->waitFor('@fundItem');
+        $browser->waitFor("@fundItem$fund->id");
         $productName = trim($browser->waitFor('@productName')->element('@productName')->getText());
 
         // Find available fund and reserve product
-        $fundElement = $this->findFundReservationOptionElement($browser, $fund->name);
-        $fundElement->findElement(WebDriverBy::xpath(".//*[@data-dusk='reserveProduct']"))->click();
+        $browser->click("@fundItem$fund->id @reserveProduct");
 
         // Wait for the reservation modal and submit with no data
         $browser->waitFor('@modalProductReserve');
@@ -284,30 +285,6 @@ class ProductReservationTest extends DuskTestCase
         }
 
         return null;
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $fundTitle
-     * @return RemoteWebElement|null
-     * @throws TimeOutException
-     */
-    private function findFundReservationOptionElement(Browser $browser, string $fundTitle): ?RemoteWebElement
-    {
-        $selector = '@fundItem';
-
-        $browser->waitFor($selector);
-
-        $element = Arr::first($browser->elements($selector), function(RemoteWebElement $element) use ($fundTitle) {
-            $fundNameElement = $element->findElement(WebDriverBy::xpath(".//*[@data-dusk='fundName']"));
-            $fundNameText = $fundNameElement->getText();
-
-            return trim($fundNameText) === $fundTitle;
-        });
-
-        $this->assertNotNull($element);
-
-        return $element;
     }
 
     /**
