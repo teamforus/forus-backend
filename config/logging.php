@@ -98,6 +98,12 @@ return [
             'level' => 'debug',
         ],
 
+        'iconnect' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/iconnect.log'),
+            'level' => 'debug',
+        ],
+
         'deepl' => [
             'driver' => 'single',
             'path' => storage_path('logs/deepl.log'),
@@ -143,5 +149,4 @@ return [
             'level' => 'debug',
         ],
     ],
-
 ];

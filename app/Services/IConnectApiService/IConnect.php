@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Services\IConnectApiService;
 
 use App\Models\Fund;
@@ -8,14 +7,14 @@ use App\Services\IConnectApiService\Objects\Person;
 use App\Services\IConnectApiService\Responses\ResponseData;
 use GuzzleHttp\Client;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
+use Throwable;
 
 class IConnect
 {
-    protected Fund $fund;
-
     private const string METHOD_GET = 'GET';
 
     private const string ENV_PRODUCTION = 'production';
@@ -27,6 +26,7 @@ class IConnect
     ];
 
     private const string URL_SANDBOX = 'https://lab.api.mijniconnect.nl/iconnect/apihcbrp/mks/v1/';
+    protected Fund $fund;
 
     private array $with = [
         'parents' => 'ouders',
@@ -58,8 +58,8 @@ class IConnect
      * @param string $bsn
      * @param array $with can contain parents,children,partners
      * @param array $fields can contain burgerservicenummer,naam.voorletters
+     * @throws Throwable
      * @return Person|null
-     * @throws \Throwable
      */
     public function getPerson(string $bsn, array $with = [], array $fields = []): ?Person
     {
@@ -71,7 +71,7 @@ class IConnect
     }
 
     /**
-     * Make the request to the API
+     * Make the request to the API.
      *
      * @param string $url
      * @param array $data
@@ -93,8 +93,9 @@ class IConnect
 
         try {
             return $guzzleClient->request(self::METHOD_GET, $url, $options);
-        } catch (\Throwable $e) {
-            logger()->error($e->getMessage());
+        } catch (Throwable $e) {
+            Log::channel('iconnect')->error($e->getMessage());
+
             return null;
         } finally {
             $keyTmpFile->close();
@@ -104,7 +105,7 @@ class IConnect
     }
 
     /**
-     * Make request headers
+     * Make request headers.
      *
      * @return string[]
      */
@@ -120,12 +121,13 @@ class IConnect
     }
 
     /**
-     * Make Guzzle request options
+     * Make Guzzle request options.
      *
      * @param array $data
      * @return array
      */
-    private function makeRequestOptions(array $data): array {
+    private function makeRequestOptions(array $data): array
+    {
         return [
             'headers' => $this->makeRequestHeaders(),
             'connect_timeout' => 10,
