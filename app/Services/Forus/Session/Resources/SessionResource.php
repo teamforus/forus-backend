@@ -70,6 +70,9 @@ class SessionResource extends BaseJsonResource
             'device_available' => Browser::isEnabled(),
             'time_passed' => $request->created_at->diffInSeconds(now()),
             'time_passed_locale' => $request->created_at->diffForHumans(now()),
+            ...$this->makeTimestamps([
+                'created_at' => $request->created_at,
+            ]),
         ];
     }
 }
