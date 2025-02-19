@@ -139,11 +139,6 @@ class RecordTypesTableSeeder extends DatabaseSeeder
             ['value' => 'niet gespecificeerd', 'name' => 'Niet gespecificeerd'],
         ],
     ], [
-        'key' => 'age',
-        'name' => 'Leeftijd',
-        'type' => 'number',
-        'system' => true,
-    ], [
         'key' => 'living_arrangement',
         'name' => 'Leefvorm',
         'type' => 'select',
