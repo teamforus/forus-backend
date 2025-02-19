@@ -21,6 +21,8 @@ use Illuminate\Database\Eloquent\Builder;
  * @property-read string $description_html
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @method static Builder<static>|Faq newModelQuery()
  * @method static Builder<static>|Faq newQuery()
  * @method static Builder<static>|Faq query()

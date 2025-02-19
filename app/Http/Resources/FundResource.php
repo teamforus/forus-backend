@@ -32,8 +32,8 @@ class FundResource extends BaseJsonResource
         'criteria.fund',
         'criteria.fund_criterion_rules',
         'criteria.record_type.translation',
-        'criteria.record_type.record_type_options',
-        'organization.tags',
+        'criteria.record_type.record_type_options.translations',
+        'organization.tags.translations',
         'organization.offices',
         'organization.contacts',
         'organization.logo.presets',
@@ -46,6 +46,7 @@ class FundResource extends BaseJsonResource
         'provider_organizations_approved.employees',
         'tags_webshop',
         'fund_formulas.record_type.translations',
+        'fund_formulas.record_type.record_type_options.translations',
         'fund_formulas.fund.fund_config.implementation',
         'top_up_transactions',
     ];
@@ -87,7 +88,7 @@ class FundResource extends BaseJsonResource
             ),
             'outcome_type' => $fund->fund_config?->outcome_type ?: FundConfig::OUTCOME_TYPE_VOUCHER,
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
-            'tags' => TagResource::collection($fund->tags_webshop),
+            'tags' => TagResource::collection($fund->tags_webshop->load('translations')),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
             'auto_validation' => $fund->isAutoValidatingRequests(),
             'logo' => new MediaResource($fund->logo),
@@ -117,7 +118,7 @@ class FundResource extends BaseJsonResource
                 'default_validator_employee_id', 'auto_requests_validation',
             ]), [
                 'criteria_editable' => $fund->criteriaIsEditable(),
-                'requester_count'  => $requesterCount,
+                'requester_count' => $requesterCount,
             ]);
         }
 
@@ -138,6 +139,27 @@ class FundResource extends BaseJsonResource
         }
 
         return array_merge($data, $fund->only(array_keys($this->select ?? [])));
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array
+     */
+    public function getVoucherGeneratorData(Fund $fund): array
+    {
+        $isVoucherManager = Gate::allows('funds.manageVouchers', [$fund, $fund->organization]);
+        $limitPerVoucher = $fund->getMaxAmountPerVoucher();
+        $limitSumVoucher = $fund->getMaxAmountSumVouchers();
+
+        return $isVoucherManager ? array_merge($fund->fund_config->only([
+            'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
+            'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
+        ]), [
+            'limit_per_voucher' => currency_format($limitPerVoucher),
+            'limit_per_voucher_locale' => currency_format_locale($limitPerVoucher),
+            'limit_sum_vouchers' => currency_format($limitSumVoucher),
+            'limit_sum_vouchers_locale' => currency_format_locale($limitSumVoucher),
+        ]) : [];
     }
 
     /**
@@ -190,7 +212,7 @@ class FundResource extends BaseJsonResource
                 ]),
                 ...$fund->fund_config->translateColumns($fund->fund_config->only([
                     'help_title', 'help_block_text', 'help_button_text', 'help_description_html',
-                ]))
+                ])),
             ] : [],
             ...$isDashboard && $fund->fund_config ? $fund->fund_config->only([
                 'allow_custom_amounts', 'allow_preset_amounts',
@@ -233,40 +255,6 @@ class FundResource extends BaseJsonResource
      * @param Fund $fund
      * @return array
      */
-    public function getVoucherGeneratorData(Fund $fund): array
-    {
-        $isVoucherManager = Gate::allows('funds.manageVouchers', [$fund, $fund->organization]);
-        $limitPerVoucher = $fund->getMaxAmountPerVoucher();
-        $limitSumVoucher = $fund->getMaxAmountSumVouchers();
-
-        return $isVoucherManager ? array_merge($fund->fund_config->only([
-            'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
-            'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
-        ]), [
-            'limit_per_voucher' => currency_format($limitPerVoucher),
-            'limit_per_voucher_locale' => currency_format_locale($limitPerVoucher),
-            'limit_sum_vouchers' => currency_format($limitSumVoucher),
-            'limit_sum_vouchers_locale' => currency_format_locale($limitSumVoucher),
-        ]) : [];
-    }
-
-    /**
-     * @param Fund $fund
-     * @return array|null
-     */
-    private function getBackofficeData(Fund $fund): ?array
-    {
-        return $fund->fund_config?->only([
-            'backoffice_enabled', 'backoffice_url',
-            'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
-            'backoffice_key', 'backoffice_certificate', 'backoffice_fallback',
-        ]);
-    }
-
-    /**
-     * @param Fund $fund
-     * @return array
-     */
     protected function getPrevalidationCsvData(Fund $fund): array
     {
         return [
@@ -285,5 +273,18 @@ class FundResource extends BaseJsonResource
         return $baseRequest->get('check_criteria', false) ? [
             'taken_by_partner' => $this->isTakenByPartner($fund, $baseRequest),
         ] : [];
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array|null
+     */
+    private function getBackofficeData(Fund $fund): ?array
+    {
+        return $fund->fund_config?->only([
+            'backoffice_enabled', 'backoffice_url',
+            'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
+            'backoffice_key', 'backoffice_certificate', 'backoffice_fallback',
+        ]);
     }
 }

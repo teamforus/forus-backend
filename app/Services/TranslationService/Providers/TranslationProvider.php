@@ -14,8 +14,8 @@ abstract class TranslationProvider
      * @param string $text The text to be translated
      * @param string $source The source language
      * @param string $target The target language
-     * @return string The translated text
      * @throws TranslationException
+     * @return string The translated text
      */
     abstract public function translate(string $text, string $source, string $target): string;
 
@@ -25,8 +25,8 @@ abstract class TranslationProvider
      * @param array $texts An array of texts to be translated
      * @param string $source The source language
      * @param string $target The target language
-     * @return array The translated texts, in the same order as input
      * @throws TranslationException
+     * @return array The translated texts, in the same order as input
      */
     abstract public function translateBatch(array $texts, string $source, string $target): array;
 
