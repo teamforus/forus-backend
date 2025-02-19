@@ -31,7 +31,6 @@ class UpdateIdentityRequest extends BaseFormRequest
             'postal_code' => 'sometimes|nullable|string|postcode',
             'client_number' => 'sometimes|nullable|string|min:2|max:40',
             'municipality_name' => 'sometimes|nullable|string|min:2|max:40',
-            'age' => 'sometimes|nullable|numeric|min:0|max:150',
             'gender' => $this->recordTypeOptionRule(RecordType::findByKey('gender')),
             'marital_status' => $this->recordTypeOptionRule(RecordType::findByKey('marital_status')),
             'neighborhood_name' => 'sometimes|nullable|string|min:2|max:40',
