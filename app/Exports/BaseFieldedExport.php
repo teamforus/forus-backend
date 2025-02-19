@@ -24,9 +24,9 @@ abstract class BaseFieldedExport implements FromCollection, WithHeadings
      */
     public function headings(): array
     {
-        $headings = $this->data->reduce(fn($list, $row) => array_merge($list, array_keys($row)), []);
+        $headings = $this->data->reduce(fn ($list, $row) => array_merge($list, array_keys($row)), []);
 
-        return array_map(static function($key) {
+        return array_map(static function ($key) {
             return static::$exportFields[$key] ?? $key;
         }, array_unique($headings));
     }
@@ -34,9 +34,9 @@ abstract class BaseFieldedExport implements FromCollection, WithHeadings
     /**
      * @return array
      */
-    public static function getExportFields() : array
+    public static function getExportFields(): array
     {
-        return array_reduce(array_keys(static::$exportFields), fn($list, $key) => array_merge($list, [[
+        return array_reduce(array_keys(static::$exportFields), fn ($list, $key) => array_merge($list, [[
             'key' => $key,
             'name' => static::$exportFields[$key],
         ]]), []);
@@ -45,7 +45,7 @@ abstract class BaseFieldedExport implements FromCollection, WithHeadings
     /**
      * @return array
      */
-    public static function getExportFieldsRaw() : array
+    public static function getExportFieldsRaw(): array
     {
         return static::$exportFields;
     }

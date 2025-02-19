@@ -27,7 +27,7 @@ class IndexIdentitiesRequest extends BaseFormRequest
         return [
             'fund_id' => [
                 'nullable',
-                Rule::in($this->organization->funds->pluck('id')->toArray())
+                Rule::in($this->organization->funds->pluck('id')->toArray()),
             ],
             ...$this->sortableResourceRules(),
         ];
