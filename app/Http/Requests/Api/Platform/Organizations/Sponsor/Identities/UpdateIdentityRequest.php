@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\RecordType;
+use Illuminate\Validation\Rule;
 
 class UpdateIdentityRequest extends BaseFormRequest
 {
@@ -27,6 +29,26 @@ class UpdateIdentityRequest extends BaseFormRequest
             'house_number' => 'sometimes|nullable|string|house_number',
             'house_number_addition' => 'sometimes|nullable|string|house_addition',
             'postal_code' => 'sometimes|nullable|string|postcode',
+            'client_number' => 'sometimes|nullable|string|min:2|max:40',
+            'municipality_name' => 'sometimes|nullable|string|min:2|max:40',
+            'gender' => $this->recordTypeOptionRule(RecordType::findByKey('gender')),
+            'marital_status' => $this->recordTypeOptionRule(RecordType::findByKey('marital_status')),
+            'neighborhood_name' => 'sometimes|nullable|string|min:2|max:40',
+            'house_composition' => $this->recordTypeOptionRule(RecordType::findByKey('house_composition')),
+            'living_arrangement' => $this->recordTypeOptionRule(RecordType::findByKey('living_arrangement')),
+        ];
+    }
+
+    /**
+     * @param RecordType $type
+     * @return array
+     */
+    protected function recordTypeOptionRule(RecordType $type): array
+    {
+        return [
+            'sometimes',
+            'nullable',
+            Rule::exists('record_type_options', 'value')->where('record_type_id', $type->id),
         ];
     }
 }

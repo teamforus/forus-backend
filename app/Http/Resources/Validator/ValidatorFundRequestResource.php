@@ -44,7 +44,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         'records.fund_request_clarifications.fund_request_record.record_type.translations',
         'identity.primary_email',
         'fund.criteria.record_type.translation',
-        'fund.tags',
+        'fund.tags.translations',
     ];
 
     /**

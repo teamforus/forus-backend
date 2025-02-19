@@ -2,8 +2,8 @@
 
 namespace App\Services\QueryCounterService\Data;
 
-use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Lang;
 
 class QueryCounter
 {
@@ -26,17 +26,6 @@ class QueryCounter
     public function getConfig(): QueryConfig
     {
         return $this->config;
-    }
-
-    /**
-     * Add a QueryExecuted event to the queries array.
-     *
-     * @param QueryExecuted $query
-     * @return void
-     */
-    public function addQuery(QueryExecuted $query): void
-    {
-        $this->queries[] = $query;
     }
 
     /**
@@ -91,6 +80,11 @@ class QueryCounter
 
         // Check if the route is excluded from logging
         if ($this->isExcludedRoute()) {
+            return false;
+        }
+
+        // Check if the route is excluded from logging
+        if ($this->getConfig()->getLocale() && (Lang::getLocale() !== $this->getConfig()->getLocale())) {
             return false;
         }
 

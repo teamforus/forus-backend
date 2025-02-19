@@ -24,24 +24,25 @@ class SessionResource extends BaseJsonResource
     public function toArray(Request $request): array
     {
         $session = $this->resource;
-        $sessionStartTime = $session->last_request->created_at;
         $currentSessionId = SessionService::currentSession()?->id;
 
-        return array_merge($this->resource->only([
-            'uid', 'identity_address',
-        ]), [
-            'active'            => $session->isActive(),
-            'current'           => $session->id === $currentSessionId,
-            'started_at'        => $sessionStartTime->format('Y-m-d H:i:s'),
-            'started_at_locale' => format_date_locale($sessionStartTime),
+        return [
+            ...$this->resource->only([
+                'uid', 'identity_address',
+            ]),
+            'active' => $session->isActive(),
+            'current' => $session->id === $currentSessionId,
 
-            'client_type'       => $session->first_request->client_type,
-            'client_version'    => $session->first_request->client_version,
-            'locations'         => $session->locations(),
+            'client_type' => $session->first_request->client_type,
+            'client_version' => $session->first_request->client_version,
+            'locations' => $session->locations(),
 
-            'first_request'     => $this->requestData($session->first_request),
-            'last_request'      => $this->requestData($session->last_request),
-        ]);
+            'first_request' => $this->requestData($session->first_request),
+            'last_request' => $this->requestData($session->last_request),
+            ...$this->makeTimestamps([
+                'created_at' => $session->created_at,
+            ]),
+        ];
     }
 
     /**
@@ -61,14 +62,17 @@ class SessionResource extends BaseJsonResource
         $locationData = GeoIp::isAvailable() ? GeoIp::getLocation($request->ip) : null;
 
         return [
-            'device'=> $agentDataArray,
+            'device' => $agentDataArray,
             'location' => $locationData,
             'client_type' => $request->client_type,
             'client_version' => $request->client_version,
             'device_string' => $agentData?->toString(),
-            'device_available'=> Browser::isEnabled(),
+            'device_available' => Browser::isEnabled(),
             'time_passed' => $request->created_at->diffInSeconds(now()),
             'time_passed_locale' => $request->created_at->diffForHumans(now()),
+            ...$this->makeTimestamps([
+                'created_at' => $request->created_at,
+            ]),
         ];
     }
 }

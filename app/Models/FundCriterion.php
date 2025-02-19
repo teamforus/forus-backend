@@ -47,6 +47,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read string $description_html
  * @property-read string $extra_description_html
  * @property-read \App\Models\RecordType|null $record_type
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion query()
