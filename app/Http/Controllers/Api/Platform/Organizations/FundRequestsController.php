@@ -30,7 +30,9 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Throwable;
 
 class FundRequestsController extends Controller
 {
@@ -39,8 +41,8 @@ class FundRequestsController extends Controller
      *
      * @param IndexFundRequestsRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundRequestsRequest $request,
@@ -70,12 +72,12 @@ class FundRequestsController extends Controller
     }
 
     /**
-     * Get fund request
+     * Get fund request.
      *
      * @param Organization $organization
      * @param FundRequest $fundRequest
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      * @return ValidatorFundRequestResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function show(
         Organization $organization,
@@ -87,12 +89,12 @@ class FundRequestsController extends Controller
     }
 
     /**
-     * Get fund request
+     * Get fund request.
      *
      * @param Organization $organization
      * @param FundRequest $fundRequest
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      * @return JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function formula(
         Organization $organization,
@@ -104,13 +106,13 @@ class FundRequestsController extends Controller
     }
 
     /**
-     * Assign fund request to employee
+     * Assign fund request to employee.
      *
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      * @return ValidatorFundRequestResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function assign(
         BaseFormRequest $request,
@@ -125,13 +127,13 @@ class FundRequestsController extends Controller
     }
 
     /**
-     * Resign employee from fund request
+     * Resign employee from fund request.
      *
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ValidatorFundRequestResource
      * @noinspection PhpUnused
      */
     public function resign(
@@ -152,8 +154,8 @@ class FundRequestsController extends Controller
      * @param ApproveFundRequestsRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ValidatorFundRequestResource
      */
     public function approve(
         ApproveFundRequestsRequest $request,
@@ -182,8 +184,8 @@ class FundRequestsController extends Controller
      * @param DeclineFundRequestsRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Throwable
      * @return ValidatorFundRequestResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function decline(
         DeclineFundRequestsRequest $request,
@@ -203,8 +205,8 @@ class FundRequestsController extends Controller
      * @param DisregardFundRequestsRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      * @return ValidatorFundRequestResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      * @noinspection PhpUnused
      */
     public function disregard(
@@ -225,8 +227,8 @@ class FundRequestsController extends Controller
      *
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ValidatorFundRequestResource
      * @noinspection PhpUnused
      */
     public function disregardUndo(
@@ -241,11 +243,10 @@ class FundRequestsController extends Controller
     /**
      * @param IndexFundRequestsRequest $request
      * @param Organization $organization
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @noinspection PhpUnused
      */
     public function export(
@@ -255,7 +256,7 @@ class FundRequestsController extends Controller
         $this->authorize('exportAnyAsValidator', [FundRequest::class, $organization]);
 
         $fileData = new FundRequestsExport($request, $request->employee($organization));
-        $fileName = date('Y-m-d H:i:s') . '.'. $request->input('export_format', 'xls');
+        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('export_format', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);
     }
@@ -264,8 +265,8 @@ class FundRequestsController extends Controller
      * @param AssignEmployeeFundRequestRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ValidatorFundRequestResource
      * @noinspection PhpUnused
      */
     public function assignEmployee(
@@ -288,8 +289,8 @@ class FundRequestsController extends Controller
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ValidatorFundRequestResource
      * @noinspection PhpUnused
      */
     public function resignEmployee(
@@ -309,9 +310,9 @@ class FundRequestsController extends Controller
      * @param FundRequestPersonRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @return FundRequestPersonArrResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return FundRequestPersonArrResource
      * @noinspection PhpUnused
      */
     public function person(
@@ -341,7 +342,10 @@ class FundRequestsController extends Controller
                 abort(404, 'iConnect error, person not found.');
             }
 
-            abort(400, $person ? 'iConnect, unknown error.' : 'iConnect, connection error.');
+            $errorMessage = $person ? 'iConnect, unknown error.' : 'iConnect, connection error.';
+
+            Log::channel('iconnect')->debug($errorMessage);
+            abort(400, $errorMessage);
         }
 
         return new FundRequestPersonArrResource($person);
@@ -353,8 +357,8 @@ class FundRequestsController extends Controller
      * @param BaseIndexFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function notes(
@@ -375,8 +379,8 @@ class FundRequestsController extends Controller
      * @param StoreFundRequestNoteRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @return NoteResource
      * @throws AuthorizationException
+     * @return NoteResource
      * @noinspection PhpUnused
      */
     public function storeNote(
@@ -437,8 +441,8 @@ class FundRequestsController extends Controller
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @param Note $note
-     * @return JsonResponse
      * @throws AuthorizationException
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function destroyNote(
