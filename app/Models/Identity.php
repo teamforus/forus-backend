@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection as SupportCollection;
@@ -75,6 +76,8 @@ use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
  * @property-read int|null $records_count
  * @property-read Collection|\App\Models\Reimbursement[] $reimbursements
  * @property-read int|null $reimbursements_count
+ * @property-read Session|null $session_last_activity
+ * @property-read Session|null $session_last_login
  * @property-read Collection|Session[] $sessions
  * @property-read int|null $sessions_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
@@ -284,6 +287,38 @@ class Identity extends Model implements Authenticatable
             'address',
             'id',
         );
+    }
+
+    /**
+     * @return HasOneThrough
+     * @noinspection PhpUnused
+     */
+    public function session_last_activity(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Session::class,
+            IdentityProxy::class,
+            'identity_address',
+            'identity_proxy_id',
+            'address',
+            'id',
+        )->latest('last_activity_at');
+    }
+
+    /**
+     * @return HasOneThrough
+     * @noinspection PhpUnused
+     */
+    public function session_last_login(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Session::class,
+            IdentityProxy::class,
+            'identity_address',
+            'identity_proxy_id',
+            'address',
+            'id',
+        )->latest('created_at');
     }
 
     /**
