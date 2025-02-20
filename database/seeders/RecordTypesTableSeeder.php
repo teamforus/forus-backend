@@ -46,10 +46,6 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'vouchers' => true,
         'criteria' => true,
     ], [
-        'key' => 'gender',
-        'name' => 'Gender',
-        'criteria' => true,
-    ], [
         'key' => 'spouse',
         'name' => 'Spouse',
     ], [
@@ -119,6 +115,131 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'key' => 'postal_code',
         'name' => 'Postcode',
         'system' => true,
+    ], [
+        'key' => 'house_composition',
+        'name' => 'Gezinssamenstelling',
+        'system' => true,
+        'type' => 'select',
+        'options' => [
+            ['value' => 'onbekend', 'name' => 'Onbekend'],
+            ['value' => 'alleenstaand', 'name' => 'Alleenstaand'],
+            ['value' => 'samenwonend zonder kinderen', 'name' => 'Samenwonend zonder kinderen'],
+            ['value' => 'samenwonend met kinderen', 'name' => 'Samenwonend met kinderen'],
+            ['value' => 'eenoudergezin', 'name' => 'Eenoudergezin'],
+        ],
+    ], [
+        'key' => 'gender',
+        'name' => 'Geslacht',
+        'system' => true,
+        'type' => 'select',
+        'options' => [
+            ['value' => 'onbekend', 'name' => 'Onbekend'],
+            ['value' => 'mannelijk', 'name' => 'Mannelijk'],
+            ['value' => 'vrouwelijk', 'name' => 'Vrouwelijk'],
+            ['value' => 'niet gespecificeerd', 'name' => 'Niet gespecificeerd'],
+        ],
+    ], [
+        'key' => 'living_arrangement',
+        'name' => 'Leefvorm',
+        'type' => 'select',
+        'system' => true,
+        'options' => [
+            [
+                'value' => 'onbekend',
+                'name' => 'Onbekend',
+            ],
+            [
+                'value' => 'alleenstaande',
+                'name' => 'Alleenstaande',
+            ],
+            [
+                'value' => 'eenoudergezin',
+                'name' => 'Eenoudergezin',
+            ],
+            [
+                'value' => 'samenwonend met partner met samenlevingscontract',
+                'name' => 'Samenwonend met partner met samenlevingscontract',
+            ],
+            [
+                'value' => 'samenwonend met partner zonder samenlevingscontract',
+                'name' => 'Samenwonend met partner zonder samenlevingscontract',
+            ],
+            [
+                'value' => 'samenwonend met inkomensafhankelijke kinderen',
+                'name' => 'Samenwonend met inkomensafhankelijke kinderen',
+            ],
+            [
+                'value' => 'samenwonend met (een) andere alleenstaande(n)',
+                'name' => 'Samenwonend met (een) andere alleenstaande(n)',
+            ],
+            [
+                'value' => 'samenwonend met huwelijks- of geregistreerd partner',
+                'name' => 'Samenwonend met huwelijks- of geregistreerd partner',
+            ],
+            [
+                'value' => 'gehuwd/ongehuwd samenwonend',
+                'name' => 'Gehuwd/ongehuwd samenwonend',
+            ],
+            [
+                'value' => 'anders',
+                'name' => 'Anders',
+            ],
+        ],
+    ], [
+        'key' => 'marital_status',
+        'name' => 'Burgerlijke Staat',
+        'type' => 'select',
+        'system' => true,
+        'options' => [
+            [
+                'value' => 'onbekend',
+                'name' => 'Onbekend',
+            ],
+            [
+                'value' => 'ongehuwd en geen geregistreerd partner en nooit gehuwd of geregistreerd partner geweest',
+                'name' => 'Ongehuwd en geen geregistreerd partner en nooit gehuwd of geregistreerd partner geweest',
+            ],
+            [
+                'value' => 'gehuwd',
+                'name' => 'Gehuwd',
+            ],
+            [
+                'value' => 'gescheiden',
+                'name' => 'Gescheiden',
+            ],
+            [
+                'value' => 'weduwe/weduwnaar',
+                'name' => 'Weduwe/weduwnaar',
+            ],
+            [
+                'value' => 'geregistreerd partner',
+                'name' => 'Geregistreerd partner',
+            ],
+            [
+                'value' => 'gescheiden geregistreerd partner',
+                'name' => 'Gescheiden geregistreerd partner',
+            ],
+            [
+                'value' => 'achtergebleven geregistreerd partner',
+                'name' => 'Achtergebleven geregistreerd partner',
+            ],
+            [
+                'value' => 'ongehuwd en geen geregistreerd partner, eventueel wel gehuwd of geregistreerd partner geweest',
+                'name' => 'Ongehuwd en geen geregistreerd partner, eventueel wel gehuwd of geregistreerd partner geweest',
+            ],
+        ],
+    ], [
+        'key' => 'client_number',
+        'name' => 'Klantnummer',
+        'system' => true,
+    ], [
+        'key' => 'neighborhood_name',
+        'name' => 'Woonwijk',
+        'system' => true,
+    ], [
+        'key' => 'municipality_name',
+        'name' => 'Gemeentenaam',
+        'system' => true,
     ]];
 
     /**
@@ -152,10 +273,14 @@ class RecordTypesTableSeeder extends DatabaseSeeder
                 ]),
             ]);
 
-            $recordType->record_type_options()->createMany(array_map(fn ($option) => [
-                'value' => $option[0],
-                'name' => $option[1],
-            ], $type['options'] ?? []));
+            foreach ($type['options'] ?? [] as $option) {
+                $recordType
+                    ->record_type_options()
+                    ->create(Arr::only($option, ['value']))
+                    ->translateOrNew('nl')
+                    ->fill(Arr::only($option, ['name']))
+                    ->save();
+            }
         }
     }
 }

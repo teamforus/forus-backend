@@ -4,6 +4,7 @@ namespace App\Services\TranslationService\Traits;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Implementation;
+use App\Services\TranslationService\Cache\TranslationCacheService;
 use App\Services\TranslationService\Models\TranslationValue;
 use App\Services\TranslationService\TranslationService;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -35,15 +36,36 @@ trait HasOnDemandTranslations
      * @param string|null $from
      * @return string|null
      */
-    public function getTranslationValue(string $key, string $locale, string|null $from): ?string
+    public function getTranslationValue(string $key, string $locale, ?string $from): ?string
     {
+        if (empty($from)) {
+            return $from;
+        }
+
+        $service = $this->getTranslationService();
+        $cacheEnabled = $service->getConfig()->isCacheEnabled();
+
+        $translationCache = $cacheEnabled
+            ? $this->getTranslationCacheService()->get($this, $key, $locale, $from)
+            : null;
+
+        if ($cacheEnabled && $translationCache !== null) {
+            return $this->purifyTranslation($translationCache);
+        }
+
         $translation = $this->translation_values()->where([
             'key' => $key,
             'from' => $from,
             'locale' => $locale,
-        ])->first();
+        ])->first()?->to;
 
-        return $translation?->to ? $this->purifyTranslation($translation?->to) : null;
+        if ($cacheEnabled && $translation !== null) {
+            $this->getTranslationCacheService()->set($this, $key, $locale, $from, $translation);
+
+            return $this->purifyTranslation($translation);
+        }
+
+        return $translation;
     }
 
     /**
@@ -72,16 +94,19 @@ trait HasOnDemandTranslations
         $columnsToTranslate = [];
         $newlyTranslatedColumns = [];
 
-        if ($implementation->isGeneral() || !$request->isWebshop()) {
+        if ($implementation->isGeneral() || !$request->isWebshop() || $sourceLocale === $targetLocale) {
             return $columns;
         }
 
         // First, check if translations already exist
         foreach ($columns as $key => $value) {
-            $existingTranslation = $this->getTranslationValue($key, $targetLocale, $value);
+            if (empty($value)) {
+                $translatedColumns[$key] = $value;
+                continue;
+            }
 
-            if ($existingTranslation) {
-                $translatedColumns[$key] = $existingTranslation;
+            if (!empty($translation = $this->getTranslationValue($key, $targetLocale, $value))) {
+                $translatedColumns[$key] = $translation;
             } else {
                 $columnsToTranslate[$key] = $value;
             }
@@ -135,7 +160,7 @@ trait HasOnDemandTranslations
         $weekly_limit = $organization->translations_weekly_limit;
         $monthly_limit = $organization->translations_monthly_limit;
 
-        $columns_str_len = array_sum(array_map(fn($value) => strlen((string) $value), $columns));
+        $columns_str_len = array_sum(array_map(fn ($value) => strlen((string) $value), $columns));
 
         // If translations are not allowed or translations are disabled for the organization, skip translation
         if (!$organization || !$organization->allow_translations || !$organization->translations_enabled) {
@@ -170,6 +195,7 @@ trait HasOnDemandTranslations
      * @param string $sourceValue Original value.
      * @param string $sourceLocale The source locale.
      * @param string $targetLocale The target locale.
+     * @param Implementation $implementation
      * @return string Translated value.
      */
     private function findTranslatedValue(
@@ -204,7 +230,7 @@ trait HasOnDemandTranslations
     }
 
     /**
-     * Store a new translation in the database.
+     * Store a new translation in the database and cache it.
      *
      * @param string $key Column key.
      * @param string $sourceValue Original value.
@@ -220,6 +246,10 @@ trait HasOnDemandTranslations
         string $locale,
         Implementation $implementation,
     ): void {
+        if ($this->getTranslationService()?->getConfig()?->isCacheEnabled()) {
+            $this->getTranslationCacheService()->set($this, $key, $locale, $sourceValue, $translatedValue ?: '');
+        }
+
         $this->translation_values()->create([
             'key' => $key,
             'from' => $sourceValue,
@@ -240,5 +270,15 @@ trait HasOnDemandTranslations
     private function getTranslationService(): TranslationService
     {
         return resolve(TranslationService::class);
+    }
+
+    /**
+     * Get an instance of the TranslationCacheService.
+     *
+     * @return TranslationCacheService
+     */
+    private function getTranslationCacheService(): TranslationCacheService
+    {
+        return resolve(TranslationCacheService::class);
     }
 }
