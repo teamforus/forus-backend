@@ -517,26 +517,28 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param string $firstName
-     * @param array $address
+     * @param array|null $address
      * @return void
      * @throws TimeoutException
      */
     private function assertReservationModalConfirmationDetails(
         Browser $browser,
         string $firstName,
-        array $address
+        ?array $address
     ): void {
-        $optional = $address['optional'] ?? false;
-
         // Assert success
         $browser->waitForTextIn('@productReserveConfirmDetails', $firstName);
 
-        if (!$optional) {
-            $browser->waitForTextIn('@overviewValueStreet', $address['street'] ?: 'Leeg');
-            $browser->waitForTextIn('@overviewValueHouseNr', $address['house_nr'] ?: 'Leeg');
-            $browser->waitForTextIn('@overviewValueHouseNrAddition', $address['house_nr_addition'] ?: 'Leeg');
-            $browser->waitForTextIn('@overviewValuePostalCode',  $address['postal_code'] ?: 'Leeg');
-            $browser->waitForTextIn('@overviewValueCity',  $address['city'] ?: 'Leeg');
+        if ($address === null) {
+            return;
+        }
+
+        if (!Arr::get($address, 'optional', false)) {
+            $browser->waitForTextIn('@overviewValueStreet', Arr::get($address, 'street', 'Leeg'));
+            $browser->waitForTextIn('@overviewValueHouseNr', Arr::get($address, 'house_nr', 'Leeg'));
+            $browser->waitForTextIn('@overviewValueHouseNrAddition', Arr::get($address, 'house_nr_addition', 'Leeg'));
+            $browser->waitForTextIn('@overviewValuePostalCode', Arr::get($address, 'postal_code', 'Leeg'));
+            $browser->waitForTextIn('@overviewValueCity', Arr::get($address, 'city', 'Leeg'));
         } else {
             $browser->waitForTextIn('@overviewValueStreet', 'Leeg');
             $browser->waitForTextIn('@overviewValueHouseNr', 'Leeg');
