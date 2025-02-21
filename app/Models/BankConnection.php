@@ -346,7 +346,6 @@ class BankConnection extends BaseModel
     {
         return tap($this)->update([
             'context' => json_decode($apiContext->toJson()),
-            'expire_at' => $apiContext->getSessionContext()->getExpiryTime(),
         ]);
     }
 
