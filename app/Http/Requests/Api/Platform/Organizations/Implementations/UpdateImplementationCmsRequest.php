@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations;
 
 use App\Models\Language;
+use App\Rules\MaxStringRule;
 use App\Rules\MediaUidRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -27,7 +28,11 @@ class UpdateImplementationCmsRequest extends FormRequest
     {
         return array_merge([
             'title' => 'nullable|string|max:50',
-            'description' => 'nullable|string|max:4000',
+            'description' => [
+                'nullable',
+                'string',
+                new MaxStringRule(400),
+            ],
             'description_alignment' => 'nullable|in:left,center,right',
             'informal_communication' => 'nullable|boolean',
             'banner_media_uid' => ['nullable', new MediaUidRule('implementation_banner')],
