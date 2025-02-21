@@ -80,6 +80,8 @@ class PaymentDescriptionTest extends TestCase
             'bank_transaction_date',
             'bank_transaction_time',
             'bank_reservation_number',
+            'bank_reservation_first_name',
+            'bank_reservation_last_name',
             'bank_branch_number',
             'bank_branch_id',
             'bank_branch_name',
@@ -132,8 +134,14 @@ class PaymentDescriptionTest extends TestCase
             $transaction->provider->bank_branch_id ? $transaction->employee?->office?->branch_id : null,
             $transaction->provider->bank_branch_name ? $transaction->employee?->office?->branch_name : null,
             $transaction->provider->bank_fund_name ? $transaction->voucher?->fund?->name : null,
+            $transaction->provider->bank_reservation_first_name ? $transaction->product_reservation?->first_name : null,
+            $transaction->provider->bank_reservation_last_name ? $transaction->product_reservation?->last_name : null,
             $transaction->provider->bank_note ? $transaction->notes_provider->first()?->message : null,
         ])));
+
+        $expectedDescription = strlen($expectedDescription) <= 140
+            ? $expectedDescription
+            : str_limit($expectedDescription, 140 - 3);
 
         self::assertEquals(
             $expectedDescription,
@@ -178,6 +186,8 @@ class PaymentDescriptionTest extends TestCase
             'bank_transaction_date' => in_array('bank_transaction_date', $flags),
             'bank_transaction_time' => in_array('bank_transaction_time', $flags),
             'bank_reservation_number' => in_array('bank_reservation_number', $flags),
+            'bank_reservation_first_name' => in_array('bank_reservation_first_name', $flags),
+            'bank_reservation_last_name' => in_array('bank_reservation_last_name', $flags),
             'bank_branch_number' => in_array('bank_branch_number', $flags),
             'bank_branch_id' => in_array('bank_branch_id', $flags),
             'bank_branch_name' => in_array('bank_branch_name', $flags),
