@@ -90,10 +90,10 @@ class ProductReservationTest extends DuskTestCase
             $this->assertFundHasApprovedProviders($fund);
 
             $addressData =  [
-                'city' => $this->faker->city(),
-                'street' => $this->faker->streetName(),
+                'city' => 'Kraigmouth',
+                'street' => 'Hodkiewicz Parks',
                 'house_nr' => '8',
-                'house_nr_addition' => '',
+                'house_nr_addition' => 'A',
                 'postal_code' => '1234AB',
             ];
 
@@ -125,6 +125,17 @@ class ProductReservationTest extends DuskTestCase
                 'first_name' => $this->faker->firstName,
                 'last_name' => $this->faker->lastName,
             ], [...$addressData, 'existing' => true, 'existing_update' => true]);
+
+            $product->forceFill([
+                'reservation_address' => Product::RESERVATION_FIELD_OPTIONAL,
+                'reservation_fields' => true,
+            ])->save();
+
+            // Test required reservation address with saved address
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], [...$addressData, 'existing' => true, 'optional' => true, 'skip' => true]);
         } finally {
             $fund->archive($fund->organization->employees[0]);
         }
@@ -239,6 +250,7 @@ class ProductReservationTest extends DuskTestCase
         array $userData = null,
         array $addressData = null,
     ): void {
+        Cache::clear();
         $implementation = $fund->getImplementation();
 
         $this->browse(function (Browser $browser) use ($implementation, $identity, $fund, $userData, $addressData, $product) {
@@ -261,7 +273,7 @@ class ProductReservationTest extends DuskTestCase
 
             $this->fillReservationModalNote($browser);
 
-            $this->assertReservationModalConfirmationDetails($browser, $userData['first_name']);
+            $this->assertReservationModalConfirmationDetails($browser, $userData['first_name'], $addressData);
             $this->submitReservationModal($browser);
 
             $reservation = $this->findProductReservation($identity, $product, $fund, $userData);
@@ -390,12 +402,14 @@ class ProductReservationTest extends DuskTestCase
         $browser->waitFor('@productReserveAddress', 100000);
 
         $browser->within('@productReserveAddress', function (Browser $browser) use ($data) {
+            $skip = $data['skip'] ?? false;
             $optional = $data['optional'] ?? false;
             $existing = $data['existing'] ?? false;
             $existingUpdate = $data['existing_update'] ?? false;
 
             if (!$existing && $optional) {
                 $browser->waitFor('@productReserveAddress');
+                $browser->assertMissing('@btnSkip');
                 $browser->press('@btnSubmit');
                 return;
             }
@@ -469,6 +483,17 @@ class ProductReservationTest extends DuskTestCase
                 $browser->click('@productReserveAddressFormCancel');
             }
 
+            if ($existing && $optional) {
+                $browser->assertPresent('@btnSkip');
+            } else {
+                $browser->assertMissing('@btnSkip');
+            }
+
+            if ($skip) {
+                $browser->press('@btnSkip');
+                return;
+            }
+
             $browser->press('@btnSubmit');
         });
     }
@@ -492,13 +517,33 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param string $firstName
+     * @param array $address
      * @return void
      * @throws TimeoutException
      */
-    private function assertReservationModalConfirmationDetails(Browser $browser, string $firstName): void
-    {
+    private function assertReservationModalConfirmationDetails(
+        Browser $browser,
+        string $firstName,
+        array $address
+    ): void {
+        $optional = $address['optional'] ?? false;
+
         // Assert success
         $browser->waitForTextIn('@productReserveConfirmDetails', $firstName);
+
+        if (!$optional) {
+            $browser->waitForTextIn('@overviewValueStreet', $address['street'] ?: 'Leeg');
+            $browser->waitForTextIn('@overviewValueHouseNr', $address['house_nr'] ?: 'Leeg');
+            $browser->waitForTextIn('@overviewValueHouseNrAddition', $address['house_nr_addition'] ?: 'Leeg');
+            $browser->waitForTextIn('@overviewValuePostalCode',  $address['postal_code'] ?: 'Leeg');
+            $browser->waitForTextIn('@overviewValueCity',  $address['city'] ?: 'Leeg');
+        } else {
+            $browser->waitForTextIn('@overviewValueStreet', 'Leeg');
+            $browser->waitForTextIn('@overviewValueHouseNr', 'Leeg');
+            $browser->waitForTextIn('@overviewValueHouseNrAddition', 'Leeg');
+            $browser->waitForTextIn('@overviewValuePostalCode',  'Leeg');
+            $browser->waitForTextIn('@overviewValueCity',  'Leeg');
+        }
     }
 
     /**
