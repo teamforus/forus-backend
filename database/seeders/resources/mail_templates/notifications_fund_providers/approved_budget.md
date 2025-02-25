@@ -17,5 +17,7 @@ Met vriendelijke groet,
 :sponsor_name
 
 Log in op uw gebruikersomgeving om aanbiedingen toe te voegen, door :provider_dashboard_link of op de onderstaande knop te klikken.
+&nbsp;  
+&nbsp;
 
 :provider_dashboard_button

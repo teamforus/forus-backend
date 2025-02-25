@@ -25,9 +25,11 @@ class ProductSoldOutMail extends ImplementationMail
      */
     protected function getMailExtraData(array $data): array
     {
+        $link = $data['provider_dashboard_link'];
+
         return [
-            'provider_dashboard_link' => $this->makeLink($data['provider_dashboard_link'], 'hier'),
-            'provider_dashboard_button' => $this->makeButton($data['provider_dashboard_link'], 'Inloggen'),
+            'provider_dashboard_link' => $this->makeLink($link, 'hier', '#315EFD'),
+            'provider_dashboard_button' => $this->makeButton($link, 'GA NAAR DE BEHEEROMGEVING', '#315EFD'),
         ];
     }
 }
