@@ -155,6 +155,12 @@ return [
         ],
     ],
 
+    'rules' => [
+        'max' => [
+            'string'  => ':attribute mag niet groter zijn dan :max karakters (:actual gebruikt).',
+        ]
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Attributes
