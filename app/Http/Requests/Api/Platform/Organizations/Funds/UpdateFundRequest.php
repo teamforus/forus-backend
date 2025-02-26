@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use App\Models\Fund;
 use App\Models\Organization;
+use App\Rules\MaxStringRule;
 use App\Rules\MediaUidRule;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -37,7 +38,11 @@ class UpdateFundRequest extends BaseFundRequest
         return [
             'name'                      => 'nullable|between:2,200',
             'media_uid'                 => ['nullable', new MediaUidRule('fund_logo')],
-            'description'               => 'nullable|string|max:15000',
+            'description'               => [
+                'nullable',
+                'string',
+                new MaxStringRule(15000),
+            ],
             'description_short'         => 'nullable|string|max:500',
             'description_position'      => "nullable|in:$descriptionPositions",
             'notification_amount'       => 'nullable|numeric',
