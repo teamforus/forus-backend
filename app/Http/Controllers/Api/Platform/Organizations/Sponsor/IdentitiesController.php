@@ -34,7 +34,9 @@ class IdentitiesController extends Controller
 
         $search = new IdentitiesSearch([
             ...$request->only([
-                'q', 'fund_id',
+                'q', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
+                'municipality_name', 'last_activity_from', 'last_activity_to', 'last_login_from',
+                'last_login_to',
             ]),
             'organization_id' => $organization->id,
         ], $query);
