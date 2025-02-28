@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
@@ -11,7 +12,6 @@ use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -70,14 +70,83 @@ class Handler extends ExceptionHandler
         $request, 
         Throwable $e,
     ): ResponseFactory|Application|Response|SymfonyResponse {
+        $message = $e->getMessage();
+
+        $message = $this->getMessageByInstance($e) ?: $message;
+        $message = $this->getMessageByStatusCode($e) ?: $message;
+
+        $this->setMessage($e, $message);
+
+        return parent::render($request, $e);
+    }
+
+    /**
+     * Convert the given exception to an array.
+     *
+     * @param  \Throwable  $e
+     * @return array
+     */
+    protected function convertExceptionToArray(Throwable $e): array
+    {
+        return config('app.debug') ? parent::convertExceptionToArray($e) : [
+            'message' => $this->isHttpException($e) ? $e->getMessage() : trans('exceptions.server_error'),
+        ];
+    }
+
+    /**
+     * @param Throwable $e
+     * @return string|null
+     * @throws \ReflectionException
+     */
+    protected function getMessageByInstance(Throwable $e): ?string
+    {
+        $message = null;
         if ($e instanceof ModelNotFoundException) {
             $reflection = new ReflectionClass($e->getModel());
             $modelKey = $this->mapModelNames[$reflection->getShortName()] ?? 'default';
-            $model = trans("exceptions.models.$modelKey");
-
-            $e = new NotFoundHttpException(trans('exceptions.not_found', compact('model')));
+            $message = trans("exceptions.not_found.$modelKey");
         }
 
-        return parent::render($request, $e);
+        if ($e instanceof AuthorizationException) {
+            $message = trans('exceptions.forbidden');
+        }
+
+        if ($e instanceof ValidationException) {
+            $message = trans('exceptions.validation_error');
+        }
+
+        return $message;
+    }
+
+    /**
+     * @param Throwable $e
+     * @return string|null
+     */
+    protected function getMessageByStatusCode(Throwable $e): ?string
+    {
+        if (method_exists($e, 'getStatusCode')) {
+            return match ($e->getStatusCode()) {
+                403 => trans('exceptions.forbidden'),
+                404 => trans('exceptions.not_found.default'),
+                422 => trans('exceptions.validation_error'),
+                500 => trans('exceptions.server_error'),
+                default => null,
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * @param Throwable $e
+     * @param string $message
+     * @return void
+     * @throws \ReflectionException
+     */
+    protected function setMessage(Throwable $e, string $message): void
+    {
+        $reflectionObject = new \ReflectionObject($e);
+        $reflectionObjectProp = $reflectionObject->getProperty('message');
+        $reflectionObjectProp->setValue($e, $message);
     }
 }
