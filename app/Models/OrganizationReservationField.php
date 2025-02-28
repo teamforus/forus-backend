@@ -48,10 +48,12 @@ class OrganizationReservationField extends BaseModel
 
     public const string TYPE_TEXT = 'text';
     public const string TYPE_NUMBER = 'number';
+    public const string TYPE_BOOLEAN = 'boolean';
 
     public const array TYPES = [
         self::TYPE_TEXT,
         self::TYPE_NUMBER,
+        self::TYPE_BOOLEAN,
     ];
 
     /**
