@@ -60,7 +60,7 @@ class Profile extends Model
      */
     public function profile_records(): HasMany
     {
-        return $this->hasMany(ProfileRecord::class);
+        return $this->hasMany(ProfileRecord::class)->latest()->latest('id');
     }
 
     /**

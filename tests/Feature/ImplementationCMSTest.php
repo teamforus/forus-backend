@@ -382,7 +382,7 @@ class ImplementationCMSTest extends TestCase
     {
         return [
             'title' => $this->faker->text(50),
-            'description' => $this->faker->text(4000),
+            'description' => $this->faker->text(400),
             'description_alignment' => Arr::random(['left', 'center', 'right']),
             'informal_communication' => (bool) rand(0, 1),
             'overlay_enabled' => (bool) rand(0, 1),
