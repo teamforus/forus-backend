@@ -524,6 +524,8 @@ class TestData
             'organization_id' => $organization?->id,
             'informal_communication' => false,
             'allow_per_fund_notification_templates' => false,
+            'overlay_enabled' => true,
+            'overlay_opacity' => 10,
             ...$this->config('default.implementations', []),
             ...$urlData,
             ...$samlData,
