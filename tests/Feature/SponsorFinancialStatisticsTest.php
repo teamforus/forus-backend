@@ -210,14 +210,11 @@ class SponsorFinancialStatisticsTest extends TestCase
 
                 if (!$officeExists) {
                     $this->makeOrganizationOffice($provider, [
-                        'postcode_number' => $item['provider_office_postcode_number']
+                        'postcode_number' => $item['provider_office_postcode_number'],
                     ]);
                 }
 
-                $product = $this->makeTestProduct($provider, [
-                    'price' => $item['product_price'],
-                    'product_category_id' => $category->id,
-                ]);
+                $product = $this->makeTestProduct($provider, $item['product_price'], $category->id);
 
                 $this->addProductFundToFund($fund, $product, false);
                 $voucher = $fund->makeProductVoucher($this->makeIdentity(), [], $product->id);
