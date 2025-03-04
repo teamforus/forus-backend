@@ -33,6 +33,8 @@ class UpdateBankStatementFieldsRequest extends BaseFormRequest
             'bank_transaction_date' => 'nullable|boolean',
             'bank_transaction_time' => 'nullable|boolean',
             'bank_reservation_number' => 'nullable|boolean',
+            'bank_reservation_first_name' => 'nullable|boolean',
+            'bank_reservation_last_name' => 'nullable|boolean',
             'bank_branch_number' => 'nullable|boolean',
             'bank_branch_id' => 'nullable|boolean',
             'bank_branch_name' => 'nullable|boolean',
