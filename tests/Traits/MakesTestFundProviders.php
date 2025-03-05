@@ -81,13 +81,14 @@ trait MakesTestFundProviders
 
     /**
      * @param int $count
+     * @param float $price
      * @return Product[]
      */
-    protected function makeProductsFundFund(int $count): array
+    protected function makeProductsFundFund(int $count, float $price = 10): array
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail('provider_'));
         $provider = $this->makeTestProviderOrganization($identity);
-        $products = $this->makeTestProducts($provider, $count);
+        $products = $this->makeTestProducts($provider, $count, $price);
 
         $this->assertNotEmpty($products, 'Products not created');
 
