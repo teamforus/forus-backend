@@ -12,6 +12,44 @@ trait MakesTestProducts
     use WithFaker;
 
     /**
+     * @param Organization $organization
+     * @param float $price
+     * @param int|null $product_category_id
+     * @return Product
+     */
+    public function makeTestProduct(
+        Organization $organization,
+        float $price = 10,
+        ?int $product_category_id = null,
+    ): Product {
+        return $organization->products()->forceCreate([
+            'name' => $this->faker->text(60),
+            'description' => $this->faker->text(),
+            'price' => $price,
+            'total_amount' => 10,
+            'sold_out' => false,
+            'expire_at' => now()->addYear(),
+            'product_category_id' => $product_category_id ?: ProductCategory::inRandomOrder()->first()->id,
+            'organization_id' => $organization->id,
+            'unlimited_stock' => false,
+            'price_type' => Product::PRICE_TYPE_REGULAR,
+            'price_discount' => 0,
+            'reservation_enabled' => 1,
+        ]);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param int $count
+     * @param float $price
+     * @return array|Product[]
+     */
+    public function makeTestProducts(Organization $organization, int $count = 1, float $price = 10): array
+    {
+        return array_map(fn () => $this->makeTestProduct($organization, $price), range(1, $count));
+    }
+
+    /**
      * @param Organization $providerOrganization
      * @return Product
      */
@@ -32,39 +70,5 @@ trait MakesTestProducts
             'price' => 120,
             'reservation_extra_payments' => Product::RESERVATION_EXTRA_PAYMENT_GLOBAL,
         ]);
-    }
-
-    /**
-     * @param Organization $organization
-     * @param array $attributes
-     * @return Product
-     */
-    public function makeTestProduct(Organization $organization, array $attributes = []): Product
-    {
-        return $organization->products()->forceCreate([
-            'name' => $this->faker->text(60),
-            'description' => $this->faker->text(),
-            'price' => 10,
-            'total_amount' => 10,
-            'sold_out' => false,
-            'expire_at' => now()->addYear(),
-            'product_category_id' => ProductCategory::inRandomOrder()->first()->id,
-            'organization_id' => $organization->id,
-            'unlimited_stock' => false,
-            'price_type' => Product::PRICE_TYPE_REGULAR,
-            'price_discount' => 0,
-            'reservation_enabled' => 1,
-            ...$attributes,
-        ]);
-    }
-
-    /**
-     * @param Organization $organization
-     * @param int $count
-     * @return array|Product[]
-     */
-    public function makeTestProducts(Organization $organization, int $count = 1): array
-    {
-        return array_map(fn () => $this->makeTestProduct($organization), range(1, $count));
     }
 }

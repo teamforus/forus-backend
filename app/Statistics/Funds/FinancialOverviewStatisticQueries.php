@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Statistics\Funds;
 
 use App\Models\Fund;
@@ -22,7 +21,7 @@ class FinancialOverviewStatisticQueries
      */
     public static function whereDate(Builder|Relation $builder, ?Carbon $from, ?Carbon $to): Builder|Relation
     {
-        return $builder->where(static function(Builder $builder) use ($from, $to) {
+        return $builder->where(static function (Builder $builder) use ($from, $to) {
             if ($from) {
                 $builder->where('vouchers.created_at', '>=', $from);
             }
@@ -30,16 +29,6 @@ class FinancialOverviewStatisticQueries
             if ($to) {
                 $builder->where('vouchers.created_at', '<=', $to);
             }
-
-            $builder->whereHas('fund', static function(Builder $builder) use ($from, $to) {
-                if ($from) {
-                    $builder->where('end_date', '>=', $from);
-                }
-
-                if ($to) {
-                    $builder->where('start_date', '<=', $to);
-                }
-            });
         });
     }
 
@@ -179,7 +168,7 @@ class FinancialOverviewStatisticQueries
                 ->where('voucher_transactions.state', $state)
                 ->whereIn('voucher_transactions.target', $targets)
                 ->whereRelation('voucher_transaction_bulk.bank_connection', 'bank_id', $bank->id)
-                ->where(function(Builder $builder) use ($from, $to) {
+                ->where(function (Builder $builder) use ($from, $to) {
                     if ($from) {
                         $builder->where('voucher_transactions.created_at', '>=', $from);
                     }
@@ -192,20 +181,20 @@ class FinancialOverviewStatisticQueries
         }
 
         $costs += $fund->voucher_transactions()
-                ->where('voucher_transactions.amount', '>', 0)
-                ->where('voucher_transactions.state', $state)
-                ->whereIn('voucher_transactions.target', $targets)
-                ->whereDoesntHave('voucher_transaction_bulk')
-                ->where(function(Builder $builder) use ($from, $to) {
-                    if ($from) {
-                        $builder->where('voucher_transactions.created_at', '>=', $from);
-                    }
+            ->where('voucher_transactions.amount', '>', 0)
+            ->where('voucher_transactions.state', $state)
+            ->whereIn('voucher_transactions.target', $targets)
+            ->whereDoesntHave('voucher_transaction_bulk')
+            ->where(function (Builder $builder) use ($from, $to) {
+                if ($from) {
+                    $builder->where('voucher_transactions.created_at', '>=', $from);
+                }
 
-                    if ($to) {
-                        $builder->where('voucher_transactions.created_at', '<=', $to);
-                    }
-                })
-                ->count() * $targetCostOld;
+                if ($to) {
+                    $builder->where('voucher_transactions.created_at', '<=', $to);
+                }
+            })
+            ->count() * $targetCostOld;
 
         return $costs;
     }
