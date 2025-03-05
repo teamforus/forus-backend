@@ -13,7 +13,8 @@ class UpdateNotificationTemplatesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'notifications:update-templates';
+    protected $signature = 'notifications:update-templates
+                            {--force : Do not ask for confirmation before updating.}';
 
     /**
      * The console command description.
@@ -30,6 +31,6 @@ class UpdateNotificationTemplatesCommand extends Command
      */
     public function handle(): void
     {
-        (new NotificationTemplatesTableSeeder())->execute($this);
+        (new NotificationTemplatesTableSeeder())->execute($this, (boolean) $this->option('force'));
     }
 }

@@ -26,9 +26,10 @@ class NotificationTemplatesTableSeeder extends Seeder
 
     /**
      * @param Command|null $command
+     * @param bool $force
      * @return void
      */
-    public function execute(?Command $command = null): void
+    public function execute(?Command $command = null, bool $force = false): void
     {
         $notificationsRepo = resolve(NotificationRepo::class);
         $data = file_get_contents(database_path('seeders/resources/mail_templates/notification_templates.json'));
@@ -98,7 +99,7 @@ class NotificationTemplatesTableSeeder extends Seeder
                         'formality: ' . ($templateModel->formal ? 'formal' : 'informal'),
                     ]);
 
-                    if ($templateChanged && (!$command || $this->confirmUpdate($command, $overview))) {
+                    if ($templateChanged && (!$command || $force || $this->confirmUpdate($command, $overview))) {
                         $templateModel->update([
                             'title' => $title,
                             'content' => $content,
