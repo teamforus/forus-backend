@@ -17,3 +17,7 @@ Telefoonnummer: :sponsor_phone
 We hopen u hiermee voldoende te hebben geïnformeerd.  
 Met vriendelijke groet,
 :sponsor_name
+&nbsp;  
+&nbsp;
+
+:provider_dashboard_button
