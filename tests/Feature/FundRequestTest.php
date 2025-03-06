@@ -141,7 +141,7 @@ class FundRequestTest extends TestCase
         ]);
 
         $fund->criteria
-            ->firstWhere('record_type_key', 'children_nth')
+            ->firstWhere('record_type_key', 'net_worth')
             ->fund_criterion_rules()
             ->forceCreate([
                 'record_type_key' => 'children_nth',

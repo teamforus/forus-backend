@@ -11,6 +11,8 @@ use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Facebook\WebDriver\Exception\ElementClickInterceptedException;
+use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Facebook\WebDriver\Remote\RemoteWebElement;
 use Facebook\WebDriver\WebDriverBy;
@@ -257,7 +259,7 @@ class ProductReservationTest extends DuskTestCase
             $browser->visit($implementation->urlWebshop());
 
             $this->loginAndGoToFundVoucher($browser, $identity, $fund);
-            $this->openFirstProductAvailableForVoucher($browser);
+            $this->openFirstProductAvailableForVoucher($browser, $fund);
 
             $browser->waitFor('@productName');
             $browser->assertSeeIn('@productName', $product->name);
@@ -288,14 +290,15 @@ class ProductReservationTest extends DuskTestCase
 
     /**
      * @param Browser $browser
+     * @param Fund $fund
      * @return void
      * @throws TimeoutException
      */
-    private function openFirstProductAvailableForVoucher(Browser $browser): void
+    private function openFirstProductAvailableForVoucher(Browser $browser, Fund $fund): void
     {
         // Find available product and open it
         $browser->waitFor('@productItem')->press('@productItem');
-        $browser->waitFor('@fundItem');
+        $browser->waitFor("@fundItem$fund->id");
     }
 
     /**
@@ -320,13 +323,14 @@ class ProductReservationTest extends DuskTestCase
      * @param Browser $browser
      * @param Fund $fund
      * @return void
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
      * @throws TimeoutException
      */
     private function openReservationModal(Browser $browser, Fund $fund): void
     {
         // Find available fund and reserve product
-        $fundElement = $this->findFundReservationOptionElement($browser, $fund->name);
-        $fundElement->findElement(WebDriverBy::xpath(".//*[@data-dusk='reserveProduct']"))->click();
+        $browser->click("@fundItem$fund->id @reserveProduct");
 
         // Wait for the reservation modal and submit with no data
         $browser->waitFor('@modalProductReserve');
@@ -648,30 +652,6 @@ class ProductReservationTest extends DuskTestCase
         }
 
         return null;
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $fundTitle
-     * @return RemoteWebElement|null
-     * @throws TimeOutException
-     */
-    private function findFundReservationOptionElement(Browser $browser, string $fundTitle): ?RemoteWebElement
-    {
-        $selector = '@fundItem';
-
-        $browser->waitFor($selector);
-
-        $element = Arr::first($browser->elements($selector), function (RemoteWebElement $element) use ($fundTitle) {
-            $fundNameElement = $element->findElement(WebDriverBy::xpath(".//*[@data-dusk='fundName']"));
-            $fundNameText = $fundNameElement->getText();
-
-            return trim($fundNameText) === $fundTitle;
-        });
-
-        $this->assertNotNull($element);
-
-        return $element;
     }
 
     /**
