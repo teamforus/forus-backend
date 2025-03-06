@@ -41,6 +41,7 @@ class ProfileResource extends BaseJsonResource
     protected function privateFields(BaseFormRequest $request, Identity $identity): array
     {
         $email = $request->isMeApp() ? $identity->email ?: 'Geen e-mailadres' : $identity->email;
+        $sessions = $identity->sessions;
         $bsnRecord = $identity->record_bsn;
 
         if ($request->auth_address() === $identity->address) {
@@ -54,12 +55,13 @@ class ProfileResource extends BaseJsonResource
                     ->pluck('email'),
                 'profile' => $this->profile,
                 ...$this->profile ? [
-                    'records' => $this?->records?: [],
-                    'bank_accounts' => $this?->bank_accounts?: [],
+                    'records' => $this?->records ?: [],
+                    'bank_accounts' => $this?->bank_accounts ?: [],
                 ] : [],
                 ...static::makeTimestampsStatic([
                     'created_at' => $identity->created_at,
-                    'last_activity_at' => array_first($identity->sessions)?->last_activity_at,
+                    'last_login_at' => $sessions->sortByDesc('created_at')->first()?->created_at,
+                    'last_activity_at' => $sessions->sortByDesc('last_activity_at')->first()?->last_activity_at,
                 ]),
             ];
         }

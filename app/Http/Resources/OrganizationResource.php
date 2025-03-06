@@ -38,11 +38,11 @@ class OrganizationResource extends BaseJsonResource
     public static function loadDeps($request = null): array
     {
         $load = [
-            'tags',
             'offices',
             'contacts',
             'offices',
             'business_type',
+            'tags.translations',
             'reservation_fields',
             'bank_connection_active',
             'employees.roles.permissions',
@@ -88,15 +88,13 @@ class OrganizationResource extends BaseJsonResource
 
         return array_filter([
             ...$organization->only([
-                'id', 'identity_address', 'business_type_id', 'email_public', 'phone_public',
+                'id', 'name', 'identity_address', 'business_type_id', 'email_public', 'phone_public',
                 'website_public', 'description', 'reservation_phone', 'reservation_address',
                 'reservation_birth_date', 'description_html',
             ]),
-            ...$organization->translateColumns(
-                $this->isCollection()
-                    ? $organization->only(['name'])
-                    : $organization->only(['name', 'description_html']),
-            ),
+            ...$this->isCollection() ? [] : $organization->translateColumns($organization->only([
+                'description_html',
+            ])),
             ...$privateData,
             ...$ownerData,
             ...$biConnectionData,
@@ -166,6 +164,7 @@ class OrganizationResource extends BaseJsonResource
                 'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time',
                 'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
                 'bank_note', 'bank_reservation_number', 'bank_separator',
+                'bank_reservation_first_name', 'bank_reservation_last_name',
             ]),
         ] : [];
     }

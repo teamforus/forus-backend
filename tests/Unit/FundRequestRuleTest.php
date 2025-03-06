@@ -51,7 +51,7 @@ class FundRequestRuleTest extends TestCase
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 2),
             $this->makeRecordValue($identity, $fund, 'net_worth', 900),
-            $this->makeRecordValue($identity, $fund, 'gender', 'Female'),
+            $this->makeRecordValue($identity, $fund, 'gender', 'vrouwelijk'),
         ]);
 
         $response->assertJsonValidationErrors('records.0.value');
@@ -67,7 +67,7 @@ class FundRequestRuleTest extends TestCase
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 3, true),
             $this->makeRecordValue($identity, $fund, 'net_worth', 500, true),
-            $this->makeRecordValue($identity, $fund, 'gender', 'Male', true),
+            $this->makeRecordValue($identity, $fund, 'gender', 'mannelijk', true),
         ]);
 
         $response->assertJsonValidationErrors('records.0.files');
@@ -80,7 +80,7 @@ class FundRequestRuleTest extends TestCase
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 3),
             $this->makeRecordValue($identity, $fund, 'net_worth', 500),
-            $this->makeRecordValue($identity, $fund, 'gender', 'Male'),
+            $this->makeRecordValue($identity, $fund, 'gender', 'mannelijk'),
         ]);
 
         $response->assertSuccessful();
@@ -102,7 +102,7 @@ class FundRequestRuleTest extends TestCase
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 2),
             $this->makeRecordValue($identity, $fund, 'net_worth', 900),
-            $this->makeRecordValue($identity, $fund, 'gender', 'Female'),
+            $this->makeRecordValue($identity, $fund, 'gender', 'vrouwelijk'),
         ]);
 
         $response->assertJsonValidationErrors('records.0.value');
@@ -118,7 +118,7 @@ class FundRequestRuleTest extends TestCase
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 3),
             $this->makeRecordValue($identity, $fund, 'net_worth', 500),
-            $this->makeRecordValue($identity, $fund, 'gender', 'Male'),
+            $this->makeRecordValue($identity, $fund, 'gender', 'mannelijk'),
         ]);
 
         $response->assertJsonValidationErrors('records.0.files');
@@ -131,7 +131,7 @@ class FundRequestRuleTest extends TestCase
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 3, true),
             $this->makeRecordValue($identity, $fund, 'net_worth', 500, true),
-            $this->makeRecordValue($identity, $fund, 'gender', 'Male', true),
+            $this->makeRecordValue($identity, $fund, 'gender', 'mannelijk', true),
         ]);
 
         $response->assertSuccessful();
@@ -154,7 +154,7 @@ class FundRequestRuleTest extends TestCase
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 2),
             $this->makeRecordValue($identity, $fund, 'net_worth', 900),
-            $this->makeRecordValue($identity, $fund, 'gender', 'Female'),
+            $this->makeRecordValue($identity, $fund, 'gender', 'vrouwelijk'),
         ]);
 
         $response->assertJsonValidationErrors('records.0.value');
@@ -170,7 +170,7 @@ class FundRequestRuleTest extends TestCase
         $response = $this->makeValidationRequest($identity, $fund, [
             $this->makeRecordValue($identity, $fund, 'children_nth', 3),
             $this->makeRecordValue($identity, $fund, 'net_worth', 500),
-            $this->makeRecordValue($identity, $fund, 'gender', 'Male'),
+            $this->makeRecordValue($identity, $fund, 'gender', 'mannelijk'),
         ]);
 
         $response->assertSuccessful();
@@ -221,7 +221,7 @@ class FundRequestRuleTest extends TestCase
             ...$params,
         ], [
             'operator' => '=',
-            'value' => 'Male',
+            'value' => 'mannelijk',
             'show_attachment' => false,
             'record_type_key' => 'gender',
             ...$params,

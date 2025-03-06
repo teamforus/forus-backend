@@ -117,6 +117,7 @@ class SessionService
     ): ?Session {
         Session::insertOrIgnore([
             'uid' => $uid,
+            'created_at' => now(),
             'identity_address' => $identity_address,
             'identity_proxy_id' => $identity_proxy_id,
         ]);

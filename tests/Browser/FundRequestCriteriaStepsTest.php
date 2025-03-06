@@ -752,7 +752,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                         'organization_id' => $organization->id,
                     ]);
 
-                    $recordType->record_type_options()->createMany($criteriaConfig['options'] ?? []);
+                    foreach ($criteriaConfig['options'] ?? [] as $option) {
+                        $recordType
+                            ->record_type_options()
+                            ->create($option)
+                            ->translateOrNew('nl')
+                            ->fill($option)
+                            ->save();
+                    }
 
                     $operatorRecordTypes[$operator] = $recordType;
                 }

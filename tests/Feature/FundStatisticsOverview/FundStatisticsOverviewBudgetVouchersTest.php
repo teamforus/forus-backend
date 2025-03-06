@@ -1,6 +1,6 @@
 <?php
 
-namespace Feature\FundStatisticsOverview;
+namespace Tests\Feature\FundStatisticsOverview;
 
 use App\Models\Fund;
 use App\Models\Organization;
@@ -29,30 +29,48 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
     public int $fundTopUpAmount = 40000;
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testFundStatisticsOverviewActiveVouchers(): void
     {
+        // 2021
         $this->travelTo('2021-01-01');
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->createFundAndTopUpBudget($organization, $this->fundTopUpAmount);
-        $this->assertActiveVouchers($fund, 1, 3, 100);
 
+        $this->createActiveVouchers($fund, 1, 3, 25);
+        $this->assertTotalAndActiveVouchersForYear($fund, 1, 1, 3, 25, 2021);
+
+        // 2022
         $this->travelTo('2022-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
-        $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertActiveVouchers($fund, 2, 4, 50);
+        $fund->update(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);
 
+        $this->createActiveVouchers($fund, 2, 4, 50);
+        $this->assertTotalAndActiveVouchersForYear($fund, 1, 0, 3, 25, 2021);
+        $this->assertTotalAndActiveVouchersForYear($fund, 2, 2, 8, 100, 2022);
+
+        // 2023
         $this->travelTo('2023-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
-        $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertActiveVouchers($fund, 5, 6, 70);
+        $fund->update(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);
 
+        $this->createActiveVouchers($fund, 5, 6, 70);
+        $this->assertTotalAndActiveVouchersForYear($fund, 1, 0, 3, 25, 2021);
+        $this->assertTotalAndActiveVouchersForYear($fund, 2, 0, 8, 100, 2022);
+        $this->assertTotalAndActiveVouchersForYear($fund, 5, 5, 30, 350, 2023);
+
+        // 2024
         $this->travelTo('2024-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
-        $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertActiveVouchers($fund, 12, 0, 120);
+        $fund->update(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);
+
+        $this->createActiveVouchers($fund, 12, 0, 120);
+        $this->assertTotalAndActiveVouchersForYear($fund, 1, 0, 3, 25, 2021);
+        $this->assertTotalAndActiveVouchersForYear($fund, 2, 0, 8, 100, 2022);
+        $this->assertTotalAndActiveVouchersForYear($fund, 5, 0, 30, 350, 2023);
+        $this->assertTotalAndActiveVouchersForYear($fund, 12, 12, 0, 1440, 2024);
     }
 
     /**
@@ -62,73 +80,100 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
      * @param int|float $transactionAmount
      * @return void
      */
-    public function assertActiveVouchers(
+    public function createActiveVouchers(
         Fund $fund,
         int $vouchersCount,
         int $childrenCount,
         int|float $transactionAmount,
     ): void {
-        $vouchers = $this->makeVouchers($fund, $vouchersCount, $childrenCount);
-        $vouchersAmount = $vouchers->sum('amount');
+        $this
+            ->makeVouchers($fund, $vouchersCount, $childrenCount)
+            ->each(fn (Voucher $voucher) => $voucher->makeTransactionBySponsor($fund->organization->employees[0], [
+                'amount' => $transactionAmount,
+            ])->setPaid(null, now()));
+    }
 
-        $childrenCount = $childrenCount * $vouchersCount;
-        $usedAmount = $transactionAmount * $vouchersCount;
-        $usedVouchersAmount = $transactionAmount * $vouchersCount;
-
-        $employee = $fund->organization->employees[0];
-
-        $vouchers->each(function (Voucher $voucher) use ($employee, $transactionAmount) {
-            $voucher
-                ->makeTransactionBySponsor($employee, ['amount' => $transactionAmount])
-                ->setPaid(null, now());
-        });
-
+    /**
+     * @param Fund $fund
+     * @param int $vouchersCount
+     * @param int $vouchersCountActive
+     * @param int $totalChildrenCount
+     * @param int|float $totalTransactionsAmount
+     * @param int $year
+     * @return void
+     */
+    public function assertTotalAndActiveVouchersForYear(
+        Fund $fund,
+        int $vouchersCount,
+        int $vouchersCountActive,
+        int $totalChildrenCount,
+        int|float $totalTransactionsAmount,
+        int $year,
+    ): void {
         $response = $this->getJson(
-            "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all&year=" . now()->year,
+            "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all&year=$year",
             $this->makeApiHeaders($fund->organization->identity),
         );
 
         $response->assertSuccessful();
         $response->assertJsonPath('data.0.budget.vouchers_count', $vouchersCount);
-        $response->assertJsonPath('data.0.budget.active_vouchers_count', $vouchersCount);
-        $response->assertJsonPath('data.0.budget.active_vouchers_amount', currency_format($vouchersAmount));
+        $response->assertJsonPath('data.0.budget.active_vouchers_count', $vouchersCountActive);
+        $response->assertJsonPath('data.0.budget.active_vouchers_amount', currency_format($vouchersCountActive * 300));
         $response->assertJsonPath('data.0.budget.deactivated_vouchers_count', 0);
         $response->assertJsonPath('data.0.budget.deactivated_vouchers_amount', currency_format(0));
         $response->assertJsonPath('data.0.budget.inactive_vouchers_count', 0);
         $response->assertJsonPath('data.0.budget.inactive_vouchers_amount', currency_format(0));
 
         $response->assertJsonPath('data.0.budget.total', currency_format($this->fundTopUpAmount));
-        $response->assertJsonPath('data.0.budget.used', currency_format($usedAmount));
-        $response->assertJsonPath('data.0.budget.left', currency_format($this->fundTopUpAmount - $usedAmount));
-        $response->assertJsonPath('data.0.budget.used_active_vouchers', currency_format($usedVouchersAmount));
-        $response->assertJsonPath('data.0.budget.children_count', $childrenCount);
+        $response->assertJsonPath('data.0.budget.used', currency_format($totalTransactionsAmount));
+        $response->assertJsonPath('data.0.budget.left', currency_format($this->fundTopUpAmount - $totalTransactionsAmount));
+        $response->assertJsonPath('data.0.budget.used_active_vouchers', currency_format($totalTransactionsAmount));
+        $response->assertJsonPath('data.0.budget.children_count', $totalChildrenCount);
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testFundStatisticsOverviewPendingVouchers(): void
     {
+        // 2021
         $this->travelTo('2021-01-01');
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->createFundAndTopUpBudget($organization, $this->fundTopUpAmount);
-        $this->assertPendingVouchers($fund, 1, 2);
 
+        $this->createPendingVouchers($fund, 1, 2);
+        $this->assertPendingVouchersForYear($fund, 1, 2, 300, 2021);
+
+        // 2022
         $this->travelTo('2022-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
-        $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertPendingVouchers($fund, 2, 3);
+        $fund->update(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);
 
+        $this->createPendingVouchers($fund, 2, 3);
+        $this->assertPendingVouchersForYear($fund, 1, 2, 300, 2021);
+        $this->assertPendingVouchersForYear($fund, 2, 6, 600, 2022);
+
+        // 2023
         $this->travelTo('2023-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
-        $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertPendingVouchers($fund, 5, 1);
+        $fund->update(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);
 
+        $this->createPendingVouchers($fund, 5, 1);
+        $this->assertPendingVouchersForYear($fund, 1, 2, 300, 2021);
+        $this->assertPendingVouchersForYear($fund, 2, 6, 600, 2022);
+        $this->assertPendingVouchersForYear($fund, 5, 5, 1500, 2023);
+
+        // 2024
         $this->travelTo('2024-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
-        $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertPendingVouchers($fund, 12, 0);
+        $fund->update(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);
+
+        $this->createPendingVouchers($fund, 12, 0);
+        $this->assertPendingVouchersForYear($fund, 1, 2, 300, 2021);
+        $this->assertPendingVouchersForYear($fund, 2, 6, 600, 2022);
+        $this->assertPendingVouchersForYear($fund, 5, 5, 1500, 2023);
+        $this->assertPendingVouchersForYear($fund, 12, 0, 3600, 2024);
     }
 
     /**
@@ -137,15 +182,33 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
      * @param int $childrenCount
      * @return void
      */
-    public function assertPendingVouchers(Fund $fund, int $vouchersCount, int $childrenCount): void
-    {
-        $vouchers = $this->makeVouchers($fund, $vouchersCount, $childrenCount);
-        $vouchers->each(fn(Voucher $voucher) => $voucher->setPending());
-        $vouchersAmount = $vouchers->sum('amount');
-        $childrenCount = $childrenCount * $vouchersCount;
+    public function createPendingVouchers(
+        Fund $fund,
+        int $vouchersCount,
+        int $childrenCount
+    ): void {
+        $this
+            ->makeVouchers($fund, $vouchersCount, $childrenCount)
+            ->each(fn (Voucher $voucher) => $voucher->setPending());
+    }
 
+    /**
+     * @param Fund $fund
+     * @param int $vouchersCount
+     * @param int $childrenCount
+     * @param float $vouchersAmount
+     * @param int $year
+     * @return void
+     */
+    public function assertPendingVouchersForYear(
+        Fund $fund,
+        int $vouchersCount,
+        int $childrenCount,
+        float $vouchersAmount,
+        int $year,
+    ): void {
         $response = $this->getJson(
-            "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all&year=" . now()->year,
+            "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all&year=$year",
             $this->makeApiHeaders($fund->organization->identity),
         );
 
@@ -166,52 +229,65 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testFundStatisticsOverviewDeactivatedVouchers(): void
     {
+        // 2021
         $this->travelTo('2021-01-01');
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->createFundAndTopUpBudget($organization, $this->fundTopUpAmount);
-        $this->assertDeactivatedVouchers($fund, 1, 2, 100);
 
+        $this->createDeactivatedVouchers($fund, 1, 2, 100);
+        $this->assertDeactivatedVouchersForYear($fund, 1, 2, 100, 2021);
+
+        // 2022
         $this->travelTo('2022-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
-        $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertDeactivatedVouchers($fund, 2, 5, 50);
+        $fund->update(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);
 
+        $this->createDeactivatedVouchers($fund, 2, 5, 50);
+        $this->assertDeactivatedVouchersForYear($fund, 1, 2, 100, 2021);
+        $this->assertDeactivatedVouchersForYear($fund, 2, 10, 100, 2022);
+
+        // 2023
         $this->travelTo('2023-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
-        $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertDeactivatedVouchers($fund, 5, 12, 70);
+        $fund->update(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);
 
+        $this->createDeactivatedVouchers($fund, 5, 12, 70);
+        $this->assertDeactivatedVouchersForYear($fund, 1, 2, 100, 2021);
+        $this->assertDeactivatedVouchersForYear($fund, 2, 10, 100, 2022);
+        $this->assertDeactivatedVouchersForYear($fund, 5, 60, 350, 2023);
+
+        // 2024
         $this->travelTo('2024-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
-        $fund->update(['end_date' => now()->endOfYear()]);
-        $this->assertDeactivatedVouchers($fund, 12, 0, 120);
+        $fund->update(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);
+
+        $this->createDeactivatedVouchers($fund, 12, 0, 120);
+        $this->assertDeactivatedVouchersForYear($fund, 1, 2, 100, 2021);
+        $this->assertDeactivatedVouchersForYear($fund, 2, 10, 100, 2022);
+        $this->assertDeactivatedVouchersForYear($fund, 5, 60, 350, 2023);
+        $this->assertDeactivatedVouchersForYear($fund, 12, 0, 1440, 2024);
     }
 
     /**
      * @param Fund $fund
      * @param int $vouchersCount
      * @param int $childrenCount
-     * @param int|float $transactionAmount
+     * @param float $transactionAmount
      * @return void
+     * @throws Throwable
      */
-    public function assertDeactivatedVouchers(
+    public function createDeactivatedVouchers(
         Fund $fund,
         int $vouchersCount,
         int $childrenCount,
-        int|float $transactionAmount,
+        float $transactionAmount,
     ): void {
         $vouchers = $this->makeVouchers($fund, $vouchersCount, $childrenCount);
-        $vouchersAmount = $vouchers->sum('amount');
-
-        $childrenCount = $childrenCount * $vouchersCount;
-        $usedAmount = $transactionAmount * $vouchersCount;
-        $usedVouchersAmount = $transactionAmount * $vouchersCount;
-
         $employee = $fund->organization->employees[0];
 
         $vouchers->each(function (Voucher $voucher) use ($employee, $transactionAmount) {
@@ -221,9 +297,25 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
 
             $voucher->deactivate();
         });
+    }
 
+    /**
+     * @param Fund $fund
+     * @param int $vouchersCount
+     * @param int $totalChildrenCount
+     * @param float $totalVouchersAmount
+     * @param int $year
+     * @return void
+     */
+    public function assertDeactivatedVouchersForYear(
+        Fund $fund,
+        int $vouchersCount,
+        int $totalChildrenCount,
+        float $totalVouchersAmount,
+        int $year,
+    ): void {
         $response = $this->getJson(
-            "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all&year=" . now()->year,
+            "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all&year=$year",
             $this->makeApiHeaders($fund->organization->identity),
         );
 
@@ -232,20 +324,20 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         $response->assertJsonPath('data.0.budget.active_vouchers_count', 0);
         $response->assertJsonPath('data.0.budget.active_vouchers_amount', currency_format(0));
         $response->assertJsonPath('data.0.budget.deactivated_vouchers_count', $vouchersCount);
-        $response->assertJsonPath('data.0.budget.deactivated_vouchers_amount', currency_format($vouchersAmount));
+        $response->assertJsonPath('data.0.budget.deactivated_vouchers_amount', currency_format($vouchersCount * 300));
         $response->assertJsonPath('data.0.budget.inactive_vouchers_count', 0);
         $response->assertJsonPath('data.0.budget.inactive_vouchers_amount', currency_format(0));
 
         $response->assertJsonPath('data.0.budget.total', currency_format($this->fundTopUpAmount));
-        $response->assertJsonPath('data.0.budget.used', currency_format($usedAmount));
-        $response->assertJsonPath('data.0.budget.left', currency_format($this->fundTopUpAmount - $usedAmount));
-        $response->assertJsonPath('data.0.budget.used_active_vouchers', currency_format($usedVouchersAmount));
-        $response->assertJsonPath('data.0.budget.children_count', $childrenCount);
+        $response->assertJsonPath('data.0.budget.used', currency_format($totalVouchersAmount));
+        $response->assertJsonPath('data.0.budget.left', currency_format($this->fundTopUpAmount - $totalVouchersAmount));
+        $response->assertJsonPath('data.0.budget.used_active_vouchers', currency_format($totalVouchersAmount));
+        $response->assertJsonPath('data.0.budget.children_count', $totalChildrenCount);
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testFundStatisticsOverviewExpiredVouchers(): void
     {
@@ -256,16 +348,19 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
 
         $this->travelTo('2022-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
+        $fund->update(['start_date' => now()->startOfYear()]);
         $fund->update(['end_date' => now()->endOfYear()]);
         $this->assertExpiredVouchers($fund, 2, 2, 50);
 
         $this->travelTo('2023-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
+        $fund->update(['start_date' => now()->startOfYear()]);
         $fund->update(['end_date' => now()->endOfYear()]);
         $this->assertExpiredVouchers($fund, 5, 12, 70);
 
         $this->travelTo('2024-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => $this->fundTopUpAmount]);
+        $fund->update(['start_date' => now()->startOfYear()]);
         $fund->update(['end_date' => now()->endOfYear()]);
         $this->assertExpiredVouchers($fund, 12, 0, 120);
     }
@@ -319,43 +414,6 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
     }
 
     /**
-     * @param Organization $organization
-     * @param float|int $topUpAmount
-     * @return Fund
-     */
-    private function createFundAndTopUpBudget(Organization $organization, float|int $topUpAmount): Fund
-    {
-        $fund = $this->makeTestFund($organization, [
-            'start_date' => now()->startOfYear(),
-            'end_date' => now()->endOfYear(),
-        ]);
-
-        $fund->top_ups()->forceDelete();
-        $fund->getOrCreateTopUp()->transactions()->create(['amount' => $topUpAmount]);
-
-        return $fund;
-    }
-
-    /**
-     * @param Fund $fund
-     * @param int $count
-     * @param int $childrenCount
-     * @return Collection
-     */
-    private function makeVouchers(Fund $fund, int $count, int $childrenCount): Collection
-    {
-        $vouchers = collect();
-
-        for ($i = 1; $i <= $count; $i++) {
-            $voucher = $fund->makeVoucher($this->makeIdentity());
-            $voucher->appendRecord('children_nth', $childrenCount);
-            $vouchers->push($voucher);
-        }
-
-        return $vouchers;
-    }
-
-    /**
      * @return void
      */
     public function testBudgetFundsTotals(): void
@@ -398,5 +456,43 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         $response->assertJsonPath('budget_funds.inactive_vouchers_count', 0);
         $response->assertJsonPath('budget_funds.inactive_vouchers_amount', currency_format(0));
         $response->assertJsonPath('budget_funds.budget_used_active_vouchers', $usedVouchersAmount);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param float|int $topUpAmount
+     * @return Fund
+     */
+    private function createFundAndTopUpBudget(Organization $organization, float|int $topUpAmount): Fund
+    {
+        $fund = $this->makeTestFund($organization, [
+            'start_date' => now()->startOfYear(),
+            'end_date' => now()->endOfYear(),
+        ]);
+
+        $fund->top_ups()->forceDelete();
+        $fund->getOrCreateTopUp()->transactions()->create(['amount' => $topUpAmount]);
+
+        return $fund;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param int $count
+     * @param int $childrenCount
+     * @param int $amount
+     * @return Collection
+     */
+    private function makeVouchers(Fund $fund, int $count, int $childrenCount, int $amount = 300): Collection
+    {
+        $vouchers = collect();
+
+        for ($i = 1; $i <= $count; $i++) {
+            $voucher = $fund->makeVoucher($this->makeIdentity(), [], $amount);
+            $voucher->appendRecord('children_nth', $childrenCount);
+            $vouchers->push($voucher);
+        }
+
+        return $vouchers;
     }
 }

@@ -6,6 +6,7 @@ use App\Services\QueryCounterService\Data\QueryCounter;
 use App\Services\QueryCounterService\QueryCounterService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 
 class LogQueryCountMiddleware
@@ -46,6 +47,7 @@ class LogQueryCountMiddleware
             'route_name' => $queryCounter->getRouteName(),
             'url' => $queryCounter->getRequest()->url(),
             'query' => $queryCounter->getRequest()->query(),
+            'locale' => Lang::getLocale(),
             'sql_queries_time' => $queryCounter->getQueriesTime(),
             'sql_queries_count' => $queryCounter->getQueriesCount(),
             // 'queries' => $queryCounter->getQueriesCount(),

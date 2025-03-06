@@ -24,7 +24,7 @@ class OrganizationReservationFieldResource extends BaseJsonResource
             ]),
             ...$this->resource->translateColumns($this->resource->only([
                 'label', 'description',
-            ]))
+            ])),
         ];
     }
 }
