@@ -3,14 +3,14 @@
 namespace App\Exceptions;
 
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\ValidationException;
 use ReflectionClass;
+use ReflectionException;
+use ReflectionObject;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Throwable;
 
@@ -63,19 +63,16 @@ class Handler extends ExceptionHandler
     /**
      * @param $request
      * @param Throwable $e
-     * @return ResponseFactory|Application|Response|SymfonyResponse
+     * @return SymfonyResponse
+     * @throws ReflectionException
      * @throws Throwable
      */
-    public function render(
-        $request, 
-        Throwable $e,
-    ): ResponseFactory|Application|Response|SymfonyResponse {
-        $message = $e->getMessage();
+    public function render($request, Throwable $e): SymfonyResponse
+    {
+        $message = $this->getMessageByInstance($e) ?: $this->getMessageByStatusCode($e) ?: $e->getMessage();
 
-        $message = $this->getMessageByInstance($e) ?: $message;
-        $message = $this->getMessageByStatusCode($e) ?: $message;
-
-        $this->setMessage($e, $message);
+        $reflection = new ReflectionObject($e);
+        $reflection->getProperty('message')?->setValue($e, $message);
 
         return parent::render($request, $e);
     }
@@ -88,7 +85,7 @@ class Handler extends ExceptionHandler
      */
     protected function convertExceptionToArray(Throwable $e): array
     {
-        return config('app.debug') ? parent::convertExceptionToArray($e) : [
+        return Config::get('app.debug') ? parent::convertExceptionToArray($e) : [
             'message' => $this->isHttpException($e) ? $e->getMessage() : trans('exceptions.server_error'),
         ];
     }
@@ -100,22 +97,22 @@ class Handler extends ExceptionHandler
      */
     protected function getMessageByInstance(Throwable $e): ?string
     {
-        $message = null;
         if ($e instanceof ModelNotFoundException) {
             $reflection = new ReflectionClass($e->getModel());
             $modelKey = $this->mapModelNames[$reflection->getShortName()] ?? 'default';
-            $message = trans("exceptions.not_found.$modelKey");
+
+            return trans("exceptions.not_found.$modelKey");
         }
 
         if ($e instanceof AuthorizationException) {
-            $message = trans('exceptions.forbidden');
+            return trans('exceptions.forbidden');
         }
 
         if ($e instanceof ValidationException) {
-            $message = trans('exceptions.validation_error');
+            return trans('exceptions.validation_error');
         }
 
-        return $message;
+        return null;
     }
 
     /**
@@ -135,18 +132,5 @@ class Handler extends ExceptionHandler
         }
 
         return null;
-    }
-
-    /**
-     * @param Throwable $e
-     * @param string $message
-     * @return void
-     * @throws \ReflectionException
-     */
-    protected function setMessage(Throwable $e, string $message): void
-    {
-        $reflectionObject = new \ReflectionObject($e);
-        $reflectionObjectProp = $reflectionObject->getProperty('message');
-        $reflectionObjectProp->setValue($e, $message);
     }
 }
