@@ -28,8 +28,8 @@ class ProviderStateAcceptedMail extends ImplementationMail
         $link = $data['provider_dashboard_link'];
 
         return [
-            'provider_dashboard_button' => $this->makeButton($link, 'DASHBOARD'),
-            'provider_dashboard_link' => $this->makeLink($link, 'hier'),
+            'provider_dashboard_link' => $this->makeLink($link, 'hier', '#315EFD'),
+            'provider_dashboard_button' => $this->makeButton($link, 'GA NAAR DE BEHEEROMGEVING', '#315EFD'),
         ];
     }
 }
