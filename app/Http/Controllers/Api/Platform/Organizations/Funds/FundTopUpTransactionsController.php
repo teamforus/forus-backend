@@ -20,8 +20,8 @@ class FundTopUpTransactionsController extends Controller
      * @param IndexFundTopUpTransactionRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(
         IndexFundTopUpTransactionRequest $request,
@@ -43,13 +43,13 @@ class FundTopUpTransactionsController extends Controller
     }
 
     /**
-     * Display the specified resource
+     * Display the specified resource.
      *
      * @param Organization $organization
      * @param Fund $fund
      * @param FundTopUp $fundTopUp
-     * @return TopUpTransactionResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return TopUpTransactionResource
      */
     public function show(
         Organization $organization,

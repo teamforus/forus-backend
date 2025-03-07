@@ -43,18 +43,51 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
     }
 
     /**
+     * @return string[]
+     */
+    public function attributes(): array
+    {
+        return [
+            'assign_by_type' => 'methode',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'amount.between' => 'Er staat niet genoeg budget op het fonds. ' .
+                'Het maximale tegoed van een voucher is €:max. ' .
+                'Vul het fonds aan om deze voucher aan te maken.',
+        ];
+    }
+
+    /**
+     * @param bool $bsn_enabled
+     * @return string
+     */
+    protected function availableAssignTypes(bool $bsn_enabled): string
+    {
+        return implode(',', array_filter([
+            'email', 'activation_code', $bsn_enabled ? 'bsn' : null,
+        ]));
+    }
+
+    /**
      * @return array
      */
     private function fundIdRule(): array
     {
-        $fundIds = $this->organization->funds()->where(function(Builder $builder) {
+        $fundIds = $this->organization->funds()->where(function (Builder $builder) {
             FundQuery::whereIsInternal($builder);
             FundQuery::whereIsConfiguredByForus($builder);
         })->pluck('id')->toArray();
 
         return [
             'required',
-            Rule::exists('funds', 'id')->whereIn('id', $fundIds)
+            Rule::exists('funds', 'id')->whereIn('id', $fundIds),
         ];
     }
 
@@ -86,7 +119,7 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
 
         return array_merge($rule, [
             'exists:products,id',
-            new ProductIdInStockRule($fund)
+            new ProductIdInStockRule($fund),
         ]);
     }
 
@@ -113,19 +146,8 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
         return $bsn_enabled ? [
             'nullable', 'required_if:assign_by_type,bsn', new BsnRule(),
         ] : [
-            'nullable', 'in:'
+            'nullable', 'in:',
         ];
-    }
-
-    /**
-     * @param bool $bsn_enabled
-     * @return string
-     */
-    protected function availableAssignTypes(bool $bsn_enabled): string
-    {
-        return implode(",", array_filter([
-            'email', 'activation_code', $bsn_enabled ? 'bsn' : null,
-        ]));
     }
 
     /**
@@ -137,26 +159,5 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
         $fund = $this->organization->funds()->findOrFail($this->input('fund_id'));
 
         return $fund;
-    }
-
-    /**
-     * @return string[]
-     */
-    public function attributes(): array
-    {
-        return [
-            'assign_by_type' => 'methode',
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    public function messages(): array {
-        return [
-            'amount.between' => 'Er staat niet genoeg budget op het fonds. '.
-                'Het maximale tegoed van een voucher is €:max. '.
-                'Vul het fonds aan om deze voucher aan te maken.'
-        ];
     }
 }

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Statistics\Funds;
 
 use App\Models\Employee;
@@ -36,95 +35,6 @@ class FinancialOverviewStatistic
     }
 
     /**
-     * @param Organization $organization
-     * @return Collection|Arrayable
-     */
-    private function getFunds(Organization $organization): Collection|Arrayable
-    {
-        return $organization->funds()->where('archived', false)->where(
-            'state', '!=', Fund::STATE_WAITING
-        )->get();
-    }
-
-    /**
-     * @param Organization $organization
-     * @return Collection|Arrayable
-     */
-    private function getBudgetFunds(Organization $organization): Collection|Arrayable {
-        return $this->getFunds($organization)->where('type', Fund::TYPE_BUDGET);
-    }
-
-    /**
-     * @param Collection $funds
-     * @param Carbon $from
-     * @param Carbon $to
-     * @return array
-     */
-    private function getFundTotals(Collection $funds, Carbon $from, Carbon $to): array {
-        $budget = 0;
-        $budget_left = 0;
-        $budget_used = 0;
-        $budget_used_active_vouchers = 0;
-        $transaction_costs = 0;
-
-        $query = Voucher::query()->whereNull('parent_id')->whereIn('fund_id', $funds->pluck('id'));
-        $vouchersQuery = FinancialOverviewStatisticQueries::whereDate($query, $from, $to);
-        $activeVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndActive((clone $vouchersQuery));
-        $inactiveVouchersQuery = FinancialOverviewStatisticQueries::wherePending((clone $vouchersQuery));
-        $deactivatedVouchersQuery = FinancialOverviewStatisticQueries::whereDeactivated((clone $vouchersQuery));
-
-        $vouchersAmount = $vouchersQuery->sum('amount');
-        $activeVouchersAmount = $activeVouchersQuery->sum('amount');
-        $inactiveVouchersAmount = $inactiveVouchersQuery->sum('amount');
-        $deactivatedVouchersAmount = $deactivatedVouchersQuery->sum('amount');
-
-        $vouchers_amount = currency_format($vouchersAmount);
-        $active_vouchers_amount = currency_format($activeVouchersAmount);
-        $inactive_vouchers_amount = currency_format($inactiveVouchersAmount);
-        $deactivated_vouchers_amount = currency_format($deactivatedVouchersAmount);
-
-        $vouchers_amount_locale = currency_format_locale($vouchersAmount);
-        $active_vouchers_amount_locale = currency_format_locale($activeVouchersAmount);
-        $inactive_vouchers_amount_locale = currency_format_locale($inactiveVouchersAmount);
-        $deactivated_vouchers_amount_locale = currency_format_locale($deactivatedVouchersAmount);
-
-        $vouchers_count = $vouchersQuery->count();
-        $active_vouchers_count = $activeVouchersQuery->count();
-        $inactive_vouchers_count = $inactiveVouchersQuery->count();
-        $deactivated_vouchers_count = $deactivatedVouchersQuery->count();
-
-        foreach ($funds as $fund) {
-            $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $from, $to);
-            $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $from, $to);
-            $left = round($total - $used, 2);
-
-            $budget += $total;
-            $budget_left += $left;
-            $budget_used += $used;
-            $budget_used_active_vouchers += FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $from, $to);
-            $transaction_costs += FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $from, $to);
-        }
-
-        $budget_locale = currency_format_locale($budget);
-        $budget_left_locale = currency_format_locale($budget_left);
-        $budget_used_locale = currency_format_locale($budget_used);
-        $budget_used_active_vouchers_locale = currency_format_locale($budget_used_active_vouchers);
-        $transaction_costs_locale = currency_format_locale($transaction_costs);
-
-        return compact(
-            'budget', 'budget_left',
-            'budget_used', 'budget_used_active_vouchers', 'transaction_costs',
-            'vouchers_amount', 'vouchers_count', 'active_vouchers_amount', 'active_vouchers_count',
-            'inactive_vouchers_amount', 'inactive_vouchers_count',
-            'deactivated_vouchers_amount', 'deactivated_vouchers_count',
-            'vouchers_amount_locale', 'active_vouchers_amount_locale',
-            'inactive_vouchers_amount_locale', 'deactivated_vouchers_amount_locale',
-            'budget_locale', 'budget_left_locale', 'budget_used_locale',
-            'budget_used_active_vouchers_locale', 'transaction_costs_locale',
-        );
-    }
-
-    /**
      * @param Fund $fund
      * @param string|null $stats
      * @param int|null $year
@@ -148,7 +58,7 @@ class FinancialOverviewStatistic
                     'used_locale' => currency_format_locale($used),
                     'total' => currency_format($total),
                     'total_locale' => currency_format_locale($total),
-                ]
+                ],
             ];
         }
 
@@ -175,6 +85,43 @@ class FinancialOverviewStatistic
                 self::getVoucherData($fund, 'budget', $from, $to) : null,
             'product_vouchers' => $loadProductVouchersStats ?
                 self::getVoucherData($fund, 'product', $from, $to) : null,
+        ];
+    }
+
+    /**
+     * @param Builder|Relation $vouchersQuery
+     * @param Carbon|null $from
+     * @param Carbon|null $to
+     * @return array
+     */
+    public static function getFundDetails(
+        Builder|Relation $vouchersQuery,
+        ?Carbon $from,
+        ?Carbon $to,
+    ): array {
+        $vouchersQuery = FinancialOverviewStatisticQueries::whereDate($vouchersQuery, $from, $to);
+        $activeVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndActive((clone $vouchersQuery));
+        $inactiveVouchersQuery = FinancialOverviewStatisticQueries::wherePending((clone $vouchersQuery));
+        $deactivatedVouchersQuery = FinancialOverviewStatisticQueries::whereDeactivated((clone $vouchersQuery));
+
+        $vouchers_count = $vouchersQuery->count();
+        $inactive_count = $inactiveVouchersQuery->count();
+        $active_count = $activeVouchersQuery->count();
+        $deactivated_count = $deactivatedVouchersQuery->count();
+        $inactive_percentage = $inactive_count ? $inactive_count / $vouchers_count * 100 : 0;
+
+        return [
+            'reserved' => $activeVouchersQuery->sum('amount'),
+            'vouchers_amount' => $vouchersQuery->sum('amount'),
+            'vouchers_count' => $vouchers_count,
+            'active_amount' => $activeVouchersQuery->sum('amount'),
+            'active_count' => $active_count,
+            'inactive_amount' => $inactiveVouchersQuery->sum('amount'),
+            'inactive_count' => $inactive_count,
+            'inactive_percentage' => currency_format($inactive_percentage),
+            'deactivated_amount' => $deactivatedVouchersQuery->sum('amount'),
+            'deactivated_count' => $deactivated_count,
+            'children_count' => self::getVoucherChildrenCount($vouchersQuery),
         ];
     }
 
@@ -247,43 +194,6 @@ class FinancialOverviewStatistic
     }
 
     /**
-     * @param Builder|Relation $vouchersQuery
-     * @param Carbon|null $from
-     * @param Carbon|null $to
-     * @return array
-     */
-    public static function getFundDetails(
-        Builder|Relation $vouchersQuery,
-        ?Carbon $from,
-        ?Carbon $to,
-    ) : array {
-        $vouchersQuery = FinancialOverviewStatisticQueries::whereDate($vouchersQuery, $from, $to);
-        $activeVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndActive((clone $vouchersQuery));
-        $inactiveVouchersQuery = FinancialOverviewStatisticQueries::wherePending((clone $vouchersQuery));
-        $deactivatedVouchersQuery = FinancialOverviewStatisticQueries::whereDeactivated((clone $vouchersQuery));
-
-        $vouchers_count = $vouchersQuery->count();
-        $inactive_count = $inactiveVouchersQuery->count();
-        $active_count = $activeVouchersQuery->count();
-        $deactivated_count = $deactivatedVouchersQuery->count();
-        $inactive_percentage = $inactive_count ? $inactive_count / $vouchers_count * 100 : 0;
-
-        return [
-            'reserved'              => $activeVouchersQuery->sum('amount'),
-            'vouchers_amount'       => $vouchersQuery->sum('amount'),
-            'vouchers_count'        => $vouchers_count,
-            'active_amount'         => $activeVouchersQuery->sum('amount'),
-            'active_count'          => $active_count,
-            'inactive_amount'       => $inactiveVouchersQuery->sum('amount'),
-            'inactive_count'        => $inactive_count,
-            'inactive_percentage'   => currency_format($inactive_percentage),
-            'deactivated_amount'    => $deactivatedVouchersQuery->sum('amount'),
-            'deactivated_count'     => $deactivated_count,
-            'children_count'        => self::getVoucherChildrenCount($vouchersQuery),
-        ];
-    }
-
-    /**
      * @param Builder $vouchersQuery
      * @return mixed
      */
@@ -293,5 +203,111 @@ class FinancialOverviewStatistic
             ->whereRelation('record_type', 'key', 'children_nth')
             ->whereIn('voucher_id', $vouchersQuery->select('id'))
             ->sum('value');
+    }
+
+    /**
+     * @param Organization $organization
+     * @return Collection|Arrayable
+     */
+    private function getFunds(Organization $organization): Collection|Arrayable
+    {
+        return $organization->funds()->where('archived', false)->where(
+            'state',
+            '!=',
+            Fund::STATE_WAITING
+        )->get();
+    }
+
+    /**
+     * @param Organization $organization
+     * @return Collection|Arrayable
+     */
+    private function getBudgetFunds(Organization $organization): Collection|Arrayable
+    {
+        return $this->getFunds($organization)->where('type', Fund::TYPE_BUDGET);
+    }
+
+    /**
+     * @param Collection $funds
+     * @param Carbon $from
+     * @param Carbon $to
+     * @return array
+     */
+    private function getFundTotals(Collection $funds, Carbon $from, Carbon $to): array
+    {
+        $budget = 0;
+        $budget_left = 0;
+        $budget_used = 0;
+        $budget_used_active_vouchers = 0;
+        $transaction_costs = 0;
+
+        $query = Voucher::query()->whereNull('parent_id')->whereIn('fund_id', $funds->pluck('id'));
+        $vouchersQuery = FinancialOverviewStatisticQueries::whereDate($query, $from, $to);
+        $activeVouchersQuery = FinancialOverviewStatisticQueries::whereNotExpiredAndActive((clone $vouchersQuery));
+        $inactiveVouchersQuery = FinancialOverviewStatisticQueries::wherePending((clone $vouchersQuery));
+        $deactivatedVouchersQuery = FinancialOverviewStatisticQueries::whereDeactivated((clone $vouchersQuery));
+
+        $vouchersAmount = $vouchersQuery->sum('amount');
+        $activeVouchersAmount = $activeVouchersQuery->sum('amount');
+        $inactiveVouchersAmount = $inactiveVouchersQuery->sum('amount');
+        $deactivatedVouchersAmount = $deactivatedVouchersQuery->sum('amount');
+
+        $vouchers_amount = currency_format($vouchersAmount);
+        $active_vouchers_amount = currency_format($activeVouchersAmount);
+        $inactive_vouchers_amount = currency_format($inactiveVouchersAmount);
+        $deactivated_vouchers_amount = currency_format($deactivatedVouchersAmount);
+
+        $vouchers_amount_locale = currency_format_locale($vouchersAmount);
+        $active_vouchers_amount_locale = currency_format_locale($activeVouchersAmount);
+        $inactive_vouchers_amount_locale = currency_format_locale($inactiveVouchersAmount);
+        $deactivated_vouchers_amount_locale = currency_format_locale($deactivatedVouchersAmount);
+
+        $vouchers_count = $vouchersQuery->count();
+        $active_vouchers_count = $activeVouchersQuery->count();
+        $inactive_vouchers_count = $inactiveVouchersQuery->count();
+        $deactivated_vouchers_count = $deactivatedVouchersQuery->count();
+
+        foreach ($funds as $fund) {
+            $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $from, $to);
+            $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $from, $to);
+            $left = round($total - $used, 2);
+
+            $budget += $total;
+            $budget_left += $left;
+            $budget_used += $used;
+            $budget_used_active_vouchers += FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $from, $to);
+            $transaction_costs += FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $from, $to);
+        }
+
+        $budget_locale = currency_format_locale($budget);
+        $budget_left_locale = currency_format_locale($budget_left);
+        $budget_used_locale = currency_format_locale($budget_used);
+        $budget_used_active_vouchers_locale = currency_format_locale($budget_used_active_vouchers);
+        $transaction_costs_locale = currency_format_locale($transaction_costs);
+
+        return compact(
+            'budget',
+            'budget_left',
+            'budget_used',
+            'budget_used_active_vouchers',
+            'transaction_costs',
+            'vouchers_amount',
+            'vouchers_count',
+            'active_vouchers_amount',
+            'active_vouchers_count',
+            'inactive_vouchers_amount',
+            'inactive_vouchers_count',
+            'deactivated_vouchers_amount',
+            'deactivated_vouchers_count',
+            'vouchers_amount_locale',
+            'active_vouchers_amount_locale',
+            'inactive_vouchers_amount_locale',
+            'deactivated_vouchers_amount_locale',
+            'budget_locale',
+            'budget_left_locale',
+            'budget_used_locale',
+            'budget_used_active_vouchers_locale',
+            'transaction_costs_locale',
+        );
     }
 }

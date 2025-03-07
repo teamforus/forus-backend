@@ -27,5 +27,5 @@ return [
         'default_title' => 'Default',
         'default_title_short' => 'Default',
         'default_description' => 'Default',
-    ]
+    ],
 ];

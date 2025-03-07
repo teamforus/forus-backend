@@ -8,7 +8,7 @@ use App\Models\Identity;
 use App\Models\Implementation;
 
 /**
- * Notify identity about them being removed from an organization
+ * Notify identity about them being removed from an organization.
  */
 class IdentityAssignedToFundRequestBySupervisorNotification extends BaseIdentityEmployeeNotification
 {
@@ -29,8 +29,8 @@ class IdentityAssignedToFundRequestBySupervisorNotification extends BaseIdentity
         $mailable = new FundRequestAssignedBySupervisorMail([
             ...$this->eventLog->data,
             'button_link' => $buttonLink,
-            'supervisor_assigned_at'=> now()->format('Y-m-d H:i:s'),
-            'supervisor_assigned_at_locale'=> format_datetime_locale(now()),
+            'supervisor_assigned_at' => now()->format('Y-m-d H:i:s'),
+            'supervisor_assigned_at_locale' => format_datetime_locale(now()),
         ]);
 
         $this->sendMailNotification($identity->email, $mailable, $this->eventLog);

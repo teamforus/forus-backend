@@ -5,8 +5,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -22,17 +21,17 @@ return new class extends Migration
                 ->default(false)
                 ->after('allow_direct_payments');
 
-            $table->decimal('limit_generator_amount',10)
+            $table->decimal('limit_generator_amount', 10)
                 ->default($defaultVoucherLimit)
                 ->nullable()
                 ->change();
 
-            $table->decimal('limit_voucher_top_up_amount',10)
+            $table->decimal('limit_voucher_top_up_amount', 10)
                 ->default($defaultVoucherLimit)
                 ->nullable()
                 ->after('limit_generator_amount');
 
-            $table->decimal('limit_voucher_total_amount',10)
+            $table->decimal('limit_voucher_total_amount', 10)
                 ->default($defaultVoucherLimit)
                 ->nullable()
                 ->after('limit_voucher_top_up_amount');

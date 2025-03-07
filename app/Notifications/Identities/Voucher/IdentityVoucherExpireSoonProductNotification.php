@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Voucher;
 
 /**
- * The voucher will expire soon (product voucher)
+ * The voucher will expire soon (product voucher).
  */
 class IdentityVoucherExpireSoonProductNotification extends BaseIdentityVoucherNotification
 {

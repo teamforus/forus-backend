@@ -25,8 +25,8 @@ class TransactionBulksController extends Controller
      *
      * @param IndexTransactionBulksRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function index(
@@ -50,8 +50,8 @@ class TransactionBulksController extends Controller
      *
      * @param Organization $organization
      * @param VoucherTransactionBulk $voucherTransactionBulk
-     * @return VoucherTransactionBulkResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return VoucherTransactionBulkResource
      * @noinspection PhpUnused
      */
     public function show(
@@ -69,8 +69,8 @@ class TransactionBulksController extends Controller
      *
      * @param StoreTransactionBulksRequest $request
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function store(
@@ -93,8 +93,8 @@ class TransactionBulksController extends Controller
      * @param UpdateTransactionBulksRequest $request
      * @param Organization $organization
      * @param VoucherTransactionBulk $transactionBulk
-     * @return VoucherTransactionBulkResource
      * @throws \Illuminate\Auth\Access\AuthorizationException|Throwable
+     * @return VoucherTransactionBulkResource
      * @noinspection PhpUnused
      */
     public function update(
@@ -121,8 +121,8 @@ class TransactionBulksController extends Controller
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param VoucherTransactionBulk $transactionBulk
-     * @return VoucherTransactionBulkResource
      * @throws Throwable
+     * @return VoucherTransactionBulkResource
      * @noinspection PhpUnused
      */
     public function setAccepted(
@@ -142,8 +142,8 @@ class TransactionBulksController extends Controller
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param VoucherTransactionBulk $transactionBulk
-     * @return string
      * @throws AuthorizationException
+     * @return string
      * @noinspection PhpUnused
      */
     public function exportSEPA(
@@ -161,8 +161,8 @@ class TransactionBulksController extends Controller
 
     /**
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function getExportFields(Organization $organization): AnonymousResourceCollection
@@ -176,10 +176,10 @@ class TransactionBulksController extends Controller
     /**
      * @param IndexTransactionBulksRequest $request
      * @param Organization $organization
-     * @return BinaryFileResponse
      * @throws AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return BinaryFileResponse
      */
     public function export(
         IndexTransactionBulksRequest $request,

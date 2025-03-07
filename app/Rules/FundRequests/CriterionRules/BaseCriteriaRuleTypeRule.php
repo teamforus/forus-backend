@@ -22,7 +22,8 @@ abstract class BaseCriteriaRuleTypeRule extends BaseRule
     public function __construct(
         protected RecordType $recordType,
         protected FundCriterionRule $rule,
-    ) {}
+    ) {
+    }
 
     /**
      * Determine if the validation rule passes.
@@ -52,5 +53,5 @@ abstract class BaseCriteriaRuleTypeRule extends BaseRule
         return Validation::check($value, new static($recordType, $rule));
     }
 
-    abstract function rules(): array;
+    abstract public function rules(): array;
 }

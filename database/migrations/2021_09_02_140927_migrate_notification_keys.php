@@ -1,12 +1,11 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use App\Models\Notification;
 use App\Models\FundRequest;
+use App\Models\Notification;
 use App\Services\EventLogService\Models\EventLog;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -21,29 +20,6 @@ return new class extends Migration
         ]);
 
         $this->migrateFundRequests();
-    }
-
-    /**
-     * Migrate fund_request_resolved to `approved` or `denied` notifications
-     *
-     * @return void
-     */
-    protected function migrateFundRequests(): void
-    {
-        $notifications = Notification::where([
-            'data->key' => 'notifications_identities.fund_request_resolved',
-        ])->get();
-
-        foreach ($notifications as $notification) {
-            if ($event = EventLog::find($notification->data['event_id'] ?? null)) {
-                $approved = ($event->data['fund_request_state'] ?? null) == FundRequest::STATE_APPROVED;
-                $state = ($approved ? 'approved' : 'denied');
-
-                $notification->update([
-                    'data->key' => 'notifications_identities.fund_request_' . $state,
-                ]);
-            }
-        }
     }
 
     /**
@@ -65,5 +41,28 @@ return new class extends Migration
         ])->update([
             'data->key' => 'notifications_identities.fund_request_resolved',
         ]);
+    }
+
+    /**
+     * Migrate fund_request_resolved to `approved` or `denied` notifications.
+     *
+     * @return void
+     */
+    protected function migrateFundRequests(): void
+    {
+        $notifications = Notification::where([
+            'data->key' => 'notifications_identities.fund_request_resolved',
+        ])->get();
+
+        foreach ($notifications as $notification) {
+            if ($event = EventLog::find($notification->data['event_id'] ?? null)) {
+                $approved = ($event->data['fund_request_state'] ?? null) == FundRequest::STATE_APPROVED;
+                $state = ($approved ? 'approved' : 'denied');
+
+                $notification->update([
+                    'data->key' => 'notifications_identities.fund_request_' . $state,
+                ]);
+            }
+        }
     }
 };

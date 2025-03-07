@@ -20,8 +20,8 @@ class EventLogsController extends Controller
      *
      * @param IndexEventLogRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function index(

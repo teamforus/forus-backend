@@ -25,6 +25,7 @@ use App\Searches\FundSearch;
 use App\Statistics\Funds\FinancialOverviewStatistic;
 use App\Statistics\Funds\FinancialStatistic;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -32,6 +33,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Throwable;
 
 class FundsController extends Controller
 {
@@ -40,8 +42,8 @@ class FundsController extends Controller
      *
      * @param IndexFundRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundRequest $request,
@@ -77,8 +79,8 @@ class FundsController extends Controller
      *
      * @param StoreFundRequest $request
      * @param Organization $organization
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Throwable
      * @return FundResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Throwable
      */
     public function store(StoreFundRequest $request, Organization $organization): FundResource
     {
@@ -130,8 +132,8 @@ class FundsController extends Controller
     /**
      * @param StoreFundCriteriaRequest $request
      * @param Organization $organization
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function storeCriteriaValidate(
@@ -149,8 +151,8 @@ class FundsController extends Controller
      * @param ShowFundRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return FundResource
      * @throws AuthorizationException
+     * @return FundResource
      */
     public function show(
         ShowFundRequest $request,
@@ -168,8 +170,8 @@ class FundsController extends Controller
      * @param UpdateFundRequest $request
      * @param Organization $organization
      * @param Fund $fund
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Throwable
      * @return FundResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Throwable
      */
     public function update(
         UpdateFundRequest $request,
@@ -198,7 +200,7 @@ class FundsController extends Controller
                 ]),
                 ...($fund->isWaiting() ? $request->only([
                     'start_date', 'end_date',
-                ]) : [])
+                ]) : []),
             ]);
 
             if (!$fund->default_validator_employee_id) {
@@ -219,7 +221,7 @@ class FundsController extends Controller
                     'custom_amount_min', 'custom_amount_max',
                     'allow_preset_amounts', 'allow_preset_amounts_validator',
                     'allow_custom_amounts', 'allow_custom_amounts_validator',
-                ]) : [])
+                ]) : []),
             ]);
 
             if ($fund->organization->allow_payouts && is_array($request->input('amount_presets'))) {
@@ -267,8 +269,8 @@ class FundsController extends Controller
      * @param UpdateFundCriteriaRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return FundResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundResource
      * @noinspection PhpUnused
      */
     public function updateCriteria(
@@ -290,15 +292,15 @@ class FundsController extends Controller
      * @param UpdateFundCriteriaRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function updateCriteriaValidate(
         UpdateFundCriteriaRequest $request,
         Organization $organization,
         Fund $fund
-    ): JsonResponse{
+    ): JsonResponse {
         $this->authorize('show', $organization);
 
         return new JsonResponse([], $request->isAuthenticated() && $fund->exists ? 200 : 403);
@@ -310,8 +312,8 @@ class FundsController extends Controller
      * @param UpdateFundBackofficeRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return FundResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundResource
      * @noinspection PhpUnused
      */
     public function updateBackoffice(
@@ -332,13 +334,13 @@ class FundsController extends Controller
     }
 
     /**
-     * Test fund backoffice connection
+     * Test fund backoffice connection.
      *
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function testBackofficeConnection(
@@ -352,15 +354,15 @@ class FundsController extends Controller
         $log = $fund->getBackofficeApi(true)->checkStatus();
 
         return new JsonResponse($log->only([
-            'state', 'response_code'
+            'state', 'response_code',
         ]), $request->isAuthenticated() ? 200 : 403);
     }
 
     /**
      * @param FinanceOverviewRequest $request
      * @param Organization $organization
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function financesOverview(
@@ -377,14 +379,14 @@ class FundsController extends Controller
     }
 
     /**
-     * Export funds data
+     * Export funds data.
      *
      * @param FinanceOverviewRequest $request
      * @param Organization $organization
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @noinspection PhpUnused
      */
     public function financesOverviewExport(
@@ -399,7 +401,7 @@ class FundsController extends Controller
         $from = Carbon::createFromFormat('Y', $year)->startOfYear();
         $to = $year < now()->year ? Carbon::createFromFormat('Y', $year)->endOfYear() : today();
         $exportType = $request->input('export_type', 'xls');
-        $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
+        $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
 
         $fundsQuery = $organization->funds()->where('state', '!=', Fund::STATE_WAITING);
         $budgetFundsQuery = $organization->funds()->where([
@@ -415,8 +417,8 @@ class FundsController extends Controller
     /**
      * @param FinanceRequest $request
      * @param Organization $organization
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function finances(FinanceRequest $request, Organization $organization): JsonResponse
@@ -440,8 +442,8 @@ class FundsController extends Controller
     /**
      * @param Organization $organization
      * @param Fund $fund
-     * @return TopUpResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return TopUpResource
      * @noinspection PhpUnused
      */
     public function topUp(Organization $organization, Fund $fund): TopUpResource
@@ -458,8 +460,8 @@ class FundsController extends Controller
      *
      * @param Organization $organization
      * @param Fund $fund
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
      * @return \Illuminate\Http\JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function destroy(Organization $organization, Fund $fund): JsonResponse
     {
@@ -476,8 +478,8 @@ class FundsController extends Controller
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return FundResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundResource
      */
     public function archive(
         BaseFormRequest $request,
@@ -496,8 +498,8 @@ class FundsController extends Controller
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return FundResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundResource
      * @noinspection PhpUnused
      */
     public function unArchive(

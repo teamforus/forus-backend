@@ -21,8 +21,8 @@ class PhysicalCardRequestsController extends Controller
      * Display a listing of the resource.
      *
      * @param Voucher $voucher
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(Voucher $voucher): AnonymousResourceCollection
     {
@@ -39,9 +39,9 @@ class PhysicalCardRequestsController extends Controller
      *
      * @param StorePhysicalCardRequestRequest $request
      * @param Voucher $voucher
-     * @return PhysicalCardRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \App\Exceptions\AuthorizationJsonException
+     * @return PhysicalCardRequestResource
      */
     public function store(
         StorePhysicalCardRequestRequest $request,
@@ -58,7 +58,7 @@ class PhysicalCardRequestsController extends Controller
     }
 
     /**
-     * Validate store a physical card
+     * Validate store a physical card.
      *
      * @param StorePhysicalCardRequestRequest $request
      * @param Voucher $voucher
@@ -67,19 +67,20 @@ class PhysicalCardRequestsController extends Controller
     public function storeValidate(
         StorePhysicalCardRequestRequest $request,
         Voucher $voucher,
-    ): void {}
+    ): void {
+    }
 
     /**
      * Display the specified resource.
      *
      * @param Voucher $voucher
      * @param PhysicalCardRequest $physicalCardRequest
-     * @return PhysicalCardRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return PhysicalCardRequestResource
      */
     public function show(
         Voucher $voucher,
-        PhysicalCardRequest  $physicalCardRequest
+        PhysicalCardRequest $physicalCardRequest
     ): PhysicalCardRequestResource {
         $this->authorize('show', $voucher);
         $this->authorize('show', $physicalCardRequest);

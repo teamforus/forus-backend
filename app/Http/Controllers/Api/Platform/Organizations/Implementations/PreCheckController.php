@@ -16,8 +16,8 @@ class PreCheckController extends Controller
      *
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return ImplementationPreChecksResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ImplementationPreChecksResource
      */
     public function index(
         Organization $organization,
@@ -35,8 +35,8 @@ class PreCheckController extends Controller
      * @param SyncPreCheckRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return ImplementationPreChecksResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ImplementationPreChecksResource
      * @noinspection PhpUnused
      */
     public function syncPreChecks(
@@ -48,7 +48,7 @@ class PreCheckController extends Controller
         $this->authorize('updatePreChecks', [$implementation, $organization]);
 
         $implementation->update($request->only([
-            'pre_check_enabled', 'pre_check_title', 'pre_check_description'
+            'pre_check_enabled', 'pre_check_title', 'pre_check_description',
         ]));
 
         if ($request->get('pre_checks')) {

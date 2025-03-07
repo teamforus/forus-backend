@@ -15,8 +15,8 @@ class ProductVouchersController extends Controller
     /**
      * @param IndexProductVouchersRequest $request
      * @param VoucherToken $voucherToken
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(
         IndexProductVouchersRequest $request,

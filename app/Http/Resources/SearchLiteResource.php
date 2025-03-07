@@ -8,6 +8,7 @@ use App\Models\Product;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Throwable;
 
 /**
  * @property Model|Organization|Product|Fund $resource
@@ -18,8 +19,8 @@ class SearchLiteResource extends JsonResource
      * Transform the resource into an array.
      *
      * @param Request $request
+     * @throws Throwable
      * @return array
-     * @throws \Throwable
      */
     public function toArray(Request $request): array
     {

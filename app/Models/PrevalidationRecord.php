@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\PrevalidationRecord
+ * App\Models\PrevalidationRecord.
  *
  * @property int $id
  * @property int $record_type_id
@@ -32,7 +32,7 @@ class PrevalidationRecord extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'record_type_id', 'value'
+        'record_type_id', 'value',
     ];
 
     /**
@@ -58,7 +58,7 @@ class PrevalidationRecord extends BaseModel
     public function makeRecord(Identity $identity): Record
     {
         return $identity->makeRecord($this->record_type, $this->value)->updateModel([
-            'prevalidation_id' => $this->prevalidation_id
+            'prevalidation_id' => $this->prevalidation_id,
         ]);
     }
 }

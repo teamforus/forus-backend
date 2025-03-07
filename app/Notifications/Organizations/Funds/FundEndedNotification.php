@@ -3,7 +3,7 @@
 namespace App\Notifications\Organizations\Funds;
 
 /**
- * Notify sponsor that the fund has ended
+ * Notify sponsor that the fund has ended.
  */
 class FundEndedNotification extends BaseFundsNotification
 {

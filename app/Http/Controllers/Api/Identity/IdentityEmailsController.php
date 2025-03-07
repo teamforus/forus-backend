@@ -20,8 +20,8 @@ class IdentityEmailsController extends Controller
      * Display a listing of the resource.
      *
      * @param IndexIdentityEmailRequest $request
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(IndexIdentityEmailRequest $request): AnonymousResourceCollection
     {
@@ -39,8 +39,8 @@ class IdentityEmailsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param StoreIdentityEmailRequest $request
-     * @return IdentityEmailResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return IdentityEmailResource
      */
     public function store(StoreIdentityEmailRequest $request): IdentityEmailResource
     {
@@ -79,12 +79,12 @@ class IdentityEmailsController extends Controller
     }
 
     /**
-     * Resend email confirmation link
+     * Resend email confirmation link.
      *
      * @param ResendIdentityEmailRequest $request
      * @param IdentityEmail $identityEmail
-     * @return IdentityEmailResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return IdentityEmailResource
      * @noinspection PhpUnused
      */
     public function resend(

@@ -41,7 +41,9 @@ class CheckActionExpirationCommand extends Command
     {
         /** @var FundProviderProduct[]|Collection $provider_products */
         $provider_products = FundProviderProduct::where(
-            'expire_at', '<', now()
+            'expire_at',
+            '<',
+            now()
         )->get();
 
         foreach ($provider_products as $provider_product) {

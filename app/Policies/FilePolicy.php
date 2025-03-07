@@ -49,7 +49,8 @@ class FilePolicy
 
             // is fund validator
             return $reimbursement && $reimbursement->voucher?->fund?->organization?->identityCan(
-                $identity, 'manage_reimbursements',
+                $identity,
+                'manage_reimbursements',
             );
         }
 

@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use App\Models\Permission;
 use App\Models\Role;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -23,7 +22,7 @@ return new class extends Migration
             $role = Role::where('key', 'validation')->get();
 
             $role->role_permissions()->firstOrCreate([
-                'permission_id' => $permission->id
+                'permission_id' => $permission->id,
             ]);
         }
     }

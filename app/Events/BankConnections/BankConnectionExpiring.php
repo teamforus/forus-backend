@@ -2,4 +2,6 @@
 
 namespace App\Events\BankConnections;
 
-class BankConnectionExpiring extends BaseBankConnectionEvent {}
+class BankConnectionExpiring extends BaseBankConnectionEvent
+{
+}

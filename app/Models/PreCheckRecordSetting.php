@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\PreCheckRecordSetting
+ * App\Models\PreCheckRecordSetting.
  *
  * @property int $id
  * @property int $pre_check_record_id

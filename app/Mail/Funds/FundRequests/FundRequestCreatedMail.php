@@ -8,11 +8,11 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class FundRequestCreatedMail extends ImplementationMail
 {
-    public ?string $notificationTemplateKey = "notifications_identities.fund_request_created";
+    public ?string $notificationTemplateKey = 'notifications_identities.fund_request_created';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

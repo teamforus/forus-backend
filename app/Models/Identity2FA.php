@@ -14,9 +14,10 @@ use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
 use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;
 use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
 use PragmaRX\Google2FA\Google2FA;
+use Throwable;
 
 /**
- * App\Models\Identity2FA
+ * App\Models\Identity2FA.
  *
  * @property string $uuid
  * @property string $identity_address
@@ -57,7 +58,8 @@ use PragmaRX\Google2FA\Google2FA;
  */
 class Identity2FA extends Model
 {
-    use HasUuids, SoftDeletes;
+    use HasUuids;
+    use SoftDeletes;
 
     public const string STATE_ACTIVE = 'active';
     public const string STATE_PENDING = 'pending';
@@ -144,9 +146,9 @@ class Identity2FA extends Model
      */
     public function getPhoneMaskedAttribute(): string
     {
-        return substr($this->phone,0,2)
-            .str_repeat( '*', (strlen($this->phone) - 4))
-            .substr($this->phone, -2);
+        return substr($this->phone, 0, 2)
+            . str_repeat('*', (strlen($this->phone) - 4))
+            . substr($this->phone, -2);
     }
 
     /**
@@ -187,10 +189,10 @@ class Identity2FA extends Model
     }
 
     /**
-     * @return string
      * @throws IncompatibleWithGoogleAuthenticatorException
      * @throws InvalidCharactersException
      * @throws SecretKeyTooShortException
+     * @return string
      */
     public function makeAuthenticatorCode(): string
     {
@@ -198,8 +200,8 @@ class Identity2FA extends Model
     }
 
     /**
+     * @throws Throwable
      * @return Identity2FACode
-     * @throws \Throwable
      */
     public function makePhoneCode(): Identity2FACode
     {
@@ -220,13 +222,13 @@ class Identity2FA extends Model
     }
 
     /**
+     * @throws Throwable
      * @return bool
-     * @throws \Throwable
      */
     public function sendCode(): bool
     {
         $this->identity_2fa_codes()->update([
-            'state' => Identity2FACode::STATE_DEACTIVATED
+            'state' => Identity2FACode::STATE_DEACTIVATED,
         ]);
 
         return resolve('forus.services.sms_notification')->sendSms(

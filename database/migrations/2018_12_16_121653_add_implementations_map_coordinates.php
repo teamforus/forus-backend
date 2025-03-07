@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -13,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('implementations', function(Blueprint $table) {
+        Schema::table('implementations', function (Blueprint $table) {
             $table->double('lon')->nullable()->after('url_app');
             $table->double('lat')->nullable()->after('lon');
         });
@@ -26,7 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('implementations', function(Blueprint $table) {
+        Schema::table('implementations', function (Blueprint $table) {
             $table->dropColumn('lon');
             $table->dropColumn('lat');
         });

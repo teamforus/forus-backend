@@ -31,7 +31,7 @@ class BankUpdateContextSessionsCommand extends Command
     public function handle(): void
     {
         /** @var BankConnection[] $bankConnections */
-        $bankConnections = BankConnection::whereHas('bank', function(Builder $builder) {
+        $bankConnections = BankConnection::whereHas('bank', function (Builder $builder) {
             $builder->where('key', 'bunq');
         })->whereState(BankConnection::STATE_ACTIVE)->get();
 

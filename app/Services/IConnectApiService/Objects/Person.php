@@ -63,7 +63,7 @@ class Person extends BasePerson
                 $this->data['verblijfplaats']['adresregel1'] ?? '',
                 $this->data['verblijfplaats']['adresregel2'] ?? '',
                 $this->data['verblijfplaats']['adresregel3'] ?? '',
-            ])
+            ]),
         ];
     }
 
@@ -88,7 +88,7 @@ class Person extends BasePerson
      */
     public function getParents(): array
     {
-        return array_map(function(array $item) {
+        return array_map(function (array $item) {
             return new ParentPerson($item);
         }, $this->data['_embedded']['ouders'] ?? []);
     }
@@ -98,7 +98,7 @@ class Person extends BasePerson
      */
     public function getChildren(): array
     {
-        return array_map(function(array $item) {
+        return array_map(function (array $item) {
             return new Child($item);
         }, $this->data['_embedded']['kinderen'] ?? []);
     }
@@ -108,7 +108,7 @@ class Person extends BasePerson
      */
     public function getPartners(): array
     {
-        return array_map(function(array $item) {
+        return array_map(function (array $item) {
             return new Partner($item);
         }, $this->data['_embedded']['partners'] ?? []);
     }
@@ -150,7 +150,7 @@ class Person extends BasePerson
     {
         $persons = $this->geRelated($scope);
 
-        return Arr::first($persons, static function(BasePerson $child) use ($scopeId) {
+        return Arr::first($persons, static function (BasePerson $child) use ($scopeId) {
             return $child->getIndex() === $scopeId;
         });
     }

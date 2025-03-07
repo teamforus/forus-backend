@@ -16,7 +16,7 @@ class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
         'voucher.fund.logo',
         'provider.logo',
         'product.photo',
-        'fund_provider_product'
+        'fund_provider_product',
     ];
 
     /**
@@ -33,7 +33,7 @@ class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
         $product_price = $fund_provider_product->price ?? null;
 
         return array_merge($transaction->only([
-            "id", "organization_id", "product_id", "address", "state",
+            'id', 'organization_id', 'product_id', 'address', 'state',
         ]), [
             'note' => $transaction->notes->where('group', 'provider')[0]->message ?? null,
             'created_at' => $transaction->created_at ? $transaction->created_at->format('Y-m-d H:i:s') : null,
@@ -46,22 +46,22 @@ class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
             'product_price' => $product_price ? currency_format($product_price) : null,
             'cancelable' => $transaction->isCancelable(),
             'transfer_in' => $transaction->daysBeforeTransaction(),
-            "organization" => array_merge($transaction->provider->only([
-                "id", "name"
+            'organization' => array_merge($transaction->provider->only([
+                'id', 'name',
             ]), [
                 'logo' => new MediaResource($transaction->provider->logo),
             ]),
-            "product" => $transaction->product ? array_merge($transaction->product->only([
-                "id", "name", "organization_id",
+            'product' => $transaction->product ? array_merge($transaction->product->only([
+                'id', 'name', 'organization_id',
             ]), [
                 'photo' => new MediaResource($transaction->product->photo),
             ]) : null,
-            "fund" => array_merge($transaction->voucher->fund->only([
-                "id", "name", "organization_id",
+            'fund' => array_merge($transaction->voucher->fund->only([
+                'id', 'name', 'organization_id',
             ]), [
                 'logo' => new MediaResource($transaction->voucher->fund->logo),
-                "organization" => array_merge($transaction->voucher->fund->organization->only([
-                    "id", "name"
+                'organization' => array_merge($transaction->voucher->fund->organization->only([
+                    'id', 'name',
                 ]), [
                     'logo' => new MediaResource($transaction->voucher->fund->organization->logo),
                 ]),

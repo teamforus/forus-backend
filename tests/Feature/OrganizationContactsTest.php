@@ -9,10 +9,12 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Arr;
 use Tests\TestCase;
 use Tests\Traits\VoucherTestTrait;
+use Throwable;
 
 class OrganizationContactsTest extends TestCase
 {
-    use VoucherTestTrait, DatabaseTransactions;
+    use VoucherTestTrait;
+    use DatabaseTransactions;
 
     /**
      * @var string
@@ -20,8 +22,8 @@ class OrganizationContactsTest extends TestCase
     protected string $apiUrl = '/api/v1/platform/organizations/%s';
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testUpdateOrganizationContactsSuccess(): void
     {
@@ -38,8 +40,8 @@ class OrganizationContactsTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testUpdateOrganizationContactsFail(): void
     {

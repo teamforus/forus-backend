@@ -11,7 +11,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseVoucherEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     protected Voucher $voucher;
 
@@ -27,7 +29,7 @@ abstract class BaseVoucherEvent
     }
 
     /**
-     * Get the voucher
+     * Get the voucher.
      *
      * @return Voucher
      */
@@ -37,7 +39,7 @@ abstract class BaseVoucherEvent
     }
 
     /**
-     * Get the voucher product
+     * Get the voucher product.
      *
      * @return Product|null
      */

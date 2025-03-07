@@ -23,7 +23,7 @@ class ReimbursementsSponsorExport extends BaseFieldedExport
         'amount' => 'Bedrag',
         'employee' => 'Medewerker',
         'email' => 'E-mail',
-        'bsn'  => 'BSN',
+        'bsn' => 'BSN',
         'iban' => 'IBAN',
         'iban_name' => 'Tenaamstelling',
         'provider_name' => 'Aanbieder',

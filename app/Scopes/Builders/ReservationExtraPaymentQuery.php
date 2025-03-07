@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\ReservationExtraPayment;
@@ -19,12 +18,12 @@ class ReservationExtraPaymentQuery
         Builder|Relation|ReservationExtraPayment $query,
         string $q,
     ): Builder|Relation|ReservationExtraPayment {
-        return $query->where(function(Builder $builder) use ($q) {
-            $builder->whereHas('product_reservation.product', function(Builder $builder) use ($q) {
+        return $query->where(function (Builder $builder) use ($q) {
+            $builder->whereHas('product_reservation.product', function (Builder $builder) use ($q) {
                 ProductQuery::queryFilter($builder, $q);
             });
 
-            $builder->orWhereHas('product_reservation.voucher.fund', function(Builder $builder) use ($q) {
+            $builder->orWhereHas('product_reservation.voucher.fund', function (Builder $builder) use ($q) {
                 FundQuery::whereQueryFilter($builder, $q);
             });
         });
@@ -39,8 +38,8 @@ class ReservationExtraPaymentQuery
         Builder|Relation|ReservationExtraPayment $query,
         array|int $organization,
     ): Builder|Relation|ReservationExtraPayment {
-        return self::whereNotRefunded($query->where(function(Builder $builder) use ($organization) {
-            $builder->whereHas('product_reservation.voucher.fund', function(Builder $builder) use ($organization) {
+        return self::whereNotRefunded($query->where(function (Builder $builder) use ($organization) {
+            $builder->whereHas('product_reservation.voucher.fund', function (Builder $builder) use ($organization) {
                 $builder->whereIn('organization_id', (array) $organization);
             });
         }));
@@ -57,7 +56,7 @@ class ReservationExtraPaymentQuery
             '__refund_amount' => ReservationExtraPaymentRefund::query()
                 ->whereColumn('reservation_extra_payments.id', 'reservation_extra_payment_id')
                 ->whereIn('state', [ReservationExtraPaymentRefund::STATE_REFUNDED])
-                ->selectRaw('sum(`amount`)')
+                ->selectRaw('sum(`amount`)'),
         ]);
 
         $query = ReservationExtraPayment::fromSub($query, 'reservation_extra_payments')->selectRaw(

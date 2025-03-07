@@ -41,4 +41,3 @@ class UpdateProductRequest extends BaseProductRequest
         ];
     }
 }
-    

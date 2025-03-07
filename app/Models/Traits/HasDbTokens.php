@@ -26,7 +26,7 @@ trait HasDbTokens
     ): string {
         do {
             $value = token_generator()->generate($block_length, $block_count);
-        } while((clone ($builder ?: static::query()))->where($column, $value)->exists());
+        } while ((clone ($builder ?: static::query()))->where($column, $value)->exists());
 
         return $value;
     }
@@ -45,7 +45,7 @@ trait HasDbTokens
     ): string {
         do {
             $value = token_generator()->generate($block_length, $block_count);
-        } while(!$isUnique($value));
+        } while (!$isUnique($value));
 
         return $value;
     }

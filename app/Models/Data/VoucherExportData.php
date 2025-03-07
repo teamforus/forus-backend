@@ -58,8 +58,8 @@ class VoucherExportData
 
         $bsnData = $sponsor->bsn_enabled ? [
             'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
-            'identity_bsn' =>  $assigned ? $this->voucher->identity?->record_bsn?->value : null
-        ]: [];
+            'identity_bsn' => $assigned ? $this->voucher->identity?->record_bsn?->value : null,
+        ] : [];
 
         $export_data = array_merge($this->onlyData ? [] : [
             'name' => $this->name,
@@ -76,15 +76,15 @@ class VoucherExportData
             'fund_name' => $this->voucher->fund->name,
             'implementation_name' => $this->voucher->fund->fund_config?->implementation?->name,
             'product_name' => $this->voucher->product?->name,
-            'granted' => $assigned ? 'Ja': 'Nee',
+            'granted' => $assigned ? 'Ja' : 'Nee',
             'created_at' => format_date_locale($this->voucher->created_at),
             'expire_at' => format_date_locale($this->voucher->expire_at),
-            'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
+            'in_use' => $this->voucher->in_use ? 'Ja' : 'Nee',
             'in_use_date' => $firstUseDate ? format_date_locale($firstUseDate) : null,
             'state' => $this->voucher->state ?? null,
-            'has_transactions' => $this->voucher->has_transactions ? 'Ja': 'Nee',
-            'has_reservations' => $this->voucher->has_reservations ? 'Ja': 'Nee',
-            'has_payouts' => $this->voucher->has_payouts ? 'Ja': 'Nee',
+            'has_transactions' => $this->voucher->has_transactions ? 'Ja' : 'Nee',
+            'has_reservations' => $this->voucher->has_reservations ? 'Ja' : 'Nee',
+            'has_payouts' => $this->voucher->has_payouts ? 'Ja' : 'Nee',
         ]);
 
         return array_only(array_merge(
@@ -99,7 +99,7 @@ class VoucherExportData
      */
     protected function getRecordsData(Voucher $voucher): array
     {
-        return $voucher->voucher_records->reduce(function(array $data, $record) {
+        return $voucher->voucher_records->reduce(function (array $data, $record) {
             return array_merge($data, [$record->record_type->key => $record->value]);
         }, []);
     }

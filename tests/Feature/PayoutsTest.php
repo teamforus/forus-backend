@@ -185,6 +185,7 @@ class PayoutsTest extends TestCase
         $this->storeRequest($fund, ['amount' => null ])->assertJsonValidationErrorFor('amount');
         $this->storeRequest($fund, ['amount_preset_id' => $presets[1]])->assertJsonMissingValidationErrors('amount');
     }
+
     /**
      * @return void
      */
@@ -329,50 +330,6 @@ class PayoutsTest extends TestCase
     }
 
     /**
-     * @param Fund $fund
-     * @return void
-     */
-    protected function configureFundPayouts(Fund $fund): void
-    {
-        $res = $this->patchJson(
-            "/api/v1/platform/organizations/$fund->organization_id/funds/$fund->id",
-            $this->getFundPayoutConfigs(),
-            $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity)),
-        );
-
-        $res->assertSuccessful();
-        $fund->refresh();
-    }
-
-    /**
-     * @param Fund $fund
-     * @return void
-     */
-    protected function configureFundFundRequestPayouts(Fund $fund): void
-    {
-        $fund->fund_config->forceFill([
-            'outcome_type' => FundConfig::OUTCOME_TYPE_PAYOUT,
-            'iban_record_key' => 'iban',
-            'iban_name_record_key' => 'iban_name',
-        ])->save();
-
-        $fund->organization->forceFill([
-            'allow_payouts' => true,
-            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
-        ])->save();
-
-        $this->configureFundPayouts($fund);
-        $this->assertPayoutsUpdated($fund);
-
-        $fund->syncCriteria([
-            ['record_type_key' => 'iban', 'operator' => '*', 'value' => '', 'show_attachment' => false],
-            ['record_type_key' => 'iban_name', 'operator' => '*', 'value' => '', 'show_attachment' => false],
-        ]);
-
-        $fund->refresh();
-    }
-
-    /**
      * @return void
      */
     public function testPayoutDelayTime(): void
@@ -436,7 +393,52 @@ class PayoutsTest extends TestCase
      * @param Fund $fund
      * @return void
      */
-    protected function assertPayoutsNotUpdated(Fund $fund): void {
+    protected function configureFundPayouts(Fund $fund): void
+    {
+        $res = $this->patchJson(
+            "/api/v1/platform/organizations/$fund->organization_id/funds/$fund->id",
+            $this->getFundPayoutConfigs(),
+            $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity)),
+        );
+
+        $res->assertSuccessful();
+        $fund->refresh();
+    }
+
+    /**
+     * @param Fund $fund
+     * @return void
+     */
+    protected function configureFundFundRequestPayouts(Fund $fund): void
+    {
+        $fund->fund_config->forceFill([
+            'outcome_type' => FundConfig::OUTCOME_TYPE_PAYOUT,
+            'iban_record_key' => 'iban',
+            'iban_name_record_key' => 'iban_name',
+        ])->save();
+
+        $fund->organization->forceFill([
+            'allow_payouts' => true,
+            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
+        ])->save();
+
+        $this->configureFundPayouts($fund);
+        $this->assertPayoutsUpdated($fund);
+
+        $fund->syncCriteria([
+            ['record_type_key' => 'iban', 'operator' => '*', 'value' => '', 'show_attachment' => false],
+            ['record_type_key' => 'iban_name', 'operator' => '*', 'value' => '', 'show_attachment' => false],
+        ]);
+
+        $fund->refresh();
+    }
+
+    /**
+     * @param Fund $fund
+     * @return void
+     */
+    protected function assertPayoutsNotUpdated(Fund $fund): void
+    {
         self::assertNull($fund->fund_config->custom_amount_min);
         self::assertNull($fund->fund_config->custom_amount_max);
         self::assertFalse($fund->fund_config->allow_preset_amounts);
@@ -450,7 +452,8 @@ class PayoutsTest extends TestCase
      * @param Fund $fund
      * @return void
      */
-    protected function assertPayoutsUpdated(Fund $fund): void {
+    protected function assertPayoutsUpdated(Fund $fund): void
+    {
         $configs = $this->getFundPayoutConfigs();
 
         self::assertEquals($configs['custom_amount_min'], $fund->fund_config->custom_amount_min);
@@ -482,7 +485,7 @@ class PayoutsTest extends TestCase
                 ['name' => 'Preset #1', 'amount' => '10.00'],
                 ['name' => 'Preset #2', 'amount' => '20.00'],
                 ['name' => 'Preset #3', 'amount' => '30.00'],
-            ]
+            ],
         ];
     }
 
@@ -497,7 +500,7 @@ class PayoutsTest extends TestCase
 
         return $this->postJson($apiUrl, [
             'fund_id' => $fund->id,
-            ...$data
+            ...$data,
         ], $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity)));
     }
 
@@ -515,7 +518,6 @@ class PayoutsTest extends TestCase
             'payouts' => [$data],
         ], $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity)));
     }
-
 
     /**
      * @return FundRequest

@@ -2,7 +2,6 @@
 
 namespace App\Services\MollieService\Objects;
 
-
 class Organization extends BaseObject
 {
     /**

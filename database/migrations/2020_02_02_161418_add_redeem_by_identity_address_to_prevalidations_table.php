@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -16,8 +15,10 @@ return new class extends Migration
         Schema::table('prevalidations', function (Blueprint $table) {
             $table->string('redeemed_by_address')->nullable()->after('identity_address');
 
-            $table->foreign('redeemed_by_address'
-            )->references('address')->on('identities')->onDelete('cascade');
+            $table->foreign('redeemed_by_address')
+                ->references('address')
+                ->on('identities')
+                ->onDelete('cascade');
         });
     }
 

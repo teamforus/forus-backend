@@ -1,8 +1,8 @@
 <?php
 
 return [
-    "options" => [
-        "yes" => 'Ja',
-        "no" => 'Nee',
-    ]
+    'options' => [
+        'yes' => 'Ja',
+        'no' => 'Nee',
+    ],
 ];

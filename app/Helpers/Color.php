@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Helpers;
-
 
 class Color
 {
@@ -94,21 +92,21 @@ class Color
      */
     public static function rgb2hex(int $red, int $green, int $blue): string
     {
-        return sprintf("#%02x%02x%02x", $red, $green, $blue);
+        return sprintf('#%02x%02x%02x', $red, $green, $blue);
     }
 
     /**
-     * Convert a hexadecimal color code to its RGB equivalent
+     * Convert a hexadecimal color code to its RGB equivalent.
      *
      * @param string $hexStr (hexadecimal color value)
-     * @param boolean $returnAsString (if set true, returns the value separated by the separator character. Otherwise, returns associative array)
+     * @param bool $returnAsString (if set true, returns the value separated by the separator character. Otherwise, returns associative array)
      * @param string $separator (to separate RGB values. Applicable only if second parameter is true.)
      * @return array|string (depending on second parameter. Returns False if invalid hex color value)
      */
     public static function hex2rgb($hexStr, $returnAsString = false, $separator = ',')
     {
         // Gets a proper hex string
-        $hexStr = preg_replace("/[^0-9A-Fa-f]/", '', $hexStr);
+        $hexStr = preg_replace('/[^0-9A-Fa-f]/', '', $hexStr);
         $rgbArray = [];
 
         // If a proper hex code, convert using bitwise operation. No overhead... faster

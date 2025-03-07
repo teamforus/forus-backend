@@ -19,6 +19,7 @@ use App\Models\Tag;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Searches\FundSearch;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,12 +28,12 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 class FundProviderController extends Controller
 {
     /**
-     * Display list funds available for apply as provider
+     * Display list funds available for apply as provider.
      *
      * @param IndexFundsRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function availableFunds(
@@ -48,24 +49,26 @@ class FundProviderController extends Controller
         ]), FundProvider::queryAvailableFunds($organization)))->query()->latest();
 
         $meta = [
-            'organizations' => Organization::whereHas('funds', function(Builder $builder) use ($query) {
+            'organizations' => Organization::whereHas('funds', function (Builder $builder) use ($query) {
                 $builder->whereIn('id', (clone($query))->select('funds.id'));
-            })->select(['id', 'name'])->get()->map(static function(Organization $organization) {
+            })->select(['id', 'name'])->get()->map(static function (Organization $organization) {
                 return $organization->only('id', 'name');
             }),
-            'implementations' => Implementation::whereHas('funds', function(Builder $builder) use ($query) {
+            'implementations' => Implementation::whereHas('funds', function (Builder $builder) use ($query) {
                 $builder->whereIn('funds.id', (clone($query))->select('funds.id'));
-            })->select(['id', 'name'])->get()->map(static function(Implementation $implementation) {
+            })->select(['id', 'name'])->get()->map(static function (Implementation $implementation) {
                 return $implementation->only('id', 'name');
             }),
-            'tags' => TagResource::collection(Tag::whereHas('funds', static function(Builder $builder) use ($query) {
+            'tags' => TagResource::collection(Tag::whereHas('funds', static function (Builder $builder) use ($query) {
                 return $builder->whereIn('funds.id', (clone($query))->select('funds.id'));
             })->where('scope', 'provider')->with('translations')->get()),
             'totals' => FundProvider::makeTotalsMeta($organization),
         ];
 
-        return FundResource::collection($query->paginate(
-            $request->input('per_page', 10))
+        return FundResource::collection(
+            $query->paginate(
+                $request->input('per_page', 10)
+            )
         )->additional(compact('meta'));
     }
 
@@ -91,8 +94,8 @@ class FundProviderController extends Controller
      *
      * @param Request $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         Request $request,
@@ -127,12 +130,12 @@ class FundProviderController extends Controller
     }
 
     /**
-     * Apply as provider to fund
+     * Apply as provider to fund.
      *
      * @param StoreFundProviderRequest $request
      * @param Organization $organization
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
      * @return ProviderFundProviderResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(
         StoreFundProviderRequest $request,
@@ -156,12 +159,12 @@ class FundProviderController extends Controller
     }
 
     /**
-     * Display the specified resource
+     * Display the specified resource.
      *
      * @param Organization $organization
      * @param FundProvider $organizationFund
-     * @return ProviderFundProviderResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProviderFundProviderResource
      */
     public function show(
         Organization $organization,
@@ -179,8 +182,8 @@ class FundProviderController extends Controller
      * @param UpdateFundProviderRequest $request
      * @param Organization $organization
      * @param FundProvider $organizationFund
-     * @return ProviderFundProviderResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProviderFundProviderResource
      */
     public function update(
         UpdateFundProviderRequest $request,
@@ -191,19 +194,19 @@ class FundProviderController extends Controller
         $this->authorize('updateProvider', [$organizationFund, $organization]);
 
         $organizationFund->update($request->only([
-            'state'
+            'state',
         ]));
 
         return ProviderFundProviderResource::create($organizationFund);
     }
 
     /**
-     * Delete the specified resource
+     * Delete the specified resource.
      *
      * @param Organization $organization
      * @param FundProvider $organizationFund
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
      * @return JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function destroy(
         Organization $organization,

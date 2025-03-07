@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Kalnoy\Nestedset\NodeTrait;
 
 /**
- * App\Models\ProductCategory
+ * App\Models\ProductCategory.
  *
  * @property int $id
  * @property string $key
@@ -103,7 +103,19 @@ use Kalnoy\Nestedset\NodeTrait;
  */
 class ProductCategory extends BaseModel
 {
-    use Translatable, NodeTrait, HasTranslationCaches;
+    use Translatable;
+    use NodeTrait;
+    use HasTranslationCaches;
+
+    /**
+     * The attributes that are translatable.
+     *
+     * @var array
+     * @noinspection PhpUnused
+     */
+    public array $translatedAttributes = [
+        'name',
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -122,16 +134,6 @@ class ProductCategory extends BaseModel
     protected $with = [];
 
     /**
-     * The attributes that are translatable.
-     *
-     * @var array
-     * @noinspection PhpUnused
-     */
-    public array $translatedAttributes = [
-        'name',
-    ];
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function products(): HasMany
@@ -146,7 +148,7 @@ class ProductCategory extends BaseModel
     public function descendants_with_products(): HasMany
     {
         return $this->hasMany(ProductCategory::class, 'parent_id')
-            ->where(function(Builder $builder) {
+            ->where(function (Builder $builder) {
                 $builder->has('products');
                 $builder->orHas('descendants');
             });

@@ -14,8 +14,8 @@ class FormatController extends Controller
      * Display a listing of the resource.
      *
      * @param FormatRequest $request
-     * @return JsonResponse
      * @throws CommonMarkException
+     * @return JsonResponse
      */
     public function format(FormatRequest $request): JsonResponse
     {

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Services\Forus\Notification\Messages;
 
 use Illuminate\Bus\Queueable;
@@ -43,9 +42,10 @@ class FcmBasicNotification extends Notification implements ShouldQueue
      */
     public function toFcm()
     {
-        return FcmMessage::create()->setNotification(FcmNotification::create()
-            ->setTitle($this->title)
-            ->setBody($this->body)
+        return FcmMessage::create()->setNotification(
+            FcmNotification::create()
+                ->setTitle($this->title)
+                ->setBody($this->body)
         );
     }
 }

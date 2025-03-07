@@ -32,9 +32,10 @@ trait ValidatesFaq
     {
         $keys = array_dot(array_keys($this->rules()));
 
-        return array_combine($keys, array_map(static function($key) {
+        return array_combine($keys, array_map(static function ($key) {
             $value = last(explode('.', $key));
-            return trans_fb("validation.attributes." . $value, $value);
+
+            return trans_fb('validation.attributes.' . $value, $value);
         }, $keys));
     }
 }

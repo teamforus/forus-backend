@@ -35,14 +35,14 @@ class StoreMollieConnectionRequest extends BaseMollieConnectionRequest
             'phone' => [
                 'required',
                 'string',
-                'regex:/^\+[1-9]\d{10,14}$/'
+                'regex:/^\+[1-9]\d{10,14}$/',
             ],
         ];
     }
 
     /**
-     * @return void
      * @throws AuthorizationJsonException
+     * @return void
      */
     protected function throttle(): void
     {

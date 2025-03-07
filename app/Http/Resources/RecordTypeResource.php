@@ -10,12 +10,11 @@ use Illuminate\Http\Request;
  */
 class RecordTypeResource extends BaseJsonResource
 {
-    public static $wrap = false;
-
-    const array LOAD = [
+    public const array LOAD = [
         'translations',
         'record_type_options.translations',
     ];
+    public static $wrap = false;
 
     /**
      * Transform the resource into an array.
@@ -36,13 +35,13 @@ class RecordTypeResource extends BaseJsonResource
             'operators' => array_map(fn ($operator) => [
                 'key' => $operator,
                 'name' => [
-                        '*' => 'n.v.t.',
-                        '=' => 'gelijk aan',
-                        '<' => 'is kleiner dan',
-                        '>' => 'is groter dan',
-                        '<=' => 'is kleiner dan of gelijk aan',
-                        '>=' => 'is groter dan of gelijk aan',
-                    ][$operator] ?? ''
+                    '*' => 'n.v.t.',
+                    '=' => 'gelijk aan',
+                    '<' => 'is kleiner dan',
+                    '>' => 'is groter dan',
+                    '<=' => 'is kleiner dan of gelijk aan',
+                    '>=' => 'is groter dan of gelijk aan',
+                ][$operator] ?? '',
             ], $recordType->getOperators()),
             'options' => $recordType->getOptions(),
         ];

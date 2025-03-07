@@ -2,4 +2,6 @@
 
 namespace App\Events\BankConnections;
 
-class BankConnectionRejected extends BaseBankConnectionEvent {}
+class BankConnectionRejected extends BaseBankConnectionEvent
+{
+}

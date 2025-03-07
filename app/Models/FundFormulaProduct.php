@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\FundFormulaProduct
+ * App\Models\FundFormulaProduct.
  *
  * @property int $id
  * @property int $fund_id

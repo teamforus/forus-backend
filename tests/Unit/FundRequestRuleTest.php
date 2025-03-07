@@ -266,7 +266,7 @@ class FundRequestRuleTest extends TestCase
     ): array {
         return [
             'files' => $withFiles ? array_map(
-                fn() => $this->makeFundRequestFile($identity)->uid,
+                fn () => $this->makeFundRequestFile($identity)->uid,
                 range(1, 10),
             ) : [],
             'value' => $value,

@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -22,7 +21,6 @@ return new class extends Migration
             ->whereNotNull('external_url')
             ->where('external_url', '!=', '')
             ->update(['state' => 'public']);
-
 
         DB::table('implementation_pages')
             ->where('external', false)

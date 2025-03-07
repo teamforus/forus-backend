@@ -376,16 +376,6 @@ class ReimbursementPolicy
     }
 
     /**
-     * @param Reimbursement $reimbursement
-     * @param Organization $organization
-     * @return bool
-     */
-    private function checkIntegrity(Reimbursement $reimbursement, Organization $organization): bool
-    {
-        return $reimbursement->voucher->fund->organization_id === $organization->id;
-    }
-
-    /**
      * @param Identity $identity
      * @param bool $auth2FAConfirmed
      * @return Response|bool
@@ -397,5 +387,15 @@ class ReimbursementPolicy
         }
 
         return true;
+    }
+
+    /**
+     * @param Reimbursement $reimbursement
+     * @param Organization $organization
+     * @return bool
+     */
+    private function checkIntegrity(Reimbursement $reimbursement, Organization $organization): bool
+    {
+        return $reimbursement->voucher->fund->organization_id === $organization->id;
     }
 }

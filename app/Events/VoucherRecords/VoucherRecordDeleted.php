@@ -2,4 +2,6 @@
 
 namespace App\Events\VoucherRecords;
 
-class VoucherRecordDeleted extends BaseVoucherRecordEvent {}
+class VoucherRecordDeleted extends BaseVoucherRecordEvent
+{
+}

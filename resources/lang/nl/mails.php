@@ -8,7 +8,7 @@ return [
         'voucher_sent' => [
             'subject' => 'Uw tegoed',
             'title' => 'Uw tegoed',
-        ]
+        ],
     ],
     'reservations' => [
         'extra_payment' => [

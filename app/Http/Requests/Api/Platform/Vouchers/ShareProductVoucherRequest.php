@@ -24,7 +24,7 @@ class ShareProductVoucherRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reason' => 'required'
+            'reason' => 'required',
         ];
     }
 }

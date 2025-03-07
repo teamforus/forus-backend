@@ -7,7 +7,7 @@ use App\Models\Organization;
 use Illuminate\Validation\Rule;
 
 /**
- * Class UpdateBankStatementFieldsRequest
+ * Class UpdateBankStatementFieldsRequest.
  */
 class UpdateBankStatementFieldsRequest extends BaseFormRequest
 {

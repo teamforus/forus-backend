@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -26,8 +25,10 @@ return new class extends Migration
             $table->date('execution_date')->nullable()->after('sepa_xml');
             $table->integer('implementation_id')->unsigned()->nullable()->after('execution_date');
 
-            $table->foreign('implementation_id')->references('id')
-                ->on('implementations')->onDelete('cascade');
+            $table->foreign('implementation_id')
+                ->references('id')
+                ->on('implementations')
+                ->onDelete('cascade');
         });
     }
 

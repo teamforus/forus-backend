@@ -13,6 +13,7 @@ use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\TestsReservations;
+use Throwable;
 
 class VoucherTransactionTransferDaysTest extends TestCase
 {
@@ -24,8 +25,8 @@ class VoucherTransactionTransferDaysTest extends TestCase
     use MakesTestFundProviders;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testTransactionTransferDays(): void
     {
@@ -44,8 +45,8 @@ class VoucherTransactionTransferDaysTest extends TestCase
     /**
      * @param Voucher $voucher
      * @param Product $product
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     private function checkTransactionTransferDays(Voucher $voucher, Product $product): void
     {

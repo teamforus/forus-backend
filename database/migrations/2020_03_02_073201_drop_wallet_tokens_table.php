@@ -1,11 +1,10 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -30,11 +29,15 @@ return new class extends Migration
             $table->integer('amount');
             $table->timestamps();
 
-            $table->foreign('wallet_id'
-            )->references('id')->on('wallets')->onDelete('cascade');
+            $table->foreign('wallet_id')
+                ->references('id')
+                ->on('wallets')
+                ->onDelete('cascade');
 
-            $table->foreign('token_id'
-            )->references('id')->on('tokens')->onDelete('cascade');
+            $table->foreign('token_id')
+                ->references('id')
+                ->on('tokens')
+                ->onDelete('cascade');
         });
     }
 };

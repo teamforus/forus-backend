@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\FundLimitMultiplier
+ * App\Models\FundLimitMultiplier.
  *
  * @property int $id
  * @property int $fund_id
@@ -28,13 +28,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class FundLimitMultiplier extends BaseModel
 {
     protected $fillable = [
-        'id', 'fund_id', 'multiplier', 'record_type_key'
+        'id', 'fund_id', 'multiplier', 'record_type_key',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund(): BelongsTo {
+    public function fund(): BelongsTo
+    {
         return $this->belongsTo(Fund::class);
     }
 }

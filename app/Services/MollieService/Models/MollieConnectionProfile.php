@@ -6,7 +6,7 @@ use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Services\MollieService\Models\MollieConnectionProfile
+ * App\Services\MollieService\Models\MollieConnectionProfile.
  *
  * @property int $id
  * @property string $name

@@ -11,8 +11,8 @@ class StartDigIdRequest extends BaseFormRequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return bool
      */
     public function authorize(): bool
     {
@@ -49,7 +49,7 @@ class StartDigIdRequest extends BaseFormRequest
     public function rules(): array
     {
         $redirectTypes = [
-            'fund_request', 'auth'
+            'fund_request', 'auth',
         ];
 
         return [
@@ -59,8 +59,8 @@ class StartDigIdRequest extends BaseFormRequest
                 Rule::exists('funds', 'id')->whereIn(
                     'id',
                     Implementation::activeFundsQuery()->pluck('id')->toArray()
-                )
-            ]
+                ),
+            ],
         ];
     }
 }

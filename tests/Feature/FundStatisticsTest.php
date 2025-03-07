@@ -21,10 +21,10 @@ class FundStatisticsTest extends TestCase
     use MakesTestOrganizations;
 
     /**
-     * Tests that top-ups created in 2020 are still valid in 2030
+     * Tests that top-ups created in 2020 are still valid in 2030.
      *
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testFundTopUpsAreNotLimitedByDate(): void
     {
@@ -40,9 +40,9 @@ class FundStatisticsTest extends TestCase
     }
 
     /**
-     * Tests that budget left is calculated correctly across different years
-     * @return void
+     * Tests that budget left is calculated correctly across different years.
      * @throws Throwable
+     * @return void
      */
     public function testFundTotalBudgetIsNotLimitedByDate(): void
     {
@@ -82,9 +82,9 @@ class FundStatisticsTest extends TestCase
     }
 
     /**
-     * Test fund stats year filter
-     * @return void
+     * Test fund stats year filter.
      * @throws Throwable
+     * @return void
      */
     public function testFundStatsYearFilter(): void
     {

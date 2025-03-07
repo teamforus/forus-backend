@@ -27,7 +27,7 @@ class IndexFundProviderChatRequest extends FormRequest
             'per_page' => [
                 'nullable',
                 'numeric',
-                'max:100'
+                'max:100',
             ],
         ];
     }

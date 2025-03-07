@@ -17,7 +17,8 @@ class EmailFrom
      * EmailSender constructor.
      * @param Implementation $implementation
      */
-    public function __construct(Implementation $implementation) {
+    public function __construct(Implementation $implementation)
+    {
         $this->email_from_name = $implementation->email_from_name ?: Config::get('mail.from.name');
         $this->email_from_address = $implementation->email_from_address ?: Config::get('mail.from.address');
 

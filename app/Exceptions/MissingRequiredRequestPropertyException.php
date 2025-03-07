@@ -1,11 +1,11 @@
 <?php
 
-
 namespace App\Exceptions;
 
+use Exception;
 use Throwable;
 
-class MissingRequiredRequestPropertyException extends \Exception
+class MissingRequiredRequestPropertyException extends Exception
 {
     public function __construct(
         $message = 'Missing required request property.',

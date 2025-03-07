@@ -21,7 +21,7 @@ class EmployeesController extends Controller
         $employees = Employee::where('identity_address', $request->auth_address());
 
         if ($role) {
-            $employees = $employees->whereHas('roles', function(
+            $employees = $employees->whereHas('roles', function (
                 Builder $builder
             ) use ($role) {
                 $builder->where('key', $role);

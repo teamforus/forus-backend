@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Models\BankConnectionAccount
+ * App\Models\BankConnectionAccount.
  *
  * @property int $id
  * @property int $bank_connection_id

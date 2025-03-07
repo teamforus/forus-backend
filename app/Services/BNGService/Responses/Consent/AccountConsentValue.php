@@ -5,21 +5,11 @@ namespace App\Services\BNGService\Responses\Consent;
 class AccountConsentValue extends ConsentValue
 {
     /**
-     * @param string $authRedirectUri
-     * @param string $redirectToken
-     * @return string
-     */
-    protected function makeRedirectUri(string $authRedirectUri, string $redirectToken): string
-    {
-        return implode('/', [$authRedirectUri, 'bank-connections', $redirectToken]);
-    }
-
-    /**
      * @return string
      */
     public function getScope(): string
     {
-        return "AIS:" . $this->getConsentId();
+        return 'AIS:' . $this->getConsentId();
     }
 
     /**
@@ -52,5 +42,15 @@ class AccountConsentValue extends ConsentValue
     public function getConsentId(): ?string
     {
         return $this->data['consentId'] ?? null;
+    }
+
+    /**
+     * @param string $authRedirectUri
+     * @param string $redirectToken
+     * @return string
+     */
+    protected function makeRedirectUri(string $authRedirectUri, string $redirectToken): string
+    {
+        return implode('/', [$authRedirectUri, 'bank-connections', $redirectToken]);
     }
 }

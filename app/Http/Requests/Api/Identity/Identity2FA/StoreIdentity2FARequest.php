@@ -12,8 +12,8 @@ class StoreIdentity2FARequest extends BaseIdentity2FARequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
      * @throws AuthorizationJsonException
+     * @return bool
      */
     public function authorize(): bool
     {
@@ -45,7 +45,7 @@ class StoreIdentity2FARequest extends BaseIdentity2FARequest
                 'numeric',
                 'digits_between:8,15',
                 Rule::unique('identity_2fa', 'phone')->where('state', Identity2FA::STATE_ACTIVE),
-            ]
+            ],
         ] : []);
     }
 }

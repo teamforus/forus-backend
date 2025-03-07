@@ -25,8 +25,8 @@ class StoreProductReservationRequest extends BaseFormRequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
      * @throws \App\Exceptions\AuthorizationJsonException
+     * @return bool
      */
     public function authorize(): bool
     {
@@ -61,7 +61,7 @@ class StoreProductReservationRequest extends BaseFormRequest
             'number' => [
                 'required',
                 'exists:physical_cards,code',
-                $sponsorIsValid && $addressIsValid ? null : 'in:'
+                $sponsorIsValid && $addressIsValid ? null : 'in:',
             ],
             'product_id' => [
                 'required',

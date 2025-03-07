@@ -22,7 +22,7 @@ class DigidAuthRequestData extends DigidData
      */
     public function setAuthRedirectUrl(string $authRedirectUrl): self
     {
-        return $this->tap(fn() => $this->authRedirectUrl = $authRedirectUrl);
+        return $this->tap(fn () => $this->authRedirectUrl = $authRedirectUrl);
     }
 
     /**
@@ -39,7 +39,7 @@ class DigidAuthRequestData extends DigidData
      */
     public function setAuthResolveUrl(string $authResolveUrl): self
     {
-        return $this->tap(fn() => $this->authResolveUrl = $authResolveUrl);
+        return $this->tap(fn () => $this->authResolveUrl = $authResolveUrl);
     }
 
     /**
@@ -56,6 +56,6 @@ class DigidAuthRequestData extends DigidData
      */
     public function setRequestId(int|string $requestId): self
     {
-        return $this->tap(fn() => $this->requestId = $requestId);
+        return $this->tap(fn () => $this->requestId = $requestId);
     }
 }

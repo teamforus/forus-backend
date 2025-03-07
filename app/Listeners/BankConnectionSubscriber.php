@@ -26,40 +26,6 @@ use Illuminate\Events\Dispatcher;
 class BankConnectionSubscriber
 {
     /**
-     * @param BankConnection $bankConnection
-     * @param Employee|null $employee
-     * @return array
-     * @noinspection PhpUnused
-     */
-    protected function getBankConnectionLogModels(
-        BankConnection $bankConnection,
-        ?Employee $employee
-    ): array {
-        return [
-            'bank' => $bankConnection->bank,
-            'employee' => $employee,
-            'organization' => $bankConnection->organization,
-            'bank_connection' => $bankConnection,
-            'bank_connection_account' => $bankConnection->bank_connection_default_account,
-        ];
-    }
-
-    /**
-     * @param BaseBankConnectionEvent $event
-     * @param string $eventType
-     * @return EventLog
-     * @noinspection PhpUnused
-     */
-    protected function makeEvent(BaseBankConnectionEvent $event, string $eventType): EventLog
-    {
-        return $event->getBankConnection()->log(
-            $eventType,
-            $event->getBankConnection()->getLogModels($event->getEmployee()),
-            $event->getData()
-        );
-    }
-
-    /**
      * @param BankConnectionCreated $event
      * @noinspection PhpUnused
      */
@@ -152,7 +118,7 @@ class BankConnectionSubscriber
     }
 
     /**
-     * The events dispatcher
+     * The events dispatcher.
      *
      * @param Dispatcher $events
      * @noinspection PhpUnused
@@ -169,5 +135,39 @@ class BankConnectionSubscriber
         $events->listen(BankConnectionDisabledInvalid::class, "$class@onBankConnectionDisabledInvalid");
         $events->listen(BankConnectionMonetaryAccountChanged::class, "$class@onBankConnectionMonetaryAccountChanged");
         $events->listen(BankConnectionExpiring::class, "$class@onBankConnectionExpiring");
+    }
+
+    /**
+     * @param BankConnection $bankConnection
+     * @param Employee|null $employee
+     * @return array
+     * @noinspection PhpUnused
+     */
+    protected function getBankConnectionLogModels(
+        BankConnection $bankConnection,
+        ?Employee $employee
+    ): array {
+        return [
+            'bank' => $bankConnection->bank,
+            'employee' => $employee,
+            'organization' => $bankConnection->organization,
+            'bank_connection' => $bankConnection,
+            'bank_connection_account' => $bankConnection->bank_connection_default_account,
+        ];
+    }
+
+    /**
+     * @param BaseBankConnectionEvent $event
+     * @param string $eventType
+     * @return EventLog
+     * @noinspection PhpUnused
+     */
+    protected function makeEvent(BaseBankConnectionEvent $event, string $eventType): EventLog
+    {
+        return $event->getBankConnection()->log(
+            $eventType,
+            $event->getBankConnection()->getLogModels($event->getEmployee()),
+            $event->getData()
+        );
     }
 }

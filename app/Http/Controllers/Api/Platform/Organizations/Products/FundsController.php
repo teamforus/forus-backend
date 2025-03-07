@@ -20,8 +20,8 @@ class FundsController extends Controller
      * @param IndexFundsRequest $request
      * @param Organization $organization
      * @param Product $product
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundsRequest $request,

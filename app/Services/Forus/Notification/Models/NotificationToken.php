@@ -7,7 +7,7 @@ use App\Services\Forus\Notification\Messages\FcmBasicNotification;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Services\Forus\Notification\Models\NotificationToken
+ * App\Services\Forus\Notification\Models\NotificationToken.
  *
  * @property int $id
  * @property string $identity_address
@@ -28,16 +28,16 @@ use Illuminate\Database\Eloquent\Model;
  */
 class NotificationToken extends Model
 {
-    const string TYPE_PUSH_IOS = 'apn';
-    const string TYPE_PUSH_ANDROID = 'fcm';
+    public const string TYPE_PUSH_IOS = 'apn';
+    public const string TYPE_PUSH_ANDROID = 'fcm';
 
-    const array TYPES = [
+    public const array TYPES = [
         self::TYPE_PUSH_IOS,
         self::TYPE_PUSH_ANDROID,
     ];
 
     protected $fillable = [
-        'id', 'identity_address', 'type', 'token'
+        'id', 'identity_address', 'type', 'token',
     ];
 
     /**
@@ -48,8 +48,10 @@ class NotificationToken extends Model
     public function makeBasicNotification(string $title, string $body)
     {
         switch ($this->type) {
-            case self::TYPE_PUSH_IOS: $notification = new ApnBasicNotification($title, $body); break;
-            case self::TYPE_PUSH_ANDROID: $notification = new FcmBasicNotification($title, $body); break;
+            case self::TYPE_PUSH_IOS: $notification = new ApnBasicNotification($title, $body);
+                break;
+            case self::TYPE_PUSH_ANDROID: $notification = new FcmBasicNotification($title, $body);
+                break;
             default: return false;
         }
 

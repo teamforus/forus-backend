@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
@@ -22,10 +21,10 @@ class RecordValidationQuery
         int $trustedDays,
         ?Carbon $startDate,
     ): Builder|Relation|RecordValidation {
-        return $builder->where(function(Builder $builder) use ($trustedDays, $startDate) {
-            $builder->where(static function(Builder $builder) use ($trustedDays, $startDate) {
+        return $builder->where(function (Builder $builder) use ($trustedDays, $startDate) {
+            $builder->where(static function (Builder $builder) use ($trustedDays, $startDate) {
                 $builder->whereNotNull('prevalidation_id');
-                $builder->whereHas('prevalidation', static function(Builder $builder) use ($trustedDays, $startDate) {
+                $builder->whereHas('prevalidation', static function (Builder $builder) use ($trustedDays, $startDate) {
                     $builder->where('validated_at', '>=', now()->subDays($trustedDays));
 
                     if ($startDate) {
@@ -34,7 +33,7 @@ class RecordValidationQuery
                 });
             });
 
-            $builder->orWhere(static function(Builder $builder) use ($trustedDays, $startDate) {
+            $builder->orWhere(static function (Builder $builder) use ($trustedDays, $startDate) {
                 $builder->whereNull('prevalidation_id');
                 $builder->where('created_at', '>=', now()->subDays($trustedDays));
 
@@ -54,9 +53,9 @@ class RecordValidationQuery
         Builder|Relation|RecordValidation $builder,
         Fund $fund,
     ): Builder|Relation|RecordValidation {
-        return $builder->where(function(Builder $builder) use ($fund) {
+        return $builder->where(function (Builder $builder) use ($fund) {
             $builder->whereIn('identity_address', $fund->validatorEmployees());
-            $builder->where(function(Builder $builder) use ($fund) {
+            $builder->where(function (Builder $builder) use ($fund) {
                 $builder->whereNull('organization_id');
                 $builder->orWhere('organization_id', $fund->organization_id);
             });

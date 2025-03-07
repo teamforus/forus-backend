@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\FundProvider;
@@ -17,7 +16,7 @@ class FundProviderUnsubscribeQuery
     public static function wherePending(
         Builder|Relation|FundProviderUnsubscribe $builder,
     ): Builder|Relation|FundProviderUnsubscribe {
-        return $builder->where(function(Builder $builder) {
+        return $builder->where(function (Builder $builder) {
             $builder->where('canceled', false);
             $builder->where('unsubscribe_at', '>=', now()->endOfDay());
             $builder->whereRelation('fund_provider', 'state', FundProvider::STATE_ACCEPTED);
@@ -31,7 +30,7 @@ class FundProviderUnsubscribeQuery
     public static function whereOverdue(
         Builder|Relation|FundProviderUnsubscribe $builder,
     ): Builder|Relation|FundProviderUnsubscribe {
-        return $builder->where(function(Builder $builder) {
+        return $builder->where(function (Builder $builder) {
             $builder->where('canceled', false);
             $builder->where('unsubscribe_at', '<', now()->endOfDay());
             $builder->whereRelation('fund_provider', 'state', FundProvider::STATE_ACCEPTED);
@@ -45,9 +44,9 @@ class FundProviderUnsubscribeQuery
     public static function whereApproved(
         Builder|Relation|FundProviderUnsubscribe $builder,
     ): Builder|Relation|FundProviderUnsubscribe {
-        return $builder->where(function(Builder $builder) {
+        return $builder->where(function (Builder $builder) {
             $builder->where('canceled', false);
-            $builder->whereDoesntHave('fund_provider', function(Builder $builder) {
+            $builder->whereDoesntHave('fund_provider', function (Builder $builder) {
                 $builder->where('state', FundProvider::STATE_ACCEPTED);
             });
         });
@@ -60,7 +59,7 @@ class FundProviderUnsubscribeQuery
     public static function whereCanceled(
         Builder|Relation|FundProviderUnsubscribe $builder,
     ): Builder|Relation|FundProviderUnsubscribe {
-        return $builder->where(function(Builder $builder) {
+        return $builder->where(function (Builder $builder) {
             $builder->where('canceled', true);
         });
     }

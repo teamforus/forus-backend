@@ -16,10 +16,14 @@ use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesTestVouchers;
+use Throwable;
 
 class ReimbursementTest extends TestCase
 {
-    use DatabaseTransactions, WithFaker, AssertsSentEmails, MakesTestVouchers;
+    use DatabaseTransactions;
+    use WithFaker;
+    use AssertsSentEmails;
+    use MakesTestVouchers;
 
     /**
      * @var string
@@ -75,8 +79,8 @@ class ReimbursementTest extends TestCase
                     'sizes' => [
                         'thumbnail',
                     ],
-                ]
-            ]
+                ],
+            ],
         ],
         'resolved_at',
         'resolved_at_locale',
@@ -89,8 +93,8 @@ class ReimbursementTest extends TestCase
     ];
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testStoreInvalidReimbursement(): void
     {
@@ -101,8 +105,8 @@ class ReimbursementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testStoreDraftAndSubmitReimbursement(): void
     {
@@ -125,8 +129,8 @@ class ReimbursementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testStoreSubmittedReimbursement(): void
     {
@@ -146,8 +150,8 @@ class ReimbursementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSponsorAssignAndUnAssignReimbursement(): void
     {
@@ -173,8 +177,8 @@ class ReimbursementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSponsorApproveReimbursement(): void
     {
@@ -194,8 +198,8 @@ class ReimbursementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSponsorApproveReimbursementWithOffset(): void
     {
@@ -231,8 +235,8 @@ class ReimbursementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSponsorRejectReimbursement(): void
     {
@@ -252,8 +256,8 @@ class ReimbursementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSponsorReimbursementNotes(): void
     {
@@ -451,7 +455,7 @@ class ReimbursementTest extends TestCase
         $response = $this->getJson("$endpoint/$reimbursement->id/notes", $headers);
         $response->assertSuccessful();
         $this->assertIsArray($response->json('data'));
-        $this->assertNotNull(Arr::first($response->json('data'), fn($item) => $item['id'] == $note->id));
+        $this->assertNotNull(Arr::first($response->json('data'), fn ($item) => $item['id'] == $note->id));
 
         // assert employee can't remove others notes
         $response = $this->deleteJson("$endpoint/$reimbursement->id/notes/$note->id", [], $headersUnassigned);
@@ -492,8 +496,8 @@ class ReimbursementTest extends TestCase
 
     /**
      * @param Voucher $voucher
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function makeInvalidReimbursement(Voucher $voucher): void
     {
@@ -511,8 +515,8 @@ class ReimbursementTest extends TestCase
     /**
      * @param Voucher $voucher
      * @param bool $submit
+     * @throws Throwable
      * @return Reimbursement
-     * @throws \Throwable
      */
     protected function makeReimbursement(Voucher $voucher, bool $submit): Reimbursement
     {
@@ -521,7 +525,7 @@ class ReimbursementTest extends TestCase
         $requesterEmail = $voucher->identity->email;
 
         $body = array_merge($this->makeReimbursementRequestBody($voucher, $headers), [
-           'state' => $submit ? 'pending' : 'draft',
+            'state' => $submit ? 'pending' : 'draft',
         ]);
 
         // assert created
@@ -545,8 +549,8 @@ class ReimbursementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return string[]
-     * @throws \Throwable
      */
     protected function makeReimbursementRequestBody(?Voucher $voucher = null, array $headers = []): array
     {

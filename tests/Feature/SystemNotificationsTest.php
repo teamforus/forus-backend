@@ -144,7 +144,7 @@ class SystemNotificationsTest extends TestCase
                 'title' => 'Value that should not be ignored',
                 'content' => 'Value that should not be ignored',
                 'type' => $channel,
-            ]]
+            ]],
         ]);
 
         $response = $this->fetchCustomTemplate($implementation, $notification);
@@ -169,7 +169,7 @@ class SystemNotificationsTest extends TestCase
                 'title' => 'Value that should not be ignored',
                 'content' => 'Value that should not be ignored',
                 'type' => $channel,
-            ]]
+            ]],
         ]);
 
         $response = $this->fetchCustomTemplate($implementation, $notification);
@@ -187,7 +187,7 @@ class SystemNotificationsTest extends TestCase
                 'formal' => !$implementation->informal_communication,
                 'fund_id' => $funds[0]->id,
                 'type' => $channel,
-            ]]
+            ]],
         ]);
 
         $response = $this->fetchCustomTemplate($implementation, $notification);
@@ -217,7 +217,7 @@ class SystemNotificationsTest extends TestCase
                 'formal' => !$implementation->informal_communication,
                 'fund_id' => null,
                 'type' => $channel,
-            ]]
+            ]],
         ]);
 
         $response = $this->fetchCustomTemplate($implementation, $notification);
@@ -279,7 +279,7 @@ class SystemNotificationsTest extends TestCase
             'data' => array_merge($this->systemNotificationStructure, [
                 'templates' => [],
                 'templates_default' => [$this->templateStructure],
-            ])
+            ]),
         ]);
 
         return $response;
@@ -306,7 +306,7 @@ class SystemNotificationsTest extends TestCase
             'data' => array_merge($this->systemNotificationStructure, [
                 'templates' => [],
                 'templates_default' => [$this->templateStructure],
-            ])
+            ]),
         ]);
 
         return $response;

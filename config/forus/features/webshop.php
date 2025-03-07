@@ -1,35 +1,35 @@
 <?php
 
 return [
-    "records" => [
+    'records' => [
         // view records list
-        "list"      => false,
+        'list' => false,
 
         // create new record
-        "create"    => false,
+        'create' => false,
 
         // validate record
-        "validate"  => false
+        'validate' => false,
     ],
-    "funds" => [
+    'funds' => [
         // list all funds
-        "list"      => env('FEATURES_WEBSHOP_FUNDS_LIST', false),
+        'list' => env('FEATURES_WEBSHOP_FUNDS_LIST', false),
 
         // view fund details
-        "show"      => false,
+        'show' => false,
 
         /**
          * Allow users to submit make fund requests
          * Hides elements from webshop and disable responsible api endpoints
-         * when disabled
+         * when disabled.
          */
         'fund_requests' => env('ENABLE_FUND_REQUESTS_WEBSHOP', true),
     ],
-    "products" => [
+    'products' => [
         // list all funds
-        "list"      => true,
+        'list' => true,
 
         // view fund details
-        "show"      => true
+        'show' => true,
     ],
 ];

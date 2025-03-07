@@ -20,8 +20,8 @@ class FundRequestClarificationsController extends Controller
      * @param IndexFundRequestClarificationsRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundRequestClarificationsRequest $request,
@@ -29,7 +29,7 @@ class FundRequestClarificationsController extends Controller
         FundRequest $fundRequest
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyValidator', [
-            FundRequestClarification::class, $fundRequest, $organization
+            FundRequestClarification::class, $fundRequest, $organization,
         ]);
 
         $query = $fundRequest->clarifications();
@@ -47,8 +47,8 @@ class FundRequestClarificationsController extends Controller
      * @param StoreFundRequestClarificationsRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @return FundRequestClarificationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundRequestClarificationResource
      */
     public function store(
         StoreFundRequestClarificationsRequest $request,
@@ -58,7 +58,7 @@ class FundRequestClarificationsController extends Controller
         $this->authorize('create', [FundRequestClarification::class, $fundRequest, $organization]);
 
         $clarification = $fundRequest->clarifications()->create($request->only([
-            'question', 'fund_request_record_id'
+            'question', 'fund_request_record_id',
         ]));
 
         FundRequestClarificationRequested::dispatch($clarification);
@@ -72,8 +72,8 @@ class FundRequestClarificationsController extends Controller
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @param FundRequestClarification $fundRequestClarification
-     * @return FundRequestClarificationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundRequestClarificationResource
      */
     public function show(
         Organization $organization,
@@ -81,7 +81,7 @@ class FundRequestClarificationsController extends Controller
         FundRequestClarification $fundRequestClarification
     ): FundRequestClarificationResource {
         $this->authorize('viewValidator', [
-            $fundRequestClarification, $fundRequest, $organization
+            $fundRequestClarification, $fundRequest, $organization,
         ]);
 
         return FundRequestClarificationResource::create($fundRequestClarification);

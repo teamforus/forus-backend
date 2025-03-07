@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Searches;
 
 use App\Models\Organization;
@@ -112,7 +111,7 @@ class VoucherTransactionsSearch extends BaseSearch
         if ($transfer_in_min = $this->getFilter('transfer_in_min')) {
             $builder->where(function (Builder $builder) use ($transfer_in_min) {
                 $builder->where('state', VoucherTransaction::STATE_PENDING);
-                $builder->where('transfer_at', '>=', now()->addDays((float)$transfer_in_min));
+                $builder->where('transfer_at', '>=', now()->addDays((float) $transfer_in_min));
                 $builder->whereNull('voucher_transaction_bulk_id');
             });
         }
@@ -126,7 +125,7 @@ class VoucherTransactionsSearch extends BaseSearch
         }
 
         if ($this->hasFilter('fund_state') && ($fund_state = $this->getFilter('fund_state'))) {
-            $builder->whereHas('voucher.fund', fn(Builder $b) => $b->where('state', '=', $fund_state));
+            $builder->whereHas('voucher.fund', fn (Builder $b) => $b->where('state', '=', $fund_state));
         }
 
         if ($this->hasFilter('bulk_state') && ($bulk_state = $this->getFilter('bulk_state'))) {
@@ -251,7 +250,7 @@ class VoucherTransactionsSearch extends BaseSearch
         $builder->addSelect([
             'product_reservation_id' => ProductReservation::query()
                 ->whereColumn('voucher_transactions.id', 'voucher_transaction_id')
-                ->select('id')
+                ->select('id'),
         ]);
 
         return VoucherTransaction::fromSub($builder, 'voucher_transactions')->select('*');
@@ -266,7 +265,7 @@ class VoucherTransactionsSearch extends BaseSearch
         $builder->addSelect([
             'fund_request_id' => Voucher::query()
                 ->whereColumn('id', 'voucher_id')
-                ->select('fund_request_id')
+                ->select('fund_request_id'),
         ]);
 
         return VoucherTransaction::fromSub($builder, 'voucher_transactions')->select('*');

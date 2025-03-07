@@ -1,13 +1,12 @@
 <?php
 
+use App\Models\Faq;
+use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Faq;
-use App\Services\MediaService\Models\Media;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -46,7 +45,8 @@ return new class extends Migration
 
         Schema::table('faq', function (Blueprint $table) {
             $table->foreign('faq_id', 'fund_faq_fund_id_foreign')
-                ->references('id')->on('funds')
+                ->references('id')
+                ->on('funds')
                 ->onDelete('cascade');
 
             $table->renameColumn('faq_id', 'fund_id');

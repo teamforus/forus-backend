@@ -9,13 +9,12 @@ use App\Models\Record;
  */
 class RecordResource extends BaseJsonResource
 {
-    public static $wrap = null;
-
     public const array LOAD = [
         'record_type.translations',
         'validations_approved.identity',
         'validations_approved.organization',
     ];
+    public static $wrap = null;
 
     /**
      * Transform the resource into an array.
@@ -35,7 +34,7 @@ class RecordResource extends BaseJsonResource
             'order' => $record->order,
             'deleted' => !is_null($record->deleted_at),
             'record_category_id' => $record->record_category_id,
-            'validations' => RecordValidationResource::collection($record->validations_approved)
+            'validations' => RecordValidationResource::collection($record->validations_approved),
         ];
     }
 }

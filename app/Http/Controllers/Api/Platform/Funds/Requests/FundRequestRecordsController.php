@@ -18,8 +18,8 @@ class FundRequestRecordsController extends Controller
      * @param IndexFundRequestRecordsRequest $request
      * @param Fund $fund
      * @param FundRequest $fundRequest
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundRequestRecordsRequest $request,
@@ -42,8 +42,8 @@ class FundRequestRecordsController extends Controller
      * @param Fund $fund
      * @param FundRequest $fundRequest
      * @param FundRequestRecord $fundRequestRecord
-     * @return FundRequestRecordResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundRequestRecordResource
      */
     public function show(
         Fund $fund,

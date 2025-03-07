@@ -54,11 +54,11 @@ class Identity2FAController extends Controller
 
     /**
      * @param StoreIdentity2FARequest $request
-     * @return Identity2FAResource
      * @throws IncompatibleWithGoogleAuthenticatorException
      * @throws InvalidCharactersException
      * @throws SecretKeyTooShortException
      * @throws Throwable
+     * @return Identity2FAResource
      */
     public function store(StoreIdentity2FARequest $request): Identity2FAResource
     {
@@ -94,9 +94,9 @@ class Identity2FAController extends Controller
     /**
      * @param BaseFormRequest $request
      * @param Identity2FA $identity2FA
-     * @return Identity2FAResource
      * @throws AuthorizationJsonException
      * @throws Throwable
+     * @return Identity2FAResource
      */
     public function resend(BaseFormRequest $request, Identity2FA $identity2FA): Identity2FAResource
     {

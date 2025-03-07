@@ -13,7 +13,7 @@ class VoucherTestCases
             'bsn_enabled' => true,
         ],
         'fund_config' => [],
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'budget',
             // assign type (email, bsn, client_uid)
             'assign_by' => 'email',
@@ -91,9 +91,8 @@ class VoucherTestCases
             'assert_active' => true,
             'sponsor_assign_existing_identity' => false,
             'sponsor_assign_by' => 'email',
-        ]]
+        ]],
     ];
-
 
     /** @var array|array[]  */
     public static array $featureTestCaseProductVouchers = [
@@ -105,7 +104,7 @@ class VoucherTestCases
         ],
         'fund_config' => [],
 
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'product',
             'assign_by' => 'email',
             'assert_created' => true,
@@ -121,7 +120,7 @@ class VoucherTestCases
             'assert_created' => true,
             'activate' => true,
             'assert_active' => true,
-        ]]
+        ]],
     ];
 
     /** @var array|array[]  */
@@ -134,7 +133,7 @@ class VoucherTestCases
         ],
         'fund_config' => [],
 
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'budget',
             'assign_by' => 'email',
             'assert_created' => true,
@@ -146,7 +145,7 @@ class VoucherTestCases
             'exceed_voucher_amount_limit' => false,
             'activate' => true,
             'assert_active' => true,
-        ]]
+        ]],
     ];
 
     /** @var array|array[]  */
@@ -159,7 +158,7 @@ class VoucherTestCases
         ],
         'fund_config' => [],
 
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'budget',
             'assign_by' => 'email',
             'assert_created' => true,
@@ -178,9 +177,9 @@ class VoucherTestCases
             'assert_created' => false,
             'assert_errors' => [
                 'bsn',
-                'assign_by_type'
+                'assign_by_type',
             ],
-        ]]
+        ]],
     ];
 
     /** @var array|array[]  */
@@ -193,7 +192,7 @@ class VoucherTestCases
         ],
         'fund_config' => [],
 
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'product',
             'assign_by' => 'email',
             'product' => 'approved',
@@ -233,7 +232,7 @@ class VoucherTestCases
             'assert_errors' => [
                 'product_id',
             ],
-        ]]
+        ]],
     ];
 
     /** @var array|array[]  */
@@ -246,7 +245,7 @@ class VoucherTestCases
         ],
         'fund_config' => [],
 
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'budget',
             'assign_by' => 'email',
             'assert_created' => true,
@@ -274,7 +273,7 @@ class VoucherTestCases
             'activate' => true,
             'activation_code' => 1,
             'assert_active' => true,
-        ]]
+        ]],
     ];
 
     /** @var array|array[]  */
@@ -287,7 +286,7 @@ class VoucherTestCases
         ],
         'fund_config' => [],
 
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'budget',
             'assign_by' => 'email',
             'assert_created' => true,
@@ -313,6 +312,6 @@ class VoucherTestCases
             'assert_errors' => [
                 'amount',
             ],
-        ]]
+        ]],
     ];
 }

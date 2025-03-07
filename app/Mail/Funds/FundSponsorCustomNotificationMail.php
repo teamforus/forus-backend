@@ -11,14 +11,14 @@ use League\CommonMark\Exception\CommonMarkException;
 class FundSponsorCustomNotificationMail extends ImplementationMail
 {
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {
         return $this->buildCustomMail(
             Arr::get($this->mailData, 'notification_subject'),
-            Str::replace("&amp;nbsp;", "&nbsp;", Arr::get($this->mailData, 'notification_content')),
+            Str::replace('&amp;nbsp;', '&nbsp;', Arr::get($this->mailData, 'notification_content')),
         );
     }
 

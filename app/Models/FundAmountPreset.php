@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Models\FundAmountPreset
+ * App\Models\FundAmountPreset.
  *
  * @property int $id
  * @property int $fund_id

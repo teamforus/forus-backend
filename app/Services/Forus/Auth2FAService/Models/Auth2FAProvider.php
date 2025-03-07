@@ -5,7 +5,7 @@ namespace App\Services\Forus\Auth2FAService\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Services\Forus\Auth2FAService\Models\Auth2FAProvider
+ * App\Services\Forus\Auth2FAService\Models\Auth2FAProvider.
  *
  * @property int $id
  * @property string $key

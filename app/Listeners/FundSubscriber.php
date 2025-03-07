@@ -48,21 +48,6 @@ class FundSubscriber
     private mixed $notificationService;
 
     /**
-     * @param Fund $fund
-     * @param array $extraModels
-     * @return array
-     */
-    private function getFundLogModels(Fund $fund, array $extraModels = []): array
-    {
-        return array_merge([
-            'fund' => $fund,
-            'sponsor' => $fund->organization,
-            'fund_config' => $fund->fund_config,
-            'implementation' => $fund->getImplementation(),
-        ], $extraModels);
-    }
-
-    /**
      * FundSubscriber constructor.
      */
     public function __construct()
@@ -74,7 +59,8 @@ class FundSubscriber
      * @param FundCreatedEvent $event
      * @noinspection PhpUnused
      */
-    public function onFundCreated(FundCreatedEvent $event): void {
+    public function onFundCreated(FundCreatedEvent $event): void
+    {
         $fund = $event->getFund();
 
         $fund->update([
@@ -98,7 +84,8 @@ class FundSubscriber
      * @param FundUpdatedEvent $event
      * @noinspection PhpUnused
      */
-    public function onFundUpdated(FundUpdatedEvent $event): void {
+    public function onFundUpdated(FundUpdatedEvent $event): void
+    {
         $fund = $event->getFund();
 
         $fund->update([
@@ -112,7 +99,8 @@ class FundSubscriber
      * @param FundStartedEvent $event
      * @noinspection PhpUnused
      */
-    public function onFundStarted(FundStartedEvent $event): void {
+    public function onFundStarted(FundStartedEvent $event): void
+    {
         $fund = $event->getFund();
 
         FundStartedNotification::send($fund->log(
@@ -122,7 +110,8 @@ class FundSubscriber
 
         /** @var FundProvider[] $fundProviders */
         $fundProviders = FundProviderQuery::whereApprovedForFundsFilter(
-            $fund->providers()->getQuery(), $fund->id
+            $fund->providers()->getQuery(),
+            $fund->id
         )->get();
 
         foreach ($fundProviders as $fundProvider) {
@@ -138,7 +127,8 @@ class FundSubscriber
      * @param FundExpiringEvent $event
      * @noinspection PhpUnused
      */
-    public function onFundExpiring(FundExpiringEvent $event): void {
+    public function onFundExpiring(FundExpiringEvent $event): void
+    {
         $fund = $event->getFund();
 
         FundExpiringNotification::send($fund->log(
@@ -148,7 +138,8 @@ class FundSubscriber
 
         /** @var FundProvider[] $fundProviders */
         $fundProviders = FundProviderQuery::whereApprovedForFundsFilter(
-            $fund->providers()->getQuery(), $fund->id
+            $fund->providers()->getQuery(),
+            $fund->id
         )->get();
 
         foreach ($fundProviders as $fundProvider) {
@@ -236,15 +227,15 @@ class FundSubscriber
 
         if ($providerEmail) {
             $mailable = new ProviderInvitationMail([
-                'provider_name'     => $providerInvitation->organization->name,
-                'sponsor_name'      => $providerInvitation->fund->organization->name,
-                'sponsor_phone'     => $providerInvitation->fund->organization->phone,
-                'sponsor_email'     => $providerInvitation->fund->organization->email,
-                'fund_name'         => $providerInvitation->fund->name,
-                'fund_start_date'   => format_date_locale($providerInvitation->fund->start_date),
-                'fund_end_date'     => format_date_locale($providerInvitation->fund->end_date),
-                'from_fund_name'    => $fundFrom->name,
-                'invitation_link'   => $fundFrom->urlProviderDashboard("/provider-invitations/$providerInvitation->token"),
+                'provider_name' => $providerInvitation->organization->name,
+                'sponsor_name' => $providerInvitation->fund->organization->name,
+                'sponsor_phone' => $providerInvitation->fund->organization->phone,
+                'sponsor_email' => $providerInvitation->fund->organization->email,
+                'fund_name' => $providerInvitation->fund->name,
+                'fund_start_date' => format_date_locale($providerInvitation->fund->start_date),
+                'fund_end_date' => format_date_locale($providerInvitation->fund->end_date),
+                'from_fund_name' => $fundFrom->name,
+                'invitation_link' => $fundFrom->urlProviderDashboard("/provider-invitations/$providerInvitation->token"),
             ], $providerInvitation->fund->getEmailFrom());
 
             $this->notificationService->sendSystemMail($providerEmail, $mailable);
@@ -255,7 +246,8 @@ class FundSubscriber
      * @param FundBalanceLowEvent $event
      * @noinspection PhpUnused
      */
-    public function onFundBalanceLow(FundBalanceLowEvent $event): void {
+    public function onFundBalanceLow(FundBalanceLowEvent $event): void
+    {
         $fund = $event->getFund();
 
         $eventLog = $fund->log($fund::EVENT_BALANCE_LOW, $this->getFundLogModels($fund), [
@@ -271,7 +263,8 @@ class FundSubscriber
 
         if ($email = $fund->organization->getContact(OrganizationContact::KEY_FUND_BALANCE_LOW_EMAIL)) {
             resolve('forus.services.notification')->sendSystemMail(
-                $email, new FundBalanceWarningMail($eventLog->data, $fund->getEmailFrom())
+                $email,
+                new FundBalanceWarningMail($eventLog->data, $fund->getEmailFrom())
             );
         }
     }
@@ -280,7 +273,8 @@ class FundSubscriber
      * @param FundBalanceSuppliedEvent $event
      * @noinspection PhpUnused
      */
-    public function onFundBalanceSupplied(FundBalanceSuppliedEvent $event): void {
+    public function onFundBalanceSupplied(FundBalanceSuppliedEvent $event): void
+    {
         $fund = $event->getFund();
         $transaction = $event->getTransaction();
 
@@ -288,7 +282,7 @@ class FundSubscriber
             'fund_top_up_transaction' => $transaction,
         ]), [
             'fund_top_up_amount' => currency_format($transaction->amount),
-            'fund_top_up_amount_locale' => currency_format_locale($transaction->amount)
+            'fund_top_up_amount_locale' => currency_format_locale($transaction->amount),
         ]);
 
         BalanceSuppliedNotification::send($eventLog);
@@ -298,7 +292,8 @@ class FundSubscriber
      * @param FundProductAddedEvent $event
      * @noinspection PhpUnused
      */
-    public function onFundProductAdded(FundProductAddedEvent $event): void {
+    public function onFundProductAdded(FundProductAddedEvent $event): void
+    {
         $fund = $event->getFund();
         $product = $event->getProduct();
 
@@ -314,7 +309,8 @@ class FundSubscriber
      * @param FundProductApprovedEvent $event
      * @noinspection PhpUnused
      */
-    public function onFundProductApproved(FundProductApprovedEvent $event): void {
+    public function onFundProductApproved(FundProductApprovedEvent $event): void
+    {
         $fund = $event->getFund();
         $product = $event->getProduct();
 
@@ -385,7 +381,7 @@ class FundSubscriber
     }
 
     /**
-     * The events dispatcher
+     * The events dispatcher.
      *
      * @param Dispatcher $events
      * @noinspection PhpUnused
@@ -394,8 +390,8 @@ class FundSubscriber
     {
         $class = '\\' . static::class;
 
-        $events->listen(FundCreatedEvent::class,"$class@onFundCreated");
-        $events->listen(FundUpdatedEvent::class,"$class@onFundUpdated");
+        $events->listen(FundCreatedEvent::class, "$class@onFundCreated");
+        $events->listen(FundUpdatedEvent::class, "$class@onFundUpdated");
         $events->listen(FundEndedEvent::class, "$class@onFundEnded");
         $events->listen(FundStartedEvent::class, "$class@onFundStarted");
         $events->listen(FundExpiringEvent::class, "$class@onFundExpiring");
@@ -413,5 +409,20 @@ class FundSubscriber
         $events->listen(FundUnArchivedEvent::class, "$class@onFundUnArchived");
 
         $events->listen(FundVouchersExportedEvent::class, "$class@onFundVouchersExported");
+    }
+
+    /**
+     * @param Fund $fund
+     * @param array $extraModels
+     * @return array
+     */
+    private function getFundLogModels(Fund $fund, array $extraModels = []): array
+    {
+        return array_merge([
+            'fund' => $fund,
+            'sponsor' => $fund->organization,
+            'fund_config' => $fund->fund_config,
+            'implementation' => $fund->getImplementation(),
+        ], $extraModels);
     }
 }

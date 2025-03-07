@@ -2,4 +2,6 @@
 
 namespace App\Events\Vouchers;
 
-class VoucherExpired extends BaseVoucherEvent {}
+class VoucherExpired extends BaseVoucherEvent
+{
+}

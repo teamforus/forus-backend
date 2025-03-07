@@ -21,9 +21,9 @@ class FundUnsubscribeSearch extends BaseSearch
         $query = parent::getBuilder();
 
         if ($this->hasFilter('q') && $q = $this->getFilter('q')) {
-            $query->whereHas('fund_provider.fund', function(Builder $builder) use ($q) {
+            $query->whereHas('fund_provider.fund', function (Builder $builder) use ($q) {
                 return $builder->where('name', 'like', "%$q%");
-            })->orWhereHas('fund_provider.fund.organization', function(Builder $builder) use ($q) {
+            })->orWhereHas('fund_provider.fund.organization', function (Builder $builder) use ($q) {
                 return $builder->where('name', 'like', "%$q%");
             });
         }
@@ -56,12 +56,12 @@ class FundUnsubscribeSearch extends BaseSearch
     public static function rules(BaseFormRequest $request = null): array
     {
         return [
-            'q'         => 'nullable|string|max:100',
-            'fund_id'   => 'nullable|exists:funds,id',
-            'from'      => 'nullable|date:Y-m-d',
-            'to'        => 'nullable|date:Y-m-d',
-            'state'     => 'nullable|in:' . implode(',', FundProviderUnsubscribe::STATES),
-            'per_page'  => $request->perPageRule(1000),
+            'q' => 'nullable|string|max:100',
+            'fund_id' => 'nullable|exists:funds,id',
+            'from' => 'nullable|date:Y-m-d',
+            'to' => 'nullable|date:Y-m-d',
+            'state' => 'nullable|in:' . implode(',', FundProviderUnsubscribe::STATES),
+            'per_page' => $request->perPageRule(1000),
         ];
     }
 
@@ -75,7 +75,7 @@ class FundUnsubscribeSearch extends BaseSearch
         string $state = 'pending'
     ): Builder|Relation|FundProviderUnsubscribe {
         return match ($state) {
-            'pending' => $builder->where(function(Builder $builder) {
+            'pending' => $builder->where(function (Builder $builder) {
                 $builder->where(fn (Builder $builder) => FundProviderUnsubscribeQuery::wherePending($builder));
                 $builder->orWhere(fn (Builder $builder) => FundProviderUnsubscribeQuery::whereOverdue($builder));
             }),

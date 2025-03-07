@@ -54,7 +54,7 @@ class EmailLogQuery
      */
     public static function whereQueryFilter(Builder|Relation|EmailLog $query, string $q): Builder|Relation
     {
-        return $query->where(function(Builder $builder) use ($q) {
+        return $query->where(function (Builder $builder) use ($q) {
             $builder->where('subject', 'LIKE', "%$q%");
             $builder->orWhere('from_name', 'LIKE', "%$q%");
             $builder->orWhere('from_address', 'LIKE', "%$q%");

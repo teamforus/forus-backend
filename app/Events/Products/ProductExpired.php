@@ -2,4 +2,6 @@
 
 namespace App\Events\Products;
 
-class ProductExpired extends BaseProductEvent {}
+class ProductExpired extends BaseProductEvent
+{
+}

@@ -3,7 +3,7 @@
 namespace App\Notifications\Organizations\ProductReservations;
 
 /**
- * The product reservation was canceled by client
+ * The product reservation was canceled by client.
  */
 class ProductReservationCanceledNotification extends BaseProductReservationsNotification
 {

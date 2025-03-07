@@ -45,6 +45,31 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
     }
 
     /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return array_merge(parent::messages(), [
+            'vouchers.*.direct_payment_iban.in' => '[direct_payment_iban] - direct payments are not available for the target fund.',
+            'vouchers.*.direct_payment_name.in' => '[direct_payment_name] - direct payments are not available for the target fund.',
+        ]);
+    }
+
+    /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        $keys = array_dot(array_keys($this->rules()));
+
+        return array_combine($keys, array_map(static function ($key) {
+            $value = last(explode('.', $key));
+
+            return trans_fb('validation.attributes.' . $value, $value);
+        }, $keys));
+    }
+
+    /**
      * @param Fund $fund
      * @return array|string[]
      */
@@ -81,7 +106,7 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
 
         return [
             'required',
-            Rule::exists('funds', 'id')->whereIn('id', $fundIds)
+            Rule::exists('funds', 'id')->whereIn('id', $fundIds),
         ];
     }
 
@@ -131,7 +156,7 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
 
         return array_merge($rule, [
             'exists:products,id',
-            new ProductIdInStockRule($fund, collect($vouchers)->countBy('product_id')->toArray())
+            new ProductIdInStockRule($fund, collect($vouchers)->countBy('product_id')->toArray()),
         ]);
     }
 
@@ -144,29 +169,5 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
         $fund = $this->organization->funds()->findOrFail($this->input('fund_id'));
 
         return $fund;
-    }
-
-    /**
-     * @return array
-     */
-    public function messages(): array
-    {
-        return array_merge(parent::messages(), [
-            'vouchers.*.direct_payment_iban.in' => '[direct_payment_iban] - direct payments are not available for the target fund.',
-            'vouchers.*.direct_payment_name.in' => '[direct_payment_name] - direct payments are not available for the target fund.',
-        ]);
-    }
-
-    /**
-     * @return array
-     */
-    public function attributes(): array
-    {
-        $keys = array_dot(array_keys($this->rules()));
-
-        return array_combine($keys, array_map(static function($key) {
-            $value = last(explode('.', $key));
-            return trans_fb("validation.attributes." . $value, $value);
-        }, $keys));
     }
 }

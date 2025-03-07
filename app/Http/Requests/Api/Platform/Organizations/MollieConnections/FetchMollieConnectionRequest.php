@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Config;
 class FetchMollieConnectionRequest extends BaseMollieConnectionRequest
 {
     /**
-     * @return void
      * @throws AuthorizationJsonException
+     * @return void
      */
     protected function throttle(): void
     {

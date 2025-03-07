@@ -25,7 +25,7 @@ class FirestoreTokensController extends Controller
         Config::set('firebase.projects.app.credentials.file', $contextFile->path());
 
         return [
-            'token' => Firebase::auth()->createCustomToken($request->auth_address())->toString()
+            'token' => Firebase::auth()->createCustomToken($request->auth_address())->toString(),
         ];
     }
 }

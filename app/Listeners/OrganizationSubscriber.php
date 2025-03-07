@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Organization;
 use App\Models\Role;
 use Illuminate\Events\Dispatcher;
+use Throwable;
 
 class OrganizationSubscriber
 {
@@ -34,7 +35,8 @@ class OrganizationSubscriber
                     $organization->offices()->create(array_only($office, ['address', 'lon', 'lat']));
                 }
             }
-        } catch (\Throwable) {}
+        } catch (Throwable) {
+        }
     }
 
     /**
@@ -51,7 +53,7 @@ class OrganizationSubscriber
     }
 
     /**
-     * The events dispatcher
+     * The events dispatcher.
      *
      * @param Dispatcher $events
      * @noinspection PhpUnused

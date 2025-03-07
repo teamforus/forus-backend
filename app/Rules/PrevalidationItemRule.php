@@ -41,14 +41,14 @@ class PrevalidationItemRule extends BaseRule
     public function passes($attribute, $value): bool
     {
         if (!Str::startsWith($attribute, $this->prefix)) {
-            return $this->reject("Invalid record key!");
+            return $this->reject('Invalid record key!');
         }
 
         $key = substr($attribute, strlen($this->prefix));
 
         if (!$this->record_types->has($key) ||
             !in_array($key, $this->fund->requiredPrevalidationKeys(true, $this->recordValues), true)) {
-            return $this->reject("Invalid record key!");
+            return $this->reject('Invalid record key!');
         }
 
         if (!$this->fund) {
@@ -77,7 +77,7 @@ class PrevalidationItemRule extends BaseRule
             $builder->whereRelation('record_type', 'record_types.key', '=', $this->csv_primary_key);
             $builder->whereRelation('prevalidation', [
                 'identity_address' => auth()->id(),
-                'fund_id' => $this->fund->id
+                'fund_id' => $this->fund->id,
             ]);
         })->exists();
     }
@@ -90,7 +90,7 @@ class PrevalidationItemRule extends BaseRule
     private function validateRecord(string $key, $value): bool
     {
         /** @var FundCriterion $criterion */
-        $criterion = $this->fund->criteria->where(function(FundCriterion $criterion) use ($key) {
+        $criterion = $this->fund->criteria->where(function (FundCriterion $criterion) use ($key) {
             return
                 $criterion->record_type_key === $key &&
                 !$criterion->isExcludedByRules($this->recordValues);

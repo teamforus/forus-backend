@@ -12,7 +12,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseReimbursementEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     protected Reimbursement $reimbursement;
     protected ?Employee $employee;
@@ -36,7 +38,7 @@ abstract class BaseReimbursementEvent
     }
 
     /**
-     * Get the fund request
+     * Get the fund request.
      *
      * @return Reimbursement
      */

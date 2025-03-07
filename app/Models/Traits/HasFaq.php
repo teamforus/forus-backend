@@ -22,8 +22,8 @@ trait HasFaq
 
     /**
      * @param array|null $faq
-     * @return static
      * @throws Throwable
+     * @return static
      */
     public function syncFaqOptional(?array $faq = null): static
     {
@@ -32,8 +32,8 @@ trait HasFaq
 
     /**
      * @param array $faq
-     * @return static
      * @throws Throwable
+     * @return static
      */
     public function syncFaq(array $faq): static
     {
@@ -48,11 +48,11 @@ trait HasFaq
     }
 
     /**
-     * Update faq question or create new fund question
+     * Update faq question or create new fund question.
      *
      * @param array $question
-     * @return HasFaq|Model
      * @throws Throwable
+     * @return HasFaq|Model
      */
     protected function syncQuestion(array $question): Faq|Model
     {

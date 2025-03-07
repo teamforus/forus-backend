@@ -13,23 +13,10 @@ use App\Events\ReservationExtraPayments\ReservationExtraPaymentRefundedApi;
 use App\Events\ReservationExtraPayments\ReservationExtraPaymentUpdated;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Events\Dispatcher;
+use Throwable;
 
 class ReservationExtraPaymentSubscriber
 {
-    /**
-     * @param BaseReservationExtraPaymentEvent $event
-     * @param string $eventType
-     * @return EventLog
-     */
-    protected function makeEvent(BaseReservationExtraPaymentEvent $event, string $eventType): EventLog
-    {
-        return $event->getReservationExtraPayment()->log(
-            $eventType,
-            $event->getReservationExtraPayment()->getLogModels($event->getEmployee()),
-            $event->getData(),
-        );
-    }
-
     /**
      * @param ReservationExtraPaymentCreated $event
      * @noinspection PhpUnused
@@ -41,7 +28,7 @@ class ReservationExtraPaymentSubscriber
 
     /**
      * @param ReservationExtraPaymentCanceled $event
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function onReservationExtraPaymentCanceled(ReservationExtraPaymentCanceled $event): void
     {
@@ -58,7 +45,7 @@ class ReservationExtraPaymentSubscriber
 
     /**
      * @param ReservationExtraPaymentRefunded $event
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function onReservationExtraPaymentRefunded(ReservationExtraPaymentRefunded $event): void
     {
@@ -69,7 +56,7 @@ class ReservationExtraPaymentSubscriber
 
     /**
      * @param ReservationExtraPaymentRefundedApi $event
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function onReservationExtraPaymentRefundedApi(ReservationExtraPaymentRefundedApi $event): void
     {
@@ -78,7 +65,7 @@ class ReservationExtraPaymentSubscriber
 
     /**
      * @param ReservationExtraPaymentFailed $event
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function onReservationExtraPaymentFailed(ReservationExtraPaymentFailed $event): void
     {
@@ -87,7 +74,7 @@ class ReservationExtraPaymentSubscriber
 
     /**
      * @param ReservationExtraPaymentExpired $event
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function onReservationExtraPaymentExpired(ReservationExtraPaymentExpired $event): void
     {
@@ -96,7 +83,7 @@ class ReservationExtraPaymentSubscriber
 
     /**
      * @param ReservationExtraPaymentPaid $event
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function onReservationExtraPaymentPaid(ReservationExtraPaymentPaid $event): void
     {
@@ -104,7 +91,7 @@ class ReservationExtraPaymentSubscriber
     }
 
     /**
-     * The events dispatcher
+     * The events dispatcher.
      *
      * @param Dispatcher $events
      * @noinspection PhpUnused
@@ -121,5 +108,19 @@ class ReservationExtraPaymentSubscriber
         $events->listen(ReservationExtraPaymentFailed::class, "$class@onReservationExtraPaymentFailed");
         $events->listen(ReservationExtraPaymentExpired::class, "$class@onReservationExtraPaymentExpired");
         $events->listen(ReservationExtraPaymentRefundedApi::class, "$class@onReservationExtraPaymentRefundedApi");
+    }
+
+    /**
+     * @param BaseReservationExtraPaymentEvent $event
+     * @param string $eventType
+     * @return EventLog
+     */
+    protected function makeEvent(BaseReservationExtraPaymentEvent $event, string $eventType): EventLog
+    {
+        return $event->getReservationExtraPayment()->log(
+            $eventType,
+            $event->getReservationExtraPayment()->getLogModels($event->getEmployee()),
+            $event->getData(),
+        );
     }
 }

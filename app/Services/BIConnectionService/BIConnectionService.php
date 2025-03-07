@@ -24,7 +24,9 @@ class BIConnectionService
     /**
      * @param Organization $organization
      */
-    protected function __construct(protected Organization $organization) {}
+    protected function __construct(protected Organization $organization)
+    {
+    }
 
     /**
      * @param Organization $organization
@@ -41,7 +43,7 @@ class BIConnectionService
      */
     public static function getBIConnectionFromRequest(Request $request): ?static
     {
-        $organization = Organization::whereHas('bi_connection', function(Builder $builder) use ($request) {
+        $organization = Organization::whereHas('bi_connection', function (Builder $builder) use ($request) {
             $accessToken = $request->header(BIConnection::AUTH_TYPE_HEADER_NAME);
 
             $builder->where('enabled', true);
@@ -68,8 +70,8 @@ class BIConnectionService
     }
 
     /**
-     * @return array
      * @throws Throwable
+     * @return array
      */
     public function getDataArray(): array
     {
@@ -97,8 +99,8 @@ class BIConnectionService
     }
 
     /**
-     * @return array
      * @throws Throwable
+     * @return array
      */
     private function getData(): array
     {

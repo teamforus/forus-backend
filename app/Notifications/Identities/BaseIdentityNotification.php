@@ -3,6 +3,7 @@
 namespace App\Notifications\Identities;
 
 use App\Notifications\BaseNotification;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 
 abstract class BaseIdentityNotification extends BaseNotification
@@ -11,8 +12,8 @@ abstract class BaseIdentityNotification extends BaseNotification
 
     /**
      * @param Model $loggable
+     * @throws Exception
      * @return array
-     * @throws \Exception
      */
     public static function getMeta($loggable): array
     {

@@ -11,6 +11,7 @@ use App\Services\MollieService\Models\MollieConnection;
 use App\Services\MollieService\MollieServiceLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Throwable;
 
 class MollieController extends Controller
 {
@@ -35,14 +36,15 @@ class MollieController extends Controller
             ));
         } catch (MollieException $e) {
             MollieServiceLogger::logError('Failed to redirect the user after mollie sign-up', $e);
+
             return redirect(Implementation::general()->urlProviderDashboard());
         }
     }
 
     /**
      * @param WebhookMollieRequest $request
+     * @throws Throwable
      * @return JsonResponse
-     * @throws \Throwable
      */
     public function processWebhook(WebhookMollieRequest $request): JsonResponse
     {

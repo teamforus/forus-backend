@@ -4,25 +4,26 @@ namespace App\Services\MediaService;
 
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaPreset;
+use Exception;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Intervention\Image\ImageManager;
 
 class MediaImagePreset extends \App\Services\MediaService\MediaPreset
 {
     /**
-     * Preset image width
+     * Preset image width.
      * @var int
      */
     public int $width = 1000;
 
     /**
-     * Preset image height
+     * Preset image height.
      * @var ?int
      */
     public ?int $height = null;
 
     /**
-     * Keep media aspect ratio
+     * Keep media aspect ratio.
      * @var bool
      */
     public bool $preserve_aspect_ratio = true;
@@ -79,6 +80,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
     public function setTransparency(bool $allow = true): MediaImagePreset
     {
         $this->allow_transparency = $allow;
+
         return $this;
     }
 
@@ -87,9 +89,10 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @return $this
      * @noinspection PhpUnused
      */
-    public function setTransparencyBgColor(string $hex_color = "#ffffff"): MediaImagePreset
+    public function setTransparencyBgColor(string $hex_color = '#ffffff'): MediaImagePreset
     {
         $this->transparent_bg_color = $hex_color;
+
         return $this;
     }
 
@@ -100,6 +103,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
     public function setFormat(string $format = 'jpg'): self
     {
         $this->allow_transparency = $format;
+
         return $this;
     }
 
@@ -111,6 +115,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
     public function setPreserveAspectRatio(bool $preserve_aspect_ratio = true): self
     {
         $this->preserve_aspect_ratio = $preserve_aspect_ratio;
+
         return $this;
     }
 
@@ -126,7 +131,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
     }
 
     /**
-     * Use original image
+     * Use original image.
      *
      * @param string $name
      * @return MediaImagePreset
@@ -141,8 +146,8 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param Filesystem $storage
      * @param string $storagePath
      * @param Media $media
+     * @throws Exception
      * @return \Illuminate\Database\Eloquent\Model|mixed
-     * @throws \Exception
      */
     public function makePresetModel(
         string $sourcePath,
@@ -174,18 +179,21 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
                 )->fill($this->transparent_bg_color)->place($image);
             }
 
-            $storage->put($outPath, $image->encodeByMediaType(
-                "image/$format",
-                quality: $this->quality)->toFilePointer(),
+            $storage->put(
+                $outPath,
+                $image->encodeByMediaType(
+                    "image/$format",
+                    quality: $this->quality
+                )->toFilePointer(),
                 'public',
             );
         }
 
         // media size row create
         return tap($media->presets()->firstOrCreate([
-            'key'  => $this->name
+            'key' => $this->name,
         ]))->update([
-            'path' => $outPath
+            'path' => $outPath,
         ]);
     }
 
@@ -194,8 +202,8 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $storagePath
      * @param MediaPreset $presetModel
      * @param Media $media
+     * @throws Exception
      * @return MediaPreset
-     * @throws \Exception
      */
     public function copyPresetModel(
         Filesystem $storage,
@@ -209,8 +217,8 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
 
         // media size row create
         return $media->presets()->create([
-            'key'   => $presetModel->key,
-            'path'  => $outPath
+            'key' => $presetModel->key,
+            'path' => $outPath,
         ]);
     }
 
@@ -231,6 +239,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
     public function setUseOriginal(bool $use_original): self
     {
         $this->use_original = $use_original;
+
         return $this;
     }
 }

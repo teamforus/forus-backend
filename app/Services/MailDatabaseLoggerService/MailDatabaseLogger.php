@@ -72,6 +72,14 @@ class MailDatabaseLogger
     }
 
     /**
+     * @return Filesystem
+     */
+    public function storage(): Filesystem
+    {
+        return resolve('filesystem')->disk($this->storageDriver);
+    }
+
+    /**
      * Collect all attachments and format them as strings.
      *
      * @param EmailLog $emailLog
@@ -114,14 +122,6 @@ class MailDatabaseLogger
             'content_id' => null,
             'content_type' => 'message/rfc822',
         ]);
-    }
-
-    /**
-     * @return Filesystem
-     */
-    public function storage(): Filesystem
-    {
-        return resolve('filesystem')->disk($this->storageDriver);
     }
 
     /**

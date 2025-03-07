@@ -4,6 +4,7 @@ namespace App\Services\Forus\Session\Middleware;
 
 use App\Http\Requests\BaseFormRequest;
 use Closure;
+use Exception;
 use Illuminate\Http\Request;
 
 class ForusSessionMiddleware
@@ -12,9 +13,9 @@ class ForusSessionMiddleware
      * Handle an incoming request.
      *
      * @param \Illuminate\Http\Request $request
-     * @param \Closure $next
+     * @param Closure $next
+     * @throws Exception
      * @return mixed
-     * @throws \Exception
      */
     public function handle(Request $request, Closure $next): mixed
     {

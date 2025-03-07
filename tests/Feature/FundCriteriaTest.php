@@ -5,9 +5,9 @@ namespace Tests\Feature;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
-use App\Models\Identity;
 use App\Models\RecordType;
 use App\Models\Voucher;
+use Exception;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
@@ -20,6 +20,7 @@ use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
+use Throwable;
 
 class FundCriteriaTest extends TestCase
 {
@@ -52,9 +53,9 @@ class FundCriteriaTest extends TestCase
     protected $dateFormat = 'd-m-Y';
 
     /**
-     * Test basic value type and min/max range
+     * Test basic value type and min/max range.
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testCriterionUpdate(): void
     {
@@ -86,9 +87,9 @@ class FundCriteriaTest extends TestCase
     }
 
     /**
-     * Test value is within min and max
+     * Test value is within min and max.
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testCriterionUpdateValueRange(): void
     {
@@ -150,8 +151,8 @@ class FundCriteriaTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testCriterionCreateAndUpdate(): void
     {
@@ -208,8 +209,8 @@ class FundCriteriaTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testCriterionUpdateTextsAfterStart(): void
     {
@@ -254,7 +255,6 @@ class FundCriteriaTest extends TestCase
             ->assertJson(['data' => ['criteria' => [$criterionData2]]])
             ->assertJsonCount(1, 'data.criteria');
 
-
         // change back to original
         $this->updateCriteriaRequest([$criterionData], $fund)
             ->assertSuccessful()
@@ -294,8 +294,8 @@ class FundCriteriaTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testFundRequestRecordsApplySuccess(): void
     {
@@ -305,15 +305,15 @@ class FundCriteriaTest extends TestCase
         $this->addTestCriteriaToFund($fund);
 
         $response = $this->makeFundRequest($identity, $fund, [
-            $this->makeRequestCriterionValue($fund, "test_bool", 'Ja'),
-            $this->makeRequestCriterionValue($fund, "test_iban", fake()->iban),
-            $this->makeRequestCriterionValue($fund, "test_date", '01-01-2010'),
-            $this->makeRequestCriterionValue($fund, "test_email", fake()->email),
-            $this->makeRequestCriterionValue($fund, "test_string", 'lorem_ipsum'),
-            $this->makeRequestCriterionValue($fund, "test_string_any", 'ipsum_lorem'),
-            $this->makeRequestCriterionValue($fund, "test_number", 7),
-            $this->makeRequestCriterionValue($fund, "test_select", 'foo'),
-            $this->makeRequestCriterionValue($fund, "test_select_number", 2),
+            $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
+            $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email),
+            $this->makeRequestCriterionValue($fund, 'test_string', 'lorem_ipsum'),
+            $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
+            $this->makeRequestCriterionValue($fund, 'test_number', 7),
+            $this->makeRequestCriterionValue($fund, 'test_select', 'foo'),
+            $this->makeRequestCriterionValue($fund, 'test_select_number', 2),
         ], false);
 
         $response->assertSuccessful();
@@ -341,11 +341,11 @@ class FundCriteriaTest extends TestCase
         $this->assertNotNull($budgetVoucher);
         $this->assertEquals($budgetVoucher->amount, $totalFormulaAmount + $totalFormulaProductsAmount);
         $this->assertFundFormulaProductVouchersCreatedByMainVoucher($budgetVoucher);
-}
+    }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testStoreSinglePrevalidationByRedeem()
     {
@@ -353,8 +353,8 @@ class FundCriteriaTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testStoreSinglePrevalidationByApply()
     {
@@ -363,8 +363,8 @@ class FundCriteriaTest extends TestCase
 
     /**
      * @param bool $assertRedeem
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function assertPrevalidationSuccess(bool $assertRedeem = true): void
     {
@@ -403,8 +403,8 @@ class FundCriteriaTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testPrevalidationCheckSuccess(): void
     {
@@ -449,14 +449,14 @@ class FundCriteriaTest extends TestCase
         $this->addTestCriteriaToFund($fund);
 
         $records = [
-            $this->makeRequestCriterionValue($fund, "test_bool", 'Nee'),
-            $this->makeRequestCriterionValue($fund, "test_iban", fake()->name),
-            $this->makeRequestCriterionValue($fund, "test_date", '2010-01-01'),
-            $this->makeRequestCriterionValue($fund, "test_email", fake()->name),
-            $this->makeRequestCriterionValue($fund, "test_string", 'ipsum_lorem'),
-            $this->makeRequestCriterionValue($fund, "test_number", 5),
-            $this->makeRequestCriterionValue($fund, "test_select", 'bar'),
-            $this->makeRequestCriterionValue($fund, "test_select_number", 1),
+            $this->makeRequestCriterionValue($fund, 'test_bool', 'Nee'),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->name),
+            $this->makeRequestCriterionValue($fund, 'test_date', '2010-01-01'),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->name),
+            $this->makeRequestCriterionValue($fund, 'test_string', 'ipsum_lorem'),
+            $this->makeRequestCriterionValue($fund, 'test_number', 5),
+            $this->makeRequestCriterionValue($fund, 'test_select', 'bar'),
+            $this->makeRequestCriterionValue($fund, 'test_select_number', 1),
         ];
 
         $errors = array_map(fn ($index) => "records.$index.value", range(0, count($records) - 1));
@@ -476,10 +476,10 @@ class FundCriteriaTest extends TestCase
         $this->addTestCriteriaToFund($fund);
 
         $records = [
-            $this->makeRequestCriterionValue($fund, "test_date", '01-01-1995'),
-            $this->makeRequestCriterionValue($fund, "test_string", 'test'),
-            $this->makeRequestCriterionValue($fund, "test_string_any", 'test'),
-            $this->makeRequestCriterionValue($fund, "test_number", 4),
+            $this->makeRequestCriterionValue($fund, 'test_date', '01-01-1995'),
+            $this->makeRequestCriterionValue($fund, 'test_string', 'test'),
+            $this->makeRequestCriterionValue($fund, 'test_string_any', 'test'),
+            $this->makeRequestCriterionValue($fund, 'test_number', 4),
         ];
 
         $errors = array_map(fn ($index) => "records.$index.value", range(0, count($records) - 1));
@@ -499,10 +499,10 @@ class FundCriteriaTest extends TestCase
         $this->addTestCriteriaToFund($fund);
 
         $records = [
-            $this->makeRequestCriterionValue($fund, "test_date", '01-01-2030'),
-            $this->makeRequestCriterionValue($fund, "test_string", fake()->text(100)),
-            $this->makeRequestCriterionValue($fund, "test_string_any", fake()->text(100)),
-            $this->makeRequestCriterionValue($fund, "test_number", 15),
+            $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2030'),
+            $this->makeRequestCriterionValue($fund, 'test_string', fake()->text(100)),
+            $this->makeRequestCriterionValue($fund, 'test_string_any', fake()->text(100)),
+            $this->makeRequestCriterionValue($fund, 'test_number', 15),
         ];
 
         $errors = array_map(fn ($index) => "records.$index.value", range(0, count($records) - 1));
@@ -525,15 +525,15 @@ class FundCriteriaTest extends TestCase
         ]);
 
         $records = [
-            $this->makeRequestCriterionValue($fund, "test_bool", null),
-            $this->makeRequestCriterionValue($fund, "test_iban", null),
-            $this->makeRequestCriterionValue($fund, "test_date", null),
-            $this->makeRequestCriterionValue($fund, "test_email", null),
-            $this->makeRequestCriterionValue($fund, "test_string", null),
-            $this->makeRequestCriterionValue($fund, "test_string_any", null),
-            $this->makeRequestCriterionValue($fund, "test_number", null),
-            $this->makeRequestCriterionValue($fund, "test_select", null),
-            $this->makeRequestCriterionValue($fund, "test_select_number", null),
+            $this->makeRequestCriterionValue($fund, 'test_bool', null),
+            $this->makeRequestCriterionValue($fund, 'test_iban', null),
+            $this->makeRequestCriterionValue($fund, 'test_date', null),
+            $this->makeRequestCriterionValue($fund, 'test_email', null),
+            $this->makeRequestCriterionValue($fund, 'test_string', null),
+            $this->makeRequestCriterionValue($fund, 'test_string_any', null),
+            $this->makeRequestCriterionValue($fund, 'test_number', null),
+            $this->makeRequestCriterionValue($fund, 'test_select', null),
+            $this->makeRequestCriterionValue($fund, 'test_select_number', null),
         ];
 
         $response = $this->makeFundRequest($identity, $fund, $records, false);
@@ -561,7 +561,7 @@ class FundCriteriaTest extends TestCase
         ]);
 
         $records = [[
-            ...$this->makeRequestCriterionValue($fund, "test_date", '01-01-2015'),
+            ...$this->makeRequestCriterionValue($fund, 'test_date', '01-01-2015'),
             'files' => [$fileModel->uid],
         ]];
 
@@ -572,8 +572,8 @@ class FundCriteriaTest extends TestCase
     /**
      * @param RecordType $recordType
      * @param bool $valid
+     * @throws Exception
      * @return string|null
-     * @throws \Exception
      */
     protected function makeCriterionValue(RecordType $recordType, bool $valid = true): ?string
     {
@@ -617,12 +617,12 @@ class FundCriteriaTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return RecordType[] array
-     * @throws \Exception
      */
     protected function makeRecordTypes(): array
     {
-        return Arr::keyBy(array_map(fn(string $type) => RecordType::create([
+        return Arr::keyBy(array_map(fn (string $type) => RecordType::create([
             'type' => $type,
             'name' => $type . random_int(10000, 99999),
             'key' => $type . random_int(10000, 99999),

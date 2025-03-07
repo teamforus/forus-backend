@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services\DigIdService\Repositories\Interfaces;
 
 use App\Services\DigIdService\DigIdException;

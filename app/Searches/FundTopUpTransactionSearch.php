@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Searches;
 
 use App\Models\BankConnectionAccount;
@@ -42,29 +41,14 @@ class FundTopUpTransactionSearch extends BaseSearch
         }
 
         if ($this->hasFilter('from')) {
-            $builder->where('created_at','>=', $this->getFilterDate('from')->startOfDay());
+            $builder->where('created_at', '>=', $this->getFilterDate('from')->startOfDay());
         }
 
         if ($this->hasFilter('to')) {
-            $builder->where('created_at','<=', $this->getFilterDate('to')->endOfDay());
+            $builder->where('created_at', '<=', $this->getFilterDate('to')->endOfDay());
         }
 
         return $this->order($builder);
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    protected function order(Builder $builder): Builder
-    {
-        $orderBy = $this->getFilter('order_by', 'created_at');
-        $orderDir = $this->getFilter('order_dir', 'desc');
-
-        $builder = $this->appendSortableFields($builder, $orderBy);
-        $builder = FundTopUpTransaction::query()->fromSub($builder, 'fund_top_up_transactions');
-
-        return $builder->orderBy($orderBy, $orderDir);
     }
 
     /**
@@ -91,5 +75,20 @@ class FundTopUpTransactionSearch extends BaseSearch
         return $builder->addSelect($subQuery ? [
             $orderBy => $subQuery,
         ] : []);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    protected function order(Builder $builder): Builder
+    {
+        $orderBy = $this->getFilter('order_by', 'created_at');
+        $orderDir = $this->getFilter('order_dir', 'desc');
+
+        $builder = $this->appendSortableFields($builder, $orderBy);
+        $builder = FundTopUpTransaction::query()->fromSub($builder, 'fund_top_up_transactions');
+
+        return $builder->orderBy($orderBy, $orderDir);
     }
 }

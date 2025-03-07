@@ -40,7 +40,7 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
         foreach ($value as $index => $file) {
             $validation = Validation::check($file, [
                 $this->isRequiredRule($criterion),
-                Rule::exists('files', 'uid')->where(function(Builder|File $builder) {
+                Rule::exists('files', 'uid')->where(function (Builder|File $builder) {
                     $builder->where('identity_address', $this->request->auth_address());
                     $builder->where('type', 'fund_request_record_proof');
                     $builder->whereNull('fileable_type');

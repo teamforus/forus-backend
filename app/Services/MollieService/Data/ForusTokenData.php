@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Config;
 use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Token\AccessTokenInterface;
 
-class ForusTokenData implements MollieToken {
+class ForusTokenData implements MollieToken
+{
     /**
      * @return string|null
      */
@@ -28,12 +29,16 @@ class ForusTokenData implements MollieToken {
      * @param AccessTokenInterface|AccessToken $token
      * @return void
      */
-    public function setAccessToken(AccessTokenInterface|AccessToken $token): void {}
+    public function setAccessToken(AccessTokenInterface|AccessToken $token): void
+    {
+    }
 
     /**
      * @return void
      */
-    public function deleteToken(): void {}
+    public function deleteToken(): void
+    {
+    }
 
     /**
      * @return bool

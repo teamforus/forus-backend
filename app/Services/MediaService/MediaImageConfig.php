@@ -41,7 +41,7 @@ abstract class MediaImageConfig extends MediaConfig
                 $file->close();
             } catch (Throwable $e) {
                 logger()->error(sprintf(
-                    "Could not generate dominant color for media %s, go error: %s",
+                    'Could not generate dominant color for media %s, go error: %s',
                     $media->id,
                     $e->getMessage()
                 ));

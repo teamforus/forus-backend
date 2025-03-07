@@ -32,7 +32,7 @@ class EmployeeResource extends BaseJsonResource
             'id', 'identity_address', 'organization_id', 'office_id',
         ]), [
             'roles' => RoleResource::collection($employee->roles),
-            'permissions' => array_unique($employee->roles->reduce(function(array $list, Role $role) {
+            'permissions' => array_unique($employee->roles->reduce(function (array $list, Role $role) {
                 return array_merge($list, $role->permissions->pluck('key')->toArray());
             }, [])),
             'email' => $employee->identity?->email,

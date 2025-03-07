@@ -7,7 +7,7 @@ return [
     | Export Language Lines
     |--------------------------------------------------------------------------
     |
-    | The following language lines contain the default headers for exporting the list of 
+    | The following language lines contain the default headers for exporting the list of
     |   - Providers used by the sponsor class.
     |   - Transactions used by the sponsor and provider class
     | Some of these rules have multiple versions such
@@ -65,7 +65,7 @@ return [
             'success' => 'voltooid',
             'pending' => 'in afwachting',
             'canceled' => 'geannuleerd',
-        ]
+        ],
     ],
 
     'voucher_transactions_bulks' => [
@@ -75,7 +75,7 @@ return [
             'pending' => 'In afwachting',
             'accepted' => 'Geaccepteerd',
             'rejected' => 'Geweigerd',
-        ]
+        ],
     ],
 
     'prevalidations' => [

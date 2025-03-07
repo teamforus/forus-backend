@@ -3,8 +3,8 @@
 namespace Tests\Traits;
 
 use App\Models\Fund;
-use App\Models\Voucher;
 use App\Models\Organization;
+use App\Models\Voucher;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,7 +27,7 @@ trait MakesVoucherTransaction
 
         $builder->where('balance', '>', 0);
 
-        return $builder->whereHas('fund', function(Builder $builder) use ($organization) {
+        return $builder->whereHas('fund', function (Builder $builder) use ($organization) {
             $builder->whereRelation('fund_config', 'allow_direct_payments', true);
 
             FundQuery::whereIsInternalConfiguredAndActive($builder->where([

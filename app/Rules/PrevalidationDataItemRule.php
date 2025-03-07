@@ -20,7 +20,8 @@ class PrevalidationDataItemRule extends BaseRule
         protected Collection $recordTypes,
         protected ?Fund $fund = null,
         protected ?array $data = []
-    ) {}
+    ) {
+    }
 
     /**
      * Determine if the validation rule passes.
@@ -59,7 +60,7 @@ class PrevalidationDataItemRule extends BaseRule
     private function validateRecord(string $key, mixed $value, array $values): bool
     {
         /** @var FundCriterion $criterion */
-        $criterion = $this->fund->criteria->where(function(FundCriterion $criterion) use ($key, $values) {
+        $criterion = $this->fund->criteria->where(function (FundCriterion $criterion) use ($key, $values) {
             return
                 $criterion->record_type_key === $key &&
                 !$criterion->isExcludedByRules($values);

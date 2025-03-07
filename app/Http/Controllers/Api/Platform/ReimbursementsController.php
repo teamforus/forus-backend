@@ -12,6 +12,7 @@ use App\Http\Resources\ReimbursementResource;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Searches\ReimbursementsSearch;
+use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -22,8 +23,8 @@ class ReimbursementsController extends Controller
      * Display a listing of the resource.
      *
      * @param IndexReimbursementsRequest $request
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(IndexReimbursementsRequest $request): AnonymousResourceCollection
     {
@@ -42,9 +43,9 @@ class ReimbursementsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param StoreReimbursementRequest $request
-     * @return ReimbursementResource
      * @throws AuthorizationException
-     * @throws \Exception
+     * @throws Exception
+     * @return ReimbursementResource
      */
     public function store(StoreReimbursementRequest $request): ReimbursementResource
     {
@@ -91,8 +92,8 @@ class ReimbursementsController extends Controller
      *
      * @param UpdateReimbursementRequest $request
      * @param Reimbursement $reimbursement
-     * @return ReimbursementResource
      * @throws AuthorizationException
+     * @return ReimbursementResource
      */
     public function update(
         UpdateReimbursementRequest $request,

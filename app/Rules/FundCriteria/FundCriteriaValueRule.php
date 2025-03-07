@@ -35,13 +35,13 @@ class FundCriteriaValueRule extends BaseFundCriteriaRule
         $validation = match ($recordType->type) {
             $recordType::TYPE_STRING => Validation::check($value, implode([
                 'required|string',
-                is_numeric($min) ? "|min:$min" : "",
-                is_numeric($max) ? "|max:$max" : "",
+                is_numeric($min) ? "|min:$min" : '',
+                is_numeric($max) ? "|max:$max" : '',
             ])),
             $recordType::TYPE_NUMBER => Validation::check($value, implode([
                 'required|numeric',
-                is_numeric($min) ? "|min:$min" : "",
-                is_numeric($max) ? "|max:$max" : "",
+                is_numeric($min) ? "|min:$min" : '',
+                is_numeric($max) ? "|max:$max" : '',
             ])),
             $recordType::TYPE_SELECT,
             $recordType::TYPE_SELECT_NUMBER => Validation::check($value, [
@@ -53,8 +53,8 @@ class FundCriteriaValueRule extends BaseFundCriteriaRule
             $recordType::TYPE_BOOL => Validation::check($value, ['nullable', Rule::in(['Ja', 'Nee'])]),
             $recordType::TYPE_DATE => Validation::check($value, implode('', [
                 "nullable|date|date_format:$this->dateFormat",
-                $this->isValidDate($min) ? "|after_or_equal:$min" : "",
-                $this->isValidDate($max) ? "|before_or_equal:$max" : "",
+                $this->isValidDate($min) ? "|after_or_equal:$min" : '',
+                $this->isValidDate($max) ? "|before_or_equal:$max" : '',
             ])),
             default => Validation::check('', ['required', Rule::in([])]),
         };

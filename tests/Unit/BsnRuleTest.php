@@ -11,7 +11,9 @@ use Tests\TestCase;
 
 class BsnRuleTest extends TestCase
 {
-    use DoesTesting, DatabaseTransactions, CreatesApplication;
+    use DoesTesting;
+    use DatabaseTransactions;
+    use CreatesApplication;
 
     /**
      * A basic unit test example.

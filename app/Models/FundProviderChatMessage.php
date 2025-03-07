@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Models\FundProviderChatMessage
+ * App\Models\FundProviderChatMessage.
  *
  * @property int $id
  * @property int $fund_provider_chat_id
@@ -36,6 +36,12 @@ use Illuminate\Database\Eloquent\Model;
 class FundProviderChatMessage extends Model
 {
     /**
+     * @var array
+     */
+    public $timestamps = [
+        'seen_at',
+    ];
+    /**
      * @var int
      */
     protected $perPage = 20;
@@ -45,14 +51,7 @@ class FundProviderChatMessage extends Model
      */
     protected $fillable = [
         'fund_provider_chat_id', 'message', 'identity_address',
-        'counterpart', 'seen_at', 'sponsor_seen', 'provider_seen'
-    ];
-
-    /**
-     * @var array
-     */
-    public $timestamps = [
-        'seen_at'
+        'counterpart', 'seen_at', 'sponsor_seen', 'provider_seen',
     ];
 
     /**
@@ -66,7 +65,8 @@ class FundProviderChatMessage extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund_provider_chat() {
+    public function fund_provider_chat()
+    {
         return $this->belongsTo(FundProviderChat::class);
     }
 }

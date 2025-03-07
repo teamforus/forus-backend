@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Models\OrganizationReservationField
+ * App\Models\OrganizationReservationField.
  *
  * @property int $id
  * @property int $organization_id

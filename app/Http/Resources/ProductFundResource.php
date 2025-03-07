@@ -23,7 +23,7 @@ class ProductFundResource extends BaseJsonResource
         'organization.bank_connection_active',
         'organization.tags.translations',
         'organization.offices',
-        'fund_config.implementation.page_provider'
+        'fund_config.implementation.page_provider',
     ];
 
     /**

@@ -1,14 +1,13 @@
 <?php
 
-use App\Services\EventLogService\Interfaces\IEventLogService;
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Voucher;
+use App\Services\EventLogService\Interfaces\IEventLogService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     protected mixed $logService;
 
     public function __construct()
@@ -23,21 +22,32 @@ return new class extends Migration
      */
     public function up(): void
     {
-        /** @var Voucher[]|Collection $vouchers
-        $vouchers = Voucher::whereNotNull('employee_id')->get()->load([
-            'employee' => function($builder) {
-                /** @var Builder|SoftDeletes $builder 
-                $builder->withTrashed();
-            },
-            'fund.organization.employees' => function($builder) {
-                /** @var Builder|SoftDeletes $builder 
-                $builder->withTrashed();
-            },
-        ]);
+        /**
+         * @var Voucher[]|Collection $vouchers
+         * $vouchers = Voucher::whereNotNull('employee_id')->get()->load([
+         * 'employee' => function($builder) {
+         * /** @var Builder|SoftDeletes $builder
+         * $builder->withTrashed();
+         * },
+         * 'fund.organization.employees' => function($builder) {
+         * /** @var Builder|SoftDeletes $builder
+         * $builder->withTrashed();
+         * },
+         * ]);
+         *
+         * foreach ($vouchers as $voucher) {
+         * $this->migrateVoucher($voucher);
+         * }
+         */
+    }
 
-        foreach ($vouchers as $voucher) {
-            $this->migrateVoucher($voucher);
-        }*/
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down(): void
+    {
     }
 
     /**
@@ -62,7 +72,7 @@ return new class extends Migration
             }
 
             $employeeMeta = collect($this->logService->modelToMeta('employee', $employee));
-            $employeeMeta = $employeeMeta->mapWithKeys(function($value, $key) {
+            $employeeMeta = $employeeMeta->mapWithKeys(function ($value, $key) {
                 return ['data->' . $key => $value];
             })->toArray();
 
@@ -71,11 +81,4 @@ return new class extends Migration
             echo "Could not find the employee for voucher: $voucher->id\n";
         }
     }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down(): void {}
 };

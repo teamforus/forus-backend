@@ -3,7 +3,7 @@
 namespace App\Models;
 
 /**
- * App\Models\DemoTransaction
+ * App\Models\DemoTransaction.
  *
  * @property int $id
  * @property string $token
@@ -22,14 +22,14 @@ namespace App\Models;
  */
 class DemoTransaction extends BaseModel
 {
-    const string STATE_PENDING  = 'pending';
-    const string STATE_ACCEPTED = 'accepted';
-    const string STATE_REJECTED = 'rejected';
+    public const string STATE_PENDING = 'pending';
+    public const string STATE_ACCEPTED = 'accepted';
+    public const string STATE_REJECTED = 'rejected';
 
-    const array STATES = [
+    public const array STATES = [
         self::STATE_PENDING,
         self::STATE_ACCEPTED,
-        self::STATE_REJECTED
+        self::STATE_REJECTED,
     ];
 
     /**

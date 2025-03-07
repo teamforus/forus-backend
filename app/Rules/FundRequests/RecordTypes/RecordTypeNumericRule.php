@@ -11,7 +11,7 @@ class RecordTypeNumericRule extends BaseRecordTypeRule
     {
         return array_filter([
             $this->isRequiredRule(),
-            "numeric",
+            'numeric',
             is_numeric($this->criterion->min) ? "min:{$this->criterion->min}" : null,
             is_numeric($this->criterion->max) ? "max:{$this->criterion->max}" : null,
             $this->getLengthRule(),

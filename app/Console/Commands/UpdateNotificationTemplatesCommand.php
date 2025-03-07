@@ -31,6 +31,6 @@ class UpdateNotificationTemplatesCommand extends Command
      */
     public function handle(): void
     {
-        (new NotificationTemplatesTableSeeder())->execute($this, (boolean) $this->option('force'));
+        (new NotificationTemplatesTableSeeder())->execute($this, (bool) $this->option('force'));
     }
 }

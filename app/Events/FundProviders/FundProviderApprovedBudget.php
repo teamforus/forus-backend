@@ -2,4 +2,6 @@
 
 namespace App\Events\FundProviders;
 
-class FundProviderApprovedBudget extends BaseFundProviderEvent {}
+class FundProviderApprovedBudget extends BaseFundProviderEvent
+{
+}

@@ -109,9 +109,9 @@ class SamlArtifactResponse
     }
 
     /**
-     * @return Assertion|null
      * @throws Saml2Exception
      * @throws Throwable
+     * @return Assertion|null
      */
     protected function processArtifactResponseBody(): ?array
     {
@@ -148,8 +148,8 @@ class SamlArtifactResponse
      *
      * @param XMLSecurityKey $key
      * @param SignedElement $element
-     * @return bool
      * @throws Saml2Exception
+     * @return bool
      */
     protected function checkSign(XMLSecurityKey $key, SignedElement $element): bool
     {
@@ -181,8 +181,8 @@ class SamlArtifactResponse
 
     /**
      * @param Assertion $assertion
-     * @return void
      * @throws Saml2Exception
+     * @return void
      */
     protected function checkAssertionTime(Assertion $assertion): void
     {
@@ -224,8 +224,8 @@ class SamlArtifactResponse
 
     /**
      * @param Assertion $assertion
-     * @return void
      * @throws Saml2Exception
+     * @return void
      */
     protected function checkAssertionAudience(Assertion $assertion): void
     {
@@ -236,15 +236,15 @@ class SamlArtifactResponse
         if ($audiences !== null && !in_array($spId, $audiences, true)) {
             throw new Saml2Exception(implode(' ', [
                 "This SP [$spId] is not a valid audience for the assertion.",
-                "Candidates were: [$audienceList]."
+                "Candidates were: [$audienceList].",
             ]));
         }
     }
 
     /**
      * @param Assertion $assertion
-     * @return void
      * @throws Saml2Exception
+     * @return void
      */
     protected function checkAssertionSubjectConfirmation(Assertion $assertion): void
     {
@@ -255,11 +255,11 @@ class SamlArtifactResponse
             $subjectConfirmationData = $sc->getSubjectConfirmationData();
 
             if (!in_array($method, $validSCMethods, true)) {
-                throw new Saml2Exception("Invalid Method on SubjectConfirmation " . var_export($method, true) . ".");
+                throw new Saml2Exception('Invalid Method on SubjectConfirmation ' . var_export($method, true) . '.');
             }
 
             if ($subjectConfirmationData === null) {
-                throw new Saml2Exception("No SubjectConfirmationData provided.");
+                throw new Saml2Exception('No SubjectConfirmationData provided.');
             }
 
             $this->checkAssertionSubjectConfirmationData($subjectConfirmationData);
@@ -268,8 +268,8 @@ class SamlArtifactResponse
 
     /**
      * @param SubjectConfirmationData $scd
-     * @return void
      * @throws Saml2Exception
+     * @return void
      */
     protected function checkAssertionSubjectConfirmationData(SubjectConfirmationData $scd): void
     {
@@ -290,14 +290,14 @@ class SamlArtifactResponse
 
         if ($recipient !== null && $recipient !== $currentURL) {
             throw new Saml2Exception(implode(' ', [
-                "Recipient in SubjectConfirmationData does not match the current URL.",
-                "Recipient is [$recipient], current URL is [$currentURL]."
+                'Recipient in SubjectConfirmationData does not match the current URL.',
+                "Recipient is [$recipient], current URL is [$currentURL].",
             ]));
         }
 
         if ($inResponseTo !== null && $requestInResponseTo !== null && $inResponseTo !== $requestInResponseTo) {
             throw new Saml2Exception(implode(' ', [
-                "InResponseTo in SubjectConfirmationData does not match the Response.",
+                'InResponseTo in SubjectConfirmationData does not match the Response.',
                 "Response has $requestInResponseTo, SubjectConfirmationData has [$inResponseTo].",
             ]));
         }

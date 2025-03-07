@@ -11,8 +11,8 @@ class RequestPhysicalCardMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_identities.voucher_physical_card_requested';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

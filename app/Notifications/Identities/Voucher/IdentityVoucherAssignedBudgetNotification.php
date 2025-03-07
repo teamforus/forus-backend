@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\Voucher;
 
 /**
- * Budget voucher was assigned to identity
+ * Budget voucher was assigned to identity.
  */
 class IdentityVoucherAssignedBudgetNotification extends BaseIdentityVoucherNotification
 {

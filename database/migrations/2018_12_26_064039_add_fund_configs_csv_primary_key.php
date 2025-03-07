@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -19,12 +18,15 @@ return new class extends Migration
 
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->string('csv_primary_key')->after('bunq_sandbox')->nullable();
-            $table->foreign('csv_primary_key'
-            )->references('key')->on('record_types')->onDelete('set null');
+
+            $table->foreign('csv_primary_key')
+                ->references('key')
+                ->on('record_types')
+                ->onDelete('set null');
         });
 
         DB::table('fund_configs')->update([
-            'csv_primary_key' => 'bsn'
+            'csv_primary_key' => 'bsn',
         ]);
     }
 
@@ -35,7 +37,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('fund_configs', function(Blueprint $table) {
+        Schema::table('fund_configs', function (Blueprint $table) {
             $table->dropForeign('fund_configs_csv_primary_key_foreign');
             $table->dropColumn('csv_primary_key');
         });

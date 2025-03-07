@@ -11,8 +11,8 @@ class ReimbursementDeclinedMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_identities.reimbursement_declined';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

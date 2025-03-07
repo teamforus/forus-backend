@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Fund;
 
 /**
- * Notify that the provider was approved to sell all their products
+ * Notify that the provider was approved to sell all their products.
  */
 class IdentityRequesterProviderApprovedProductsNotification extends BaseIdentityFundNotification
 {

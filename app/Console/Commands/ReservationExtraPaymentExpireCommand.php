@@ -40,15 +40,16 @@ class ReservationExtraPaymentExpireCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function handle(): void
     {
         foreach ($this->getReservationsWithExpiredExtraPaymentsQuery()->get() as $reservation) {
             try {
                 $reservation->cancelByState($reservation::STATE_CANCELED_PAYMENT_EXPIRED);
-            } catch (Throwable) {}
+            } catch (Throwable) {
+            }
         }
     }
 

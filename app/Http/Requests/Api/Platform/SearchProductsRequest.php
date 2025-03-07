@@ -26,20 +26,20 @@ class SearchProductsRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'q'                     => 'nullable|string|max:100',
-            'unlimited_stock'       => 'nullable|boolean',
-            'perice_type'           => 'nullable|string|in:' . join(',', Product::PRICE_TYPES),
-            'show_all'              => 'nullable|boolean',
-            'per_page'              => 'nullable|numeric|max:1000',
-            'fund_id'               => 'nullable|exists:funds,id',
-            'product_category_id'   => 'nullable|exists:product_categories,id',
-            'fund_type'             => 'nullable|in:' . implode(',', Fund::TYPES),
-            'order_by'              => 'nullable|in:name,created_at,price_min,price_max,price,most_popular',
-            'order_dir'             => 'nullable|in:asc,desc',
-            'simplified'            => 'nullable|bool',
-            'postcode'              => 'nullable|string|max:100',
-            'distance'              => 'nullable|integer|max:1000',
-            'bookmarked'            => 'nullable|bool',
+            'q' => 'nullable|string|max:100',
+            'unlimited_stock' => 'nullable|boolean',
+            'perice_type' => 'nullable|string|in:' . implode(',', Product::PRICE_TYPES),
+            'show_all' => 'nullable|boolean',
+            'per_page' => 'nullable|numeric|max:1000',
+            'fund_id' => 'nullable|exists:funds,id',
+            'product_category_id' => 'nullable|exists:product_categories,id',
+            'fund_type' => 'nullable|in:' . implode(',', Fund::TYPES),
+            'order_by' => 'nullable|in:name,created_at,price_min,price_max,price,most_popular',
+            'order_dir' => 'nullable|in:asc,desc',
+            'simplified' => 'nullable|bool',
+            'postcode' => 'nullable|string|max:100',
+            'distance' => 'nullable|integer|max:1000',
+            'bookmarked' => 'nullable|bool',
         ];
     }
 }

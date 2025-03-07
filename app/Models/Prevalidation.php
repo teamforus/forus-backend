@@ -16,7 +16,7 @@ use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Support\Collection;
 
 /**
- * App\Models\Prevalidation
+ * App\Models\Prevalidation.
  *
  * @property int $id
  * @property string|null $uid
@@ -64,14 +64,15 @@ use Illuminate\Support\Collection;
  */
 class Prevalidation extends BaseModel
 {
-    use SoftDeletes, HasDbTokens;
+    use SoftDeletes;
+    use HasDbTokens;
 
     public const string STATE_PENDING = 'pending';
     public const string STATE_USED = 'used';
 
     public const array STATES = [
         self::STATE_PENDING,
-        self::STATE_USED
+        self::STATE_USED,
     ];
 
     /**
@@ -124,16 +125,16 @@ class Prevalidation extends BaseModel
         /** @var Prevalidation[]|\Illuminate\Database\Eloquent\Collection $prevalidations */
         $prevalidations = $query->where(function (Builder $query) use ($identity) {
             // Where BSN record match
-            $query->whereHas('prevalidation_records', fn(Builder $builder) => $builder->where([
+            $query->whereHas('prevalidation_records', fn (Builder $builder) => $builder->where([
                 'value' => $identity->bsn,
             ])->whereRelation('record_type', 'key', '=', 'bsn'));
 
             // Or BSN hashed record match
             foreach (Fund::whereRelation('fund_config', 'hash_bsn', true)->get() as $fund) {
-                $query->orWhere(static function(Builder $builder) use ($fund, $identity) {
+                $query->orWhere(static function (Builder $builder) use ($fund, $identity) {
                     $builder->where([
                         'fund_id' => $fund->id,
-                    ])->whereHas('prevalidation_records', function(Builder $builder) use ($fund, $identity) {
+                    ])->whereHas('prevalidation_records', function (Builder $builder) use ($fund, $identity) {
                         $builder->where([
                             'value' => $fund->getHashedValue($identity->bsn),
                         ])->whereRelation('record_type', 'key', '=', 'bsn_hash');
@@ -142,7 +143,7 @@ class Prevalidation extends BaseModel
             }
         })->get();
 
-        return $prevalidations->each(static function(Prevalidation $prevalidation) use ($identity) {
+        return $prevalidations->each(static function (Prevalidation $prevalidation) use ($identity) {
             $prevalidation->assignToIdentity($identity);
         })->count();
     }
@@ -150,28 +151,32 @@ class Prevalidation extends BaseModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function prevalidation_records(): HasMany {
+    public function prevalidation_records(): HasMany
+    {
         return $this->hasMany(PrevalidationRecord::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function records(): HasMany {
+    public function records(): HasMany
+    {
         return $this->hasMany(PrevalidationRecord::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund(): BelongsTo {
+    public function fund(): BelongsTo
+    {
         return $this->belongsTo(Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function organization(): BelongsTo {
+    public function organization(): BelongsTo
+    {
         return $this->belongsTo(Organization::class);
     }
 
@@ -184,28 +189,32 @@ class Prevalidation extends BaseModel
         $identity_address = $request->auth_address();
 
         // list of funds where you can manage funds
-        $managedFunds = Fund::whereRelation('organization', function(Builder $builder) use ($identity_address) {
+        $managedFunds = Fund::whereRelation('organization', function (Builder $builder) use ($identity_address) {
             OrganizationQuery::whereHasPermissions($builder, $identity_address, Permission::MANAGE_FUNDS);
         })->pluck('id')->toArray();
 
         // list of identities who can validate records for funds where you can manage funds
-        $relatedIdentities = Identity::whereHas('employees', function(Builder $builder) use ($identity_address) {
+        $relatedIdentities = Identity::whereHas('employees', function (Builder $builder) use ($identity_address) {
             EmployeeQuery::whereHasPermissionFilter($builder, [
                 Permission::VALIDATE_RECORDS,
             ]);
 
-            $builder->whereHas('organization', function(Builder $builder) use ($identity_address) {
+            $builder->whereHas('organization', function (Builder $builder) use ($identity_address) {
                 OrganizationQuery::whereHasPermissions($builder, $identity_address, Permission::MANAGE_FUNDS);
             });
         })->pluck('address')->toArray();
 
-        $prevalidations = static::where(function(Builder|Prevalidation $builder) use (
-            $identity_address, $managedFunds, $relatedIdentities
+        $prevalidations = static::where(function (Builder|Prevalidation $builder) use (
+            $identity_address,
+            $managedFunds,
+            $relatedIdentities
         ) {
             $builder->where('identity_address', $identity_address);
 
-            $builder->orWhere(function(Builder $builder) use (
-                $identity_address, $managedFunds, $relatedIdentities
+            $builder->orWhere(function (Builder $builder) use (
+                $identity_address,
+                $managedFunds,
+                $relatedIdentities
             ) {
                 // created for fund where you can manage funds
                 $builder->whereIn('fund_id', $managedFunds);
@@ -216,11 +225,13 @@ class Prevalidation extends BaseModel
         });
 
         if ($request->has('q') && $q = $request->input('q')) {
-            $prevalidations->where(static function(Builder $query) use ($q) {
+            $prevalidations->where(static function (Builder $query) use ($q) {
                 $query->where('uid', 'like', "%$q%");
-                $query->orWhereIn('id', static function(QBuilder $query) use ($q) {
-                    $query->from((new PrevalidationRecord)->getTable())->where(
-                        'value', 'like', "%$q%",
+                $query->orWhereIn('id', static function (QBuilder $query) use ($q) {
+                    $query->from((new PrevalidationRecord())->getTable())->where(
+                        'value',
+                        'like',
+                        "%$q%",
                     )->select('prevalidation_id');
                 });
             });
@@ -259,23 +270,23 @@ class Prevalidation extends BaseModel
      */
     public static function export(BaseFormRequest $request): Collection
     {
-        $transKey = "export.prevalidations";
+        $transKey = 'export.prevalidations';
 
         $query = self::search($request)->with([
             'prevalidation_records.record_type.translations',
         ]);
 
-        $data = $query->get()->map(static function(Prevalidation $prevalidation) use ($transKey)  {
+        $data = $query->get()->map(static function (Prevalidation $prevalidation) use ($transKey) {
             return collect([
                 trans("$transKey.code") => $prevalidation->uid,
-                trans("$transKey.used") => trans("$transKey.used_" . ($prevalidation->state === self::STATE_USED ? "yes" : "no")),
-            ])->merge($prevalidation->prevalidation_records->filter(function(PrevalidationRecord $record) {
+                trans("$transKey.used") => trans("$transKey.used_" . ($prevalidation->state === self::STATE_USED ? 'yes' : 'no')),
+            ])->merge($prevalidation->prevalidation_records->filter(function (PrevalidationRecord $record) {
                 return !str_contains($record->record_type->key, '_eligible');
             })->pluck('value', 'record_type.name'))->toArray();
         })->values();
 
         (clone $query)->update([
-            'exported' => true
+            'exported' => true,
         ]);
 
         return $data;
@@ -331,7 +342,7 @@ class Prevalidation extends BaseModel
         ])->pluck('value');
 
         /** @var array[] $data new pre validations and pre validations that have to be updated */
-        $data = array_filter(array_map(static function($record) use ($existingPrimaryKeys, $fund, $overwriteKeys, $recordTypes) {
+        $data = array_filter(array_map(static function ($record) use ($existingPrimaryKeys, $fund, $overwriteKeys, $recordTypes) {
             $primaryKey = $record[$fund->fund_config->csv_primary_key];
 
             if ($existingPrimaryKeys->search($primaryKey) !== false &&
@@ -342,18 +353,18 @@ class Prevalidation extends BaseModel
             return [
                 'primaryKey' => $primaryKey,
                 'record' => $record,
-                'records' => array_filter(array_map(static function($key) use ($recordTypes, $record) {
+                'records' => array_filter(array_map(static function ($key) use ($recordTypes, $record) {
                     return (!$recordTypes[$key] || $key === 'primary_email') ? false : [
                         'record_type_id' => $recordTypes[$key],
-                        'value' => is_null($record[$key]) ? '' : $record[$key]
+                        'value' => is_null($record[$key]) ? '' : $record[$key],
                     ];
-                }, array_keys($record)), static function($value) {
+                }, array_keys($record)), static function ($value) {
                     return (bool) $value;
                 }),
             ];
-        }, $data), "is_array");
+        }, $data), 'is_array');
 
-        $prevalidations = array_map(static function(array $records) use ($fund, $overwriteKeys, $fundPrevalidationPrimaryKey, $identity) {
+        $prevalidations = array_map(static function (array $records) use ($fund, $overwriteKeys, $fundPrevalidationPrimaryKey, $identity) {
             if (in_array($records['primaryKey'], $overwriteKeys, true)) {
                 $prevalidation = Prevalidation::where([
                     'state' => Prevalidation::STATE_PENDING,
@@ -388,9 +399,11 @@ class Prevalidation extends BaseModel
     /**
      * @return $this
      */
-    public function updateHashes(): Prevalidation {
+    public function updateHashes(): Prevalidation
+    {
         $records = $this->prevalidation_records->pluck(
-            'value', 'record_type.key'
+            'value',
+            'record_type.key'
         )->toArray();
 
         $primaryKey = $records[$this->fund->fund_config->csv_primary_key];
@@ -408,7 +421,8 @@ class Prevalidation extends BaseModel
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getIsUsedAttribute(): bool {
+    public function getIsUsedAttribute(): bool
+    {
         return $this->state === self::STATE_USED;
     }
 

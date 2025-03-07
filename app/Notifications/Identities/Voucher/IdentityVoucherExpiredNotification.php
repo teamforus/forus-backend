@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Voucher;
 
 /**
- * The voucher expired (budget/subsidy)
+ * The voucher expired (budget/subsidy).
  */
 class IdentityVoucherExpiredNotification extends BaseIdentityVoucherNotification
 {

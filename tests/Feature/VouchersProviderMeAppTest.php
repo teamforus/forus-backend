@@ -22,8 +22,8 @@ class VouchersProviderMeAppTest extends TestCase
     use MakesTestFundProviders;
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testVoucherAmountVisibility(): void
     {
@@ -35,7 +35,7 @@ class VouchersProviderMeAppTest extends TestCase
         ]);
 
         $voucher = $fund->makeVoucher($this->makeIdentity(), [
-            'state' => Voucher::STATE_ACTIVE
+            'state' => Voucher::STATE_ACTIVE,
         ], 100);
 
         $this->assertNotNull($voucher);

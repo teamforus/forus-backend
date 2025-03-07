@@ -2,10 +2,10 @@
 
 namespace Tests\Browser;
 
+use App\Models\Implementation;
+use Illuminate\Support\Facades\Log;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
-use Illuminate\Support\Facades\Log;
-use App\Models\Implementation;
 use Throwable;
 
 class DebugFrontendConnectivityTest extends DuskTestCase
@@ -13,8 +13,8 @@ class DebugFrontendConnectivityTest extends DuskTestCase
     /**
      * Test connectivity and debug frontend.
      *
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testDebugFrontendConnectivity()
     {

@@ -191,44 +191,6 @@ class FundRequestPolicy
     }
 
     /**
-     * @param Identity $identity
-     * @param FundRequest $fundRequest
-     * @param Organization $organization
-     * @param bool $checkResolvingIssues
-     * @return Response|bool
-     */
-    private function baseResolveAsValidator(
-        Identity $identity,
-        FundRequest $fundRequest,
-        Organization $organization,
-        bool $checkResolvingIssues = false,
-    ): Response|bool {
-        if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
-            return $this->deny(trans('policies.fund_requests.invalid_endpoint'));
-        }
-
-        // only pending requests could be updated by fund validators
-        if (!$fundRequest->isPending()) {
-            return $this->deny(trans('policies.fund_requests.not_pending'));
-        }
-
-        // should be properly configured
-        if ($checkResolvingIssues && ($error = $fundRequest->getResolvingError())) {
-            $fundRequest->fund->logError($error, ['fund_request_id' => $fundRequest->id]);
-            return $this->deny(App::hasDebugModeEnabled() ?
-                $error :
-                trans('policies.fund_requests.configuration_issue'));
-        }
-
-        // has to be assigned
-        if ($fundRequest->employee?->identity_address !== $identity->address) {
-            return $this->deny(trans('policies.fund_requests.not_assigned'));
-        }
-
-        return true;
-    }
-
-    /**
      * Determine whether the validator can resolve the fundRequest.
      *
      * @param Identity $identity
@@ -365,28 +327,6 @@ class FundRequestPolicy
         return $fundRequest->records()->where([
             'record_type_key' => 'partner_bsn',
         ])->doesntExist();
-    }
-
-    /**
-     * @param Fund $fund
-     * @param FundRequest $fundRequest
-     * @return bool
-     */
-    private function checkIntegrityRequester(Fund $fund, FundRequest $fundRequest): bool
-    {
-        return $fundRequest->fund_id === $fund->id;
-    }
-
-    /**
-     * @param Organization $organization
-     * @param FundRequest $fundRequest
-     * @return bool
-     */
-    private function checkIntegrityValidator(
-        Organization $organization,
-        FundRequest $fundRequest,
-    ): bool {
-        return $fundRequest->fund->organization_id === $organization->id;
     }
 
     /**
@@ -588,5 +528,66 @@ class FundRequestPolicy
         }
 
         return $this->viewAsValidator($identity, $fundRequest, $organization);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @param bool $checkResolvingIssues
+     * @return Response|bool
+     */
+    private function baseResolveAsValidator(
+        Identity $identity,
+        FundRequest $fundRequest,
+        Organization $organization,
+        bool $checkResolvingIssues = false,
+    ): Response|bool {
+        if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
+            return $this->deny(trans('policies.fund_requests.invalid_endpoint'));
+        }
+
+        // only pending requests could be updated by fund validators
+        if (!$fundRequest->isPending()) {
+            return $this->deny(trans('policies.fund_requests.not_pending'));
+        }
+
+        // should be properly configured
+        if ($checkResolvingIssues && ($error = $fundRequest->getResolvingError())) {
+            $fundRequest->fund->logError($error, ['fund_request_id' => $fundRequest->id]);
+
+            return $this->deny(App::hasDebugModeEnabled() ?
+                $error :
+                trans('policies.fund_requests.configuration_issue'));
+        }
+
+        // has to be assigned
+        if ($fundRequest->employee?->identity_address !== $identity->address) {
+            return $this->deny(trans('policies.fund_requests.not_assigned'));
+        }
+
+        return true;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param FundRequest $fundRequest
+     * @return bool
+     */
+    private function checkIntegrityRequester(Fund $fund, FundRequest $fundRequest): bool
+    {
+        return $fundRequest->fund_id === $fund->id;
+    }
+
+    /**
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return bool
+     */
+    private function checkIntegrityValidator(
+        Organization $organization,
+        FundRequest $fundRequest,
+    ): bool {
+        return $fundRequest->fund->organization_id === $organization->id;
     }
 }

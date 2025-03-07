@@ -18,9 +18,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Arr;
+use Throwable;
 
 /**
- * App\Models\FundRequest
+ * App\Models\FundRequest.
  *
  * @property int $id
  * @property int|null $identity_id
@@ -76,7 +77,8 @@ use Illuminate\Support\Arr;
  */
 class FundRequest extends BaseModel
 {
-    use HasLogs, HasNotes;
+    use HasLogs;
+    use HasNotes;
 
     public const string EVENT_CREATED = 'created';
     public const string EVENT_APPROVED = 'approved';
@@ -227,8 +229,8 @@ class FundRequest extends BaseModel
 
     /**
      * @param string|null $note
+     * @throws Throwable
      * @return FundRequest
-     * @throws \Throwable
      */
     public function decline(?string $note = null): self
     {
@@ -263,7 +265,7 @@ class FundRequest extends BaseModel
     }
 
     /**
-     * Set all fund request pending records assigned to given employee as disregarded
+     * Set all fund request pending records assigned to given employee as disregarded.
      *
      * @param string|null $note
      * @param bool $notify
@@ -295,7 +297,7 @@ class FundRequest extends BaseModel
     }
 
     /**
-     * Assign all available pending fund request records to given employee
+     * Assign all available pending fund request records to given employee.
      * @param Employee $employee
      * @param Employee|null $supervisorEmployee
      * @return $this
@@ -316,7 +318,7 @@ class FundRequest extends BaseModel
     }
 
     /**
-     * Remove all assigned fund request records from employee
+     * Remove all assigned fund request records from employee.
      * @param Employee $employee
      * @param Employee|null $supervisorEmployee
      * @return $this
@@ -324,7 +326,7 @@ class FundRequest extends BaseModel
     public function resignEmployee(Employee $employee, ?Employee $supervisorEmployee = null): self
     {
         $this->records()->where([
-            'record_type_key' => 'partner_bsn'
+            'record_type_key' => 'partner_bsn',
         ])->forceDelete();
 
         $this->update([
@@ -337,43 +339,7 @@ class FundRequest extends BaseModel
     }
 
     /**
-     * Prepare fund requests for exporting
-     *
-     * @param Builder $builder
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
-     */
-    private static function exportTransform(Builder $builder): mixed
-    {
-        $fundRequests = (clone $builder)->with([
-            'identity.record_bsn',
-            'records',
-            'fund',
-        ])->get();
-
-        $recordKeyList = FundRequestRecord::query()
-            ->whereIn('fund_request_id', (clone $builder)->select('id'))
-            ->pluck('record_type_key');
-
-        return $fundRequests->map(static function(FundRequest $request) use ($recordKeyList) {
-            $records = $recordKeyList->reduce(fn ($records, $key) => [
-                ...$records, $key => $request->records->firstWhere('record_type_key', $key),
-            ], []);
-
-            return array_merge([
-                trans("export.fund_requests.bsn") => $request->identity?->record_bsn?->value ?: '-',
-                trans("export.fund_requests.fund_name") => $request->fund->name,
-                trans("export.fund_requests.status") => trans("export.fund_requests.state-values.$request->state"),
-                trans("export.fund_requests.validator") => $request->employee?->identity?->email ?: '-',
-                trans("export.fund_requests.created_at") => $request->created_at,
-                trans("export.fund_requests.resolved_at") => $request->resolved_at,
-                trans("export.fund_requests.lead_time_days") => (string) $request->lead_time_days,
-                trans("export.fund_requests.lead_time_locale") => $request->lead_time_locale,
-            ], array_map(fn(?FundRequestRecord $record = null) => $record?->value ?: '-', $records));
-        })->values();
-    }
-
-    /**
-     * Export fund requests
+     * Export fund requests.
      * @param IndexFundRequestsRequest $request
      * @param Employee $employee
      * @return Builder[]|Collection|\Illuminate\Support\Collection
@@ -430,24 +396,6 @@ class FundRequest extends BaseModel
     public function isResolved(): bool
     {
         return in_array($this->state, self::STATES_RESOLVED);
-    }
-
-    /**
-     * @return array
-     */
-    private function getTrustedAndPendingRecordValues(): array
-    {
-        $recordTypes = array_unique([
-            ...$this->fund->fund_formula_products->pluck('record_type_key_multiplier')->filter(),
-            ...$this->fund->fund_formulas->pluck('record_type_key')->filter(),
-        ]);
-
-        $trustedValues = $this->fund->getTrustedRecordOfTypes($this->identity, $recordTypes);
-
-        return  [
-            ...$trustedValues,
-            ...$this->records->pluck('value', 'record_type_key')->toArray(),
-        ];
     }
 
     /**
@@ -522,18 +470,72 @@ class FundRequest extends BaseModel
 
             if (!Arr::get($values, $this->fund?->fund_config->iban_record_key) ||
                 !Arr::get($values, $this->fund?->fund_config->iban_name_record_key)) {
-                return "invalid_iban_record_values";
+                return 'invalid_iban_record_values';
             }
 
             if (Validation::check(Arr::get($values, $this->fund?->fund_config->iban_record_key), [
                 'required', new IbanRule(),
             ])->fails()) {
-                return "invalid_iban_format";
+                return 'invalid_iban_format';
             }
 
             return $this->fund->getResolvingError();
         }
 
         return null;
+    }
+
+    /**
+     * Prepare fund requests for exporting.
+     *
+     * @param Builder $builder
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    private static function exportTransform(Builder $builder): mixed
+    {
+        $fundRequests = (clone $builder)->with([
+            'identity.record_bsn',
+            'records',
+            'fund',
+        ])->get();
+
+        $recordKeyList = FundRequestRecord::query()
+            ->whereIn('fund_request_id', (clone $builder)->select('id'))
+            ->pluck('record_type_key');
+
+        return $fundRequests->map(static function (FundRequest $request) use ($recordKeyList) {
+            $records = $recordKeyList->reduce(fn ($records, $key) => [
+                ...$records, $key => $request->records->firstWhere('record_type_key', $key),
+            ], []);
+
+            return array_merge([
+                trans('export.fund_requests.bsn') => $request->identity?->record_bsn?->value ?: '-',
+                trans('export.fund_requests.fund_name') => $request->fund->name,
+                trans('export.fund_requests.status') => trans("export.fund_requests.state-values.$request->state"),
+                trans('export.fund_requests.validator') => $request->employee?->identity?->email ?: '-',
+                trans('export.fund_requests.created_at') => $request->created_at,
+                trans('export.fund_requests.resolved_at') => $request->resolved_at,
+                trans('export.fund_requests.lead_time_days') => (string) $request->lead_time_days,
+                trans('export.fund_requests.lead_time_locale') => $request->lead_time_locale,
+            ], array_map(fn (?FundRequestRecord $record = null) => $record?->value ?: '-', $records));
+        })->values();
+    }
+
+    /**
+     * @return array
+     */
+    private function getTrustedAndPendingRecordValues(): array
+    {
+        $recordTypes = array_unique([
+            ...$this->fund->fund_formula_products->pluck('record_type_key_multiplier')->filter(),
+            ...$this->fund->fund_formulas->pluck('record_type_key')->filter(),
+        ]);
+
+        $trustedValues = $this->fund->getTrustedRecordOfTypes($this->identity, $recordTypes);
+
+        return  [
+            ...$trustedValues,
+            ...$this->records->pluck('value', 'record_type_key')->toArray(),
+        ];
     }
 }

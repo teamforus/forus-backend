@@ -7,6 +7,7 @@ use App\Http\Requests\Api\File\StoreFileRequest;
 use App\Http\Resources\FileResource;
 use App\Services\FileService\FileService;
 use App\Services\FileService\Models\File;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -38,8 +39,8 @@ class FileController extends Controller
      * Store a newly created resource in storage.
      *
      * @param StoreFileRequest $request
+     * @throws Exception
      * @return FileResource
-     * @throws \Exception
      */
     public function store(StoreFileRequest $request): FileResource
     {
@@ -52,7 +53,7 @@ class FileController extends Controller
             ])->passes();
 
             $isPdf = !$isImage && Validator::make($request->only('file'), [
-                'file' => 'required|file|mimes:pdf'
+                'file' => 'required|file|mimes:pdf',
             ])->passes();
 
             if ($isImage) {
@@ -76,7 +77,7 @@ class FileController extends Controller
     }
 
     /**
-     * Validate file store request
+     * Validate file store request.
      *
      * @param StoreFileRequest $request
      * @return ?JsonResponse
@@ -84,15 +85,15 @@ class FileController extends Controller
      */
     public function storeValidate(StoreFileRequest $request): ?JsonResponse
     {
-        return $request->authorize() ? new JsonResponse(): null;
+        return $request->authorize() ? new JsonResponse() : null;
     }
 
     /**
      * Display the specified resource.
      *
      * @param File $file
-     * @return FileResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FileResource
      */
     public function show(File $file): FileResource
     {
@@ -102,11 +103,11 @@ class FileController extends Controller
     }
 
     /**
-     * Download file as stream
+     * Download file as stream.
      *
      * @param File $file
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
     public function download(File $file): StreamedResponse
     {

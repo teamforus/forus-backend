@@ -44,7 +44,7 @@ class StoreProductReservationBatchRequest extends BaseFormRequest
 
         return [
             'reservations' => array_merge(explode('|', 'required|array|min:1'), [
-                new ProviderProductReservationBatchRule()
+                new ProviderProductReservationBatchRule(),
             ]),
             'reservations.*' => array_merge(explode('|', 'bail|required|array'), [
                 // validate access products and vouchers

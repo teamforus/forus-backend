@@ -8,10 +8,13 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Throwable;
 
 class BaseDigestMail extends Mailable implements ShouldQueue
 {
-    use Queueable, SerializesModels, InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
+    use InteractsWithQueue;
 
     protected ?string $preferencesLinkDashboard = null;
 
@@ -40,13 +43,13 @@ class BaseDigestMail extends Mailable implements ShouldQueue
     /**
      * Handle a job failure.
      *
-     * @param \Throwable $e
+     * @param Throwable $e
      * @return void
      */
-    public function failed(\Throwable $e): void
+    public function failed(Throwable $e): void
     {
         if ($logger = logger()) {
-            $logger->error("Error sending digest: `" . $e->getMessage() . "`");
+            $logger->error('Error sending digest: `' . $e->getMessage() . '`');
         }
     }
 

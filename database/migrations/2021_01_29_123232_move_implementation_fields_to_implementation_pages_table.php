@@ -1,16 +1,15 @@
 <?php
 
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Implementation;
+use App\Models\ImplementationPage;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\ImplementationPage;
-use App\Models\Implementation;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -21,10 +20,10 @@ return new class extends Migration
         Implementation::get()->each(function (Implementation $implementation) {
             if (!$this->withTrashed($implementation->page_explanation())->exists()) {
                 $implementation->pages()->create([
-                    'content'       => $implementation->description_steps ?? null,
-                    'page_type'     => ImplementationPage::TYPE_EXPLANATION,
-                    'external_url'  => $implementation->more_info_url ?? null,
-                    'use_external'  => $implementation->has_more_info_url ?? null,
+                    'content' => $implementation->description_steps ?? null,
+                    'page_type' => ImplementationPage::TYPE_EXPLANATION,
+                    'external_url' => $implementation->more_info_url ?? null,
+                    'use_external' => $implementation->has_more_info_url ?? null,
                 ]);
             }
 
@@ -45,12 +44,6 @@ return new class extends Migration
         });
     }
 
-    private function withTrashed(Builder|Relation $builder): Builder|Relation
-    {
-        /** @var Builder|Relation|SoftDeletes $builder */
-        return $builder->withTrashed();
-    }
-
     /**
      * Reverse the migrations.
      *
@@ -64,5 +57,11 @@ return new class extends Migration
             $table->text('description_steps')->after('more_info_url')->nullable();
             $table->text('description_providers')->after('description_steps')->nullable();
         });
+    }
+
+    private function withTrashed(Builder|Relation $builder): Builder|Relation
+    {
+        /** @var Builder|Relation|SoftDeletes $builder */
+        return $builder->withTrashed();
     }
 };

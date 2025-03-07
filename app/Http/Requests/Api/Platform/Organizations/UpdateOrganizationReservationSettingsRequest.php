@@ -37,6 +37,18 @@ class UpdateOrganizationReservationSettingsRequest extends BaseOrganizationReque
     /**
      * @return array
      */
+    public function attributes(): array
+    {
+        return [
+            'fields.*.type' => trans('validation.attributes.type'),
+            'fields.*.label' => trans('validation.attributes.label'),
+            'fields.*.description' => trans('validation.attributes.description'),
+        ];
+    }
+
+    /**
+     * @return array
+     */
     private function reservationCustomFieldRules(): array
     {
         return [
@@ -49,18 +61,6 @@ class UpdateOrganizationReservationSettingsRequest extends BaseOrganizationReque
             'fields.*.label' => 'required|string|max:200',
             'fields.*.required' => 'nullable|boolean',
             'fields.*.description' => 'nullable|string|max:1000',
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    public function attributes(): array
-    {
-        return [
-            'fields.*.type' => trans('validation.attributes.type'),
-            'fields.*.label' => trans('validation.attributes.label'),
-            'fields.*.description' => trans('validation.attributes.description'),
         ];
     }
 }

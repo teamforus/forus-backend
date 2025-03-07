@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 /*
  * This file is part of Laravel Markdown.
@@ -68,7 +68,7 @@ return [
     'renderer' => [
         'block_separator' => "\n",
         'inner_separator' => "\n",
-        'soft_break'      => "\n",
+        'soft_break' => "\n",
     ],
 
     /*
@@ -89,15 +89,15 @@ return [
     */
 
     'commonmark' => [
-        'enable_em'              => true,
-        'enable_strong'          => true,
-        'use_asterisk'           => true,
-        'use_underscore'         => true,
+        'enable_em' => true,
+        'enable_strong' => true,
+        'use_asterisk' => true,
+        'use_underscore' => true,
         'unordered_list_markers' => ['-', '+', '*'],
     ],
 
     /**
-     * YouTube player settings
+     * YouTube player settings.
      */
     'youtube_iframe' => [
         'wrapper_class' => 'youtube-root',
@@ -105,10 +105,10 @@ return [
     ],
 
     /**
-     * Open links in new window
+     * Open links in new window.
      */
     'external_link' => [
-        'open_in_new_window' => true
+        'open_in_new_window' => true,
     ],
 
     /*
@@ -166,7 +166,7 @@ return [
 
     'slug_normalizer' => [
         'max_length' => 255,
-        'unique'     => 'document',
+        'unique' => 'document',
     ],
 
 ];

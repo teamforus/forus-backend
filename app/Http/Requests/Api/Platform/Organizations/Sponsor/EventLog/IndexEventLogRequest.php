@@ -29,7 +29,7 @@ class IndexEventLogRequest extends BaseFormRequest
                 ($this->request->has('loggable_id') ? '|size:1' : ''),
             'loggable.*' => 'required|string',
             'loggable_id' => 'nullable|integer',
-            'per_page'  => $this->perPageRule(),
+            'per_page' => $this->perPageRule(),
         ];
     }
 }

@@ -38,9 +38,9 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
         $transaction = $this->resource;
 
         return array_merge($transaction->only([
-            "id", "organization_id", "product_id", "address",
-            "state", 'state_locale', "payment_id", 'iban_final',
-            "branch_name", "branch_number", "branch_id",
+            'id', 'organization_id', 'product_id', 'address',
+            'state', 'state_locale', 'payment_id', 'iban_final',
+            'branch_name', 'branch_number', 'branch_id',
         ]), $this->getIbanFields($transaction), [
             'amount' => currency_format($transaction->amount),
             'amount_locale' => currency_format_locale($transaction->amount),
@@ -49,11 +49,11 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
             'timestamp' => $transaction->created_at->timestamp,
             'cancelable' => $transaction->isCancelable(),
             'transfer_in' => $transaction->daysBeforeTransaction(),
-            "fund" => new FundTinyResource($transaction->voucher->fund),
+            'fund' => new FundTinyResource($transaction->voucher->fund),
             'notes' => VoucherTransactionNoteResource::collection($transaction->notes_provider),
-            "product" => new ProductResource($transaction->product),
+            'product' => new ProductResource($transaction->product),
             'reservation' => new ProductReservationResource($transaction->product_reservation),
-            "organization" => new OrganizationTinyResource($transaction->provider),
+            'organization' => new OrganizationTinyResource($transaction->provider),
         ], $this->timestamps($transaction, 'created_at', 'updated_at'));
     }
 

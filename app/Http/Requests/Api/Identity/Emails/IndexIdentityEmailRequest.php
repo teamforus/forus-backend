@@ -2,4 +2,6 @@
 
 namespace App\Http\Requests\Api\Identity\Emails;
 
-class IndexIdentityEmailRequest extends BaseIdentityEmailRequest {}
+class IndexIdentityEmailRequest extends BaseIdentityEmailRequest
+{
+}

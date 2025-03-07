@@ -13,7 +13,8 @@ use Throwable;
 
 class BIConnectionTest extends TestCase
 {
-    use DatabaseTransactions, MakesTestOrganizations;
+    use DatabaseTransactions;
+    use MakesTestOrganizations;
 
     /**
      * @var string
@@ -26,8 +27,8 @@ class BIConnectionTest extends TestCase
     protected string $apiOrganizationUrl = '/api/v1/platform/organizations/%s/bi-connection';
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testValidTokenWhenEnabled(): void
     {
@@ -35,8 +36,8 @@ class BIConnectionTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testAuthTypeDisabled(): void
     {
@@ -53,8 +54,8 @@ class BIConnectionTest extends TestCase
 
     /**
      * @param bool $enabled
-     * @return void
      * @throws Throwable
+     * @return void
      */
     protected function testValidToken(bool $enabled = true): void
     {

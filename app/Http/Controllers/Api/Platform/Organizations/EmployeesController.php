@@ -15,6 +15,7 @@ use App\Models\Identity;
 use App\Models\Organization;
 use App\Searches\EmployeesSearch;
 use App\Traits\ThrottleWithMeta;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -34,8 +35,8 @@ class EmployeesController extends Controller
      *
      * @param IndexEmployeesRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexEmployeesRequest $request,
@@ -56,8 +57,8 @@ class EmployeesController extends Controller
      *
      * @param StoreEmployeeRequest $request
      * @param Organization $organization
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
      * @return EmployeeResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(
         StoreEmployeeRequest $request,
@@ -83,8 +84,8 @@ class EmployeesController extends Controller
      *
      * @param Organization $organization
      * @param Employee $employee
-     * @return EmployeeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return EmployeeResource
      */
     public function show(Organization $organization, Employee $employee): EmployeeResource
     {
@@ -100,8 +101,8 @@ class EmployeesController extends Controller
      * @param UpdateEmployeeRequest $request
      * @param Organization $organization
      * @param Employee $employee
-     * @return EmployeeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return EmployeeResource
      */
     public function update(
         UpdateEmployeeRequest $request,
@@ -129,8 +130,8 @@ class EmployeesController extends Controller
      *
      * @param Organization $organization
      * @param Employee $employee
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
      * @return JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function destroy(Organization $organization, Employee $employee): JsonResponse
     {
@@ -146,10 +147,10 @@ class EmployeesController extends Controller
     /**
      * @param IndexEmployeesRequest $request
      * @param Organization $organization
-     * @return BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return BinaryFileResponse
      */
     public function export(
         IndexEmployeesRequest $request,
@@ -163,7 +164,7 @@ class EmployeesController extends Controller
         ]), $organization->employees()->getQuery());
 
         $exportType = $request->input('export_type', 'xls');
-        $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
+        $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
         $exportData = new EmployeesExport($search->query());
 
         return resolve('excel')->download($exportData, $fileName);

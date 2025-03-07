@@ -10,7 +10,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseEmployeeEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     protected Employee $employee;
 
@@ -26,7 +28,7 @@ abstract class BaseEmployeeEvent
     }
 
     /**
-     * Get the voucher
+     * Get the voucher.
      *
      * @return Employee
      */

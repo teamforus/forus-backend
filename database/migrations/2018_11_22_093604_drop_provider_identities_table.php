@@ -1,15 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
+use App\Models\Employee;
+use App\Models\Organization;
+use App\Models\Role;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use App\Models\Organization;
-use App\Models\Employee;
-use App\Models\Role;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -21,23 +20,24 @@ return new class extends Migration
             $providerIdentities = DB::table('provider_identities')->get();
 
             $roleId = Role::query()->where([
-                'key' => 'operation_officer'
+                'key' => 'operation_officer',
             ])->first()->id;
 
-            $organizations = Organization::query()->whereIn(
-                'id', $providerIdentities->pluck('provider_id')
-            )->get()->keyBy('id');
+            $organizations = Organization::query()
+                ->whereIn('id', $providerIdentities->pluck('provider_id'))
+                ->get()
+                ->keyBy('id');
 
             $providerIdentities = $providerIdentities->groupBy('provider_id');
 
-            foreach($providerIdentities as $organizationId => $_providerIdentities) {
+            foreach ($providerIdentities as $organizationId => $_providerIdentities) {
                 /** @var Organization $organization */
                 $organization = $organizations[$organizationId];
 
                 foreach ($_providerIdentities as $_providerIdentity) {
                     /** @var Employee $employee */
                     $employee = $organization->employees()->firstOrCreate([
-                        'identity_address' => $_providerIdentity->identity_address
+                        'identity_address' => $_providerIdentity->identity_address,
                     ]);
 
                     $employee->roles()->attach($roleId);
@@ -72,15 +72,15 @@ return new class extends Migration
                 $roleId = Role::where('key', 'operation_officer')->first()->id;
                 $employeeRoles = DB::table('employee_roles')->where('role_id', $roleId)->get();
 
-                $employeeRoles = $employeeRoles->map(function($employeeRole) {
+                $employeeRoles = $employeeRoles->map(function ($employeeRole) {
                     /** @var Employee $employee */
                     $employee = DB::table('employees')->where([
                         'id' => $employeeRole->employee_id,
                     ])->first();
 
                     return [
-                        "identity_address"  => $employee->identity_address,
-                        "provider_id"       => $employee->organization_id
+                        'identity_address' => $employee->identity_address,
+                        'provider_id' => $employee->organization_id,
                     ];
                 })->toArray();
 

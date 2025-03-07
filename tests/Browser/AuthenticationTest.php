@@ -12,16 +12,19 @@ use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestIdentities;
+use Throwable;
 
 class AuthenticationTest extends DuskTestCase
 {
-    use AssertsSentEmails, MakesTestIdentities, HasFrontendActions;
+    use AssertsSentEmails;
+    use MakesTestIdentities;
+    use HasFrontendActions;
 
     /**
      * A Dusk test example.
      *
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSignInByEmailExample(): void
     {
@@ -53,7 +56,7 @@ class AuthenticationTest extends DuskTestCase
             $browser->assertVisible('@authEmailForm');
 
             // Type the email and submit the form
-            $browser->within('@authEmailForm', function(Browser $browser) use ($identity) {
+            $browser->within('@authEmailForm', function (Browser $browser) use ($identity) {
                 $browser->type('@authEmailFormEmail', $identity->email);
                 $browser->press('@authEmailFormSubmit');
             });
@@ -79,8 +82,8 @@ class AuthenticationTest extends DuskTestCase
     /**
      * A Dusk test example.
      *
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSignUpByEmailExample(): void
     {
@@ -112,7 +115,7 @@ class AuthenticationTest extends DuskTestCase
             $browser->assertVisible('@authEmailForm');
 
             // Type the email and submit the form
-            $browser->within('@authEmailForm', function(Browser $browser) use ($email) {
+            $browser->within('@authEmailForm', function (Browser $browser) use ($email) {
                 $browser->type('@authEmailFormEmail', $email);
                 $browser->press('@authEmailFormSubmit');
             });

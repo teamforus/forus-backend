@@ -2,4 +2,6 @@
 
 namespace App\Events\Funds;
 
-class FundEndedEvent extends BaseFundEvent {}
+class FundEndedEvent extends BaseFundEvent
+{
+}

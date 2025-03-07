@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
@@ -29,11 +28,15 @@ class VoucherQuery
         $fund_id,
         $organization_id = null
     ): Builder|Relation|Voucher {
-        $builder->whereHas('product', static function(Builder $builder) use (
-            $fund_id, $identity_address, $organization_id
+        $builder->whereHas('product', static function (Builder $builder) use (
+            $fund_id,
+            $identity_address,
+            $organization_id
         ) {
-            $builder->whereHas('organization', static function(Builder $builder) use (
-                $fund_id, $identity_address, $organization_id
+            $builder->whereHas('organization', static function (Builder $builder) use (
+                $fund_id,
+                $identity_address,
+                $organization_id
             ) {
                 if ($organization_id instanceof Builder) {
                     $builder->whereIn('organizations.id', $organization_id);
@@ -43,7 +46,7 @@ class VoucherQuery
 
                 OrganizationQuery::whereHasPermissions($builder, $identity_address, 'scan_vouchers');
 
-                $builder->whereHas('fund_providers', static function(Builder $builder) use ($fund_id) {
+                $builder->whereHas('fund_providers', static function (Builder $builder) use ($fund_id) {
                     FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id, 'product');
                 });
             });
@@ -51,9 +54,9 @@ class VoucherQuery
             ProductQuery::approvedForFundsFilter($builder, $fund_id);
         });
 
-        return $builder->where(function(Builder $builder) {
+        return $builder->where(function (Builder $builder) {
             $builder->whereDoesntHave('transactions');
-            $builder->whereDoesntHave('product_reservation', function(Builder $builder) {
+            $builder->whereDoesntHave('product_reservation', function (Builder $builder) {
                 $builder->where('state', '!=', ProductReservation::STATE_PENDING);
                 $builder->orWhereDate('expire_at', '<', now());
             });
@@ -66,10 +69,10 @@ class VoucherQuery
      */
     public static function whereNotExpired(Builder|Relation|Voucher $builder): Builder|Relation|Voucher
     {
-        return $builder->where(static function(Builder $builder) {
+        return $builder->where(static function (Builder $builder) {
             $builder->where('vouchers.expire_at', '>=', today());
 
-            $builder->whereHas('fund', static function(Builder $builder) {
+            $builder->whereHas('fund', static function (Builder $builder) {
                 $builder->whereDate('end_date', '>=', today());
             });
         });
@@ -120,10 +123,10 @@ class VoucherQuery
     public static function whereExpired(
         Builder|Relation|Voucher $builder,
     ): Builder|Relation|Voucher {
-        return $builder->where(static function(Builder $builder) {
+        return $builder->where(static function (Builder $builder) {
             $builder->where('vouchers.expire_at', '<', today());
 
-            $builder->orWhereHas('fund', static function(Builder $builder) {
+            $builder->orWhereHas('fund', static function (Builder $builder) {
                 $builder->where('end_date', '<', today());
             });
         });
@@ -159,15 +162,15 @@ class VoucherQuery
     public static function whereVisibleToSponsor(
         Builder|Relation|Voucher $builder
     ): Builder|Relation|Voucher {
-        return $builder->where(static function(Builder $builder) {
+        return $builder->where(static function (Builder $builder) {
             $builder->whereNotNull('employee_id');
 
-            $builder->orWhere(static function(Builder $builder) {
+            $builder->orWhere(static function (Builder $builder) {
                 $builder->whereNull('employee_id');
                 $builder->whereNull('product_id');
             });
 
-            $builder->orWhere(static function(Builder $builder) {
+            $builder->orWhere(static function (Builder $builder) {
                 $builder->whereNull('employee_id');
                 $builder->whereNotNull('product_id');
                 $builder->whereNull('parent_id');
@@ -186,7 +189,7 @@ class VoucherQuery
         string $q,
     ): Builder|Relation|Voucher {
         return $builder->where(static function ($builder) use ($q) {
-            $builder->where('number', 'LIKE', "%" . ltrim($q, '#') ."%");
+            $builder->where('number', 'LIKE', '%' . ltrim($q, '#') . '%');
             $builder->orWhere('note', 'LIKE', "%$q%");
             $builder->orWhere('activation_code', 'LIKE', "%$q%");
             $builder->orWhere('client_uid', 'LIKE', "%$q%");
@@ -219,15 +222,15 @@ class VoucherQuery
         Builder|Relation|Voucher $builder,
         bool $inUse = true,
     ): Builder|Relation|Voucher {
-        return $builder->where(static function(Builder $builder) use ($inUse) {
+        return $builder->where(static function (Builder $builder) use ($inUse) {
             if ($inUse) {
                 $builder->whereHas('transactions');
-                $builder->orWhereHas('product_vouchers', function(Builder $builder) {
+                $builder->orWhereHas('product_vouchers', function (Builder $builder) {
                     static::whereIsProductVoucher($builder);
                 });
             } else {
                 $builder->whereDoesntHave('transactions');
-                $builder->whereDoesntHave('product_vouchers', function(Builder $builder) {
+                $builder->whereDoesntHave('product_vouchers', function (Builder $builder) {
                     static::whereIsProductVoucher($builder);
                 });
             }
@@ -246,11 +249,11 @@ class VoucherQuery
         Carbon $toDate = null,
     ): Builder|Relation|Voucher {
         if ($fromDate) {
-            $builder->where("first_use_date", '>=', $fromDate);
+            $builder->where('first_use_date', '>=', $fromDate);
         }
 
         if ($toDate) {
-            $builder->where("first_use_date", '<=', $toDate);
+            $builder->where('first_use_date', '<=', $toDate);
         }
 
         return $builder;
@@ -263,16 +266,16 @@ class VoucherQuery
     public static function whereIsProductVoucher(
         Builder|Relation|Voucher $builder,
     ): Builder|Relation|Voucher {
-        return $builder->where(static function(Builder $builder) {
+        return $builder->where(static function (Builder $builder) {
             $builder->whereNotNull('parent_id');
 
-            $builder->where(static function(Builder $builder) {
+            $builder->where(static function (Builder $builder) {
                 $builder->whereDoesntHave('product_reservation');
                 $builder->orWhereHas('product_reservation', function (Builder $builder) {
                     $builder->whereIn('state', [
                         ProductReservation::STATE_WAITING,
                         ProductReservation::STATE_PENDING,
-                        ProductReservation::STATE_ACCEPTED
+                        ProductReservation::STATE_ACCEPTED,
                     ]);
                 });
             });
@@ -308,10 +311,10 @@ class VoucherQuery
     ): Builder|Relation|Voucher {
         $selectQuery = Voucher::fromSub(self::addBalanceFields(Voucher::query()), 'vouchers');
 
-        $selectQuery->where(function(Builder $builder) {
-            $builder->where(fn(Builder $q) => static::whereIsProductVoucherWithoutTransactions($q));
+        $selectQuery->where(function (Builder $builder) {
+            $builder->where(fn (Builder $q) => static::whereIsProductVoucherWithoutTransactions($q));
 
-            $builder->orWhere(function(Builder $builder) {
+            $builder->orWhere(function (Builder $builder) {
                 $builder->whereNull('parent_id');
                 $builder->where('balance', '>', 0);
             });
@@ -352,6 +355,31 @@ class VoucherQuery
     }
 
     /**
+     * @param Builder|Relation|Voucher $builder
+     * @param Reimbursement|null $reimbursement
+     * @return Builder|Relation|Voucher
+     */
+    public static function whereAllowReimbursements(
+        Builder|Relation|Voucher $builder,
+        ?Reimbursement $reimbursement = null,
+    ): Builder|Relation|Voucher {
+        return $builder->where(function (Builder $builder) use ($reimbursement) {
+            $builder->where(function (Builder $builder) use ($reimbursement) {
+                VoucherQuery::whereNotExpiredAndActive($builder);
+
+                if ($reimbursement) {
+                    $builder->orWhere('id', $reimbursement->voucher_id);
+                }
+            });
+
+            $builder->whereNull('product_id');
+            $builder->whereNull('product_reservation_id');
+            $builder->whereRelation('fund', 'type', Fund::TYPE_BUDGET);
+            $builder->whereRelation('fund.fund_config', 'allow_reimbursements', true);
+        });
+    }
+
+    /**
      * @return Builder|VoucherTransaction
      */
     private static function voucherTotalAmountSubQuery(): Builder|VoucherTransaction
@@ -385,30 +413,5 @@ class VoucherQuery
         return DB::query()
             ->fromSub($selectQuery, 'voucher_payouts')
             ->selectRaw('`transactions_amount` + `vouchers_amount` + `reimbursements_pending_amount`');
-    }
-
-    /**
-     * @param Builder|Relation|Voucher $builder
-     * @param Reimbursement|null $reimbursement
-     * @return Builder|Relation|Voucher
-     */
-    public static function whereAllowReimbursements(
-        Builder|Relation|Voucher $builder,
-        ?Reimbursement $reimbursement = null,
-    ): Builder|Relation|Voucher {
-        return $builder->where(function(Builder $builder) use ($reimbursement) {
-            $builder->where(function(Builder $builder) use ($reimbursement) {
-                VoucherQuery::whereNotExpiredAndActive($builder);
-
-                if ($reimbursement) {
-                    $builder->orWhere('id', $reimbursement->voucher_id);
-                }
-            });
-
-            $builder->whereNull('product_id');
-            $builder->whereNull('product_reservation_id');
-            $builder->whereRelation('fund', 'type', Fund::TYPE_BUDGET);
-            $builder->whereRelation('fund.fund_config', 'allow_reimbursements', true);
-        });
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Voucher;
 
 /**
- * Product voucher was created
+ * Product voucher was created.
  */
 class IdentityProductVoucherAddedNotification extends BaseIdentityVoucherNotification
 {

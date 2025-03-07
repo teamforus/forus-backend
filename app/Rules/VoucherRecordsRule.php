@@ -37,13 +37,15 @@ class VoucherRecordsRule implements Rule
 
         // have invalid record keys
         if (!empty($invalidKeys)) {
-            $this->message = "Invalid record types found: " . implode(', ', $invalidKeys) . ".";
+            $this->message = 'Invalid record types found: ' . implode(', ', $invalidKeys) . '.';
+
             return false;
         }
 
         // only one record of the same type can exist at a time
         if (count(Arr::duplicates($recordKeys)) > 0) {
-            $this->message = "Some records keys are duplicated";
+            $this->message = 'Some records keys are duplicated';
+
             return false;
         }
 
@@ -51,6 +53,7 @@ class VoucherRecordsRule implements Rule
         foreach ($recordKeys as $key) {
             if ($error = VoucherRecord::validateRecord($key, $value[$key])) {
                 $this->message = $error;
+
                 return false;
             }
         }

@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 
 /**
- * App\Models\RecordType
+ * App\Models\RecordType.
  *
  * @property int $id
  * @property string $key
@@ -65,7 +65,9 @@ use Illuminate\Support\Arr;
  */
 class RecordType extends BaseModel
 {
-    use Translatable, RecordTranslationsTrait, HasTranslationCaches;
+    use Translatable;
+    use RecordTranslationsTrait;
+    use HasTranslationCaches;
 
     public const string TYPE_BOOL = 'bool';
     public const string TYPE_IBAN = 'iban';
@@ -88,6 +90,16 @@ class RecordType extends BaseModel
     ];
 
     /**
+     * The attributes that are translatable.
+     *
+     * @var array
+     * @noinspection PhpUnused
+     */
+    public array $translatedAttributes = [
+        'name',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array
@@ -97,16 +109,6 @@ class RecordType extends BaseModel
     ];
 
     protected $perPage = 100;
-
-    /**
-     * The attributes that are translatable.
-     *
-     * @var array
-     * @noinspection PhpUnused
-     */
-    public array $translatedAttributes = [
-        'name',
-    ];
 
     protected $casts = [
         'system' => 'bool',
@@ -141,7 +143,7 @@ class RecordType extends BaseModel
     public static function searchQuery(array $filters = [], bool $withSystem = true): RecordType|Builder
     {
         /** @var RecordType $query */
-        $query = static::where(fn(Builder $builder) => $builder->where($withSystem ? [] : [
+        $query = static::where(fn (Builder $builder) => $builder->where($withSystem ? [] : [
             'system' => false,
         ]))->with('translations');
 
@@ -154,7 +156,7 @@ class RecordType extends BaseModel
         }
 
         if (Arr::get($filters, 'organization_id', false)) {
-            $query->where(function(Builder|RecordType $builder) use ($filters) {
+            $query->where(function (Builder|RecordType $builder) use ($filters) {
                 $builder->whereNull('organization_id');
                 $builder->orWhere('organization_id', Arr::get($filters, 'organization_id'));
             });
@@ -240,7 +242,7 @@ class RecordType extends BaseModel
         if ($this->type == 'bool') {
             return [
                 ['value' => 'Ja', 'name' => trans('record_types.options.yes')],
-                ['value' => 'Nee', 'name' =>  trans('record_types.options.no')],
+                ['value' => 'Nee', 'name' => trans('record_types.options.no')],
             ];
         }
 

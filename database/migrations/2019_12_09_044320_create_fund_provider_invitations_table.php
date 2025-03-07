@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -21,7 +20,7 @@ return new class extends Migration
             $table->boolean('allow_budget')->default(false);
             $table->boolean('allow_products')->default(false);
             $table->enum('state', [
-                'pending', 'accepted', 'expired'
+                'pending', 'accepted', 'expired',
             ])->default('pending');
             $table->string('token', 200);
             $table->timestamps();

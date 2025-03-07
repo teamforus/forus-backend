@@ -15,7 +15,11 @@ use Tests\Traits\MakesTestOrganizations;
 
 class Organization2FATest extends TestCase
 {
-    use DatabaseTransactions, WithFaker, MakesTestIdentities, MakesTestOrganizations, MakesTestFunds;
+    use DatabaseTransactions;
+    use WithFaker;
+    use MakesTestIdentities;
+    use MakesTestOrganizations;
+    use MakesTestFunds;
 
     /**
      * @return void
@@ -152,7 +156,7 @@ class Organization2FATest extends TestCase
         $apiHeaders = $this->makeApiHeaders($identityProxy, [
             'client_type' => 'sponsor',
         ]);
-        $response = $this->patchJson('/api/v1/platform/organizations/'. $organization->id, $data, $apiHeaders);
+        $response = $this->patchJson('/api/v1/platform/organizations/' . $organization->id, $data, $apiHeaders);
 
         $response->assertSuccessful();
         $organization = Organization::find($response->json('data.id'));

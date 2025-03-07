@@ -37,7 +37,7 @@ class IndexBankConnectionsRequest extends BaseFormRequest
 
         return [
             'per_page' => $this->perPageRule(),
-            'state' => 'nullable|in:' . implode(',', $allowedStates)
+            'state' => 'nullable|in:' . implode(',', $allowedStates),
         ];
     }
 }

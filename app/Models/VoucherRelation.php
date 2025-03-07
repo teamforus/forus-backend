@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Models\VoucherRelation
+ * App\Models\VoucherRelation.
  *
  * @property int $id
  * @property int $voucher_id
@@ -38,7 +38,7 @@ class VoucherRelation extends Model
      * @var string[]
      */
     protected $fillable = [
-        'voucher_id', 'bsn'
+        'voucher_id', 'bsn',
     ];
 
     /**

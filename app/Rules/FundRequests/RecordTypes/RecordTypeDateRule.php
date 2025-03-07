@@ -11,7 +11,7 @@ class RecordTypeDateRule extends BaseRecordTypeRule
     {
         return array_filter([
             $this->isRequiredRule(),
-            "date",
+            'date',
             "date_format:$this->dateFormat",
             $this->isValidDate($this->criterion->min) ? "after_or_equal:{$this->criterion->min}" : null,
             $this->isValidDate($this->criterion->max) ? "before_or_equal:{$this->criterion->max}" : null,

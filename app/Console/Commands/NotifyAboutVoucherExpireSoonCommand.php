@@ -38,7 +38,7 @@ class NotifyAboutVoucherExpireSoonCommand extends Command
         foreach ($vouchers as $voucher) {
             $expireInWeeks = ceil(now()->diffInWeeks($voucher->expire_at));
 
-            $has6weeksLogs = $voucher->logs()->where(function(Builder $builder) use ($voucher) {
+            $has6weeksLogs = $voucher->logs()->where(function (Builder $builder) use ($voucher) {
                 $builder->whereIn('event', [
                     Voucher::EVENT_EXPIRING_SOON_BUDGET,
                     Voucher::EVENT_EXPIRING_SOON_PRODUCT,
@@ -49,11 +49,11 @@ class NotifyAboutVoucherExpireSoonCommand extends Command
                 ]);
             })->exists();
 
-            if (!$has6weeksLogs && ($expireInWeeks <= 6 && $expireInWeeks > 3) ) {
+            if (!$has6weeksLogs && ($expireInWeeks <= 6 && $expireInWeeks > 3)) {
                 VoucherExpireSoon::dispatch($voucher);
             }
 
-            $has3weeksLogs = $voucher->logs()->where(function(Builder $builder) use ($voucher) {
+            $has3weeksLogs = $voucher->logs()->where(function (Builder $builder) use ($voucher) {
                 $builder->whereIn('event', [
                     Voucher::EVENT_EXPIRING_SOON_BUDGET,
                     Voucher::EVENT_EXPIRING_SOON_PRODUCT,
@@ -64,7 +64,7 @@ class NotifyAboutVoucherExpireSoonCommand extends Command
                 ]);
             })->exists();
 
-            if (!$has3weeksLogs && ($expireInWeeks <= 3 && $expireInWeeks > 0) ) {
+            if (!$has3weeksLogs && ($expireInWeeks <= 3 && $expireInWeeks > 0)) {
                 VoucherExpireSoon::dispatch($voucher);
             }
         }
@@ -76,14 +76,14 @@ class NotifyAboutVoucherExpireSoonCommand extends Command
      */
     protected function queryVouchers(Builder|Relation|Voucher $builder): Builder|Relation|Voucher
     {
-        $builder->where(function(Builder $builder) {
+        $builder->where(function (Builder $builder) {
             // budget vouchers
-            $builder->where(function(Builder $builder) {
+            $builder->where(function (Builder $builder) {
                 $builder->whereNull('product_id');
             });
 
             // product vouchers
-            $builder->orWhere(function(Builder $builder) {
+            $builder->orWhere(function (Builder $builder) {
                 $builder->whereNotNull('product_id');
                 $builder->whereDoesntHave('transactions');
             });

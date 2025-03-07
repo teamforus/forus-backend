@@ -31,7 +31,7 @@ trait MakesTestFundRequests
         bool $validate,
         array $headers = []
     ): TestResponse {
-        $url = "/api/v1/platform/funds/$fund->id/requests" . ($validate ? "/validate" : "");
+        $url = "/api/v1/platform/funds/$fund->id/requests" . ($validate ? '/validate' : '');
         $proxy = $this->makeIdentityProxy($identity);
         $identity->setBsnRecord('123456789');
 

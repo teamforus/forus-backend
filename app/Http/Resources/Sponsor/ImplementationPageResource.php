@@ -41,15 +41,6 @@ class ImplementationPageResource extends BaseJsonResource
     }
 
     /**
-     * @param Implementation $implementation
-     * @return array
-     */
-    protected function getImplementationData(Implementation $implementation): array
-    {
-        return $implementation->only('id', 'name', 'url_webshop', 'organization_id');
-    }
-
-    /**
      * @param ImplementationPage $page
      * @return string|null
      */
@@ -58,5 +49,14 @@ class ImplementationPageResource extends BaseJsonResource
         return $page->implementation->urlWebshop(ImplementationPage::webshopUriByPageType(
             $page->page_type
         ));
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @return array
+     */
+    protected function getImplementationData(Implementation $implementation): array
+    {
+        return $implementation->only('id', 'name', 'url_webshop', 'organization_id');
     }
 }

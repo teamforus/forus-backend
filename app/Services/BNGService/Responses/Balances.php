@@ -17,7 +17,7 @@ class Balances extends Value
     {
         $balances = $this->data['balances'] ?? [];
 
-        return array_filter($balances, function(array $balance) use ($type) {
+        return array_filter($balances, function (array $balance) use ($type) {
             return !$type || $balance['balanceType'] === $type;
         });
     }

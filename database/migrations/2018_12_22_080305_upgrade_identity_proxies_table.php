@@ -1,12 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
 use App\Models\IdentityProxy;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -14,23 +13,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('identity_proxies', function(Blueprint $table) {
+        Schema::table('identity_proxies', function (Blueprint $table) {
             $table->string('type', 20)->after('id');
             $table->string('exchange_token', 200)->after('access_token');
         });
 
-        IdentityProxy::withTrashed()->get()->each(function(IdentityProxy $identityProxy) {
+        IdentityProxy::withTrashed()->get()->each(function (IdentityProxy $identityProxy) {
             if (!empty($identityProxy['auth_code'])) {
                 $identityProxy->update([
                     'type' => 'pin_code',
                     'exchange_token' => $identityProxy['auth_code'],
                 ]);
-            } else if (!empty($identityProxy['auth_token'])) {
+            } elseif (!empty($identityProxy['auth_token'])) {
                 $identityProxy->update([
                     'type' => 'qr_code',
                     'exchange_token' => $identityProxy['auth_token'],
                 ]);
-            } else if (!empty($identityProxy['auth_email_token'])) {
+            } elseif (!empty($identityProxy['auth_email_token'])) {
                 $identityProxy->update([
                     'type' => 'email_code',
                     'exchange_token' => $identityProxy['auth_email_token'],
@@ -43,7 +42,7 @@ return new class extends Migration
             }
         });
 
-        Schema::table('identity_proxies', function(Blueprint $table) {
+        Schema::table('identity_proxies', function (Blueprint $table) {
             $table->dropColumn('auth_code', 'auth_token', 'auth_email_token');
         });
     }
@@ -55,21 +54,30 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('identity_proxies', function(Blueprint $table) {
+        Schema::table('identity_proxies', function (Blueprint $table) {
             $table->string('auth_token', 64)->nullable();
             $table->string('auth_code', 64)->nullable();
             $table->string('auth_email_token', 64)->nullable();
         });
 
-        IdentityProxy::all()->each(function(IdentityProxy $identityProxy) {
+        IdentityProxy::all()->each(function (IdentityProxy $identityProxy) {
             switch ($identityProxy->type) {
-                case 'pin_code': $identityProxy->forceFill(['auth_code' => $identityProxy->exchange_token])->save(); break;
-                case 'qr_code': $identityProxy->forceFill(['auth_token' => $identityProxy->exchange_token])->save(); break;
-                case 'email_code': $identityProxy->forceFill(['auth_email_token' => $identityProxy->exchange_token])->save(); break;
+                case 'pin_code': $identityProxy->forceFill([
+                    'auth_code' => $identityProxy->exchange_token,
+                ])->save();
+                    break;
+                case 'qr_code': $identityProxy->forceFill([
+                    'auth_token' => $identityProxy->exchange_token,
+                ])->save();
+                    break;
+                case 'email_code': $identityProxy->forceFill([
+                    'auth_email_token' => $identityProxy->exchange_token,
+                ])->save();
+                    break;
             }
         });
 
-        Schema::table('identity_proxies', function(Blueprint $table) {
+        Schema::table('identity_proxies', function (Blueprint $table) {
             $table->dropColumn('type', 'exchange_token');
         });
     }

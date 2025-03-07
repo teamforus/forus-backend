@@ -16,8 +16,8 @@ class PhysicalCardRequestsController extends Controller
      * @param StorePhysicalCardRequestRequest $request
      * @param Organization $organization
      * @param VoucherToken $voucherToken
-     * @return PhysicalCardRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return PhysicalCardRequestResource
      */
     public function store(
         StorePhysicalCardRequestRequest $request,
@@ -38,7 +38,7 @@ class PhysicalCardRequestsController extends Controller
     }
 
     /**
-     * Validate store a physical card
+     * Validate store a physical card.
      *
      * @param StorePhysicalCardRequestRequest $request
      * @param Organization $organization
@@ -49,5 +49,6 @@ class PhysicalCardRequestsController extends Controller
         StorePhysicalCardRequestRequest $request,
         Organization $organization,
         VoucherToken $voucherToken
-    ): void {}
+    ): void {
+    }
 }

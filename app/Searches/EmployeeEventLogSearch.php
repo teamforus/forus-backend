@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Searches;
-
 
 use App\Models\BankConnection;
 use App\Models\Employee;
@@ -71,13 +69,41 @@ class EmployeeEventLogSearch extends BaseSearch
 
     /**
      * @param Builder $builder
+     * @return void
+     */
+    public function whereVoucherExported(Builder $builder): void
+    {
+        if (!$this->hasFilter('loggable_id') || $this->hasFilter('loggable' !== 'voucher')) {
+            return;
+        }
+
+        $builder->where(function (Builder $builder) {
+            $builder->where('event', Fund::EVENT_VOUCHERS_EXPORTED);
+
+            $builder->whereHasMorph('loggable', Fund::class, function (Builder $builder) {
+                $builder->whereHas('organization', function (Builder $builder) {
+                    OrganizationQuery::whereHasPermissions($builder, $this->employee->identity_address, [
+                        'manage_vouchers',
+                    ]);
+                });
+            });
+
+            $builder->whereJsonContains(
+                'data->fund_export_voucher_ids',
+                (int) $this->getFilter('loggable_id')
+            );
+        });
+    }
+
+    /**
+     * @param Builder $builder
      * @param string $morphClass
      * @return void
      */
     protected function whereEvents(Builder $builder, string $morphClass): void
     {
         /** @var Model $morphModel */
-        $morphModel = new $morphClass;
+        $morphModel = new $morphClass();
 
         if (!in_array($morphModel->getMorphClass(), $this->getFilter('loggable', []))) {
             return;
@@ -99,7 +125,8 @@ class EmployeeEventLogSearch extends BaseSearch
         $builder->whereHasMorph('loggable', $morphModel::class);
 
         $builder->whereIn('loggable_id', fn (QBuilder $q) => $q->fromSub(
-            $this->makeMorphQuery($morphModel), $morphModel->getTable()
+            $this->makeMorphQuery($morphModel),
+            $morphModel->getTable()
         ));
     }
 
@@ -131,33 +158,5 @@ class EmployeeEventLogSearch extends BaseSearch
                 Arr::get($this->permissions, "$morphKey.permissions", [])
             );
         })->select('id');
-    }
-
-    /**
-     * @param Builder $builder
-     * @return void
-     */
-    function whereVoucherExported(Builder $builder): void
-    {
-        if (!$this->hasFilter('loggable_id') || $this->hasFilter('loggable' !== 'voucher')) {
-            return;
-        }
-
-        $builder->where(function (Builder $builder) {
-            $builder->where('event', Fund::EVENT_VOUCHERS_EXPORTED);
-
-            $builder->whereHasMorph('loggable', Fund::class, function(Builder $builder) {
-                $builder->whereHas('organization', function(Builder $builder) {
-                    OrganizationQuery::whereHasPermissions($builder, $this->employee->identity_address, [
-                        'manage_vouchers',
-                    ]);
-                });
-            });
-
-            $builder->whereJsonContains(
-                'data->fund_export_voucher_ids',
-                (int) $this->getFilter('loggable_id')
-            );
-        });
     }
 }

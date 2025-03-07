@@ -15,6 +15,7 @@ use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Notification;
+use Throwable;
 
 class NotificationService
 {
@@ -42,7 +43,7 @@ class NotificationService
     }
 
     /**
-     * Add notification token for identity
+     * Add notification token for identity.
      *
      * @param string $identity_address
      * @param string $token
@@ -63,7 +64,7 @@ class NotificationService
     }
 
     /**
-     * Remove notification token
+     * Remove notification token.
      *
      * @param string $token
      * @param string|null $type
@@ -89,7 +90,7 @@ class NotificationService
     }
 
     /**
-     * Send push notification
+     * Send push notification.
      *
      * @param string $identityAddress
      * @param string $title
@@ -139,7 +140,7 @@ class NotificationService
     }
 
     /**
-     * Send restore identity link to address email
+     * Send restore identity link to address email.
      *
      * @param string $email
      * @param EmailFrom|null $emailFrom
@@ -158,15 +159,15 @@ class NotificationService
 
         if (str_contains($source, '_webshop')) {
             $platform = 'de webshop';
-        } else if (str_contains($source, '_sponsor')) {
+        } elseif (str_contains($source, '_sponsor')) {
             $platform = 'het dashboard';
-        } else if (str_contains($source, '_provider')) {
+        } elseif (str_contains($source, '_provider')) {
             $platform = 'het dashboard';
-        } else if (str_contains($source, '_validator')) {
+        } elseif (str_contains($source, '_validator')) {
             $platform = 'het dashboard';
-        } else if (str_contains($source, '_website')) {
+        } elseif (str_contains($source, '_website')) {
             $platform = 'de website';
-        } else if (str_contains($source, 'me_app')) {
+        } elseif (str_contains($source, 'me_app')) {
             $platform = 'Me';
         }
 
@@ -176,7 +177,7 @@ class NotificationService
     }
 
     /**
-     * Send email confirmation link
+     * Send email confirmation link.
      *
      * @param string $email
      * @param string $clientType
@@ -197,7 +198,7 @@ class NotificationService
     }
 
     /**
-     * Send verification link for identity email
+     * Send verification link for identity email.
      *
      * @param string $email
      * @param ?EmailFrom $emailFrom
@@ -215,7 +216,7 @@ class NotificationService
     }
 
     /**
-     * Send digest
+     * Send digest.
      *
      * @param string $email
      * @param BaseDigestMail $mailable
@@ -224,31 +225,6 @@ class NotificationService
     public function sendDigest(string $email, BaseDigestMail $mailable): ?bool
     {
         return $this->sendMail($email, $mailable);
-    }
-
-    /**
-     * Send the mail and check for failure
-     *
-     * @param $email
-     * @param Mailable $mailable
-     * @return bool
-     */
-    private function sendMail($email, Mailable $mailable): bool
-    {
-        if (!Config::get('mail.disable', false)) {
-            try {
-                if (!$this->isUnsubscribed($email, $mailable)) {
-                    $mailable = $this->addGlobalVarsToMailable($mailable, $email);
-                    $this->mailer->to($email)->queue($mailable);
-                }
-            } catch (\Throwable $e) {
-                $this->logFailure($e);
-            }
-
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -275,7 +251,7 @@ class NotificationService
     }
 
     /**
-     * Check if email can be unsubscribed
+     * Check if email can be unsubscribed.
      *
      * @param Mailable $mailable
      * @return bool
@@ -286,11 +262,11 @@ class NotificationService
     }
 
     /**
-     * Check if email is unsubscribed from all message or current email type
+     * Check if email is unsubscribed from all message or current email type.
      * @param string $email
      * @param Mailable $mailable
+     * @throws Throwable
      * @return bool
-     * @throws \Throwable
      */
     protected function isUnsubscribed(string $email, Mailable $mailable): bool
     {
@@ -304,7 +280,7 @@ class NotificationService
     }
 
     /**
-     * Check if Push notification can be unsubscribed
+     * Check if Push notification can be unsubscribed.
      *
      * @param string $key
      * @return bool
@@ -315,7 +291,7 @@ class NotificationService
     }
 
     /**
-     * Check if Push notification is unsubscribed
+     * Check if Push notification is unsubscribed.
      *
      * @param string $identity_address
      * @param string $key
@@ -327,7 +303,32 @@ class NotificationService
     }
 
     /**
-     * Log failure
+     * Send the mail and check for failure.
+     *
+     * @param $email
+     * @param Mailable $mailable
+     * @return bool
+     */
+    private function sendMail($email, Mailable $mailable): bool
+    {
+        if (!Config::get('mail.disable', false)) {
+            try {
+                if (!$this->isUnsubscribed($email, $mailable)) {
+                    $mailable = $this->addGlobalVarsToMailable($mailable, $email);
+                    $this->mailer->to($email)->queue($mailable);
+                }
+            } catch (Throwable $e) {
+                $this->logFailure($e);
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Log failure.
      *
      * @param string|null $message
      * @return void

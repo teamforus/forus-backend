@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Models\Identity2FACode
+ * App\Models\Identity2FACode.
  *
  * @property int $id
  * @property string $code

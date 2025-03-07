@@ -1,12 +1,11 @@
 <?php
 
+use App\Models\ReimbursementCategory;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\ReimbursementCategory;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -20,7 +19,8 @@ return new class extends Migration
             $table->integer('organization_id')->unsigned()->after('id');
 
             $table->foreign('organization_id')
-                ->references('id')->on('organizations')
+                ->references('id')
+                ->on('organizations')
                 ->onDelete('restrict');
         });
     }

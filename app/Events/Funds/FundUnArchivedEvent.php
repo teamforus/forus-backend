@@ -2,4 +2,6 @@
 
 namespace App\Events\Funds;
 
-class FundUnArchivedEvent extends FundArchivedEvent {}
+class FundUnArchivedEvent extends FundArchivedEvent
+{
+}

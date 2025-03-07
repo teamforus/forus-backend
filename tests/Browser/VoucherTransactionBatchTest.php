@@ -8,19 +8,22 @@ use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Searches\VoucherTransactionsSearch;
 use Carbon\Carbon;
+use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesVoucherTransaction;
+use Throwable;
 
 class VoucherTransactionBatchTest extends DuskTestCase
 {
-    use MakesVoucherTransaction, WithFaker, HasFrontendActions;
+    use MakesVoucherTransaction;
+    use WithFaker;
+    use HasFrontendActions;
 
     /**
      * @var string
@@ -30,7 +33,7 @@ class VoucherTransactionBatchTest extends DuskTestCase
     /**
      * @var string
      */
-    protected string $csvPath = "public/transactions_batch_test.csv";
+    protected string $csvPath = 'public/transactions_batch_test.csv';
 
     /**
      * @var int
@@ -38,8 +41,8 @@ class VoucherTransactionBatchTest extends DuskTestCase
     protected int $transactionPerVoucher = 10;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testUploadBatch(): void
     {
@@ -81,8 +84,8 @@ class VoucherTransactionBatchTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param VoucherTransaction $transaction
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     private function searchTransaction(Browser $browser, VoucherTransaction $transaction): void
     {
@@ -90,7 +93,7 @@ class VoucherTransactionBatchTest extends DuskTestCase
         $browser->value('@searchTransaction', $transaction->uid);
 
         $browser->waitFor("@transactionItem$transaction->id");
-        $browser->within("@transactionItem$transaction->id", function(Browser $browser) use ($transaction) {
+        $browser->within("@transactionItem$transaction->id", function (Browser $browser) use ($transaction) {
             $browser->assertSee($transaction->uid);
             $browser->assertSeeIn('@transactionState', $transaction->state_locale);
         });
@@ -98,8 +101,8 @@ class VoucherTransactionBatchTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     private function goToTransactionsPage(Browser $browser): void
     {
@@ -112,8 +115,8 @@ class VoucherTransactionBatchTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Voucher $voucher
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     private function uploadTransactionsBatch(Browser $browser, Voucher $voucher): void
     {
@@ -167,8 +170,8 @@ class VoucherTransactionBatchTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     private function logout(Browser $browser): void
     {

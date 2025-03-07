@@ -21,8 +21,8 @@ class TransactionsController extends Controller
      *
      * @param IndexTransactionsRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexTransactionsRequest $request,
@@ -33,12 +33,12 @@ class TransactionsController extends Controller
 
         $query = VoucherTransaction::searchProvider($request, $organization);
         $totalAmount = currency_format((clone $query)->sum('amount'));
-        
+
         $meta = [
             'total_amount' => $totalAmount,
             'total_amount_locale' => currency_format_locale($totalAmount),
         ];
-        
+
         return ProviderVoucherTransactionResource::queryCollection(VoucherTransactionQuery::order(
             $query,
             $request->input('order_by'),
@@ -48,8 +48,8 @@ class TransactionsController extends Controller
 
     /**
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function getExportFields(
@@ -64,10 +64,10 @@ class TransactionsController extends Controller
     /**
      * @param IndexTransactionsRequest $request
      * @param Organization $organization
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function export(
         IndexTransactionsRequest $request,
@@ -88,8 +88,8 @@ class TransactionsController extends Controller
     /**
      * @param Organization $organization
      * @param VoucherTransaction $voucherTransaction
-     * @return ProviderVoucherTransactionResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProviderVoucherTransactionResource
      */
     public function show(
         Organization $organization,

@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use OneLogin\Saml2\Error;
+use Throwable;
 
 class DigIdSamlRepo extends DigIdRepo
 {
@@ -32,9 +33,9 @@ class DigIdSamlRepo extends DigIdRepo
      * @param string $redirectUrl
      * @param string $sessionSecret
      * @param ClientTls|null $tlsCert
-     * @return DigidAuthRequestData
      * @throws Saml2Exception
      * @throws Error
+     * @return DigidAuthRequestData
      */
     public function makeAuthRequest(
         string $redirectUrl,
@@ -47,7 +48,7 @@ class DigIdSamlRepo extends DigIdRepo
 
         $authRedirectUrl = $auth->login(null, [], true, false, true);
 
-        return (new DigidAuthRequestData)
+        return (new DigidAuthRequestData())
             ->setRequestId($auth->getLastRequestID())
             ->setAuthResolveUrl($redirectUrl)
             ->setAuthRedirectUrl($authRedirectUrl);
@@ -58,10 +59,10 @@ class DigIdSamlRepo extends DigIdRepo
      * @param string $requestId
      * @param string $sessionSecret
      * @param ClientTls|null $tlsCert
-     * @return DigidAuthResolveData
      * @throws DigIdException
      * @throws Saml2Exception
-     * @throws \Throwable
+     * @throws Throwable
+     * @return DigidAuthResolveData
      */
     public function resolveResponse(
         Request $request,
@@ -73,15 +74,15 @@ class DigIdSamlRepo extends DigIdRepo
         $response = $auth->resolveArtifact($request->get('SAMLart'));
 
         if ($response->getInResponseTo() !== $requestId) {
-            throw $this->makeException("DigiD: invalid response.", 'unknown_error');
+            throw $this->makeException('DigiD: invalid response.', 'unknown_error');
         }
 
         if (!$response->isSuccess() && $response->getStatusSubCode() == $this::DIGID_STATUS_CANCELLED) {
-            throw $this->makeException("Digid API Request canceled.", self::DIGID_CANCELLED);
+            throw $this->makeException('Digid API Request canceled.', self::DIGID_CANCELLED);
         }
 
         if (!$response->isSuccess()) {
-            throw $this->makeException("Digid invalid verify credentials request, response body.", 403);
+            throw $this->makeException('Digid invalid verify credentials request, response body.', 403);
         }
 
         return new DigidAuthResolveData(explode(':', $response->getUser()->getNameId())[1]);

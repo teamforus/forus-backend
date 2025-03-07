@@ -23,7 +23,7 @@ class IndexProductsRequest extends BaseFormRequest
             'state' => 'nullable|in:approved,pending',
             ...$this->sortableResourceRules(100, [
                 'name', 'last_monitored_change_at',
-            ])
+            ]),
         ];
     }
 }

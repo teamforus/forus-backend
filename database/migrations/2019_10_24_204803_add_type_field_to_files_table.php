@@ -1,12 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
 use App\Services\FileService\Models\File;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -15,12 +14,12 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasColumn('files', 'type')) {
-            Schema::table('files', function(Blueprint $table) {
-                $table->string('type',60)->default('')->after('original_name');
+            Schema::table('files', function (Blueprint $table) {
+                $table->string('type', 60)->default('')->after('original_name');
             });
 
             File::where('type', '=', '')->update([
-                'type' => 'fund_request_record_proof'
+                'type' => 'fund_request_record_proof',
             ]);
         }
     }

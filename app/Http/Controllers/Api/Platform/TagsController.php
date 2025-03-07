@@ -24,10 +24,10 @@ class TagsController extends Controller
         $query = Tag::query();
 
         if ($request->input('type') === 'funds') {
-            $query->where(function(Builder $builder) {
+            $query->where(function (Builder $builder) {
                 $builder->where('scope', '=', 'webshop');
 
-                $builder->whereHas('funds', function(Builder $builder) {
+                $builder->whereHas('funds', function (Builder $builder) {
                     $fundsQuery = FundQuery::whereActiveFilter(Implementation::activeFundsQuery());
                     $builder->whereIn('funds.id', $fundsQuery->select('funds.id'));
                 });

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Searches;
 
 use App\Models\Fund;
@@ -44,21 +43,6 @@ class ReservationExtraPaymentsSearch extends BaseSearch
 
     /**
      * @param Builder|ReservationExtraPayment $builder
-     * @return Builder|ReservationExtraPayment
-     */
-    protected function order(Builder|ReservationExtraPayment $builder): Builder|ReservationExtraPayment
-    {
-        $orderBy = $this->getFilter('order_by', 'paid_at');
-        $orderDir = $this->getFilter('order_dir', 'desc');
-
-        return ReservationExtraPayment::query()
-            ->fromSub($this->appendSortableFields($builder, $orderBy), 'reservation_extra_payments')
-            ->orderBy($orderBy, $orderDir)
-            ->latest();
-    }
-
-    /**
-     * @param Builder|ReservationExtraPayment $builder
      * @param string|null $orderBy
      * @return Builder|ReservationExtraPayment
      */
@@ -68,21 +52,22 @@ class ReservationExtraPaymentsSearch extends BaseSearch
     ): Builder|ReservationExtraPayment {
         $subQuery = match($orderBy) {
             'fund_name' => Fund::query()
-                ->whereHas('vouchers.product_reservation', function(Builder $builder) {
+                ->whereHas('vouchers.product_reservation', function (Builder $builder) {
                     $builder->whereColumn(
-                        'product_reservations.id', 'reservation_extra_payments.product_reservation_id'
+                        'product_reservations.id',
+                        'reservation_extra_payments.product_reservation_id'
                     );
                 })
                 ->select('name')
                 ->limit(1),
             'provider_name' => Organization::query()
-                ->whereHas('products.product_reservations', function(Builder $builder) {
+                ->whereHas('products.product_reservations', function (Builder $builder) {
                     $builder->whereColumn('product_reservations.id', 'product_reservation_id');
                 })
                 ->select('name')
                 ->limit(1),
             'product_name' => Product::query()
-                ->whereHas('product_reservations', function(Builder $builder) {
+                ->whereHas('product_reservations', function (Builder $builder) {
                     $builder->whereColumn('product_reservations.id', 'product_reservation_id');
                 })
                 ->select('name')
@@ -97,5 +82,20 @@ class ReservationExtraPaymentsSearch extends BaseSearch
         return $builder->addSelect($subQuery ? [
             $orderBy => $subQuery,
         ] : []);
+    }
+
+    /**
+     * @param Builder|ReservationExtraPayment $builder
+     * @return Builder|ReservationExtraPayment
+     */
+    protected function order(Builder|ReservationExtraPayment $builder): Builder|ReservationExtraPayment
+    {
+        $orderBy = $this->getFilter('order_by', 'paid_at');
+        $orderDir = $this->getFilter('order_dir', 'desc');
+
+        return ReservationExtraPayment::query()
+            ->fromSub($this->appendSortableFields($builder, $orderBy), 'reservation_extra_payments')
+            ->orderBy($orderBy, $orderDir)
+            ->latest();
     }
 }

@@ -55,7 +55,7 @@ class MediaPolicy
         if ($media->mediable instanceof Product) {
             // Organizations where identity manages providers and has at least one configured fund
             $organizations = OrganizationQuery::whereHasPermissions(
-                Organization::whereHas('funds', function(Builder $builder) {
+                Organization::whereHas('funds', function (Builder $builder) {
                     return FundQuery::whereIsConfiguredByForus($builder);
                 }),
                 $identity->address,
@@ -67,7 +67,7 @@ class MediaPolicy
                 if (Gate::allows('storeSponsorProduct', [
                     Product::class,
                     $media->mediable->organization,
-                    $organization
+                    $organization,
                 ])) {
                     return true;
                 }

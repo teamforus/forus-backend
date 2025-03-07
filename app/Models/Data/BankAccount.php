@@ -4,10 +4,15 @@ namespace App\Models\Data;
 
 class BankAccount
 {
+    /**
+     * @param string $iban
+     * @param string $name
+     */
     public function __construct(
         protected string $iban,
         protected string $name,
-    ) {}
+    ) {
+    }
 
     /**
      * @return string

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\OrganizationContact
+ * App\Models\OrganizationContact.
  *
  * @property int $id
  * @property int $organization_id
@@ -30,17 +30,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class OrganizationContact extends Model
 {
-    const string TYPE_EMAIL = 'email';
+    public const string TYPE_EMAIL = 'email';
 
-    const string KEY_FUND_BALANCE_LOW_EMAIL = 'fund_balance_low';
-    const string KEY_BANK_CONNECTION_EXPIRING = 'bank_connections_expiring';
-    const string KEY_PROVIDER_APPLIED = 'provider_applied';
+    public const string KEY_FUND_BALANCE_LOW_EMAIL = 'fund_balance_low';
+    public const string KEY_BANK_CONNECTION_EXPIRING = 'bank_connections_expiring';
+    public const string KEY_PROVIDER_APPLIED = 'provider_applied';
 
-    const array TYPES = [
-        self::TYPE_EMAIL
+    public const array TYPES = [
+        self::TYPE_EMAIL,
     ];
 
-    const array AVAILABLE_TYPES = [[
+    public const array AVAILABLE_TYPES = [[
         'key' => self::KEY_FUND_BALANCE_LOW_EMAIL,
         'type' => self::TYPE_EMAIL,
     ], [

@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -16,7 +15,9 @@ return new class extends Migration
         Schema::table('record_validations', function (Blueprint $table) {
             $table->unsignedInteger('prevalidation_id')->after('organization_id')->nullable();
 
-            $table->foreign('prevalidation_id')->references('id')->on('prevalidations')
+            $table->foreign('prevalidation_id')
+                ->references('id')
+                ->on('prevalidations')
                 ->onDelete('cascade');
         });
     }

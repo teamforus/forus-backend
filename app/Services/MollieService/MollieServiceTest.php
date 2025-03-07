@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Services\MollieService;
 
 use App\Models\ReservationExtraPayment;
@@ -30,53 +29,12 @@ class MollieServiceTest implements MollieServiceInterface
      */
     protected function __construct(protected ?MollieToken $token = null)
     {
-        $this->data = Arr::map(Config::get('mollie.test_data'), fn(mixed $item, string $key) => match($key) {
+        $this->data = Arr::map(Config::get('mollie.test_data'), fn (mixed $item, string $key) => match($key) {
             'connection' => $this->mapTestConnectionData($item),
             'payment' => $this->mapTestPaymentData($item),
             'refund' => $item ? $this->mapTestRefundData($item) : null,
             default => null,
         });
-    }
-
-    /**
-     * @param array $data
-     * @return array
-     */
-    private function mapTestConnectionData(array $data): array
-    {
-        return [
-            ...$data,
-            'profile' => [
-                ...$data['profile'],
-                'created_at' => now()
-            ],
-        ];
-    }
-
-    /**
-     * @param array $data
-     * @return array
-     */
-    private function mapTestPaymentData(array $data): array
-    {
-        return [
-            ...$data,
-            'paid_at' => now(),
-            'created_at' => now(),
-            'expires_at' => now()->addMinutes(15),
-        ];
-    }
-
-    /**
-     * @param array $data
-     * @return array
-     */
-    private function mapTestRefundData(array $data): array
-    {
-        return [
-            ...$data,
-            'created_at' => now(),
-        ];
     }
 
     /**
@@ -109,29 +67,6 @@ class MollieServiceTest implements MollieServiceInterface
             'access_token' => token_generator()->generate(32),
             'refresh_token' => $code,
         ]), $state);
-    }
-
-    /**
-     * @param AccessToken $token
-     * @param string $state
-     * @return MollieConnection|null
-     */
-    private function processConnectionByToken(AccessToken $token, string $state): ?MollieConnection
-    {
-        $mollieConnections = MollieConnection::firstWhere('state_code', $state);
-
-        return $mollieConnections?->updateConnectionByToken($token, new ResourceOwner([
-            'id' => Arr::get($this->data, 'connection.organization.id'),
-            'name' => Arr::get($this->data, 'connection.organization.name', ''),
-            'city' => Arr::get($this->data, 'connection.organization.address.city', ''),
-            'street' => Arr::get($this->data, 'connection.organization.address.streetAndNumber', ''),
-            'country' => Arr::get($this->data, 'connection.organization.address.country', ''),
-            'postcode' => Arr::get($this->data, 'connection.organization.address.postalCode', ''),
-            'first_name' => Arr::get($this->data, 'connection.organization.first_name'),
-            'last_name' => Arr::get($this->data, 'connection.organization.last_name'),
-            'vat_number' => Arr::get($this->data, 'connection.organization.vatNumber'),
-            'registration_number' => Arr::get($this->data, 'connection.organization.registrationNumber'),
-        ]));
     }
 
     /**
@@ -205,7 +140,7 @@ class MollieServiceTest implements MollieServiceInterface
     public function readAllProfiles(): Collection
     {
         return collect([
-            new Profile($this->data['connection']['profile'])
+            new Profile($this->data['connection']['profile']),
         ]);
     }
 
@@ -216,7 +151,7 @@ class MollieServiceTest implements MollieServiceInterface
     public function readAllPaymentMethods(string $profileId): Collection
     {
         return collect([
-            new PaymentMethod($this->data['connection']['payment_method'])
+            new PaymentMethod($this->data['connection']['payment_method']),
         ]);
     }
 
@@ -227,7 +162,7 @@ class MollieServiceTest implements MollieServiceInterface
     public function readActivePaymentMethods(string $profileId): Collection
     {
         return collect([
-            new PaymentMethod($this->data['connection']['payment_method'])
+            new PaymentMethod($this->data['connection']['payment_method']),
         ]);
     }
 
@@ -264,7 +199,7 @@ class MollieServiceTest implements MollieServiceInterface
             'method' => self::PAYMENT_METHOD_IDEAL,
             'profile_id' => $profileId,
             'checkout_url' => $attributes['redirect_url'],
-            ...$attributes
+            ...$attributes,
         ]));
     }
 
@@ -300,7 +235,7 @@ class MollieServiceTest implements MollieServiceInterface
             'id' => 'refund_' . Str::random(5),
             'payment_id' => $paymentId,
             'status' => $this->data['refund']['status'] ?? ReservationExtraPaymentRefund::STATE_REFUNDED,
-            ...$attributes
+            ...$attributes,
         ]));
     }
 
@@ -311,7 +246,7 @@ class MollieServiceTest implements MollieServiceInterface
     public function getPaymentRefunds(string $paymentId): Collection
     {
         return collect($this->data['refund'] ? [
-            new Refund($this->data['refund'])
+            new Refund($this->data['refund']),
         ] : []);
     }
 
@@ -321,5 +256,69 @@ class MollieServiceTest implements MollieServiceInterface
     public function revokeToken(): bool
     {
         return true;
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    private function mapTestConnectionData(array $data): array
+    {
+        return [
+            ...$data,
+            'profile' => [
+                ...$data['profile'],
+                'created_at' => now(),
+            ],
+        ];
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    private function mapTestPaymentData(array $data): array
+    {
+        return [
+            ...$data,
+            'paid_at' => now(),
+            'created_at' => now(),
+            'expires_at' => now()->addMinutes(15),
+        ];
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    private function mapTestRefundData(array $data): array
+    {
+        return [
+            ...$data,
+            'created_at' => now(),
+        ];
+    }
+
+    /**
+     * @param AccessToken $token
+     * @param string $state
+     * @return MollieConnection|null
+     */
+    private function processConnectionByToken(AccessToken $token, string $state): ?MollieConnection
+    {
+        $mollieConnections = MollieConnection::firstWhere('state_code', $state);
+
+        return $mollieConnections?->updateConnectionByToken($token, new ResourceOwner([
+            'id' => Arr::get($this->data, 'connection.organization.id'),
+            'name' => Arr::get($this->data, 'connection.organization.name', ''),
+            'city' => Arr::get($this->data, 'connection.organization.address.city', ''),
+            'street' => Arr::get($this->data, 'connection.organization.address.streetAndNumber', ''),
+            'country' => Arr::get($this->data, 'connection.organization.address.country', ''),
+            'postcode' => Arr::get($this->data, 'connection.organization.address.postalCode', ''),
+            'first_name' => Arr::get($this->data, 'connection.organization.first_name'),
+            'last_name' => Arr::get($this->data, 'connection.organization.last_name'),
+            'vat_number' => Arr::get($this->data, 'connection.organization.vatNumber'),
+            'registration_number' => Arr::get($this->data, 'connection.organization.registrationNumber'),
+        ]));
     }
 }

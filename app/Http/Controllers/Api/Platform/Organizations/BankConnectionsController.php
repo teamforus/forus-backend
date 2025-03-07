@@ -19,8 +19,8 @@ class BankConnectionsController extends Controller
      *
      * @param IndexBankConnectionsRequest $request
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(
         IndexBankConnectionsRequest $request,
@@ -46,8 +46,8 @@ class BankConnectionsController extends Controller
      *
      * @param StoreBankConnectionsRequest $request
      * @param Organization $organization
-     * @return BankConnectionResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return BankConnectionResource
      */
     public function store(
         StoreBankConnectionsRequest $request,
@@ -74,8 +74,8 @@ class BankConnectionsController extends Controller
      *
      * @param Organization $organization
      * @param \App\Models\BankConnection $bankConnection
-     * @return BankConnectionResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return BankConnectionResource
      */
     public function show(
         Organization $organization,
@@ -92,8 +92,8 @@ class BankConnectionsController extends Controller
      * @param UpdateBankConnectionsRequest $request
      * @param Organization $organization
      * @param \App\Models\BankConnection $bankConnection
-     * @return BankConnectionResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return BankConnectionResource
      */
     public function update(
         UpdateBankConnectionsRequest $request,

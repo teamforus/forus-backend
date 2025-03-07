@@ -20,7 +20,7 @@ class ProviderProductsDigest extends BaseOrganizationDigest
     protected string $requiredRelation = 'fund_providers';
     protected string $digestKey = 'provider_products';
     protected array $employeePermissions = [
-        'manage_provider_funds'
+        'manage_provider_funds',
     ];
 
     /**
@@ -39,6 +39,7 @@ class ProviderProductsDigest extends BaseOrganizationDigest
 
         if ($totalProducts === 0) {
             $this->updateLastDigest($organization);
+
             return;
         }
 
@@ -62,12 +63,12 @@ class ProviderProductsDigest extends BaseOrganizationDigest
         }
 
         $emailBody = new MailBodyBuilder();
-        $emailBody->h1(trans_choice("digests.provider_products.title", $totalProducts, [
+        $emailBody->h1(trans_choice('digests.provider_products.title', $totalProducts, [
             'provider_name' => $organization->name,
             'count_products' => $totalProducts,
         ]));
 
-        $emailBody->text(trans_choice("digests.provider_products.greetings", $totalProducts, [
+        $emailBody->text(trans_choice('digests.provider_products.greetings', $totalProducts, [
             'provider_name' => $organization->name,
             'count_products' => $totalProducts,
         ]));
@@ -84,7 +85,8 @@ class ProviderProductsDigest extends BaseOrganizationDigest
      * @param Organization $organization
      * @return Collection
      */
-    public function getOrganizationProductReservedEvents(Organization $organization): Collection {
+    public function getOrganizationProductReservedEvents(Organization $organization): Collection
+    {
         $query = EventLog::eventsOfTypeQuery(
             Product::class,
             $organization->products(),

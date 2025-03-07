@@ -9,9 +9,11 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\MediaResource;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
+use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Throwable;
 
 class MediaController extends Controller
 {
@@ -32,8 +34,8 @@ class MediaController extends Controller
      * Display a listing of the resource.
      *
      * @param BaseFormRequest $request
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(BaseFormRequest $request): AnonymousResourceCollection
     {
@@ -54,8 +56,8 @@ class MediaController extends Controller
      * Store a newly created resource in storage.
      *
      * @param StoreMediaRequest $request
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
      * @return MediaResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(StoreMediaRequest $request): MediaResource
     {
@@ -75,7 +77,7 @@ class MediaController extends Controller
                     'identity_address' => $request->auth_address(),
                 ]);
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             logger()->error(sprintf(
                 "Media uploading failed: %s\n%s",
                 $e->getMessage(),
@@ -90,8 +92,8 @@ class MediaController extends Controller
      * Display the specified resource.
      *
      * @param Media $media
-     * @return MediaResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return MediaResource
      */
     public function show(Media $media): MediaResource
     {
@@ -103,8 +105,8 @@ class MediaController extends Controller
     /**
      * @param CloneMediaRequest $request
      * @param Media $media
-     * @return MediaResource
      * @throws AuthorizationException
+     * @return MediaResource
      */
     public function clone(CloneMediaRequest $request, Media $media): MediaResource
     {
@@ -117,7 +119,7 @@ class MediaController extends Controller
             $media->update([
                 'identity_address' => $request->auth_address(),
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             logger()->error(sprintf(
                 "Media uploading failed: %s\n%s",
                 $e->getMessage(),
@@ -132,8 +134,8 @@ class MediaController extends Controller
      * Remove the specified resource from storage.
      *
      * @param Media $media
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
      * @return \Illuminate\Http\JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function destroy(Media $media): JsonResponse
     {

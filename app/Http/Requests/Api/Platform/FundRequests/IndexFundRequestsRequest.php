@@ -28,7 +28,7 @@ class IndexFundRequestsRequest extends BaseFormRequest
             'archived' => 'nullable|boolean',
             ...$this->sortableResourceRules(100, [
                 'id', 'fund_name', 'created_at', 'state', 'no_answer_clarification',
-            ])
+            ]),
         ];
     }
 }

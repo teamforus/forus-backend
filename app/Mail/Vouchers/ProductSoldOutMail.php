@@ -11,8 +11,8 @@ class ProductSoldOutMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_products.sold_out';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

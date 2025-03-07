@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Services\MollieService\Models\MollieConnectionToken
+ * App\Services\MollieService\Models\MollieConnectionToken.
  *
  * @property int $id
  * @property string $access_token

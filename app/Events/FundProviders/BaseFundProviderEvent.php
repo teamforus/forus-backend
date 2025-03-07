@@ -10,7 +10,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseFundProviderEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     protected FundProvider $fundProvider;
 

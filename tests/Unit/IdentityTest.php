@@ -9,7 +9,9 @@ use Tests\TestCase;
 
 class IdentityTest extends TestCase
 {
-    use DoesTesting, DatabaseTransactions, CreatesApplication;
+    use DoesTesting;
+    use DatabaseTransactions;
+    use CreatesApplication;
 
     /**
      * A basic unit test example.

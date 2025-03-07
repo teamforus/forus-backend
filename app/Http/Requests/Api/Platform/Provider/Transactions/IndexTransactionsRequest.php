@@ -29,17 +29,19 @@ class IndexTransactionsRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'organization_id'   => ['nullable', Rule::in(OrganizationQuery::whereHasPermissions(
-                Organization::query(), $this->auth_address(), 'scan_vouchers'
+            'organization_id' => ['nullable', Rule::in(OrganizationQuery::whereHasPermissions(
+                Organization::query(),
+                $this->auth_address(),
+                'scan_vouchers'
             )->pluck('id')->toArray())],
-            'q'                 => 'nullable|string',
-            'state'             => Rule::in(VoucherTransaction::STATES),
-            'fund_state'        => Rule::in(Fund::STATES),
-            'from'              => 'date:Y-m-d',
-            'to'                => 'date:Y-m-d',
-            'amount_min'        => 'numeric|min:0',
-            'amount_max'        => 'numeric|min:0',
-            'per_page'          => $this->perPageRule(),
+            'q' => 'nullable|string',
+            'state' => Rule::in(VoucherTransaction::STATES),
+            'fund_state' => Rule::in(Fund::STATES),
+            'from' => 'date:Y-m-d',
+            'to' => 'date:Y-m-d',
+            'amount_min' => 'numeric|min:0',
+            'amount_max' => 'numeric|min:0',
+            'per_page' => $this->perPageRule(),
         ];
     }
 }

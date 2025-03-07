@@ -1,12 +1,11 @@
 <?php
 
+use App\Models\Product;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Product;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      */
@@ -43,7 +42,7 @@ return new class extends Migration
 
         // set old `no_price` products `price` to 0 just in case
         Product::where('no_price', true)->update([
-            'price' => 0
+            'price' => 0,
         ]);
 
         // set old non `no_price` products `price_type` to `regular`

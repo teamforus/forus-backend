@@ -41,7 +41,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * App\Models\VoucherTransactionBulk
+ * App\Models\VoucherTransactionBulk.
  *
  * @property int $id
  * @property int|null $bank_connection_id
@@ -99,7 +99,8 @@ use Throwable;
  */
 class VoucherTransactionBulk extends BaseModel
 {
-    use HasLogs, HasDbTokens;
+    use HasLogs;
+    use HasDbTokens;
 
     public const string EVENT_RESET = 'reset';
     public const string EVENT_CREATED = 'created';
@@ -229,31 +230,6 @@ class VoucherTransactionBulk extends BaseModel
     }
 
     /**
-     * @param VoucherTransaction $transaction
-     * @param DraftPayment $draftPayment
-     * @return Payment|null
-     * @throws \bunq\Exception\BunqException
-     */
-    protected function findPaymentFromDraftPayment(
-        VoucherTransaction $transaction,
-        DraftPayment $draftPayment
-    ): ?Payment {
-        $filter = function(Payment $payment) use ($transaction) {
-            return strtolower($payment->getDescription()) == strtolower($transaction->payment_description);
-        };
-
-        $payments = $draftPayment->getObject()->getReferencedObject();
-
-        if ($payments instanceof PaymentBatch) {
-            $payments = $payments->getPayments()->getPayment() ?: [];
-        } else {
-            $payments = [$payments];
-        }
-
-        return array_filter(array_filter($payments), $filter)[0] ?? null;
-    }
-
-    /**
      * @return BulkPaymentValue|DraftPayment|null
      */
     public function fetchPayment(): BulkPaymentValue|DraftPayment|null
@@ -282,12 +258,12 @@ class VoucherTransactionBulk extends BaseModel
 
     /**
      * @param DraftPayment $draftPayment
-     * @return VoucherTransactionBulk
      * @throws Throwable
+     * @return VoucherTransactionBulk
      */
     public function setAcceptedBunq(DraftPayment $draftPayment): self
     {
-        DB::transaction(function() use ($draftPayment) {
+        DB::transaction(function () use ($draftPayment) {
             $this->update([
                 'state' => static::STATE_ACCEPTED,
             ]);
@@ -296,7 +272,8 @@ class VoucherTransactionBulk extends BaseModel
 
             foreach ($this->voucher_transactions as $transaction) {
                 $payment = $draftPayment ? $this->findPaymentFromDraftPayment(
-                    $transaction, $draftPayment
+                    $transaction,
+                    $draftPayment
                 ) : null;
 
                 $transaction->setPaid($payment?->getId(), now());
@@ -312,12 +289,12 @@ class VoucherTransactionBulk extends BaseModel
     /**
      * @param Employee|null $employee
      * @param bool $throttle
-     * @return self
      * @throws Throwable
+     * @return self
      */
     public function setAcceptedBNG(?Employee $employee = null, bool $throttle = true): self
     {
-        DB::transaction(function() use ($employee) {
+        DB::transaction(function () use ($employee) {
             $this->update([
                 'state' => static::STATE_ACCEPTED,
                 'accepted_manually' => true,
@@ -346,12 +323,12 @@ class VoucherTransactionBulk extends BaseModel
     public function submitBulkToBunq(?Employee $employee = null): self
     {
         try {
-            DB::transaction(function() use ($employee) {
+            DB::transaction(function () use ($employee) {
                 if (!$this->bank_connection->useContext()) {
-                    throw new Exception("Bank connection invalid.", 403);
+                    throw new Exception('Bank connection invalid.', 403);
                 }
 
-                $transactions = $this->voucher_transactions->map(function(VoucherTransaction $transaction) {
+                $transactions = $this->voucher_transactions->map(function (VoucherTransaction $transaction) {
                     $amount = number_format($transaction->amount, 2, '.', '');
                     $ibanTo = $transaction->getTargetIban();
                     $ibanToName = $transaction->getTargetName();
@@ -410,7 +387,7 @@ class VoucherTransactionBulk extends BaseModel
             $implementation = $implementation ?: Implementation::general();
             $bngService = resolve('bng_service');
 
-            DB::transaction(function() use ($employee, $implementation, $bngService) {
+            DB::transaction(function () use ($employee, $implementation, $bngService) {
                 $requestedExecutionDate = PaymentBNG::getNextBusinessDay()->format('Y-m-d');
 
                 $bulkPayment = $this->createBulkPaymentToBNG($requestedExecutionDate);
@@ -433,7 +410,7 @@ class VoucherTransactionBulk extends BaseModel
             // Throttle calls just in case
             sleep(2);
         } catch (Throwable $e) {
-            $bngService::logError("Submit bulk", $e);
+            $bngService::logError('Submit bulk', $e);
 
             $this->updateModel([
                 'state' => self::STATE_ERROR,
@@ -446,48 +423,10 @@ class VoucherTransactionBulk extends BaseModel
     }
 
     /**
-     * @param string $requestedExecutionDate
-     * @return BulkPayment
-     */
-    private function createBulkPaymentToBNG(string $requestedExecutionDate): BulkPayment {
-        $payments = [];
-
-        foreach ($this->voucher_transactions as $transaction) {
-            $ibanTo = $transaction->getTargetIban();
-            $ibanToName = $transaction->getTargetName();
-
-            $transaction->update([
-                'iban_to' => $ibanTo,
-                'iban_to_name' => $ibanToName,
-                'iban_from' => $this->monetary_account_iban,
-                'payment_description' => $transaction->makePaymentDescription(140),
-            ]);
-
-            $payments[] = new PaymentBNG(
-                new AmountBNG(number_format($transaction->amount, 2, '.', ''), 'EUR'),
-                new Account($this->monetary_account_iban, $this->monetary_account_name),
-                new Account($ibanTo, $ibanToName),
-                $transaction->id,
-                $transaction->payment_description,
-                $requestedExecutionDate
-            );
-        }
-
-        $redirectToken = static::makeUniqueToken('redirect_token', 200);
-
-        return new BulkPayment(
-            new PaymentInitiator(Arr::get($this->bank_connection->bank->data, 'paymentInitiatorName')),
-            new Account($this->monetary_account_iban, $this->monetary_account_name),
-            $payments,
-            new PaymentInfoData($this->id, $requestedExecutionDate, $redirectToken),
-            token_generator()->generate(32)
-        );
-    }
-
-    /**
      * @return string
      */
-    public function getBulkPaymentToBNGXML(): string {
+    public function getBulkPaymentToBNGXML(): string
+    {
         $bulkPayment = $this->createBulkPaymentToBNG(PaymentBNG::getNextBusinessDay()->format('Y-m-d'));
 
         return $bulkPayment->toXml();
@@ -512,7 +451,7 @@ class VoucherTransactionBulk extends BaseModel
     public function setExported(Employee $employee): self
     {
         $this->updateModel([
-            'is_exported' => true
+            'is_exported' => true,
         ])->log(self::EVENT_EXPORTED, $this->getLogModels($employee));
 
         return $this;
@@ -532,14 +471,14 @@ class VoucherTransactionBulk extends BaseModel
             $builder->whereNotNull('bank_cron_time');
             $builder->whereTime('bank_cron_time', '>=', $now->clone()->floorMinute());
             $builder->whereTime('bank_cron_time', '<', $now->clone()->ceilMinute());
-        })->whereHas('funds', function(Builder $builder) {
+        })->whereHas('funds', function (Builder $builder) {
             FundQuery::whereIsInternal($builder);
             FundQuery::whereIsConfiguredByForus($builder);
 
-            $builder->whereHas('voucher_transactions', function(Builder $builder) {
+            $builder->whereHas('voucher_transactions', function (Builder $builder) {
                 VoucherTransactionQuery::whereAvailableForBulking($builder);
             });
-        })->whereHas('bank_connection_active', function(Builder $builder) {
+        })->whereHas('bank_connection_active', function (Builder $builder) {
             $builder->whereHas('bank_connection_default_account');
         })->get();
 
@@ -626,8 +565,8 @@ class VoucherTransactionBulk extends BaseModel
 
     /**
      * @param Employee|null $employee
-     * @return $this
      * @throws Throwable
+     * @return $this
      */
     public function resetBulk(?Employee $employee): self
     {
@@ -642,23 +581,8 @@ class VoucherTransactionBulk extends BaseModel
     }
 
     /**
-     * @param Employee|null $employee
-     * @param array $extraModels
-     * @return array
-     */
-    protected function getLogModels(?Employee $employee = null, array $extraModels = []): array
-    {
-        return array_merge([
-            'sponsor' => $this->bank_connection->organization,
-            'employee' => $employee,
-            'bank_connection' => $this->bank_connection,
-            'voucher_transaction_bulk' => $this,
-        ], $extraModels);
-    }
-
-    /**
-     * @return bool
      * @throws Throwable
+     * @return bool
      */
     public function updatePaymentStatus(): bool
     {
@@ -669,12 +593,13 @@ class VoucherTransactionBulk extends BaseModel
         }
 
         $this->update([
-            'state_fetched_times'   => $this->state_fetched_times + 1,
-            'state_fetched_at'      => now(),
+            'state_fetched_times' => $this->state_fetched_times + 1,
+            'state_fetched_at' => now(),
         ]);
 
         switch (strtolower($payment->getStatus())) {
-            case static::STATE_REJECTED: $this->setRejected(); break;
+            case static::STATE_REJECTED: $this->setRejected();
+                break;
             case static::STATE_ACCEPTED: {
                 if ($this->bank_connection->bank->isBunq()) {
                     $this->setAcceptedBunq($payment);
@@ -707,7 +632,7 @@ class VoucherTransactionBulk extends BaseModel
     public function dashboardDetailsUrl(?string $success = null, ?string $error = null): string
     {
         return $this->implementation->urlSponsorDashboard(sprintf(
-            "/organizations/%d/transaction-bulks/%d",
+            '/organizations/%d/transaction-bulks/%d',
             $this->bank_connection->organization_id,
             $this->id
         ), array_filter(compact('success', 'error')));
@@ -720,7 +645,7 @@ class VoucherTransactionBulk extends BaseModel
      */
     public static function search(Request $request, Organization $organization): Builder
     {
-        $query = self::whereHas('bank_connection', fn(Builder $q) => $q->where([
+        $query = self::whereHas('bank_connection', fn (Builder $q) => $q->where([
             'bank_connections.organization_id' => $organization->id,
         ]));
 
@@ -729,6 +654,101 @@ class VoucherTransactionBulk extends BaseModel
         ]), $query);
 
         return $builder->query();
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @param array $fields
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    public static function export(Request $request, Organization $organization, array $fields): mixed
+    {
+        return self::exportTransform(VoucherTransactionBulkQuery::order(
+            self::search($request, $organization),
+            $request->get('order_by'),
+            $request->get('order_dir')
+        ), $fields);
+    }
+
+    /**
+     * @param VoucherTransaction $transaction
+     * @param DraftPayment $draftPayment
+     * @throws \bunq\Exception\BunqException
+     * @return Payment|null
+     */
+    protected function findPaymentFromDraftPayment(
+        VoucherTransaction $transaction,
+        DraftPayment $draftPayment
+    ): ?Payment {
+        $filter = function (Payment $payment) use ($transaction) {
+            return strtolower($payment->getDescription()) == strtolower($transaction->payment_description);
+        };
+
+        $payments = $draftPayment->getObject()->getReferencedObject();
+
+        if ($payments instanceof PaymentBatch) {
+            $payments = $payments->getPayments()->getPayment() ?: [];
+        } else {
+            $payments = [$payments];
+        }
+
+        return array_filter(array_filter($payments), $filter)[0] ?? null;
+    }
+
+    /**
+     * @param Employee|null $employee
+     * @param array $extraModels
+     * @return array
+     */
+    protected function getLogModels(?Employee $employee = null, array $extraModels = []): array
+    {
+        return array_merge([
+            'sponsor' => $this->bank_connection->organization,
+            'employee' => $employee,
+            'bank_connection' => $this->bank_connection,
+            'voucher_transaction_bulk' => $this,
+        ], $extraModels);
+    }
+
+    /**
+     * @param string $requestedExecutionDate
+     * @return BulkPayment
+     */
+    private function createBulkPaymentToBNG(string $requestedExecutionDate): BulkPayment
+    {
+        $payments = [];
+
+        foreach ($this->voucher_transactions as $transaction) {
+            $ibanTo = $transaction->getTargetIban();
+            $ibanToName = $transaction->getTargetName();
+
+            $transaction->update([
+                'iban_to' => $ibanTo,
+                'iban_to_name' => $ibanToName,
+                'iban_from' => $this->monetary_account_iban,
+                'payment_description' => $transaction->makePaymentDescription(140),
+            ]);
+
+            $payments[] = new PaymentBNG(
+                new AmountBNG(number_format($transaction->amount, 2, '.', ''), 'EUR'),
+                new Account($this->monetary_account_iban, $this->monetary_account_name),
+                new Account($ibanTo, $ibanToName),
+                $transaction->id,
+                $transaction->payment_description,
+                $requestedExecutionDate
+            );
+        }
+
+        $redirectToken = static::makeUniqueToken('redirect_token', 200);
+
+        return new BulkPayment(
+            new PaymentInitiator(Arr::get($this->bank_connection->bank->data, 'paymentInitiatorName')),
+            new Account($this->monetary_account_iban, $this->monetary_account_name),
+            $payments,
+            new PaymentInfoData($this->id, $requestedExecutionDate, $redirectToken),
+            token_generator()->generate(32)
+        );
     }
 
     /**
@@ -745,34 +765,19 @@ class VoucherTransactionBulk extends BaseModel
             'bank_connection.bank',
         ])->withCount([
             'voucher_transactions',
-        ])->get()->map(fn(VoucherTransactionBulk $transactionBulk) => array_only([
-            "id" => $transactionBulk->id,
-            "quantity" => $transactionBulk->voucher_transactions_count,
-            "amount" => currency_format($transactionBulk->voucher_transactions->sum('amount')),
-            "bank_name" => $transactionBulk->bank_connection->bank->name,
-            "date_transaction" => format_datetime_locale($transactionBulk->created_at),
+        ])->get()->map(fn (VoucherTransactionBulk $transactionBulk) => array_only([
+            'id' => $transactionBulk->id,
+            'quantity' => $transactionBulk->voucher_transactions_count,
+            'amount' => currency_format($transactionBulk->voucher_transactions->sum('amount')),
+            'bank_name' => $transactionBulk->bank_connection->bank->name,
+            'date_transaction' => format_datetime_locale($transactionBulk->created_at),
             'state' => trans("export.voucher_transactions_bulks.state-values.$transactionBulk->state"),
         ], $fields))->values();
 
-        return $data->map(function($item) use ($fieldLabels) {
-            return array_reduce(array_keys($item), fn($obj, $key) => array_merge($obj, [
+        return $data->map(function ($item) use ($fieldLabels) {
+            return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
                 $fieldLabels[$key] => $item[$key],
             ]), []);
         });
-    }
-
-    /**
-     * @param Request $request
-     * @param Organization $organization
-     * @param array $fields
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
-     */
-    public static function export(Request $request, Organization $organization, array $fields): mixed
-    {
-        return self::exportTransform(VoucherTransactionBulkQuery::order(
-            self::search($request, $organization),
-            $request->get('order_by'),
-            $request->get('order_dir')
-        ), $fields);
     }
 }

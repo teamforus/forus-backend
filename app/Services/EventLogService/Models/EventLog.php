@@ -9,6 +9,7 @@ use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,7 +19,7 @@ use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Support\Arr;
 
 /**
- * App\Services\EventLogService\Models\EventLog
+ * App\Services\EventLogService\Models\EventLog.
  *
  * @property int $id
  * @property string $loggable_type
@@ -31,7 +32,7 @@ use Illuminate\Support\Arr;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string|null $loggable_locale_dashboard
  * @property-read Identity|null $identity
- * @property-read Model|\Eloquent $loggable
+ * @property-read Model|Eloquent $loggable
  * @method static Builder<static>|EventLog newModelQuery()
  * @method static Builder<static>|EventLog newQuery()
  * @method static Builder<static>|EventLog query()
@@ -48,8 +49,8 @@ use Illuminate\Support\Arr;
  */
 class EventLog extends Model
 {
-    const string TRANSLATION_DASHBOARD = 'dashboard';
-    const string TRANSLATION_WEBSHOP = 'webshop';
+    public const string TRANSLATION_DASHBOARD = 'dashboard';
+    public const string TRANSLATION_WEBSHOP = 'webshop';
 
     protected $fillable = [
         'event', 'data', 'identity_address', 'original',
@@ -158,7 +159,7 @@ class EventLog extends Model
                 : trans('transaction.type.outgoing');
 
             $canSeeAmount = $forWebshop || ($consumer && $this->isSameOrganization($consumer));
-            $eventKey .= $eventKey == 'transaction' ? ($canSeeAmount ? ".complete" : '.basic') : '';
+            $eventKey .= $eventKey == 'transaction' ? ($canSeeAmount ? '.complete' : '.basic') : '';
 
             $attributes = array_merge([
                 'id' => Arr::get($this->data, 'voucher_id'),

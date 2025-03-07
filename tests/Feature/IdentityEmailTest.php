@@ -12,7 +12,8 @@ use Tests\TestCase;
 
 class IdentityEmailTest extends TestCase
 {
-    use AssertsSentEmails, DatabaseTransactions;
+    use AssertsSentEmails;
+    use DatabaseTransactions;
 
     /**
      * @var string
@@ -137,30 +138,16 @@ class IdentityEmailTest extends TestCase
         $proxy = $this->makeIdentityProxy($this->makeIdentity());
 
         for ($i = 1; $i <= config('forus.mail.max_identity_emails'); $i++) {
-            $email = microtime(true) . "@example.com";
+            $email = microtime(true) . '@example.com';
             $response = $this->storeNewEmailRequest($email, $proxy);
 
             $response->assertStatus(201);
             $response->assertJsonStructure(['data' => $this->resourceStructure]);
         }
 
-        $email = microtime(true) . "@example.com";
+        $email = microtime(true) . '@example.com';
         $response = $this->storeNewEmailRequest($email, $proxy);
         $response->assertJsonValidationErrorFor('email');
-    }
-
-    /**
-     * @param string|null $target
-     * @return string|null
-     */
-    private function createEmailAndGetVerificationLink(?string $target = null): ?string
-    {
-        $startTime = now();
-
-        $proxy = $this->makeIdentityProxy($this->makeIdentity());
-        $identityEmail = $this->storeNewEmail($proxy, null, $target);
-
-        return $this->findFirstEmailVerificationLink($identityEmail->email, $startTime);
     }
 
     /**
@@ -226,7 +213,7 @@ class IdentityEmailTest extends TestCase
     ): IdentityEmail {
         $startTime = now();
 
-        $email = $email ?: microtime(true) . "@example.com";
+        $email = $email ?: microtime(true) . '@example.com';
         $response = $this->storeNewEmailRequest($email, $authProxy, $target);
 
         $response->assertStatus(201);
@@ -258,7 +245,21 @@ class IdentityEmailTest extends TestCase
             'target' => $target,
             'email' => $email,
         ], $this->makeApiHeaders($authProxy, [
-            'Client-Type' => 'webshop'
+            'Client-Type' => 'webshop',
         ]));
+    }
+
+    /**
+     * @param string|null $target
+     * @return string|null
+     */
+    private function createEmailAndGetVerificationLink(?string $target = null): ?string
+    {
+        $startTime = now();
+
+        $proxy = $this->makeIdentityProxy($this->makeIdentity());
+        $identityEmail = $this->storeNewEmail($proxy, null, $target);
+
+        return $this->findFirstEmailVerificationLink($identityEmail->email, $startTime);
     }
 }

@@ -8,21 +8,25 @@ use App\Models\Organization;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestIdentities;
+use Throwable;
 
 class ReimbursementTest extends DuskTestCase
 {
-    use AssertsSentEmails, MakesTestIdentities, WithFaker, HasFrontendActions;
+    use AssertsSentEmails;
+    use MakesTestIdentities;
+    use WithFaker;
+    use HasFrontendActions;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testDraftReimbursementCreate(): void
     {
@@ -32,8 +36,8 @@ class ReimbursementTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testPendingReimbursementCreate(): void
     {
@@ -43,8 +47,8 @@ class ReimbursementTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testPendingReimbursementSkipEmailCreate(): void
     {
@@ -54,8 +58,8 @@ class ReimbursementTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testApprovedReimbursementCreate(): void
     {
@@ -65,8 +69,8 @@ class ReimbursementTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testDeclinedReimbursementCreate(): void
     {
@@ -76,8 +80,8 @@ class ReimbursementTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testExpiredReimbursementCreate(): void
     {
@@ -90,8 +94,8 @@ class ReimbursementTest extends DuskTestCase
      * @param Implementation $implementation
      * @param string $state
      * @param bool $withEmail
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function makeReimbursementWithState(
         Implementation $implementation,
@@ -151,8 +155,8 @@ class ReimbursementTest extends DuskTestCase
     /**
      * @param Reimbursement $reimbursement
      * @param string $state
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function resolveReimbursement(
         Reimbursement $reimbursement,
@@ -218,22 +222,9 @@ class ReimbursementTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
-     * @throws TimeOutException
-     */
-    private function assignReimbursement(Browser $browser) : void
-    {
-        $browser->waitFor('@reimbursementAssign');
-        $browser->element('@reimbursementAssign')->click();
-        $browser->waitFor('@successNotification');
-        $browser->waitUntilMissing('@successNotification');
-    }
-
-    /**
-     * @param Browser $browser
      * @param Voucher $voucher
+     * @throws Throwable
      * @return array
-     * @throws \Throwable
      */
     protected function prepareReimbursementRequestForm(Browser $browser, Voucher $voucher): array
     {
@@ -262,20 +253,8 @@ class ReimbursementTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeOutException
-     */
-    private function goToReimbursementsPage(Browser $browser) : void {
-        $browser->waitFor('@userVouchers');
-        $browser->press('@userVouchers');
-        $browser->waitFor('@menuBtnReimbursements');
-        $browser->press('@menuBtnReimbursements');
-    }
-
-    /**
-     * @param Browser $browser
      * @return void
-     * @throws TimeOutException
      */
     protected function saveReimbursement(Browser $browser): void
     {
@@ -289,8 +268,8 @@ class ReimbursementTest extends DuskTestCase
      * @param Browser $browser
      * @param array $data
      * @param Reimbursement $reimbursement
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     protected function submitReimbursement(
         Browser $browser,
@@ -313,9 +292,9 @@ class ReimbursementTest extends DuskTestCase
      * @param Browser $browser
      * @param Reimbursement|null $reimbursement
      * @param array $data
-     * @return void
      * @throws TimeOutException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return void
      */
     protected function assertReimbursementValuesAreCorrect(
         Browser $browser,
@@ -334,8 +313,8 @@ class ReimbursementTest extends DuskTestCase
      * @param Browser $browser
      * @param Reimbursement|null $reimbursement
      * @param array $data
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     protected function assertWebshopReimbursementValuesAreCorrect(
         Browser $browser,
@@ -358,7 +337,7 @@ class ReimbursementTest extends DuskTestCase
         $this->selectReimbursementTabByState($browser, $reimbursement);
 
         $browser->waitFor($duskSelector);
-        $browser->within($duskSelector, function(Browser $browser) use ($reimbursement, $data) {
+        $browser->within($duskSelector, function (Browser $browser) use ($reimbursement, $data) {
             $browser->assertSeeIn('@reimbursementsItemTitle', $data['title']);
             $browser->assertSeeIn('@reimbursementsItemFundName', $data['fund_name']);
             $browser->assertSeeIn('@reimbursementsItemAmount', currency_format_locale($data['amount']));
@@ -399,8 +378,8 @@ class ReimbursementTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Organization|null $organization
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     protected function goToDashboardReimbursementsPage(
         Browser $browser,
@@ -423,32 +402,10 @@ class ReimbursementTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @param Reimbursement $reimbursement
-     * @return void
-     * @throws TimeOutException
-     */
-    private function searchDashboardReimbursement(
-        Browser $browser,
-        Reimbursement $reimbursement,
-    ): void {
-        $this->switchToFund($browser, $reimbursement->voucher->fund_id);
-        $this->selectReimbursementTabByState($browser, $reimbursement);
-
-        if ($reimbursement->voucher?->identity?->email) {
-            $browser->waitFor('@searchReimbursement');
-            $browser->type('@searchReimbursement', $reimbursement->voucher->identity->email);
-
-            $browser->waitFor("@reimbursement$reimbursement->id", 20);
-            $browser->assertVisible("@reimbursement$reimbursement->id");
-        }
-    }
-
-    /**
-     * @param Browser $browser
      * @param Reimbursement|null $reimbursement
      * @param array $data
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function assertDashboardReimbursementValuesAreCorrect(
         Browser $browser,
@@ -467,64 +424,10 @@ class ReimbursementTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @param Reimbursement $reimbursement
-     * @param array $data
-     * @return void
-     * @throws TimeOutException
-     */
-    private function assertDashboardReimbursementPage(
-        Browser $browser,
-        Reimbursement $reimbursement,
-        array $data
-    ) : void {
-        $browser->waitFor("@reimbursementIdentityEmail$reimbursement->id", 10);
-        $browser->assertSeeIn(
-            '@reimbursementIdentityEmail' . $reimbursement->id,
-            $reimbursement->voucher->identity->email ?: 'Geen E-mail'
-        );
-        $browser->assertSeeIn('@reimbursementAmount'.$reimbursement->id, currency_format_locale($data['amount']));
-        $browser->assertSeeIn('@reimbursementState'.$reimbursement->id, $reimbursement->state_locale);
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Reimbursement $reimbursement
-     * @return void
-     * @throws TimeOutException
-     */
-    private function goToDashboardReimbursementDetailsPage(
-        Browser $browser,
-        Reimbursement $reimbursement,
-    ): void {
-        $browser->element("@reimbursement". $reimbursement->id)->click();
-        $browser->waitFor('@reimbursementDetails');
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Reimbursement $reimbursement
-     * @param array $data
-     * @return void
-     */
-    private function assertDashboardReimbursementDetails(
-        Browser $browser,
-        Reimbursement $reimbursement,
-        array $data
-    ) : void {
-        $browser->assertSeeIn('@reimbursementIBAN', $data['iban']);
-        $browser->assertSeeIn('@reimbursementIBANName', $data['iban_name']);
-        $browser->assertSeeIn('@reimbursementAmount', currency_format_locale($data['amount']));
-        $browser->assertSeeIn('@reimbursementState', $reimbursement->state_locale);
-        $browser->assertSeeIn('@reimbursementTitle', $data['title']);
-        $browser->assertSeeIn('@reimbursementDescription', $data['description']);
-    }
-
-    /**
-     * @param Browser $browser
      * @param ?Reimbursement $reimbursement
      * @param array $data
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     protected function submitDraftReimbursementRequest(
         Browser $browser,
@@ -567,7 +470,7 @@ class ReimbursementTest extends DuskTestCase
     protected function assertReimbursementDataIsCorrect(
         ?Reimbursement $reimbursement,
         array $data
-    ): void{
+    ): void {
         $this->assertTrue($reimbursement->title == $data['title']);
         $this->assertTrue($reimbursement->description == $data['description']);
         $this->assertTrue($reimbursement->voucher->fund->name == $data['fund_name']);
@@ -593,8 +496,8 @@ class ReimbursementTest extends DuskTestCase
      * @param Browser $browser
      * @param array $data
      * @param Reimbursement $reimbursement
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     protected function assertReimbursementOverview(
         Browser $browser,
@@ -602,7 +505,7 @@ class ReimbursementTest extends DuskTestCase
         Reimbursement $reimbursement
     ): void {
         $browser->waitFor('@reimbursementOverview');
-        $browser->within('@reimbursementOverview', function(Browser $browser) use ($data, $reimbursement) {
+        $browser->within('@reimbursementOverview', function (Browser $browser) use ($data, $reimbursement) {
             $browser->assertSeeIn('@reimbursementOverviewTitle', $data['title']);
             $browser->assertSeeIn('@reimbursementOverviewAmount', currency_format_locale($data['amount']));
             $browser->assertSeeIn('@reimbursementOverviewSponsorName', $data['sponsor_name']);
@@ -620,8 +523,8 @@ class ReimbursementTest extends DuskTestCase
      * @param Browser $browser
      * @param Reimbursement $reimbursement
      * @param array $data
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     protected function assertReimbursementDetailsPage(
         Browser $browser,
@@ -629,7 +532,7 @@ class ReimbursementTest extends DuskTestCase
         array $data
     ): void {
         $browser->waitFor('@reimbursementDetailsPage');
-        $browser->within('@reimbursementDetailsPage', function(Browser $browser) use ($data, $reimbursement) {
+        $browser->within('@reimbursementDetailsPage', function (Browser $browser) use ($data, $reimbursement) {
             $this->assertReimbursementOverview($browser, $data, $reimbursement);
         });
 
@@ -645,15 +548,16 @@ class ReimbursementTest extends DuskTestCase
             $browser->assertMissing('@reimbursementDetailsPageDeleteBtn');
         }
     }
+
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     protected function fillReimbursementForm(Browser $browser, Voucher $voucher): array
     {
         $formData = $this->makeReimbursementData($voucher);
 
         $browser->waitFor('@reimbursementForm');
-        $browser->within('@reimbursementForm', function(Browser $browser) use ($voucher, $formData) {
+        $browser->within('@reimbursementForm', function (Browser $browser) use ($voucher, $formData) {
             $browser->within('@fileUploader', function (Browser $browser) {
                 $browser->script("document.querySelector('.droparea-hidden-input').style.display = 'block'");
                 $browser->waitFor('[name=file_uploader_input_hidden]');
@@ -671,7 +575,7 @@ class ReimbursementTest extends DuskTestCase
         $browser->waitUntilMissing('@modalPhotoCropper');
 
         $browser->waitFor('@reimbursementForm');
-        $browser->within('@reimbursementForm', function(Browser $browser) use ($voucher, $formData) {
+        $browser->within('@reimbursementForm', function (Browser $browser) use ($voucher, $formData) {
             $browser->type('title', $formData['title']);
             $browser->type('amount', $formData['amount']);
             $browser->type('description', $formData['description']);
@@ -688,8 +592,8 @@ class ReimbursementTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return string[]
-     * @throws \Throwable
      */
     protected function makeReimbursementData(Voucher $voucher): array
     {
@@ -707,9 +611,111 @@ class ReimbursementTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @param Reimbursement $reimbursement
-     * @return void
      * @throws TimeOutException
+     * @return void
+     */
+    private function assignReimbursement(Browser $browser): void
+    {
+        $browser->waitFor('@reimbursementAssign');
+        $browser->element('@reimbursementAssign')->click();
+        $browser->waitFor('@successNotification');
+        $browser->waitUntilMissing('@successNotification');
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeOutException
+     * @return void
+     */
+    private function goToReimbursementsPage(Browser $browser): void
+    {
+        $browser->waitFor('@userVouchers');
+        $browser->press('@userVouchers');
+        $browser->waitFor('@menuBtnReimbursements');
+        $browser->press('@menuBtnReimbursements');
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Reimbursement $reimbursement
+     * @throws TimeOutException
+     * @return void
+     */
+    private function searchDashboardReimbursement(
+        Browser $browser,
+        Reimbursement $reimbursement,
+    ): void {
+        $this->switchToFund($browser, $reimbursement->voucher->fund_id);
+        $this->selectReimbursementTabByState($browser, $reimbursement);
+
+        if ($reimbursement->voucher?->identity?->email) {
+            $browser->waitFor('@searchReimbursement');
+            $browser->type('@searchReimbursement', $reimbursement->voucher->identity->email);
+
+            $browser->waitFor("@reimbursement$reimbursement->id", 20);
+            $browser->assertVisible("@reimbursement$reimbursement->id");
+        }
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Reimbursement $reimbursement
+     * @param array $data
+     * @throws TimeOutException
+     * @return void
+     */
+    private function assertDashboardReimbursementPage(
+        Browser $browser,
+        Reimbursement $reimbursement,
+        array $data
+    ): void {
+        $browser->waitFor("@reimbursementIdentityEmail$reimbursement->id", 10);
+        $browser->assertSeeIn(
+            '@reimbursementIdentityEmail' . $reimbursement->id,
+            $reimbursement->voucher->identity->email ?: 'Geen E-mail'
+        );
+        $browser->assertSeeIn('@reimbursementAmount' . $reimbursement->id, currency_format_locale($data['amount']));
+        $browser->assertSeeIn('@reimbursementState' . $reimbursement->id, $reimbursement->state_locale);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Reimbursement $reimbursement
+     * @throws TimeOutException
+     * @return void
+     */
+    private function goToDashboardReimbursementDetailsPage(
+        Browser $browser,
+        Reimbursement $reimbursement,
+    ): void {
+        $browser->element('@reimbursement' . $reimbursement->id)->click();
+        $browser->waitFor('@reimbursementDetails');
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Reimbursement $reimbursement
+     * @param array $data
+     * @return void
+     */
+    private function assertDashboardReimbursementDetails(
+        Browser $browser,
+        Reimbursement $reimbursement,
+        array $data
+    ): void {
+        $browser->assertSeeIn('@reimbursementIBAN', $data['iban']);
+        $browser->assertSeeIn('@reimbursementIBANName', $data['iban_name']);
+        $browser->assertSeeIn('@reimbursementAmount', currency_format_locale($data['amount']));
+        $browser->assertSeeIn('@reimbursementState', $reimbursement->state_locale);
+        $browser->assertSeeIn('@reimbursementTitle', $data['title']);
+        $browser->assertSeeIn('@reimbursementDescription', $data['description']);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Reimbursement $reimbursement
+     * @throws TimeOutException
+     * @return void
      */
     private function selectReimbursementTabByState(
         Browser $browser,

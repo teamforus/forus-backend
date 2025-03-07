@@ -6,7 +6,7 @@ use App\Models\Organization;
 use App\Notifications\Organizations\BaseOrganizationNotification;
 
 /**
- * Class BasePhysicalCardRequestNotification
+ * Class BasePhysicalCardRequestNotification.
  */
 abstract class BasePhysicalCardRequestNotification extends BaseOrganizationNotification
 {

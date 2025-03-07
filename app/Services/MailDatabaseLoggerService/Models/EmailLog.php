@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 use Mews\Purifier\Facades\Purifier;
 
 /**
- * App\Services\MailDatabaseLoggerService\Models\EmailLog
+ * App\Services\MailDatabaseLoggerService\Models\EmailLog.
  *
  * @property int $id
  * @property int|null $event_log_id

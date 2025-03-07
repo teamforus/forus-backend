@@ -40,26 +40,6 @@ trait ThrottleWithMeta
     }
 
     /**
-     * @param string $error
-     * @param Request $request
-     * @param string $type
-     * @param int $code
-     * @throws AuthorizationJsonException
-     */
-    private function throttle(
-        string $error,
-        Request $request,
-        string $type = 'prevalidations',
-        int $code = 429
-    ): void {
-        if ($this->hasTooManyLoginAttempts($request)) {
-            $this->responseWithThrottleMeta($error, $request, $type, $code);
-        }
-
-        $this->incrementLoginAttempts($request);
-    }
-
-    /**
      * @param Request $request
      * @param string $key
      * @noinspection PhpUnused
@@ -111,7 +91,7 @@ trait ThrottleWithMeta
         throw new AuthorizationJsonException(json_encode([
             'error' => $error,
             'message' => $message,
-            'meta' => array_merge(compact('title', 'message'), $meta)
+            'meta' => array_merge(compact('title', 'message'), $meta),
         ]), $code);
     }
 
@@ -124,5 +104,25 @@ trait ThrottleWithMeta
     protected function throttleKey(Request $request): string
     {
         return Str::lower(($this->throttleKeyPrefix ?: '') . $request->ip());
+    }
+
+    /**
+     * @param string $error
+     * @param Request $request
+     * @param string $type
+     * @param int $code
+     * @throws AuthorizationJsonException
+     */
+    private function throttle(
+        string $error,
+        Request $request,
+        string $type = 'prevalidations',
+        int $code = 429
+    ): void {
+        if ($this->hasTooManyLoginAttempts($request)) {
+            $this->responseWithThrottleMeta($error, $request, $type, $code);
+        }
+
+        $this->incrementLoginAttempts($request);
     }
 }

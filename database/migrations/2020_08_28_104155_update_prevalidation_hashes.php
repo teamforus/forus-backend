@@ -1,10 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use App\Models\Prevalidation;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -14,7 +13,7 @@ return new class extends Migration
     {
         Prevalidation::whereHas('fund.fund_config')->with([
             'fund.fund_config', 'prevalidation_records.record_type',
-        ])->withTrashed()->get()->each(static function(Prevalidation $prevalidation) {
+        ])->withTrashed()->get()->each(static function (Prevalidation $prevalidation) {
             $prevalidation->updateHashes();
         });
     }
@@ -24,5 +23,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down(): void {}
+    public function down(): void
+    {
+    }
 };

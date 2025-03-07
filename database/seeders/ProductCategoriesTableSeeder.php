@@ -41,63 +41,12 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
         if (Schema::hasColumns($model->getTable(), [$model->getLftName(), $model->getRgtName()])) {
             ProductCategory::fixTree();
 
-            ProductCategory::whereIsRoot()->each(function(ProductCategory $category) {
+            ProductCategory::whereIsRoot()->each(function (ProductCategory $category) {
                 $category->descendants()->update([
                     'root_id' => $category->id,
                 ]);
             });
         }
-    }
-
-    /**
-     * @param $file
-     */
-    private static function seedFile($file): void
-    {
-        $taxonomies = self::loadTaxonomies($file, [
-            'en' => 'en-US',
-            'nl' => 'nl-NL'
-        ], 'en')->toArray();
-
-        $depth = 1;
-        $translations = [];
-        $depths = ['categories' => [], 'keys' => []];
-
-        while ($list = self::filterByDepth($taxonomies, $depth)) {
-            $parents = $depths['keys'][$depth - 1] ?? [];
-
-            $categories = array_values(array_map(static function ($category) use (
-                $depth, $parents, &$translations
-            ) {
-                $names = $category['names'][$depth - 1];
-
-                foreach ($names as $locale => $name) {
-                    $translations[] = [
-                        'locale' => $locale,
-                        'name' => $name,
-                        'product_category_id' => $category['id'],
-                    ];
-                }
-
-                return [
-                    'id' => $category['id'],
-                    'key' => $category['keys'][$depth - 1],
-                    'parent_id' => $depth > 1 ? $parents[$category['keys'][$depth - 2]] ?? null : null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }, $list));
-
-            $depths['categories'][$depth] = $categories;
-            $depths['keys'][$depth] = array_pluck($categories, 'id', 'key');
-
-            $depth++;
-        }
-
-        $categories = array_flatten($depths['categories'], 1);
-
-        ProductCategory::query()->insert($categories);
-        ProductCategoryTranslation::query()->insert($translations);
     }
 
     /**
@@ -107,7 +56,7 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
     {
         foreach ($list as $oldId => $newId) {
             Product::withTrashed()->where('product_category_id', $oldId)->update([
-                'product_category_id' => $newId
+                'product_category_id' => $newId,
             ]);
         }
     }
@@ -145,7 +94,7 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
                 [$id, $names] = explode(' - ', $row);
 
                 $names = explode(' > ', $names);
-                $keys = array_map("str_slug", $names);
+                $keys = array_map('str_slug', $names);
                 $depth = count($names);
 
                 if (!isset($taxonomiesNames[$id])) {
@@ -160,12 +109,66 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
 
         return $taxonomiesRaw[$keyLocale]->map(function ($taxonomy) use ($taxonomiesNames) {
             return array_set($taxonomy, 'names', array_map(static function ($nameKey) use (
-                $taxonomiesNames, $taxonomy
+                $taxonomiesNames,
+                $taxonomy
             ) {
                 return array_map(static function ($names) use ($nameKey) {
                     return $names[$nameKey];
                 }, $taxonomiesNames[$taxonomy['id']]);
             }, array_keys($taxonomy['names'])));
         });
+    }
+
+    /**
+     * @param $file
+     */
+    private static function seedFile($file): void
+    {
+        $taxonomies = self::loadTaxonomies($file, [
+            'en' => 'en-US',
+            'nl' => 'nl-NL',
+        ], 'en')->toArray();
+
+        $depth = 1;
+        $translations = [];
+        $depths = ['categories' => [], 'keys' => []];
+
+        while ($list = self::filterByDepth($taxonomies, $depth)) {
+            $parents = $depths['keys'][$depth - 1] ?? [];
+
+            $categories = array_values(array_map(static function ($category) use (
+                $depth,
+                $parents,
+                &$translations
+            ) {
+                $names = $category['names'][$depth - 1];
+
+                foreach ($names as $locale => $name) {
+                    $translations[] = [
+                        'locale' => $locale,
+                        'name' => $name,
+                        'product_category_id' => $category['id'],
+                    ];
+                }
+
+                return [
+                    'id' => $category['id'],
+                    'key' => $category['keys'][$depth - 1],
+                    'parent_id' => $depth > 1 ? $parents[$category['keys'][$depth - 2]] ?? null : null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }, $list));
+
+            $depths['categories'][$depth] = $categories;
+            $depths['keys'][$depth] = array_pluck($categories, 'id', 'key');
+
+            $depth++;
+        }
+
+        $categories = array_flatten($depths['categories'], 1);
+
+        ProductCategory::query()->insert($categories);
+        ProductCategoryTranslation::query()->insert($translations);
     }
 }

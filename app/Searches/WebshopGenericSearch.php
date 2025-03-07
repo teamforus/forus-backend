@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Searches;
-
 
 use App\Models\Implementation;
 use App\Models\Product;
@@ -42,8 +40,8 @@ class WebshopGenericSearch
 
     /**
      * @param array|string $types
-     * @return Builder|null
      * @throws Exception
+     * @return Builder|null
      */
     public function query(array|string $types): ?Builder
     {
@@ -61,16 +59,16 @@ class WebshopGenericSearch
     /**
      * @param string $type
      * @param array $options
-     * @return Builder
      * @throws Exception
+     * @return Builder
      */
     protected function queryOfType(string $type, array $options): Builder
     {
         return match ($type) {
-            "products" => $this->queryProducts($options),
-            "providers" => $this->queryProviders($options),
-            "funds" => $this->queryFunds($options),
-            default => throw new Exception("Unknown query type"),
+            'products' => $this->queryProducts($options),
+            'providers' => $this->queryProviders($options),
+            'funds' => $this->queryFunds($options),
+            default => throw new Exception('Unknown query type'),
         };
     }
 
@@ -109,10 +107,10 @@ class WebshopGenericSearch
         $columns = ['id', 'name', 'created_at'];
 
         return match ($type) {
-            "funds" => $query->select($columns)->selectRaw('"fund" as `item_type`'),
-            "products" => $query->select($columns)->selectRaw('"product" as `item_type`'),
-            "providers" => $query->select($columns)->selectRaw('"provider" as `item_type`'),
-            default => throw new Exception("Unknown query type"),
+            'funds' => $query->select($columns)->selectRaw('"fund" as `item_type`'),
+            'products' => $query->select($columns)->selectRaw('"product" as `item_type`'),
+            'providers' => $query->select($columns)->selectRaw('"provider" as `item_type`'),
+            default => throw new Exception('Unknown query type'),
         };
     }
 }

@@ -1,11 +1,10 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -31,8 +30,10 @@ return new class extends Migration
             $table->integer('expires_in')->unsigned();
             $table->timestamps();
 
-            $table->foreign('wallet_voucher_id'
-            )->references('id')->on('wallet_vouchers')->onDelete('cascade');
+            $table->foreign('wallet_voucher_id')
+                ->references('id')
+                ->on('wallet_vouchers')
+                ->onDelete('cascade');
         });
     }
 };

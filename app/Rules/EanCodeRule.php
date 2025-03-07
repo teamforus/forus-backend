@@ -2,7 +2,6 @@
 
 namespace App\Rules;
 
-
 class EanCodeRule extends BaseRule
 {
     /**

@@ -3,7 +3,7 @@
 namespace App\Models;
 
 /**
- * App\Models\EmployeeRole
+ * App\Models\EmployeeRole.
  *
  * @property int $id
  * @property int $employee_id
@@ -23,6 +23,6 @@ namespace App\Models;
 class EmployeeRole extends BaseModel
 {
     protected $fillable = [
-        'employee_id', 'role_id'
+        'employee_id', 'role_id',
     ];
 }

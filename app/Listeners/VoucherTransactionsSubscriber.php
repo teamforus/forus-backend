@@ -11,6 +11,7 @@ use App\Notifications\Identities\Voucher\IdentityProductVoucherTransactionNotifi
 use App\Notifications\Identities\Voucher\IdentityVoucherBudgetTransactionNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherSubsidyTransactionNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderTransactionBunqSuccessNotification;
+use Exception;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Config;
 
@@ -18,7 +19,7 @@ class VoucherTransactionsSubscriber
 {
     /**
      * @param VoucherTransactionCreated $event
-     * @throws \Exception
+     * @throws Exception
      * @noinspection PhpUnused
      */
     public function onVoucherTransactionCreated(VoucherTransactionCreated $event): void
@@ -36,13 +37,13 @@ class VoucherTransactionsSubscriber
         $transaction->product?->updateSoldOutState();
 
         $eventMeta = [
-            'fund'                  => $voucher->fund,
-            'voucher'               => $voucher,
-            'sponsor'               => $voucher->fund->organization,
-            'provider'              => $transaction->provider,
-            'product'               => $transaction->product,
-            'voucher_transaction'   => $transaction,
-            'implementation'        => $fund->getImplementation(),
+            'fund' => $voucher->fund,
+            'voucher' => $voucher,
+            'sponsor' => $voucher->fund->organization,
+            'provider' => $transaction->provider,
+            'product' => $transaction->product,
+            'voucher_transaction' => $transaction,
+            'implementation' => $fund->getImplementation(),
         ];
 
         if ($type == 'product') {
@@ -110,7 +111,7 @@ class VoucherTransactionsSubscriber
     }
 
     /**
-     * The events dispatcher
+     * The events dispatcher.
      *
      * @param Dispatcher $events
      * @return void

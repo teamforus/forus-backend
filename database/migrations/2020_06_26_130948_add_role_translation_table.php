@@ -1,12 +1,11 @@
 <?php
 
+use Database\Seeders\RolesTableSeeder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Database\Seeders\RolesTableSeeder;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -22,8 +21,11 @@ return new class extends Migration
             $table->string('locale', 3);
 
             $table->unique(['role_id', 'locale']);
-            $table->foreign('role_id'
-            )->references('id')->on('roles')->onDelete('cascade');
+
+            $table->foreign('role_id')
+                ->references('id')
+                ->on('roles')
+                ->onDelete('cascade');
         });
 
         (new RolesTableSeeder())->run();

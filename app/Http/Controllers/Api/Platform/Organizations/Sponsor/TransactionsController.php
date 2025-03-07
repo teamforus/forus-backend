@@ -32,8 +32,8 @@ class TransactionsController extends Controller
      *
      * @param IndexTransactionsRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function index(
@@ -82,8 +82,8 @@ class TransactionsController extends Controller
      *
      * @param StoreTransactionRequest $request
      * @param Organization $organization
-     * @return SponsorVoucherTransactionResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return SponsorVoucherTransactionResource
      * @noinspection PhpUnused
      */
     public function store(
@@ -135,8 +135,8 @@ class TransactionsController extends Controller
     /**
      * @param StoreTransactionBatchRequest $request
      * @param Organization $organization
-     * @return JsonResponse
      * @throws AuthorizationException
+     * @return JsonResponse
      */
     public function storeBatchValidate(
         StoreTransactionBatchRequest $request,
@@ -150,8 +150,8 @@ class TransactionsController extends Controller
     /**
      * @param StoreTransactionBatchRequest $request
      * @param Organization $organization
-     * @return JsonResponse
      * @throws AuthorizationException
+     * @return JsonResponse
      */
     public function storeBatch(
         StoreTransactionBatchRequest $request,
@@ -197,14 +197,14 @@ class TransactionsController extends Controller
 
         return new JsonResponse([
             'created' => SponsorVoucherTransactionResource::queryCollection($query, (clone $query)->count()),
-            'errors' => array_reduce($errorsItems, fn($array, $item) => array_merge($array, $item), []),
+            'errors' => array_reduce($errorsItems, fn ($array, $item) => array_merge($array, $item), []),
         ]);
     }
 
     /**
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function getExportFields(
@@ -219,10 +219,10 @@ class TransactionsController extends Controller
     /**
      * @param IndexTransactionsRequest $request
      * @param Organization $organization
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @noinspection PhpUnused
      */
     public function export(
@@ -244,8 +244,8 @@ class TransactionsController extends Controller
      *
      * @param Organization $organization
      * @param VoucherTransaction $voucherTransaction
-     * @return SponsorVoucherTransactionResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return SponsorVoucherTransactionResource
      * @noinspection PhpUnused
      */
     public function show(

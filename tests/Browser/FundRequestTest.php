@@ -7,20 +7,23 @@ use App\Models\Implementation;
 use App\Searches\FundRequestSearch;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Facebook\WebDriver\Exception\TimeOutException;
+use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
-use Illuminate\Foundation\Testing\WithFaker;
+use Throwable;
 
 class FundRequestTest extends DuskTestCase
 {
-    use AssertsSentEmails, HasFrontendActions, WithFaker;
+    use AssertsSentEmails;
+    use HasFrontendActions;
+    use WithFaker;
 
     protected ?Identity $identity;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testWebshopFundRequests(): void
     {
@@ -48,7 +51,7 @@ class FundRequestTest extends DuskTestCase
             $browser->waitFor('@headerTitle');
 
             $fundRequests = (new FundRequestSearch($search))->query()->where([
-                'identity_id' => $identity->id
+                'identity_id' => $identity->id,
             ])->take(10)->get();
 
             $this->goToIdentityFundRequests($browser);
@@ -72,8 +75,8 @@ class FundRequestTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function goToIdentityFundRequests(Browser $browser): void
     {

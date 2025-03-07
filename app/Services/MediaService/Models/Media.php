@@ -3,6 +3,7 @@
 namespace App\Services\MediaService\Models;
 
 use App\Helpers\Color;
+use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * App\Services\MediaService\Models\Media
+ * App\Services\MediaService\Models\Media.
  *
  * @property int $id
  * @property string|null $uid
@@ -25,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read bool|null $is_dark
- * @property-read Model|\Eloquent|null $mediable
+ * @property-read Model|Eloquent|null $mediable
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\MediaPreset[] $presets
  * @property-read int|null $presets_count
  * @property-read \App\Services\MediaService\Models\MediaPreset|null $size_original
@@ -73,14 +74,14 @@ class Media extends Model
     public function size_original(): HasOne
     {
         return $this->hasOne(MediaPreset::class)->where([
-            'key' => 'original'
+            'key' => 'original',
         ]);
     }
 
     /**
      * @return MorphTo
      */
-    public function mediable() : MorphTo
+    public function mediable(): MorphTo
     {
         return $this->morphTo();
     }

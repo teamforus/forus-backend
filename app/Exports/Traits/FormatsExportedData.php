@@ -5,6 +5,23 @@ namespace App\Exports\Traits;
 trait FormatsExportedData
 {
     /**
+     * @return array
+     */
+    public function columnFormats(): array
+    {
+        $keys = array_keys($this->data->first() ?: []);
+        $alphabet = range('A', 'Z');
+
+        return array_reduce($keys, function ($list, string $key) use ($keys, $alphabet) {
+            if ($format = $this->getFormat($key)) {
+                return array_merge($list, [$alphabet[array_search($key, $keys)] => $format]);
+            }
+
+            return $list;
+        }, []);
+    }
+
+    /**
      * @param string $key
      * @return string|null
      */
@@ -17,22 +34,5 @@ trait FormatsExportedData
         }
 
         return null;
-    }
-
-    /**
-     * @return array
-     */
-    public function columnFormats(): array
-    {
-        $keys = array_keys($this->data->first() ?: []);
-        $alphabet = range('A', 'Z');
-
-        return array_reduce($keys, function($list, string $key) use ($keys, $alphabet) {
-            if ($format = $this->getFormat($key)) {
-                return array_merge($list, [$alphabet[array_search($key, $keys)] => $format]);
-            }
-
-            return $list;
-        }, []);
     }
 }

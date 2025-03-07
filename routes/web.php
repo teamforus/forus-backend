@@ -14,10 +14,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 /**
- * Authorization not required
+ * Authorization not required.
  */
 Route::get('/', function () {
-    return "";
+    return '';
 });
 
 Route::get('/notifications/unsubscribe/{unsubscribeToken}', 'NotificationsController@unsubscribe');

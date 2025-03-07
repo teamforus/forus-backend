@@ -1,13 +1,12 @@
 <?php
 
-use App\Services\EventLogService\Models\EventLog;
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Eloquent\Collection;
 use App\Models\Notification;
 use App\Models\Voucher;
+use App\Services\EventLogService\Models\EventLog;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -17,6 +16,15 @@ return new class extends Migration
     {
         $this->migrateVouchersCreated();
         $this->migrateVouchersAssigned();
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down(): void
+    {
     }
 
     protected function migrateVouchersCreated()
@@ -30,7 +38,7 @@ return new class extends Migration
 
             $voucher = $event->loggable;
             $notifications = Notification::where([
-                'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherAssignedNotification'
+                'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherAssignedNotification',
             ])->where('data->event_id', $event->id);
 
             if ($voucher->fund->isTypeSubsidy()) {
@@ -58,7 +66,7 @@ return new class extends Migration
 
             $voucher = $event->loggable;
             $notifications = Notification::where([
-                'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherAddedNotification'
+                'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherAddedNotification',
             ])->where('data->event_id', $event->id);
 
             if ($voucher->fund->isTypeSubsidy()) {
@@ -90,12 +98,4 @@ return new class extends Migration
 
         return $events;
     }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down(): void
-    {}
 };

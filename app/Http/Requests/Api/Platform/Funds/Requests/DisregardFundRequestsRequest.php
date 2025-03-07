@@ -28,8 +28,8 @@ class DisregardFundRequestsRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'note'      => 'nullable|string|between:0,2000',
-            'notify'    => 'required|boolean',
+            'note' => 'nullable|string|between:0,2000',
+            'notify' => 'required|boolean',
         ];
     }
 }

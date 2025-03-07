@@ -2,4 +2,6 @@
 
 namespace App\Events\Employees;
 
-class EmployeeDeleted extends BaseEmployeeEvent {}
+class EmployeeDeleted extends BaseEmployeeEvent
+{
+}

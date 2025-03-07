@@ -64,7 +64,7 @@ trait AssertsSentEmails
     }
 
     /**
-     * Assert that email confirmation was sent to the identity after given time
+     * Assert that email confirmation was sent to the identity after given time.
      *
      * @param string $email
      * @param string $mailable
@@ -83,7 +83,7 @@ trait AssertsSentEmails
     }
 
     /**
-     * Assert that email confirmation was sent to the identity after given time
+     * Assert that email confirmation was sent to the identity after given time.
      *
      * @param string $email
      * @param Carbon|null $after
@@ -95,12 +95,12 @@ trait AssertsSentEmails
     ): void {
         static::assertNotNull(
             $this->findFirstEmailRestoreLink($email, $after),
-            "No identity email restore link sent."
+            'No identity email restore link sent.'
         );
     }
 
     /**
-     * Assert that email confirmation was sent to the identity after given time
+     * Assert that email confirmation was sent to the identity after given time.
      *
      * @param string $email
      * @param Carbon|null $after
@@ -112,12 +112,12 @@ trait AssertsSentEmails
     ): void {
         static::assertNotNull(
             $this->findFirstEmailConfirmationLink($email, $after),
-            "No identity email confirmation link sent."
+            'No identity email confirmation link sent.'
         );
     }
 
     /**
-     * Assert that email verification was sent to the identity after given time
+     * Assert that email verification was sent to the identity after given time.
      *
      * @param string $email
      * @param Carbon|null $after
@@ -129,7 +129,7 @@ trait AssertsSentEmails
     ): void {
         static::assertNotNull(
             $this->findFirstEmailVerificationLink($email, $after),
-            "No identity email verification link sent."
+            'No identity email verification link sent.'
         );
     }
 

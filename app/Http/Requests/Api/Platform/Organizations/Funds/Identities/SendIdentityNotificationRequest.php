@@ -21,8 +21,8 @@ class SendIdentityNotificationRequest extends IndexIdentitiesRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, string>
      * @throws \App\Exceptions\AuthorizationJsonException
+     * @return array<string, string>
      */
     public function rules(): array
     {

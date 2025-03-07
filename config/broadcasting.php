@@ -61,7 +61,7 @@ return [
             'key_id' => env('APN_KEY_ID'),
             'team_id' => env('APN_TEAM_ID'),
             'app_bundle_id' => env('APN_BUNDLE_ID'),
-            'private_key_content' => file_get_contents(env('APN_CERTIFICATE_PATH', "app/apn-cert.pem")),
+            'private_key_content' => file_get_contents(env('APN_CERTIFICATE_PATH', 'app/apn-cert.pem')),
             'production' => !env('APN_SANDBOX', true),
         ] : null,
 

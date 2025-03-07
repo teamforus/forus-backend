@@ -2,4 +2,6 @@
 
 namespace App\Events\MollieConnections;
 
-class MollieConnectionCreated extends BaseMollieConnectionEvent {}
+class MollieConnectionCreated extends BaseMollieConnectionEvent
+{
+}

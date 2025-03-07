@@ -11,8 +11,8 @@ class VoucherAssignedProductMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_identities.identity_voucher_assigned_product';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

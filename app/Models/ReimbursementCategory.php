@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * App\Models\ReimbursementCategory
+ * App\Models\ReimbursementCategory.
  *
  * @property int $id
  * @property int $organization_id

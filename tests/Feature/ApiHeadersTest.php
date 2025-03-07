@@ -10,6 +10,7 @@ use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\TestsReservations;
+use Throwable;
 
 class ApiHeadersTest extends TestCase
 {
@@ -21,8 +22,8 @@ class ApiHeadersTest extends TestCase
     use MakesTestFundProviders;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testImplementationKey(): void
     {
@@ -36,8 +37,8 @@ class ApiHeadersTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testClientType(): void
     {

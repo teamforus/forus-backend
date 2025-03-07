@@ -19,8 +19,8 @@ class FundProviderChatsController extends Controller
      * @param Request $request
      * @param Organization $organization
      * @param Product $product
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         Request $request,
@@ -31,7 +31,7 @@ class FundProviderChatsController extends Controller
         $this->authorize('showFunds', [$product, $organization]);
 
         $this->authorize('viewAnyProvider', [
-            FundProviderChat::class, $product, $organization
+            FundProviderChat::class, $product, $organization,
         ]);
 
         return FundProviderChatResource::collection(
@@ -49,8 +49,8 @@ class FundProviderChatsController extends Controller
      * @param Organization $organization
      * @param Product $product
      * @param FundProviderChat $fundProviderChat
-     * @return FundProviderChatResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderChatResource
      */
     public function show(
         Organization $organization,
@@ -61,7 +61,7 @@ class FundProviderChatsController extends Controller
         $this->authorize('showFunds', [$product, $organization]);
 
         $this->authorize('viewProvider', [
-            $fundProviderChat, $product, $organization
+            $fundProviderChat, $product, $organization,
         ]);
 
         return new FundProviderChatResource($fundProviderChat);

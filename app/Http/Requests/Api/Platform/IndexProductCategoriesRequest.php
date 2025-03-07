@@ -40,7 +40,7 @@ class IndexProductCategoriesRequest extends BaseFormRequest
     {
         return [
             'nullable',
-            $this->input('parent_id') === 'null' ? '' : 'exists:product_categories,id'
+            $this->input('parent_id') === 'null' ? '' : 'exists:product_categories,id',
         ];
     }
 }

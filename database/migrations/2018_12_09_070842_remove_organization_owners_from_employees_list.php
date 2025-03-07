@@ -1,10 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use App\Models\Organization;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -13,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         // Remove organization owners from employees list
-        Organization::all()->map(function(Organization $organization) {
+        Organization::all()->map(function (Organization $organization) {
             $organization->employees()->where([
-                'identity_address' => $organization->identity_address
+                'identity_address' => $organization->identity_address,
             ])->delete();
         });
     }
@@ -25,5 +24,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down(): void {}
+    public function down(): void
+    {
+    }
 };

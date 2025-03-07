@@ -23,11 +23,11 @@ class ProviderProductResource extends ProductResource
             'sponsor_organization_id' => $this->resource->sponsor_organization_id,
             'sponsor_organization' => new OrganizationBasicResource($this->resource->sponsor_organization),
             'unseen_messages' => $this->hasUnseenMessages(),
-            'excluded_funds' => Fund::whereHas('providers.product_exclusions', function(Builder $builder) {
+            'excluded_funds' => Fund::whereHas('providers.product_exclusions', function (Builder $builder) {
                 $builder->where('product_id', '=', $this->resource->id);
                 $builder->orWhereNull('product_id');
             })->select([
-                'id', 'name', 'state'
+                'id', 'name', 'state',
             ])->get(),
             ...$this->resource->only([
                 'sku', 'ean',
@@ -42,7 +42,8 @@ class ProviderProductResource extends ProductResource
     protected function hasUnseenMessages(): bool
     {
         return FundProviderChatMessage::whereIn(
-            'fund_provider_chat_id', $this->resource->fund_provider_chats()->pluck('id')
+            'fund_provider_chat_id',
+            $this->resource->fund_provider_chats()->pluck('id')
         )->where('provider_seen', '=', false)->count();
     }
 

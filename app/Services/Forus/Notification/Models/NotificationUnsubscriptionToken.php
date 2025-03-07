@@ -5,7 +5,7 @@ namespace App\Services\Forus\Notification\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Services\Forus\Notification\Models\NotificationUnsubscriptionToken
+ * App\Services\Forus\Notification\Models\NotificationUnsubscriptionToken.
  *
  * @property int $id
  * @property string $email
@@ -25,11 +25,11 @@ use Illuminate\Database\Eloquent\Model;
 class NotificationUnsubscriptionToken extends Model
 {
     protected $fillable = [
-        'email', 'token'
+        'email', 'token',
     ];
 
     /**
-     * Make new model with unique token
+     * Make new model with unique token.
      * @param string $email
      * @return NotificationUnsubscriptionToken
      */
@@ -43,7 +43,7 @@ class NotificationUnsubscriptionToken extends Model
     }
 
     /**
-     * Find model by token
+     * Find model by token.
      *
      * @param string $token
      * @param bool $onlyActive
@@ -54,7 +54,7 @@ class NotificationUnsubscriptionToken extends Model
         $token = self::query()->where(compact('token'));
 
         if ($onlyActive) {
-            $token->where('created_at', '>' , now()->subDays(7));
+            $token->where('created_at', '>', now()->subDays(7));
         }
 
         return $token->first();

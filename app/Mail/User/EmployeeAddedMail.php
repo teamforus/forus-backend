@@ -11,8 +11,8 @@ class EmployeeAddedMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_identities.added_employee';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

@@ -26,8 +26,8 @@ class FeedbackController extends Controller
 
     /**
      * @param StoreFeedbackRequest $request
-     * @return JsonResponse
      * @throws AuthorizationJsonException
+     * @return JsonResponse
      */
     public function store(StoreFeedbackRequest $request): JsonResponse
     {

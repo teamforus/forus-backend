@@ -7,7 +7,7 @@ use App\Models\Fund;
 use App\Models\Identity;
 
 /**
- * Notify sponsor that the fund balance is low (reached the threshold)
+ * Notify sponsor that the fund balance is low (reached the threshold).
  */
 class BalanceLowNotification extends BaseFundsNotification
 {

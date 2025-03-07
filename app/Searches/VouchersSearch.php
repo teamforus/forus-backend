@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Searches;
-
 
 use App\Models\Product;
 use App\Models\Voucher;

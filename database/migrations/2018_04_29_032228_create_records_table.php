@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -22,14 +21,20 @@ return new class extends Migration
             $table->integer('order')->unsigned()->default(0);
             $table->timestamps();
 
-            $table->foreign('identity_address'
-            )->references('address')->on('identities')->onDelete('cascade');
+            $table->foreign('identity_address')
+                ->references('address')
+                ->on('identities')
+                ->onDelete('cascade');
 
-            $table->foreign('record_type_id'
-            )->references('id')->on('record_types')->onDelete('cascade');
+            $table->foreign('record_type_id')
+                ->references('id')
+                ->on('record_types')
+                ->onDelete('cascade');
 
-            $table->foreign('record_category_id'
-            )->references('id')->on('record_categories')->onDelete('cascade');
+            $table->foreign('record_category_id')
+                ->references('id')
+                ->on('record_categories')
+                ->onDelete('cascade');
         });
     }
 

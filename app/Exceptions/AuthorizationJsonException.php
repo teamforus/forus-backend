@@ -1,12 +1,12 @@
 <?php
 
-
 namespace App\Exceptions;
 
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 
-class AuthorizationJsonException extends \Exception
+class AuthorizationJsonException extends Exception
 {
     /**
      * @return string
@@ -22,12 +22,12 @@ class AuthorizationJsonException extends \Exception
     public function render(): JsonResponse
     {
         return new JsonResponse(array_merge(
-            json_decode($this->message, JSON_OBJECT_AS_ARRAY), config('app.debug', false) ? [
+            json_decode($this->message, JSON_OBJECT_AS_ARRAY),
+            config('app.debug', false) ? [
                 'file' => $this->getFile(),
                 'line' => $this->getLine(),
                 'trace' => array_map(fn ($trace) => Arr::except($trace, ['args']), $this->getTrace()),
-            ]: []
+            ] : []
         ), $this->getCode());
     }
-
 }

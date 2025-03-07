@@ -29,6 +29,15 @@ abstract class BaseOrganizationDigest extends BaseDigest
 
     /**
      * @param Organization $organization
+     * @return Carbon
+     */
+    public function getLastOrganizationDigestTime(Organization $organization): Carbon
+    {
+        return $organization->lastDigestOfType($this->digestKey)->created_at ?? now()->subDay();
+    }
+
+    /**
+     * @param Organization $organization
      * @param NotificationService $notificationService
      * @return void
      */
@@ -39,19 +48,11 @@ abstract class BaseOrganizationDigest extends BaseDigest
 
     /**
      * @param Organization $organization
-     * @return Carbon
      */
-    public function getLastOrganizationDigestTime(Organization $organization): Carbon
+    protected function updateLastDigest(Organization $organization): void
     {
-        return $organization->lastDigestOfType($this->digestKey)->created_at ?? now()->subDay();
-    }
-
-    /**
-     * @param Organization $organization
-     */
-    protected function updateLastDigest(Organization $organization): void {
         $organization->digests()->create([
-            'type' => $this->digestKey
+            'type' => $this->digestKey,
         ]);
     }
 

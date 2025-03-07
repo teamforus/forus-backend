@@ -13,12 +13,12 @@ use Illuminate\Http\JsonResponse;
 class PhysicalCardsController extends Controller
 {
     /**
-     * Link existing physical card to existing voucher
+     * Link existing physical card to existing voucher.
      * @param StorePhysicalCardRequest $request
      * @param Organization $organization
      * @param Voucher $voucher
-     * @return PhysicalCardResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return PhysicalCardResource
      */
     public function store(
         StorePhysicalCardRequest $request,
@@ -33,13 +33,13 @@ class PhysicalCardsController extends Controller
     }
 
     /**
-     * Unlink physical card from voucher
+     * Unlink physical card from voucher.
      *
      * @param Organization $organization
      * @param Voucher $voucher
      * @param PhysicalCard $physicalCard
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      */
     public function destroy(
         Organization $organization,
@@ -51,7 +51,7 @@ class PhysicalCardsController extends Controller
         $this->authorize('deleteSponsor', [$physicalCard, $voucher, $organization]);
 
         $voucher->physical_cards()->where([
-            'physical_cards.id' => $physicalCard->id
+            'physical_cards.id' => $physicalCard->id,
         ])->delete();
 
         return new JsonResponse([]);

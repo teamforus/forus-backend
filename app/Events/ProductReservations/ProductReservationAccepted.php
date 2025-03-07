@@ -2,4 +2,6 @@
 
 namespace App\Events\ProductReservations;
 
-class ProductReservationAccepted extends BaseProductReservationEvent {}
+class ProductReservationAccepted extends BaseProductReservationEvent
+{
+}

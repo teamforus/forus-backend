@@ -25,7 +25,7 @@ class FundRequestRecordResource extends BaseJsonResource
             ]),
             'record_type' => [
                 ...$this->resource->record_type->only([
-                    'key', 'name', 'type'
+                    'key', 'name', 'type',
                 ]),
                 'name' => $this->resource->record_type?->name ?: $this->resource->record_type?->key,
                 'options' => $this->resource->record_type?->getOptions(),

@@ -46,7 +46,7 @@ class ProductPolicy
     {
         $hard_limit = config('forus.features.dashboard.organizations.products.hard_limit');
         $count_products = $organization->products()->whereDoesntHave('sponsor_organization')->count();
-  
+
         return $organization->identityCan($identity, [
             'manage_products',
         ]) && $count_products < $hard_limit;
@@ -135,7 +135,7 @@ class ProductPolicy
 
     /**
      * To be able to make a reservation, product should not
-     * be expired or sold out and voucher not expired
+     * be expired or sold out and voucher not expired.
      *
      * @param Identity $identity
      * @param Product $product
@@ -303,7 +303,8 @@ class ProductPolicy
         $sponsorManagesProviderProducts = $sponsor->manage_provider_products;
         $identityIsManagingSponsorProviders = $sponsor->identityCan($identity, 'manage_providers');
         $sponsorIsActiveProviderSponsor = OrganizationQuery::whereIsProviderOrganization(
-            Organization::query(), $sponsor
+            Organization::query(),
+            $sponsor
         )->whereKey($provider->id)->exists();
 
         return

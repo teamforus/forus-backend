@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
 
 /**
- * App\Models\Record
+ * App\Models\Record.
  *
  * @property int $id
  * @property string $identity_address
@@ -106,7 +106,7 @@ class Record extends BaseModel
     public function validations_approved(): HasMany
     {
         return $this->hasMany(RecordValidation::class)->where([
-           'state' => 'approved',
+            'state' => 'approved',
         ])->orderByDesc('updated_at');
     }
 
@@ -118,7 +118,7 @@ class Record extends BaseModel
         return $this->validations()->create([
             'uuid' => token_generator()->generate(64),
             'identity_address' => null,
-            'state' => 'pending'
+            'state' => 'pending',
         ]);
     }
 

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * App\Models\Permission
+ * App\Models\Permission.
  *
  * @property int $id
  * @property string $key
@@ -23,26 +23,25 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Permission extends BaseModel
 {
+    public const string VALIDATE_RECORDS = 'validate_records';
+    public const string MANAGE_VALIDATORS = 'manage_validators';
+
+    public const string MANAGE_FUNDS = 'manage_funds';
+    public const string MANAGE_FUND_TEXTS = 'manage_fund_texts';
+
+    public const string MANAGE_PAYOUTS = 'manage_payouts';
+
+    public const string MANAGE_IMPLEMENTATION_NOTIFICATIONS = 'manage_implementation_notifications';
+
+    public const string MANAGE_IDENTITIES = 'manage_identities';
+    public const string VIEW_IDENTITIES = 'view_identities';
+
+    public $timestamps = false;
     protected static Collection|null $memCache = null;
-
-    const string VALIDATE_RECORDS = 'validate_records';
-    const string MANAGE_VALIDATORS = 'manage_validators';
-
-    const string MANAGE_FUNDS = 'manage_funds';
-    const string MANAGE_FUND_TEXTS = 'manage_fund_texts';
-
-    const string MANAGE_PAYOUTS = 'manage_payouts';
-
-    const string MANAGE_IMPLEMENTATION_NOTIFICATIONS = 'manage_implementation_notifications';
-
-    const string MANAGE_IDENTITIES = 'manage_identities';
-    const string VIEW_IDENTITIES = 'view_identities';
 
     protected $fillable = [
         'key', 'name',
     ];
-
-    public $timestamps = false;
 
     /**
      * @return Collection
@@ -57,6 +56,6 @@ class Permission extends BaseModel
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, (new RolePermission)->getTable());
+        return $this->belongsToMany(Role::class, (new RolePermission())->getTable());
     }
 }

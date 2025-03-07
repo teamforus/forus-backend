@@ -7,17 +7,20 @@ use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherQuery;
+use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use Tests\Traits\MakesVoucherTransaction;
 
 class VoucherTransactionBatchTest extends TestCase
 {
-    use MakesVoucherTransaction, WithFaker, DatabaseTransactions;
+    use MakesVoucherTransaction;
+    use WithFaker;
+    use DatabaseTransactions;
 
     /**
      * @var string
@@ -40,8 +43,8 @@ class VoucherTransactionBatchTest extends TestCase
     protected int $vouchersCount = 3;
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testVoucherTransactionBatchWithValidData(): void
     {
@@ -60,8 +63,8 @@ class VoucherTransactionBatchTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testVoucherTransactionsBatchWithInvalidTotalAmount(): void
     {
@@ -88,8 +91,8 @@ class VoucherTransactionBatchTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testVoucherTransactionBatchWithInvalidVoucher(): void
     {
@@ -111,8 +114,8 @@ class VoucherTransactionBatchTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testVoucherTransactionBatchWithInvalidAmount(): void
     {
@@ -143,8 +146,8 @@ class VoucherTransactionBatchTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testVoucherTransactionBatchWithInvalidMultipleAmounts(): void
     {
@@ -170,8 +173,8 @@ class VoucherTransactionBatchTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testVoucherTransactionBatchWithInvalidData(): void
     {
@@ -187,7 +190,7 @@ class VoucherTransactionBatchTest extends TestCase
                 'note' => [],
                 'direct_payment_iban' => '',
                 'direct_payment_name' => '',
-            ])
+            ]),
         ];
 
         $this->checkTransactionBatch($transactions, [
@@ -199,12 +202,12 @@ class VoucherTransactionBatchTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testVoucherTransactionBatchWithInvalidFund(): void
     {
-        $organization = Organization::query()->whereDoesntHave('funds', function(Builder $builder) {
+        $organization = Organization::query()->whereDoesntHave('funds', function (Builder $builder) {
             $builder->whereRelation('fund_config', 'allow_direct_payments', true);
         })->first();
 
@@ -221,7 +224,7 @@ class VoucherTransactionBatchTest extends TestCase
             array_merge($this->getDefaultTransactionData(), [
                 'amount' => $voucher->amount_available,
                 'voucher_number' => $voucher->number,
-            ])
+            ]),
         ];
 
         $errors = [

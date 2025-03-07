@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Models\IdentityEmail
+ * App\Models\IdentityEmail.
  *
  * @property int $id
  * @property string $email
@@ -42,10 +42,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class IdentityEmail extends Model
 {
-    use SoftDeletes, HasRedirectTarget;
+    use SoftDeletes;
+    use HasRedirectTarget;
 
     /**
-     * @var array 
+     * @var array
      */
     protected $fillable = [
         'email', 'identity_address', 'verified', 'primary', 'initial',
@@ -70,7 +71,7 @@ class IdentityEmail extends Model
     }
 
     /**
-     * Send/Resend verification link to the email
+     * Send/Resend verification link to the email.
      */
     public function sendVerificationEmail(array $params = []): IdentityEmail
     {
@@ -86,7 +87,7 @@ class IdentityEmail extends Model
     }
 
     /**
-     * Make this identity email as primary
+     * Make this identity email as primary.
      */
     public function setPrimary(): IdentityEmail
     {
@@ -108,13 +109,13 @@ class IdentityEmail extends Model
     }
 
     /**
-     * Set this identity email as verified
+     * Set this identity email as verified.
      * @return self
      */
     public function setVerified(): IdentityEmail
     {
         $this->update([
-            'verified' => true
+            'verified' => true,
         ]);
 
         if (!$this->identity->primary_email) {

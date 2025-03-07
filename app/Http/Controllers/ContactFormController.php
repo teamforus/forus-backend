@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 class ContactFormController extends Controller
 {
     /**
-     * Get api availability state
+     * Get api availability state.
      *
      * @param SendContactFormRequest $request
      * @return JsonResponse

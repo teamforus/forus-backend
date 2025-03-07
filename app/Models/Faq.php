@@ -8,7 +8,7 @@ use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * App\Models\Faq
+ * App\Models\Faq.
  *
  * @property int $id
  * @property int $faq_id

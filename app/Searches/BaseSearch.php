@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Searches;
-
 
 use App\Http\Requests\BaseFormRequest;
 use Carbon\Carbon;
@@ -114,8 +112,8 @@ class BaseSearch
     }
 
     /**
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      * @throws Exception
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null): LengthAwarePaginator
     {

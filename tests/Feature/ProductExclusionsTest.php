@@ -22,8 +22,8 @@ class ProductExclusionsTest extends TestCase
     use MakesTestOrganizations;
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testProductExclusionForFund(): void
     {
@@ -58,8 +58,8 @@ class ProductExclusionsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testProductExclusionForSeveralFunds(): void
     {
@@ -127,8 +127,8 @@ class ProductExclusionsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testProductExclusionForAllFunds(): void
     {

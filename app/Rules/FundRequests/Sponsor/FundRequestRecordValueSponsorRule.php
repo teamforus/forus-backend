@@ -47,12 +47,12 @@ class FundRequestRecordValueSponsorRule extends BaseFundRequestRule
 
         // Get criteria IDs not excluded by the original rules
         $criteriaIds = $this->fund_request->fund->criteria->filter(
-            fn(FundCriterion $criterion) => !$criterion->isExcludedByRules($values)
+            fn (FundCriterion $criterion) => !$criterion->isExcludedByRules($values)
         )->pluck('id');
 
         // Get criteria IDs not excluded after applying the new value
         $criteriaIdsAfterUpdate = $this->fund_request->fund->criteria->filter(
-            fn(FundCriterion $criterion) => !$criterion->isExcludedByRules([
+            fn (FundCriterion $criterion) => !$criterion->isExcludedByRules([
                 ...$values,
                 $this->criterion->record_type_key => $value,
             ])
@@ -66,7 +66,8 @@ class FundRequestRecordValueSponsorRule extends BaseFundRequestRule
 
         // If there are conflicts, set the error message and stop
         if (!empty($criteriaDiff)) {
-            $this->messageText = "Deze waarde kan niet worden aangepast, omdat dit een conflict veroorzaakt met andere eigenschappen.";
+            $this->messageText = 'Deze waarde kan niet worden aangepast, omdat dit een conflict veroorzaakt met andere eigenschappen.';
+
             return false;
         }
 

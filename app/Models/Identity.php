@@ -9,6 +9,7 @@ use App\Services\Forus\Auth2FAService\Data\Auth2FASecret;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
 use App\Services\Forus\Notification\Models\NotificationToken;
 use App\Services\Forus\Session\Models\Session;
+use Exception;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -26,9 +27,10 @@ use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
 use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;
 use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
+use Throwable;
 
 /**
- * App\Models\Identity
+ * App\Models\Identity.
  *
  * @property int $id
  * @property string $pin_code
@@ -101,7 +103,7 @@ class Identity extends Model implements Authenticatable
     use Notifiable;
 
     /**
-     * How much time user has to exchange their exchange_token
+     * How much time user has to exchange their exchange_token.
      * @var array
      */
     public const array EXPIRATION_TIMES = [
@@ -141,6 +143,14 @@ class Identity extends Model implements Authenticatable
     ];
 
     /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->address ?: '';
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
@@ -153,7 +163,6 @@ class Identity extends Model implements Authenticatable
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
-
     public function emails_verified(): HasMany
     {
         return $this
@@ -199,21 +208,6 @@ class Identity extends Model implements Authenticatable
      * @return BelongsToMany
      * @noinspection PhpUnused
      */
-    private function auth_2fa_providers(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Auth2FAProvider::class,
-            'identity_2fa',
-            'identity_address',
-            'auth_2fa_provider_id',
-            'address',
-        );
-    }
-
-    /**
-     * @return BelongsToMany
-     * @noinspection PhpUnused
-     */
     public function auth_2fa_providers_active(): BelongsToMany
     {
         return $this->auth_2fa_providers()->where([
@@ -251,7 +245,7 @@ class Identity extends Model implements Authenticatable
     public function primary_email(): HasOne
     {
         return $this->hasOne(IdentityEmail::class, 'identity_address', 'address')->where([
-            'primary' => true
+            'primary' => true,
         ]);
     }
 
@@ -262,7 +256,7 @@ class Identity extends Model implements Authenticatable
     public function initial_email(): HasOne
     {
         return $this->hasOne(IdentityEmail::class, 'identity_address', 'address')->where([
-            'initial' => true
+            'initial' => true,
         ]);
     }
 
@@ -460,7 +454,10 @@ class Identity extends Model implements Authenticatable
         bool $initial = false
     ): IdentityEmail|Model {
         return $this->emails()->create(array_merge(compact(
-            'email', 'verified', 'primary', 'initial'
+            'email',
+            'verified',
+            'primary',
+            'initial'
         ), [
             'verification_token' => token_generator()->generate(200),
         ]));
@@ -509,7 +506,7 @@ class Identity extends Model implements Authenticatable
             $identity->addEmail($primaryEmail, false, true, true);
         }
 
-        $identity->createRecordCategory("Relaties");
+        $identity->createRecordCategory('Relaties');
         $identity->addRecords($records);
 
         return $identity;
@@ -524,7 +521,7 @@ class Identity extends Model implements Authenticatable
     {
         return IdentityEmail::where([
             'primary' => 1,
-            'email' => $primaryEmail
+            'email' => $primaryEmail,
         ])->first()?->identity ?: static::make($primaryEmail, $records);
     }
 
@@ -536,14 +533,14 @@ class Identity extends Model implements Authenticatable
     {
         $recordTypes = RecordType::pluck('id', 'key')->toArray();
 
-        return $this->records()->createMany(array_map(fn($key) => [
+        return $this->records()->createMany(array_map(fn ($key) => [
             'record_type_id' => $recordTypes[$key],
             'value' => $records[$key],
         ], array_keys($records)));
     }
 
     /**
-     * Add new record category to identity
+     * Add new record category to identity.
      * @param string $name
      * @param int $order
      * @return RecordCategory|BaseModel
@@ -554,7 +551,7 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * Create new proxy for given identity
+     * Create new proxy for given identity.
      * @return IdentityProxy
      */
     public function makeIdentityPoxy(): IdentityProxy
@@ -563,34 +560,34 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * Make code authorization proxy identity
+     * Make code authorization proxy identity.
      * @return IdentityProxy
      */
-    static function makeAuthorizationCodeProxy(): IdentityProxy
+    public static function makeAuthorizationCodeProxy(): IdentityProxy
     {
         return static::makeProxy('pin_code');
     }
 
     /**
-     * Make token authorization proxy identity
+     * Make token authorization proxy identity.
      * @return IdentityProxy
      */
-    static function makeAuthorizationTokenProxy(): IdentityProxy
+    public static function makeAuthorizationTokenProxy(): IdentityProxy
     {
         return static::makeProxy('qr_code');
     }
 
     /**
-     * Make token authorization proxy identity
+     * Make token authorization proxy identity.
      * @return IdentityProxy
      */
-    static function makeAuthorizationShortTokenProxy(): IdentityProxy
+    public static function makeAuthorizationShortTokenProxy(): IdentityProxy
     {
         return static::makeProxy('short_token');
     }
 
     /**
-     * Make email token authorization proxy identity
+     * Make email token authorization proxy identity.
      * @return IdentityProxy
      */
     public function makeAuthorizationEmailProxy(): IdentityProxy
@@ -611,7 +608,7 @@ class Identity extends Model implements Authenticatable
     ): IdentityProxy {
         try {
             $exchangeToken = static::uniqExchangeToken($type);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             logger()->error($e->getMessage());
             abort(400);
         }
@@ -620,68 +617,7 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * @param $type
-     * @return string
-     * @throws \Throwable
-     */
-    private static function uniqExchangeToken($type): string
-    {
-        do {
-            $token = match ($type) {
-                "qr_code" => static::makeToken(64),
-                "pin_code" => (string) random_int(111111, 999999),
-                "email_code" => static::makeToken(128),
-                "short_token", "confirmation_code" => static::makeToken(200),
-                default => throw new \Exception(trans('identity-proxy.unknown_token_type')),
-            };
-        } while(IdentityProxy::whereAccessToken($token)->exists());
-
-        return $token;
-    }
-
-    /**
-     * Create new proxy
-     *
-     * @param string $exchange_token
-     * @param string $type
-     * @param int $expires_in
-     * @param Identity|null $identity
-     * @param string $state
-     * @return IdentityProxy
-     */
-    private static function createProxy(
-        string $exchange_token,
-        string $type,
-        int $expires_in,
-        Identity $identity = null,
-        string $state = 'pending'
-    ): IdentityProxy {
-        $access_token = static::makeAccessToken();
-
-        return IdentityProxy::create(array_merge([
-            'identity_address' => $identity?->address,
-        ], compact('exchange_token', 'type', 'expires_in', 'state', 'access_token')));
-    }
-
-    /**
-     * @return string
-     */
-    protected static function makeAccessToken(): string
-    {
-        return static::makeToken(200);
-    }
-
-    /**
-     * @param int $size
-     * @return string
-     */
-    protected static function makeToken(int $size): string
-    {
-        return app('token_generator')->generate($size);
-    }
-
-    /**
-     * Authorize proxy identity by code
+     * Authorize proxy identity by code.
      * @param string $code
      * @param string|null $ip
      * @param IdentityProxy|null $inherit2FA
@@ -696,7 +632,7 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * Authorize proxy identity by token
+     * Authorize proxy identity by token.
      * @param string $token
      * @param string|null $ip
      * @param IdentityProxy|null $inherit2FA
@@ -711,7 +647,7 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * Authorize proxy identity by token
+     * Authorize proxy identity by token.
      * @param string $token
      * @param string|null $ip
      * @return bool
@@ -722,62 +658,7 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * Activate proxy by exchange_token
-     *
-     * @param string $type
-     * @param string $exchangeToken
-     * @param Identity|null $identity
-     * @param string|null $ip
-     * @param IdentityProxy|null $inherit2FA
-     * @return IdentityProxy
-     */
-    private static function exchangeToken(
-        string $type,
-        string $exchangeToken,
-        Identity $identity = null,
-        ?string $ip = null,
-        ?IdentityProxy $inherit2FA = null,
-    ): IdentityProxy {
-        $proxy = IdentityProxy::findByExchangeToken($exchangeToken, $type);
-
-        if (empty($proxy)) {
-            abort(404, trans('identity-proxy.code.not-found'));
-        }
-
-        if (!$proxy->isPending()) {
-            abort(403, trans('identity-proxy.code.not-pending'));
-        }
-
-        if ($proxy->exchange_time_expired) {
-            abort(403, trans('identity-proxy.code.expired'));
-        }
-
-        // Update identity_address only if provided
-        $proxy->update(array_merge([
-            'state' => IdentityProxy::STATE_ACTIVE,
-            'activated_at' => now(),
-        ], $identity ? [
-            'identity_address' => $identity->address,
-        ] : []));
-
-        $initialEmail = $proxy->identity->initial_email;
-        $isEmailToken = in_array($type, ['email_code', 'confirmation_code']);
-
-        if ($inherit2FA) {
-            $proxy->inherit2FAStateFrom($inherit2FA);
-        } else if ($ip) {
-            $proxy->inherit2FAState($ip, Config::get('forus.auth_2fa.remember_hours'));
-        }
-
-        if ($isEmailToken && $initialEmail && !$initialEmail->verified) {
-            $initialEmail->setVerified();
-        }
-
-        return $proxy;
-    }
-
-    /**
-     * Authorize proxy identity by token
+     * Authorize proxy identity by token.
      * @param string $token
      * @return IdentityProxy
      */
@@ -797,20 +678,7 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * @param $exchange_token
-     * @param $type
-     * @return IdentityProxy|null
-     */
-    private static function proxyByExchangeToken($exchange_token, $type): ?IdentityProxy
-    {
-        return IdentityProxy::where([
-            'exchange_token'    => $exchange_token,
-            'type'              => $type
-        ])->first();
-    }
-
-    /**
-     * Authorize proxy identity by email token
+     * Authorize proxy identity by email token.
      * @param string $token
      * @param string|null $ip
      * @return string
@@ -821,7 +689,7 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * Authorize proxy identity by email token
+     * Authorize proxy identity by email token.
      * @param string $token
      * @param string|null $ip
      * @return string
@@ -858,11 +726,11 @@ class Identity extends Model implements Authenticatable
         ])->exists();
 
         if ($recordType->key === 'primary_email' && $hasRecordOfSameType) {
-            abort(403,'record.exceptions.primary_email_already_exists');
+            abort(403, 'record.exceptions.primary_email_already_exists');
         }
 
         if ($recordType->key === 'bsn') {
-            abort(403,'record.exceptions.bsn_record_cant_be_created');
+            abort(403, 'record.exceptions.bsn_record_cant_be_created');
         }
 
         return Record::create([
@@ -883,7 +751,7 @@ class Identity extends Model implements Authenticatable
         $recordType = RecordType::findByKey('bsn');
 
         if ($this->bsn && $this->bsn !== $bsnValue) {
-            abort(403,'record.exceptions.bsn_record_cant_be_changed');
+            abort(403, 'record.exceptions.bsn_record_cant_be_changed');
         }
 
         $record = $this->records()->create([
@@ -948,14 +816,6 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * @return string
-     */
-    public function __toString()
-    {
-        return $this->address ?: "";
-    }
-
-    /**
      * @return bool
      */
     public function is2FARequired(): bool
@@ -995,7 +855,7 @@ class Identity extends Model implements Authenticatable
      */
     public function hasVouchersFromFundsWhere2FAIsRequired(): bool
     {
-        return $this->vouchers()->whereHas('fund', function(Builder $builder) {
+        return $this->vouchers()->whereHas('fund', function (Builder $builder) {
             $builder->whereRelation(
                 'fund_config',
                 'auth_2fa_policy',
@@ -1030,10 +890,10 @@ class Identity extends Model implements Authenticatable
     /**
      * @param string $company
      * @param string $holder
-     * @return Auth2FASecret
      * @throws IncompatibleWithGoogleAuthenticatorException
      * @throws InvalidCharactersException
      * @throws SecretKeyTooShortException
+     * @return Auth2FASecret
      */
     public function make2FASecret(string $company, string $holder): Auth2FASecret
     {
@@ -1101,5 +961,149 @@ class Identity extends Model implements Authenticatable
     public function getCurrent2FAHolderName(): string
     {
         return $this->email ?: 'Gebruiker [' . Str::upper(substr($this->address, 2, 10)) . ']';
+    }
+
+    /**
+     * @return string
+     */
+    protected static function makeAccessToken(): string
+    {
+        return static::makeToken(200);
+    }
+
+    /**
+     * @param int $size
+     * @return string
+     */
+    protected static function makeToken(int $size): string
+    {
+        return app('token_generator')->generate($size);
+    }
+
+    /**
+     * @return BelongsToMany
+     * @noinspection PhpUnused
+     */
+    private function auth_2fa_providers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Auth2FAProvider::class,
+            'identity_2fa',
+            'identity_address',
+            'auth_2fa_provider_id',
+            'address',
+        );
+    }
+
+    /**
+     * @param $type
+     * @throws Throwable
+     * @return string
+     */
+    private static function uniqExchangeToken($type): string
+    {
+        do {
+            $token = match ($type) {
+                'qr_code' => static::makeToken(64),
+                'pin_code' => (string) random_int(111111, 999999),
+                'email_code' => static::makeToken(128),
+                'short_token', 'confirmation_code' => static::makeToken(200),
+                default => throw new Exception(trans('identity-proxy.unknown_token_type')),
+            };
+        } while (IdentityProxy::whereAccessToken($token)->exists());
+
+        return $token;
+    }
+
+    /**
+     * Create new proxy.
+     *
+     * @param string $exchange_token
+     * @param string $type
+     * @param int $expires_in
+     * @param Identity|null $identity
+     * @param string $state
+     * @return IdentityProxy
+     */
+    private static function createProxy(
+        string $exchange_token,
+        string $type,
+        int $expires_in,
+        Identity $identity = null,
+        string $state = 'pending'
+    ): IdentityProxy {
+        $access_token = static::makeAccessToken();
+
+        return IdentityProxy::create(array_merge([
+            'identity_address' => $identity?->address,
+        ], compact('exchange_token', 'type', 'expires_in', 'state', 'access_token')));
+    }
+
+    /**
+     * Activate proxy by exchange_token.
+     *
+     * @param string $type
+     * @param string $exchangeToken
+     * @param Identity|null $identity
+     * @param string|null $ip
+     * @param IdentityProxy|null $inherit2FA
+     * @return IdentityProxy
+     */
+    private static function exchangeToken(
+        string $type,
+        string $exchangeToken,
+        Identity $identity = null,
+        ?string $ip = null,
+        ?IdentityProxy $inherit2FA = null,
+    ): IdentityProxy {
+        $proxy = IdentityProxy::findByExchangeToken($exchangeToken, $type);
+
+        if (empty($proxy)) {
+            abort(404, trans('identity-proxy.code.not-found'));
+        }
+
+        if (!$proxy->isPending()) {
+            abort(403, trans('identity-proxy.code.not-pending'));
+        }
+
+        if ($proxy->exchange_time_expired) {
+            abort(403, trans('identity-proxy.code.expired'));
+        }
+
+        // Update identity_address only if provided
+        $proxy->update(array_merge([
+            'state' => IdentityProxy::STATE_ACTIVE,
+            'activated_at' => now(),
+        ], $identity ? [
+            'identity_address' => $identity->address,
+        ] : []));
+
+        $initialEmail = $proxy->identity->initial_email;
+        $isEmailToken = in_array($type, ['email_code', 'confirmation_code']);
+
+        if ($inherit2FA) {
+            $proxy->inherit2FAStateFrom($inherit2FA);
+        } elseif ($ip) {
+            $proxy->inherit2FAState($ip, Config::get('forus.auth_2fa.remember_hours'));
+        }
+
+        if ($isEmailToken && $initialEmail && !$initialEmail->verified) {
+            $initialEmail->setVerified();
+        }
+
+        return $proxy;
+    }
+
+    /**
+     * @param $exchange_token
+     * @param $type
+     * @return IdentityProxy|null
+     */
+    private static function proxyByExchangeToken($exchange_token, $type): ?IdentityProxy
+    {
+        return IdentityProxy::where([
+            'exchange_token' => $exchange_token,
+            'type' => $type,
+        ])->first();
     }
 }

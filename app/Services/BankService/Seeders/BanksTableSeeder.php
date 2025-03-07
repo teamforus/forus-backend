@@ -20,10 +20,10 @@ use Throwable;
 class BanksTableSeeder extends Seeder
 {
     public string $warningBankUsageMessage =
-        "Although BUNQ/BNG connection is not required to run the app, " .
-        "you will not be able to use/test some platform functionality, " .
-        "like: top-ups and transactions payout which means all the " .
-        "transactions will always remain as ‘pending’ unless you " .
+        'Although BUNQ/BNG connection is not required to run the app, ' .
+        'you will not be able to use/test some platform functionality, ' .
+        'like: top-ups and transactions payout which means all the ' .
+        'transactions will always remain as ‘pending’ unless you ' .
         "change the state to 'success' manually as sponsor.";
 
     /**
@@ -41,6 +41,122 @@ class BanksTableSeeder extends Seeder
     {
         $this->bunqBank();
         $this->bngBank();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasBunqContextFile(): bool
+    {
+        return file_exists(storage_path($this->bunqContextFile));
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasBngContextFile(): bool
+    {
+        return file_exists(storage_path($this->bngContextFile));
+    }
+
+    /**
+     * @return array|null
+     */
+    public function makeBunqBankInstallation(): ?Bank
+    {
+        $key = 'bunq';
+        $bunqKey = Config::get('forus.seeders.bank_seeder.bunq_key');
+        $environment = $this->apiKeyToEnvironmentType($bunqKey);
+        $description = 'Forus PSD2 development installation.';
+        $errorPrefix = 'Could not create BUNQ bank context/installation: ';
+
+        if (!$bunqKey) {
+            if (App::runningUnitTests()) {
+                $this->printWarning($errorPrefix . 'The api key is not present in your .env file.');
+            }
+
+            return null;
+        }
+
+        try {
+            $allPermittedIp = json_decode(Config::get('forus.seeders.bank_seeder.bunq_ip', '[]'), true);
+            $context = ApiContext::create($environment, $bunqKey, $description, $allPermittedIp);
+
+            BunqContext::loadApiContext(ApiContext::fromJson($context->toJson()));
+
+            $oauth_client = OauthClient::listing()->getValue()[0] ?? null;
+            $oauth_client = $oauth_client ?: OauthClient::get(OauthClient::create()->getValue())->getValue();
+
+            return Bank::updateOrCreate(compact('key'), [
+                'name' => 'Bunq',
+                'transaction_cost' => .11,
+                'data->context' => json_decode($context->toJson()),
+                'data->oauth_client' => $oauth_client,
+            ]);
+        } catch (Throwable $e) {
+            $error = '[Error] - ' . $e->getMessage();
+            $message = 'Error while making bank context using the key from the .env file.';
+
+            $this->printWarning("$errorPrefix$message\n$error");
+
+            return null;
+        }
+    }
+
+    /**
+     * @param string|null $apiKey
+     * @return BunqEnumApiEnvironmentType
+     */
+    public function apiKeyToEnvironmentType(?string $apiKey): BunqEnumApiEnvironmentType
+    {
+        if (is_string($apiKey) && !starts_with(strtolower($apiKey), 'sandbox')) {
+            return BunqEnumApiEnvironmentType::PRODUCTION();
+        }
+
+        return BunqEnumApiEnvironmentType::SANDBOX();
+    }
+
+    /**
+     * @param string $message
+     */
+    public function printWarning(string $message): void
+    {
+        if (App::runningUnitTests()) {
+            return;
+        }
+
+        echo $this->makeHeader('WARNING');
+        echo $this->makeText($message);
+        echo $this->makeHeader('INFO');
+        echo $this->makeText($this->warningBankUsageMessage);
+        echo $this->makeHeader('END');
+    }
+
+    /**
+     * @param string $header
+     * @param int $length
+     * @return string
+     */
+    public function makeHeader(string $header, int $length = 80): string
+    {
+        $size = ($length - strlen($header) - 4) / 2;
+        $start = str_repeat('=', ceil($size));
+        $end = str_repeat('=', floor($size));
+
+        return sprintf("%s [%s] %s\n", $start, $header, $end);
+    }
+
+    /**
+     * @param string $text
+     * @param int $length
+     * @param int $offset
+     * @return string
+     */
+    public function makeText(string $text, int $length = 80, int $offset = 4): string
+    {
+        return implode("\n", array_map(function ($row) use ($offset) {
+            return str_repeat(' ', $offset) . $row;
+        }, explode("\n", wordwrap($text, $length)))) . "\n";
     }
 
     /**
@@ -111,7 +227,7 @@ class BanksTableSeeder extends Seeder
      */
     protected static function getBunqRedirectUrls(int $oauthClientId): array
     {
-        return array_map(function(OauthCallbackUrl $callbackUrl) {
+        return array_map(function (OauthCallbackUrl $callbackUrl) {
             return $callbackUrl->getUrl();
         }, OauthCallbackUrl::listing($oauthClientId)->getValue());
     }
@@ -124,22 +240,6 @@ class BanksTableSeeder extends Seeder
     protected static function registerBunqOauthCallbackUrl(int $oauthClientId, string $redirectUrl): int
     {
         return OauthCallbackUrl::create($oauthClientId, $redirectUrl)->getValue();
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasBunqContextFile(): bool
-    {
-        return file_exists(storage_path($this->bunqContextFile));
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasBngContextFile(): bool
-    {
-        return file_exists(storage_path($this->bngContextFile));
     }
 
     /**
@@ -157,103 +257,5 @@ class BanksTableSeeder extends Seeder
             'oauth_redirect_id' => array_get($data, 'oauth_redirect_id'),
             'oauth_redirect_url' => array_get($data, 'oauth_redirect_url'),
         ]));
-    }
-
-    /**
-     * @return array|null
-     */
-    public function makeBunqBankInstallation(): ?Bank
-    {
-        $key = 'bunq';
-        $bunqKey = Config::get('forus.seeders.bank_seeder.bunq_key');
-        $environment = $this->apiKeyToEnvironmentType($bunqKey);
-        $description = 'Forus PSD2 development installation.';
-        $errorPrefix = "Could not create BUNQ bank context/installation: ";
-
-        if (!$bunqKey) {
-            if (App::runningUnitTests()) {
-                $this->printWarning($errorPrefix . "The api key is not present in your .env file.");
-            }
-            return null;
-        }
-
-        try {
-            $allPermittedIp = json_decode(Config::get('forus.seeders.bank_seeder.bunq_ip', "[]"), true);
-            $context = ApiContext::create($environment, $bunqKey, $description, $allPermittedIp);
-
-            BunqContext::loadApiContext(ApiContext::fromJson($context->toJson()));
-
-            $oauth_client = OauthClient::listing()->getValue()[0] ?? null;
-            $oauth_client = $oauth_client ?: OauthClient::get(OauthClient::create()->getValue())->getValue();
-
-            return Bank::updateOrCreate(compact('key'), [
-                'name' => 'Bunq',
-                'transaction_cost' => .11,
-                'data->context' => json_decode($context->toJson()),
-                'data->oauth_client' => $oauth_client,
-            ]);
-        } catch (Throwable $e) {
-            $error = "[Error] - " . $e->getMessage();
-            $message = "Error while making bank context using the key from the .env file.";
-
-            $this->printWarning("$errorPrefix$message\n$error");
-            return null;
-        }
-    }
-
-    /**
-     * @param string|null $apiKey
-     * @return BunqEnumApiEnvironmentType
-     */
-    public function apiKeyToEnvironmentType(?string $apiKey): BunqEnumApiEnvironmentType
-    {
-        if (is_string($apiKey) && !starts_with(strtolower($apiKey), 'sandbox')) {
-            return BunqEnumApiEnvironmentType::PRODUCTION();
-        }
-
-        return BunqEnumApiEnvironmentType::SANDBOX();
-    }
-
-    /**
-     * @param string $message
-     */
-    public function printWarning(string $message): void
-    {
-        if (App::runningUnitTests()) {
-            return;
-        }
-
-        echo $this->makeHeader("WARNING");
-        echo $this->makeText($message);
-        echo $this->makeHeader("INFO");
-        echo $this->makeText($this->warningBankUsageMessage);
-        echo $this->makeHeader("END");
-    }
-
-    /**
-     * @param string $header
-     * @param int $length
-     * @return string
-     */
-    public function makeHeader(string $header, int $length = 80): string
-    {
-        $size = ($length - strlen($header) - 4) / 2;
-        $start = str_repeat('=', ceil($size));
-        $end = str_repeat('=', floor($size));
-
-        return sprintf("%s [%s] %s\n", $start, $header, $end);
-    }
-
-    /**
-     * @param string $text
-     * @param int $length
-     * @param int $offset
-     * @return string
-     */
-    public function makeText(string $text, int $length = 80, int $offset = 4): string
-    {
-        return implode("\n", array_map(function($row) use ($offset) {
-            return str_repeat(" ", $offset) . $row;
-        }, explode("\n", wordwrap($text, $length)))) . "\n";
     }
 }

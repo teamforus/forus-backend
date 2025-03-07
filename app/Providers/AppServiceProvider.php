@@ -61,34 +61,34 @@ class AppServiceProvider extends ServiceProvider
      * @var array|string[]
      */
     public static array $morphMap = [
-        'faq'                           => Faq::class,
-        'fund'                          => Fund::class,
-        'office'                        => Office::class,
-        'voucher'                       => Voucher::class,
-        'product'                       => Product::class,
-        'identity'                      => Identity::class,
-        'employees'                     => Employee::class,
-        'fund_request'                  => FundRequest::class,
-        'organization'                  => Organization::class,
-        'bi_connection'                 => BIConnection::class,
-        'reimbursement'                 => Reimbursement::class,
-        'identity_email'                => IdentityEmail::class,
-        'mail_template'                 => NotificationTemplate::class,
-        'fund_provider'                 => FundProvider::class,
-        'physical_card'                 => PhysicalCard::class,
-        'bank_connection'               => BankConnection::class,
-        'implementation'                => Implementation::class,
-        'product_category'              => ProductCategory::class,
-        'implementation_page'           => ImplementationPage::class,
-        'implementation_block'          => ImplementationBlock::class,
-        'product_reservation'           => ProductReservation::class,
-        'physical_card_request'         => PhysicalCardRequest::class,
-        'fund_request_record'           => FundRequestRecord::class,
-        'fund_request_clarification'    => FundRequestClarification::class,
-        'voucher_record'                => VoucherRecord::class,
-        'voucher_transaction'           => VoucherTransaction::class,
-        'voucher_transaction_bulk'      => VoucherTransactionBulk::class,
-        'reservation_extra_payment'     => ReservationExtraPayment::class,
+        'faq' => Faq::class,
+        'fund' => Fund::class,
+        'office' => Office::class,
+        'voucher' => Voucher::class,
+        'product' => Product::class,
+        'identity' => Identity::class,
+        'employees' => Employee::class,
+        'fund_request' => FundRequest::class,
+        'organization' => Organization::class,
+        'bi_connection' => BIConnection::class,
+        'reimbursement' => Reimbursement::class,
+        'identity_email' => IdentityEmail::class,
+        'mail_template' => NotificationTemplate::class,
+        'fund_provider' => FundProvider::class,
+        'physical_card' => PhysicalCard::class,
+        'bank_connection' => BankConnection::class,
+        'implementation' => Implementation::class,
+        'product_category' => ProductCategory::class,
+        'implementation_page' => ImplementationPage::class,
+        'implementation_block' => ImplementationBlock::class,
+        'product_reservation' => ProductReservation::class,
+        'physical_card_request' => PhysicalCardRequest::class,
+        'fund_request_record' => FundRequestRecord::class,
+        'fund_request_clarification' => FundRequestClarification::class,
+        'voucher_record' => VoucherRecord::class,
+        'voucher_transaction' => VoucherTransaction::class,
+        'voucher_transaction_bulk' => VoucherTransactionBulk::class,
+        'reservation_extra_payment' => ReservationExtraPayment::class,
     ];
 
     /**
@@ -134,6 +134,30 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
+     * @param string $locale
+     * @return false|string
+     */
+    public function setLocale(string $locale): string|false
+    {
+        if (strlen($locale) === 2) {
+            $locale .= '_' . strtoupper($locale);
+        }
+
+        Carbon::setLocale($locale);
+
+        return setlocale(LC_ALL, $locale);
+    }
+
+    /**
+     * Register any application services.
+     *
+     * @return void
+     */
+    public function register(): void
+    {
+    }
+
+    /**
      * @return void
      */
     protected function registerMediaConfigs(): void
@@ -165,46 +189,24 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function extendValidator(): void
     {
-        Validator::extend('city_name', function($attribute, $value) {
+        Validator::extend('city_name', function ($attribute, $value) {
             return preg_match('/^[A-Za-z\- ]{0,100}$/', $value);
         });
 
-        Validator::extend('street_name', function($attribute, $value) {
+        Validator::extend('street_name', function ($attribute, $value) {
             return preg_match('/^[A-Za-z\- ]{0,80}$/', $value);
         });
 
-        Validator::extend('house_number', function($attribute, $value) {
+        Validator::extend('house_number', function ($attribute, $value) {
             return preg_match('/^[1-9][0-9]{0,4}$/', $value);
         });
 
-        Validator::extend('postcode', function($attribute, $value) {
+        Validator::extend('postcode', function ($attribute, $value) {
             return preg_match('/^[1-9][0-9]{3} ?[a-zA-Z]{2}$/', $value);
         });
 
-        Validator::extend('house_addition', function($attribute, $value) {
+        Validator::extend('house_addition', function ($attribute, $value) {
             return preg_match('/^[a-zA-Z0-9\-]{1,4}$/', $value);
         });
     }
-
-    /**
-     * @param string $locale
-     * @return false|string
-     */
-    public function setLocale(string $locale): string|false
-    {
-        if (strlen($locale) === 2) {
-            $locale .= '_' . strtoupper($locale);
-        }
-
-        Carbon::setLocale($locale);
-
-        return setlocale(LC_ALL, $locale);
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register(): void {}
 }

@@ -2,11 +2,10 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -21,11 +20,13 @@ return new class extends Migration
             $table->unsignedBigInteger('event_id')->after('organization_id')->nullable();
 
             $table->foreign('organization_id')
-                ->references('id')->on('organizations')
+                ->references('id')
+                ->on('organizations')
                 ->onDelete('restrict');
 
             $table->foreign('event_id')
-                ->references('id')->on('event_logs')
+                ->references('id')
+                ->on('event_logs')
                 ->onDelete('restrict');
 
             $table->index('scope');

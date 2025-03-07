@@ -24,9 +24,9 @@ class MediaResource extends JsonResource
             return null;
         }
 
-        $sizes = $media->presets->filter(static function(MediaPreset $preset) {
+        $sizes = $media->presets->filter(static function (MediaPreset $preset) {
             return $preset->key !== 'original';
-        })->keyBy('key')->map(static function(MediaPreset $preset) {
+        })->keyBy('key')->map(static function (MediaPreset $preset) {
             return $preset->urlPublic();
         });
 

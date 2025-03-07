@@ -20,8 +20,8 @@ class FundRequestRecordsController extends Controller
      * @param IndexFundRequestRecordsRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundRequestRecordsRequest $request,
@@ -41,8 +41,8 @@ class FundRequestRecordsController extends Controller
      * @param StoreFundRequestRecordRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @return ValidatorFundRequestRecordResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ValidatorFundRequestRecordResource
      */
     public function store(
         StoreFundRequestRecordRequest $request,
@@ -64,8 +64,8 @@ class FundRequestRecordsController extends Controller
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @param FundRequestRecord $record
-     * @return ValidatorFundRequestRecordResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ValidatorFundRequestRecordResource
      */
     public function update(
         UpdateFundRequestRecordRequest $request,
@@ -87,8 +87,8 @@ class FundRequestRecordsController extends Controller
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @param FundRequestRecord $record
-     * @return ValidatorFundRequestRecordResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ValidatorFundRequestRecordResource
      */
     public function show(
         Organization $organization,

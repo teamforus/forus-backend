@@ -35,7 +35,7 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
         $criterion = $this->findCriterion($attribute);
         $fundCriteriaById = $this->fund->criteria->pluck('record_type_key', 'id');
 
-        $values = array_reduce(array_keys($this->records), function($list, $fund_criterion_id) use ($fundCriteriaById) {
+        $values = array_reduce(array_keys($this->records), function ($list, $fund_criterion_id) use ($fundCriteriaById) {
             $value = $this->records[$fund_criterion_id] ?? null;
 
             if ($fundCriteriaById[$fund_criterion_id] ?? false) {

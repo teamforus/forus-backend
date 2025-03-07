@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Services\MediaService\Models\MediaPreset
+ * App\Services\MediaService\Models\MediaPreset.
  *
  * @property int $id
  * @property int $media_id

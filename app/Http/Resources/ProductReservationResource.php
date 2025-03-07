@@ -21,7 +21,7 @@ class ProductReservationResource extends BaseJsonResource
         'voucher_transaction',
         'extra_payment.refunds',
         'extra_payment.refunds_active',
-        'custom_fields.organization_reservation_field'
+        'custom_fields.organization_reservation_field',
     ];
 
     /**
@@ -37,7 +37,7 @@ class ProductReservationResource extends BaseJsonResource
         $transaction = $this->resource->voucher_transaction;
 
         $productSnapshot = new Product(array_merge($reservation->only([
-            'price_type', 'price_discount'
+            'price_type', 'price_discount',
         ]), $voucher->fund->isTypeSubsidy() ? [
             'price' => is_null($reservation->price) ? null : max($reservation->price - $reservation->amount, 0),
         ] : [

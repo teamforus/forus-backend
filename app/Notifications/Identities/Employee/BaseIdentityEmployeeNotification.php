@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 abstract class BaseIdentityEmployeeNotification extends BaseIdentityNotification
 {
     /**
-     * Get identities which are eligible for the notification
+     * Get identities which are eligible for the notification.
      *
      * @param Employee $loggable
      * @param EventLog $eventLog

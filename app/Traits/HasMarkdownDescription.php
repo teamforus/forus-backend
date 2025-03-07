@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Exception\CommonMarkException;
 use League\CommonMark\MarkdownConverter;
+use Throwable;
 
 /**
  * @property string $description
@@ -35,12 +36,92 @@ trait HasMarkdownDescription
     }
 
     /**
-     * @return string
      * @throws CommonMarkException
+     * @return string
      */
     public function descriptionToHtml(): string
     {
         return $this->getMarkdownConverter()->convert($this->description ?: '')->getContent();
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function descriptionToText(): string
+    {
+        return trim(preg_replace('/\s+/', ' ', e(strip_tags($this->descriptionToHtml()))));
+    }
+
+    /**
+     * @return Builder|Media
+     */
+    public function getDescriptionMarkdownMediaQuery(): Builder|Media
+    {
+        return Media::whereRelation('presets', function (Builder|MediaPreset $builder) {
+            $builder->whereIn('id', $this->getDescriptionMarkdownMediaPresetsQuery()->select('id'));
+        });
+    }
+
+    /**
+     * @param string $mediaType
+     * @return Builder|Media
+     */
+    public function getDescriptionMarkdownMediaPresetsValidQuery(
+        string $mediaType
+    ): Builder|MediaPreset {
+        $presets = $this->getDescriptionMarkdownMediaPresetsQuery();
+
+        return $presets->whereHas('media', function (Builder|Media $builder) use ($mediaType) {
+            $builder->where('type', $mediaType);
+            $builder->where(function (Builder $builder) {
+                $builder->whereNull('mediable_id');
+                $builder->orWhereHasMorph('mediable', $this->getMorphClass(), function (Builder $builder) {
+                    $builder->where('mediable_id', $this->getKey());
+                });
+            });
+        });
+    }
+
+    /**
+     * @param string $mediaType
+     * @return Builder|Media
+     */
+    public function getDescriptionMarkdownMediaPresetsInValidQuery(
+        string $mediaType,
+    ): Builder|MediaPreset {
+        $presets = $this->getDescriptionMarkdownMediaPresetsQuery();
+        $validPresets = $this->getDescriptionMarkdownMediaPresetsValidQuery($mediaType);
+
+        return (clone $presets)->whereNotIn('id', (clone $validPresets->select('id')));
+    }
+
+    /**
+     * @param string $mediaType
+     * @throws Throwable
+     * @return bool
+     */
+    public function syncDescriptionMarkdownMedia(string $mediaType): bool
+    {
+        $presetsInvalid = $this->getDescriptionMarkdownMediaPresetsInValidQuery($mediaType)->get();
+
+        $description = $presetsInvalid->reduce(function ($description, MediaPreset $preset) use ($mediaType) {
+            $newMedia = resolve('media')->cloneMedia($preset->media, $mediaType);
+            $newMedia->update(['identity_address' => auth()->id()]);
+            $newPreset = $newMedia->findPreset($preset->key);
+            $imageUrl = $newPreset ?: $newMedia->presets()->where('key', '!=', 'original')->first();
+
+            return str_replace($preset->urlPublic(), $imageUrl->urlPublic(), $description);
+        }, $this->description);
+
+        if ($presetsInvalid->count() > 0) {
+            $this->update(compact('description'));
+        }
+
+        $presetsToSyncQuery = $this->getDescriptionMarkdownMediaPresetsValidQuery($mediaType);
+        $mediaToSync = Media::whereIn('id', $presetsToSyncQuery->select('media_id'));
+
+        return $this->syncMedia($mediaToSync->pluck('uid')->toArray(), $mediaType);
     }
 
     /**
@@ -67,15 +148,6 @@ trait HasMarkdownDescription
     }
 
     /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function descriptionToText(): string
-    {
-        return trim(preg_replace('/\s+/', ' ', e(strip_tags($this->descriptionToHtml()))));
-    }
-
-    /**
      * @return array
      */
     protected function getDescriptionMarkdownMediaPaths(): array
@@ -95,7 +167,7 @@ trait HasMarkdownDescription
             $imageSrc = $image->getAttribute('src');
 
             if (Str::contains($imageSrc, '/media/')) {
-                $srcSegments = array();
+                $srcSegments = [];
                 preg_match('/\/media\/.*/', $imageSrc, $srcSegments);
 
                 $linksArray[] = $srcSegments[0];
@@ -111,76 +183,5 @@ trait HasMarkdownDescription
     protected function getDescriptionMarkdownMediaPresetsQuery(): Builder|MediaPreset
     {
         return MediaPreset::query()->whereIn('path', $this->getDescriptionMarkdownMediaPaths());
-    }
-
-    /**
-     * @return Builder|Media
-     */
-    public function getDescriptionMarkdownMediaQuery(): Builder|Media
-    {
-        return Media::whereRelation('presets', function(Builder|MediaPreset $builder) {
-            $builder->whereIn('id', $this->getDescriptionMarkdownMediaPresetsQuery()->select('id'));
-        });
-    }
-
-    /**
-     * @param string $mediaType
-     * @return Builder|Media
-     */
-    public function getDescriptionMarkdownMediaPresetsValidQuery(
-        string $mediaType
-    ): Builder|MediaPreset {
-        $presets = $this->getDescriptionMarkdownMediaPresetsQuery();
-
-        return $presets->whereHas('media', function (Builder|Media $builder) use ($mediaType) {
-            $builder->where('type', $mediaType);
-            $builder->where(function (Builder $builder) {
-                $builder->whereNull('mediable_id');
-                $builder->orWhereHasMorph('mediable', $this->getMorphClass(), function(Builder $builder) {
-                    $builder->where('mediable_id', $this->getKey());
-                });
-            });
-        });
-    }
-
-    /**
-     * @param string $mediaType
-     * @return Builder|Media
-     */
-    public function getDescriptionMarkdownMediaPresetsInValidQuery(
-        string $mediaType,
-    ): Builder|MediaPreset {
-        $presets = $this->getDescriptionMarkdownMediaPresetsQuery();
-        $validPresets = $this->getDescriptionMarkdownMediaPresetsValidQuery($mediaType);
-
-        return (clone $presets)->whereNotIn('id', (clone $validPresets->select('id')));
-    }
-
-    /**
-     * @param string $mediaType
-     * @return bool
-     * @throws \Throwable
-     */
-    public function syncDescriptionMarkdownMedia(string $mediaType): bool
-    {
-        $presetsInvalid = $this->getDescriptionMarkdownMediaPresetsInValidQuery($mediaType)->get();
-
-        $description = $presetsInvalid->reduce(function ($description, MediaPreset $preset) use ($mediaType) {
-            $newMedia = resolve('media')->cloneMedia($preset->media, $mediaType);
-            $newMedia->update(['identity_address' => auth()->id()]);
-            $newPreset = $newMedia->findPreset($preset->key);
-            $imageUrl = $newPreset ?: $newMedia->presets()->where('key', '!=', 'original')->first();
-
-            return str_replace($preset->urlPublic(), $imageUrl->urlPublic(), $description);
-        }, $this->description);
-
-        if ($presetsInvalid->count() > 0) {
-            $this->update(compact('description'));
-        }
-
-        $presetsToSyncQuery = $this->getDescriptionMarkdownMediaPresetsValidQuery($mediaType);
-        $mediaToSync = Media::whereIn('id', $presetsToSyncQuery->select('media_id'));
-
-        return $this->syncMedia($mediaToSync->pluck('uid')->toArray(), $mediaType);
     }
 }

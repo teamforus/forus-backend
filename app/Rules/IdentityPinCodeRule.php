@@ -14,7 +14,7 @@ class IdentityPinCodeRule implements Rule
 
     /**
      * Create a new rule instance.
-     * @param integer $digits
+     * @param int $digits
      * @return void
      */
     public function __construct(int $digits = 4)
@@ -37,11 +37,11 @@ class IdentityPinCodeRule implements Rule
             return false;
         }
 
-        $expression = '/^[0-9]{' . $this->digits .'}\z/';
+        $expression = '/^[0-9]{' . $this->digits . '}\z/';
 
         if (!preg_match($expression, $value)) {
             $this->message = trans('validation.digits', [
-                'digits' => $this->digits
+                'digits' => $this->digits,
             ]);
 
             return false;

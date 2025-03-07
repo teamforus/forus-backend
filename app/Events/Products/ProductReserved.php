@@ -23,7 +23,7 @@ class ProductReserved extends BaseProductEvent
     }
 
     /**
-     * Get the product
+     * Get the product.
      *
      * @return Voucher
      */

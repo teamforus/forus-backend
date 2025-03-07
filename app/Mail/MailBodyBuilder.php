@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Helpers\Markdown;
+use DomDocument;
 use League\CommonMark\Exception\CommonMarkException;
 
 class MailBodyBuilder
@@ -102,8 +103,8 @@ class MailBodyBuilder
      * @param array $data
      * @param string $globalStyles
      * @param string|null $textColor
-     * @return MailBodyBuilder
      * @throws CommonMarkException
+     * @return MailBodyBuilder
      */
     public function markdown(
         string $markdown,
@@ -136,7 +137,7 @@ class MailBodyBuilder
         }, '');
 
         $documentOptions = LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOERROR;
-        $document = new \DomDocument();
+        $document = new DomDocument();
         $document->loadHTML('<?xml encoding="utf-8" ?>' . $html, $documentOptions);
 
         $styles['li'] = $styles['text'] ?? '';
@@ -221,23 +222,6 @@ class MailBodyBuilder
 
     /**
      * @param string $type
-     * @param string $url
-     * @param string $text
-     * @param array $styles
-     * @return $this
-     */
-    protected function button(
-        string $type = 'button_primary',
-        string $url = '',
-        string $text = '',
-        array $styles = []
-    ): MailBodyBuilder {
-        $this->mailBody[] = [array_merge((array) $type, $styles), $text, $url];
-        return $this;
-    }
-
-    /**
-     * @param string $type
      * @param string $text
      * @param array $styles
      * @return $this
@@ -245,6 +229,7 @@ class MailBodyBuilder
     public function block(string $type = 'h1', string $text = '', array $styles = []): MailBodyBuilder
     {
         $this->mailBody[] = [array_merge((array) $type, $styles), $text];
+
         return $this;
     }
 
@@ -287,6 +272,7 @@ class MailBodyBuilder
     public function pop(): MailBodyBuilder
     {
         array_pop($this->mailBody);
+
         return $this;
     }
 
@@ -296,5 +282,23 @@ class MailBodyBuilder
     public static function create(): MailBodyBuilder
     {
         return new self();
+    }
+
+    /**
+     * @param string $type
+     * @param string $url
+     * @param string $text
+     * @param array $styles
+     * @return $this
+     */
+    protected function button(
+        string $type = 'button_primary',
+        string $url = '',
+        string $text = '',
+        array $styles = []
+    ): MailBodyBuilder {
+        $this->mailBody[] = [array_merge((array) $type, $styles), $text, $url];
+
+        return $this;
     }
 }

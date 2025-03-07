@@ -19,7 +19,9 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting, WithEvents
 {
-    use Exportable, RegistersEventListeners, FormatsExportedData;
+    use Exportable;
+    use RegistersEventListeners;
+    use FormatsExportedData;
 
     /**
      * @var array[]
@@ -84,25 +86,11 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
     {
         $data = $this->data->merge($this->getTotals());
 
-        return $data->map(function($item) {
-            return array_reduce(array_keys($item), fn($obj, $key) => array_merge($obj, [
+        return $data->map(function ($item) {
+            return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
                 $this->trans($key) => (string) $item[$key],
             ]), []);
         });
-    }
-
-    /**
-     * @return array|array[]
-     */
-    protected function getTotals(): array
-    {
-        return (!$this->detailed && $this->withTotal) ? [[
-            "name" => $this->trans("total"),
-            "total_top_up" => currency_format($this->data->sum('total_top_up')),
-            "expenses" => currency_format($this->data->sum('expenses')),
-            "balance" => currency_format($this->data->sum('balance')),
-            "transactions" => currency_format($this->data->sum('transactions')),
-        ]] : [];
     }
 
     /**
@@ -122,6 +110,20 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
     }
 
     /**
+     * @return array|array[]
+     */
+    protected function getTotals(): array
+    {
+        return (!$this->detailed && $this->withTotal) ? [[
+            'name' => $this->trans('total'),
+            'total_top_up' => currency_format($this->data->sum('total_top_up')),
+            'expenses' => currency_format($this->data->sum('expenses')),
+            'balance' => currency_format($this->data->sum('balance')),
+            'transactions' => currency_format($this->data->sum('transactions')),
+        ]] : [];
+    }
+
+    /**
      * @param Collection $funds
      * @return Collection
      */
@@ -134,18 +136,18 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
                 $costs = FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $this->from, $this->to);
 
                 return [
-                    "name" => $fund->name,
-                    "total_top_up" => currency_format($total),
-                    "expenses" => currency_format($used),
-                    "balance" => currency_format(round($total - $used, 2)),
-                    "transactions" => currency_format($costs),
+                    'name' => $fund->name,
+                    'total_top_up' => currency_format($total),
+                    'expenses' => currency_format($used),
+                    'balance' => currency_format(round($total - $used, 2)),
+                    'transactions' => currency_format($costs),
                 ];
             });
         }
 
-        $funds = $funds->map(fn(Fund $fund) => $this->getVoucherData($fund));
+        $funds = $funds->map(fn (Fund $fund) => $this->getVoucherData($fund));
 
-        if (!$funds->first(fn(array $item) => $item['budget_children_count'] > 0)) {
+        if (!$funds->first(fn (array $item) => $item['budget_children_count'] > 0)) {
             return $funds->map(function (array $item) {
                 unset($item['budget_children_count']);
 
@@ -163,19 +165,20 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
     protected function getVoucherData(Fund $fund): array
     {
         $detailsByType = [
-            'budget'  => FinancialOverviewStatistic::getFundDetails($fund->budget_vouchers()->getQuery(), $this->from, $this->to),
+            'budget' => FinancialOverviewStatistic::getFundDetails($fund->budget_vouchers()->getQuery(), $this->from, $this->to),
             'product' => FinancialOverviewStatistic::getFundDetails($fund->product_vouchers()->getQuery(), $this->from, $this->to),
         ];
         $usedActiveVouchers = FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $this->from, $this->to);
 
         $voucherData = [
-            "name" => $fund->name,
+            'name' => $fund->name,
         ];
 
         foreach ($detailsByType as $type => $details) {
-            if ($type == "budget") {
+            if ($type == 'budget') {
                 $budgetUsedPercentage = (float) $details['vouchers_amount'] ? (
-                    $fund->budget_used_active_vouchers / $details['vouchers_amount'] * 100) : 0;
+                    $fund->budget_used_active_vouchers / $details['vouchers_amount'] * 100
+                ) : 0;
 
                 $averagePerVoucher = $details['vouchers_count'] ?
                     $details['vouchers_amount'] / $details['vouchers_count'] : 0;
@@ -192,27 +195,27 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
                     ($details['active_amount'] / $details['vouchers_amount'] * 100) : 0;
 
                 $voucherData = array_merge($voucherData, [
-                    "budget_amount_per_voucher"            => currency_format($fund->fund_formulas->sum('amount')),
-                    "budget_average_per_voucher"           => currency_format($averagePerVoucher),
-                    "budget_total_spent_amount"            => currency_format($usedActiveVouchers),
-                    "budget_total_left_amount"             => currency_format($budgetLeftAmount),
-                    "budget_total_spent_percentage"        => currency_format($budgetUsedPercentage / 100, 4),
-                    "budget_total_left_percentage"         => currency_format($budgetLeftPercentage / 100, 4),
-                    "budget_vouchers_count"                => currency_format($details['vouchers_count'], 0),
-                    "budget_vouchers_inactive_count"       => currency_format($details['inactive_count'], 0),
-                    "budget_vouchers_inactive_percentage"  => currency_format($inactiveVouchersPercentage / 100, 4),
-                    "budget_vouchers_active_percentage"    => currency_format($activeVouchersPercentage / 100, 4),
-                    "budget_vouchers_active_count"         => currency_format($details['active_count'], 0),
-                    "budget_vouchers_deactivated_count"    => currency_format($details['deactivated_count'], 0),
-                    "budget_children_count"                => $details['children_count'],
+                    'budget_amount_per_voucher' => currency_format($fund->fund_formulas->sum('amount')),
+                    'budget_average_per_voucher' => currency_format($averagePerVoucher),
+                    'budget_total_spent_amount' => currency_format($usedActiveVouchers),
+                    'budget_total_left_amount' => currency_format($budgetLeftAmount),
+                    'budget_total_spent_percentage' => currency_format($budgetUsedPercentage / 100, 4),
+                    'budget_total_left_percentage' => currency_format($budgetLeftPercentage / 100, 4),
+                    'budget_vouchers_count' => currency_format($details['vouchers_count'], 0),
+                    'budget_vouchers_inactive_count' => currency_format($details['inactive_count'], 0),
+                    'budget_vouchers_inactive_percentage' => currency_format($inactiveVouchersPercentage / 100, 4),
+                    'budget_vouchers_active_percentage' => currency_format($activeVouchersPercentage / 100, 4),
+                    'budget_vouchers_active_count' => currency_format($details['active_count'], 0),
+                    'budget_vouchers_deactivated_count' => currency_format($details['deactivated_count'], 0),
+                    'budget_children_count' => $details['children_count'],
                 ]);
             }
 
             $voucherData = array_merge($voucherData, [
-                "{$type}_vouchers_amount"               => currency_format($details['vouchers_amount']),
-                "{$type}_vouchers_active_amount"        => currency_format($details['active_amount']),
-                "{$type}_vouchers_inactive_amount"      => currency_format($details['inactive_amount']),
-                "{$type}_vouchers_deactivated_amount"   => currency_format($details['deactivated_amount']),
+                "{$type}_vouchers_amount" => currency_format($details['vouchers_amount']),
+                "{$type}_vouchers_active_amount" => currency_format($details['active_amount']),
+                "{$type}_vouchers_inactive_amount" => currency_format($details['inactive_amount']),
+                "{$type}_vouchers_deactivated_amount" => currency_format($details['deactivated_amount']),
             ]);
         }
 

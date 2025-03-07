@@ -16,29 +16,29 @@ use Throwable;
 
 class DigIdCgiRepo extends DigIdRepo
 {
-    public const string DIGID_SUCCESS                     = '0000';
-    public const string DIGID_UNAVAILABLE                 = '0001';
-    public const string DIGID_TEMPORARY_UNAVAILABLE_1     = '0003';
-    public const string DIGID_VERIFICATION_FAILED_1       = '0004';
-    public const string DIGID_VERIFICATION_FAILED_2       = '0007';
-    public const string DIGID_ILLEGAL_REQUEST             = '0030';
-    public const string DIGID_ERROR_APP_ID                = '0032';
-    public const string DIGID_ERROR_ASELECT               = '0033';
-    public const string DIGID_CANCELLED                   = '0040';
-    public const string DIGID_BUSY                        = '0050';
-    public const string DIGID_INVALID_SESSION             = '0070';
-    public const string DIGID_WEBSERVICE_NOT_ACTIVE       = '0080';
-    public const string DIGID_WEBSERVICE_NOT_AUTHORISED   = '0099';
-    public const string DIGID_TEMPORARY_UNAVAILABLE_2     = '010c';
-    public const string DIGID_API_NOT_RESPONDING          = 'API_0000';
+    public const string DIGID_SUCCESS = '0000';
+    public const string DIGID_UNAVAILABLE = '0001';
+    public const string DIGID_TEMPORARY_UNAVAILABLE_1 = '0003';
+    public const string DIGID_VERIFICATION_FAILED_1 = '0004';
+    public const string DIGID_VERIFICATION_FAILED_2 = '0007';
+    public const string DIGID_ILLEGAL_REQUEST = '0030';
+    public const string DIGID_ERROR_APP_ID = '0032';
+    public const string DIGID_ERROR_ASELECT = '0033';
+    public const string DIGID_CANCELLED = '0040';
+    public const string DIGID_BUSY = '0050';
+    public const string DIGID_INVALID_SESSION = '0070';
+    public const string DIGID_WEBSERVICE_NOT_ACTIVE = '0080';
+    public const string DIGID_WEBSERVICE_NOT_AUTHORISED = '0099';
+    public const string DIGID_TEMPORARY_UNAVAILABLE_2 = '010c';
+    public const string DIGID_API_NOT_RESPONDING = 'API_0000';
 
-    public const string URL_API_SANDBOX = "https://was-preprod1.digid.nl/was/server";
-    public const string URL_API_PRODUCTION = "https://was.digid.nl/was/server";
+    public const string URL_API_SANDBOX = 'https://was-preprod1.digid.nl/was/server';
+    public const string URL_API_PRODUCTION = 'https://was.digid.nl/was/server';
 
-    public const string ENV_SANDBOX = "sandbox";
-    public const string ENV_PRODUCTION = "production";
+    public const string ENV_SANDBOX = 'sandbox';
+    public const string ENV_PRODUCTION = 'production';
 
-    public const string DIGID_CERT_DISABLE = "disable";
+    public const string DIGID_CERT_DISABLE = 'disable';
 
     protected ?string $app_id = null;
     protected ?string $shared_secret = null;
@@ -51,7 +51,8 @@ class DigIdCgiRepo extends DigIdRepo
      * @param string $env
      * @throws DigIdException
      */
-    public function __construct(string $env = self::ENV_SANDBOX) {
+    public function __construct(string $env = self::ENV_SANDBOX)
+    {
         if (!in_array($env, [self::ENV_SANDBOX, self::ENV_PRODUCTION])) {
             throw $this->makeException('Invalid environment.');
         }
@@ -86,8 +87,195 @@ class DigIdCgiRepo extends DigIdRepo
     }
 
     /**
-     * @return string
+     * @param string $redirectUrl
+     * @param string $sessionSecret
+     * @param ClientTls|null $tlsCert
      * @throws DigIdException
+     * @return DigidAuthRequestData
+     */
+    public function makeAuthRequest(
+        string $redirectUrl,
+        string $sessionSecret,
+        ?ClientTls $tlsCert = null,
+    ): DigidAuthRequestData {
+        $redirectUrl = url_extend_get_params($redirectUrl, [
+            'session_secret' => $sessionSecret,
+        ]);
+
+        $request = $this->makeRequestUrl($this->makeAuthorizedRequest(array_merge([
+            'request' => 'authenticate',
+            'app_url' => $redirectUrl,
+        ])));
+
+        $response = $this->makeCall($request, 'get', $tlsCert);
+        $result = $this->parseResponseBody($response->getBody());
+        $result_code = $result['result_code'] ?? false;
+
+        if ($result_code !== self::DIGID_SUCCESS) {
+            throw $this->makeException('Digid API error code received.', $result_code);
+        }
+
+        if (!$this->validateAuthRequestResponse($result)) {
+            throw $this->makeException('Digid invalid auth request, response body.', $result_code);
+        }
+
+        $authRedirectParams = Arr::only($result, ['rid', 'a-select-server']);
+        $authRedirectUrl = url_extend_get_params($result['as_url'], $authRedirectParams);
+
+        return (new DigidAuthRequestData())
+            ->setMeta($result)
+            ->setRequestId($result['rid'])
+            ->setAuthResolveUrl($redirectUrl)
+            ->setAuthRedirectUrl($authRedirectUrl);
+    }
+
+    /**
+     * @param Request $request
+     * @param string $requestId
+     * @param string $sessionSecret
+     * @param ClientTls|null $tlsCert
+     * @throws DigIdException
+     * @return DigidAuthResolveData
+     */
+    public function resolveResponse(
+        Request $request,
+        string $requestId,
+        string $sessionSecret,
+        ?ClientTls $tlsCert = null,
+    ): DigidAuthResolveData {
+        $resolveParams = [
+            'request' => 'verify_credentials',
+            'rid' => $request->get('rid', ''),
+            'a-select-server' => $request->get('a-select-server', ''),
+            'aselect_credentials' => $request->get('aselect_credentials', ''),
+        ];
+
+        if ($sessionSecret !== $request->get('session_secret')) {
+            throw $this->makeException('DigiD: invalid response.', 'unknown_error');
+        }
+
+        if ($resolveParams['rid'] !== $requestId) {
+            throw $this->makeException('DigiD: invalid response.', 'unknown_error');
+        }
+
+        $request = $this->makeRequestUrl($this->makeAuthorizedRequest($resolveParams));
+        $response = $this->makeCall($request, 'get', $tlsCert);
+        $result = $this->parseResponseBody($response->getBody());
+        $result = array_merge($result, compact('resolveParams'));
+
+        if ($response->getStatusCode() !== 200) {
+            throw $this->makeException('DigiD: invalid response.');
+        }
+
+        $result_code = $result['result_code'] ?? null;
+
+        if ($result_code == self::DIGID_CANCELLED) {
+            throw $this->makeException('Digid API Request canceled.', $result_code);
+        }
+
+        if (!$this->validateVerifyCredentialsResponse($result)) {
+            throw $this->makeException('Digid invalid verify credentials request, response body.', $result_code);
+        }
+
+        if ($result_code == self::DIGID_SUCCESS) {
+            return new DigidAuthResolveData($result['uid'], $result);
+        }
+
+        throw $this->makeException('Digid API error code received.', $result_code);
+    }
+
+    /**
+     * @param string|null $app_id
+     * @return DigIdCgiRepo
+     */
+    public function setAppId(?string $app_id): self
+    {
+        $this->app_id = $app_id;
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $a_select_server
+     * @return $this
+     */
+    public function setASelectServer(?string $a_select_server): self
+    {
+        $this->a_select_server = $a_select_server;
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $shared_secret
+     * @return DigIdCgiRepo
+     */
+    public function setSharedSecret(?string $shared_secret): self
+    {
+        $this->shared_secret = $shared_secret;
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $trusted_certificate
+     * @return DigIdCgiRepo
+     */
+    public function setTrustedCertificate(?string $trusted_certificate): self
+    {
+        $this->trusted_certificate = $trusted_certificate;
+
+        return $this;
+    }
+
+    /**
+     * @param Request $request
+     * @param string $session_secret
+     * @return bool
+     */
+    public function validateResolveResponse(Request $request, string $session_secret): bool
+    {
+        return $request->get('session_secret') !== $session_secret;
+    }
+
+    /**
+     * @param string $uri
+     * @param string $method
+     * @param ClientTls|null $clientTls
+     * @throws DigIdException
+     * @return ResponseInterface|null
+     */
+    protected function makeCall(
+        string $uri,
+        string $method = 'get',
+        ?ClientTls $clientTls = null,
+    ): ?ResponseInterface {
+        $tlsCert = $clientTls ? new TmpFile($clientTls->getCert()) : null;
+        $tlsKey = $clientTls ? new TmpFile($clientTls->getKey()) : null;
+
+        $certificate = $this->makeTrustedCertificate();
+        $options = $this->makeRequestOptions($certificate, $tlsCert, $tlsKey);
+
+        try {
+            $response = (new Client())->request($method, $uri, $options);
+        } catch (Throwable) {
+            throw $this->makeException('Digid API not responding.', self::DIGID_API_NOT_RESPONDING);
+        } finally {
+            $certificate && $certificate->close();
+            $tlsCert && $tlsCert->close();
+            $tlsKey && $tlsKey->close();
+        }
+
+        if (!isset($response)) {
+            throw $this->makeException('No response.', self::DIGID_API_NOT_RESPONDING);
+        }
+
+        return $response;
+    }
+
+    /**
+     * @throws DigIdException
+     * @return string
      */
     private function getApiUrl(): string
     {
@@ -95,9 +283,9 @@ class DigIdCgiRepo extends DigIdRepo
             return self::URL_API_SANDBOX;
         } elseif ($this->environment == self::ENV_PRODUCTION) {
             return self::URL_API_PRODUCTION;
-        } else {
-            throw $this->makeException("Invalid environment.");
         }
+        throw $this->makeException('Invalid environment.');
+
     }
 
     /**
@@ -106,9 +294,9 @@ class DigIdCgiRepo extends DigIdRepo
     private function getAuthParams(): array
     {
         return [
-            "app_id"            => $this->app_id,
-            "shared_secret"     => $this->shared_secret,
-            "a-select-server"   => $this->a_select_server,
+            'app_id' => $this->app_id,
+            'shared_secret' => $this->shared_secret,
+            'a-select-server' => $this->a_select_server,
         ];
     }
 
@@ -123,12 +311,12 @@ class DigIdCgiRepo extends DigIdRepo
 
     /**
      * @param array $params
-     * @return string
      * @throws DigIdException
+     * @return string
      */
     private function makeRequestUrl(array $params): string
     {
-        return sprintf("%s?%s", $this->getApiUrl(), http_build_query($params));
+        return sprintf('%s?%s', $this->getApiUrl(), http_build_query($params));
     }
 
     /**
@@ -139,6 +327,7 @@ class DigIdCgiRepo extends DigIdRepo
     {
         $result = [];
         parse_str($response, $result);
+
         return $result;
     }
 
@@ -190,139 +379,6 @@ class DigIdCgiRepo extends DigIdRepo
     }
 
     /**
-     * @param string $redirectUrl
-     * @param string $sessionSecret
-     * @param ClientTls|null $tlsCert
-     * @return DigidAuthRequestData
-     * @throws DigIdException
-     */
-    public function makeAuthRequest(
-        string $redirectUrl,
-        string $sessionSecret,
-        ?ClientTls $tlsCert = null,
-    ): DigidAuthRequestData {
-        $redirectUrl = url_extend_get_params($redirectUrl, [
-            'session_secret' => $sessionSecret,
-        ]);
-
-        $request = $this->makeRequestUrl($this->makeAuthorizedRequest(array_merge([
-            "request"           => "authenticate",
-            "app_url"           => $redirectUrl,
-        ])));
-
-        $response = $this->makeCall($request, 'get', $tlsCert);
-        $result = $this->parseResponseBody($response->getBody());
-        $result_code = $result['result_code'] ?? false;
-
-        if ($result_code !== self::DIGID_SUCCESS) {
-            throw $this->makeException("Digid API error code received.", $result_code);
-        }
-
-        if (!$this->validateAuthRequestResponse($result)) {
-            throw $this->makeException("Digid invalid auth request, response body.", $result_code);
-        }
-
-        $authRedirectParams = Arr::only($result, ['rid', 'a-select-server']);
-        $authRedirectUrl = url_extend_get_params($result['as_url'], $authRedirectParams);
-
-        return (new DigidAuthRequestData)
-            ->setMeta($result)
-            ->setRequestId($result['rid'])
-            ->setAuthResolveUrl($redirectUrl)
-            ->setAuthRedirectUrl($authRedirectUrl);
-    }
-
-    /**
-     * @param Request $request
-     * @param string $requestId
-     * @param string $sessionSecret
-     * @param ClientTls|null $tlsCert
-     * @return DigidAuthResolveData
-     * @throws DigIdException
-     */
-    public function resolveResponse(
-        Request $request,
-        string $requestId,
-        string $sessionSecret,
-        ?ClientTls $tlsCert = null,
-    ): DigidAuthResolveData {
-        $resolveParams = [
-            'request'               => 'verify_credentials',
-            'rid'                   => $request->get('rid', ''),
-            'a-select-server'       => $request->get('a-select-server', ''),
-            'aselect_credentials'   => $request->get('aselect_credentials', ''),
-        ];
-
-        if ($sessionSecret !== $request->get('session_secret')) {
-            throw $this->makeException("DigiD: invalid response.", 'unknown_error');
-        }
-
-        if ($resolveParams['rid'] !== $requestId) {
-            throw $this->makeException("DigiD: invalid response.", 'unknown_error');
-        }
-
-        $request = $this->makeRequestUrl($this->makeAuthorizedRequest($resolveParams));
-        $response = $this->makeCall($request, 'get', $tlsCert);
-        $result = $this->parseResponseBody($response->getBody());
-        $result = array_merge($result, compact('resolveParams'));
-
-        if ($response->getStatusCode() !== 200) {
-            throw $this->makeException("DigiD: invalid response.");
-        }
-
-        $result_code = $result['result_code'] ?? null;
-
-        if ($result_code == self::DIGID_CANCELLED) {
-            throw $this->makeException("Digid API Request canceled.", $result_code);
-        }
-
-        if (!$this->validateVerifyCredentialsResponse($result)) {
-            throw $this->makeException("Digid invalid verify credentials request, response body.", $result_code);
-        }
-
-        if ($result_code == self::DIGID_SUCCESS) {
-            return new DigidAuthResolveData($result['uid'], $result);
-        }
-
-        throw $this->makeException("Digid API error code received.", $result_code);
-    }
-
-    /**
-     * @param string $uri
-     * @param string $method
-     * @param ClientTls|null $clientTls
-     * @return ResponseInterface|null
-     * @throws DigIdException
-     */
-    protected function makeCall(
-        string $uri,
-        string $method = 'get',
-        ?ClientTls $clientTls = null,
-    ): ?ResponseInterface {
-        $tlsCert = $clientTls ? new TmpFile($clientTls->getCert()) : null;
-        $tlsKey = $clientTls ? new TmpFile($clientTls->getKey()) : null;
-
-        $certificate = $this->makeTrustedCertificate();
-        $options = $this->makeRequestOptions($certificate, $tlsCert, $tlsKey);
-
-        try {
-            $response = (new Client())->request($method, $uri, $options);
-        } catch (Throwable) {
-            throw $this->makeException("Digid API not responding.", self::DIGID_API_NOT_RESPONDING);
-        } finally {
-            $certificate && $certificate->close();
-            $tlsCert && $tlsCert->close();
-            $tlsKey && $tlsKey->close();
-        }
-
-        if (!isset($response)) {
-            throw $this->makeException("No response.", self::DIGID_API_NOT_RESPONDING);
-        }
-
-        return $response;
-    }
-
-    /**
      * @param TmpFile|bool|null $cert
      * @param TmpFile|null $clientTlsCert
      * @param TmpFile|null $clientTlsKey
@@ -357,55 +413,5 @@ class DigIdCgiRepo extends DigIdRepo
         }
 
         return $this->trusted_certificate ? new TmpFile($this->trusted_certificate) : null;
-    }
-
-    /**
-     * @param string|null $app_id
-     * @return DigIdCgiRepo
-     */
-    public function setAppId(?string $app_id): self
-    {
-        $this->app_id = $app_id;
-        return $this;
-    }
-
-    /**
-     * @param string|null $a_select_server
-     * @return $this
-     */
-    public function setASelectServer(?string $a_select_server): self
-    {
-        $this->a_select_server = $a_select_server;
-        return $this;
-    }
-
-    /**
-     * @param string|null $shared_secret
-     * @return DigIdCgiRepo
-     */
-    public function setSharedSecret(?string $shared_secret): self
-    {
-        $this->shared_secret = $shared_secret;
-        return $this;
-    }
-
-    /**
-     * @param string|null $trusted_certificate
-     * @return DigIdCgiRepo
-     */
-    public function setTrustedCertificate(?string $trusted_certificate): self
-    {
-        $this->trusted_certificate = $trusted_certificate;
-        return $this;
-    }
-
-    /**
-     * @param Request $request
-     * @param string $session_secret
-     * @return bool
-     */
-    public function validateResolveResponse(Request $request, string $session_secret): bool
-    {
-        return $request->get('session_secret') !== $session_secret;
     }
 }

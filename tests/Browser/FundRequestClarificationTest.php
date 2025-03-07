@@ -5,14 +5,15 @@ namespace Tests\Browser;
 use App\Mail\Auth\UserLoginMail;
 use App\Models\FundRequest;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
+use Throwable;
 
 class FundRequestClarificationTest extends DuskTestCase
 {
@@ -25,8 +26,8 @@ class FundRequestClarificationTest extends DuskTestCase
     use MakesTestFundRequests;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testWebshopFundRequestClarificationRedirect(): void
     {
@@ -72,7 +73,8 @@ class FundRequestClarificationTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($fundRequest, $identity, $startTime) {
             $browser->visit($this->findFirstEmailFundRequestClarificationLink(
-                $identity->email, $startTime
+                $identity->email,
+                $startTime
             ));
 
             $browser->waitFor('@authOptionEmailRestore');
@@ -83,7 +85,7 @@ class FundRequestClarificationTest extends DuskTestCase
             $browser->assertVisible('@authEmailForm');
 
             // Type the email and submit the form
-            $browser->within('@authEmailForm', function(Browser $browser) use ($identity) {
+            $browser->within('@authEmailForm', function (Browser $browser) use ($identity) {
                 $browser->type('@authEmailFormEmail', $identity->email);
                 $browser->press('@authEmailFormSubmit');
             });

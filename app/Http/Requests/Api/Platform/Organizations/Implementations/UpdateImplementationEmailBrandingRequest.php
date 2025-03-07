@@ -25,9 +25,9 @@ class UpdateImplementationEmailBrandingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email_color'       => 'nullable|string|size:7|starts_with:#',
-            'email_signature'   => 'nullable|string|max:4096',
-            'email_logo_uid'    => ['nullable', new MediaUidRule('email_logo')]
+            'email_color' => 'nullable|string|size:7|starts_with:#',
+            'email_signature' => 'nullable|string|max:4096',
+            'email_logo_uid' => ['nullable', new MediaUidRule('email_logo')],
         ];
     }
 }

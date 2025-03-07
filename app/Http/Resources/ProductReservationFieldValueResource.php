@@ -22,7 +22,7 @@ class ProductReservationFieldValueResource extends BaseJsonResource
     public function toArray($request): array
     {
         return array_merge($this->resource->only('id', 'value'), [
-            'label' => $this->resource->organization_reservation_field?->label
+            'label' => $this->resource->organization_reservation_field?->label,
         ]);
     }
 }

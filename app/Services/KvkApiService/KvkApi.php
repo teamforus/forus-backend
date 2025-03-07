@@ -5,10 +5,11 @@ namespace App\Services\KvkApiService;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class KvkApi
 {
-    protected string $api_url = "https://api.kvk.nl/";
+    protected string $api_url = 'https://api.kvk.nl/';
     protected bool $api_debug;
     protected ?string $api_key;
     protected string $api_cert_path;
@@ -53,32 +54,13 @@ class KvkApi
     {
         try {
             $response = json_decode($this->makeApiCall($kvk_number, $detailed), false);
+
             return is_object($response) ? $response : null;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::channel('kvk')->warning($e->getMessage());
         }
 
         return null;
-    }
-
-    /**
-     * @param string $kvk_number
-     * @param bool $detailed
-     * @return string|null
-     */
-    private function makeApiCall(string $kvk_number, bool $detailed): ?string
-    {
-        $cacheKey = $this->cache_prefix . $kvk_number . ($detailed ? '.detailed' : '');
-        $cacheDuration = $this->cache_time * 60;
-
-        return Cache::remember($cacheKey, $cacheDuration, function() use ($kvk_number, $detailed) {
-            return (new Client())->get($this->getApiUrl($kvk_number, $detailed), [
-                'verify' => $this->api_cert_path,
-                'headers' => [
-                    'apikey' => $this->api_key
-                ],
-            ])->getBody()->getContents();
-        });
     }
 
     /**
@@ -91,9 +73,9 @@ class KvkApi
         $addresses = $kvkData->adressen ?? [];
         $geocodeService = resolve('geocode_api');
 
-        return array_map(function($addressItem) use ($geocodeService) {
+        return array_map(function ($addressItem) use ($geocodeService) {
             $address = sprintf(
-                "%s %s, %s, %s",
+                '%s %s, %s, %s',
                 $addressItem->straatnaam,
                 $addressItem->huisnummer,
                 $addressItem->postcode,
@@ -110,5 +92,25 @@ class KvkApi
 
             return $arr;
         }, $addresses);
+    }
+
+    /**
+     * @param string $kvk_number
+     * @param bool $detailed
+     * @return string|null
+     */
+    private function makeApiCall(string $kvk_number, bool $detailed): ?string
+    {
+        $cacheKey = $this->cache_prefix . $kvk_number . ($detailed ? '.detailed' : '');
+        $cacheDuration = $this->cache_time * 60;
+
+        return Cache::remember($cacheKey, $cacheDuration, function () use ($kvk_number, $detailed) {
+            return (new Client())->get($this->getApiUrl($kvk_number, $detailed), [
+                'verify' => $this->api_cert_path,
+                'headers' => [
+                    'apikey' => $this->api_key,
+                ],
+            ])->getBody()->getContents();
+        });
     }
 }

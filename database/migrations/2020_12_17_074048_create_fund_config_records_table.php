@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -22,10 +21,14 @@ return new class extends Migration
             $table->unique(['fund_id', 'record_type']);
             $table->index(['fund_id', 'record_type']);
 
-            $table->foreign('fund_id')->references('id')->on('funds')
+            $table->foreign('fund_id')
+                ->references('id')
+                ->on('funds')
                 ->onDelete('cascade');
 
-            $table->foreign('record_type')->references('key')->on('record_types')
+            $table->foreign('record_type')
+                ->references('key')
+                ->on('record_types')
                 ->onDelete('cascade');
         });
     }
@@ -37,7 +40,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('fund_config_records', static function(Blueprint $table) {
+        Schema::table('fund_config_records', static function (Blueprint $table) {
             $table->dropForeign('fund_config_records_fund_id_foreign');
             $table->dropForeign('fund_config_records_record_type_foreign');
         });

@@ -53,7 +53,7 @@ class RouteServiceProvider extends ServiceProvider
         $router->bind('prevalidation_uid', static function ($value) {
             return Prevalidation::query()->where([
                 'uid' => $value,
-                'state' => Prevalidation::STATE_PENDING
+                'state' => Prevalidation::STATE_PENDING,
             ])->first();
         });
 
@@ -98,11 +98,11 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $router->bind('voucher_number_or_address', static function ($value) {
-            return $value ? Voucher::where(function(Builder $builder) use ($value) {
+            return $value ? Voucher::where(function (Builder $builder) use ($value) {
                 $builder->whereDoesntHave('product_reservation');
                 $builder->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER);
 
-                $builder->where(function(Builder $builder) use ($value) {
+                $builder->where(function (Builder $builder) use ($value) {
                     $builder->where('number', $value);
                     $builder->orWhereRelation('tokens', 'address', $value);
                 });
@@ -116,9 +116,10 @@ class RouteServiceProvider extends ServiceProvider
                 if ($voucher = Voucher::findByAddressOrPhysicalCard($value)) {
                     return $voucher->token_without_confirmation;
                 }
-            } catch (ModelNotFoundException) {}
+            } catch (ModelNotFoundException) {
+            }
 
-            abort(404, $isCard ? "De pas is niet geactiveerd": 'De voucher is niet gevonden.');
+            abort(404, $isCard ? 'De pas is niet geactiveerd' : 'De voucher is niet gevonden.');
         });
 
         $router->bind('voucher_token_address', static function ($address) {
@@ -126,13 +127,13 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $router->bind('product_voucher_token_address', static function ($address) {
-            return VoucherToken::whereAddress($address)->whereHas('voucher', static function(Builder $builder) {
+            return VoucherToken::whereAddress($address)->whereHas('voucher', static function (Builder $builder) {
                 $builder->whereNotNull('parent_id');
             })->firstOrFail();
         });
 
         $router->bind('budget_voucher_token_address', static function ($address) {
-            return VoucherToken::whereAddress($address)->whereHas('voucher', static function(Builder $builder) {
+            return VoucherToken::whereAddress($address)->whereHas('voucher', static function (Builder $builder) {
                 $builder->whereNull('parent_id');
                 $builder->where('type', '!=', Voucher::VOUCHER_TYPE_PAYOUT);
             })->firstOrFail();
@@ -178,13 +179,13 @@ class RouteServiceProvider extends ServiceProvider
             $sessionExpireTime = now()->subSeconds(DigIdSession::SESSION_EXPIRATION_TIME);
 
             return DigIdSession::where([
-                'state'         => DigIdSession::STATE_PENDING_AUTH,
-                'session_uid'   => $digid_session_uid,
+                'state' => DigIdSession::STATE_PENDING_AUTH,
+                'session_uid' => $digid_session_uid,
             ])->where('created_at', '>=', $sessionExpireTime)->firstOrFail();
         });
 
         $router->bind('bngBankConnectionToken', static function ($token) {
-            return BankConnection::whereRedirectToken($token)->whereHas('bank', function(Builder $builder) {
+            return BankConnection::whereRedirectToken($token)->whereHas('bank', function (Builder $builder) {
                 $builder->where('key', 'bng');
             })->firstOrFail();
         });
@@ -192,7 +193,7 @@ class RouteServiceProvider extends ServiceProvider
         $router->bind('bngVoucherTransactionBulkToken', static function ($token) {
             return VoucherTransactionBulk::whereRedirectToken($token)->where([
                 'state' => VoucherTransactionBulk::STATE_PENDING,
-            ])->whereHas('bank_connection.bank', function(Builder $builder) {
+            ])->whereHas('bank_connection.bank', function (Builder $builder) {
                 $builder->where('key', 'bng');
             })->firstOrFail();
         });
@@ -226,7 +227,7 @@ class RouteServiceProvider extends ServiceProvider
     protected function mapWebRoutes(): void
     {
         Route::namespace($this->namespace)->middleware([
-            'web'
+            'web',
         ])->group(base_path('routes/web.php'));
     }
 
@@ -248,7 +249,7 @@ class RouteServiceProvider extends ServiceProvider
         Route::prefix('api/v1/platform')->namespace(
             $this->namespace
         )->middleware([
-            'api', 'implementation_key', 'client_key', 'client_version', 'forus_session'
+            'api', 'implementation_key', 'client_key', 'client_version', 'forus_session',
         ])->group(base_path('routes/api-platform.php'));
     }
 }

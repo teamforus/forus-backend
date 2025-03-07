@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace App\Services\SAML2Service\Lib;
 
@@ -29,17 +29,17 @@ use Throwable;
  */
 class SOAPClient
 {
-    const string START_SOAP_ENVELOPE = '<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">\
+    public const string START_SOAP_ENVELOPE = '<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">\
         <soap-env:Header/><soap-env:Body>';
-    const string END_SOAP_ENVELOPE = '</soap-env:Body></soap-env:Envelope>';
+    public const string END_SOAP_ENVELOPE = '</soap-env:Body></soap-env:Envelope>';
 
     /**
-     * This function sends the SOAP message to the service location and returns SOAP response
+     * This function sends the SOAP message to the service location and returns SOAP response.
      *
      * @param ArtifactResolve $msg The request that should be sent.
      * @param Settings $settings
-     * @return ArtifactResponse The response we received.
      * @throws Throwable
+     * @return ArtifactResponse The response we received.
      * @psalm-suppress UndefinedClass
      */
     public function send(ArtifactResolve $msg, Settings $settings): ArtifactResponse
@@ -112,28 +112,10 @@ class SOAPClient
                 return $samlResponse;
             }
 
-            throw new Saml2Exception("Artifact response failed validation.");
+            throw new Saml2Exception('Artifact response failed validation.');
         }
 
-        throw new Saml2Exception("Invalid artifact response type.");
-    }
-
-    /**
-     * Add a signature validator based on an SSL context.
-     *
-     * @param ArtifactResponse $msg The message we should add a validator to.
-     * @param resource $context The stream context.
-     * @return void
-     */
-    private static function addSSLValidator(ArtifactResponse $msg, $context) : void
-    {
-        $peer_cert = Arr::get(stream_context_get_options($context), 'ssl.peer_certificate');
-        $peer_key = $peer_cert ? openssl_pkey_get_public($peer_cert) : null;
-        $peer_key_info = $peer_key ? openssl_pkey_get_details($peer_key) : null;
-
-        if ($peer_key_info['key'] ?? null) {
-            $msg->addValidator([SOAPClient::class, 'validateSSL'], $peer_key_info['key']);
-        }
+        throw new Saml2Exception('Invalid artifact response type.');
     }
 
     /**
@@ -142,10 +124,10 @@ class SOAPClient
      * @param string $data The public key that was used on the connection.
      * @param XMLSecurityKey $key The key we should validate the certificate against.
      * @param bool $debugLog
-     * @return void
      * @throws Saml2Exception
+     * @return void
      */
-    public static function validateSSL(string $data, XMLSecurityKey $key, bool $debugLog = false) : void
+    public static function validateSSL(string $data, XMLSecurityKey $key, bool $debugLog = false): void
     {
         $keyInfo = openssl_pkey_get_details($key->key);
         $debugLog = !Config::get('forus.digid.saml.disable_ssl_debug_log');
@@ -169,14 +151,31 @@ class SOAPClient
         }
     }
 
+    /**
+     * Add a signature validator based on an SSL context.
+     *
+     * @param ArtifactResponse $msg The message we should add a validator to.
+     * @param resource $context The stream context.
+     * @return void
+     */
+    private static function addSSLValidator(ArtifactResponse $msg, $context): void
+    {
+        $peer_cert = Arr::get(stream_context_get_options($context), 'ssl.peer_certificate');
+        $peer_key = $peer_cert ? openssl_pkey_get_public($peer_cert) : null;
+        $peer_key_info = $peer_key ? openssl_pkey_get_details($peer_key) : null;
+
+        if ($peer_key_info['key'] ?? null) {
+            $msg->addValidator([SOAPClient::class, 'validateSSL'], $peer_key_info['key']);
+        }
+    }
 
     /**
-     * Extracts the SOAP Fault from SOAP message
+     * Extracts the SOAP Fault from SOAP message.
      *
      * @param DOMDocument $soapMessage
      * @return string|null
      */
-    private function getSOAPFault(DOMDocument $soapMessage) : ?string
+    private function getSOAPFault(DOMDocument $soapMessage): ?string
     {
         $soapFault = Utils::xpQuery($soapMessage->firstChild, '/soap-env:Envelope/soap-env:Body/soap-env:Fault');
 
@@ -190,6 +189,6 @@ class SOAPClient
             return $faultStringElement[0]->textContent;
         }
 
-        return "Unknown fault string found";
+        return 'Unknown fault string found';
     }
 }

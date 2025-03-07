@@ -11,7 +11,7 @@ class BankBalance
      * @param string $amount
      * @param string $currency
      */
-    public function __construct(string $amount, string $currency = "EUR")
+    public function __construct(string $amount, string $currency = 'EUR')
     {
         $this->amount = $amount;
         $this->currency = $currency;

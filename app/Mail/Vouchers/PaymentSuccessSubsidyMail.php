@@ -11,8 +11,8 @@ class PaymentSuccessSubsidyMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_identities.voucher_subsidy_transaction';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use Illuminate\Database\Eloquent\Collection;
+use Throwable;
 
 class SyncAllMarkdownDescriptionMedia extends BaseCommand
 {
@@ -30,18 +31,18 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
     /**
      * @var bool|null
      */
-    private ?bool $dryRun = false;
+    protected ?bool $detailed = false;
 
     /**
      * @var bool|null
      */
-    protected ?bool $detailed = false;
+    private ?bool $dryRun = false;
 
     /**
      * Execute the console command.
      *
+     * @throws Throwable
      * @return int
-     * @throws \Throwable
      */
     public function handle(): int
     {
@@ -54,18 +55,19 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
 
         if (!$this->dryRun) {
             $confirmed = $this->confirm(implode("\n", [
-                "You are about to sync markdown medias, which could delete uploaded medias.",
+                'You are about to sync markdown medias, which could delete uploaded medias.',
                 " It is advised to use '--dry-run' mode to see the changed before applying this command.",
-                " Do you want to continue?"
+                ' Do you want to continue?',
             ]));
 
             if (!$confirmed) {
                 $this->warn('Bye!');
+
                 return 1;
             }
         }
 
-        $this->printHeader("Sync markdown medias" . ($dryRun ? " in dry mode!\n" : "!\n"), 1);
+        $this->printHeader('Sync markdown medias' . ($dryRun ? " in dry mode!\n" : "!\n"), 1);
 
         match($type) {
             'all' => $this->syncAll(),
@@ -81,8 +83,8 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
 
     /**
      * @param
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function syncAll(): void
     {
@@ -93,8 +95,8 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
     }
 
     /**
+     * @throws Throwable
      * @return Collection
-     * @throws \Throwable
      */
     public function syncFunds(): Collection
     {
@@ -102,8 +104,8 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
     }
 
     /**
+     * @throws Throwable
      * @return Collection
-     * @throws \Throwable
      */
     public function syncFaq(): Collection
     {
@@ -111,8 +113,8 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
     }
 
     /**
+     * @throws Throwable
      * @return Collection
-     * @throws \Throwable
      */
     public function syncImplementations(): Collection
     {
@@ -120,8 +122,8 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
     }
 
     /**
+     * @throws Throwable
      * @return Collection
-     * @throws \Throwable
      */
     public function syncImplementationPages(): Collection
     {
@@ -132,8 +134,8 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
      * @param Collection $models
      * @param string $mediaType
      * @param string $model
+     * @throws Throwable
      * @return Collection
-     * @throws \Throwable
      */
     public function syncModels(Collection $models, string $mediaType, string $model): Collection
     {
@@ -153,8 +155,8 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
             $this->printText();
         }
 
-        $this->printText($this->green(sprintf("%s models processed", $models->count())));
-        $this->printSeparator("#");
+        $this->printText($this->green(sprintf('%s models processed', $models->count())));
+        $this->printSeparator('#');
 
         return $models;
     }
@@ -183,21 +185,21 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
             $this->printHeader($this->green("Has '" . $mediaSyncedIds . "':\n"));
             $this->printModels($mediaSynced, 'id', 'uid');
         } else {
-            $this->printText(sprintf("    - has: %s", $mediaSyncedIds));
+            $this->printText(sprintf('    - has: %s', $mediaSyncedIds));
         }
 
         if ($this->detailed) {
             $this->printHeader($this->green("Should '" . $mediaToSyncIds . "':\n"));
             $this->printModels($mediaToSync, 'id', 'uid');
         } else {
-            $this->printText(sprintf("    - should: %s", $mediaToSyncIds));
+            $this->printText(sprintf('    - should: %s', $mediaToSyncIds));
         }
 
         if ($this->detailed) {
             $this->printHeader($this->green("Should clone '" . $mediaToCloneIds . "':\n"));
             $this->printModels($mediaToClone, 'id', 'uid');
         } else {
-            $this->printText(sprintf("    - should clone: %s", $mediaToCloneIds));
+            $this->printText(sprintf('    - should clone: %s', $mediaToCloneIds));
         }
 
         $hasMediaToSync =

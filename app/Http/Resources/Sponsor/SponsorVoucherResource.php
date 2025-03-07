@@ -51,7 +51,7 @@ class SponsorVoucherResource extends BaseJsonResource
 
         if ($voucher->is_granted && $voucher->identity_id) {
             $identity_email = $voucher->identity?->email;
-            $identity_bsn = $bsn_enabled ? $voucher->identity?->bsn: null;
+            $identity_bsn = $bsn_enabled ? $voucher->identity?->bsn : null;
         }
 
         return array_merge($voucher->only([

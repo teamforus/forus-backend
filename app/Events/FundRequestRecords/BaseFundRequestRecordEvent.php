@@ -31,7 +31,7 @@ abstract class BaseFundRequestRecordEvent extends BaseFundRequestEvent
     }
 
     /**
-     * Get the fund request
+     * Get the fund request.
      *
      * @return FundRequestRecord
      */
@@ -41,7 +41,7 @@ abstract class BaseFundRequestRecordEvent extends BaseFundRequestEvent
     }
 
     /**
-     * Get notify requester setting
+     * Get notify requester setting.
      *
      * @return bool
      */

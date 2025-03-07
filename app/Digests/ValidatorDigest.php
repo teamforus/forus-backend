@@ -19,8 +19,8 @@ class ValidatorDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
 
-    protected string $requiredRelation = "funds";
-    protected string $digestKey = "validator";
+    protected string $requiredRelation = 'funds';
+    protected string $digestKey = 'validator';
 
     protected array $employeePermissions = [
         Permission::VALIDATE_RECORDS,
@@ -43,7 +43,7 @@ class ValidatorDigest extends BaseOrganizationDigest
 
         $emailBody = new MailBodyBuilder();
         $emailBody->h1(trans_choice('digests.validator.title', $total_requests, [
-            'count_requests' => $total_requests
+            'count_requests' => $total_requests,
         ]));
         $emailBody->text(trans_choice('digests.validator.greetings', $total_requests, [
             'organization_name' => $organization->name,
@@ -52,13 +52,13 @@ class ValidatorDigest extends BaseOrganizationDigest
 
         foreach ($events as $event) {
             $emailBody->h3(trans_choice(
-                "digests.validator.fund_header",
+                'digests.validator.fund_header',
                 $event['count_requests'],
                 self::arrayOnlyString($event)
             ));
 
             $emailBody->text(trans_choice(
-                "digests.validator.fund_details",
+                'digests.validator.fund_details',
                 $event['count_requests'],
                 self::arrayOnlyString($event)
             ))->space();
@@ -82,7 +82,7 @@ class ValidatorDigest extends BaseOrganizationDigest
 
         return $organization->funds()->where([
             'state' => Fund::STATE_ACTIVE,
-        ])->get()->map(static function(Fund $fund) use ($digestDateTime) {
+        ])->get()->map(static function (Fund $fund) use ($digestDateTime) {
             $query = EventLog::eventsOfTypeQuery(FundRequest::class, $fund->fund_requests());
             $query->where('event', FundRequest::EVENT_CREATED);
             $query->where('created_at', '>=', $digestDateTime);

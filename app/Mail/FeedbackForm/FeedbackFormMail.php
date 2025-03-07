@@ -11,8 +11,8 @@ class FeedbackFormMail extends ImplementationMail
     public $subject = 'New feedback from customer :customer_email';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

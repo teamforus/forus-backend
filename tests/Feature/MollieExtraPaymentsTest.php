@@ -31,8 +31,8 @@ class MollieExtraPaymentsTest extends TestCase
     use MakesTestFundProviders;
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testOnboardingAccount(): void
     {
@@ -44,8 +44,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testConnectExistingAccount(): void
     {
@@ -57,8 +57,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testProvidersWithoutConnectionCantUseExtraPayments(): void
     {
@@ -78,8 +78,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testProvidersWithActiveConnectionButDisallowedExtraPayments(): void
     {
@@ -104,8 +104,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testProvidersWithActiveConnectionAndAllowedExtraPayments(): void
     {
@@ -133,8 +133,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testExtraPaymentReservationSuccess(): void
     {
@@ -143,8 +143,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testExtraPaymentReservationEmptyVoucherSuccess(): void
     {
@@ -153,8 +153,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testExtraPaymentReservationWhileExtraIsPendingSuccess(): void
     {
@@ -172,8 +172,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testExtraPaymentDoubleReservationForNonFullFails(): void
     {
@@ -185,8 +185,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testReservationRejectNotPaidAndNotExpired(): void
     {
@@ -195,15 +195,17 @@ class MollieExtraPaymentsTest extends TestCase
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($provider->identity));
 
         $response = $this->postJson(
-            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject", [], $headers
+            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject",
+            [],
+            $headers
         );
 
         $response->assertForbidden();
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testReservationRejectNotPaidAndExpired(): void
     {
@@ -213,15 +215,17 @@ class MollieExtraPaymentsTest extends TestCase
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($provider->identity));
 
         $response = $this->postJson(
-            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject", [], $headers
+            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject",
+            [],
+            $headers
         );
 
         $response->assertSuccessful();
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testReservationRejectPaid(): void
     {
@@ -234,15 +238,17 @@ class MollieExtraPaymentsTest extends TestCase
         $headers = $this->makeApiHeaders($proxy);
 
         $response = $this->postJson(
-            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject", [], $headers
+            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject",
+            [],
+            $headers
         );
 
         $response->assertForbidden();
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testReservationRefundAndReject(): void
     {
@@ -265,15 +271,17 @@ class MollieExtraPaymentsTest extends TestCase
         $this->assertTrue($reservation->extra_payment->isFullyRefunded());
 
         $response = $this->postJson(
-            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject", [], $headers
+            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject",
+            [],
+            $headers
         );
 
         $response->assertSuccessful();
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testReservationCancelPaidByRequester(): void
     {
@@ -284,8 +292,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testReservationCancelNotPaidAndNotExpiredByRequester(): void
     {
@@ -293,8 +301,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testReservationCancelNotPaidAndExpiredByRequester(): void
     {
@@ -305,8 +313,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testMollieAccountReservationSuccessByProductConfig(): void
     {
@@ -341,8 +349,8 @@ class MollieExtraPaymentsTest extends TestCase
         $this->assertNotNull($reservation);
         $this->assertNotNull($reservation->extra_payment?->payment_id);
 
-        $response = $this->postJson("/mollie/webhooks", [
-            'id' => $reservation->extra_payment->payment_id
+        $response = $this->postJson('/mollie/webhooks', [
+            'id' => $reservation->extra_payment->payment_id,
         ]);
 
         $response->assertSuccessful();
@@ -352,8 +360,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testMollieAccountReservationFailNotAllowedByFund(): void
     {
@@ -378,8 +386,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testMollieAccountReservationFailNotAllowedByProduct(): void
     {
@@ -395,7 +403,7 @@ class MollieExtraPaymentsTest extends TestCase
         $product = $provider->products()->first();
 
         $product->update([
-            'reservation_extra_payments' => Product::RESERVATION_EXTRA_PAYMENT_NO
+            'reservation_extra_payments' => Product::RESERVATION_EXTRA_PAYMENT_NO,
         ]);
 
         $response = $this->makeReservationStoreRequest($fund->vouchers()->first(), $product);
@@ -405,6 +413,25 @@ class MollieExtraPaymentsTest extends TestCase
         $response->assertJsonFragment(['errors' => ['product_id' => [
             trans('validation.product_reservation.not_enough_voucher_funds'),
         ]]]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testMollieAccountReservationFailNoConnection(): void
+    {
+        $fundProvider = $this->prepareFundProvider();
+
+        /** @var Voucher $voucher */
+        /** @var Product $product */
+        $voucher = $fundProvider->fund->vouchers()->first();
+        $product = $fundProvider->organization->products()->first();
+
+        $response = $this->makeReservationStoreRequest($voucher, $product);
+
+        $response->assertJsonValidationErrorFor('product_id');
+        $response->assertJsonFragment(['errors' => ['product_id' => [trans('validation.product_reservation.not_enough_voucher_funds')]]]);
     }
 
     /**
@@ -448,27 +475,8 @@ class MollieExtraPaymentsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
-     */
-    public function testMollieAccountReservationFailNoConnection(): void
-    {
-        $fundProvider = $this->prepareFundProvider();
-
-        /** @var Voucher $voucher */
-        /** @var Product $product */
-        $voucher = $fundProvider->fund->vouchers()->first();
-        $product = $fundProvider->organization->products()->first();
-
-        $response = $this->makeReservationStoreRequest($voucher, $product);
-
-        $response->assertJsonValidationErrorFor('product_id');
-        $response->assertJsonFragment(['errors' => ['product_id' => [trans('validation.product_reservation.not_enough_voucher_funds')]]]);
-    }
-
-    /**
      * @return FundProvider
-     * @throws Throwable
      */
     private function prepareFundProvider(): FundProvider
     {
@@ -484,7 +492,7 @@ class MollieExtraPaymentsTest extends TestCase
         ]);
 
         $this->assertNotNull($fund->makeVoucher($organization->identity, [
-            'state' => Voucher::STATE_ACTIVE
+            'state' => Voucher::STATE_ACTIVE,
         ], 100));
 
         $provider = $this->makeTestProviderOrganization($this->makeIdentity($this->makeUniqueEmail()));
@@ -587,8 +595,8 @@ class MollieExtraPaymentsTest extends TestCase
 
     /**
      * @param bool $emptyVoucher
-     * @return ProductReservation
      * @throws Throwable
+     * @return ProductReservation
      */
     private function makeReservation(bool $emptyVoucher = false): ProductReservation
     {
@@ -638,8 +646,8 @@ class MollieExtraPaymentsTest extends TestCase
      */
     private function payExtraPayment(ProductReservation $reservation): void
     {
-        $response = $this->postJson("/mollie/webhooks", [
-            'id' => $reservation->extra_payment->payment_id
+        $response = $this->postJson('/mollie/webhooks', [
+            'id' => $reservation->extra_payment->payment_id,
         ]);
 
         $response->assertSuccessful();

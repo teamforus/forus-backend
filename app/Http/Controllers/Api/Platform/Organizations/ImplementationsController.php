@@ -16,6 +16,7 @@ use App\Models\Organization;
 use App\Scopes\Builders\ImplementationQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Throwable;
 
 class ImplementationsController extends Controller
 {
@@ -24,8 +25,8 @@ class ImplementationsController extends Controller
      *
      * @param IndexImplementationRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexImplementationRequest $request,
@@ -52,8 +53,8 @@ class ImplementationsController extends Controller
      *
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return ImplementationPrivateResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ImplementationPrivateResource
      */
     public function show(
         Organization $organization,
@@ -71,9 +72,9 @@ class ImplementationsController extends Controller
      * @param UpdateImplementationCmsRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return ImplementationPrivateResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return ImplementationPrivateResource
      * @noinspection PhpUnused
      */
     public function updateCMS(
@@ -113,8 +114,8 @@ class ImplementationsController extends Controller
      * @param UpdateImplementationDigiDRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return ImplementationPrivateResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ImplementationPrivateResource
      * @noinspection PhpUnused
      */
     public function updateDigiD(
@@ -138,8 +139,8 @@ class ImplementationsController extends Controller
      * @param UpdateImplementationEmailRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return ImplementationPrivateResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ImplementationPrivateResource
      * @noinspection PhpUnused
      */
     public function updateEmail(
@@ -161,8 +162,8 @@ class ImplementationsController extends Controller
      * @param UpdateImplementationEmailBrandingRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return ImplementationPrivateResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ImplementationPrivateResource
      * @noinspection PhpUnused
      */
     public function updateEmailBranding(
@@ -184,8 +185,8 @@ class ImplementationsController extends Controller
      * @param UpdatePreCheckBannerRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return ImplementationPrivateResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ImplementationPrivateResource
      * @noinspection PhpUnused
      */
     public function updatePreCheckBanner(

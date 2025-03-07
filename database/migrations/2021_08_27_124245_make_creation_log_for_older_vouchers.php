@@ -1,13 +1,12 @@
 <?php
 
+use App\Models\Voucher;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Builder;
-use App\Models\Voucher;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -15,20 +14,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $vouchers = Voucher::whereDoesntHave('logs', function(Builder $builder) {
+        $vouchers = Voucher::whereDoesntHave('logs', function (Builder $builder) {
             $builder->whereIn('event', Voucher::EVENTS_CREATED);
         })->with([
-            'employee' => function($builder) {
+            'employee' => function ($builder) {
                 /** @var Builder|SoftDeletes $builder */
                 $builder->withTrashed();
             },
-            'product' => function($builder) {
+            'product' => function ($builder) {
                 /** @var Builder|SoftDeletes $builder */
                 $builder->withTrashed();
             },
         ])->get();
 
         $this->migrateVouchers($vouchers);
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down(): void
+    {
     }
 
     /**
@@ -56,7 +64,8 @@ return new class extends Migration
      * @param Voucher $voucher
      * @return array
      */
-    protected function getVoucherLogModels(Voucher $voucher): array {
+    protected function getVoucherLogModels(Voucher $voucher): array
+    {
         return array_merge([
             'fund' => $voucher->fund,
             'voucher' => $voucher,
@@ -67,11 +76,4 @@ return new class extends Migration
             'provider' => $voucher->product->organization,
         ] : []);
     }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down(): void {}
 };

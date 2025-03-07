@@ -42,6 +42,6 @@ class SessionServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton('forus.session', fn() => new SessionService());
+        $this->app->singleton('forus.session', fn () => new SessionService());
     }
 }

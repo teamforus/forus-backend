@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Responses;
 
 use App\Exceptions\AuthorizationJsonException;
@@ -27,9 +26,9 @@ class AuthorizationJsonResponse extends Response
     /**
      * Throw authorization exception if response was denied.
      *
+     * @throws AuthorizationJsonException
      * @return \Illuminate\Auth\Access\Response
      *
-     * @throws AuthorizationJsonException
      */
     public function authorize(): Response
     {

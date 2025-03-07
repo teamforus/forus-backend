@@ -11,8 +11,8 @@ class PaymentSuccessBudgetMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_identities.voucher_budget_transaction';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\Voucher;
 
 /**
- * Share product voucher to the provider by email
+ * Share product voucher to the provider by email.
  */
 class IdentityProductVoucherSharedNotification extends BaseIdentityVoucherNotification
 {
@@ -26,7 +26,7 @@ class IdentityProductVoucherSharedNotification extends BaseIdentityVoucherNotifi
                 ...$this->eventLog->data,
                 'reason' => $this->eventLog->data['voucher_share_message'] ?? '',
                 'qr_token' => $voucher->token_without_confirmation->address,
-                'requester_email' => $identity->email
+                'requester_email' => $identity->email,
             ], $voucher->fund->fund_config->implementation->getEmailFrom());
 
             $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
@@ -36,7 +36,7 @@ class IdentityProductVoucherSharedNotification extends BaseIdentityVoucherNotifi
             ...$this->eventLog->data,
             'reason' => $this->eventLog->data['voucher_share_message'] ?? '',
             'qr_token' => $voucher->token_without_confirmation->address,
-            'requester_email' => $identity->email
+            'requester_email' => $identity->email,
         ], $voucher->fund->fund_config->implementation->getEmailFrom());
 
         $this->sendMailNotification(

@@ -34,8 +34,8 @@ class PrevalidationPolicy extends BasePolicy
     /**
      * @param Identity $identity
      * @param Prevalidation $prevalidation
-     * @return bool
      * @throws AuthorizationJsonException
+     * @return bool
      * @noinspection PhpUnused
      */
     public function redeem(Identity $identity, Prevalidation $prevalidation): bool
@@ -82,6 +82,6 @@ class PrevalidationPolicy extends BasePolicy
      */
     public function getPolicyKey(): string
     {
-        return "prevalidations";
+        return 'prevalidations';
     }
 }

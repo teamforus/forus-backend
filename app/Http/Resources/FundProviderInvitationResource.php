@@ -28,11 +28,11 @@ class FundProviderInvitationResource extends BaseJsonResource
         return array_merge($invitation->only([
             'id', 'state', 'allow_budget', 'allow_products', 'expired',
         ]), [
-            'fund'                  => new FundResource($invitation->fund),
-            'from_fund'             => new FundResource($invitation->from_fund),
+            'fund' => new FundResource($invitation->fund),
+            'from_fund' => new FundResource($invitation->from_fund),
             'provider_organization' => new OrganizationResource($invitation->organization),
-            'sponsor_organization'  => new OrganizationResource($invitation->fund->organization),
-            'can_be_accepted'       => $invitation->canBeAccepted(),
+            'sponsor_organization' => new OrganizationResource($invitation->fund->organization),
+            'can_be_accepted' => $invitation->canBeAccepted(),
         ], $this->timestamps($invitation, 'created_at', 'expire_at'));
     }
 }

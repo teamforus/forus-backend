@@ -12,8 +12,8 @@ class FundProviderInvitationsController extends Controller
      * Display the specified resource.
      *
      * @param FundProviderInvitation $invitation
-     * @return FundProviderInvitationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderInvitationResource
      */
     public function show(FundProviderInvitation $invitation): FundProviderInvitationResource
     {
@@ -26,8 +26,8 @@ class FundProviderInvitationsController extends Controller
      * Update the specified resource in storage.
      *
      * @param FundProviderInvitation $invitation
-     * @return FundProviderInvitationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderInvitationResource
      */
     public function update(FundProviderInvitation $invitation): FundProviderInvitationResource
     {

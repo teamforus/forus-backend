@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -18,11 +17,11 @@ return new class extends Migration
             $table->string('uid', 255)->nullable();
             $table->string('original_name', 200)->nullable();
 
-            $table->string('type',60);
+            $table->string('type', 60);
             $table->string('ext', 10);
 
-            $table->string('path',1024);
-            $table->string('size',100);
+            $table->string('path', 1024);
+            $table->string('size', 100);
 
             $table->string('identity_address', 200);
 

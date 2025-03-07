@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\FundCriterionRule
+ * App\Models\FundCriterionRule.
  *
  * @property int $id
  * @property int $fund_criterion_id

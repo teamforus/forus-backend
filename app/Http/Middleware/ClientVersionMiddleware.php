@@ -18,7 +18,7 @@ class ClientVersionMiddleware
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param  Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next): mixed
@@ -32,7 +32,7 @@ class ClientVersionMiddleware
         }
 
         return new JsonResponse([
-            "message" => 'invalid_client_version',
+            'message' => 'invalid_client_version',
         ], 403);
     }
 }

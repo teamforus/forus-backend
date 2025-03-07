@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -20,11 +19,15 @@ return new class extends Migration
             $table->integer('multiplier')->unsigned();
             $table->timestamps();
 
-            $table->foreign('record_type_key'
-            )->references('key')->on('record_types')->onDelete('set null');
+            $table->foreign('record_type_key')
+                ->references('key')
+                ->on('record_types')
+                ->onDelete('set null');
 
-            $table->foreign('fund_id'
-            )->references('id')->on('funds')->onDelete('cascade');
+            $table->foreign('fund_id')
+                ->references('id')
+                ->on('funds')
+                ->onDelete('cascade');
         });
     }
 

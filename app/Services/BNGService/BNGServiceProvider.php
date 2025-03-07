@@ -3,6 +3,7 @@
 namespace App\Services\BNGService;
 
 use App\Services\BankService\Models\Bank;
+use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,7 +22,7 @@ class BNGServiceProvider extends ServiceProvider
                 return $this->getBngServiceInstance($bngBank);
             }
 
-            throw new \Exception("BNG Bank not found.");
+            throw new Exception('BNG Bank not found.');
         });
     }
 

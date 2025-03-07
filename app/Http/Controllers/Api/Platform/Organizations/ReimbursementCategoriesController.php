@@ -17,8 +17,8 @@ class ReimbursementCategoriesController extends Controller
      * Display a listing of the resource.
      *
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(Organization $organization): AnonymousResourceCollection
     {
@@ -33,8 +33,8 @@ class ReimbursementCategoriesController extends Controller
      *
      * @param Organization $organization
      * @param ReimbursementCategory $reimbursementCategory
-     * @return ReimbursementCategoryResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ReimbursementCategoryResource
      */
     public function show(
         Organization $organization,
@@ -51,8 +51,8 @@ class ReimbursementCategoriesController extends Controller
      *
      * @param StoreReimbursementCategoryRequest $request
      * @param Organization $organization
-     * @return ReimbursementCategoryResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ReimbursementCategoryResource
      */
     public function store(
         StoreReimbursementCategoryRequest $request,
@@ -72,8 +72,8 @@ class ReimbursementCategoriesController extends Controller
      * @param UpdateReimbursementCategoryRequest $request
      * @param Organization $organization
      * @param ReimbursementCategory $reimbursementCategory
-     * @return ReimbursementCategoryResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ReimbursementCategoryResource
      */
     public function update(
         UpdateReimbursementCategoryRequest $request,
@@ -93,8 +93,8 @@ class ReimbursementCategoriesController extends Controller
      *
      * @param Organization $organization
      * @param ReimbursementCategory $reimbursementCategory
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      */
     public function destroy(
         Organization $organization,
@@ -108,4 +108,3 @@ class ReimbursementCategoriesController extends Controller
         return new JsonResponse([]);
     }
 }
-

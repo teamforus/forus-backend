@@ -14,13 +14,13 @@ class SourceTableSeeder extends DatabaseSeeder
     public function run(): void
     {
         Source::create([
-            'key'   => 'app.me_app',
-            'url'   => null,
+            'key' => 'app.me_app',
+            'url' => null,
         ]);
 
         Source::create([
-            'key'   => 'shop.test_shop',
-            'url'   => 'http://localhost:8000',
+            'key' => 'shop.test_shop',
+            'url' => 'http://localhost:8000',
         ]);
     }
 }

@@ -11,7 +11,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseBankConnectionEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     protected BankConnection $bankConnection;
     protected ?Employee $employee;

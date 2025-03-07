@@ -33,13 +33,13 @@ class DependencyRule implements Rule
 
         if (!is_array($value)) {
             $this->responseMessage = 'invalid_dependency_format';
+
             return false;
         }
 
         if (count($value) === 0) {
             return true;
         }
-
 
         foreach ($value as $dependency) {
             if (!in_array($dependency, $this->dependencies, true)) {

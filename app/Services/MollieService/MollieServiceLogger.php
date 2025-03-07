@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Services\MollieService;
 
 use Illuminate\Support\Facades\Log;

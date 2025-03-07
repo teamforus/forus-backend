@@ -9,6 +9,7 @@ use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\VoucherTestTrait;
+use Throwable;
 
 class FundCheckRelationBsnTest extends TestCase
 {
@@ -19,8 +20,8 @@ class FundCheckRelationBsnTest extends TestCase
     use MakesTestIdentities;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testBsnRelationVoucherReceived(): void
     {
@@ -42,8 +43,8 @@ class FundCheckRelationBsnTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testInactiveBsnRelationVoucherNotReceived(): void
     {
@@ -70,8 +71,8 @@ class FundCheckRelationBsnTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testExpiredBsnRelationVoucherNotReceived(): void
     {
@@ -95,8 +96,8 @@ class FundCheckRelationBsnTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return Voucher
-     * @throws \Throwable
      */
     protected function makeFundForCheckTest(): Voucher
     {
@@ -122,6 +123,7 @@ class FundCheckRelationBsnTest extends TestCase
         $voucher = Voucher::find($uploadResponse->json('data.id'));
 
         self::assertNotNull($voucher);
+
         return $voucher;
     }
 }

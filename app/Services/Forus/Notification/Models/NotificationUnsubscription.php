@@ -5,7 +5,7 @@ namespace App\Services\Forus\Notification\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Services\Forus\Notification\Models\NotificationUnsubscription
+ * App\Services\Forus\Notification\Models\NotificationUnsubscription.
  *
  * @property int $id
  * @property string $email
@@ -23,6 +23,6 @@ use Illuminate\Database\Eloquent\Model;
 class NotificationUnsubscription extends Model
 {
     protected $fillable = [
-        'email'
+        'email',
     ];
 }

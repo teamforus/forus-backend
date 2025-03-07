@@ -2,7 +2,7 @@
 
 return [
     'source' => [
-        'user'      => 'Gebruiker',
-        'employee'  => 'Medewerker',
-    ]
+        'user' => 'Gebruiker',
+        'employee' => 'Medewerker',
+    ],
 ];

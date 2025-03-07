@@ -26,7 +26,8 @@ abstract class BaseFundCriteriaRule extends BaseRule
     public function __construct(
         protected BaseFormRequest $request,
         protected Organization $organization,
-    ) {}
+    ) {
+    }
 
     /**
      * @param string|null $key
@@ -82,14 +83,14 @@ abstract class BaseFundCriteriaRule extends BaseRule
         }
 
         return match($recordType->type) {
-            $recordType::TYPE_DATE  => ValidatorFacade::make(compact('min', 'max'), [
+            $recordType::TYPE_DATE => ValidatorFacade::make(compact('min', 'max'), [
                 'min' => implode('', [
                     "nullable|date|date_format:$this->dateFormat",
-                    $this->isValidDate($max) ? "|before_or_equal:$max" : "",
+                    $this->isValidDate($max) ? "|before_or_equal:$max" : '',
                 ]),
                 'max' => implode('', [
                     "nullable|date|date_format:$this->dateFormat",
-                    $this->isValidDate($min) ? "|after_or_equal:$min" : "",
+                    $this->isValidDate($min) ? "|after_or_equal:$min" : '',
                 ]),
             ]),
             default => ValidatorFacade::make(compact('min', 'max'), [

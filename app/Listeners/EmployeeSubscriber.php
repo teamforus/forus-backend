@@ -10,13 +10,14 @@ use App\Models\Role;
 use App\Notifications\Identities\Employee\IdentityAddedEmployeeNotification;
 use App\Notifications\Identities\Employee\IdentityChangedEmployeeRolesNotification;
 use App\Notifications\Identities\Employee\IdentityRemovedEmployeeNotification;
+use Exception;
 use Illuminate\Events\Dispatcher;
 
 class EmployeeSubscriber
 {
     /**
      * @param EmployeeCreated $employeeCreated
-     * @throws \Exception
+     * @throws Exception
      * @noinspection PhpUnused
      */
     public function onEmployeeCreated(EmployeeCreated $employeeCreated): void
@@ -31,7 +32,7 @@ class EmployeeSubscriber
 
     /**
      * @param EmployeeUpdated $employeeUpdated
-     * @throws \Exception
+     * @throws Exception
      * @noinspection PhpUnused
      */
     public function onEmployeeUpdated(EmployeeUpdated $employeeUpdated): void
@@ -40,11 +41,11 @@ class EmployeeSubscriber
         $currentRoles = $employee->roles->pluck('key')->toArray();
         $previousRoles = $employeeUpdated->getPreviousRoles();
 
-        $removedRoles = array_filter($previousRoles, static function($role) use ($currentRoles) {
+        $removedRoles = array_filter($previousRoles, static function ($role) use ($currentRoles) {
             return !in_array($role, $currentRoles, true);
         });
 
-        $newRoles = array_filter($currentRoles, static function($role) use ($previousRoles) {
+        $newRoles = array_filter($currentRoles, static function ($role) use ($previousRoles) {
             return !in_array($role, $previousRoles, true);
         });
 
@@ -66,7 +67,7 @@ class EmployeeSubscriber
 
     /**
      * @param EmployeeDeleted $employeeDeleted
-     * @throws \Exception
+     * @throws Exception
      * @noinspection PhpUnused
      */
     public function onEmployeeDeleted(EmployeeDeleted $employeeDeleted): void
@@ -80,7 +81,7 @@ class EmployeeSubscriber
     }
 
     /**
-     * The events dispatcher
+     * The events dispatcher.
      *
      * @param Dispatcher $events
      * @noinspection PhpUnused

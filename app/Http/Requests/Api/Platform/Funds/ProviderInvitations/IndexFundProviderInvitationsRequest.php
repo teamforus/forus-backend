@@ -26,8 +26,8 @@ class IndexFundProviderInvitationsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'per_page'  => 'numeric|between:1,100',
-            'state'     => Rule::in(FundProviderInvitation::STATES),
+            'per_page' => 'numeric|between:1,100',
+            'state' => Rule::in(FundProviderInvitation::STATES),
         ];
     }
 }

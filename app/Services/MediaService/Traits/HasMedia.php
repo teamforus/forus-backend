@@ -7,6 +7,7 @@ use App\Services\MediaService\Models\Media;
 use Barryvdh\LaravelIdeHelper\Eloquent;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Throwable;
 
 /**
  * @property Collection $medias
@@ -42,8 +43,8 @@ trait HasMedia
     /**
      * @param string|null $uid
      * @param string $cloneType
+     * @throws Throwable
      * @return static
-     * @throws \Throwable
      * @noinspection PhpUnused
      */
     public function attachOrCloneMediaByUid(?string $uid, string $cloneType): static
@@ -87,9 +88,9 @@ trait HasMedia
         $order = array_flip(array_diff($uid, $oldMedia));
 
         $newMedia->each(fn (Media $media) => $media->update([
-            'order'         => $order[$media->uid],
+            'order' => $order[$media->uid],
             'mediable_type' => $this->getMorphClass(),
-            'mediable_id'   => $this->id,
+            'mediable_id' => $this->id,
         ]));
 
         return true;
@@ -110,7 +111,7 @@ trait HasMedia
     }
 
     /**
-     * Remove medias by uid
+     * Remove medias by uid.
      * @param array|string $uid
      */
     public function unlinkMedias(array|string $uid): void
@@ -118,8 +119,8 @@ trait HasMedia
         $media = $this->medias()->whereIn('uid', (array) $uid)->get();
 
         try {
-            $media->each(fn(Media $media) => resolve('media')->unlink($media));
-        } catch (\Throwable $e) {
+            $media->each(fn (Media $media) => resolve('media')->unlink($media));
+        } catch (Throwable $e) {
             logger()?->error($e->getMessage());
         }
     }

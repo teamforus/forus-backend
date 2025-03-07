@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Searches;
-
 
 use App\Models\Fund;
 use App\Models\FundRequest;
@@ -108,11 +106,11 @@ class FundSearch extends BaseSearch
         }
 
         if ($approved) {
-            $builder->whereHas('fund_providers', function(Builder $builder) use ($funds, $type) {
+            $builder->whereHas('fund_providers', function (Builder $builder) use ($funds, $type) {
                 FundProviderQuery::whereApprovedForFundsFilter($builder, $funds, $type);
             });
         } else {
-            $builder->whereDoesntHave('fund_providers', function(Builder $builder) use ($funds, $type) {
+            $builder->whereDoesntHave('fund_providers', function (Builder $builder) use ($funds, $type) {
                 FundProviderQuery::whereApprovedForFundsFilter($builder, $funds, $type);
             });
         }

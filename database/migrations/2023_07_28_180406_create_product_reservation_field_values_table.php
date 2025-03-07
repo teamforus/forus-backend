@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -21,11 +20,13 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('organization_reservation_field_id', 'organization_field_id_foreign')
-                ->references('id')->on('organization_reservation_fields')
+                ->references('id')
+                ->on('organization_reservation_fields')
                 ->onDelete('cascade');
 
             $table->foreign('product_reservation_id')
-                ->references('id')->on('product_reservations')
+                ->references('id')
+                ->on('product_reservations')
                 ->onDelete('cascade');
         });
     }

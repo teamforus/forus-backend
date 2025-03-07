@@ -148,9 +148,12 @@ class VoucherSubscriber
 
         if ($voucherAssigned->shouldNotifyRequesterAssigned() && !$voucher->isTypePayout()) {
             switch ($type) {
-                case 'budget': IdentityVoucherAssignedBudgetNotification::send($event); break;
-                case 'subsidy': IdentityVoucherAssignedSubsidyNotification::send($event); break;
-                case 'product': IdentityVoucherAssignedProductNotification::send($event); break;
+                case 'budget': IdentityVoucherAssignedBudgetNotification::send($event);
+                    break;
+                case 'subsidy': IdentityVoucherAssignedSubsidyNotification::send($event);
+                    break;
+                case 'product': IdentityVoucherAssignedProductNotification::send($event);
+                    break;
             }
         }
 
@@ -305,18 +308,18 @@ class VoucherSubscriber
             $physicalCardRequest->house,
             $physicalCardRequest->house_addition,
             $physicalCardRequest->postcode,
-            $physicalCardRequest->city
+            $physicalCardRequest->city,
         ]));
 
         $eventLog = $physicalCardRequest->voucher->log(Voucher::EVENT_PHYSICAL_CARD_REQUESTED, [
-            'fund'                      => $physicalCardRequest->voucher->fund,
-            'sponsor'                   => $physicalCardRequest->voucher->fund->organization,
-            'voucher'                   => $physicalCardRequest->voucher,
-            'employee'                  => $physicalCardRequest->employee,
-            'implementation'            => $physicalCardRequest->voucher->fund->getImplementation(),
-            'physical_card_request'     => $physicalCardRequest,
+            'fund' => $physicalCardRequest->voucher->fund,
+            'sponsor' => $physicalCardRequest->voucher->fund->organization,
+            'voucher' => $physicalCardRequest->voucher,
+            'employee' => $physicalCardRequest->employee,
+            'implementation' => $physicalCardRequest->voucher->fund->getImplementation(),
+            'physical_card_request' => $physicalCardRequest,
         ], [
-            'note'    => "Adresgegevens: $address",
+            'note' => "Adresgegevens: $address",
             'address' => $address,
         ]);
 
@@ -328,7 +331,7 @@ class VoucherSubscriber
     }
 
     /**
-     * The events dispatcher
+     * The events dispatcher.
      *
      * @param Dispatcher $events
      * @return void

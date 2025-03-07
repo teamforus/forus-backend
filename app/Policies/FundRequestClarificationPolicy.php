@@ -134,7 +134,6 @@ class FundRequestClarificationPolicy
         return true;
     }
 
-
     /**
      * @param Organization $organization
      * @param FundRequest $fundRequest

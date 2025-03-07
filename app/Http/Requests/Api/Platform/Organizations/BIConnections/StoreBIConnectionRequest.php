@@ -8,6 +8,7 @@ use App\Services\BIConnectionService\BIConnectionService;
 use App\Services\BIConnectionService\Models\BIConnection;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 /**
  * @property-read Organization $organization
@@ -27,8 +28,8 @@ class StoreBIConnectionRequest extends BaseFormRequest
     /**
      * Get the validation rules that apply to the request.
      *
+     * @throws Throwable
      * @return array
-     * @throws \Throwable
      */
     public function rules(): array
     {
@@ -52,7 +53,6 @@ class StoreBIConnectionRequest extends BaseFormRequest
             ] : [],
         ];
     }
-
 
     /**
      * @return array

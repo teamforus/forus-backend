@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\Voucher;
 
 /**
- * Product voucher was assigned to identity
+ * Product voucher was assigned to identity.
  */
 class IdentityVoucherAssignedProductNotification extends BaseIdentityVoucherNotification
 {

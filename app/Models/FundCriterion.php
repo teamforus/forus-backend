@@ -21,7 +21,7 @@ use Illuminate\Validation\Validator;
 use League\CommonMark\Exception\CommonMarkException;
 
 /**
- * App\Models\FundCriterion
+ * App\Models\FundCriterion.
  *
  * @property int $id
  * @property int $fund_id
@@ -128,9 +128,9 @@ class FundCriterion extends BaseModel
     }
 
     /**
+     * @throws CommonMarkException
      * @return string
      * @noinspection PhpUnused
-     * @throws CommonMarkException
      */
     public function getDescriptionHtmlAttribute(): string
     {
@@ -138,9 +138,9 @@ class FundCriterion extends BaseModel
     }
 
     /**
+     * @throws CommonMarkException
      * @return string
      * @noinspection PhpUnused
-     * @throws CommonMarkException
      */
     public function getExtraDescriptionHtmlAttribute(): string
     {

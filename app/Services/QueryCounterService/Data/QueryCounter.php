@@ -18,7 +18,8 @@ class QueryCounter
         protected array $queries,
         protected Request $request,
         protected QueryConfig $config,
-    ) {}
+    ) {
+    }
 
     /**
      * @return QueryConfig
@@ -35,7 +36,7 @@ class QueryCounter
      */
     public function getQueriesTime(): float
     {
-        return array_sum(array_map(fn($query) => $query->time, $this->queries));
+        return array_sum(array_map(fn ($query) => $query->time, $this->queries));
     }
 
     /**
@@ -111,6 +112,7 @@ class QueryCounter
     protected function getMinQueriesForRoute(?string $routeName): int
     {
         $minQueriesOverwrite = $this->config->getMinQueriesOverwrite();
+
         return $minQueriesOverwrite[$routeName] ?? $this->config->getMinQueries();
     }
 
@@ -123,6 +125,7 @@ class QueryCounter
     protected function getMinQueriesTimeForRoute(?string $routeName): int
     {
         $minQueriesTimeOverwrite = $this->config->getMinQueriesTimeOverwrite();
+
         return $minQueriesTimeOverwrite[$routeName] ?? $this->config->getMinQueriesTime();
     }
 
@@ -151,5 +154,4 @@ class QueryCounter
 
         return $this->getQueriesTime() >= $minQueriesTime;
     }
-
 }

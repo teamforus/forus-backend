@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Services\Forus\Session\Services\Data;
 
 class LocationData
@@ -33,22 +32,25 @@ class LocationData
     /**
      * @return string|null
      */
-    public function toString() {
+    public function toString()
+    {
         if ($this->country && $this->city) {
-            return sprintf("%s, %s", $this->country, $this->city);
-        } else if ($this->country && !$this->city) {
+            return sprintf('%s, %s', $this->country, $this->city);
+        } elseif ($this->country && !$this->city) {
             return $this->country;
-        } else if ($this->city && !$this->country) {
+        } elseif ($this->city && !$this->country) {
             return $this->city;
-        } else {
-            return trans("agent.unknown");
         }
+
+        return trans('agent.unknown');
+
     }
 
     /**
      * @return bool
      */
-    public function isDetected() {
+    public function isDetected()
+    {
         return !empty($this->country) || !empty($this->city);
     }
 }

@@ -11,8 +11,8 @@ class SendVoucherMail extends ImplementationMail
     public $subject = 'Hierbij ontvangt u uw :fund_name';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

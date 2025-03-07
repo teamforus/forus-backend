@@ -38,8 +38,8 @@ class BankProcessFundTopUpsCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function handle(): void
     {
@@ -61,7 +61,7 @@ class BankProcessFundTopUpsCommand extends Command
         FundQuery::whereIsConfiguredByForus($funds);
 
         foreach ($funds->get() as $fund) {
-            DB::transaction(function() use ($fund) {
+            DB::transaction(function () use ($fund) {
                 $this->processFund($fund);
                 sleep($this->fetchInterval);
             });
@@ -78,6 +78,7 @@ class BankProcessFundTopUpsCommand extends Command
 
         if (!$payments) {
             $this->info("Could not fetch top-ups for \"$fund->name\" fund.");
+
             return;
         }
 
@@ -123,7 +124,7 @@ class BankProcessFundTopUpsCommand extends Command
         if ($connection->bank->isBNG() && $this->shouldSkipBNG($payment, $topUp)) {
             $topUp->transactions()->firstOrCreate([
                 'bank_transaction_id' => $payment->getId(),
-                'amount' => NULL
+                'amount' => null,
             ]);
 
             return;
@@ -131,7 +132,7 @@ class BankProcessFundTopUpsCommand extends Command
 
         $transaction = $topUp->transactions()->firstOrCreate([
             'bank_transaction_id' => $payment->getId(),
-            'amount' => $payment->getAmount()
+            'amount' => $payment->getAmount(),
         ]);
 
         $transaction->update($connection->only('bank_connection_account_id'));

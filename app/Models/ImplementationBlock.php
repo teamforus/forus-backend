@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Facades\Config;
 
 /**
- * App\Models\ImplementationBlock
+ * App\Models\ImplementationBlock.
  *
  * @property int $id
  * @property int $implementation_page_id
@@ -86,7 +86,7 @@ class ImplementationBlock extends Model
     }
 
     /**
-     * Get fund banner
+     * Get fund banner.
      * @return MorphOne
      * @noinspection PhpUnused
      */

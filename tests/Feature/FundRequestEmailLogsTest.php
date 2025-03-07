@@ -14,6 +14,7 @@ use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
+use Throwable;
 
 class FundRequestEmailLogsTest extends TestCase
 {
@@ -26,7 +27,7 @@ class FundRequestEmailLogsTest extends TestCase
     use MakesTestFundRequests;
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testRequestFundEmailLogCreated()
     {

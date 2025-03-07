@@ -3,6 +3,7 @@
 namespace App\Services\DigIdService\Console\Commands;
 
 use App\Services\DigIdService\Models\DigIdSession;
+use Exception;
 use Illuminate\Console\Command;
 
 class DigIdSessionsCleanupCommand extends Command
@@ -24,15 +25,17 @@ class DigIdSessionsCleanupCommand extends Command
     /**
      * Execute the console command.
      *
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function handle(): void
     {
         $olderThan = now()->subSeconds(DigIdSession::SESSION_EXPIRATION_TIME);
 
         DigIdSession::where(
-            'created_at', '<', $olderThan
+            'created_at',
+            '<',
+            $olderThan
         )->whereNotIn('state', [
             DigIdSession::STATE_ERROR,
             DigIdSession::STATE_EXPIRED,
@@ -42,7 +45,9 @@ class DigIdSessionsCleanupCommand extends Command
         ]);
 
         DigIdSession::where(
-            'created_at', '<', $olderThan
+            'created_at',
+            '<',
+            $olderThan
         )->delete();
     }
 }

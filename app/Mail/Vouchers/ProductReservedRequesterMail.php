@@ -11,8 +11,8 @@ class ProductReservedRequesterMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_identities.product_voucher_reserved';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

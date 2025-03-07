@@ -21,7 +21,8 @@ class IdentityVoucherAddressRule implements Rule
         protected ?Identity $identity,
         protected ?string $voucher_type = null,
         protected ?string $fund_type = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Determine if the validation rule passes.
@@ -37,14 +38,16 @@ class IdentityVoucherAddressRule implements Rule
             ->where('id', $value));
 
         if (!is_null($this->fund_type)) {
-            $query->whereHas('fund', function(Builder $builder) {
+            $query->whereHas('fund', function (Builder $builder) {
                 $builder->where('type', '=', $this->fund_type);
             });
         }
 
         switch ($this->voucher_type) {
-            case Voucher::TYPE_BUDGET; $query->whereNull('product_id'); break;
-            case Voucher::TYPE_PRODUCT; $query->whereNotNull('product_id'); break;
+            case Voucher::TYPE_BUDGET: $query->whereNull('product_id');
+                break;
+            case Voucher::TYPE_PRODUCT: $query->whereNotNull('product_id');
+                break;
         }
 
         return $query->exists();

@@ -39,7 +39,7 @@ class StoreMediaRequest extends BaseFormRequest
                 'mimes:' . implode(',', $type->getSourceExtensions()),
                 new FileMimeTypeRule($type->getSourceMimeTypes()),
                 'max:' . $type->getMaxSourceFileSize(4096),
-            ]: []),
+            ] : []),
             'type' => [
                 'required',
                 Rule::in(array_keys(MediaService::getMediaConfigs())),
@@ -60,7 +60,7 @@ class StoreMediaRequest extends BaseFormRequest
             ],
             'sync_presets.*' => [
                 'nullable',
-                $type ? Rule::in(array_map(fn(MediaPreset $preset) => $preset->name, $type->getPresets())) : [],
+                $type ? Rule::in(array_map(fn (MediaPreset $preset) => $preset->name, $type->getPresets())) : [],
             ],
         ];
     }

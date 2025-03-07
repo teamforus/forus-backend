@@ -82,6 +82,51 @@ class RequesterDigest extends BaseDigest
     }
 
     /**
+     * @param EloquentCollection|Fund[] $funds
+     * @return MailBodyBuilder[]
+     */
+    public function buildFundProvidersMailBody(EloquentCollection|Arrayable $funds): array
+    {
+        return $funds->reduce(function ($array, Fund $fund) {
+            $events = $this->getEvents($fund, Fund::EVENT_PROVIDER_APPROVED_BUDGET, [
+                Fund::EVENT_PROVIDER_APPROVED_BUDGET,
+                Fund::EVENT_PROVIDER_REVOKED_BUDGET,
+            ]);
+
+            if ($events->count() > 0) {
+                $array[$fund->id] = MailBodyBuilder::create();
+                $array[$fund->id]->h3(trans_choice(
+                    'digests.requester.providers.title',
+                    $events->count(),
+                    [
+                        'count_providers' => $events->count(),
+                        'sponsor_name' => $fund->organization->name,
+                        'fund_name' => $fund->name,
+                    ]
+                ));
+
+                $array[$fund->id]->text(trans(
+                    'digests.requester.providers.description',
+                    [
+                        'providers_list' => $events->pluck('provider_name')->implode("\n- "),
+                    ]
+                ));
+            }
+
+            return $array;
+        }, []);
+    }
+
+    /**
+     * @param Fund $fund
+     * @return Carbon
+     */
+    public function getFundDigestTime(Fund $fund): Carbon
+    {
+        return $fund->lastDigestOfType('requester')->created_at ?? now()->subWeek();
+    }
+
+    /**
      * @param Fund $fund
      * @param string $targetEvent
      * @param array $otherEvents
@@ -95,49 +140,31 @@ class RequesterDigest extends BaseDigest
         $query = EventLog::eventsOfTypeQuery(Fund::class, $fund->id);
 
         $logsApprovedBudget = $query->whereIn('event', $otherEvents)->where(
-            'created_at', '>=', $this->getFundDigestTime($fund)
+            'created_at',
+            '>=',
+            $this->getFundDigestTime($fund)
         )->get()->groupBy('loggable_id');
 
-        return $logsApprovedBudget->filter(static function(
+        return $logsApprovedBudget->filter(static function (
             Collection $group
         ) use ($targetEvent) {
             $group = $group->sortBy('created_at');
+
             return ($group->first()->event === $group->last()->event) &&
                 $group->last()->event === $targetEvent;
-        })->map(static function(Collection $group) {
+        })->map(static function (Collection $group) {
             return $group->sortBy('created_at')->last();
         })->flatten(1)->pluck('data');
     }
 
     /**
-     * @param EloquentCollection|Fund[] $funds
-     * @return MailBodyBuilder[]
+     * @param Fund $fund
      */
-    public function buildFundProvidersMailBody(EloquentCollection|Arrayable $funds): array
+    protected function updateLastDigest(Fund $fund): void
     {
-        return $funds->reduce(function($array, Fund $fund) {
-            $events = $this->getEvents($fund, Fund::EVENT_PROVIDER_APPROVED_BUDGET, [
-                Fund::EVENT_PROVIDER_APPROVED_BUDGET,
-                Fund::EVENT_PROVIDER_REVOKED_BUDGET,
-            ]);
-
-            if ($events->count() > 0) {
-                $array[$fund->id] = MailBodyBuilder::create();
-                $array[$fund->id]->h3(trans_choice(
-                    'digests.requester.providers.title', $events->count(), [
-                        'count_providers' => $events->count(),
-                        'sponsor_name' => $fund->organization->name,
-                        'fund_name' => $fund->name
-                    ]));
-
-                $array[$fund->id]->text(trans(
-                    'digests.requester.providers.description', [
-                        'providers_list' => $events->pluck('provider_name')->implode("\n- ")
-                    ]));
-            }
-
-            return $array;
-        }, []);
+        $fund->digests()->create([
+            'type' => 'requester',
+        ]);
     }
 
     /**
@@ -146,7 +173,7 @@ class RequesterDigest extends BaseDigest
      */
     private function buildFundProductsMailBody(EloquentCollection|Arrayable $funds): array
     {
-        return $funds->reduce(function($array, Fund $fund) {
+        return $funds->reduce(function ($array, Fund $fund) {
             $events = $this->getEvents($fund, Fund::EVENT_PRODUCT_APPROVED, [
                 Fund::EVENT_PRODUCT_APPROVED,
                 Fund::EVENT_PRODUCT_REVOKED,
@@ -159,15 +186,18 @@ class RequesterDigest extends BaseDigest
 
                 $array[$fund->id] = new MailBodyBuilder();
                 $array[$fund->id]->h3(trans_choice(
-                    'digests.requester.products.title', $events->count(), [
-                    'count_products' => $events->count(),
-                    'sponsor_name' => $fund->organization->name,
-                    'fund_name' => $fund->name
-                ]));
+                    'digests.requester.products.title',
+                    $events->count(),
+                    [
+                        'count_products' => $events->count(),
+                        'sponsor_name' => $fund->organization->name,
+                        'fund_name' => $fund->name,
+                    ]
+                ));
 
                 foreach ($productEventsByProvider as $productEventByProvider) {
                     $array[$fund->id]->h5($productEventByProvider[0]['provider_name']);
-                    $textList = $productEventByProvider->map(static function(array $data) {
+                    $textList = $productEventByProvider->map(static function (array $data) {
                         return trans(
                             'digests.requester.products.price',
                             self::arrayOnlyString($data)
@@ -189,12 +219,12 @@ class RequesterDigest extends BaseDigest
         $identityFunds = [];
 
         /** @var Collection|Voucher[] $vouchers */
-        $vouchers = Voucher::where(static function(Builder $builder) {
+        $vouchers = Voucher::where(static function (Builder $builder) {
             $builder->whereNull('product_id');
-        })->orWhere(static function(Builder $builder) {
+        })->orWhere(static function (Builder $builder) {
             $builder->whereNotNull('product_id');
             $builder->doesntHave('transactions');
-        })->get()->filter(static function(Voucher $voucher) {
+        })->get()->filter(static function (Voucher $voucher) {
             return !$voucher->used;
         });
 
@@ -210,23 +240,5 @@ class RequesterDigest extends BaseDigest
         }
 
         return $identityFunds;
-    }
-
-    /**
-     * @param Fund $fund
-     * @return Carbon
-     */
-    public function getFundDigestTime(Fund $fund): Carbon
-    {
-        return $fund->lastDigestOfType('requester')->created_at ?? now()->subWeek();
-    }
-
-    /**
-     * @param Fund $fund
-     */
-    protected function updateLastDigest(Fund $fund): void {
-        $fund->digests()->create([
-            'type' => 'requester'
-        ]);
     }
 }

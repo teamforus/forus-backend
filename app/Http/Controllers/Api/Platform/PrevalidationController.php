@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Platform\Prevalidations\UploadPrevalidationsRequest;
 use App\Http\Resources\PrevalidationResource;
 use App\Models\Fund;
 use App\Models\Prevalidation;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -18,8 +19,8 @@ class PrevalidationController extends Controller
 {
     /**
      * @param StorePrevalidationsRequest $request
-     * @return PrevalidationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return PrevalidationResource
      * @noinspection PhpUnused
      */
     public function store(StorePrevalidationsRequest $request): PrevalidationResource
@@ -35,8 +36,8 @@ class PrevalidationController extends Controller
 
     /**
      * @param UploadPrevalidationsRequest $request
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function storeCollection(
@@ -67,11 +68,11 @@ class PrevalidationController extends Controller
     }
 
     /**
-     * Generate pre-validations hashes for frontend
+     * Generate pre-validations hashes for frontend.
      *
      * @param UploadPrevalidationsRequest $request
-     * @return array
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return array
      * @noinspection PhpUnused
      */
     public function collectionHash(UploadPrevalidationsRequest $request): array
@@ -89,19 +90,20 @@ class PrevalidationController extends Controller
             ])->select(['id', 'uid_hash', 'records_hash'])->get()->toArray(),
             'collection' => array_map(static function ($row) use ($primaryKey) {
                 ksort($row);
+
                 return [
                     'data' => $row,
                     'uid_hash' => hash('sha256', $row[$primaryKey]),
                     'records_hash' => hash('sha256', json_encode($row)),
                 ];
-            }, $request->input('data', []))
+            }, $request->input('data', [])),
         ];
     }
 
     /**
      * @param SearchPrevalidationsRequest $request
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function index(
@@ -114,9 +116,9 @@ class PrevalidationController extends Controller
 
     /**
      * @param SearchPrevalidationsRequest $request
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @noinspection PhpUnused
      */
     public function export(
@@ -125,18 +127,18 @@ class PrevalidationController extends Controller
         $this->authorize('viewAny', Prevalidation::class);
 
         $type = $request->input('export_format', 'xls');
-        $fileName = date('Y-m-d H:i:s') . '.'. $type;
+        $fileName = date('Y-m-d H:i:s') . '.' . $type;
         $fileData = new PrevalidationsExport($request);
 
         return resolve('excel')->download($fileData, $fileName);
     }
 
     /**
-     * Delete prevalidation
+     * Delete prevalidation.
      * @param Prevalidation $prevalidation
-     * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws Exception
+     * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
      */
     public function destroy(

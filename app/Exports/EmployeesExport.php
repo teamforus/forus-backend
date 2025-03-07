@@ -13,7 +13,8 @@ use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 
 class EmployeesExport extends BaseFieldedExport
 {
-    use Exportable, RegistersEventListeners;
+    use Exportable;
+    use RegistersEventListeners;
 
     protected Collection $data;
     protected bool $withRoles;
@@ -47,7 +48,7 @@ class EmployeesExport extends BaseFieldedExport
      */
     protected function exportTransform(Collection $employees): Collection
     {
-        return $employees->map(fn(Employee $employee) => $this->getEmployeeRow($employee));
+        return $employees->map(fn (Employee $employee) => $this->getEmployeeRow($employee));
     }
 
     /**
@@ -61,15 +62,15 @@ class EmployeesExport extends BaseFieldedExport
         $employeeLastUpdate = $employee->logs[0]?->created_at ?? $employee->updated_at;
 
         return array_merge([
-            trans("export.employees.email") => $employee->identity->email,
-            trans("export.employees.owner") => $employeeIsOwner ? 'ja' : 'nee',
-            trans("export.employees.branch_number") => $employee->office?->branch_number ?: '-',
-            trans("export.employees.branch_name") => $employee->office?->branch_name ?: '-',
-            trans("export.employees.branch_id") => $employee->office?->branch_id ?: '-',
+            trans('export.employees.email') => $employee->identity->email,
+            trans('export.employees.owner') => $employeeIsOwner ? 'ja' : 'nee',
+            trans('export.employees.branch_number') => $employee->office?->branch_number ?: '-',
+            trans('export.employees.branch_name') => $employee->office?->branch_name ?: '-',
+            trans('export.employees.branch_id') => $employee->office?->branch_id ?: '-',
         ], $employeeRoles, [
-            trans("export.employees.is_2fa_configured") => $employee->identity->is2FAConfigured() ? 'ja' : 'nee',
-            trans("export.employees.created_at") => $employee->created_at?->format('Y-m-d H:i:s'),
-            trans("export.employees.updated_at") => $employeeLastUpdate?->format('Y-m-d H:i:s'),
+            trans('export.employees.is_2fa_configured') => $employee->identity->is2FAConfigured() ? 'ja' : 'nee',
+            trans('export.employees.created_at') => $employee->created_at?->format('Y-m-d H:i:s'),
+            trans('export.employees.updated_at') => $employeeLastUpdate?->format('Y-m-d H:i:s'),
         ]);
     }
 

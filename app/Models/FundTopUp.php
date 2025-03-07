@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * App\Models\FundTopUp
+ * App\Models\FundTopUp.
  *
  * @property int $id
  * @property int|null $fund_id
@@ -57,7 +57,7 @@ class FundTopUp extends BaseModel
     }
 
     /**
-     * Generate new top up code
+     * Generate new top up code.
      * @return string
      */
     public static function generateCode(): string

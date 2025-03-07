@@ -11,6 +11,7 @@ use App\Models\Office;
 use App\Models\Organization;
 use App\Searches\OfficeSearch;
 use App\Services\MediaService\Models\Media;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -21,8 +22,8 @@ class OfficesController extends Controller
      *
      * @param IndexOfficeRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexOfficeRequest $request,
@@ -44,8 +45,8 @@ class OfficesController extends Controller
      *
      * @param StoreOfficeRequest $request
      * @param Organization $organization
-     * @return OfficeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return OfficeResource
      */
     public function store(StoreOfficeRequest $request, Organization $organization): OfficeResource
     {
@@ -77,8 +78,8 @@ class OfficesController extends Controller
     /**
      * @param Organization $organization
      * @param Office $office
-     * @return OfficeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return OfficeResource
      */
     public function show(Organization $organization, Office $office): OfficeResource
     {
@@ -94,8 +95,8 @@ class OfficesController extends Controller
      * @param UpdateOfficeRequest $request
      * @param Organization $organization
      * @param Office $office
-     * @return OfficeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return OfficeResource
      */
     public function update(
         UpdateOfficeRequest $request,
@@ -114,7 +115,7 @@ class OfficesController extends Controller
 
         $office->update($request->only([
             'name', 'address', 'phone', 'email',
-            'branch_id', 'branch_name', 'branch_number'
+            'branch_id', 'branch_name', 'branch_number',
         ]));
 
         $office->updateSchedule($request->input('schedule', []));
@@ -132,9 +133,9 @@ class OfficesController extends Controller
      *
      * @param Organization $organization
      * @param Office $office
-     * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws Exception
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Organization $organization, Office $office): JsonResponse
     {

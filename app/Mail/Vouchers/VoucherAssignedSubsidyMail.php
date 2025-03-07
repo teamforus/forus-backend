@@ -11,8 +11,8 @@ class VoucherAssignedSubsidyMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_identities.identity_voucher_assigned_subsidy';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

@@ -22,8 +22,8 @@ class FundUnsubscribeController extends Controller
      *
      * @param IndexFundUnsubscribeRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundUnsubscribeRequest $request,
@@ -46,8 +46,8 @@ class FundUnsubscribeController extends Controller
      *
      * @param StoreFundUnsubscribeRequest $request
      * @param Organization $organization
-     * @return FundProviderUnsubscribeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderUnsubscribeResource
      */
     public function store(
         StoreFundUnsubscribeRequest $request,
@@ -70,8 +70,8 @@ class FundUnsubscribeController extends Controller
      *
      * @param Organization $organization
      * @param FundProviderUnsubscribe $fundUnsubscribe
-     * @return FundProviderUnsubscribeResource
      * @throws AuthorizationException
+     * @return FundProviderUnsubscribeResource
      */
     public function view(
         Organization $organization,
@@ -89,8 +89,8 @@ class FundUnsubscribeController extends Controller
      * @param UpdateFundUnsubscribeRequest $request
      * @param Organization $organization
      * @param FundProviderUnsubscribe $fundUnsubscribe
-     * @return FundProviderUnsubscribeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderUnsubscribeResource
      */
     public function update(
         UpdateFundUnsubscribeRequest $request,

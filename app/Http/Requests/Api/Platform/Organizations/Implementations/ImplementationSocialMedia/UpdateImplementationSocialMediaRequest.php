@@ -34,10 +34,10 @@ class UpdateImplementationSocialMediaRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'type'  => [
+            'type' => [
                 'required',
                 'in:' . implode(',', ImplementationSocialMedia::TYPES),
-                Rule::unique('implementation_social_media','type')->where(fn (Builder $q) => $q->where([
+                Rule::unique('implementation_social_media', 'type')->where(fn (Builder $q) => $q->where([
                     'implementation_id' => $this->implementation->id,
                 ]))->ignore($this->social_media->id),
             ],

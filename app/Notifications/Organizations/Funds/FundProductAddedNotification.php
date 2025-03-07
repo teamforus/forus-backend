@@ -3,7 +3,7 @@
 namespace App\Notifications\Organizations\Funds;
 
 /**
- * Notify sponsor that a new product was added to the webshop by a provider
+ * Notify sponsor that a new product was added to the webshop by a provider.
  */
 class FundProductAddedNotification extends BaseFundsNotification
 {

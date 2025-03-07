@@ -198,7 +198,6 @@ return [
 
         App\Services\TokenGeneratorService\TokenGeneratorServiceProvider::class,
 
-
         /*
          * Forus Service Providers
          */

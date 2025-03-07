@@ -3,7 +3,7 @@
 namespace App\Notifications\Organizations\Funds;
 
 /**
- * Notify sponsor that the fund balance was successfully supplied
+ * Notify sponsor that the fund balance was successfully supplied.
  */
 class BalanceSuppliedNotification extends BaseFundsNotification
 {

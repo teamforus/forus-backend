@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
@@ -30,7 +29,7 @@ class FundQuery
     public static function whereNotActiveFilter(
         Builder|Relation|Fund $query,
     ): Builder|Relation|Fund {
-        return $query->where(function(Builder $builder) {
+        return $query->where(function (Builder $builder) {
             $builder->where('state', '!=', Fund::STATE_ACTIVE);
             $builder->orWhereDate('end_date', '<', today());
         });
@@ -48,8 +47,8 @@ class FundQuery
         bool $includeExternal = true,
     ): Builder|Relation|Fund {
         return $query->whereIn('state', [
-            Fund::STATE_ACTIVE, Fund::STATE_CLOSED
-        ])->where(function(Builder $builder) use ($includeArchived, $includeExternal) {
+            Fund::STATE_ACTIVE, Fund::STATE_CLOSED,
+        ])->where(function (Builder $builder) use ($includeArchived, $includeExternal) {
             if (!$includeArchived) {
                 $builder->where('archived', false);
             }
@@ -74,30 +73,30 @@ class FundQuery
             $query->where('organization_id', $product->sponsor_organization_id);
         }
 
-        $query->whereDoesntHave('providers.product_exclusions', static function(Builder $builder) use ($product) {
+        $query->whereDoesntHave('providers.product_exclusions', static function (Builder $builder) use ($product) {
             $builder->where('product_id', $product->id);
         });
 
-        return $query->where(function(Builder $builder) use ($product) {
-            $builder->where(function(Builder $builder) use ($product) {
+        return $query->where(function (Builder $builder) use ($product) {
+            $builder->where(function (Builder $builder) use ($product) {
                 $builder->where('type', '=', Fund::TYPE_BUDGET);
 
-                $builder->whereHas('providers', static function(Builder $builder) use ($product) {
+                $builder->whereHas('providers', static function (Builder $builder) use ($product) {
                     $builder->where('state', FundProvider::STATE_ACCEPTED);
                     $builder->where('allow_products', '=', true);
                     $builder->where('excluded', false);
 
-                    $builder->whereHas('organization.products', static function(Builder $builder) use ($product) {
+                    $builder->whereHas('organization.products', static function (Builder $builder) use ($product) {
                         $builder->where('products.id', $product->id);
                     });
                 });
             });
 
-            $builder->orWhereHas('providers', static function(Builder $builder) use ($product) {
+            $builder->orWhereHas('providers', static function (Builder $builder) use ($product) {
                 $builder->where('state', FundProvider::STATE_ACCEPTED);
                 $builder->where('excluded', false);
 
-                $builder->whereHas('fund_provider_products', static function(Builder $builder) use ($product) {
+                $builder->whereHas('fund_provider_products', static function (Builder $builder) use ($product) {
                     $builder->where('product_id', $product->id);
                 });
             });
@@ -125,7 +124,7 @@ class FundQuery
         Builder|Relation|Fund $query,
         int|array $organization_id,
     ): Builder|Relation|Fund {
-        return $query->whereHas('providers.organization', static function(
+        return $query->whereHas('providers.organization', static function (
             Builder $builder
         ) use ($organization_id) {
             $builder->whereIn('organizations.id', (array) $organization_id);
@@ -141,7 +140,7 @@ class FundQuery
         Builder|Relation|Fund $query,
         string $q,
     ): Builder|Relation|Fund {
-        return $query->where(function(Builder $builder) use ($q) {
+        return $query->where(function (Builder $builder) use ($q) {
             $builder->where('name', 'LIKE', "%$q%");
             $builder->orWhere('description_text', 'LIKE', "%$q%");
             $builder->orWhere('description_short', 'LIKE', "%$q%");
@@ -194,7 +193,7 @@ class FundQuery
     {
         return $query->where('end_date', '<', now()->format('Y-m-d'));
     }
-  
+
     /**
      * @param Builder|Relation|Fund $query
      * @return Builder|Relation|Fund

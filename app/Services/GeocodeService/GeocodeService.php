@@ -1,35 +1,39 @@
 <?php
 
 namespace App\Services\GeocodeService;
+
 use GuzzleHttp\Client;
 use Illuminate\Support\Arr;
+use Throwable;
 
 class GeocodeService
-{   
-    protected string $api_url = "https://maps.googleapis.com/maps/api/";
+{
+    protected string $api_url = 'https://maps.googleapis.com/maps/api/';
     protected ?string $api_key = null;
 
-    function __construct(?string $api_key = null)
+    public function __construct(?string $api_key = null)
     {
         $this->api_key = $api_key;
     }
 
     /**
-     * Compose api endpoint address
+     * Compose api endpoint address.
      *
      * @param $address
      * @return string
      */
-    public function getApiUrl($address): string {
+    public function getApiUrl($address): string
+    {
         return sprintf(
-            "%sgeocode/json?address=%s&key=%s", $this->api_url,
+            '%sgeocode/json?address=%s&key=%s',
+            $this->api_url,
             $address,
             $this->api_key
         );
     }
 
     /**
-     * Get address geocode
+     * Get address geocode.
      *
      * @param $address
      * @return array|bool
@@ -48,7 +52,7 @@ class GeocodeService
             $coordinatesData = Arr::only($result['geometry']['location'], ['lng', 'lat']);
 
             return array_merge($coordinatesData, $postalData);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return false;
         }
     }
@@ -59,7 +63,7 @@ class GeocodeService
      */
     protected function addressComponentsToPostcode(array $address_components): array
     {
-        $postalCode = array_first(array_filter($address_components, function($component) {
+        $postalCode = array_first(array_filter($address_components, function ($component) {
             return in_array('postal_code', $component['types']);
         }))['long_name'] ?? null;
 

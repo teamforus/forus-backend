@@ -11,8 +11,8 @@ class ProviderInvitationMail extends ImplementationMail
     public $subject = 'U wordt uitgenodigd voor :fund_name';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

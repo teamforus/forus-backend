@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -17,7 +16,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->string('identity_address', 200);
             $table->enum('type', [
-                'fcm', 'apn'
+                'fcm', 'apn',
             ]);
             $table->string('token', 200);
             $table->timestamps();

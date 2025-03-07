@@ -2,16 +2,17 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Implementation;
+use Illuminate\Database\Seeder;
+use Throwable;
 
 class ImplementationsNotificationBrandingSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      *
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function run(): void
     {
@@ -38,7 +39,7 @@ class ImplementationsNotificationBrandingSeeder extends Seeder
      * @param string $implementation_key
      * @param string $email_color
      * @param string $logo_path
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function migrateImplementation(
         string $implementation_key,

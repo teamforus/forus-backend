@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Models\ImplementationSocialMedia
+ * App\Models\ImplementationSocialMedia.
  *
  * @property int $id
  * @property int $implementation_id
@@ -29,11 +29,11 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ImplementationSocialMedia extends Model
 {
-    const string TYPE_FACEBOOK = 'facebook';
-    const string TYPE_TWITTER = 'twitter';
-    const string TYPE_YOUTUBE = 'youtube';
+    public const string TYPE_FACEBOOK = 'facebook';
+    public const string TYPE_TWITTER = 'twitter';
+    public const string TYPE_YOUTUBE = 'youtube';
 
-    const array TYPES = [
+    public const array TYPES = [
         self::TYPE_FACEBOOK,
         self::TYPE_TWITTER,
         self::TYPE_YOUTUBE,

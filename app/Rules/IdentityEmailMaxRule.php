@@ -3,6 +3,7 @@
 namespace App\Rules;
 
 use App\Models\IdentityEmail;
+use Exception;
 use Illuminate\Contracts\Validation\Rule;
 
 class IdentityEmailMaxRule implements Rule
@@ -12,15 +13,17 @@ class IdentityEmailMaxRule implements Rule
      *
      * @return void
      */
-    public function __construct(protected ?string $identity_address) {}
+    public function __construct(protected ?string $identity_address)
+    {
+    }
 
     /**
      * Determine if the validation rule passes.
      *
      * @param  string  $attribute
      * @param  mixed  $value
+     * @throws Exception
      * @return bool
-     * @throws \Exception
      */
     public function passes($attribute, $value): bool
     {
@@ -37,7 +40,7 @@ class IdentityEmailMaxRule implements Rule
     public function message(): string
     {
         return trans('validation.max_emails_reached', [
-            'max' => config('forus.mail.max_identity_emails')
+            'max' => config('forus.mail.max_identity_emails'),
         ]);
     }
 }

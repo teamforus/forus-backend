@@ -20,7 +20,7 @@ class OrganizationTinyResource extends BaseJsonResource
     public function toArray($request): array
     {
         return array_merge($this->resource->only([
-            "id", "name",
+            'id', 'name',
         ]), [
             'logo' => new MediaResource($this->resource->logo),
         ]);

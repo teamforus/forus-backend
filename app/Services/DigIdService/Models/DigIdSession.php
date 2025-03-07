@@ -18,7 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 
 /**
- * App\Services\DigIdService\Models\DigIdSession
+ * App\Services\DigIdService\Models\DigIdSession.
  *
  * @property int $id
  * @property string $state
@@ -106,7 +106,7 @@ class DigIdSession extends Model
     ];
 
     // Sessions which are authorized in 10 minutes are deleted
-    public const int|float SESSION_EXPIRATION_TIME = 10*60;
+    public const int|float SESSION_EXPIRATION_TIME = 10 * 60;
 
     public const string CONNECTION_TYPE_CGI = 'cgi';
     public const string CONNECTION_TYPE_SAML = 'saml';
@@ -168,31 +168,17 @@ class DigIdSession extends Model
         $implementation = $request->implementation();
 
         return self::create([
-            'client_type'           => $request->client_type(),
-            'identity_address'      => $request->auth_address(),
-            'implementation_id'     => $implementation->id,
-            'connection_type'       => $implementation->digid_connection_type,
-            'state'                 => DigIdSession::STATE_CREATED,
-            'session_uid'           => $token_generator->generate(100),
-            'session_secret'        => $token_generator->generate(200),
-            'session_final_url'     => self::makeFinalRedirectUrl($request),
-            'session_request'       => $request->input('request'),
-            'meta'                  => self::makeSessionMeta($request),
+            'client_type' => $request->client_type(),
+            'identity_address' => $request->auth_address(),
+            'implementation_id' => $implementation->id,
+            'connection_type' => $implementation->digid_connection_type,
+            'state' => DigIdSession::STATE_CREATED,
+            'session_uid' => $token_generator->generate(100),
+            'session_secret' => $token_generator->generate(200),
+            'session_final_url' => self::makeFinalRedirectUrl($request),
+            'session_request' => $request->input('request'),
+            'meta' => self::makeSessionMeta($request),
         ]);
-    }
-
-    /**
-     * @param string $uri
-     * @param array $params
-     * @return string
-     */
-    protected function getApiUrl(string $uri, array $params = []): string
-    {
-        $implementationApiUrl = $this->implementation->digid_forus_api_url;
-        $apiHost = $implementationApiUrl ?: url('/');
-        $url = sprintf('%s/%s', rtrim($apiHost, '/'), ltrim($uri, '/'));
-
-        return !empty($params) ? url_extend_get_params($url, $params) : $url;
     }
 
     /**
@@ -209,35 +195,18 @@ class DigIdSession extends Model
             );
         } catch (DigIdException $exception) {
             $this->setError($exception->getMessage(), $exception->getDigIdCode());
+
             return $this;
         }
 
         return $this->updateModel([
-            'state'                         => self::STATE_PENDING_AUTH,
-            'digid_rid'                     => $authRequest->getRequestId(),
-            'digid_state'                   => DigIdSession::STATE_PENDING_AUTH,
-            'digid_as_url'                  => $authRequest->getMeta('as_url'),
-            'digid_app_url'                 => $authRequest->getAuthResolveUrl(),
-            'digid_request_aselect_server'  => $authRequest->getMeta('a-select-server'),
-            'digid_auth_redirect_url'       => $authRequest->getAuthRedirectUrl()
-        ]);
-    }
-
-    /**
-     * @param $message
-     * @param $errorCode
-     * @return DigIdSession
-     */
-    private function setError($message, $errorCode): self
-    {
-        Log::channel('digid')->error("Could not make digid auth request: $errorCode - $message");
-
-        $canceled = $errorCode == DigIdCgiRepo::DIGID_CANCELLED;
-
-        return $this->updateModel([
-            'digid_error_code'      => $errorCode,
-            'digid_error_message'   => DigIdCgiRepo::responseCodeDetails($errorCode),
-            'state'                 => $canceled ? self::STATE_CANCELED: self::STATE_ERROR,
+            'state' => self::STATE_PENDING_AUTH,
+            'digid_rid' => $authRequest->getRequestId(),
+            'digid_state' => DigIdSession::STATE_PENDING_AUTH,
+            'digid_as_url' => $authRequest->getMeta('as_url'),
+            'digid_app_url' => $authRequest->getAuthResolveUrl(),
+            'digid_request_aselect_server' => $authRequest->getMeta('a-select-server'),
+            'digid_auth_redirect_url' => $authRequest->getAuthRedirectUrl(),
         ]);
     }
 
@@ -284,38 +253,6 @@ class DigIdSession extends Model
     public function getResolveUrl(array $params = []): string
     {
         return $this->getApiUrl(sprintf('/api/v1/platform/digid/%s/resolve', $this->session_uid), $params);
-    }
-
-    /**
-     * @param StartDigIdRequest $request
-     * @return string|null
-     */
-    protected static function makeFinalRedirectUrl(StartDigIdRequest $request): ?string
-    {
-        if ($request->input('request') === 'fund_request') {
-            $fund = Fund::find($request->input('fund_id'));
-
-            return $fund->urlWebshop(sprintf('/fondsen/%s/activeer', $fund->id));
-        }
-
-        if (($request->input('request') === 'auth')) {
-            return $request->implementation()->urlFrontend($request->client_type());
-        }
-
-        return null;
-    }
-
-    /**
-     * @param StartDigIdRequest $request
-     * @return array
-     */
-    private static function makeSessionMeta(StartDigIdRequest $request): array
-    {
-        if ($request->input('request') === 'fund_request') {
-            return $request->only('fund_id');
-        }
-
-        return [];
     }
 
     /**
@@ -419,11 +356,44 @@ class DigIdSession extends Model
         }
 
         return $this->updateModel([
-            'digid_uid'                             => $result->getUid(),
-            'digid_response_aselect_server'         => $result->getMeta('a-select-server'),
-            'digid_response_aselect_credentials'    => $result->getMeta('resolveParams.aselect_credentials'),
-            'state'                                 => self::STATE_AUTHORIZED,
+            'digid_uid' => $result->getUid(),
+            'digid_response_aselect_server' => $result->getMeta('a-select-server'),
+            'digid_response_aselect_credentials' => $result->getMeta('resolveParams.aselect_credentials'),
+            'state' => self::STATE_AUTHORIZED,
         ]);
+    }
+
+    /**
+     * @param string $uri
+     * @param array $params
+     * @return string
+     */
+    protected function getApiUrl(string $uri, array $params = []): string
+    {
+        $implementationApiUrl = $this->implementation->digid_forus_api_url;
+        $apiHost = $implementationApiUrl ?: url('/');
+        $url = sprintf('%s/%s', rtrim($apiHost, '/'), ltrim($uri, '/'));
+
+        return !empty($params) ? url_extend_get_params($url, $params) : $url;
+    }
+
+    /**
+     * @param StartDigIdRequest $request
+     * @return string|null
+     */
+    protected static function makeFinalRedirectUrl(StartDigIdRequest $request): ?string
+    {
+        if ($request->input('request') === 'fund_request') {
+            $fund = Fund::find($request->input('fund_id'));
+
+            return $fund->urlWebshop(sprintf('/fondsen/%s/activeer', $fund->id));
+        }
+
+        if (($request->input('request') === 'auth')) {
+            return $request->implementation()->urlFrontend($request->client_type());
+        }
+
+        return null;
     }
 
     /**
@@ -439,7 +409,7 @@ class DigIdSession extends Model
                 $implementation->digid_cgi_tls_key,
                 $implementation->digid_cgi_tls_cert,
             );
-        } else if ($generalImplementation->digid_cgi_tls_cert && $generalImplementation->digid_cgi_tls_key) {
+        } elseif ($generalImplementation->digid_cgi_tls_cert && $generalImplementation->digid_cgi_tls_key) {
             return new ClientTls(
                 $generalImplementation->digid_cgi_tls_key,
                 $generalImplementation->digid_cgi_tls_cert,
@@ -447,5 +417,36 @@ class DigIdSession extends Model
         }
 
         return null;
+    }
+
+    /**
+     * @param $message
+     * @param $errorCode
+     * @return DigIdSession
+     */
+    private function setError($message, $errorCode): self
+    {
+        Log::channel('digid')->error("Could not make digid auth request: $errorCode - $message");
+
+        $canceled = $errorCode == DigIdCgiRepo::DIGID_CANCELLED;
+
+        return $this->updateModel([
+            'digid_error_code' => $errorCode,
+            'digid_error_message' => DigIdCgiRepo::responseCodeDetails($errorCode),
+            'state' => $canceled ? self::STATE_CANCELED : self::STATE_ERROR,
+        ]);
+    }
+
+    /**
+     * @param StartDigIdRequest $request
+     * @return array
+     */
+    private static function makeSessionMeta(StartDigIdRequest $request): array
+    {
+        if ($request->input('request') === 'fund_request') {
+            return $request->only('fund_id');
+        }
+
+        return [];
     }
 }

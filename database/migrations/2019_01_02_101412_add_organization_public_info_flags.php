@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -13,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('organizations', function(Blueprint $table) {
+        Schema::table('organizations', function (Blueprint $table) {
             $table->boolean('email_public')->default(false)->after('email');
             $table->boolean('phone_public')->default(false)->after('phone');
             $table->boolean('website_public')->default(false)->after('website');
@@ -33,7 +32,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('organizations', function(Blueprint $table) {
+        Schema::table('organizations', function (Blueprint $table) {
             $table->dropColumn('email_public');
             $table->dropColumn('phone_public');
             $table->dropColumn('website_public');

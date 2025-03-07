@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\VoucherTransaction;
@@ -41,7 +40,8 @@ class VoucherTransactionBulkQuery
     protected static function orderVoucherTransactionsCountQuery(): Builder|Relation|VoucherTransactionBulk
     {
         return VoucherTransaction::query()->whereColumn(
-            'voucher_transaction_bulk_id', 'voucher_transaction_bulks.id'
+            'voucher_transaction_bulk_id',
+            'voucher_transaction_bulks.id'
         )->selectRaw('SUM(`voucher_transactions`.`amount`)');
     }
 }

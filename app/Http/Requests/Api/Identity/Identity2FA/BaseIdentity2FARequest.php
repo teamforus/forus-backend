@@ -17,24 +17,12 @@ use PragmaRX\Google2FA\Google2FA;
 abstract class BaseIdentity2FARequest extends BaseFormRequest
 {
     /**
-     * @param string $key
-     * @return void
-     * @throws \App\Exceptions\AuthorizationJsonException
-     */
-    protected function throttleRequest(string $key): void
-    {
-        $this->maxAttempts = Config::get('forus.auth_2fa.throttle_attempts');
-        $this->decayMinutes = Config::get('forus.auth_2fa.throttle_decay');
-        $this->throttleWithKey('to_many_attempts', $this, 'auth_2fa', $key);
-    }
-
-    /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
      * @throws IncompatibleWithGoogleAuthenticatorException
      * @throws InvalidCharactersException
      * @throws SecretKeyTooShortException
+     * @return array
      */
     public function codeRules(): array
     {
@@ -71,10 +59,10 @@ abstract class BaseIdentity2FARequest extends BaseFormRequest
     }
 
     /**
-     * @return string[]
      * @throws IncompatibleWithGoogleAuthenticatorException
      * @throws InvalidCharactersException
      * @throws SecretKeyTooShortException
+     * @return string[]
      */
     public function rulesAuthenticator(string $code, Identity2FA $identity2FA): array
     {
@@ -84,5 +72,17 @@ abstract class BaseIdentity2FARequest extends BaseFormRequest
         return [
             'code' => 'required|string|size:6' . ($isValid ? '' : '|in:'),
         ];
+    }
+
+    /**
+     * @param string $key
+     * @throws \App\Exceptions\AuthorizationJsonException
+     * @return void
+     */
+    protected function throttleRequest(string $key): void
+    {
+        $this->maxAttempts = Config::get('forus.auth_2fa.throttle_attempts');
+        $this->decayMinutes = Config::get('forus.auth_2fa.throttle_decay');
+        $this->throttleWithKey('to_many_attempts', $this, 'auth_2fa', $key);
     }
 }

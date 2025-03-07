@@ -16,6 +16,15 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 class MigratePhysicalCardsCommand extends BaseCommand
 {
     /**
+     * Use voucher_relations table to find the new voucher.
+     */
+    public const string SOURCE_RELATION = 'voucher_relation';
+
+    /**
+     * Use vouchers.identity_address column to find the new voucher.
+     */
+    public const string SOURCE_IDENTITY = 'voucher_identity';
+    /**
      * The name and signature of the console command.
      *
      * @var string
@@ -30,21 +39,11 @@ class MigratePhysicalCardsCommand extends BaseCommand
     protected $description = 'Migrate physical cards from expired vouchers.';
 
     /**
-     * Migration source
+     * Migration source.
      *
      * @var string
      */
-    protected string $migrationSource = "";
-
-    /**
-     * Use voucher_relations table to find the new voucher.
-     */
-    public const string SOURCE_RELATION = 'voucher_relation';
-
-    /**
-     * Use vouchers.identity_address column to find the new voucher.
-     */
-    public const string SOURCE_IDENTITY = 'voucher_identity';
+    protected string $migrationSource = '';
 
     /**
      * Execute the console command.
@@ -53,7 +52,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
      */
     public function handle(): void
     {
-        $this->printHeader("Physical cards migration", 2);
+        $this->printHeader('Physical cards migration', 2);
         $this->askMigrationSource();
         $fund = $this->selectFund();
 
@@ -86,13 +85,16 @@ class MigratePhysicalCardsCommand extends BaseCommand
      */
     protected function askMigrationSource(): void
     {
-        $this->printHeader("Select next action:");
+        $this->printHeader('Select next action:');
         $this->printList($this->askMigrationSourceList());
 
-        switch ($this->ask("Please select next step:", 1)) {
-            case 1: $this->migrationSource = static::SOURCE_IDENTITY; break;
-            case 2: $this->migrationSource = static::SOURCE_RELATION; break;
+        switch ($this->ask('Please select next step:', 1)) {
+            case 1: $this->migrationSource = static::SOURCE_IDENTITY;
+                break;
+            case 2: $this->migrationSource = static::SOURCE_RELATION;
+                break;
             case 3: $this->exit();
+                // no break
             default: $this->printText("Invalid input!\nPlease try again:\n");
         }
 
@@ -127,18 +129,25 @@ class MigratePhysicalCardsCommand extends BaseCommand
      */
     protected function askNextAction(Fund $fund): void
     {
-        $this->printHeader("Select next action:");
+        $this->printHeader('Select next action:');
         $this->printList($this->askNextActionList($fund));
         $this->printText();
 
-        switch ($this->ask("Please select next step:", 2)) {
-            case 1: $this->migratePhysicalCards($fund); break;
-            case 2: $this->printCards($this->buildEligiblePhysicalCardsQuery($fund)->get()); break;
-            case 3: $this->printCards($this->buildEdgeCasePhysicalCardsQuery($fund)->get()); break;
-            case 4: $this->printCards($this->buildEdgeCasePhysicalCardsQuery($fund)->get(), true); break;
-            case 5: $this->printCards($this->buildPhysicalCardsQuery($fund)->get()); break;
+        switch ($this->ask('Please select next step:', 2)) {
+            case 1: $this->migratePhysicalCards($fund);
+                break;
+            case 2: $this->printCards($this->buildEligiblePhysicalCardsQuery($fund)->get());
+                break;
+            case 3: $this->printCards($this->buildEdgeCasePhysicalCardsQuery($fund)->get());
+                break;
+            case 4: $this->printCards($this->buildEdgeCasePhysicalCardsQuery($fund)->get(), true);
+                break;
+            case 5: $this->printCards($this->buildPhysicalCardsQuery($fund)->get());
+                break;
             case 6: $this->exit();
-            default: $this->printText("Invalid input!\nPlease try again:\n"); break;
+                // no break
+            default: $this->printText("Invalid input!\nPlease try again:\n");
+                break;
         }
 
         $this->askNextAction($fund);
@@ -150,7 +159,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
      */
     protected function buildPhysicalCardsQuery(Fund $fund): Builder|PhysicalCard
     {
-        $builder = PhysicalCard::where(function(Builder $builder) use ($fund) {
+        $builder = PhysicalCard::where(function (Builder $builder) use ($fund) {
             // Should be assigned
             if ($this->migrationSource == self::SOURCE_IDENTITY) {
                 $builder->whereNotNull('identity_address');
@@ -162,7 +171,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
             }
 
             // Should be assigned to vouchers
-            $builder->whereHas('voucher', function(Builder $builder) use ($fund) {
+            $builder->whereHas('voucher', function (Builder $builder) use ($fund) {
                 // Which is expired
                 VoucherQuery::whereExpiredButActive($builder);
 
@@ -197,7 +206,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
      */
     protected function physicalCardRelationSubQuery()
     {
-        return VoucherRelation::whereHas('voucher', function(Builder $builder) {
+        return VoucherRelation::whereHas('voucher', function (Builder $builder) {
             $builder->whereColumn('voucher_relations.voucher_id', 'physical_cards.voucher_id');
         })->select('bsn');
     }
@@ -208,18 +217,18 @@ class MigratePhysicalCardsCommand extends BaseCommand
      */
     protected function buildEligiblePhysicalCardsQuery(Fund $fund): Builder
     {
-        return $this->buildPhysicalCardsQuery($fund)->where(function(Builder $builder) use ($fund) {
+        return $this->buildPhysicalCardsQuery($fund)->where(function (Builder $builder) use ($fund) {
             // Should have one active voucher from the same fund as the expired one
-            $builder->whereHas('voucher', function(Builder $builder) {
+            $builder->whereHas('voucher', function (Builder $builder) {
                 VoucherQuery::whereExpiredButActive($builder);
 
                 // Should have a fund
-                $builder->whereHas('fund', function(Builder $builder) {
+                $builder->whereHas('fund', function (Builder $builder) {
                     // Which is active
                     FundQuery::whereActiveFilter($builder);
 
                     // And should have one voucher
-                    $builder->whereHas('vouchers', function(Builder $builder) {
+                    $builder->whereHas('vouchers', function (Builder $builder) {
                         // Which is not expired and active
                         VoucherQuery::whereNotExpiredAndActive($builder);
 
@@ -239,7 +248,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
                             $builder->whereNull('identity_id');
 
                             // And relation bsn should match
-                            $builder->whereHas('voucher_relation', function(Builder $builder) {
+                            $builder->whereHas('voucher_relation', function (Builder $builder) {
                                 $builder->whereColumn('voucher_relations.bsn', 'relation_bsn');
                             });
                         }
@@ -285,9 +294,9 @@ class MigratePhysicalCardsCommand extends BaseCommand
     protected function buildPhysicalCardStats(Fund $fund): array
     {
         return [
-            $this->buildEligiblePhysicalCardsQuery($fund)->count() . " eligible card(s)!",
-            $this->buildEdgeCasePhysicalCardsQuery($fund)->count() . " edge case(s)!",
-            $this->buildPhysicalCardsQuery($fund)->count() . " total!",
+            $this->buildEligiblePhysicalCardsQuery($fund)->count() . ' eligible card(s)!',
+            $this->buildEdgeCasePhysicalCardsQuery($fund)->count() . ' edge case(s)!',
+            $this->buildPhysicalCardsQuery($fund)->count() . ' total!',
         ];
     }
 
@@ -296,82 +305,16 @@ class MigratePhysicalCardsCommand extends BaseCommand
      */
     protected function printFundsList(): Collection
     {
-        $funds = Fund::whereHas('fund_config', function(Builder $builder) {
+        $funds = Fund::whereHas('fund_config', function (Builder $builder) {
             $builder->where('allow_physical_cards', 1);
         })->get();
 
-        $this->printList($funds->map(function(Fund $fund) {
-            return "[$fund->id] $fund->name (" . ($fund->organization->name ?? '') . ")";
+        $this->printList($funds->map(function (Fund $fund) {
+            return "[$fund->id] $fund->name (" . ($fund->organization->name ?? '') . ')';
         })->toArray());
         $this->printText();
 
         return $funds;
-    }
-
-    /**
-     * @return Fund
-     */
-    private function selectFund(): Fund
-    {
-        $this->printHeader("Please select the fund");
-        $funds = $this->printFundsList();
-
-        if ($funds->count() == 0) {
-            $this->printText($this->red("\nNo funds where physical cards are available found!"));
-            $this->exit();
-        }
-
-        $fundId = $this->ask('Select fund id: ', $funds[0]->id);
-        $fundModel = $funds->where('id', '=', $fundId)->first();
-
-        if ($fundModel) {
-            return $fundModel;
-        }
-
-        $this->printText("Invalid fund selected!\nPlease try again!\n");
-        return $this->selectFund();
-    }
-
-    /**
-     * @param Fund $fund
-     * @return void
-     */
-    private function migratePhysicalCards(Fund $fund): void
-    {
-        $cards = $this->buildEligiblePhysicalCardsQuery($fund)->get();
-        $failedCards = new Collection();
-
-        foreach ($cards as $index => $card) {
-            $this->printText($this->green(sprintf("- migrating %s of %s", $index + 1, $cards->count())));
-
-            if ($errorMessage = $this->migratePhysicalCard($card, $fund)) {
-                $failedCards->push($card);
-
-                $this->printText($this->yellow(sprintf(
-                    "[Warning!] Edge case detected on card: [$card->id] (%s).",
-                    $errorMessage['error'] ?? ''
-                )));
-
-                if ($errorMessage['vouchers'] ?? null) {
-                    $this->printModels($errorMessage['vouchers'], 'id', 'fund_name', 'state');
-                }
-            }
-        }
-
-        if ($failedCards->count() == 0) {
-            $this->printText($this->green($cards->count() . " card(s) migrated!\n"));
-
-            if ($cards->count() > 0) {
-                $this->printCardsActions($cards);
-            }
-
-            $this->printSeparator();
-            return;
-        }
-
-        $this->printText($this->red($failedCards->count() . " card(s) failed to migrate:\n"));
-        $this->printCardsActions($failedCards, "Failed cards");
-        $this->printText();
     }
 
     /**
@@ -395,7 +338,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
                 ])->log($card::EVENT_MIGRATED, [
                     'physical_card' => $card,
                 ], [
-                    'prev_voucher_id' =>  $preValue,
+                    'prev_voucher_id' => $preValue,
                 ]);
 
                 $this->printText($this->green(sprintf(
@@ -404,19 +347,20 @@ class MigratePhysicalCardsCommand extends BaseCommand
                     "$preValue => $card->voucher_id"
                 )));
             }
+
             return null;
         }
 
         if ($cardSiblings->count() > 1) {
-            $error = "To many cards on same fund";
+            $error = 'To many cards on same fund';
         }
 
         if ($vouchers->count() == 0) {
-            $error = "No vouchers for replacement";
+            $error = 'No vouchers for replacement';
         }
 
         if ($vouchers->count() > 1) {
-            $error = "To many vouchers for replacement (" . $vouchers->count() . ")";
+            $error = 'To many vouchers for replacement (' . $vouchers->count() . ')';
         }
 
         return compact('error', 'vouchers');
@@ -430,10 +374,11 @@ class MigratePhysicalCardsCommand extends BaseCommand
     protected function getCardSiblings(PhysicalCard $card, Fund $fund)
     {
         switch ($this->migrationSource) {
-            case self::SOURCE_IDENTITY: $querySiblings = $card->identity->physical_cards(); break;
+            case self::SOURCE_IDENTITY: $querySiblings = $card->identity->physical_cards();
+                break;
             case self::SOURCE_RELATION: {
-                $querySiblings = PhysicalCard::whereHas('voucher', function(Builder $builder) use ($card) {
-                    $builder->whereHas('voucher_relation', function(Builder $builder) use ($card) {
+                $querySiblings = PhysicalCard::whereHas('voucher', function (Builder $builder) use ($card) {
+                    $builder->whereHas('voucher_relation', function (Builder $builder) use ($card) {
                         $builder->where('bsn', '==', $card->voucher->voucher_relation->bsn);
                     });
                 });
@@ -447,7 +392,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
 
         $querySiblings->where('id', '!=', $card->id);
 
-        return $querySiblings->whereHas('voucher', function(Builder $builder) use ($fund) {
+        return $querySiblings->whereHas('voucher', function (Builder $builder) use ($fund) {
             $builder->whereNull('parent_id');
             $builder->where('fund_id', $fund->id);
         });
@@ -460,7 +405,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
      */
     protected function getCardReplacementVouchers(PhysicalCard $card, Fund $fund): Collection|array
     {
-        return Voucher::where(function(Builder $builder) use ($card, $fund) {
+        return Voucher::where(function (Builder $builder) use ($card, $fund) {
             // Which is not expired and active
             VoucherQuery::whereNotExpiredAndActive($builder);
 
@@ -477,12 +422,12 @@ class MigratePhysicalCardsCommand extends BaseCommand
                 $builder->whereNull('identity_id');
 
                 // And relation bsn should match
-                $builder->whereHas('voucher_relation', function(Builder $builder) use ($card) {
+                $builder->whereHas('voucher_relation', function (Builder $builder) use ($card) {
                     $builder->where('bsn', $card->voucher->voucher_relation->bsn);
                 });
             }
         })->where([
-            'fund_id' => $fund->id
+            'fund_id' => $fund->id,
         ])->whereNull('parent_id')->get();
     }
 
@@ -493,15 +438,16 @@ class MigratePhysicalCardsCommand extends BaseCommand
      */
     protected function printCardsActions(Collection $cards, ?string $header = null)
     {
-        $this->printHeader("Card(s) actions:");
+        $this->printHeader('Card(s) actions:');
         $this->printList([
             '[1] Show cards',
             '[2] Continue',
         ]);
         $this->printText();
 
-        switch ($this->ask("Please select next step:", 2)) {
-            case 1: $header ? $this->printCards($cards, $header) : $this->printCards($cards); break;
+        switch ($this->ask('Please select next step:', 2)) {
+            case 1: $header ? $this->printCards($cards, $header) : $this->printCards($cards);
+                break;
             case 2: return;
             default: $this->printText("Invalid input!\nPlease try again:\n");
         }
@@ -516,25 +462,93 @@ class MigratePhysicalCardsCommand extends BaseCommand
     protected function printCards(
         Collection $cards,
         bool $validate = false,
-        string $header = "List physical cards:"
+        string $header = 'List physical cards:'
     ) {
         $headers = array_merge([
-            'id', 'code', 'fund_id', 'voucher_id'
+            'id', 'code', 'fund_id', 'voucher_id',
         ], $validate ? ['validation'] : []);
 
-        $body = $cards->map(function(PhysicalCard $card) use ($validate) {
+        $body = $cards->map(function (PhysicalCard $card) use ($validate) {
             return array_merge([
                 $card->id,
                 $card->code,
                 $card->voucher->fund->name,
                 $card->voucher_id,
             ], $validate ? [
-                $this->migratePhysicalCard($card, $card->voucher->fund, true)['error'] ?? '-'
+                $this->migratePhysicalCard($card, $card->voucher->fund, true)['error'] ?? '-',
             ] : []);
         })->toArray();
 
         $this->printHeader($header);
         $this->table($headers, $body);
         $this->printSeparator();
+    }
+
+    /**
+     * @return Fund
+     */
+    private function selectFund(): Fund
+    {
+        $this->printHeader('Please select the fund');
+        $funds = $this->printFundsList();
+
+        if ($funds->count() == 0) {
+            $this->printText($this->red("\nNo funds where physical cards are available found!"));
+            $this->exit();
+        }
+
+        $fundId = $this->ask('Select fund id: ', $funds[0]->id);
+        $fundModel = $funds->where('id', '=', $fundId)->first();
+
+        if ($fundModel) {
+            return $fundModel;
+        }
+
+        $this->printText("Invalid fund selected!\nPlease try again!\n");
+
+        return $this->selectFund();
+    }
+
+    /**
+     * @param Fund $fund
+     * @return void
+     */
+    private function migratePhysicalCards(Fund $fund): void
+    {
+        $cards = $this->buildEligiblePhysicalCardsQuery($fund)->get();
+        $failedCards = new Collection();
+
+        foreach ($cards as $index => $card) {
+            $this->printText($this->green(sprintf('- migrating %s of %s', $index + 1, $cards->count())));
+
+            if ($errorMessage = $this->migratePhysicalCard($card, $fund)) {
+                $failedCards->push($card);
+
+                $this->printText($this->yellow(sprintf(
+                    "[Warning!] Edge case detected on card: [$card->id] (%s).",
+                    $errorMessage['error'] ?? ''
+                )));
+
+                if ($errorMessage['vouchers'] ?? null) {
+                    $this->printModels($errorMessage['vouchers'], 'id', 'fund_name', 'state');
+                }
+            }
+        }
+
+        if ($failedCards->count() == 0) {
+            $this->printText($this->green($cards->count() . " card(s) migrated!\n"));
+
+            if ($cards->count() > 0) {
+                $this->printCardsActions($cards);
+            }
+
+            $this->printSeparator();
+
+            return;
+        }
+
+        $this->printText($this->red($failedCards->count() . " card(s) failed to migrate:\n"));
+        $this->printCardsActions($failedCards, 'Failed cards');
+        $this->printText();
     }
 }

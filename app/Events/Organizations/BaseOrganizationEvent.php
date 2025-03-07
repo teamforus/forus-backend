@@ -10,7 +10,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseOrganizationEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     protected Organization $organization;
 
@@ -26,7 +28,7 @@ abstract class BaseOrganizationEvent
     }
 
     /**
-     * Get the voucher
+     * Get the voucher.
      *
      * @return Organization
      */

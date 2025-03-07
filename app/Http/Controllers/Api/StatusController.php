@@ -5,11 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class StatusController extends Controller
 {
     /**
-     * Get api availability state
+     * Get api availability state.
      *
      * @return JsonResponse
      */
@@ -17,10 +18,11 @@ class StatusController extends Controller
     {
         try {
             DB::connection()->getPdo();
+
             return new JsonResponse([
                 'success' => true,
             ]);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return new JsonResponse(null, 503);
         }
     }

@@ -21,7 +21,7 @@ class ImplementationKeyMiddleware
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param  Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next): mixed
@@ -32,7 +32,7 @@ class ImplementationKeyMiddleware
 
         if (Implementation::implementationKeysAvailable()->search($this->implementationKey($request)) === false) {
             return new JsonResponse([
-                "message" => 'unknown_implementation_key',
+                'message' => 'unknown_implementation_key',
             ], 403);
         }
 
@@ -43,7 +43,7 @@ class ImplementationKeyMiddleware
      * @param Request $request
      * @return string|null
      */
-    public function implementationKey(Request $request):? string
+    public function implementationKey(Request $request): ?string
     {
         return BaseFormRequest::createFromBase($request)?->implementation_key();
     }

@@ -1,11 +1,9 @@
 <?php
 
-use App\Models\FundRequestClarification;
-use Illuminate\Database\Migrations\Migration;
 use App\Services\FileService\Models\File;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -17,7 +15,7 @@ return new class extends Migration
             ->where('type', 'fund_request_record_proof')
             ->where('fileable_type', 'fund_request_clarification')
             ->update([
-                'type' => 'fund_request_clarification_proof'
+                'type' => 'fund_request_clarification_proof',
             ]);
     }
 
@@ -26,5 +24,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down(): void {}
+    public function down(): void
+    {
+    }
 };

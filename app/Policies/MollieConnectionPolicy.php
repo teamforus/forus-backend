@@ -73,7 +73,8 @@ class MollieConnectionPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function destroy(Identity $identity, Organization $organization): bool {
+    public function destroy(Identity $identity, Organization $organization): bool
+    {
         return
             $organization->identityCan($identity, 'manage_payment_methods') &&
             $organization->mollie_connection()->exists();

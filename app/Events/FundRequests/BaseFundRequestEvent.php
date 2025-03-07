@@ -11,7 +11,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseFundRequestEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     protected FundRequest $fundRequest;
     protected ?Employee $employee;
@@ -35,7 +37,7 @@ abstract class BaseFundRequestEvent
     }
 
     /**
-     * Get the fund request
+     * Get the fund request.
      *
      * @return FundRequest
      */
@@ -45,7 +47,7 @@ abstract class BaseFundRequestEvent
     }
 
     /**
-     * Get the fund request
+     * Get the fund request.
      *
      * @return Fund
      */

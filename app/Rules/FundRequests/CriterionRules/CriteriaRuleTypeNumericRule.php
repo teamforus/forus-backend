@@ -12,7 +12,7 @@ class CriteriaRuleTypeNumericRule extends BaseCriteriaRuleTypeRule
     public function rules(): array
     {
         return array_filter([
-            "numeric",
+            'numeric',
             match($this->rule->operator) {
                 '=' => Rule::in([floatval($this->rule->value)]),
                 '!=' => Rule::notIn([floatval($this->rule->value)]),

@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Searches;
-
 
 use App\Models\Employee;
 use App\Models\Fund;
@@ -84,21 +82,6 @@ class FundRequestSearch extends BaseSearch
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    protected function order(Builder $builder): Builder
-    {
-        $orderBy = $this->getFilter('order_by', 'created_at');
-        $orderDir = $this->getFilter('order_dir', 'desc');
-
-        $builder = $this->appendSortableFields($builder, $orderBy);
-        $builder = FundRequest::query()->fromSub($builder, 'fund_requests');
-
-        return $builder->orderBy($orderBy, $orderDir)->latest();
-    }
-
-    /**
      * @param Builder|FundRequest $builder
      * @param string|null $orderBy
      * @return Builder|FundRequest
@@ -113,8 +96,8 @@ class FundRequestSearch extends BaseSearch
                 ->select('name')
                 ->limit(1),
             'assignee_email' => IdentityEmail::query()
-                ->whereHas('identity', function(Builder|Identity $builder) {
-                    $builder->whereHas('employees', function(Builder|Employee $builder) {
+                ->whereHas('identity', function (Builder|Identity $builder) {
+                    $builder->whereHas('employees', function (Builder|Employee $builder) {
                         $builder->where('organization_id', $this->employee->organization_id);
                         $builder->whereColumn('id', 'fund_requests.employee_id');
                     });
@@ -130,7 +113,7 @@ class FundRequestSearch extends BaseSearch
                 ->limit(1),
             'no_answer_clarification' => FundRequestRecord::query()
                 ->whereColumn('fund_request_id', 'fund_requests.id')
-                ->whereRelation('fund_request_clarifications', function(Builder $builder) {
+                ->whereRelation('fund_request_clarifications', function (Builder $builder) {
                     $builder->whereNull('answered_at');
                 })
                 ->selectRaw('count(*)'),
@@ -151,5 +134,20 @@ class FundRequestSearch extends BaseSearch
         $this->employee = $employee;
 
         return $this;
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    protected function order(Builder $builder): Builder
+    {
+        $orderBy = $this->getFilter('order_by', 'created_at');
+        $orderDir = $this->getFilter('order_dir', 'desc');
+
+        $builder = $this->appendSortableFields($builder, $orderBy);
+        $builder = FundRequest::query()->fromSub($builder, 'fund_requests');
+
+        return $builder->orderBy($orderBy, $orderDir)->latest();
     }
 }

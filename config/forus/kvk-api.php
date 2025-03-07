@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'debug' => env("KVK_API_DEBUG", false),
+    'debug' => env('KVK_API_DEBUG', false),
 ];

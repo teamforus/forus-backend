@@ -2,4 +2,6 @@
 
 namespace App\Events\Organizations;
 
-class OrganizationCreated extends BaseOrganizationEvent {}
+class OrganizationCreated extends BaseOrganizationEvent
+{
+}

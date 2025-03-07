@@ -7,9 +7,8 @@ use Illuminate\Contracts\Validation\Rule;
 
 class FundApplicableRule implements Rule
 {
-
     private Organization $organization;
-    private string $message = "The validation error message.";
+    private string $message = 'The validation error message.';
 
     /**
      * Create a new rule instance.
@@ -33,7 +32,8 @@ class FundApplicableRule implements Rule
     public function passes($attribute, $value)
     {
         if (!empty($this->organization->fund_providers()->where(
-            'fund_id', $value
+            'fund_id',
+            $value
         )->first())) {
             $this->message = trans(
                 'validation.organization_fund.already_requested'

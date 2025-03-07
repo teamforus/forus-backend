@@ -66,7 +66,7 @@ class SponsorFinancialStatisticsTestCases
                     'test_business_type' => 2,
                 ],
                 'postcodes' => [
-                    '123456789' => 1
+                    '123456789' => 1,
                 ],
                 'funds' => [
                     'Test fund 1' => 0,
@@ -82,7 +82,7 @@ class SponsorFinancialStatisticsTestCases
                 '2021-06-23' => [
                     'count' => 3,
                     'amount' => 62,
-                ]
+                ],
             ],
             'providers' => [
                 'test_provider_month' => [
@@ -90,7 +90,7 @@ class SponsorFinancialStatisticsTestCases
                     'total_spent' => 14,
                     'highest_transaction' => 14,
                     'transactions' => [[
-                        'amount' => 14
+                        'amount' => 14,
                     ]],
                 ],
                 'test_provider_month2' => [
@@ -98,7 +98,7 @@ class SponsorFinancialStatisticsTestCases
                     'total_spent' => 29,
                     'highest_transaction' => 29,
                     'transactions' => [[
-                        'amount' => 29
+                        'amount' => 29,
                     ]],
                 ],
             ],

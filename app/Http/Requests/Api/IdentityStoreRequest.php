@@ -21,8 +21,8 @@ class IdentityStoreRequest extends BaseFormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
      * @throws \App\Exceptions\AuthorizationJsonException
+     * @return array
      */
     public function rules(): array
     {

@@ -2,4 +2,6 @@
 
 namespace App\Events\Employees;
 
-class EmployeeCreated extends BaseEmployeeEvent {}
+class EmployeeCreated extends BaseEmployeeEvent
+{
+}

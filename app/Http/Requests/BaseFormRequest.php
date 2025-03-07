@@ -44,18 +44,6 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     }
 
     /**
-     * Handle a failed authorization attempt.
-     *
-     * @return void
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @noinspection PhpUnused
-     */
-    protected function failedAuthorization(): void
-    {
-        throw new AuthorizationException($this->message ?? null);
-    }
-
-    /**
      * @return string|null
      */
     public function auth_address(): ?string
@@ -311,22 +299,6 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     }
 
     /**
-     * @return string[]
-     */
-    protected function uploadedCSVFileRules(): array
-    {
-        return [
-            'file' => 'nullable|array|size:6',
-            'file.name' => 'required_with:file|string',
-            'file.content' => 'required_with:file|string',
-            'file.total' => 'required_with:file|numeric',
-            'file.chunk' => 'required_with:file|numeric',
-            'file.chunks' => 'required_with:file|numeric',
-            'file.chunkSize' => 'required_with:file|numeric',
-        ];
-    }
-
-    /**
      * @return array
      */
     public function attributes(): array
@@ -340,5 +312,33 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
         }
 
         return $keys;
+    }
+
+    /**
+     * Handle a failed authorization attempt.
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return void
+     * @noinspection PhpUnused
+     */
+    protected function failedAuthorization(): void
+    {
+        throw new AuthorizationException($this->message ?? null);
+    }
+
+    /**
+     * @return string[]
+     */
+    protected function uploadedCSVFileRules(): array
+    {
+        return [
+            'file' => 'nullable|array|size:6',
+            'file.name' => 'required_with:file|string',
+            'file.content' => 'required_with:file|string',
+            'file.total' => 'required_with:file|numeric',
+            'file.chunk' => 'required_with:file|numeric',
+            'file.chunks' => 'required_with:file|numeric',
+            'file.chunkSize' => 'required_with:file|numeric',
+        ];
     }
 }

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\VoucherToken
+ * App\Models\VoucherToken.
  *
  * @property int $id
  * @property int $voucher_id
@@ -33,13 +33,14 @@ class VoucherToken extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'voucher_id', 'address', 'need_confirmation'
+        'voucher_id', 'address', 'need_confirmation',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function voucher(): BelongsTo {
+    public function voucher(): BelongsTo
+    {
         return $this->belongsTo(Voucher::class);
     }
 }

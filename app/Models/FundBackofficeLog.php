@@ -6,7 +6,7 @@ use App\Services\BackofficeApiService\BackofficeApi;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\FundBackofficeLog
+ * App\Models\FundBackofficeLog.
  *
  * @property int $id
  * @property int|null $fund_id

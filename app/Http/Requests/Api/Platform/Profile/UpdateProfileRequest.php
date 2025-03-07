@@ -13,8 +13,8 @@ class UpdateProfileRequest extends BaseFormRequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
      * @throws AuthorizationJsonException
+     * @return bool
      */
     public function authorize(): bool
     {

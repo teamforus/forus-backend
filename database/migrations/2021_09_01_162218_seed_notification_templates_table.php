@@ -1,15 +1,14 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use Database\Seeders\NotificationTemplatesTableSeeder;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
-     * @return void
      * @throws Exception
+     * @return void
      */
     public function up(): void
     {
@@ -21,5 +20,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down(): void {}
+    public function down(): void
+    {
+    }
 };

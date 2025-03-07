@@ -11,9 +11,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 /**
- * App\Models\IdentityProxy
+ * App\Models\IdentityProxy.
  *
  * @property int $id
  * @property string $type
@@ -139,7 +140,7 @@ class IdentityProxy extends Model
     }
 
     /**
-     * Activation time expired
+     * Activation time expired.
      *
      * @return bool
      * @noinspection PhpUnused
@@ -202,12 +203,12 @@ class IdentityProxy extends Model
 
     /**
      * @param bool $expired
+     * @throws Throwable
      * @return IdentityProxy
-     * @throws \Throwable
      */
     public function deactivateBySession(bool $expired = true): static
     {
-        DB::transaction(function() use ($expired) {
+        DB::transaction(function () use ($expired) {
             $state = $expired ? static::STATE_EXPIRED : static::STATE_TERMINATED;
 
             $this->deactivate($state);
@@ -215,19 +216,6 @@ class IdentityProxy extends Model
         });
 
         return $this;
-    }
-
-    /**
-     * @param string $state
-     * @return bool
-     */
-    protected function deactivate(string $state): bool
-    {
-        $this->update([
-            'state' => $state,
-        ]);
-
-        return (bool) $this->delete();
     }
 
     /**
@@ -315,5 +303,18 @@ class IdentityProxy extends Model
             'identity_2fa_uuid' => $proxy->identity_2fa_uuid,
             'identity_2fa_parent_proxy_id' => $proxy->id,
         ])->save();
+    }
+
+    /**
+     * @param string $state
+     * @return bool
+     */
+    protected function deactivate(string $state): bool
+    {
+        $this->update([
+            'state' => $state,
+        ]);
+
+        return (bool) $this->delete();
     }
 }

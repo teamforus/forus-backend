@@ -14,8 +14,8 @@ class VouchersController extends Controller
     /**
      * @param BaseFormRequest $request
      * @param VoucherToken $voucherToken
-     * @return ProviderVoucherResource|\Illuminate\Auth\Access\Response
      * @throws AuthorizationException
+     * @return ProviderVoucherResource|\Illuminate\Auth\Access\Response
      */
     public function show(BaseFormRequest $request, VoucherToken $voucherToken)
     {

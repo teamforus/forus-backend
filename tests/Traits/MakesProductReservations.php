@@ -6,15 +6,17 @@ use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Models\ProductReservation;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\ProductSubQuery;
 use App\Scopes\Builders\VoucherQuery;
-use App\Models\ProductReservation;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\WithFaker;
+use Throwable;
 
 trait MakesProductReservations
 {
@@ -68,7 +70,7 @@ trait MakesProductReservations
 
         if (!$voucher) {
             $voucher = $funds->first()->makeVoucher($organization->identity, [
-                'state' => Voucher::STATE_ACTIVE
+                'state' => Voucher::STATE_ACTIVE,
             ], 10000);
         }
 
@@ -78,46 +80,9 @@ trait MakesProductReservations
     }
 
     /**
-     * @param Organization $organization
-     * @param Collection|Fund[] $funds
-     * @return Product
-     */
-    private function createProductForReservation(Organization $organization, Collection|array $funds): Product
-    {
-        $product = $this->makeTestProduct($organization);
-
-        foreach ($funds as $fund) {
-            $product->fund_providers()->firstOrCreate([
-                'organization_id' => $organization->id,
-                'fund_id'         => $fund->id,
-                'state'           => FundProvider::STATE_ACCEPTED,
-                'allow_budget'    => true,
-                'allow_products'  => true,
-            ]);
-        }
-
-        /** @var \Illuminate\Database\Eloquent\Collection|FundProvider[] $fund_providers */
-        $fund_providers = FundProviderQuery::whereApprovedForFundsFilter(
-            FundProvider::query(),
-            collect($funds)->pluck('id')->toArray()
-        )->get();
-
-        foreach ($fund_providers as $fund_provider) {
-            $product->fund_provider_products()->create([
-                'amount' => $product->price,
-                'limit_total' => $product->unlimited_stock ? 1000 : $product->stock_amount,
-                'fund_provider_id' => $fund_provider->id,
-                'limit_per_identity' => $product->unlimited_stock ? 25 : ceil(max($product->stock_amount / 10, 1)),
-            ]);
-        }
-
-        return $product;
-    }
-
-    /**
      * @param Voucher $voucher
+     * @throws Exception
      * @return Product
-     * @throws \Exception
      */
     public function findProductForReservation(Voucher $voucher): Product
     {
@@ -152,8 +117,8 @@ trait MakesProductReservations
 
     /**
      * @param Organization $organization
+     * @throws Throwable
      * @return ProductReservation
-     * @throws \Throwable
      */
     public function makeBudgetReservationInDb(Organization $organization): ProductReservation
     {
@@ -200,5 +165,42 @@ trait MakesProductReservations
         $this->assertNotNull($reservation);
 
         return $reservation;
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Collection|Fund[] $funds
+     * @return Product
+     */
+    private function createProductForReservation(Organization $organization, Collection|array $funds): Product
+    {
+        $product = $this->makeTestProduct($organization);
+
+        foreach ($funds as $fund) {
+            $product->fund_providers()->firstOrCreate([
+                'organization_id' => $organization->id,
+                'fund_id' => $fund->id,
+                'state' => FundProvider::STATE_ACCEPTED,
+                'allow_budget' => true,
+                'allow_products' => true,
+            ]);
+        }
+
+        /** @var \Illuminate\Database\Eloquent\Collection|FundProvider[] $fund_providers */
+        $fund_providers = FundProviderQuery::whereApprovedForFundsFilter(
+            FundProvider::query(),
+            collect($funds)->pluck('id')->toArray()
+        )->get();
+
+        foreach ($fund_providers as $fund_provider) {
+            $product->fund_provider_products()->create([
+                'amount' => $product->price,
+                'limit_total' => $product->unlimited_stock ? 1000 : $product->stock_amount,
+                'fund_provider_id' => $fund_provider->id,
+                'limit_per_identity' => $product->unlimited_stock ? 25 : ceil(max($product->stock_amount / 10, 1)),
+            ]);
+        }
+
+        return $product;
     }
 }

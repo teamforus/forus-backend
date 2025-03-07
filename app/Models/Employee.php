@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\UploadedFile;
 
 /**
- * App\Models\Employee
+ * App\Models\Employee.
  *
  * @property int $id
  * @property string $identity_address
@@ -97,7 +97,7 @@ class Employee extends BaseModel
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, (new EmployeeRole)->getTable());
+        return $this->belongsToMany(Role::class, (new EmployeeRole())->getTable());
     }
 
     /**
@@ -106,6 +106,29 @@ class Employee extends BaseModel
     public function fund_request_records(): HasMany
     {
         return $this->hasMany(FundRequestRecord::class);
+    }
+
+    /**
+     * @param string $event
+     * @param ?array $fileData
+     * @param array $itemsData
+     * @return EventLog
+     */
+    public function logCsvUpload(
+        string $event,
+        ?array $fileData = null,
+        array $itemsData = [],
+    ): EventLog {
+        $fileMeta = $fileData ? $this->storeUploadedCsvFile($fileData, $itemsData, $event) : [];
+
+        return $this->log($event, [
+            'employee' => $this,
+        ], $fileMeta ? [
+            'uploaded_file_meta' => [
+                ...$fileMeta,
+                'state' => 'pending',
+            ],
+        ] : []);
     }
 
     /**
@@ -152,28 +175,5 @@ class Employee extends BaseModel
             ...$meta,
             'file_id' => $fileModel->id,
         ];
-    }
-
-    /**
-     * @param string $event
-     * @param ?array $fileData
-     * @param array $itemsData
-     * @return EventLog
-     */
-    public function logCsvUpload(
-        string $event,
-        ?array $fileData = null,
-        array $itemsData = [],
-    ): EventLog {
-        $fileMeta = $fileData ? $this->storeUploadedCsvFile($fileData, $itemsData, $event) : [];
-
-        return $this->log($event, [
-            'employee' => $this,
-        ],  $fileMeta ? [
-            'uploaded_file_meta' => [
-                ...$fileMeta,
-                'state' => 'pending',
-            ]
-        ] : []);
     }
 }

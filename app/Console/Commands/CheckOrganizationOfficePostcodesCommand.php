@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Office;
 use App\Models\Organization;
 use Illuminate\Console\Command;
+use Throwable;
 
 /**
  * @noinspection PhpUnused
@@ -41,7 +42,8 @@ class CheckOrganizationOfficePostcodesCommand extends Command
             foreach ($organizations as $organization) {
                 $organization->offices->each(fn (Office $office) => $office->updateGeoData());
             }
-        } catch (\Throwable) {}
+        } catch (Throwable) {
+        }
     }
 
     /**

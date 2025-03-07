@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Searches;
 
 use App\Models\Product;
@@ -71,13 +70,13 @@ class ProductSearch extends BaseSearch
         }
 
         if ($updated_from = $this->getFilter('updated_from')) {
-            $builder->whereHas('logs_last_monitored_field_changed', function(Builder $builder) use ($updated_from) {
+            $builder->whereHas('logs_last_monitored_field_changed', function (Builder $builder) use ($updated_from) {
                 $builder->where('created_at', '>=', Carbon::parse($updated_from)->startOfDay());
             });
         }
 
         if ($updated_to = $this->getFilter('updated_to')) {
-            $builder->whereHas('logs_last_monitored_field_changed', function(Builder $builder) use ($updated_to) {
+            $builder->whereHas('logs_last_monitored_field_changed', function (Builder $builder) use ($updated_to) {
                 $builder->where('created_at', '<=', Carbon::parse($updated_to)->startOfDay());
             });
         }

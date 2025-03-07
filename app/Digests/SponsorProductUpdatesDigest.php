@@ -21,7 +21,7 @@ class SponsorProductUpdatesDigest extends BaseOrganizationDigest
     protected string $digestKey = 'sponsor_product_updates';
 
     protected array $employeePermissions = [
-        'manage_providers'
+        'manage_providers',
     ];
 
     /**
@@ -41,7 +41,7 @@ class SponsorProductUpdatesDigest extends BaseOrganizationDigest
 
         $emailBody->text(trans('digests.sponsor.greetings', [
             'organization_name' => $organization->name,
-        ]), ["text_center"]);
+        ]), ['text_center']);
 
         $numberOfChanges = $this->getUpdatedProductsQuery($organization)->count();
 
@@ -63,6 +63,15 @@ class SponsorProductUpdatesDigest extends BaseOrganizationDigest
     }
 
     /**
+     * @param MailBodyBuilder $emailBody
+     * @return BaseDigestMail
+     */
+    protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
+    {
+        return new DigestSponsorProductUpdatesMail(compact('emailBody'));
+    }
+
+    /**
      * @param Organization $organization
      * @return Builder
      */
@@ -71,17 +80,8 @@ class SponsorProductUpdatesDigest extends BaseOrganizationDigest
         return ProductQuery::approvedForFundsFilter(
             Product::query(),
             $organization->funds_active->pluck('id')->toArray(),
-        )->whereHas('logs_monitored_field_changed', function(Builder $builder) use ($organization) {
+        )->whereHas('logs_monitored_field_changed', function (Builder $builder) use ($organization) {
             $builder->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
         });
-    }
-
-    /**
-     * @param MailBodyBuilder $emailBody
-     * @return BaseDigestMail
-     */
-    protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
-    {
-        return new DigestSponsorProductUpdatesMail(compact('emailBody'));
     }
 }

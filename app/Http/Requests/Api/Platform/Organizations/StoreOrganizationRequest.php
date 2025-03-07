@@ -28,30 +28,30 @@ class StoreOrganizationRequest extends BaseFormRequest
     public function rules(): array
     {
         $kvk = $this->input('kvk');
-        $kvkDebug = env("KVK_API_DEBUG", false);
+        $kvkDebug = env('KVK_API_DEBUG', false);
         $kvkGeneric = $kvk === Organization::GENERIC_KVK;
 
         return [
-            'name'                  => 'required|between:2,64',
-            'description'           => 'nullable|string|max:4096',
-            'iban'                  => ['required', new IbanRule()],
-            'email'                 => [
+            'name' => 'required|between:2,64',
+            'description' => 'nullable|string|max:4096',
+            'iban' => ['required', new IbanRule()],
+            'email' => [
                 'required',
                 ...$this->emailRules(),
             ],
-            'email_public'          => 'boolean',
-            'phone'                 => 'required|digits_between:4,20',
-            'phone_public'          => 'boolean',
-            'kvk'                   => [
+            'email_public' => 'boolean',
+            'phone' => 'required|digits_between:4,20',
+            'phone_public' => 'boolean',
+            'kvk' => [
                 'required',
                 'digits:8',
                 $kvkDebug || $kvkGeneric ? null : 'unique:organizations,kvk',
                 $kvkGeneric ? null : new KvkRule(),
             ],
-            'btw'                   => ['nullable', 'string', new BtwRule()],
-            'website'               => 'nullable|max:200|url',
-            'website_public'        => 'boolean',
-            'business_type_id'      => 'required|exists:business_types,id',
+            'btw' => ['nullable', 'string', new BtwRule()],
+            'website' => 'nullable|max:200|url',
+            'website_public' => 'boolean',
+            'business_type_id' => 'required|exists:business_types,id',
         ];
     }
 }

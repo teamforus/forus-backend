@@ -12,8 +12,8 @@ class FaqController extends Controller
     /**
      * @param StoreFaqValidateRequest $request
      * @param Organization $organization
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function storeValidate(

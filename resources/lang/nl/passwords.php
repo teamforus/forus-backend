@@ -17,6 +17,6 @@ return [
     'reset' => 'Je wachtwoord is hersteld!',
     'sent' => 'We hebben een herstel link per e-mail gestuurd',
     'token' => 'Dit wachtwoordhersteltoken is ongeldig.',
-    'user' => "Dit e-mailadres is niet bij ons bekend",
+    'user' => 'Dit e-mailadres is niet bij ons bekend',
 
 ];

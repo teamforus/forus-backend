@@ -24,8 +24,8 @@ class FundProviderChatMessagesController extends Controller
      * @param Fund $fund
      * @param FundProvider $fundProvider
      * @param FundProviderChat $fundProviderChat
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundProviderChatMessageRequest $request,
@@ -35,19 +35,19 @@ class FundProviderChatMessagesController extends Controller
         FundProviderChat $fundProviderChat
     ): AnonymousResourceCollection {
         $this->authorize('showSponsor', [
-            $fundProvider, $organization, $fund
+            $fundProvider, $organization, $fund,
         ]);
 
         $this->authorize('viewAnySponsor', [
-            FundProviderChat::class, $fundProvider, $fund, $organization
+            FundProviderChat::class, $fundProvider, $fund, $organization,
         ]);
 
         $this->authorize('viewAnySponsor', [
-            FundProviderChatMessage::class, $fundProviderChat, $fundProvider, $fund, $organization
+            FundProviderChatMessage::class, $fundProviderChat, $fundProvider, $fund, $organization,
         ]);
 
         $fundProviderChat->messages()->update([
-            'sponsor_seen' => true
+            'sponsor_seen' => true,
         ]);
 
         return FundProviderChatMessageResource::collection(
@@ -63,8 +63,8 @@ class FundProviderChatMessagesController extends Controller
      * @param Fund $fund
      * @param FundProvider $fundProvider
      * @param FundProviderChat $fundProviderChat
-     * @return FundProviderChatMessageResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderChatMessageResource
      */
     public function store(
         StoreFundProviderChatMessageRequest $request,
@@ -77,7 +77,7 @@ class FundProviderChatMessagesController extends Controller
         $this->authorize('viewSponsor', [$fundProviderChat, $fundProvider, $fund, $organization]);
 
         $this->authorize('createSponsor', [
-            FundProviderChatMessage::class, $fundProviderChat, $fundProvider, $fund, $organization
+            FundProviderChatMessage::class, $fundProviderChat, $fundProvider, $fund, $organization,
         ]);
 
         $chatMessage = $fundProviderChat->addSponsorMessage(
@@ -98,8 +98,8 @@ class FundProviderChatMessagesController extends Controller
      * @param FundProvider $fundProvider
      * @param FundProviderChat $fundProviderChat
      * @param FundProviderChatMessage $fundProviderChatMessage
-     * @return FundProviderChatMessageResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderChatMessageResource
      */
     public function show(
         Organization $organization,
@@ -109,19 +109,19 @@ class FundProviderChatMessagesController extends Controller
         FundProviderChatMessage $fundProviderChatMessage
     ): FundProviderChatMessageResource {
         $this->authorize('showSponsor', [
-            $fundProvider, $organization, $fund
+            $fundProvider, $organization, $fund,
         ]);
 
         $this->authorize('viewSponsor', [
-            $fundProviderChat, $fundProvider, $fund, $organization
+            $fundProviderChat, $fundProvider, $fund, $organization,
         ]);
 
         $this->authorize('viewSponsor', [
-            $fundProviderChatMessage, $fundProviderChat, $fundProvider, $fund, $organization
+            $fundProviderChatMessage, $fundProviderChat, $fundProvider, $fund, $organization,
         ]);
 
         $fundProviderChatMessage->update([
-            'sponsor_seen' => true
+            'sponsor_seen' => true,
         ]);
 
         return new FundProviderChatMessageResource(

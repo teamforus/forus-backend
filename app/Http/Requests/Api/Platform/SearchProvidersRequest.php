@@ -27,15 +27,15 @@ class SearchProvidersRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'q'                     => 'nullable|string',
-            'fund_id'               => $this->fundIdRules($this->implementation()),
-            'postcode'              => 'nullable|string|max:100',
-            'distance'              => 'nullable|integer|max:1000',
-            'order_by'              => 'nullable|in:created_at,name',
-            'order_dir'             => 'nullable|in:asc,desc',
-            'business_type_id'      => 'nullable|exists:business_types,id',
-            'product_category_id'   => 'nullable|exists:product_categories,id',
-            'per_page'              => $this->perPageRule(1000),
+            'q' => 'nullable|string',
+            'fund_id' => $this->fundIdRules($this->implementation()),
+            'postcode' => 'nullable|string|max:100',
+            'distance' => 'nullable|integer|max:1000',
+            'order_by' => 'nullable|in:created_at,name',
+            'order_dir' => 'nullable|in:asc,desc',
+            'business_type_id' => 'nullable|exists:business_types,id',
+            'product_category_id' => 'nullable|exists:product_categories,id',
+            'per_page' => $this->perPageRule(1000),
         ];
     }
 
@@ -43,14 +43,15 @@ class SearchProvidersRequest extends BaseFormRequest
      * @param Implementation|null $implementation
      * @return array
      */
-    protected function fundIdRules(?Implementation $implementation = null): array {
+    protected function fundIdRules(?Implementation $implementation = null): array
+    {
         return [
             'nullable',
-            Rule::exists('funds', 'id')->where(function(Builder $builder) use ($implementation) {
+            Rule::exists('funds', 'id')->where(function (Builder $builder) use ($implementation) {
                 if ($implementation && !$implementation->isGeneral()) {
                     $builder->addWhereExistsQuery($implementation->funds()->getBaseQuery());
                 }
-            })
+            }),
         ];
     }
 }

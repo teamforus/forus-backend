@@ -36,12 +36,12 @@ class BankVoucherTransactionBulksUpdateStateCommand extends Command
         /** @var VoucherTransactionBulk[]|Collection $bulks */
         $bulks = VoucherTransactionBulk::where([
             'state' => VoucherTransactionBulk::STATE_PENDING,
-        ])->whereHas('bank_connection', function(Builder $builder) {
+        ])->whereHas('bank_connection', function (Builder $builder) {
             $builder->where('state', '!=', BankConnection::STATE_INVALID);
 
-            $builder->whereHas('bank', function(Builder $builder) {
+            $builder->whereHas('bank', function (Builder $builder) {
                 $builder->where('key', Bank::BANK_BUNQ);
-                $builder->orWhere(function(Builder $builder) {
+                $builder->orWhere(function (Builder $builder) {
                     $builder->where('key', Bank::BANK_BNG);
                     $builder->whereNotNull('access_token');
                 });

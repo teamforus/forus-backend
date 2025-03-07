@@ -1,20 +1,17 @@
 <?php
 
-
 namespace App\Helpers;
-
 
 use Illuminate\Support\Facades\Cache;
 use Psr\SimpleCache\InvalidArgumentException;
 
 class Locker
 {
-    protected string $key;
-    protected string $lockString;
-
     public mixed $lockValue = 1;
     public int $lockTime = 5;
     public int $maxWaitingTime = 30;
+    protected string $key;
+    protected string $lockString;
 
     /** @var int How often to check for unlock */
     protected int $sleepInterval = 1000 * 100;
@@ -37,8 +34,8 @@ class Locker
     }
 
     /**
-     * @return void
      * @throws InvalidArgumentException
+     * @return void
      */
     public function lock(): void
     {
@@ -76,9 +73,10 @@ class Locker
         return !$this->locked();
 
     }
+
     /**
-     * @return bool
      * @throws InvalidArgumentException
+     * @return bool
      */
     public function waitForUnlockAndLock(): bool
     {

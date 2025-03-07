@@ -36,25 +36,25 @@ class UpdateFundRequest extends BaseFundRequest
         $descriptionPositions = implode(',', Fund::DESCRIPTION_POSITIONS);
 
         return [
-            'name'                      => 'nullable|between:2,200',
-            'media_uid'                 => ['nullable', new MediaUidRule('fund_logo')],
-            'description'               => [
+            'name' => 'nullable|between:2,200',
+            'media_uid' => ['nullable', new MediaUidRule('fund_logo')],
+            'description' => [
                 'nullable',
                 'string',
                 new MaxStringRule(15000),
             ],
-            'description_short'         => 'nullable|string|max:500',
-            'description_position'      => "nullable|in:$descriptionPositions",
-            'notification_amount'       => 'nullable|numeric',
-            'faq_title'                 => 'nullable|string|max:200',
-            'tag_ids'                   => 'nullable|array',
-            'tag_ids.*'                 => 'required|exists:tags,id',
-            'request_btn_text'          => 'nullable|string|max:50',
-            'external_link_text'        => 'nullable|string|max:50',
-            'external_link_url'         => 'nullable|string|max:200',
-            'external_page'             => 'nullable|boolean',
-            'external_page_url'         => 'nullable|required_if:external_page,true|string|max:200|url',
-            'auto_requests_validation'  => 'nullable|boolean',
+            'description_short' => 'nullable|string|max:500',
+            'description_position' => "nullable|in:$descriptionPositions",
+            'notification_amount' => 'nullable|numeric',
+            'faq_title' => 'nullable|string|max:200',
+            'tag_ids' => 'nullable|array',
+            'tag_ids.*' => 'required|exists:tags,id',
+            'request_btn_text' => 'nullable|string|max:50',
+            'external_link_text' => 'nullable|string|max:50',
+            'external_link_url' => 'nullable|string|max:200',
+            'external_page' => 'nullable|boolean',
+            'external_page_url' => 'nullable|required_if:external_page,true|string|max:200|url',
+            'auto_requests_validation' => 'nullable|boolean',
             'default_validator_employee_id' => [
                 'nullable',
                 Rule::in($availableValidators->toArray()),
@@ -62,12 +62,12 @@ class UpdateFundRequest extends BaseFundRequest
             'start_date' => $this->fund->isWaiting() ? [
                 'nullable',
                 'date_format:Y-m-d',
-                'after:' . $this->fund->created_at->addDays(5)->format('Y-m-d')
+                'after:' . $this->fund->created_at->addDays(5)->format('Y-m-d'),
             ] : [],
             'end_date' => [
                 'nullable',
                 'date_format:Y-m-d',
-                'after:start_date'
+                'after:start_date',
             ],
             ...$this->customAndPresetAmountRules(),
             ...$this->faqRules($this->fund->faq()->pluck('id')->toArray()),

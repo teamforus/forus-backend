@@ -3,7 +3,7 @@
 namespace App\Models;
 
 /**
- * App\Models\FundProduct
+ * App\Models\FundProduct.
  *
  * @property int $id
  * @property int $fund_id
@@ -30,20 +30,22 @@ class FundProduct extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'product_id'
+        'fund_id', 'product_id',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund() {
+    public function fund()
+    {
         return $this->belongsTo(Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function product() {
+    public function product()
+    {
         return $this->belongsTo(Product::class);
     }
 }

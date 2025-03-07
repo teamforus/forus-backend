@@ -56,46 +56,6 @@ class StoreReimbursementRequest extends BaseFormRequest
     }
 
     /**
-     * @param Identity $identity
-     * @param Reimbursement|null $reimbursement
-     * @return Builder|Relation|Voucher
-     */
-    protected function availableVouchers(
-        Identity $identity,
-        ?Reimbursement $reimbursement = null,
-    ): Builder|Relation|Voucher {
-        return VoucherQuery::whereAllowReimbursements($identity->vouchers(), $reimbursement);
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Reimbursement|null $reimbursement
-     * @return string
-     */
-    protected function amountRule(Identity $identity, ?Reimbursement $reimbursement = null): string
-    {
-        $voucher = $this
-            ->availableVouchers($identity, $reimbursement)
-            ->find($this->input('voucher_id'));
-
-        return "required|numeric|min:0.1|max:" . currency_format($voucher?->amount_available ?: 0);
-    }
-
-    /**
-     * @param Reimbursement|null $reimbursement
-     * @return array
-     */
-    protected function voucherIdRule(?Reimbursement $reimbursement = null): array
-    {
-        $query = $this->availableVouchers($this->identity(), $reimbursement);
-
-        return [
-            'required',
-            Rule::in($query->get()->pluck('id')->values()->toArray()),
-        ];
-    }
-
-    /**
      * @return array
      */
     public function attributes(): array
@@ -133,6 +93,46 @@ class StoreReimbursementRequest extends BaseFormRequest
                 trans('validation.attributes.iban_name')
             ),
             'files.required' => trans('validation.reimbursement.files.required'),
+        ];
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Reimbursement|null $reimbursement
+     * @return Builder|Relation|Voucher
+     */
+    protected function availableVouchers(
+        Identity $identity,
+        ?Reimbursement $reimbursement = null,
+    ): Builder|Relation|Voucher {
+        return VoucherQuery::whereAllowReimbursements($identity->vouchers(), $reimbursement);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Reimbursement|null $reimbursement
+     * @return string
+     */
+    protected function amountRule(Identity $identity, ?Reimbursement $reimbursement = null): string
+    {
+        $voucher = $this
+            ->availableVouchers($identity, $reimbursement)
+            ->find($this->input('voucher_id'));
+
+        return 'required|numeric|min:0.1|max:' . currency_format($voucher?->amount_available ?: 0);
+    }
+
+    /**
+     * @param Reimbursement|null $reimbursement
+     * @return array
+     */
+    protected function voucherIdRule(?Reimbursement $reimbursement = null): array
+    {
+        $query = $this->availableVouchers($this->identity(), $reimbursement);
+
+        return [
+            'required',
+            Rule::in($query->get()->pluck('id')->values()->toArray()),
         ];
     }
 }

@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Notifications;
-
 
 use App\Notifications\Identities\BaseIdentityNotification;
 use Illuminate\Notifications\Notification;

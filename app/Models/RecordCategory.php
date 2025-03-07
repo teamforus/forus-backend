@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * App\Models\RecordCategory
+ * App\Models\RecordCategory.
  *
  * @property int $id
  * @property string $identity_address

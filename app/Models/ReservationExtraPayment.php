@@ -19,9 +19,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Event;
+use Throwable;
 
 /**
- * App\Models\ReservationExtraPayment
+ * App\Models\ReservationExtraPayment.
  *
  * @property int $id
  * @property int $product_reservation_id
@@ -218,9 +219,9 @@ class ReservationExtraPayment extends Model
 
     /**
      * @param Employee|null $employee
-     * @return ReservationExtraPayment|null
      * @throws MollieException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return ReservationExtraPayment|null
      */
     public function fetchAndUpdateMolliePayment(?Employee $employee): ?ReservationExtraPayment
     {
@@ -283,36 +284,10 @@ class ReservationExtraPayment extends Model
     }
 
     /**
-     * @return void
-     * @throws MollieException
-     */
-    private function fetchMollieRefunds(): void
-    {
-        if (!$this->payment_id) {
-            return;
-        }
-
-        /** @var Refund[] $refunds */
-        $refunds = $this->getMollieConnection()
-            ->getMollieService()
-            ->getPaymentRefunds($this->payment_id);
-
-        foreach ($refunds as $refund) {
-            $this->refunds()->updateOrCreate([
-                'refund_id' => $refund->id,
-            ], [
-                'state' => $refund->status,
-                'amount' => $refund->amount,
-                'currency' => $refund->currency,
-            ]);
-        }
-    }
-
-    /**
      * @param Employee|null $employee
-     * @return ReservationExtraPaymentRefund|null
      * @throws MollieException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return ReservationExtraPaymentRefund|null
      */
     public function createMollieRefund(?Employee $employee): ?ReservationExtraPaymentRefund
     {
@@ -397,7 +372,6 @@ class ReservationExtraPayment extends Model
         return in_array($this->state, self::CANCELED_STATES, true);
     }
 
-
     /**
      * @return bool
      */
@@ -476,5 +450,31 @@ class ReservationExtraPayment extends Model
     protected function getMollieConnection(): ?MollieConnection
     {
         return $this->product_reservation->product?->organization?->mollie_connection;
+    }
+
+    /**
+     * @throws MollieException
+     * @return void
+     */
+    private function fetchMollieRefunds(): void
+    {
+        if (!$this->payment_id) {
+            return;
+        }
+
+        /** @var Refund[] $refunds */
+        $refunds = $this->getMollieConnection()
+            ->getMollieService()
+            ->getPaymentRefunds($this->payment_id);
+
+        foreach ($refunds as $refund) {
+            $this->refunds()->updateOrCreate([
+                'refund_id' => $refund->id,
+            ], [
+                'state' => $refund->status,
+                'amount' => $refund->amount,
+                'currency' => $refund->currency,
+            ]);
+        }
     }
 }

@@ -43,14 +43,18 @@ class ServiceIdentityProvider implements UserProvider
      * @param $token
      * @return void
      */
-    public function retrieveByToken($identifier, $token): void {}
+    public function retrieveByToken($identifier, $token): void
+    {
+    }
 
     /**
      * @param Authenticatable $user
      * @param $token
      * @return void
      */
-    public function updateRememberToken(Authenticatable $user, $token): void {}
+    public function updateRememberToken(Authenticatable $user, $token): void
+    {
+    }
 
     /**
      * @param Authenticatable|Identity $user
@@ -72,5 +76,6 @@ class ServiceIdentityProvider implements UserProvider
         Authenticatable $user,
         array $credentials,
         bool $force = false
-    ): void {}
+    ): void {
+    }
 }
