@@ -84,11 +84,11 @@ class OfficePolicy
             return false;
         }
 
-        if ($organization->offices()->count() <= 1){
+        if ($organization->offices()->count() <= 1) {
             return $this->deny('Cannot delete the only office.');
         }
 
-        if ($office->employees()->exists()){
+        if ($office->employees()->exists()) {
             return $this->deny('Cannot delete office with employees.');
         }
 

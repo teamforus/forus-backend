@@ -46,6 +46,23 @@ class Handler extends ExceptionHandler
     ];
 
     /**
+     * @param $request
+     * @param Throwable $e
+     * @throws ReflectionException
+     * @throws Throwable
+     * @return SymfonyResponse
+     */
+    public function render($request, Throwable $e): SymfonyResponse
+    {
+        $message = $this->getMessageByInstance($e) ?: $this->getMessageByStatusCode($e) ?: $e->getMessage();
+
+        $reflection = new ReflectionObject($e);
+        $reflection->getProperty('message')?->setValue($e, $message);
+
+        return parent::render($request, $e);
+    }
+
+    /**
      * Convert a validation exception into a JSON response.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -61,26 +78,9 @@ class Handler extends ExceptionHandler
     }
 
     /**
-     * @param $request
-     * @param Throwable $e
-     * @return SymfonyResponse
-     * @throws ReflectionException
-     * @throws Throwable
-     */
-    public function render($request, Throwable $e): SymfonyResponse
-    {
-        $message = $this->getMessageByInstance($e) ?: $this->getMessageByStatusCode($e) ?: $e->getMessage();
-
-        $reflection = new ReflectionObject($e);
-        $reflection->getProperty('message')?->setValue($e, $message);
-
-        return parent::render($request, $e);
-    }
-
-    /**
      * Convert the given exception to an array.
      *
-     * @param  \Throwable  $e
+     * @param  Throwable  $e
      * @return array
      */
     protected function convertExceptionToArray(Throwable $e): array
@@ -92,8 +92,8 @@ class Handler extends ExceptionHandler
 
     /**
      * @param Throwable $e
+     * @throws ReflectionException
      * @return string|null
-     * @throws \ReflectionException
      */
     protected function getMessageByInstance(Throwable $e): ?string
     {

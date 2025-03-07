@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use App\Models\Identity;
 use App\Models\IdentityProxy;
+use Exception;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -108,7 +109,7 @@ trait DoesTesting
     ): mixed {
         try {
             return $callable();
-        } catch (\Exception) {
+        } catch (Exception) {
             self::fail($message);
         }
     }

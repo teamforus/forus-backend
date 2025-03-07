@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\FundTopUpTransaction
+ * App\Models\FundTopUpTransaction.
  *
  * @property int $id
  * @property int $fund_top_up_id
@@ -40,7 +40,7 @@ class FundTopUpTransaction extends BaseModel
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      * @noinspection PhpUnused
      */
-    function fund_top_up(): BelongsTo
+    public function fund_top_up(): BelongsTo
     {
         return $this->belongsTo(FundTopUp::class);
     }
@@ -49,7 +49,7 @@ class FundTopUpTransaction extends BaseModel
      * @return BelongsTo
      * @noinspection PhpUnused
      */
-    function bank_connection_account(): BelongsTo
+    public function bank_connection_account(): BelongsTo
     {
         return $this->belongsTo(BankConnectionAccount::class);
     }

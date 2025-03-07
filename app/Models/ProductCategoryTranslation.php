@@ -3,7 +3,7 @@
 namespace App\Models;
 
 /**
- * App\Models\ProductCategoryTranslation
+ * App\Models\ProductCategoryTranslation.
  *
  * @property int $id
  * @property int $product_category_id
@@ -29,13 +29,14 @@ class ProductCategoryTranslation extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'name'
+        'name',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function product_category() {
+    public function product_category()
+    {
         return $this->belongsTo(ProductCategory::class);
     }
 }

@@ -17,9 +17,10 @@ use App\Traits\DoesTesting;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Random\RandomException;
+use Throwable;
 
 trait VoucherTestTrait
 {
@@ -49,9 +50,9 @@ trait VoucherTestTrait
      * @param Fund $fund
      * @param array $assert
      * @param Product[] $products
-     * @return array
      * @throws RandomException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return array
      */
     protected function makeVoucherData(Fund $fund, array $assert, array $products): array
     {
@@ -97,8 +98,8 @@ trait VoucherTestTrait
     /**
      * @param array $assert
      * @param int $index
+     * @throws Throwable
      * @return array
-     * @throws \Throwable
      */
     protected function assignByFields(array $assert, int $index): array
     {
@@ -158,8 +159,8 @@ trait VoucherTestTrait
      * @param Carbon $startDate
      * @param array $vouchers
      * @param array $assert
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function assertVouchersCreated(
         Builder|Voucher $query,
@@ -176,7 +177,7 @@ trait VoucherTestTrait
 
         foreach ($vouchers as $index => $voucherArr) {
             /** @var Voucher $voucher */
-            $voucher = $createdVouchers->first(fn(Voucher $item) => $item->note === $voucherArr['note']);
+            $voucher = $createdVouchers->first(fn (Voucher $item) => $item->note === $voucherArr['note']);
             $this->assertNotNull($voucher);
             $sortedVouchers[] = $voucher;
 
@@ -432,7 +433,8 @@ trait VoucherTestTrait
         Carbon $startDate,
         array $vouchers,
         array $assert
-    ): void {}
+    ): void {
+    }
 
     /**
      * @param Builder $query
@@ -446,7 +448,8 @@ trait VoucherTestTrait
         Carbon $startDate,
         array $vouchers,
         array $assert
-    ): void {}
+    ): void {
+    }
 
     /**
      * @param Fund $fund
@@ -481,8 +484,8 @@ trait VoucherTestTrait
     }
 
     /**
+     * @throws Throwable
      * @return int
-     * @throws \Throwable
      */
     protected function randomFakeBsn(): int
     {

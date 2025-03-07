@@ -44,6 +44,7 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
 
         if ($mailBody->count() === 1) {
             $this->updateLastDigest($organization);
+
             return;
         }
 
@@ -71,8 +72,8 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
         array $otherEvents
     ): Collection {
         // reservations query
-        $query = ProductReservation::where(function(Builder $builder) use ($organization) {
-            $builder->whereHas('product', function(Builder $builder) use ($organization) {
+        $query = ProductReservation::where(function (Builder $builder) use ($organization) {
+            $builder->whereHas('product', function (Builder $builder) use ($organization) {
                 $builder->whereIn('id', $organization->products()->select('id'));
             });
         });
@@ -89,6 +90,15 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
             ->map(fn (Collection $group) => $group->sortBy('created_at')->last())
             ->flatten(1)
             ->pluck('data');
+    }
+
+    /**
+     * @param MailBodyBuilder $emailBody
+     * @return BaseDigestMail
+     */
+    protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
+    {
+        return new DigestProviderFundsMail(compact('emailBody'));
     }
 
     /**
@@ -114,12 +124,13 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
         if ($logsProducts->count() > 0) {
             $count_reservations = $logsProducts->count();
             $count_pending_reservations = $logsProducts->where(
-                'product_reservation_state', ProductReservation::STATE_PENDING
+                'product_reservation_state',
+                ProductReservation::STATE_PENDING
             )->count();
             $provider_name = $organization->name;
 
             $mailBody->text(trans_choice(
-                "digests.provider_reservations.reservations.title",
+                'digests.provider_reservations.reservations.title',
                 $count_reservations,
                 compact('count_reservations', 'provider_name', 'count_pending_reservations')
             ));
@@ -130,19 +141,19 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
                 $groups = $group->groupBy('product_reservation_state');
                 $count = count($group);
 
-                $mailBody->h5(trans("digests.provider_reservations.reservations.product_item.title", [
+                $mailBody->h5(trans('digests.provider_reservations.reservations.product_item.title', [
                     'product_name' => $group[0]['product_name'] ?? '',
                     'product_price_locale' => $group[0]['product_price_locale'] ?? '',
                 ]), ['margin_less']);
 
-                $mailBody->text(trans_choice("digests.provider_reservations.reservations.product_item.description_total", $count, [
+                $mailBody->text(trans_choice('digests.provider_reservations.reservations.product_item.description_total', $count, [
                     'count_total' => $count,
                 ]), ['strong', 'margin_less']);
 
                 $mailBody->text($groups->keys()->map(function ($state) use ($groups) {
                     $count = count($groups[$state]);
 
-                    return trans_choice("digests.provider_reservations.reservations.product_item.description", $count, [
+                    return trans_choice('digests.provider_reservations.reservations.product_item.description', $count, [
                         'count' => $count,
                         'state' => strtolower(trans("states.product_reservations.$state")),
                     ]);
@@ -151,14 +162,5 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
         }
 
         return $mailBody;
-    }
-
-    /**
-     * @param MailBodyBuilder $emailBody
-     * @return BaseDigestMail
-     */
-    protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
-    {
-        return new DigestProviderFundsMail(compact('emailBody'));
     }
 }

@@ -23,7 +23,7 @@ class PayoutsController extends Controller
     {
         $this->authorize('viewAny', [VoucherTransaction::class]);
 
-        $query = VoucherTransaction::where(function(Builder $builder) use ($request) {
+        $query = VoucherTransaction::where(function (Builder $builder) use ($request) {
             $builder->where('target', VoucherTransaction::TARGET_PAYOUT);
             $builder->whereHas('voucher', function (Builder $builder) use ($request) {
                 $builder->where('voucher_type', Voucher::VOUCHER_TYPE_PAYOUT);

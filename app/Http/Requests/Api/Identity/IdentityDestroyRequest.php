@@ -24,7 +24,7 @@ class IdentityDestroyRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'comment' => 'nullable|string'
+            'comment' => 'nullable|string',
         ];
     }
 }

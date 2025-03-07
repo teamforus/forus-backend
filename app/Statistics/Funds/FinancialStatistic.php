@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Statistics\Funds;
 
 use App\Models\BaseModel;
@@ -24,7 +23,7 @@ class FinancialStatistic
         $dates = $this->makeDates($options);
         $options = array_merge($options, [
             'date_from' => array_first($dates)['from'] ?? null,
-            'date_to' => array_last($dates)['to'] ?? null
+            'date_to' => array_last($dates)['to'] ?? null,
         ]);
 
         return [
@@ -60,52 +59,10 @@ class FinancialStatistic
                 'amount_locale' => currency_format_locale($total_amount),
                 'count' => $datesData->sum('count'),
             ],
-            "lowest_transaction" => $lowest_transaction,
-            "highest_transaction" => $highest_transaction,
-            "highest_daily_transaction" => $highest_daily_transaction,
+            'lowest_transaction' => $lowest_transaction,
+            'highest_transaction' => $highest_transaction,
+            'highest_daily_transaction' => $highest_daily_transaction,
         ];
-    }
-
-    /**
-     * @param array $options
-     * @return array
-     */
-    protected function makeDates(array $options): array {
-        $type = array_get($options, 'type');
-        $date = Carbon::createFromDate(array_get($options, 'type_value'))->startOfDay();
-
-        $dates = [];
-
-        if ($type === 'year') {
-            $startDate = $date->clone()->startOfYear();
-
-            do {
-                $dates[] = [
-                    'from' => $startDate->copy(),
-                    'to' => $startDate->copy()->endOfMonth(),
-                ];
-            } while ($startDate->addMonth()->year == $date->year);
-        } elseif ($type === 'quarter') {
-            $startDate = $date->clone()->startOfQuarter();
-
-            do {
-                $dates[] = [
-                    'from' => $startDate->copy()->startOfWeek(),
-                    'to' => $startDate->copy()->endOfWeek(),
-                ];
-            } while ($startDate->addWeek()->quarter == $date->quarter);
-        } elseif ($type === 'month') {
-            $startDate = $date->clone()->startOfMonth();
-
-            do {
-                $dates[] = [
-                    'from' => $startDate->copy()->startOfDay(),
-                    'to' => $startDate->copy()->endOfDay(),
-                ];
-            } while ($startDate->addDay()->month == $date->month);
-        }
-
-        return $dates;
     }
 
     /**
@@ -148,10 +105,53 @@ class FinancialStatistic
     }
 
     /**
+     * @param array $options
+     * @return array
+     */
+    protected function makeDates(array $options): array
+    {
+        $type = array_get($options, 'type');
+        $date = Carbon::createFromDate(array_get($options, 'type_value'))->startOfDay();
+
+        $dates = [];
+
+        if ($type === 'year') {
+            $startDate = $date->clone()->startOfYear();
+
+            do {
+                $dates[] = [
+                    'from' => $startDate->copy(),
+                    'to' => $startDate->copy()->endOfMonth(),
+                ];
+            } while ($startDate->addMonth()->year == $date->year);
+        } elseif ($type === 'quarter') {
+            $startDate = $date->clone()->startOfQuarter();
+
+            do {
+                $dates[] = [
+                    'from' => $startDate->copy()->startOfWeek(),
+                    'to' => $startDate->copy()->endOfWeek(),
+                ];
+            } while ($startDate->addWeek()->quarter == $date->quarter);
+        } elseif ($type === 'month') {
+            $startDate = $date->clone()->startOfMonth();
+
+            do {
+                $dates[] = [
+                    'from' => $startDate->copy()->startOfDay(),
+                    'to' => $startDate->copy()->endOfDay(),
+                ];
+            } while ($startDate->addDay()->month == $date->month);
+        }
+
+        return $dates;
+    }
+
+    /**
      * @param VoucherTransaction|null $transaction
      * @return array|null
      */
-    protected function getTransactionData(?VoucherTransaction $transaction) : ?array
+    protected function getTransactionData(?VoucherTransaction $transaction): ?array
     {
         return $transaction ? array_merge($transaction->only('id', 'amount'), [
             'provider' => $transaction->provider?->name,
@@ -169,7 +169,7 @@ class FinancialStatistic
         string $type,
         Builder $transactionsQuery,
         Carbon $dateFrom
-    ): array  {
+    ): array {
         /** @var VoucherTransaction|BaseModel|null $highest_transaction */
         $highest_transaction = (clone $transactionsQuery)->orderByDesc('amount')->first();
         $transactionOverview = (clone $transactionsQuery)->selectRaw(
@@ -184,9 +184,9 @@ class FinancialStatistic
         )->first();
 
         return array_merge($transactionOverview->toArray(), [
-            "key" => $dateFrom->copy()->startOfDay()->isoFormat($this->dateFormatStr($type)),
-            "highest_transaction" => $this->getTransactionData($highest_transaction),
-            "highest_daily_transaction" => $highest_daily_transaction ? array_merge($highest_daily_transaction->toArray(), [
+            'key' => $dateFrom->copy()->startOfDay()->isoFormat($this->dateFormatStr($type)),
+            'highest_transaction' => $this->getTransactionData($highest_transaction),
+            'highest_daily_transaction' => $highest_daily_transaction ? array_merge($highest_daily_transaction->toArray(), [
                 'date_locale' => format_date_locale($highest_daily_transaction->date ?? null),
                 'amount_locale' => currency_format_locale($highest_daily_transaction->amount),
             ]) : $highest_daily_transaction,

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\Employee;
@@ -21,9 +20,9 @@ class FundRequestQuery
         Builder|Relation|FundRequest $builder,
         int $identity_id,
     ): Builder|Relation|FundRequest {
-        return $builder->where(function(Builder $builder) use ($identity_id) {
-            $builder->whereHas('fund', static function(Builder $builder) use ($identity_id) {
-                $builder->whereHas('vouchers', static function(Builder $builder) use ($identity_id) {
+        return $builder->where(function (Builder $builder) use ($identity_id) {
+            $builder->whereHas('fund', static function (Builder $builder) use ($identity_id) {
+                $builder->whereHas('vouchers', static function (Builder $builder) use ($identity_id) {
                     $builder->where('identity_id', $identity_id);
                     VoucherQuery::whereNotExpired($builder);
                 });
@@ -57,12 +56,12 @@ class FundRequestQuery
         Builder|Relation|FundRequest $builder,
         int $identity_id,
     ): Builder|Relation|FundRequest {
-        return $builder->where(function(Builder $builder) use ($identity_id) {
-            $builder->where(function(Builder $builder) use ($identity_id) {
+        return $builder->where(function (Builder $builder) use ($identity_id) {
+            $builder->where(function (Builder $builder) use ($identity_id) {
                 static::whereApprovedAndVoucherIsActive($builder, $identity_id);
             });
 
-            $builder->orWhere(function(Builder $builder) use ($identity_id) {
+            $builder->orWhere(function (Builder $builder) use ($identity_id) {
                 static::whereIsPending($builder, $identity_id);
             });
         });
@@ -78,15 +77,15 @@ class FundRequestQuery
         string $q,
     ): Builder|Relation|FundRequest {
         return $builder->where(function (Builder $query) use ($q) {
-            $query->whereHas('fund', static function(Builder $builder) use ($q) {
+            $query->whereHas('fund', static function (Builder $builder) use ($q) {
                 $builder->where('name', 'LIKE', "%$q%");
             });
 
-            $query->orWhereHas('identity.primary_email', static function(Builder $builder) use ($q) {
+            $query->orWhereHas('identity.primary_email', static function (Builder $builder) use ($q) {
                 $builder->where('email', 'LIKE', "%$q%");
             });
 
-            $query->orWhereHas('identity', static function(Builder $builder) use ($q) {
+            $query->orWhereHas('identity', static function (Builder $builder) use ($q) {
                 IdentityQuery::whereBsnLike($builder, $q);
             });
 
@@ -103,12 +102,12 @@ class FundRequestQuery
         Builder|Relation|FundRequest $query,
         Employee $employee,
     ): Builder|Relation|FundRequest {
-        return $query->where(static function(Builder $builder) use ($employee) {
+        return $query->where(static function (Builder $builder) use ($employee) {
             // validator
-            $builder->where(fn(Builder $q) => static::whereEmployeeCanBeValidator($q, $employee));
+            $builder->where(fn (Builder $q) => static::whereEmployeeCanBeValidator($q, $employee));
 
             // supervisor
-            $builder->orWhere(fn(Builder $q) => static::whereEmployeeIsValidatorsSupervisor($q, $employee));
+            $builder->orWhere(fn (Builder $q) => static::whereEmployeeIsValidatorsSupervisor($q, $employee));
         });
     }
 
@@ -121,7 +120,7 @@ class FundRequestQuery
         Builder|Relation|FundRequest $query,
         Employee $employee,
     ): Builder|Relation|FundRequest {
-        return $query->where(fn(Builder $q) => static::whereSponsorEmployeeHasPermission($q, $employee, [
+        return $query->where(fn (Builder $q) => static::whereSponsorEmployeeHasPermission($q, $employee, [
             Permission::VALIDATE_RECORDS,
         ]));
     }
@@ -135,7 +134,7 @@ class FundRequestQuery
         Builder|Relation|FundRequest $query,
         Employee $employee,
     ): Builder|Relation|FundRequest {
-        return $query->where(fn(Builder $q) => static::whereSponsorEmployeeHasPermission($q, $employee, [
+        return $query->where(fn (Builder $q) => static::whereSponsorEmployeeHasPermission($q, $employee, [
             Permission::MANAGE_VALIDATORS,
         ]));
     }

@@ -24,9 +24,9 @@ class IndexFundProviderInvitationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'q'                 => 'nullable|string',
-            'expired'           => 'nullable|boolean',
-            'per_page'          => 'numeric|between:1,100',
+            'q' => 'nullable|string',
+            'expired' => 'nullable|boolean',
+            'per_page' => 'numeric|between:1,100',
         ];
     }
 }

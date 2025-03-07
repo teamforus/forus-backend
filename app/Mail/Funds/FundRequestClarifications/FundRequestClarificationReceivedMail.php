@@ -8,11 +8,11 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class FundRequestClarificationReceivedMail extends ImplementationMail
 {
-    public ?string $notificationTemplateKey = "notifications_fund_requests.clarification_received";
+    public ?string $notificationTemplateKey = 'notifications_fund_requests.clarification_received';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {
@@ -27,7 +27,8 @@ class FundRequestClarificationReceivedMail extends ImplementationMail
     {
         return [
             'validator_fund_request_button' => $this->makeButton(
-                $data['validator_fund_request_link'], 'Ga naar de beheeromgeving'
+                $data['validator_fund_request_link'],
+                'Ga naar de beheeromgeving'
             ),
         ];
     }

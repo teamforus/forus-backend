@@ -17,14 +17,17 @@ use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestIdentities;
+use Throwable;
 
 class IdentityEmailTest extends DuskTestCase
 {
-    use AssertsSentEmails, MakesTestIdentities, HasFrontendActions;
+    use AssertsSentEmails;
+    use MakesTestIdentities;
+    use HasFrontendActions;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testIdentityEmailsPageOnWebshop(): void
     {
@@ -38,8 +41,8 @@ class IdentityEmailTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testIdentityEmailsPageOnSponsorDashboard(): void
     {
@@ -53,8 +56,8 @@ class IdentityEmailTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testIdentityEmailsPageOnProviderDashboard(): void
     {
@@ -68,8 +71,8 @@ class IdentityEmailTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testIdentityEmailsPageOnValidatorDashboard(): void
     {
@@ -98,8 +101,8 @@ class IdentityEmailTest extends DuskTestCase
      * @param Implementation $implementation
      * @param Identity $identity
      * @param string $frontend
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     private function makeIdentityEmailTests(
         Implementation $implementation,
@@ -142,8 +145,8 @@ class IdentityEmailTest extends DuskTestCase
      * @param Identity $identity
      * @param string $frontend
      * @param bool $hasButton
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function goToIdentityEmailPage(
         Browser $browser,
@@ -168,15 +171,15 @@ class IdentityEmailTest extends DuskTestCase
      * @param Browser $browser
      * @param Identity $identity
      * @param string $frontend
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function deleteEmail(Browser $browser, Identity $identity, string $frontend): void
     {
         /** @var IdentityEmail $notPrimaryEmail */
         $notPrimaryEmail = $identity->emails()->where('primary', false)->first();
 
-        $browser->within('#email_' . $notPrimaryEmail->id, function(Browser $browser) {
+        $browser->within('#email_' . $notPrimaryEmail->id, function (Browser $browser) {
             $browser->press('@btnDeleteIdentityEmail');
         });
 
@@ -194,13 +197,13 @@ class IdentityEmailTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param IdentityEmail $identityEmail
-     * @return void
      * @throws \Facebook\WebDriver\Exception\TimeOutException
+     * @return void
      */
     private function setEmailAsPrimary(Browser $browser, IdentityEmail $identityEmail): void
     {
         $browser->waitFor('#email_' . $identityEmail->id);
-        $browser->within('#email_' . $identityEmail->id, function(Browser $browser) use ($identityEmail) {
+        $browser->within('#email_' . $identityEmail->id, function (Browser $browser) use ($identityEmail) {
             $browser->assertSeeIn('@identityEmailListItemEmail', $identityEmail->email);
             $browser->assertNotPresent('@identityEmailListItemNotVerified');
 
@@ -216,8 +219,8 @@ class IdentityEmailTest extends DuskTestCase
      * @param Browser $browser
      * @param IdentityEmail $identityEmail
      * @param Carbon $startTime
-     * @return void
      * @throws \Facebook\WebDriver\Exception\TimeOutException
+     * @return void
      */
     private function resendEmailVerification(
         Browser $browser,
@@ -225,7 +228,7 @@ class IdentityEmailTest extends DuskTestCase
         Carbon $startTime
     ): void {
         $browser->waitFor('#email_' . $identityEmail->id);
-        $browser->within('#email_' . $identityEmail->id, function(Browser $browser) use ($identityEmail, $startTime) {
+        $browser->within('#email_' . $identityEmail->id, function (Browser $browser) use ($identityEmail, $startTime) {
             $browser->assertSeeIn('@identityEmailListItemEmail', $identityEmail->email);
             $browser->press('@btnResendVerificationEmail');
         });
@@ -240,8 +243,8 @@ class IdentityEmailTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Identity $identity
-     * @return string
      * @throws TimeOutException
+     * @return string
      */
     private function addNewEmail(Browser $browser, Identity $identity): string
     {
@@ -255,7 +258,7 @@ class IdentityEmailTest extends DuskTestCase
         $browser->assertVisible('@identityNewEmailForm');
 
         // Type the email and submit the form for new email
-        $browser->within('@identityNewEmailForm', function(Browser $browser) use ($email, $identity) {
+        $browser->within('@identityNewEmailForm', function (Browser $browser) use ($email, $identity) {
             $browser->type('@identityNewEmailFormEmail', $identity->email);
             $browser->press('@identityNewEmailFormSubmit');
 

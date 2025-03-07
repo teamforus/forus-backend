@@ -28,7 +28,7 @@ class NotificationServiceProvider extends ServiceProvider
         $this->app->bind(INotificationRepo::class, NotificationRepo::class);
 
         $this->commands([
-            NotificationsTokensImportCommand::class
+            NotificationsTokensImportCommand::class,
         ]);
     }
 }

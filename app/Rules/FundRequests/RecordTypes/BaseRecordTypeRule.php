@@ -18,7 +18,9 @@ abstract class BaseRecordTypeRule extends BaseRule
     /**
      * @param FundCriterion $criterion
      */
-    public function __construct(protected FundCriterion $criterion) {}
+    public function __construct(protected FundCriterion $criterion)
+    {
+    }
 
     /**
      * Determine if the validation rule passes.
@@ -38,7 +40,7 @@ abstract class BaseRecordTypeRule extends BaseRule
         return $validator->passes() || $this->reject($validator->errors()->first('value'));
     }
 
-    abstract function rules(): array;
+    abstract public function rules(): array;
 
     /**
      * @return string
@@ -85,17 +87,20 @@ abstract class BaseRecordTypeRule extends BaseRule
 
         if (!in_array($criterion->operator, $criterion->record_type->getOperators())) {
             Log::error("Invalid criteria operator detected [$criterion->id].");
+
             return false;
         }
 
         if (in_array($criterion->operator, ['>', '<'], true)) {
             if ($typeDate && !$this->isValidDate($criterion->value)) {
                 Log::error("Invalid criteria value detected [$criterion->id].");
+
                 return false;
             }
 
             if (!$typeDate && !is_numeric($criterion->value)) {
                 Log::error("Invalid criteria value detected [$criterion->id].");
+
                 return false;
             }
         }
@@ -113,11 +118,13 @@ abstract class BaseRecordTypeRule extends BaseRule
 
         if ($criterion->min && ($typeDate ? !$this->isValidDate($criterion->min) : !is_numeric($criterion->min))) {
             Log::error("Invalid criteria min value detected [$criterion->id].");
+
             return false;
         }
 
         if ($criterion->max && ($typeDate ? !$this->isValidDate($criterion->max) : !is_numeric($criterion->max))) {
             Log::error("Invalid criteria max value detected [$criterion->id].");
+
             return false;
         }
 

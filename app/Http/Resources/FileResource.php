@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Resources;
 
 use App\Services\FileService\Models\File;
@@ -20,7 +21,7 @@ class FileResource extends BaseJsonResource
             'identity_address', 'original_name', 'type', 'ext', 'uid', 'order',
         ]), [
             'size' => pretty_file_size($this->resource->size),
-            'url'  => $this->resource->urlPublic(),
+            'url' => $this->resource->urlPublic(),
             'preview' => new MediaCompactResource($this->resource->preview),
         ]);
     }

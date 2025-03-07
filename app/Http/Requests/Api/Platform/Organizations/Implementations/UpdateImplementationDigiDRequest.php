@@ -24,10 +24,10 @@ class UpdateImplementationDigiDRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'digid_app_id'          => 'required_with:digid_shared_secret|nullable|string|max:100',
-            'digid_shared_secret'   => 'required|string|max:100',
+            'digid_app_id' => 'required_with:digid_shared_secret|nullable|string|max:100',
+            'digid_shared_secret' => 'required|string|max:100',
             'digid_a_select_server' => 'required_with:digid_shared_secret|nullable|string|max:100',
-            'digid_enabled'         => 'nullable|boolean',
+            'digid_enabled' => 'nullable|boolean',
         ];
     }
 }

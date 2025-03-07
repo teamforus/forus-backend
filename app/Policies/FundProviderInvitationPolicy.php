@@ -157,11 +157,11 @@ class FundProviderInvitationPolicy
         FundProviderInvitation $invitation
     ): Response|bool {
         if ($invitation->state == FundProviderInvitation::STATE_ACCEPTED) {
-            return $this->deny("Invitation already approved!");
+            return $this->deny('Invitation already approved!');
         }
 
         if ($invitation->state == FundProviderInvitation::STATE_EXPIRED) {
-            return $this->deny("Invitation expired!");
+            return $this->deny('Invitation expired!');
         }
 
         return $identity->exists && $invitation->state == FundProviderInvitation::STATE_PENDING;

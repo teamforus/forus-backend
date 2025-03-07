@@ -5,7 +5,7 @@ namespace App\Services\Forus\Notification\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Services\Forus\Notification\Models\NotificationPreference
+ * App\Services\Forus\Notification\Models\NotificationPreference.
  *
  * @property int $id
  * @property string $identity_address
@@ -29,6 +29,6 @@ use Illuminate\Database\Eloquent\Model;
 class NotificationPreference extends Model
 {
     protected $fillable = [
-        'identity_address', 'key', 'subscribed', 'type'
+        'identity_address', 'key', 'subscribed', 'type',
     ];
 }

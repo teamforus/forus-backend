@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Notifications;
-
 
 use Illuminate\Notifications\Channels\DatabaseChannel as IlluminateDatabaseChannel;
 use Illuminate\Notifications\Notification;

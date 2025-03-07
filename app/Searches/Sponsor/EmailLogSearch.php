@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Searches\Sponsor;
 
 use App\Scopes\Builders\EmailLogQuery;

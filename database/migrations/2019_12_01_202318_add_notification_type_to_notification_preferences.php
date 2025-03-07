@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -13,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('notification_preferences', function(Blueprint $table) {
+        Schema::table('notification_preferences', function (Blueprint $table) {
             $table->enum('type', ['email', 'push'])->default('email')->after('mail_key');
 
             $table->renameColumn('mail_key', 'key');
@@ -25,7 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('notification_preferences', function(Blueprint $table) {
+        Schema::table('notification_preferences', function (Blueprint $table) {
             $table->dropColumn('type');
 
             $table->renameColumn('key', 'mail_key');

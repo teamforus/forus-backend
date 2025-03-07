@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Platform\SearchRequest;
 use App\Http\Resources\SearchLiteResource;
 use App\Http\Resources\SearchResource;
 use App\Searches\WebshopGenericSearch;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -14,8 +15,8 @@ class SearchController extends Controller
 {
     /**
      * @param SearchRequest $request
+     * @throws Exception
      * @return JsonResponse|AnonymousResourceCollection
-     * @throws \Exception
      */
     public function index(SearchRequest $request)
     {
@@ -41,17 +42,17 @@ class SearchController extends Controller
             'data' => [
                 'products' => [
                     'items' => SearchLiteResource::collection((clone $products)->take(3)->get()),
-                    'count' => $products->count()
+                    'count' => $products->count(),
                 ],
                 'funds' => [
                     'items' => SearchLiteResource::collection((clone $funds)->take(3)->get()),
-                    'count' => $funds->count()
+                    'count' => $funds->count(),
                 ],
                 'providers' => [
                     'items' => SearchLiteResource::collection((clone $providers)->take(3)->get()),
-                    'count' => $providers->count()
+                    'count' => $providers->count(),
                 ],
-            ]
+            ],
         ]);
     }
 }

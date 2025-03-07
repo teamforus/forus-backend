@@ -34,6 +34,6 @@ class FundRequestResource extends BaseJsonResource
      */
     public function activePeriod(FundRequest $fundRequest): bool
     {
-        return (bool)$fundRequest->vouchers->first(fn (Voucher $voucher) => !$voucher->expired);
+        return (bool) $fundRequest->vouchers->first(fn (Voucher $voucher) => !$voucher->expired);
     }
 }

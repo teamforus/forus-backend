@@ -47,16 +47,6 @@ class EventLogResource extends BaseJsonResource
 
     /**
      * @param EventLog $eventLog
-     * @param Employee $employee
-     * @return string|null
-     */
-    protected function identityEmail(EventLog $eventLog, Employee $employee): ?string
-    {
-        return $eventLog->isSameOrganization($employee) ? $eventLog->identity?->email : null;
-    }
-
-    /**
-     * @param EventLog $eventLog
      * @return string|null
      */
     public function getNote(EventLog $eventLog): ?string
@@ -72,5 +62,15 @@ class EventLogResource extends BaseJsonResource
         }
 
         return null;
+    }
+
+    /**
+     * @param EventLog $eventLog
+     * @param Employee $employee
+     * @return string|null
+     */
+    protected function identityEmail(EventLog $eventLog, Employee $employee): ?string
+    {
+        return $eventLog->isSameOrganization($employee) ? $eventLog->identity?->email : null;
     }
 }

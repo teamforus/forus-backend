@@ -12,6 +12,7 @@ use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Scopes\Builders\ProductQuery;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -23,8 +24,8 @@ class ProductsController extends Controller
      * @param IndexProductsRequest $request
      * @param Organization $sponsor
      * @param Organization $provider
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(
         IndexProductsRequest $request,
@@ -35,7 +36,7 @@ class ProductsController extends Controller
 
         $query = Product::searchAny($request, $provider->products()->getQuery());
         $query = ProductQuery::whereNotExpired($query->where([
-            'sponsor_organization_id' => $sponsor->id
+            'sponsor_organization_id' => $sponsor->id,
         ]))->latest();
 
         return SponsorProductResource::queryCollection($query, $request);
@@ -47,8 +48,8 @@ class ProductsController extends Controller
      * @param StoreProductsRequest $request
      * @param Organization $sponsor
      * @param Organization $provider
-     * @return SponsorProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return SponsorProductResource
      */
     public function store(
         StoreProductsRequest $request,
@@ -74,8 +75,8 @@ class ProductsController extends Controller
      * @param Organization $sponsor
      * @param Organization $provider
      * @param Product $product
-     * @return SponsorProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return SponsorProductResource
      */
     public function show(
         Organization $sponsor,
@@ -96,8 +97,8 @@ class ProductsController extends Controller
      * @param Organization $sponsor
      * @param Organization $provider
      * @param \App\Models\Product $product
-     * @return SponsorProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return SponsorProductResource
      */
     public function update(
         UpdateProductsRequest $request,
@@ -120,8 +121,8 @@ class ProductsController extends Controller
      * @param Organization $sponsor
      * @param Organization $provider
      * @param \App\Models\Product $product
+     * @throws Exception
      * @return JsonResponse
-     * @throws \Exception
      */
     public function destroy(
         Organization $sponsor,

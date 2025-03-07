@@ -3,6 +3,7 @@
 namespace App\Rules\Base;
 
 use Illuminate\Contracts\Validation\Rule;
+use Throwable;
 
 class KvkRule implements Rule
 {
@@ -17,8 +18,9 @@ class KvkRule implements Rule
     {
         try {
             return (bool) resolve('kvk_api')->kvkNumberData($value);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             logger()->error($e->getMessage());
+
             return false;
         }
     }

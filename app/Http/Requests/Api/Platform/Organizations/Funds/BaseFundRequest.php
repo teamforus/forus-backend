@@ -22,6 +22,26 @@ abstract class BaseFundRequest extends BaseFormRequest
     use ValidatesFaq;
 
     /**
+     * @return string[]
+     */
+    public function attributes(): array
+    {
+        return array_merge([
+            'criteria.*.value' => 'Waarde',
+        ], $this->getFaqAttributes());
+    }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'external_page_url.required_if' => 'Het external URL veld is verplicht',
+        ];
+    }
+
+    /**
      * @return array
      */
     protected function fundFormulaProductsRule(): array
@@ -73,36 +93,6 @@ abstract class BaseFundRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
-     */
-    private function fundConfigHelpRules(): array
-    {
-        return [
-            'help_enabled' => 'nullable|boolean',
-            'help_title' => 'nullable|required_if_accepted:help_enabled|string|max:200',
-            'help_block_text' => 'nullable|required_if_accepted:help_enabled|string|max:200',
-            'help_button_text' => 'nullable|required_if_accepted:help_enabled|string|max:200',
-            'help_description' => 'nullable|required_if_accepted:help_enabled|string',
-            'help_show_email' => 'nullable|boolean',
-            'help_show_phone' => 'nullable|boolean',
-            'help_show_website' => 'nullable|boolean',
-            'help_show_chat' => 'nullable|boolean',
-
-            ...$this->get('help_enabled', false) ? [
-                'help_email' => 'nullable|required_if_accepted:help_show_email|email|max:200',
-                'help_phone' => 'nullable|required_if_accepted:help_show_phone|string|max:200',
-                'help_website' => 'nullable|required_if_accepted:help_show_website|url|max:200|starts_with:https://',
-                'help_chat' => 'nullable|required_if_accepted:help_show_chat|url|max:200|starts_with:https://',
-            ] : [
-                'help_email' => 'nullable|email|max:200',
-                'help_phone' => 'nullable|string|max:200',
-                'help_website' => 'nullable|url|max:200|starts_with:https://',
-                'help_chat' => 'nullable|url|max:200|starts_with:https://',
-            ],
-        ];
-    }
-
-    /**
      * @param array $criteriaIds
      * @return array
      */
@@ -134,22 +124,32 @@ abstract class BaseFundRequest extends BaseFormRequest
     }
 
     /**
-     * @return string[]
-     */
-    public function attributes(): array
-    {
-        return array_merge([
-            'criteria.*.value' => 'Waarde',
-        ], $this->getFaqAttributes());
-    }
-
-    /**
      * @return array
      */
-    public function messages(): array
+    private function fundConfigHelpRules(): array
     {
         return [
-            'external_page_url.required_if' => 'Het external URL veld is verplicht',
+            'help_enabled' => 'nullable|boolean',
+            'help_title' => 'nullable|required_if_accepted:help_enabled|string|max:200',
+            'help_block_text' => 'nullable|required_if_accepted:help_enabled|string|max:200',
+            'help_button_text' => 'nullable|required_if_accepted:help_enabled|string|max:200',
+            'help_description' => 'nullable|required_if_accepted:help_enabled|string',
+            'help_show_email' => 'nullable|boolean',
+            'help_show_phone' => 'nullable|boolean',
+            'help_show_website' => 'nullable|boolean',
+            'help_show_chat' => 'nullable|boolean',
+
+            ...$this->get('help_enabled', false) ? [
+                'help_email' => 'nullable|required_if_accepted:help_show_email|email|max:200',
+                'help_phone' => 'nullable|required_if_accepted:help_show_phone|string|max:200',
+                'help_website' => 'nullable|required_if_accepted:help_show_website|url|max:200|starts_with:https://',
+                'help_chat' => 'nullable|required_if_accepted:help_show_chat|url|max:200|starts_with:https://',
+            ] : [
+                'help_email' => 'nullable|email|max:200',
+                'help_phone' => 'nullable|string|max:200',
+                'help_website' => 'nullable|url|max:200|starts_with:https://',
+                'help_chat' => 'nullable|url|max:200|starts_with:https://',
+            ],
         ];
     }
 }

@@ -12,6 +12,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Interfaces\MollieServiceInterface;
 use App\Services\MollieService\Objects\Payment;
+use Exception;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -20,9 +21,10 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Throwable;
 
 /**
- * App\Models\ProductReservation
+ * App\Models\ProductReservation.
  *
  * @property int $id
  * @property int $product_id
@@ -111,7 +113,8 @@ use Illuminate\Support\Facades\Event;
  */
 class ProductReservation extends BaseModel
 {
-    use SoftDeletes, HasLogs;
+    use SoftDeletes;
+    use HasLogs;
 
     public const string EVENT_CREATED = 'created';
     public const string EVENT_REJECTED = 'rejected';
@@ -207,8 +210,9 @@ class ProductReservation extends BaseModel
         'rejected_at' => 'datetime',
         'canceled_at' => 'datetime',
     ];
+
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public static function makeCode(): int
     {
@@ -226,7 +230,7 @@ class ProductReservation extends BaseModel
      */
     public function getAddressAttribute($value): string
     {
-        return trim($value ?: sprintf("%s %s", $this->street ?: '', implode(', ', array_filter([
+        return trim($value ?: sprintf('%s %s', $this->street ?: '', implode(', ', array_filter([
             $this->house_nr, $this->house_nr_addition, $this->postal_code, $this->city,
         ]))));
     }
@@ -380,13 +384,14 @@ class ProductReservation extends BaseModel
             $this->isAccepted() ||
             $this->isRejected() ||
             $this->isCanceled() ||
-            $this->isExpired());
+            $this->isExpired()
+        );
     }
 
     /**
      * @param Employee|null $employee
+     * @throws Throwable
      * @return $this
-     * @throws \Throwable
      */
     public function acceptProvider(?Employee $employee = null): self
     {
@@ -484,8 +489,8 @@ class ProductReservation extends BaseModel
 
     /**
      * @param Employee|null $employee
+     * @throws Throwable
      * @return $this
-     * @throws \Throwable
      */
     public function rejectOrCancelProvider(?Employee $employee = null): self
     {
@@ -607,8 +612,8 @@ class ProductReservation extends BaseModel
     }
 
     /**
+     * @throws Throwable
      * @return bool|null
-     * @throws \Throwable
      */
     public function cancelByClient(): ?bool
     {
@@ -616,8 +621,8 @@ class ProductReservation extends BaseModel
     }
 
     /**
+     * @throws Throwable
      * @return bool|null
-     * @throws \Throwable
      */
     public function cancelBySponsor(): ?bool
     {
@@ -626,8 +631,8 @@ class ProductReservation extends BaseModel
 
     /**
      * @param string $state
+     * @throws Throwable
      * @return bool
-     * @throws \Throwable
      */
     public function cancelByState(string $state): bool
     {
@@ -648,8 +653,8 @@ class ProductReservation extends BaseModel
     /**
      * @param string|null $identity_address
      * @param string|null $note
+     * @throws Throwable
      * @return VoucherTransaction
-     * @throws \Throwable
      */
     public function acceptByApp(?string $identity_address, ?string $note = null): VoucherTransaction
     {
@@ -667,6 +672,72 @@ class ProductReservation extends BaseModel
     }
 
     /**
+     * @param Implementation $implementation
+     * @return Payment|null
+     */
+    public function createExtraPayment(Implementation $implementation): ?Payment
+    {
+        return $this->createExtraPaymentMollie($implementation, $this->amount_extra);
+    }
+
+    /**
+     * @param Employee|null $employee
+     * @throws MollieException|Throwable
+     * @return ReservationExtraPayment|null
+     */
+    public function fetchExtraPayment(?Employee $employee): ?ReservationExtraPayment
+    {
+        if ($this->extra_payment?->payment_id && $this->extra_payment?->isMollieType()) {
+            return $this->extra_payment->fetchAndUpdateMolliePayment($employee);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param Employee|null $employee
+     * @throws MollieException|Throwable
+     * @return ReservationExtraPaymentRefund|null
+     */
+    public function refundExtraPayment(?Employee $employee): ?ReservationExtraPaymentRefund
+    {
+        if ($this->extra_payment?->payment_id && $this->extra_payment->isMollieType()) {
+            return $this->extra_payment->createMollieRefund($employee);
+        }
+
+        return null;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function expiresIn(): ?int
+    {
+        if ($this->created_at && $this->isWaiting()) {
+            $timeOffset = Config::get('forus.reservations.extra_payment_waiting_time');
+            $expireAt = $this->created_at->clone()->addMinutes($timeOffset);
+            $expiresIn = now()->diffInSeconds($expireAt, false);
+
+            return max(min($expiresIn, $this->extra_payment->expiresIn() ?: 0), 0) ?: null;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAcceptable(): bool
+    {
+        return
+            $this->isPending() &&
+            !$this->isExpired() &&
+            !$this->product->trashed() &&
+            (!$this->extra_payment || $this->extra_payment->isPaid()) &&
+            (!$this->extra_payment || $this->extra_payment->refunds_active->isEmpty());
+    }
+
+    /**
      * @param Employee|null $employee
      * @param array $extraModels
      * @return array
@@ -678,15 +749,6 @@ class ProductReservation extends BaseModel
             'employee' => $employee,
             'product_reservation' => $this,
         ], $extraModels);
-    }
-
-    /**
-     * @param Implementation $implementation
-     * @return Payment|null
-     */
-    public function createExtraPayment(Implementation $implementation): ?Payment
-    {
-        return $this->createExtraPaymentMollie($implementation, $this->amount_extra);
     }
 
     /**
@@ -730,62 +792,5 @@ class ProductReservation extends BaseModel
         Event::dispatch(new ReservationExtraPaymentCreated($extraPayment));
 
         return $payment;
-    }
-
-    /**
-     * @param Employee|null $employee
-     * @return ReservationExtraPayment|null
-     * @throws MollieException|\Throwable
-     */
-    public function fetchExtraPayment(?Employee $employee): ?ReservationExtraPayment
-    {
-        if ($this->extra_payment?->payment_id && $this->extra_payment?->isMollieType()) {
-            return $this->extra_payment->fetchAndUpdateMolliePayment($employee);
-        }
-
-        return null;
-    }
-
-    /**
-     * @param Employee|null $employee
-     * @return ReservationExtraPaymentRefund|null
-     * @throws MollieException|\Throwable
-     */
-    public function refundExtraPayment(?Employee $employee): ?ReservationExtraPaymentRefund
-    {
-        if ($this->extra_payment?->payment_id && $this->extra_payment->isMollieType()) {
-            return $this->extra_payment->createMollieRefund($employee);
-        }
-
-        return null;
-    }
-
-    /**
-     * @return int|null
-     */
-    public function expiresIn(): ?int
-    {
-        if ($this->created_at && $this->isWaiting()) {
-            $timeOffset = Config::get('forus.reservations.extra_payment_waiting_time');
-            $expireAt = $this->created_at->clone()->addMinutes($timeOffset);
-            $expiresIn = now()->diffInSeconds($expireAt, false);
-
-            return max(min($expiresIn, $this->extra_payment->expiresIn() ?: 0), 0) ?: null;
-        }
-
-        return null;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isAcceptable(): bool
-    {
-        return
-            $this->isPending() &&
-            !$this->isExpired() &&
-            !$this->product->trashed() &&
-            (!$this->extra_payment || $this->extra_payment->isPaid()) &&
-            (!$this->extra_payment || $this->extra_payment->refunds_active->isEmpty());
     }
 }

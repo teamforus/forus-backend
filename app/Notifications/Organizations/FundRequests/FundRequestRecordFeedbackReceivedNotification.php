@@ -8,6 +8,7 @@ use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Services\EventLogService\Models\EventLog;
+use Exception;
 use Illuminate\Support\Collection;
 
 class FundRequestRecordFeedbackReceivedNotification extends BaseFundsRequestsNotification
@@ -50,8 +51,8 @@ class FundRequestRecordFeedbackReceivedNotification extends BaseFundsRequestsNot
     /**
      * @param FundRequestRecord $loggable
      * @param EventLog $eventLog
+     * @throws Exception
      * @return Collection
-     * @throws \Exception
      */
     public static function eligibleIdentities($loggable, EventLog $eventLog): Collection
     {

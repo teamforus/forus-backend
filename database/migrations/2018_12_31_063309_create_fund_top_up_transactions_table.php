@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -17,11 +16,13 @@ return new class extends Migration
             $table->increments('id');
             $table->integer('fund_top_up_id')->unsigned();
             $table->float('amount')->unsigned()->nullable();
-            $table->string('bunq_transaction_id',20)->nullable();
+            $table->string('bunq_transaction_id', 20)->nullable();
             $table->timestamps();
 
-            $table->foreign('fund_top_up_id'
-            )->references('id')->on('fund_top_ups')->onDelete('cascade');
+            $table->foreign('fund_top_up_id')
+                ->references('id')
+                ->on('fund_top_ups')
+                ->onDelete('cascade');
         });
     }
 

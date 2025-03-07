@@ -22,8 +22,8 @@ class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
      * @throws \App\Exceptions\AuthorizationJsonException
+     * @return array
      */
     public function rules(): array
     {
@@ -38,7 +38,7 @@ class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
                 ...$this->emailRules(),
             ],
             'source' => 'required|in:' . Implementation::keysAvailable()->implode(','),
-            'target' => 'nullable|alpha_dash'
+            'target' => 'nullable|alpha_dash',
         ];
     }
 }

@@ -4,4 +4,6 @@ namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Vouchers\Physical
 
 use App\Http\Requests\Api\Platform\Vouchers\PhysicalCards\StorePhysicalCardRequest as IdentityStorePhysicalCardRequest;
 
-class StorePhysicalCardRequest extends IdentityStorePhysicalCardRequest { }
+class StorePhysicalCardRequest extends IdentityStorePhysicalCardRequest
+{
+}

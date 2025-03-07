@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use League\CommonMark\Exception\CommonMarkException;
 
 /**
- * App\Models\NotificationTemplate
+ * App\Models\NotificationTemplate.
  *
  * @property int $id
  * @property string $type
@@ -76,8 +76,8 @@ class NotificationTemplate extends Model
     }
 
     /**
-     * @return string|null
      * @throws CommonMarkException
+     * @return string|null
      */
     public function convertToHtml(): ?string
     {

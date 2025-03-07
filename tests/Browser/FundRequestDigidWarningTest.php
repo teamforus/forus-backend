@@ -6,12 +6,13 @@ use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Services\DigIdService\Models\DigIdSession;
+use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Throwable;
 
 class FundRequestDigidWarningTest extends DuskTestCase
 {
@@ -21,7 +22,7 @@ class FundRequestDigidWarningTest extends DuskTestCase
     use MakesTestOrganizations;
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testWebshopFundRequestDigidWarningAndExpired(): void
     {
@@ -35,7 +36,7 @@ class FundRequestDigidWarningTest extends DuskTestCase
         // configure implementation and organization
         $implementationData = $implementation->only([
             'digid_enabled', 'digid_required', 'digid_connection_type', 'digid_app_id',
-            'digid_shared_secret', 'digid_a_select_server'
+            'digid_shared_secret', 'digid_a_select_server',
         ]);
 
         $implementation->forceFill([
@@ -88,15 +89,17 @@ class FundRequestDigidWarningTest extends DuskTestCase
     /**
      * @param Implementation $implementation
      * @param Fund $fund
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function processFundRequestTestCase(Implementation $implementation, Fund $fund): void
     {
         $requester = $this->makeIdentity($this->makeUniqueEmail());
 
         $this->browse(function (Browser $browser) use (
-            $implementation, $fund, $requester
+            $implementation,
+            $fund,
+            $requester
         ) {
             $browser->visit($implementation->urlWebshop());
             $this->loginIdentity($browser, $requester);

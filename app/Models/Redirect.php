@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\Redirect
+ * App\Models\Redirect.
  *
  * @property int $id
  * @property string|null $url

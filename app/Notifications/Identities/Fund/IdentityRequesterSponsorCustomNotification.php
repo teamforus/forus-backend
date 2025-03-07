@@ -9,7 +9,7 @@ use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Support\Arr;
 
 /**
- * Custom mailing from the sponsor
+ * Custom mailing from the sponsor.
  */
 class IdentityRequesterSponsorCustomNotification extends BaseIdentityFundNotification
 {
@@ -25,7 +25,7 @@ class IdentityRequesterSponsorCustomNotification extends BaseIdentityFundNotific
         $fund = $this->eventLog->loggable;
 
         $mailable = new FundSponsorCustomNotificationMail([
-            ...array_filter($this->eventLog->data, fn($value) => is_string($value)),
+            ...array_filter($this->eventLog->data, fn ($value) => is_string($value)),
             'webshop_link' => $fund->urlWebshop(),
         ], $fund->getEmailFrom());
 
@@ -33,7 +33,7 @@ class IdentityRequesterSponsorCustomNotification extends BaseIdentityFundNotific
     }
 
     /**
-     * Get identities which are eligible for the notification
+     * Get identities which are eligible for the notification.
      *
      * @param Fund $loggable
      * @param EventLog $eventLog

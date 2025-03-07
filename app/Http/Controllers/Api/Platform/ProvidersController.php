@@ -17,7 +17,8 @@ class ProvidersController extends Controller
      * @param SearchProvidersRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(SearchProvidersRequest $request): AnonymousResourceCollection {
+    public function index(SearchProvidersRequest $request): AnonymousResourceCollection
+    {
         return ProviderResource::queryCollection(Implementation::searchProviders($request->only([
             'q', 'business_type_id', 'product_category_id', 'fund_id', 'postcode', 'distance',
             'order_by', 'order_dir',

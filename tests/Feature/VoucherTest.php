@@ -14,6 +14,7 @@ use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundProviderQuery;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
@@ -48,8 +49,8 @@ class VoucherTest extends TestCase
     protected string $apiBaseUrl = '/api/v1/platform';
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherCaseBudgetVouchers(): void
     {
@@ -57,8 +58,8 @@ class VoucherTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherCaseProductVouchers(): void
     {
@@ -66,8 +67,8 @@ class VoucherTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherCaseBudgetVouchersExceedAmount(): void
     {
@@ -75,8 +76,8 @@ class VoucherTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherCaseBudgetVouchersNoBSNExceedAmount(): void
     {
@@ -84,8 +85,8 @@ class VoucherTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherCaseProductVouchersEdgeCases(): void
     {
@@ -93,8 +94,8 @@ class VoucherTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherCaseSubsidyFundBudgetVouchers(): void
     {
@@ -102,8 +103,8 @@ class VoucherTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherCaseBudgetVouchersExcludedFields(): void
     {
@@ -111,8 +112,8 @@ class VoucherTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherFundFormulaProductMultiplier(): void
     {
@@ -140,10 +141,74 @@ class VoucherTest extends TestCase
     }
 
     /**
+     * @throws Exception
+     * @return void
+     */
+    public function testDeactivateVoucherBySponsor(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
+        $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $product = $this->findProductForReservation($voucher);
+
+        $reservation = $this->makeReservation($voucher, $product);
+        $response = $this->makeReservationGetRequest($reservation);
+
+        $response->assertSuccessful();
+
+        $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
+        $url = $this->getSponsorApiUrl($voucher, '/deactivate');
+
+        $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
+        $response->assertSuccessful();
+
+        $this->assertTrue($voucher->refresh()->isDeactivated(), 'Voucher deactivation failed');
+
+        $reservation->refresh();
+        $this->assertTrue($reservation->isCanceledBySponsor(), 'Reservation cancel failed');
+    }
+
+    /**
+     * @throws Exception
+     * @return void
+     */
+    public function testDeactivateVoucherByRequester(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
+        $this->assertNotNull($organization);
+        $this->makeProviderAndProducts($this->makeTestFund($organization, [], [
+            'allow_blocking_vouchers' => true,
+        ]), 1);
+
+        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $product = $this->findProductForReservation($voucher);
+
+        $reservation = $this->makeReservation($voucher, $product);
+        $response = $this->makeReservationGetRequest($reservation);
+
+        $response->assertSuccessful();
+
+        $headers = $this->makeApiHeaders($voucher->identity);
+        $url = $this->getIdentityApiUrl($voucher, '/deactivate');
+
+        $response = $this->post($url, ['note' => $this->faker->sentence()], $headers);
+        $response->assertSuccessful();
+
+        $this->assertTrue($voucher->refresh()->isDeactivated(), 'Voucher deactivation failed');
+
+        $reservation->refresh();
+        $this->assertTrue($reservation->isCanceledByClient(), 'Reservation cancel failed');
+    }
+
+    /**
      * @param Fund $fund
      * @param Identity $identity
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function makeVoucherForFundFormulaProduct(Fund $fund, Identity $identity): void
     {
@@ -205,9 +270,9 @@ class VoucherTest extends TestCase
      * @param Fund $fund
      * @param array $assert
      * @param Product[] $products
-     * @return void
      * @throws Throwable
      * @throws RandomException
+     * @return void
      */
     protected function storeVoucher(Fund $fund, array $assert, array $products): void
     {
@@ -242,9 +307,9 @@ class VoucherTest extends TestCase
      * @param Carbon $startDate
      * @param array $vouchers
      * @param array $assert
+     * @throws Exception
+     * @throws Throwable
      * @return void
-     * @throws \Exception
-     * @throws \Throwable
      */
     protected function checkAsSponsor(
         Builder $query,
@@ -257,7 +322,7 @@ class VoucherTest extends TestCase
 
         foreach ($vouchers as $voucherArr) {
             /** @var Voucher $voucher */
-            $voucher = $createdVouchers->first(fn(Voucher $item) => $item->note === $voucherArr['note']);
+            $voucher = $createdVouchers->first(fn (Voucher $item) => $item->note === $voucherArr['note']);
             $this->assertNotNull($voucher);
 
             if ($voucher->isPending()) {
@@ -288,8 +353,8 @@ class VoucherTest extends TestCase
     /**
      * @param Voucher $voucher
      * @param array $assert
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function assertAbilityAssignVoucher(Voucher $voucher, array $assert): void
     {
@@ -396,8 +461,8 @@ class VoucherTest extends TestCase
 
     /**
      * @param Voucher $voucher
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function assertAbilityUpdateLimitMultiplier(Voucher $voucher): void
     {
@@ -443,8 +508,8 @@ class VoucherTest extends TestCase
 
     /**
      * @param Voucher $voucher
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function assertAbilityCreateTransactions(Voucher $voucher): void
     {
@@ -465,8 +530,8 @@ class VoucherTest extends TestCase
     /**
      * @param Voucher $voucher
      * @param bool $assert
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function makeDirectTransaction(Voucher $voucher, bool $assert = true): void
     {
@@ -502,8 +567,8 @@ class VoucherTest extends TestCase
 
     /**
      * @param Voucher $voucher
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function makeTransactionToProvider(Voucher $voucher): void
     {
@@ -543,8 +608,8 @@ class VoucherTest extends TestCase
 
     /**
      * @param Voucher $voucher
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function assertAbilityCreateTopUp(Voucher $voucher): void
     {
@@ -564,8 +629,8 @@ class VoucherTest extends TestCase
     /**
      * @param Voucher $voucher
      * @param bool $assert
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function makeTopUp(Voucher $voucher, bool $assert = true): void
     {
@@ -611,8 +676,8 @@ class VoucherTest extends TestCase
 
     /**
      * @param Voucher $voucher
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function assertAbilityAssignPhysicalCard(Voucher $voucher): void
     {
@@ -627,8 +692,8 @@ class VoucherTest extends TestCase
      * @param Voucher $voucher
      * @param string $as
      * @param bool $assert
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function assignPhysicalCard(
         Voucher $voucher,
@@ -657,8 +722,8 @@ class VoucherTest extends TestCase
 
     /**
      * @param Voucher $voucher
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function assertAbilityRemovePhysicalCard(Voucher $voucher): void
     {
@@ -678,8 +743,8 @@ class VoucherTest extends TestCase
 
     /**
      * @param Voucher $voucher
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function assertAbilityCreatePhysicalCardRequest(Voucher $voucher): void
     {
@@ -710,8 +775,8 @@ class VoucherTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return string
-     * @throws \Exception
      */
     protected function getPhysicalCardCode(): string
     {
@@ -727,8 +792,8 @@ class VoucherTest extends TestCase
      * @param Carbon $startDate
      * @param array $vouchers
      * @param array $assert
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function checkAsIdentity(
         Builder $query,
@@ -741,7 +806,7 @@ class VoucherTest extends TestCase
 
         foreach ($vouchers as $voucherArr) {
             /** @var Voucher $voucher */
-            $voucher = $createdVouchers->first(fn(Voucher $item) => $item->note === $voucherArr['note']);
+            $voucher = $createdVouchers->first(fn (Voucher $item) => $item->note === $voucherArr['note']);
             $this->assertNotNull($voucher);
 
             if ($voucher->identity) {
@@ -761,8 +826,8 @@ class VoucherTest extends TestCase
 
     /**
      * @param Voucher $voucher
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function assertAbilityIdentityAssignPhysicalCard(Voucher $voucher): void
     {
@@ -777,8 +842,8 @@ class VoucherTest extends TestCase
 
     /**
      * @param Voucher $voucher
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function assertAbilityIdentityRemovePhysicalCard(Voucher $voucher): void
     {
@@ -800,8 +865,8 @@ class VoucherTest extends TestCase
 
     /**
      * @param Voucher $voucher
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function assertAbilityIdentityCreatePhysicalCardRequest(Voucher $voucher): void
     {
@@ -925,69 +990,5 @@ class VoucherTest extends TestCase
     protected function getIdentityApiUrl(Voucher $voucher, string $append = ''): string
     {
         return "$this->apiBaseUrl/vouchers/$voucher->number" . $append;
-    }
-
-    /**
-     * @return void
-     * @throws \Exception
-     */
-    public function testDeactivateVoucherBySponsor(): void
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
-
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
-        $product = $this->findProductForReservation($voucher);
-
-        $reservation = $this->makeReservation($voucher, $product);
-        $response = $this->makeReservationGetRequest($reservation);
-
-        $response->assertSuccessful();
-
-        $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
-        $url = $this->getSponsorApiUrl($voucher, '/deactivate');
-
-        $response = $this->patch($url, ['note' => $this->faker->sentence()], $headers);
-        $response->assertSuccessful();
-
-        $this->assertTrue($voucher->refresh()->isDeactivated(), 'Voucher deactivation failed');
-
-        $reservation->refresh();
-        $this->assertTrue($reservation->isCanceledBySponsor(), 'Reservation cancel failed');
-    }
-
-    /**
-     * @return void
-     * @throws \Exception
-     */
-    public function testDeactivateVoucherByRequester(): void
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization, [], [
-            'allow_blocking_vouchers' => true,
-        ]), 1);
-
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
-        $product = $this->findProductForReservation($voucher);
-
-        $reservation = $this->makeReservation($voucher, $product);
-        $response = $this->makeReservationGetRequest($reservation);
-
-        $response->assertSuccessful();
-
-        $headers = $this->makeApiHeaders($voucher->identity);
-        $url = $this->getIdentityApiUrl($voucher, '/deactivate');
-
-        $response = $this->post($url, ['note' => $this->faker->sentence()], $headers);
-        $response->assertSuccessful();
-
-        $this->assertTrue($voucher->refresh()->isDeactivated(), 'Voucher deactivation failed');
-
-        $reservation->refresh();
-        $this->assertTrue($reservation->isCanceledByClient(), 'Reservation cancel failed');
     }
 }

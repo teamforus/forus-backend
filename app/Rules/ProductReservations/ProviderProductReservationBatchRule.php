@@ -52,20 +52,20 @@ class ProviderProductReservationBatchRule extends BaseRule
             $fieldsData[$field] = array_filter(array_pluck($reservations, $field));
         }
 
-        return count(array_filter($fieldsData, function($fieldData) use ($countAll) {
+        return count(array_filter($fieldsData, function ($fieldData) use ($countAll) {
             return count($fieldData) !== $countAll;
         })) === 0;
     }
 
     /**
-     * Load request models (optimized by grouping)
+     * Load request models (optimized by grouping).
      *
      * @param array $reservations
      * @return array
      */
     public function inflateReservationsData(array $reservations = []): array
     {
-        $data = collect($reservations)->map(function($reservation) {
+        $data = collect($reservations)->map(function ($reservation) {
             $voucher = Voucher::findByPhysicalCardQuery($reservation['number']);
 
             $voucher = $voucher->whereHas('fund', function (Builder $builder) {
@@ -78,20 +78,20 @@ class ProviderProductReservationBatchRule extends BaseRule
             ], $reservation);
         });
 
-        $groupedData = $data->filter(function($row) {
+        $groupedData = $data->filter(function ($row) {
             return !is_null($row['voucher_id'] ?? null);
         })->groupBy('voucher_id');
 
-        $groupedData = $groupedData->map(function($data, $voucher_id) {
+        $groupedData = $groupedData->map(function ($data, $voucher_id) {
             $productIds = array_pluck($data, 'product_id');
             $productsList = ProductSubQuery::appendReservationStats([
-                'voucher_id' => $voucher_id
+                'voucher_id' => $voucher_id,
             ], Product::query()->whereIn('id', $productIds))->get();
 
             return $productsList->groupBy('id');
         });
 
-        return $data->map(function($item) use ($groupedData) {
+        return $data->map(function ($item) use ($groupedData) {
             return array_merge($item, [
                 'product' => $groupedData[$item['voucher_id'] ?? null][$item['product_id'] ?? null][0] ?? null,
                 'is_valid' => null,

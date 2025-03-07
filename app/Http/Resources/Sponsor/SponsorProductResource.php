@@ -25,8 +25,6 @@ use Illuminate\Support\Arr;
  */
 class SponsorProductResource extends BaseJsonResource
 {
-    protected Collection |null $funds = null;
-
     public const array LOAD = [
         'photo.presets',
         'product_reservations_pending',
@@ -38,6 +36,7 @@ class SponsorProductResource extends BaseJsonResource
         'product_exclusions',
         'logs_last_monitored_field_changed',
     ];
+    protected Collection |null $funds = null;
 
     /**
      * Transform the resource into an array.
@@ -73,7 +72,7 @@ class SponsorProductResource extends BaseJsonResource
             'deleted' => !is_null($product->deleted_at),
             'photo' => new MediaResource($product->photo),
             'product_category' => new ProductCategoryResource($product->product_category),
-            'is_available' => $this->isAvailable($product, $fundProvider) ,
+            'is_available' => $this->isAvailable($product, $fundProvider),
             'deals_history' => $fundProvider ? $this->getDealsHistory($product, $fundProvider) : null,
             'funds' => $this->funds ? $this->getFundData($this->funds, $product) : [],
             'monitored_changes_count' => $product->logs_monitored_field_changed()->count(),
@@ -85,7 +84,7 @@ class SponsorProductResource extends BaseJsonResource
             ...$this->makeTimestamps([
                 'created_at' => $product->created_at,
                 'last_monitored_changed_at' => $product->logs_last_monitored_field_changed?->created_at,
-            ])
+            ]),
         ];
     }
 
@@ -106,7 +105,7 @@ class SponsorProductResource extends BaseJsonResource
 
             return [
                 ...$fund->only([
-                    "id", "type", 'type_locale', "name", "organization_id",
+                    'id', 'type', 'type_locale', 'name', 'organization_id',
                 ]),
                 'implementation' => $fund->fund_config?->implementation?->only([
                     'id', 'name',
@@ -137,7 +136,7 @@ class SponsorProductResource extends BaseJsonResource
             'fields' => $this->getHistoryFields($log),
             ...$this->makeTimestamps($log->only([
                 'created_at',
-            ]))
+            ])),
         ])->toArray();
     }
 
@@ -149,13 +148,13 @@ class SponsorProductResource extends BaseJsonResource
     {
         $list = collect(Arr::get($log->data, 'product_updated_fields', []));
 
-        return $list->mapWithKeys(function($row, $key) {
+        return $list->mapWithKeys(function ($row, $key) {
             if ($key === 'description') {
                 return [
                     $key => [
-                        'from' =>  (new Product(['description' => $row['from'] ?? '']))->description_html,
+                        'from' => (new Product(['description' => $row['from'] ?? '']))->description_html,
                         'to' => (new Product(['description' => $row['to'] ?? '']))->description_html,
-                    ]
+                    ],
                 ];
             }
 

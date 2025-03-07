@@ -31,7 +31,7 @@ class CheckProductExpirationCommand extends Command
     public function handle(): void
     {
         $products = Product::whereDate('expire_at', '<', now());
-        $products->whereDoesntHave('logs', function(Builder $builder) {
+        $products->whereDoesntHave('logs', function (Builder $builder) {
             $builder->where('event', 'expired');
         });
 

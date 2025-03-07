@@ -11,8 +11,8 @@ class ProviderStateRejectedMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_fund_providers.state_rejected';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

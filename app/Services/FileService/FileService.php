@@ -4,6 +4,7 @@ namespace App\Services\FileService;
 
 use App\Services\FileService\Models\File;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -21,13 +22,13 @@ class FileService
     protected File|Builder $model;
 
     /**
-     * Filesystem driver to use for storage
+     * Filesystem driver to use for storage.
      * @var string $storageDriver
      */
     protected string $storageDriver;
 
     /**
-     * Path to upload files in
+     * Path to upload files in.
      * @var string $storagePath
      */
     protected string $storagePath;
@@ -36,14 +37,15 @@ class FileService
      * FileService constructor.
      *
      */
-    public function __construct() {
+    public function __construct()
+    {
         $this->model = File::query();
         $this->storagePath = str_start(config('file.storage_path'), '/');
         $this->storageDriver = config('file.filesystem_driver', 'local');
     }
 
     /**
-     * Delete file from db and storage
+     * Delete file from db and storage.
      *
      * @param File $file
      * @return bool|null
@@ -53,24 +55,6 @@ class FileService
         self::deleteFile($this->urlPublic($file->path));
 
         return $file->delete();
-    }
-
-    /**
-     * Returns a unique string that is free to be used as file name
-     *
-     * @param $path
-     * @param $ext
-     * @return string
-     */
-    protected function makeUniqueFileName($path, $ext): string
-    {
-        $tokenGenerator = resolve('token_generator');
-
-        do {
-            $name = $tokenGenerator->generate('62');
-        } while($this->storage()->exists($path . '/' . $name . '.' . $ext));
-
-        return $name;
     }
 
     /**
@@ -89,49 +73,6 @@ class FileService
             $file->getSize(),
             $options,
         );
-    }
-
-    /**
-     * @param string $file_path
-     * @param string $original_name
-     * @param string $ext
-     * @param string $type
-     * @param string $size
-     * @param array $options
-     * @return File
-     */
-    protected function doUpload(
-        string $file_path,
-        string $original_name,
-        string $ext,
-        string $type,
-        string $size,
-        array $options = []
-    ): File {
-        $uid = File::makeUid();
-        $name = $this->makeUniqueFileName($this->storagePath, $ext);
-
-        $storagePrefix = Arr::get($options, 'storage_prefix', '');
-        $visibility = Arr::get($options, 'visibility', 'private');
-
-        $path = str_start($name . '.' . $ext, '/');
-        $path = str_start($this->storagePath . $storagePrefix . $path, '/');
-
-        $this->storage()->put($path, file_get_contents($file_path), $visibility);
-
-        return File::create(compact(
-            'uid', 'original_name', 'path', 'size', 'ext', 'type',
-        ));
-    }
-
-    /**
-     * Get storage
-     *
-     * @return Filesystem
-     */
-    private function storage(): Filesystem
-    {
-        return Storage::disk($this->storageDriver);
     }
 
     /**
@@ -171,10 +112,10 @@ class FileService
     }
 
     /**
-     * Delete all files with missing fileable
+     * Delete all files with missing fileable.
      *
+     * @throws Exception
      * @return int count files removed
-     * @throws \Exception
      */
     public function clearFilesWithoutFileable(): int
     {
@@ -185,7 +126,7 @@ class FileService
     }
 
     /**
-     * Get all files with missing fileable
+     * Get all files with missing fileable.
      *
      * @return File[]|Builder[]|Collection|SupportCollection
      */
@@ -201,11 +142,11 @@ class FileService
     }
 
     /**
-     * Clear files that are created but not assigned to any resource
+     * Clear files that are created but not assigned to any resource.
      *
      * @param float|int $minutesToExpire
+     * @throws Exception
      * @return int
-     * @throws \Exception
      */
     public function clearExpiredFiles(float|int $minutesToExpire = 5 * 60): int
     {
@@ -216,14 +157,14 @@ class FileService
     }
 
     /**
-     * Returns list of all files uploaded to storage but not assigned to any entity
+     * Returns list of all files uploaded to storage but not assigned to any entity.
      *
      * @param float|int $minutesToExpire
      * @return File[]|Builder[]|Collection
      */
     public function getExpiredList(float|int $minutesToExpire = 5 * 60): Collection|array
     {
-        $expiredFiles = $this->model->newQuery()->where(function(Builder $query) {
+        $expiredFiles = $this->model->newQuery()->where(function (Builder $query) {
             $query->whereNull('fileable_type');
             $query->orWhereNull('fileable_id');
         })->where('created_at', '<', Carbon::now()->subMinutes($minutesToExpire));
@@ -233,7 +174,7 @@ class FileService
     }
 
     /**
-     * Delete all files which exists on storage but are not listed in db
+     * Delete all files which exists on storage but are not listed in db.
      *
      * @return int count files deleted
      */
@@ -247,7 +188,7 @@ class FileService
     }
 
     /**
-     * Make list files which exists on storage but are not listed in db
+     * Make list files which exists on storage but are not listed in db.
      *
      * @return array
      */
@@ -256,8 +197,74 @@ class FileService
         $storage = $this->storage();
         $dbFiles = File::query()->pluck('path');
 
-        return array_filter($storage->allFiles($this->storagePath), function($file) use ($dbFiles) {
+        return array_filter($storage->allFiles($this->storagePath), function ($file) use ($dbFiles) {
             return $dbFiles->search(str_start($file, '/')) === false;
         });
+    }
+
+    /**
+     * Returns a unique string that is free to be used as file name.
+     *
+     * @param $path
+     * @param $ext
+     * @return string
+     */
+    protected function makeUniqueFileName($path, $ext): string
+    {
+        $tokenGenerator = resolve('token_generator');
+
+        do {
+            $name = $tokenGenerator->generate('62');
+        } while ($this->storage()->exists($path . '/' . $name . '.' . $ext));
+
+        return $name;
+    }
+
+    /**
+     * @param string $file_path
+     * @param string $original_name
+     * @param string $ext
+     * @param string $type
+     * @param string $size
+     * @param array $options
+     * @return File
+     */
+    protected function doUpload(
+        string $file_path,
+        string $original_name,
+        string $ext,
+        string $type,
+        string $size,
+        array $options = []
+    ): File {
+        $uid = File::makeUid();
+        $name = $this->makeUniqueFileName($this->storagePath, $ext);
+
+        $storagePrefix = Arr::get($options, 'storage_prefix', '');
+        $visibility = Arr::get($options, 'visibility', 'private');
+
+        $path = str_start($name . '.' . $ext, '/');
+        $path = str_start($this->storagePath . $storagePrefix . $path, '/');
+
+        $this->storage()->put($path, file_get_contents($file_path), $visibility);
+
+        return File::create(compact(
+            'uid',
+            'original_name',
+            'path',
+            'size',
+            'ext',
+            'type',
+        ));
+    }
+
+    /**
+     * Get storage.
+     *
+     * @return Filesystem
+     */
+    private function storage(): Filesystem
+    {
+        return Storage::disk($this->storageDriver);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services\MediaService\Commands;
 
+use Exception;
 use Illuminate\Console\Command;
 
 class MediaCleanupCommand extends Command
@@ -35,7 +36,7 @@ class MediaCleanupCommand extends Command
     /**
      * Execute the console command.
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function handle(): void
     {
@@ -56,7 +57,7 @@ class MediaCleanupCommand extends Command
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function mediaWithoutMediable(): void
     {
@@ -67,7 +68,7 @@ class MediaCleanupCommand extends Command
             echo sprintf("%s medias without mediable where found.\n", $countMedia);
 
             if ($this->option('force') ||
-                $this->confirm("Would you like to delete them?")) {
+                $this->confirm('Would you like to delete them?')) {
                 echo "√ {$media->clearMediasWithoutMediable()} media deleted.\n";
             } else {
                 echo "√ Skipped.\n";
@@ -79,7 +80,7 @@ class MediaCleanupCommand extends Command
 
     /**
      * @param int $minutes
-     * @throws \Exception
+     * @throws Exception
      */
     public function expiredMedia(int $minutes): void
     {
@@ -90,7 +91,7 @@ class MediaCleanupCommand extends Command
             echo sprintf("%s expired medias found.\n", $countMedia);
 
             if ($this->option('force') ||
-                $this->confirm("Would you like to delete them?")) {
+                $this->confirm('Would you like to delete them?')) {
                 echo sprintf(
                     "√ %s media deleted.\n",
                     $media->clearExpiredMedias($minutes ?: 5 * 60)
@@ -104,7 +105,7 @@ class MediaCleanupCommand extends Command
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function unusedMediaFiles(): void
     {
@@ -115,7 +116,7 @@ class MediaCleanupCommand extends Command
             echo sprintf("%s unused media files found.\n", $countFiles);
 
             if ($this->option('force') ||
-                $this->confirm("Would you like to delete them?")) {
+                $this->confirm('Would you like to delete them?')) {
                 echo sprintf("√ %s files deleted.\n", $media->clearStorage());
             } else {
                 echo "√ Skipped.\n";

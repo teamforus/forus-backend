@@ -34,8 +34,8 @@ class IndexFundRequestsRequest extends BaseFormRequest
             'state_group' => 'nullable|in:all,pending,assigned,resolved',
             'identity_id' => 'nullable|exists:identities,id',
             ...$this->sortableResourceRules(100, [
-                'id', 'fund_name', 'created_at', 'note', 'state', 'requester_email', 'assignee_email'
-            ])
+                'id', 'fund_name', 'created_at', 'note', 'state', 'requester_email', 'assignee_email',
+            ]),
         ];
     }
 }

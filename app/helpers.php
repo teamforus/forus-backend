@@ -68,8 +68,7 @@ if (!function_exists('currency_format')) {
         int $decimals = 2,
         string $decPoint = '.',
         string $thousandsSep = ''
-    ): string
-    {
+    ): string {
         return number_format($number, $decimals, $decPoint, $thousandsSep);
     }
 }
@@ -92,7 +91,7 @@ if (!function_exists('currency_format_locale')) {
 
 if (!function_exists('cache_optional')) {
     /**
-     * Try to cache $callback response for $minutes in case of exception skip cache
+     * Try to cache $callback response for $minutes in case of exception skip cache.
      *
      * @param string $key
      * @param callable $callback
@@ -102,15 +101,15 @@ if (!function_exists('cache_optional')) {
      * @return mixed
      */
     function cache_optional(
-        string   $key,
+        string $key,
         callable $callback,
-        float    $minutes = 1,
-        string   $driver = null,
-        bool     $reset = false
-    ): mixed
-    {
+        float $minutes = 1,
+        string $driver = null,
+        bool $reset = false
+    ): mixed {
         try {
             $reset && cache()->driver()->delete($key);
+
             return cache()->driver($driver)->remember($key, $minutes * 60, $callback);
         } catch (\Psr\SimpleCache\CacheException|\Throwable) {
             return $callback();
@@ -126,9 +125,8 @@ if (!function_exists('record_types_cached')) {
      */
     function record_types_cached(
         float $minutes = 1,
-        bool  $reset = false
-    ): mixed
-    {
+        bool $reset = false
+    ): mixed {
         return cache_optional('record_types', static function () {
             return RecordType::search()->toArray();
         }, $minutes, null, $reset);
@@ -153,7 +151,7 @@ if (!function_exists('record_types_static')) {
 
 if (!function_exists('pretty_file_size')) {
     /**
-     * Human-readable file size
+     * Human-readable file size.
      * @param $bytes
      * @param int $precision
      * @return string
@@ -180,7 +178,8 @@ if (!function_exists('json_pretty')) {
     {
         try {
             return json_encode($value, JSON_THROW_ON_ERROR | $options + JSON_PRETTY_PRINT, $depth);
-        } catch (Throwable) {}
+        } catch (Throwable) {
+        }
 
         return $value;
     }
@@ -207,11 +206,10 @@ if (!function_exists('api_dependency_requested')) {
      * @return bool
      */
     function api_dependency_requested(
-        string                   $key,
+        string $key,
         \Illuminate\Http\Request $request = null,
-        bool                     $default = true
-    ): bool
-    {
+        bool $default = true
+    ): bool {
         $requestData = $request ?? request();
         $dependency = $requestData->input('dependency');
 
@@ -244,10 +242,11 @@ if (!function_exists('url_extend_get_params')) {
     {
         $urlData = explode('?', rtrim($url, '/'));
         $urlParams = [];
-        parse_str($urlData[1] ?? "", $urlParams);
+        parse_str($urlData[1] ?? '', $urlParams);
 
-        return sprintf("%s?%s", rtrim($urlData[0], '/'), http_build_query(array_merge(
-            $params, $urlParams
+        return sprintf('%s?%s', rtrim($urlData[0], '/'), http_build_query(array_merge(
+            $params,
+            $urlParams
         )));
     }
 }
@@ -273,7 +272,7 @@ if (!function_exists('make_qr_code')) {
      */
     function make_qr_code(string $type, string $value, int $size = 400): string
     {
-        return (string)QrCode::format('png')
+        return (string) QrCode::format('png')
             ->size($size)
             ->margin(2)
             ->generate(json_encode(compact('type', 'value')));
@@ -313,7 +312,7 @@ if (!function_exists('trans_fb')) {
 if (!function_exists('str_var_replace')) {
     function str_var_replace(string $string, array $replace, bool $filterValues = true): string
     {
-        $replace = array_sort($replace, fn($value, $key) => mb_strlen($key) * -1);
+        $replace = array_sort($replace, fn ($value, $key) => mb_strlen($key) * -1);
 
         foreach ($replace as $key => $value) {
             if (!$filterValues || (is_string($value) || is_numeric($value))) {

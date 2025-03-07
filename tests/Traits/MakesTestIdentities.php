@@ -19,8 +19,8 @@ trait MakesTestIdentities
     {
         $domain = $domain ?: Config::get('forus.tests.identity_domain', 'example.com');
 
-        $token = self::makeUniqueTokenCallback(fn($token) => IdentityEmail::where([
-            'email' => "$prefix$token@$domain"
+        $token = self::makeUniqueTokenCallback(fn ($token) => IdentityEmail::where([
+            'email' => "$prefix$token@$domain",
         ])->doesntExist(), 8);
 
         return "$prefix$token@$domain";

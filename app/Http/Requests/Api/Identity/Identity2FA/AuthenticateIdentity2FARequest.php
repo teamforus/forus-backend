@@ -16,8 +16,8 @@ class AuthenticateIdentity2FARequest extends BaseIdentity2FARequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
      * @throws AuthorizationJsonException
+     * @return bool
      */
     public function authorize(): bool
     {
@@ -29,10 +29,10 @@ class AuthenticateIdentity2FARequest extends BaseIdentity2FARequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
      * @throws IncompatibleWithGoogleAuthenticatorException
      * @throws InvalidCharactersException
      * @throws SecretKeyTooShortException
+     * @return array
      */
     public function rules(): array
     {

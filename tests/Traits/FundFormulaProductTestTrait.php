@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Voucher;
 use Carbon\Carbon;
+
 use function PHPUnit\Framework\assertCount;
 
 trait FundFormulaProductTestTrait

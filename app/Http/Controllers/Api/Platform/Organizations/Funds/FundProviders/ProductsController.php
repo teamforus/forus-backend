@@ -21,8 +21,8 @@ class ProductsController extends Controller
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProvider $fundProvider
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundProviderProductsRequest $request,
@@ -48,8 +48,8 @@ class ProductsController extends Controller
      * @param Fund $fund
      * @param FundProvider $fundProvider
      * @param Product $product
-     * @return SponsorProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return SponsorProductResource
      */
     public function show(
         Organization $organization,

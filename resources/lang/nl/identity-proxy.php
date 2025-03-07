@@ -2,17 +2,17 @@
 
 return [
     'restore_email_subject' => 'Log in met een bestaand account',
-    'token'  => [
+    'token' => [
         'not-pending' => 'Niet in behandeling.',
         'expired' => 'Ongeldig',
         'not-found' => 'Niet gevonden',
     ],
-    'code'  => [
+    'code' => [
         'not-pending' => 'Niet in behandeling.',
         'expired' => 'Ongeldig',
         'not-found' => 'Niet gevonden',
     ],
-    'email'  => [
+    'email' => [
         'not-pending' => 'Niet in behandeling.',
         'expired' => 'Ongeldig',
         'not-found' => 'Niet gevonden',

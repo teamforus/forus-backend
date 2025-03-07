@@ -10,7 +10,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseFundEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     protected Fund $fund;
 
@@ -25,7 +27,7 @@ abstract class BaseFundEvent
     }
 
     /**
-     * Get the voucher
+     * Get the voucher.
      *
      * @return Fund
      */
