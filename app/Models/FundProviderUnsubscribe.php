@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\FundProviderUnsubscribe
+ * App\Models\FundProviderUnsubscribe.
  *
  * @property int $id
  * @property int $fund_provider_id
@@ -107,6 +107,6 @@ class FundProviderUnsubscribe extends BaseModel
      */
     public function getStateLocaleAttribute(): string
     {
-        return trans("fund-unsubscribes.states." . $this->state);
+        return trans('fund-unsubscribes.states.' . $this->state);
     }
 }

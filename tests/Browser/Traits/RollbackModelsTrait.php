@@ -10,8 +10,8 @@ trait RollbackModelsTrait
      * @param array $modelsWithFields
      * @param callable $callback
      * @param callable|null $finalCallback
-     * @return mixed
      * @throws Throwable
+     * @return mixed
      */
     public function rollbackModels(array $modelsWithFields, callable $callback, callable $finalCallback = null): mixed
     {

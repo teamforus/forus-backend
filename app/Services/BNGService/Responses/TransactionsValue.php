@@ -22,7 +22,7 @@ class TransactionsValue extends Value
     {
         $transactions = $this->getTransactions()['booked'] ?? null;
 
-        return is_array($transactions) ? array_map(function(array $transaction) {
+        return is_array($transactions) ? array_map(function (array $transaction) {
             return new TransactionValue(new ResponseData($transaction));
         }, $transactions) : null;
     }

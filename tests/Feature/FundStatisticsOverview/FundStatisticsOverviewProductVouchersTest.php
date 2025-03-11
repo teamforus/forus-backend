@@ -289,8 +289,8 @@ class FundStatisticsOverviewProductVouchersTest extends TestCase
      * @param Fund $fund
      * @param int $vouchersCount
      * @param int $childrenCount
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function createDeactivatedProductVouchers(
         Fund $fund,

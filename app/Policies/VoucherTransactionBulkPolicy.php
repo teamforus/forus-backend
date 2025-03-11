@@ -56,14 +56,15 @@ class VoucherTransactionBulkPolicy
 
         if ($hasPermission) {
             if (VoucherTransactionBulk::getNextBulkTransactionsForSponsor(
-                $organization, BaseFormRequest::createFromBase(request())
+                $organization,
+                BaseFormRequest::createFromBase(request())
             )->exists()) {
                 return true;
             }
 
-            return $this->deny(implode(" ", [
-                "Om een nieuwe bulktransactie aan te maken,",
-                "moet er minstens één lopende transactie zijn.",
+            return $this->deny(implode(' ', [
+                'Om een nieuwe bulktransactie aan te maken,',
+                'moet er minstens één lopende transactie zijn.',
             ]), 403);
         }
 
@@ -89,18 +90,18 @@ class VoucherTransactionBulkPolicy
         $bank = $bulk->bank_connection->bank;
 
         if ($bank->isBunq() && !$bulk->isRejected()) {
-            return $this->deny("Only rejected bulks can be resent to the bank.");
+            return $this->deny('Only rejected bulks can be resent to the bank.');
         }
 
         if ($bank->isBunq() && (!$bulk->isPending() && !$bulk->isDraft() && !$bulk->isRejected())) {
-            return $this->deny("Only pending, draft and rejected bulks can be resent to the bank.");
+            return $this->deny('Only pending, draft and rejected bulks can be resent to the bank.');
         }
 
         return $integrityIsValid && $hasPermission;
     }
 
     /**
-     * Determine whether the user can manually accept bulk transaction
+     * Determine whether the user can manually accept bulk transaction.
      *
      * @param Identity $identity
      * @param VoucherTransactionBulk $voucherTransactionBulk
@@ -119,18 +120,18 @@ class VoucherTransactionBulkPolicy
             $voucherTransactionBulk->is_exported;
 
         if (!$voucherTransactionBulk->isDraft()) {
-            return $this->deny("Alleen concept bulk lijsten kunnen handmatig worden geaccepteerd.");
+            return $this->deny('Alleen concept bulk lijsten kunnen handmatig worden geaccepteerd.');
         }
 
         if (!$organization->allow_manual_bulk_processing) {
-            return $this->deny("Handmatig accepteren is niet mogelijk.");
+            return $this->deny('Handmatig accepteren is niet mogelijk.');
         }
 
         return $hasPermission && $voucherTransactionBulk->bank_connection->bank->isBNG();
     }
 
     /**
-     * Determine whether the user can manually accept bulk transaction
+     * Determine whether the user can manually accept bulk transaction.
      *
      * @param Identity $identity
      * @param VoucherTransactionBulk $voucherTransactionBulk
@@ -148,18 +149,18 @@ class VoucherTransactionBulkPolicy
             $organization->identityCan($identity, 'manage_transaction_bulks');
 
         if (!$voucherTransactionBulk->isDraft()) {
-            return $this->deny("Alleen concept bulk lijsten kunnen worden geëxporteerd.");
+            return $this->deny('Alleen concept bulk lijsten kunnen worden geëxporteerd.');
         }
 
         if (!$organization->allow_manual_bulk_processing) {
-            return $this->deny("Het exporteren van het SEPA bestand is niet mogelijk.");
+            return $this->deny('Het exporteren van het SEPA bestand is niet mogelijk.');
         }
 
         return $hasPermission && $voucherTransactionBulk->bank_connection->bank->isBNG();
     }
 
     /**
-     * Check that voucher transaction bulk belongs to given organization
+     * Check that voucher transaction bulk belongs to given organization.
      * @param VoucherTransactionBulk $bulk
      * @param Organization $organization
      * @return bool

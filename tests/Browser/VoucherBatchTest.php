@@ -7,20 +7,23 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Voucher;
 use Carbon\Carbon;
+use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Tests\Browser\Traits\HasFrontendActions;
-use Tests\TestCases\VoucherBatchTestCases;
 use Tests\DuskTestCase;
+use Tests\TestCases\VoucherBatchTestCases;
 use Tests\Traits\VoucherTestTrait;
+use Throwable;
 
 class VoucherBatchTest extends DuskTestCase
 {
-    use WithFaker, HasFrontendActions, VoucherTestTrait;
+    use WithFaker;
+    use HasFrontendActions;
+    use VoucherTestTrait;
 
     /**
      * @var string
@@ -30,10 +33,10 @@ class VoucherBatchTest extends DuskTestCase
     /**
      * @var string
      */
-    protected string $csvPath = "public/vouchers_batch_test.csv";
+    protected string $csvPath = 'public/vouchers_batch_test.csv';
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testUploadBatchCaseAssignByEmail(): void
     {
@@ -41,7 +44,7 @@ class VoucherBatchTest extends DuskTestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testUploadBatchCaseAssignByBSN(): void
     {
@@ -49,7 +52,7 @@ class VoucherBatchTest extends DuskTestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testUploadBatchCaseAssignByClientUID(): void
     {
@@ -57,7 +60,7 @@ class VoucherBatchTest extends DuskTestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testUploadBatchCaseAssignByClientUIDSameCode(): void
     {
@@ -65,7 +68,7 @@ class VoucherBatchTest extends DuskTestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testUploadBatchCaseLowAmounts(): void
     {
@@ -74,8 +77,8 @@ class VoucherBatchTest extends DuskTestCase
 
     /**
      * @param $testCase
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function doUploadBatch($testCase): void
     {
@@ -126,8 +129,8 @@ class VoucherBatchTest extends DuskTestCase
                 $browser->waitFor('@searchVoucher');
                 $browser->waitFor("@vouchersCard$fundId");
 
-                $list->each(fn(Voucher $item) => $this->searchVoucher($browser, $item, $type));
-                $list->each(fn(Voucher $item) => $item->delete());
+                $list->each(fn (Voucher $item) => $this->searchVoucher($browser, $item, $type));
+                $list->each(fn (Voucher $item) => $item->delete());
             }
 
             // Logout
@@ -136,11 +139,39 @@ class VoucherBatchTest extends DuskTestCase
     }
 
     /**
+     * @param bool $allowDirectPayments
+     * @return array
+     */
+    protected function directPaymentFields(bool $allowDirectPayments): array
+    {
+        return $allowDirectPayments ? [
+            'direct_payment_iban' => $this->faker()->iban('NL'),
+            'direct_payment_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,
+        ] : [
+            'direct_payment_iban' => '',
+            'direct_payment_name' => '',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function recordsFields(): array
+    {
+        return [
+            'record.given_name' => $this->faker()->firstName,
+            'record.family_name' => $this->faker()->lastName,
+            'record.birth_date' => Carbon::create(2000, 1, 5)->format('Y-m-d'),
+            'record.address' => $this->faker()->address,
+        ];
+    }
+
+    /**
      * @param Browser $browser
      * @param Voucher $voucher
      * @param string $type
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     private function searchVoucher(Browser $browser, Voucher $voucher, string $type = 'client_uid'): void
     {
@@ -159,8 +190,8 @@ class VoucherBatchTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     private function goToVouchersPage(Browser $browser): void
     {
@@ -175,9 +206,9 @@ class VoucherBatchTest extends DuskTestCase
      * @param Browser $browser
      * @param Collection $funds
      * @param array $testCase
-     * @return void
      * @throws TimeOutException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return void
      */
     private function uploadVouchersBatch(
         Browser $browser,
@@ -223,8 +254,8 @@ class VoucherBatchTest extends DuskTestCase
     /**
      * @param Collection $funds
      * @param array $testCase
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     private function createFile(Collection $funds, array $testCase): void
     {
@@ -249,18 +280,19 @@ class VoucherBatchTest extends DuskTestCase
             for ($i = 1; $i <= $count; $i++) {
                 $amount = $lowAmounts ? rand(1, 5) : rand(6, min($fund->getMaxAmountPerVoucher(), 50));
 
-                fputcsv($handle, array_merge([
-                    'fund_id' => $fund->id,
-                    'bsn' => $type === 'bsn' ? (string) $this->randomFakeBsn() : null,
-                    'email' => $type === 'email' ? $this->makeUniqueEmail() : null,
-                    'client_uid' => $type === 'client_uid' ? ($sameCode ? $baseClientUid : Str::random()) : null,
-                    'activate' => true,
-                    'activation_code' => true,
-                    'amount' => $amount,
-                    'limit_multiplier' => rand(1, 3),
-                    'expire_at' => now()->addDays(30)->format('Y-m-d'),
-                    'note' => $this->faker()->sentence(),
-                ],
+                fputcsv($handle, array_merge(
+                    [
+                        'fund_id' => $fund->id,
+                        'bsn' => $type === 'bsn' ? (string) $this->randomFakeBsn() : null,
+                        'email' => $type === 'email' ? $this->makeUniqueEmail() : null,
+                        'client_uid' => $type === 'client_uid' ? ($sameCode ? $baseClientUid : Str::random()) : null,
+                        'activate' => true,
+                        'activation_code' => true,
+                        'amount' => $amount,
+                        'limit_multiplier' => rand(1, 3),
+                        'expire_at' => now()->addDays(30)->format('Y-m-d'),
+                        'note' => $this->faker()->sentence(),
+                    ],
                     $this->directPaymentFields($fund->generatorDirectPaymentsAllowed()),
                     $this->recordsFields(),
                 ));
@@ -271,37 +303,9 @@ class VoucherBatchTest extends DuskTestCase
     }
 
     /**
-     * @param bool $allowDirectPayments
-     * @return array
-     */
-    protected function directPaymentFields(bool $allowDirectPayments): array
-    {
-        return $allowDirectPayments ? [
-            'direct_payment_iban' => $this->faker()->iban('NL'),
-            'direct_payment_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,
-        ] : [
-            'direct_payment_iban' => '',
-            'direct_payment_name' => '',
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function recordsFields(): array
-    {
-        return [
-            'record.given_name' => $this->faker()->firstName,
-            'record.family_name' => $this->faker()->lastName,
-            'record.birth_date' => Carbon::create(2000, 1, 5)->format('Y-m-d'),
-            'record.address' => $this->faker()->address,
-        ];
-    }
-
-    /**
      * @param Browser $browser
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     private function logout(Browser $browser): void
     {

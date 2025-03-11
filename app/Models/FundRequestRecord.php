@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * App\Models\FundRequestRecord
+ * App\Models\FundRequestRecord.
  *
  * @property int $id
  * @property int $fund_request_id
@@ -44,7 +44,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class FundRequestRecord extends BaseModel
 {
-    use HasFiles, HasLogs;
+    use HasFiles;
+    use HasLogs;
 
     public const string EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
     public const string EVENT_CLARIFICATION_RECEIVED = 'clarification_received';
@@ -89,7 +90,7 @@ class FundRequestRecord extends BaseModel
     }
 
     /**
-     * Make and validate records for requester
+     * Make and validate records for requester.
      * @return $this
      */
     public function makeValidation(): self

@@ -7,12 +7,12 @@ use App\Models\Identity;
 use App\Models\Voucher;
 
 /**
- * New budget subsidy transaction created
+ * New budget subsidy transaction created.
  */
 class IdentityVoucherSubsidyTransactionNotification extends BaseIdentityVoucherNotification
 {
     protected static ?string $key = 'notifications_identities.voucher_subsidy_transaction';
-    protected static ?string $pushKey = "voucher.transaction";
+    protected static ?string $pushKey = 'voucher.transaction';
 
     /**
      * @param Identity $identity

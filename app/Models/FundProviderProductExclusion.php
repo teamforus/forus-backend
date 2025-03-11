@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\FundProviderProductExclusion
+ * App\Models\FundProviderProductExclusion.
  *
  * @property int $id
  * @property int $fund_provider_id
@@ -35,20 +35,22 @@ class FundProviderProductExclusion extends Model
     use HasFormattedTimestamps;
 
     protected $fillable = [
-        'fund_provider_id', 'product_id'
+        'fund_provider_id', 'product_id',
     ];
 
     /**
      * @return BelongsTo
      */
-    public function fund_provider(): BelongsTo {
+    public function fund_provider(): BelongsTo
+    {
         return $this->belongsTo(FundProvider::class);
     }
 
     /**
      * @return BelongsTo
      */
-    public function product(): BelongsTo {
+    public function product(): BelongsTo
+    {
         return $this->belongsTo(Product::class);
     }
 }

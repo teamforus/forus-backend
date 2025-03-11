@@ -47,7 +47,7 @@ class FundsController extends Controller
         ]), Implementation::queryFundsByState($state)))->query();
 
         $organizations = Organization::whereIn('id', (clone $query)->select('organization_id'))->get();
-        $organizations = $organizations->map(fn(Organization $item) => $item->only('id', 'name'));
+        $organizations = $organizations->map(fn (Organization $item) => $item->only('id', 'name'));
         $meta = compact('organizations');
         $query->with(FundResource::load());
 
@@ -100,12 +100,12 @@ class FundsController extends Controller
     }
 
     /**
-     * Apply fund for identity
+     * Apply fund for identity.
      *
      * @param BaseFormRequest $request
      * @param Fund $fund
-     * @return VoucherResource|null
      * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
+     * @return VoucherResource|null
      */
     public function apply(BaseFormRequest $request, Fund $fund): ?VoucherResource
     {
@@ -127,12 +127,12 @@ class FundsController extends Controller
     }
 
     /**
-     * Apply fund for identity
+     * Apply fund for identity.
      *
      * @param CheckFundRequest $request
      * @param Fund $fund
-     * @return JsonResponse
      * @throws AuthorizationException
+     * @return JsonResponse
      */
     public function check(CheckFundRequest $request, Fund $fund): JsonResponse
     {
@@ -150,7 +150,10 @@ class FundsController extends Controller
         $backoffice = $hasBackoffice ? $fund->backofficeResponseToData($backofficeResponse) : null;
 
         return new JsonResponse(compact(
-            'backoffice', 'vouchers', 'prevalidations', 'prevalidation_vouchers'
+            'backoffice',
+            'vouchers',
+            'prevalidations',
+            'prevalidation_vouchers'
         ));
     }
 }

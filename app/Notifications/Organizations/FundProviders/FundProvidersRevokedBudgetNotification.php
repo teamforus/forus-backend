@@ -7,7 +7,7 @@ use App\Models\FundProvider;
 use App\Models\Identity;
 
 /**
- * Notify the fund provider that they can no longer scan budget vouchers
+ * Notify the fund provider that they can no longer scan budget vouchers.
  */
 class FundProvidersRevokedBudgetNotification extends BaseFundProvidersNotification
 {

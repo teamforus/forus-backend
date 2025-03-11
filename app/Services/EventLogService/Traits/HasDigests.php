@@ -26,7 +26,7 @@ trait HasDigests
     {
         /** @var Digest|null $digest */
         $digest = $this->digests()->where([
-            'type' => $type
+            'type' => $type,
         ])->orderByDesc('created_at')->first();
 
         return $digest;

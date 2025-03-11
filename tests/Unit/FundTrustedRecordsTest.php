@@ -2,10 +2,10 @@
 
 namespace Tests\Unit;
 
-use App\Models\Role;
 use App\Models\Identity;
-use App\Models\RecordType;
 use App\Models\Organization;
+use App\Models\RecordType;
+use App\Models\Role;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\CreatesApplication;
@@ -14,7 +14,10 @@ use Tests\Traits\MakesTestFunds;
 
 class FundTrustedRecordsTest extends TestCase
 {
-    use DoesTesting, DatabaseTransactions, CreatesApplication, MakesTestFunds;
+    use DoesTesting;
+    use DatabaseTransactions;
+    use CreatesApplication;
+    use MakesTestFunds;
 
     /**
      * @return void
@@ -24,7 +27,7 @@ class FundTrustedRecordsTest extends TestCase
         $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
 
         $requester = $this->makeIdentity();
-        $this->setRecordsValue($fund->organization, $requester, 'children_nth',  2);
+        $this->setRecordsValue($fund->organization, $requester, 'children_nth', 2);
 
         $fund->fund_config->forceFill([
             'record_validity_days' => 2,

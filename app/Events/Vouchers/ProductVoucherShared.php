@@ -26,7 +26,7 @@ class ProductVoucherShared extends BaseVoucherEvent
     }
 
     /**
-     * Get the share message product
+     * Get the share message product.
      *
      * @return string
      */

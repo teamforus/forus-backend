@@ -24,7 +24,7 @@ class RecordCategoryStoreRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'name'  => 'required|between:2,16',
+            'name' => 'required|between:2,16',
             'order' => 'nullable|numeric|min:0',
         ];
     }

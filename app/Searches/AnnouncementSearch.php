@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Searches;
-
 
 use App\Models\Announcement;
 use App\Models\BankConnection;
@@ -50,7 +48,7 @@ class AnnouncementSearch extends BaseSearch
         }
 
         $builder
-            ->where(function(Builder $builder) use ($isWebshop, $implementationId) {
+            ->where(function (Builder $builder) use ($isWebshop, $implementationId) {
                 if ($isWebshop) {
                     $builder->whereNull('implementation_id');
                     $builder->orWhere('implementation_id', $implementationId);
@@ -76,13 +74,13 @@ class AnnouncementSearch extends BaseSearch
             });
         } else {
             $builder->where(function (Builder $builder) use ($identityAddress, $organizationId) {
-                $builder->where(fn(Builder $builder) => $this->whereBankConnection(
+                $builder->where(fn (Builder $builder) => $this->whereBankConnection(
                     $builder,
                     $identityAddress,
                     $organizationId,
                 ));
 
-                $builder->orWhere(fn(Builder $builder) => $this->whereOrganizationOrRole(
+                $builder->orWhere(fn (Builder $builder) => $this->whereOrganizationOrRole(
                     $builder,
                     $identityAddress,
                     $organizationId,

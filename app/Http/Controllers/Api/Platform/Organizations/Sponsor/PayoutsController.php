@@ -29,8 +29,8 @@ class PayoutsController extends Controller
      *
      * @param IndexPayoutTransactionsRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function index(
@@ -63,8 +63,8 @@ class PayoutsController extends Controller
      *
      * @param Organization $organization
      * @param VoucherTransaction $voucherTransaction
-     * @return VoucherTransactionPayoutResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return VoucherTransactionPayoutResource
      * @noinspection PhpUnused
      */
     public function show(
@@ -82,8 +82,8 @@ class PayoutsController extends Controller
      *
      * @param StorePayoutTransactionRequest $request
      * @param Organization $organization
-     * @return VoucherTransactionPayoutResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return VoucherTransactionPayoutResource
      * @noinspection PhpUnused
      */
     public function store(
@@ -125,9 +125,9 @@ class PayoutsController extends Controller
      *
      * @param StorePayoutTransactionBatchRequest $request
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws RandomException
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function storeBatch(

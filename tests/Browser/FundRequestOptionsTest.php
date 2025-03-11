@@ -188,8 +188,8 @@ class FundRequestOptionsTest extends DuskTestCase
      * @param Fund $fund The fund being tested.
      * @param array $present List of element selectors that should appear.
      * @param array $missing List of element selectors that should not appear.
-     * @return void
      * @throws Throwable
+     * @return void
      */
     protected function assertFundRequestOptionsVisibility(
         Fund $fund,

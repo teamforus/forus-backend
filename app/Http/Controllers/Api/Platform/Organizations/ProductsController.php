@@ -12,6 +12,7 @@ use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductRequest;
 use App\Http\Resources\Provider\ProviderProductResource;
 use App\Models\Organization;
 use App\Models\Product;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -22,8 +23,8 @@ class ProductsController extends Controller
      *
      * @param IndexProductRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexProductRequest $request,
@@ -32,11 +33,11 @@ class ProductsController extends Controller
         $this->authorize('viewAnyPublic', [Product::class, $organization]);
 
         return ProviderProductResource::collection(Product::searchAny($request)->where([
-            'organization_id' => $organization->id
+            'organization_id' => $organization->id,
         ])->with(
             ProviderProductResource::load()
         )->paginate($request->input('per_page', 15)))->additional([
-            'meta' => $organization->productsMeta()
+            'meta' => $organization->productsMeta(),
         ]);
     }
 
@@ -45,8 +46,8 @@ class ProductsController extends Controller
      *
      * @param StoreProductRequest $request
      * @param Organization $organization
-     * @return ProviderProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProviderProductResource
      */
     public function store(
         StoreProductRequest $request,
@@ -66,8 +67,8 @@ class ProductsController extends Controller
      *
      * @param Organization $organization
      * @param Product $product
-     * @return ProviderProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProviderProductResource
      */
     public function show(Organization $organization, Product $product): ProviderProductResource
     {
@@ -83,8 +84,8 @@ class ProductsController extends Controller
      * @param UpdateProductRequest $request
      * @param Organization $organization
      * @param Product $product
-     * @return ProviderProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProviderProductResource
      */
     public function update(
         UpdateProductRequest $request,
@@ -105,8 +106,8 @@ class ProductsController extends Controller
      * @param UpdateProductExclusionsRequest $request
      * @param Organization $organization
      * @param Product $product
-     * @return ProviderProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProviderProductResource
      */
     public function updateExclusions(
         UpdateProductExclusionsRequest $request,
@@ -119,6 +120,7 @@ class ProductsController extends Controller
         $product->updateExclusions($request);
 
         ProductUpdated::dispatch($product);
+
         return new ProviderProductResource($product);
     }
 
@@ -127,9 +129,9 @@ class ProductsController extends Controller
      *
      * @param Organization $organization
      * @param Product $product
-     * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws Exception
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Organization $organization, Product $product): JsonResponse
     {

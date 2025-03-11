@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Notifications;
-
 
 use App\Models\Identity;
 use App\Notifications\Identities\BaseIdentityNotification;

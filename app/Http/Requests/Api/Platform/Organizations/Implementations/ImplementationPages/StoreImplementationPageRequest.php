@@ -38,18 +38,26 @@ class StoreImplementationPageRequest extends ValidateImplementationPageBlocksReq
         $faqRules = $this->faqRules([]);
 
         return array_merge(parent::rules(), [
-            'title'                 => 'nullable|string|max:200',
-            'state'                 => "nullable|in:$states",
-            'page_type'             => $this->pageTypeRule(),
-            'description'           => 'nullable|string|max:10000',
-            'description_position'  => "nullable|in:$descriptionPositions",
+            'title' => 'nullable|string|max:200',
+            'state' => "nullable|in:$states",
+            'page_type' => $this->pageTypeRule(),
+            'description' => 'nullable|string|max:10000',
+            'description_position' => "nullable|in:$descriptionPositions",
             'description_alignment' => 'nullable|in:left,center,right',
-            'external'              => 'present|boolean',
-            'external_url'          => 'nullable|string|max:300',
-            'media_uid'             => 'nullable|array',
-            'media_uid.*'           => $this->mediaRule(),
-            'blocks_per_row'        => 'nullable|integer|min:1|max:3',
+            'external' => 'present|boolean',
+            'external_url' => 'nullable|string|max:300',
+            'media_uid' => 'nullable|array',
+            'media_uid.*' => $this->mediaRule(),
+            'blocks_per_row' => 'nullable|integer|min:1|max:3',
         ], $faqRules);
+    }
+
+    /**
+     * @return string[]
+     */
+    public function attributes(): array
+    {
+        return $this->getFaqAttributes();
     }
 
     /**
@@ -67,20 +75,13 @@ class StoreImplementationPageRequest extends ValidateImplementationPageBlocksReq
     /**
      * @return array
      */
-    private function mediaRule(): array {
+    private function mediaRule(): array
+    {
         return [
             'required',
             'string',
             'exists:media,uid',
-            new MediaUidRule('cms_media')
+            new MediaUidRule('cms_media'),
         ];
-    }
-
-    /**
-     * @return string[]
-     */
-    public function attributes(): array
-    {
-        return $this->getFaqAttributes();
     }
 }

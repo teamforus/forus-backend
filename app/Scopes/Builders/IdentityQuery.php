@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
@@ -61,8 +60,8 @@ class IdentityQuery
     public static function whereBsn(
         Builder|Relation|Identity $builder,
         string $bsn,
-    ): Builder|Relation|Identity  {
-        return $builder->whereHas('records', function(Builder $builder) use ($bsn) {
+    ): Builder|Relation|Identity {
+        return $builder->whereHas('records', function (Builder $builder) use ($bsn) {
             $builder->where('value', '=', $bsn);
             $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
         });
@@ -76,8 +75,8 @@ class IdentityQuery
     public static function whereBsnLike(
         Builder|Relation|Identity $builder,
         string $bsn,
-    ): Builder|Relation|Identity  {
-        return $builder->whereHas('records', function(Builder $builder) use ($bsn) {
+    ): Builder|Relation|Identity {
+        return $builder->whereHas('records', function (Builder $builder) use ($bsn) {
             $builder->where('value', 'LIKE', "%$bsn%");
             $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
         });
@@ -93,8 +92,8 @@ class IdentityQuery
         Builder|Relation|Identity $builder,
         array|int $organizationId,
         array|int $fundId = null,
-    ): Builder|Relation|Identity  {
-        return $builder->where(function(Builder $builder) use ($organizationId, $fundId) {
+    ): Builder|Relation|Identity {
+        return $builder->where(function (Builder $builder) use ($organizationId, $fundId) {
             $builder->whereHas('vouchers.fund', function (Builder $builder) use ($organizationId, $fundId) {
                 $builder->whereIn('organization_id', (array) $organizationId);
 

@@ -9,12 +9,12 @@ use App\Models\VoucherTransaction;
 use Illuminate\Support\Arr;
 
 /**
- * New budget voucher transaction created
+ * New budget voucher transaction created.
  */
 class IdentityVoucherBudgetTransactionNotification extends BaseIdentityVoucherNotification
 {
     protected static ?string $key = 'notifications_identities.voucher_budget_transaction';
-    protected static ?string $pushKey = "voucher.transaction";
+    protected static ?string $pushKey = 'voucher.transaction';
 
     /**
      * @param Identity $identity

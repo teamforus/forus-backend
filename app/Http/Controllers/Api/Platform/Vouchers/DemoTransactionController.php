@@ -20,7 +20,7 @@ class DemoTransactionController extends Controller
     {
         return DemoTransactionResource::create(DemoTransaction::create([
             'token' => app('token_generator')->generate(16),
-            'state' => 'pending'
+            'state' => 'pending',
         ]));
     }
 
@@ -47,7 +47,7 @@ class DemoTransactionController extends Controller
         DemoTransaction $transaction
     ): DemoTransactionResource {
         return DemoTransactionResource::create($transaction->updateModel([
-            'state' => $request->get('state')
+            'state' => $request->get('state'),
         ]));
     }
 }

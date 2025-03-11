@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Models\SystemConfig
+ * App\Models\SystemConfig.
  *
  * @property int $id
  * @property string $key

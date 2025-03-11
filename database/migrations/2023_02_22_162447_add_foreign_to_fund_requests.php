@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -15,14 +14,18 @@ return new class extends Migration
     {
         Schema::table('fund_requests', function (Blueprint $table) {
             $table->foreign('fund_id')
-                ->references('id')->on('funds')->onDelete('cascade');
+                ->references('id')
+                ->on('funds')
+                ->onDelete('cascade');
 
             $table->index('fund_id');
         });
 
         Schema::table('fund_request_records', function (Blueprint $table) {
             $table->foreign('employee_id')
-                ->references('id')->on('employees')->onDelete('set null');
+                ->references('id')
+                ->on('employees')
+                ->onDelete('set null');
 
             $table->index('employee_id');
         });

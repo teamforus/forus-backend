@@ -3,7 +3,7 @@
 return [
     'bank_connection' => [
         'permissions' => [
-            'manage_bank_connections'
+            'manage_bank_connections',
         ],
         'events' => array_merge([
             'disabled',
@@ -19,7 +19,7 @@ return [
 
     'voucher' => [
         'permissions' => [
-            'manage_vouchers'
+            'manage_vouchers',
         ],
         'events' => [
             'created_budget',
@@ -43,7 +43,7 @@ return [
 
     'employees' => [
         'permissions' => [
-            'manage_employees'
+            'manage_employees',
         ],
         'events' => [
             'created',
@@ -54,7 +54,7 @@ return [
 
     'fund' => [
         'permissions' => [
-            'view_funds'
+            'view_funds',
         ],
         'events' => [
             'created',

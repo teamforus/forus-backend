@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
 abstract class BaseIdentityFundNotification extends BaseIdentityNotification
 {
     /**
-     * Get identities which are eligible for the notification
+     * Get identities which are eligible for the notification.
      *
      * @param Fund $loggable
      * @param EventLog $eventLog

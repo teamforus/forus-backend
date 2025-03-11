@@ -2,6 +2,6 @@
 
 return [
     'codes' => [
-        '404' => 'Niet gevonden.'
-    ]
+        '404' => 'Niet gevonden.',
+    ],
 ];

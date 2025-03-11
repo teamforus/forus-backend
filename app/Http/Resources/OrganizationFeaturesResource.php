@@ -45,10 +45,9 @@ class OrganizationFeaturesResource extends BaseJsonResource
                 'external_funds' => true,
                 'budget_funds' => true,
                 'subsidy_funds' => true,
-            ]
+            ],
         ];
     }
-
 
     /**
      * @param Organization $organization
@@ -57,7 +56,7 @@ class OrganizationFeaturesResource extends BaseJsonResource
     protected function isReimbursementsEnabled(Organization $organization): bool
     {
         return $organization->funds
-            ->filter(fn(Fund $fund) => $fund->fund_config->allow_reimbursements)
+            ->filter(fn (Fund $fund) => $fund->fund_config->allow_reimbursements)
             ->isNotEmpty();
     }
 
@@ -68,7 +67,7 @@ class OrganizationFeaturesResource extends BaseJsonResource
     protected function isVoucherRecordsEnabled(Organization $organization): bool
     {
         return $organization->funds
-            ->filter(fn(Fund $fund) => $fund->fund_config->allow_voucher_records)
+            ->filter(fn (Fund $fund) => $fund->fund_config->allow_voucher_records)
             ->isNotEmpty();
     }
 
@@ -79,7 +78,7 @@ class OrganizationFeaturesResource extends BaseJsonResource
     protected function isPhysicalCardsEnabled(Organization $organization): bool
     {
         return $organization->funds
-            ->filter(fn(Fund $fund) => $fund->fund_config->allow_physical_cards)
+            ->filter(fn (Fund $fund) => $fund->fund_config->allow_physical_cards)
             ->isNotEmpty();
     }
 
@@ -90,7 +89,7 @@ class OrganizationFeaturesResource extends BaseJsonResource
     protected function isIConnectApiOinEnabled(Organization $organization): bool
     {
         return $organization->funds
-            ->filter(fn(Fund $fund) => $fund->hasIConnectApiOin())
+            ->filter(fn (Fund $fund) => $fund->hasIConnectApiOin())
             ->isNotEmpty();
     }
 
@@ -101,7 +100,7 @@ class OrganizationFeaturesResource extends BaseJsonResource
     protected function isDigidEnabled(Organization $organization): bool
     {
         return $organization->implementations
-            ->filter(fn(Implementation $implementation) => $implementation->digidEnabled())
+            ->filter(fn (Implementation $implementation) => $implementation->digidEnabled())
             ->isNotEmpty();
     }
 
@@ -121,7 +120,7 @@ class OrganizationFeaturesResource extends BaseJsonResource
     protected function isFundRequestsEnabled(Organization $organization): bool
     {
         return $organization->funds
-            ->filter(fn(Fund $fund) => $fund->fund_config->allow_fund_requests)
+            ->filter(fn (Fund $fund) => $fund->fund_config->allow_fund_requests)
             ->isNotEmpty();
     }
 
@@ -132,7 +131,7 @@ class OrganizationFeaturesResource extends BaseJsonResource
     protected function isVoucherTopUpEnabled(Organization $organization): bool
     {
         return $organization->funds
-            ->filter(fn(Fund $fund) => $fund->fund_config->allow_voucher_top_ups)
+            ->filter(fn (Fund $fund) => $fund->fund_config->allow_voucher_top_ups)
             ->isNotEmpty();
     }
 }

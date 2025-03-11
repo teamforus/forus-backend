@@ -2,8 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -12,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         DB::statement(
-            "ALTER TABLE `fund_requests` CHANGE `state` `state` ".
+            'ALTER TABLE `fund_requests` CHANGE `state` `state` ' .
             "ENUM('pending', 'approved', 'declined', 'approved_partly', 'disregarded') DEFAULT 'pending';"
         );
     }
@@ -25,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         DB::statement(
-            "ALTER TABLE `fund_requests` CHANGE `state` `state` ".
+            'ALTER TABLE `fund_requests` CHANGE `state` `state` ' .
             "ENUM('pending', 'approved', 'declined', 'approved_partly') DEFAULT 'pending';"
         );
     }

@@ -10,7 +10,10 @@ use Tests\Traits\MakesTestIdentities;
 
 abstract class TestCase extends BaseTestCase
 {
-    use CreatesApplication, DoesTesting, MakesTestIdentities, AssertsSentEmails;
+    use CreatesApplication;
+    use DoesTesting;
+    use MakesTestIdentities;
+    use AssertsSentEmails;
 
     /**
      * @var string[]

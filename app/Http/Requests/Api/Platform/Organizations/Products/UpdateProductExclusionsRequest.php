@@ -30,11 +30,10 @@ class UpdateProductExclusionsRequest extends FormRequest
         $funds = $this->product->organization->fund_providers->pluck('fund_id');
 
         return [
-            'enable_funds'      => 'nullable|array',
-            'enable_funds.*'    => 'required|exists:funds,id|in:' . $funds->join(','),
-            'disable_funds'     => 'nullable|array',
-            'disable_funds.*'   => 'required|exists:funds,id|in:' . $funds->join(','),
+            'enable_funds' => 'nullable|array',
+            'enable_funds.*' => 'required|exists:funds,id|in:' . $funds->join(','),
+            'disable_funds' => 'nullable|array',
+            'disable_funds.*' => 'required|exists:funds,id|in:' . $funds->join(','),
         ];
     }
 }
-    

@@ -11,8 +11,8 @@ class FundRequestDeniedMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_identities.fund_request_denied';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

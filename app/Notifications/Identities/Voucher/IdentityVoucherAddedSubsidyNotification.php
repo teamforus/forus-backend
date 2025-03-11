@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Voucher;
 
 /**
- * Subsidy voucher was created
+ * Subsidy voucher was created.
  */
 class IdentityVoucherAddedSubsidyNotification extends BaseIdentityVoucherNotification
 {

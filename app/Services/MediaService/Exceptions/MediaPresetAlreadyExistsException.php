@@ -2,4 +2,8 @@
 
 namespace App\Services\MediaService\Exceptions;
 
-class MediaPresetAlreadyExistsException extends \Exception {}
+use Exception;
+
+class MediaPresetAlreadyExistsException extends Exception
+{
+}

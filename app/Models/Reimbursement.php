@@ -11,6 +11,7 @@ use App\Searches\ReimbursementsSearch;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Traits\HasFiles;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * App\Models\Reimbursement
+ * App\Models\Reimbursement.
  *
  * @property int $id
  * @property int $voucher_id
@@ -92,7 +93,11 @@ use Throwable;
  */
 class Reimbursement extends Model
 {
-    use SoftDeletes, HasFiles, HasNotes, HasTags, HasLogs;
+    use SoftDeletes;
+    use HasFiles;
+    use HasNotes;
+    use HasTags;
+    use HasLogs;
 
     public const string STATE_DRAFT = 'draft';
     public const string STATE_PENDING = 'pending';
@@ -284,13 +289,13 @@ class Reimbursement extends Model
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public static function makeCode(): int
     {
         do {
             $code = random_int(11111111, 99999999);
-        } while(self::query()->where(compact('code'))->exists());
+        } while (self::query()->where(compact('code'))->exists());
 
         return $code;
     }
@@ -366,25 +371,53 @@ class Reimbursement extends Model
 
     /**
      * @param string|null $note
-     * @return $this
      * @throws Throwable
+     * @return $this
      */
     public function approve(?string $note = null): self
     {
-        DB::transaction(fn() => $this->resolve(true, $note));
+        DB::transaction(fn () => $this->resolve(true, $note));
 
         return $this;
     }
 
     /**
-     * @return $this
      * @throws Throwable
+     * @return $this
      */
     public function decline(?string $note = null, ?string $reason = null): self
     {
-        DB::transaction(fn() => $this->resolve(false, $note, $reason));
+        DB::transaction(fn () => $this->resolve(false, $note, $reason));
 
         return $this;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function isResolved(): bool
+    {
+        return in_array($this->state, self::STATES_RESOLVED);
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @param array $fields
+     * @return SupportCollection
+     */
+    public static function export(Request $request, Organization $organization, array $fields): SupportCollection
+    {
+        $query = Reimbursement::where('state', '!=', Reimbursement::STATE_DRAFT);
+        $query = $query->whereRelation('voucher.fund', 'organization_id', $organization->id);
+
+        $search = new ReimbursementsSearch($request->only([
+            'q', 'fund_id', 'from', 'to', 'amount_min', 'amount_max', 'state',
+            'expired', 'archived', 'deactivated', 'identity_address', 'implementation_id',
+        ]), $query);
+
+        return self::exportTransform($search->query()->latest(), $fields);
     }
 
     /**
@@ -410,22 +443,13 @@ class Reimbursement extends Model
         }
 
         if ($note) {
-            $note = ($approved ? "Geaccepteerd: " : "Afgewezen: ") . $note;
+            $note = ($approved ? 'Geaccepteerd: ' : 'Afgewezen: ') . $note;
             $this->addNote($note, $this->employee);
         }
 
         ReimbursementResolved::dispatch($this, $this->employee);
 
         return $this;
-    }
-
-    /**
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    public function isResolved(): bool
-    {
-        return in_array($this->state, self::STATES_RESOLVED);
     }
 
     /**
@@ -444,7 +468,7 @@ class Reimbursement extends Model
             'target' => VoucherTransaction::TARGET_IBAN,
             'state' => VoucherTransaction::STATE_PENDING,
             'target_iban' => $this->iban,
-            'target_name' => $this->iban_name
+            'target_name' => $this->iban_name,
         ]);
     }
 
@@ -492,24 +516,5 @@ class Reimbursement extends Model
                 format_datetime_locale($reimbursement->resolved_at) :
                 '-',
         ], $fields))->values();
-    }
-
-    /**
-     * @param Request $request
-     * @param Organization $organization
-     * @param array $fields
-     * @return SupportCollection
-     */
-    public static function export(Request $request, Organization $organization, array $fields): SupportCollection
-    {
-        $query = Reimbursement::where('state', '!=', Reimbursement::STATE_DRAFT);
-        $query = $query->whereRelation('voucher.fund', 'organization_id', $organization->id);
-
-        $search = new ReimbursementsSearch($request->only([
-            'q', 'fund_id', 'from', 'to', 'amount_min', 'amount_max', 'state',
-            'expired', 'archived', 'deactivated', 'identity_address', 'implementation_id',
-        ]), $query);
-
-        return self::exportTransform($search->query()->latest(), $fields);
     }
 }

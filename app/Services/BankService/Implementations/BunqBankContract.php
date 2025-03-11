@@ -8,6 +8,6 @@ class BunqBankContract extends BankContract
 {
     public function makeAuthorizationUrl(): string
     {
-        return "";
+        return '';
     }
 }

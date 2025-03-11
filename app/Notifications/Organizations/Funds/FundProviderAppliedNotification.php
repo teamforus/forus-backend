@@ -7,7 +7,7 @@ use App\Models\Fund;
 use App\Models\Identity;
 
 /**
- * Notify sponsor that a new provider applied to the fund
+ * Notify sponsor that a new provider applied to the fund.
  */
 class FundProviderAppliedNotification extends BaseFundsNotification
 {
@@ -20,7 +20,8 @@ class FundProviderAppliedNotification extends BaseFundsNotification
      * @param Identity $identity
      * @return void
      */
-    public function toMail(Identity $identity): void {
+    public function toMail(Identity $identity): void
+    {
         /** @var Fund $fund */
         $fund = $this->eventLog->loggable;
 

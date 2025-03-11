@@ -11,7 +11,9 @@ use Illuminate\Queue\SerializesModels;
 
 class BaseReservationExtraPaymentEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     /**
      * Create a new event instance.
@@ -22,7 +24,8 @@ class BaseReservationExtraPaymentEvent
         protected ReservationExtraPayment $extraPayment,
         protected ?Employee $employee = null,
         protected array $data = [],
-    ) {}
+    ) {
+    }
 
     /**
      * @return ProductReservation

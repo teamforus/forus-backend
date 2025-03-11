@@ -53,17 +53,17 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
 
         // note has to be string
         if (!is_string($note)) {
-            return $this->reject("Notitieveld mag alleen tekst bevatten.");
+            return $this->reject('Notitieveld mag alleen tekst bevatten.');
         }
 
         // product existence
         if (!$voucher) {
-            return $this->reject("Tegoed niet gevonden.");
+            return $this->reject('Tegoed niet gevonden.');
         }
 
         // product existence
         if (!$product) {
-            return $this->reject("Aanbod niet gevonden.");
+            return $this->reject('Aanbod niet gevonden.');
         }
 
         // validate voucher and provider organization
@@ -80,6 +80,16 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
     }
 
     /**
+     * Get the validation error message.
+     *
+     * @return string
+     */
+    public function message(): string
+    {
+        return sprintf('Rij: %s: %s', $this->index + 1, ($this->messageText ?: ''));
+    }
+
+    /**
      * @param Voucher $voucher
      * @return bool|string|null
      */
@@ -87,7 +97,7 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
     {
         // only regular vouchers can be used for reservations
         if (!$voucher->isBudgetType()) {
-            return "Dit tegoed heeft geen budget.";
+            return 'Dit tegoed heeft geen budget.';
         }
 
         $sponsorIsValid = OrganizationQuery::whereHasPermissionToScanVoucher(
@@ -143,7 +153,7 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
         if ($voucher->fund->isTypeBudget()) {
             $allowed = ProductQuery::approvedForFundsFilter($productQuery, $voucher->fund_id)->exists();
         } elseif ($voucher->fund->isTypeSubsidy()) {
-            $allowed = $productQuery->whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {
+            $allowed = $productQuery->whereHas('fund_provider_products', function (Builder $builder) use ($voucher) {
                 FundProviderProductQuery::whereAvailableForSubsidyVoucher(
                     $builder,
                     $voucher,
@@ -154,16 +164,6 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
         }
 
         // This product was not approved for this found.
-        return $allowed ?: "Dit aanbod is niet geaccepteerd voor dit fonds.";
-    }
-
-    /**
-     * Get the validation error message.
-     *
-     * @return string
-     */
-    public function message(): string
-    {
-        return sprintf('Rij: %s: %s', $this->index + 1, ($this->messageText ?: ''));
+        return $allowed ?: 'Dit aanbod is niet geaccepteerd voor dit fonds.';
     }
 }

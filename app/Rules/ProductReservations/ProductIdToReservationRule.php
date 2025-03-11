@@ -9,6 +9,7 @@ use App\Models\Voucher;
 use App\Rules\BaseRule;
 use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\ProductSubQuery;
+use Exception;
 use Illuminate\Support\Env;
 
 class ProductIdToReservationRule extends BaseRule
@@ -38,8 +39,8 @@ class ProductIdToReservationRule extends BaseRule
      *
      * @param string $attribute
      * @param mixed $value
+     * @throws Exception
      * @return bool
-     * @throws \Exception
      */
     public function passes($attribute, $value): bool
     {
@@ -97,7 +98,8 @@ class ProductIdToReservationRule extends BaseRule
         }
 
         if ($this->throttle && $product->product_reservations()->whereIn(
-            'state', [ProductReservation::STATE_PENDING]
+            'state',
+            [ProductReservation::STATE_PENDING]
         )->where('voucher_id', $voucher->id)->count() >= $this->throttleTotalPendingCount) {
             return $this->reject(trans('validation.product_reservation.reservations_limit_reached', [
                 'count' => $this->throttleTotalPendingCount,

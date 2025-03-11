@@ -7,10 +7,10 @@ use App\Services\MediaService\Models\Media;
 
 abstract class MediaConfig
 {
-    const string TYPE_SINGLE = 'single';
-    const string TYPE_MULTIPLE = 'multiple';
+    public const string TYPE_SINGLE = 'single';
+    public const string TYPE_MULTIPLE = 'multiple';
 
-    const array TYPES = [
+    public const array TYPES = [
         self::TYPE_SINGLE,
         self::TYPE_MULTIPLE,
     ];
@@ -25,7 +25,7 @@ abstract class MediaConfig
         'jpeg',
         'png',
         'gif',
-        'bmp'
+        'bmp',
     ];
 
     /**
@@ -67,7 +67,7 @@ abstract class MediaConfig
      * @var array
      */
     protected array $sync_presets = [
-        'thumbnail'
+        'thumbnail',
     ];
 
     /**
@@ -89,27 +89,6 @@ abstract class MediaConfig
     public function getType(): ?string
     {
         return $this->type ?? null;
-    }
-
-    /**
-     * @param MediaPreset $mediaPreset
-     * @param bool $overwriteIfExists
-     * @return MediaPreset
-     * @throws MediaPresetAlreadyExistsException
-     */
-    protected function addPreset(
-        MediaPreset $mediaPreset,
-        bool $overwriteIfExists = false
-    ): MediaPreset {
-        if (!$overwriteIfExists && isset($this->presets[$mediaPreset->name])) {
-            throw new MediaPresetAlreadyExistsException(sprintf(
-                "Media config '%s' already has '%s' preset.",
-                $this->getName(),
-                $mediaPreset->name
-            ));
-        }
-
-        return $this->presets[$mediaPreset->name] = $mediaPreset;
     }
 
     /**
@@ -167,8 +146,9 @@ abstract class MediaConfig
     public function getSyncPresets(): array
     {
         return $this->regenerate_source ? array_merge(
-            $this->sync_presets, (array) $this->regenerate_source
-        ): $this->sync_presets;
+            $this->sync_presets,
+            (array) $this->regenerate_source
+        ) : $this->sync_presets;
     }
 
     /**
@@ -177,4 +157,25 @@ abstract class MediaConfig
      * @return void
      */
     abstract public function onMediaPresetsUpdated(Media $media, bool $fromQueue = false): void;
+
+    /**
+     * @param MediaPreset $mediaPreset
+     * @param bool $overwriteIfExists
+     * @throws MediaPresetAlreadyExistsException
+     * @return MediaPreset
+     */
+    protected function addPreset(
+        MediaPreset $mediaPreset,
+        bool $overwriteIfExists = false
+    ): MediaPreset {
+        if (!$overwriteIfExists && isset($this->presets[$mediaPreset->name])) {
+            throw new MediaPresetAlreadyExistsException(sprintf(
+                "Media config '%s' already has '%s' preset.",
+                $this->getName(),
+                $mediaPreset->name
+            ));
+        }
+
+        return $this->presets[$mediaPreset->name] = $mediaPreset;
+    }
 }

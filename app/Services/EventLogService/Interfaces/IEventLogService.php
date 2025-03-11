@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Services\EventLogService\Interfaces;
 
 interface IEventLogService

@@ -24,7 +24,7 @@ class RegisterDevicePushRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'id' => 'required|string|min:8'
+            'id' => 'required|string|min:8',
         ];
     }
 }

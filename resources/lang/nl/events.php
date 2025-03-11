@@ -90,6 +90,6 @@ return [
             'transaction_budget' => 'Tegoed #:number transactie is aangemaakt',
             'transaction_product' => 'Tegoed #:number transactie is aangemaakt',
             'physical_card_requested' => 'Tegoed #:number plastic pas is besteld',
-        ]
+        ],
     ],
 ];

@@ -3,7 +3,7 @@
 namespace App\Notifications\Organizations\Funds;
 
 /**
- * Notify sponsor that the fund has is expiring
+ * Notify sponsor that the fund has is expiring.
  */
 class FundExpiringNotification extends BaseFundsNotification
 {

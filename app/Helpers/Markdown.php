@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Helpers;
 
 use League\CommonMark\Exception\CommonMarkException;
@@ -9,8 +8,8 @@ class Markdown
 {
     /**
      * @param string $content
-     * @return string
      * @throws CommonMarkException
+     * @return string
      */
     public static function convert(string $content): string
     {

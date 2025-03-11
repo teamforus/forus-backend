@@ -25,8 +25,8 @@ class IndexFundProviderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'q'  => 'nullable|string|max:50',
-            'state' => 'nullable|in:' . join(',', FundProvider::STATES),
+            'q' => 'nullable|string|max:50',
+            'state' => 'nullable|in:' . implode(',', FundProvider::STATES),
             'organization_id' => 'nullable|exists:organizations,id',
         ];
     }

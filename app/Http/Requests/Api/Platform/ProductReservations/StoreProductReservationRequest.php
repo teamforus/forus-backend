@@ -40,14 +40,6 @@ class StoreProductReservationRequest extends BaseFormRequest
     }
 
     /**
-     * @return Product|null
-     */
-    protected function getProduct(): ?Product
-    {
-        return Product::find($this->input('product_id'));
-    }
-
-    /**
      * @param Product|null $product
      * @return array
      */
@@ -90,6 +82,47 @@ class StoreProductReservationRequest extends BaseFormRequest
     }
 
     /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        $product = Product::find($this->input('product_id'));
+
+        return [
+            ...parent::attributes(),
+            ...$product?->organization->reservation_fields->reduce(fn (
+                array $result,
+                OrganizationReservationField $field,
+            ) => [
+                ...$result,
+                "custom_fields.$field->id" => Arr::get($field->translateColumns($field->only([
+                    'label',
+                ])), 'label', $field?->label || ''),
+            ], []) ?: [],
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'birth_date.date_format' => trans('validation.date', [
+                'attribute' => trans('validation.attributes.birth_date'),
+            ]),
+        ];
+    }
+
+    /**
+     * @return Product|null
+     */
+    protected function getProduct(): ?Product
+    {
+        return Product::find($this->input('product_id'));
+    }
+
+    /**
      * @param Product|null $product
      * @return array[]
      */
@@ -128,42 +161,9 @@ class StoreProductReservationRequest extends BaseFormRequest
                 $field->required ? 'required' : 'nullable',
                 $field->type === $field::TYPE_NUMBER ? 'int' : 'string',
                 $field->type === $field::TYPE_TEXT ? 'max:200' : null,
-            ])
+            ]),
         ], [
             'custom_fields' => 'nullable|array',
         ]);
-    }
-
-    /**
-     * @return array
-     */
-    public function attributes(): array
-    {
-        $product = Product::find($this->input('product_id'));
-
-        return [
-            ...parent::attributes(),
-            ...$product?->organization->reservation_fields->reduce(fn (
-                array $result,
-                OrganizationReservationField $field,
-            ) => [
-                ...$result,
-                "custom_fields.$field->id" => Arr::get($field->translateColumns($field->only([
-                    'label',
-                ])), 'label', $field?->label || ''),
-            ], []) ?: [],
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    public function messages(): array
-    {
-        return [
-            'birth_date.date_format' => trans('validation.date', [
-                'attribute' => trans('validation.attributes.birth_date')
-            ])
-        ];
     }
 }

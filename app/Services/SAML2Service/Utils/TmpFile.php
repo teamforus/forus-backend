@@ -2,4 +2,6 @@
 
 namespace App\Services\SAML2Service\Utils;
 
-class TmpFile extends \App\Helpers\TmpFile {}
+class TmpFile extends \App\Helpers\TmpFile
+{
+}

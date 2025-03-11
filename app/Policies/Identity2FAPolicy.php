@@ -74,7 +74,7 @@ class Identity2FAPolicy
     public function activate(Identity $identity, Identity2FA $identity2FA): Response|bool
     {
         $sameTypeExists = $identity->auth_2fa_providers_active()->where([
-            'type' => $identity2FA->auth_2fa_provider->type
+            'type' => $identity2FA->auth_2fa_provider->type,
         ])->exists();
 
         $phoneUsed = $identity2FA->isTypePhone() && Identity2FA::query()->where([

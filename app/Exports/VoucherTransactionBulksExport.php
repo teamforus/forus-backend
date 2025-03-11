@@ -8,8 +8,6 @@ use Illuminate\Http\Request;
 
 class VoucherTransactionBulksExport extends BaseFieldedExport
 {
-    protected array $fields;
-
     /**
      * @var array|string[]
      */
@@ -21,6 +19,7 @@ class VoucherTransactionBulksExport extends BaseFieldedExport
         'bank_name' => 'Bank naam',
         'date_transaction' => 'Datum transactie',
     ];
+    protected array $fields;
 
     /**
      * @param Request $request

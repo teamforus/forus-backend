@@ -12,7 +12,9 @@ abstract class BaseBIExporter
     /**
      * @param Organization $organization
      */
-    public function __construct(protected Organization $organization) {}
+    public function __construct(protected Organization $organization)
+    {
+    }
 
     /**
      * @return array
@@ -43,7 +45,7 @@ abstract class BaseBIExporter
     protected function transformKeys(array $data, array $fields): array
     {
         return array_map(function ($row) use ($fields) {
-            return array_reduce(array_keys($row), fn($obj, $key) => array_merge($obj, [
+            return array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
                 $fields[$key] => (string) $row[$key],
             ]), []);
         }, $data);

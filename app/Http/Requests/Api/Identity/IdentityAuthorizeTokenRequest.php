@@ -24,7 +24,7 @@ class IdentityAuthorizeTokenRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'auth_token' => 'required'
+            'auth_token' => 'required',
         ];
     }
 }
